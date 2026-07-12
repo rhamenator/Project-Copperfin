@@ -2648,6 +2648,9 @@ std::optional<RuntimeSurfaceCursorSnapshot> parse_cursor_snapshot_xml(const std:
             row.values.push_back(xml_unescape(xml_text.substr(col_value_start, col_end - col_value_start)));
             col_scan = col_end + 6U;
         }
+        if (row.values.size() != snapshot.fields.size()) {
+            return std::nullopt;
+        }
         snapshot.rows.push_back(std::move(row));
         scan = row_end + 6U;
     }

@@ -1867,6 +1867,14 @@ namespace copperfin::runtime
             },
             [this](const RuntimeSurfaceCursorSnapshot &snapshot, const std::string &destination_alias) -> std::optional<std::size_t>
             {
+                if (std::any_of(snapshot.rows.begin(), snapshot.rows.end(), [&](const RuntimeSurfaceCursorRow &row)
+                    {
+                        return row.values.size() != snapshot.fields.size();
+                    }))
+                {
+                    return std::nullopt;
+                }
+
                 std::string alias = normalize_identifier(trim_copy(destination_alias));
                 if (alias.empty())
                 {

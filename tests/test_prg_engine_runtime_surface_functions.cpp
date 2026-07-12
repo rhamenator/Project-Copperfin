@@ -1070,6 +1070,114 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_cursor_xml_cardinality_mismatch_preserves_destinations()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_cardinality";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path existing_path = temp_root / "existing.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "ID", .type = 'N', .length = 4U},
+            {.name = "NAME", .type = 'C', .length = 20U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            existing_path.string(),
+            fields,
+            {{"1", "ALPHA"}, {"2", "BETA"}});
+        expect(create_result.ok, "XMLTOCURSOR cardinality fixture should be created");
+        const std::string original_bytes = read_text(existing_path);
+
+        const std::string xml_prefix =
+            "<CopperfinCursor alias=\"Source\"><Fields>"
+            "<Field name=\"ID\" type=\"N\" width=\"4\" decimals=\"0\" />"
+            "<Field name=\"NAME\" type=\"C\" width=\"20\" decimals=\"0\" />"
+            "</Fields><Rows><Row>";
+        const std::string xml_suffix = "</Row></Rows></CopperfinCursor>";
+        const std::string extra_column_xml =
+            xml_prefix + "<Col>3</Col><Col>GAMMA</Col><Col>EXTRA</Col>" + xml_suffix;
+        const std::string missing_column_xml = xml_prefix + "<Col>3</Col>" + xml_suffix;
+        write_text(temp_root / "extra_columns.xml", extra_column_xml);
+        write_text(temp_root / "missing_columns.xml", missing_column_xml);
+
+        const fs::path main_path = temp_root / "cursor_xml_cardinality.prg";
+        write_text(
+            main_path,
+            "USE 'existing.dbf' ALIAS ExistingXml\n"
+            "GO 2\n"
+            "cInlineExtra = '" + extra_column_xml + "'\n"
+            "cInlineMissing = '" + missing_column_xml + "'\n"
+            "nInlineExtraExisting = XMLTOCURSOR(cInlineExtra, 'ExistingXml')\n"
+            "nInlineMissingNew = XMLTOCURSOR(cInlineMissing, 'InlineMissingDest')\n"
+            "nFileExtraNew = XMLTOCURSOR('extra_columns.xml', 'FileExtraDest')\n"
+            "nFileMissingExisting = XMLTOCURSOR('missing_columns.xml', 'ExistingXml')\n"
+            "lInlineMissingUsed = USED('InlineMissingDest')\n"
+            "lFileExtraUsed = USED('FileExtraDest')\n"
+            "lExistingUsed = USED('ExistingXml')\n"
+            "cAliasAfterFailures = ALIAS()\n"
+            "nRecnoAfterFailures = RECNO()\n"
+            "SELECT ExistingXml\n"
+            "nExistingCount = RECCOUNT()\n"
+            "nExistingRecno = RECNO()\n"
+            "nExistingId = ID\n"
+            "cExistingName = NAME\n"
+            "cExistingAlias = ALIAS()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("XMLTOCURSOR cardinality script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            if (found == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        };
+
+        check("ninlineextraexisting", "0");
+        check("ninlinemissingnew", "0");
+        check("nfileextranew", "0");
+        check("nfilemissingexisting", "0");
+        check("linlinemissingused", "false");
+        check("lfileextraused", "false");
+        check("lexistingused", "true");
+        check("caliasafterfailures", "ExistingXml");
+        check("nrecnoafterfailures", "2");
+        check("nexistingcount", "2");
+        check("nexistingrecno", "2");
+        check("nexistingid", "2");
+        check("cexistingname", "BETA");
+        check("cexistingalias", "ExistingXml");
+
+        expect(read_text(existing_path) == original_bytes,
+               "rejected XMLTOCURSOR cardinality mismatches should preserve destination bytes");
+        expect(std::count_if(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "runtime.warning";
+        }) >= 4,
+               "each rejected XMLTOCURSOR cardinality mismatch should emit a warning event");
+        expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "runtime.xmltocursor";
+        }),
+               "rejected XMLTOCURSOR cardinality mismatches should not emit success events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_getpem_setpem_compobj_functions()
     {
         namespace fs = std::filesystem;
@@ -54190,6 +54298,7 @@ int main()
     test_common_native_oop_function_abbreviations();
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_invalid_input_runtime_surface_functions();
+    test_cursor_xml_cardinality_mismatch_preserves_destinations();
     test_newobject_getpem_setpem_compobj_functions();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
