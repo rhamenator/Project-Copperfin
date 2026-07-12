@@ -228,6 +228,7 @@ int main(int argc, char** argv) {
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_visual_method_copy_move_parse_diagnostics_localize);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_visual_method_reorder_parse_diagnostics_localize);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_designer_contexts);
+    RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_preserves_sidecar_path_spelling);
 #if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_HOST_SMOKE)
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_detail_header_footer_section_kinds);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection);

@@ -1543,6 +1543,7 @@
   "Vfp.IndexProbe.Error.UnsupportedType": "Unsupported index type.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall": "File is smaller than the 512-byte Visual FoxPro IDX header size.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues": "Header values do not look like a Visual FoxPro IDX file.",
+  "Vfp.Sidecar.Error.AmbiguousPath": "[!! Mülţïplë sïdëçår fïlës måţçh '{path}'. !!]",
   "Studio.ReportLayout.Section.ColumnFooter": "Column Footer",
   "Studio.ReportLayout.Section.ColumnHeader": "Column Header",
   "Studio.ReportLayout.Section.Detail": "Detail",

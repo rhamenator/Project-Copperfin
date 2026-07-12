@@ -3836,6 +3836,10 @@ copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
 
+copperfin_add_test(test_vfp_sidecar_path cf_design_model
+    test_vfp_sidecar_path.cpp
+)
+
 copperfin_add_test(test_studio_host cf_design_model
     test_studio_host.cpp
     test_studio_host_shared_test_helpers.cpp

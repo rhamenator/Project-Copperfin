@@ -1310,11 +1310,16 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
         return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Object.DuplicateBatchRequired"));
     }
 
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return failed_visual_object_duplicate_batch_result(
+            ambiguous_memo_sidecar_error(memo_resolution));
+    }
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
         return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
         ? std::vector<std::uint8_t>{}
         : read_binary_file(memo_path);
@@ -1788,11 +1793,16 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
         records.push_back(std::move(created_values));
     }
 
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return failed_visual_object_create_batch_result(
+            ambiguous_memo_sidecar_error(memo_resolution));
+    }
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
         return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
         ? std::vector<std::uint8_t>{}
         : read_binary_file(memo_path);
@@ -2009,11 +2019,16 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
         return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupSelectionRequired"));
     }
 
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return failed_visual_object_group_result(
+            ambiguous_memo_sidecar_error(memo_resolution));
+    }
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
         return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
         ? std::vector<std::uint8_t>{}
         : read_binary_file(memo_path);
@@ -2201,11 +2216,16 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Object.SelectedContainerChildrenRequired"));
     }
 
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return failed_visual_object_ungroup_result(
+            ambiguous_memo_sidecar_error(memo_resolution));
+    }
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
         return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
         ? std::vector<std::uint8_t>{}
         : read_binary_file(memo_path);
@@ -2930,11 +2950,15 @@ VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchReque
         }
     }
 
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
+    }
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
         ? std::vector<std::uint8_t>{}
         : read_binary_file(memo_path);

@@ -373,10 +373,10 @@ void test_open_document_canonicalizes_direct_sidecar_paths() {
     write_sidecar(legacy_sidecar_two);
     if (has_exact_entry("Legacy.PJT") && has_exact_entry("LEGACY.pjt")) {
         const auto legacy_result = copperfin::studio::open_document({.path = legacy_primary.string()});
-        expect(legacy_result.ok && legacy_result.document.has_sidecar &&
-                   (legacy_result.document.sidecar_path == legacy_sidecar_one.string() ||
-                    legacy_result.document.sidecar_path == legacy_sidecar_two.string()),
-               "#3990: ordinary primary opens should retain existing ambiguous-sidecar handling");
+        expect(!legacy_result.ok && legacy_result.error == english_catalog.translate(
+                   "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                   {{"path", (temp_dir / "legacy.pjt").string()}}),
+               "#3992: ordinary primary opens should reject ambiguous sidecars");
     }
 
     if (has_exact_entry("Ambiguous.PJX") && has_exact_entry("AMBIGUOUS.pjx")) {

@@ -321,6 +321,7 @@ void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std:
 
 // ==== Designer subsystem dispatch/catalog/execution JSON exposure tests ====
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path);
+void test_studio_host_json_preserves_sidecar_path_spelling(const std::string& studio_host_path);
 void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& studio_host_path);
 void test_studio_host_json_exposes_designer_invocation_admission(const std::string& studio_host_path);
 void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_host_path);

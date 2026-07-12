@@ -142,6 +142,7 @@ add_library(cf_vfp_assets
     src/vfp/dbf_header.cpp
     src/vfp/dbf_table.cpp
     src/vfp/index_probe.cpp
+    src/vfp/sidecar_path.cpp
     src/vfp/visual_asset_editor_shared_helpers.cpp
     src/vfp/visual_asset_editor_method_blobs.cpp
     src/vfp/visual_asset_editor_property_blobs.cpp

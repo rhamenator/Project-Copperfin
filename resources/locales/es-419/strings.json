@@ -1543,6 +1543,7 @@
   "Vfp.IndexProbe.Error.UnsupportedType": "Tipo de indice no compatible.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall": "El archivo es menor que el tamano de encabezado Visual FoxPro IDX de 512 bytes.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues": "Los valores del encabezado no parecen corresponder a un archivo Visual FoxPro IDX.",
+  "Vfp.Sidecar.Error.AmbiguousPath": "Varios archivos asociados coinciden con '{path}'.",
   "Studio.ReportLayout.Section.ColumnFooter": "Pie de columna",
   "Studio.ReportLayout.Section.ColumnHeader": "Encabezado de columna",
   "Studio.ReportLayout.Section.Detail": "Detalle",

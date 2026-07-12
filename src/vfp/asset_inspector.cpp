@@ -5,6 +5,7 @@
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
 #include <cctype>
@@ -351,40 +352,12 @@ void extract_database_container_metadata(
     result.database_container_metadata = std::move(metadata);
 }
 
-std::string memo_sidecar_path_for(const std::filesystem::path& path, AssetFamily family) {
-    std::filesystem::path candidate = path;
-    switch (family) {
-        case AssetFamily::project:
-            candidate.replace_extension(".pjt");
-            return candidate.string();
-        case AssetFamily::form:
-            candidate.replace_extension(".sct");
-            return candidate.string();
-        case AssetFamily::class_library:
-            candidate.replace_extension(".vct");
-            return candidate.string();
-        case AssetFamily::report:
-            candidate.replace_extension(".frt");
-            return candidate.string();
-        case AssetFamily::label:
-            candidate.replace_extension(".lbt");
-            return candidate.string();
-        case AssetFamily::menu:
-            candidate.replace_extension(".mnt");
-            return candidate.string();
-        case AssetFamily::database_container:
-            candidate.replace_extension(".dct");
-            return candidate.string();
-        case AssetFamily::table:
-            candidate.replace_extension(".fpt");
-            return candidate.string();
-        case AssetFamily::index:
-        case AssetFamily::unknown:
-        case AssetFamily::program:
-        case AssetFamily::header:
-            return {};
-    }
-    return {};
+SidecarPathResolution memo_sidecar_resolution_for(
+    const std::filesystem::path& path,
+    const std::string& explicit_memo_sidecar_path) {
+    return explicit_memo_sidecar_path.empty()
+        ? resolve_vfp_memo_sidecar_path(path)
+        : resolve_unique_casefold_path(explicit_memo_sidecar_path);
 }
 
 bool asset_expects_memo_sidecar(AssetFamily family, const DbfHeader& header) {
@@ -404,6 +377,24 @@ bool asset_expects_memo_sidecar(AssetFamily family, const DbfHeader& header) {
         case AssetFamily::program:
         case AssetFamily::header:
             return false;
+    }
+    return false;
+}
+
+bool table_bytes_declare_memo_field(
+    const std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header) {
+    const std::size_t descriptor_limit = std::min<std::size_t>(
+        table_bytes.size(),
+        header.header_length);
+    for (std::size_t offset = 32U; (offset + 32U) <= descriptor_limit; offset += 32U) {
+        if (table_bytes[offset] == 0x0DU) {
+            return false;
+        }
+        const char field_type = static_cast<char>(table_bytes[offset + 11U]);
+        if (field_type == 'M' || field_type == 'G' || field_type == 'P') {
+            return true;
+        }
     }
     return false;
 }
@@ -716,11 +707,21 @@ void validate_expected_companions(
     const std::filesystem::path file_path(path);
 
     if (asset_expects_memo_sidecar(family, header)) {
-        const std::string memo_path = memo_sidecar_path.empty()
-            ? memo_sidecar_path_for(file_path, family)
-            : memo_sidecar_path;
+        const SidecarPathResolution memo_resolution =
+            memo_sidecar_resolution_for(file_path, memo_sidecar_path);
+        const std::string memo_path = memo_resolution.path.value_or(
+            memo_resolution.requested_path).string();
         if (!memo_path.empty()) {
-            if (!resolve_existing_path_casefold(memo_path).has_value()) {
+            if (memo_resolution.ambiguous) {
+                append_validation_issue(
+                    result,
+                    AssetValidationSeverity::error,
+                    "memo.sidecar_ambiguous",
+                    memo_resolution.requested_path.string(),
+                    asset_inspector_text(
+                        "Vfp.Sidecar.Error.AmbiguousPath",
+                        {{"path", memo_resolution.requested_path.string()}}));
+            } else if (!memo_resolution.path.has_value()) {
                 append_validation_issue(
                     result,
                     AssetValidationSeverity::error,
@@ -760,14 +761,19 @@ void validate_memo_sidecar(
         return;
     }
 
-    const std::string memo_path = memo_sidecar_path.empty()
-        ? memo_sidecar_path_for(std::filesystem::path(table_path), family)
-        : memo_sidecar_path;
+    const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
+        std::filesystem::path(table_path),
+        memo_sidecar_path);
+    const std::string memo_path = memo_resolution.path.value_or(
+        memo_resolution.requested_path).string();
     if (memo_path.empty()) {
         return;
     }
 
-    const auto resolved_memo_path = resolve_existing_path_casefold(memo_path);
+    if (memo_resolution.ambiguous) {
+        return;
+    }
+    const auto& resolved_memo_path = memo_resolution.path;
     if (!resolved_memo_path.has_value()) {
         return;
     }
@@ -997,6 +1003,19 @@ AssetInspectionResult inspect_asset(const std::string& path, const std::string& 
         return result;
     }
 
+    if (result.family != AssetFamily::table) {
+        const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
+            std::filesystem::path(path),
+            memo_sidecar_path);
+        if (memo_resolution.ambiguous) {
+            result.ok = false;
+            result.error = asset_inspector_text(
+                "Vfp.Sidecar.Error.AmbiguousPath",
+                {{"path", memo_resolution.requested_path.string()}});
+            return result;
+        }
+    }
+
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         result.ok = false;
@@ -1004,11 +1023,38 @@ AssetInspectionResult inspect_asset(const std::string& path, const std::string& 
         return result;
     }
 
+    if (result.family == AssetFamily::table && header_result.header.has_memo_file()) {
+        const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
+            std::filesystem::path(path),
+            memo_sidecar_path);
+        if (memo_resolution.ambiguous) {
+            result.ok = false;
+            result.error = asset_inspector_text(
+                "Vfp.Sidecar.Error.AmbiguousPath",
+                {{"path", memo_resolution.requested_path.string()}});
+            return result;
+        }
+    }
+
     result.ok = true;
     result.header_available = true;
     result.header = header_result.header;
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
     const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
+
+    if (result.family == AssetFamily::table &&
+        table_bytes_declare_memo_field(table_bytes, result.header)) {
+        const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
+            std::filesystem::path(path),
+            memo_sidecar_path);
+        if (memo_resolution.ambiguous) {
+            result.ok = false;
+            result.error = asset_inspector_text(
+                "Vfp.Sidecar.Error.AmbiguousPath",
+                {{"path", memo_resolution.requested_path.string()}});
+            return result;
+        }
+    }
 
     validate_dbf_storage(result, path, result.header, file_size);
     validate_dbf_field_descriptors(result, path, result.header, table_bytes);
@@ -1344,6 +1390,20 @@ DatabaseExportResult export_database_as_json(
         };
     }
 
+    const fs::path dbc_fs_path(dbc_path);
+    const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(dbc_path);
+    if (dct_resolution.ambiguous) {
+        return {
+            .ok = false,
+            .error = asset_inspector_text(
+                "Vfp.Sidecar.Error.AmbiguousPath",
+                {{"path", dct_resolution.requested_path.string()}}),
+            .json = {}
+        };
+    }
+    const std::optional<fs::path> dct_path = dct_resolution.path;
+    const bool has_dct = dct_path.has_value();
+
     // Load the raw DBC bytes for direct field-pointer extraction
     const std::vector<std::uint8_t> dbc_bytes = read_binary_file(dbc_path);
     if (dbc_bytes.empty()) {
@@ -1364,11 +1424,6 @@ DatabaseExportResult export_database_as_json(
             .json = {}
         };
     }
-
-    // Determine the .DCT memo sidecar path
-    const fs::path dbc_fs_path(dbc_path);
-    const std::optional<fs::path> dct_path = resolve_existing_path_casefold(fs::path(dbc_path).replace_extension(".dct"));
-    const bool has_dct = dct_path.has_value();
 
     // Read all catalog rows with raw memo block numbers
     const std::vector<RawDbcRow> raw_rows = read_raw_dbc_rows(dbc_bytes, header_result.header);

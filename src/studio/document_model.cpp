@@ -5,6 +5,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/vfp/sidecar_path.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <algorithm>
@@ -156,66 +157,6 @@ std::string lowercase_ascii(std::string_view value) {
         lowered.push_back(lowercase_ascii_byte(ch));
     }
     return lowered;
-}
-
-struct ExistingPathResolution {
-    std::optional<std::filesystem::path> path{};
-    bool ambiguous = false;
-};
-
-ExistingPathResolution resolve_unique_existing_path_casefold(
-    const std::filesystem::path& candidate,
-    bool require_regular_file = false) {
-    std::error_code ignored;
-    const auto admissible = [&](const std::filesystem::path& path) {
-        ignored.clear();
-        return !require_regular_file || std::filesystem::is_regular_file(path, ignored);
-    };
-    const bool candidate_exists = std::filesystem::exists(candidate, ignored) && admissible(candidate);
-    ignored.clear();
-
-    const std::filesystem::path directory =
-        candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
-    if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
-        return {.path = candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt};
-    }
-
-    const std::string requested_name = candidate.filename().string();
-    const std::string target_name = lowercase_ascii(requested_name);
-    std::optional<std::filesystem::path> folded_match;
-    std::size_t folded_match_count = 0U;
-    for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
-        if (ignored) {
-            break;
-        }
-        if (!admissible(entry.path())) {
-            continue;
-        }
-
-        const std::string entry_name = entry.path().filename().string();
-        if (entry_name == requested_name) {
-            return {.path = entry.path()};
-        }
-        if (lowercase_ascii(entry_name) == target_name) {
-            if (!folded_match.has_value()) {
-                folded_match = entry.path();
-            }
-            ++folded_match_count;
-        }
-    }
-
-    if (folded_match_count > 1U) {
-        return {.path = folded_match, .ambiguous = true};
-    }
-    if (folded_match.has_value()) {
-        return {.path = folded_match};
-    }
-    return {.path = candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt};
-}
-
-std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
-    const ExistingPathResolution resolution = resolve_unique_existing_path_casefold(candidate);
-    return resolution.path;
 }
 
 std::optional<std::string_view> primary_extension_for_sidecar(const std::filesystem::path& path) {
@@ -690,14 +631,14 @@ const char* studio_asset_kind_name(StudioAssetKind kind) {
 }
 
 std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind) {
-    std::filesystem::path file_path(path);
-    auto resolve_sidecar = [&](std::string_view extension) {
-        const auto candidate = file_path.replace_extension(extension).string();
-        if (const auto resolved = resolve_existing_path_casefold(candidate); resolved.has_value()) {
-            return resolved->string();
+    const std::filesystem::path file_path(path);
+    const auto resolve_sidecar = [&](std::string_view extension) {
+        const vfp::SidecarPathResolution resolution =
+            vfp::resolve_vfp_sidecar_path(file_path, extension);
+        if (resolution.ambiguous) {
+            return std::string{};
         }
-
-        return candidate;
+        return resolution.path.value_or(resolution.requested_path).string();
     };
 
     switch (kind) {
@@ -937,8 +878,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     const std::filesystem::path requested_path(request.path);
     if (const auto primary_extension = primary_extension_for_sidecar(requested_path);
         primary_extension.has_value()) {
-        const ExistingPathResolution sidecar_resolution =
-            resolve_unique_existing_path_casefold(requested_path, true);
+        const vfp::SidecarPathResolution sidecar_resolution =
+            vfp::resolve_unique_casefold_path(requested_path);
         if (sidecar_resolution.ambiguous) {
             return {
                 .ok = false,
@@ -953,8 +894,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             opened_sidecar_path = actual_sidecar_path.string();
             std::filesystem::path primary_candidate = actual_sidecar_path;
             primary_candidate.replace_extension(*primary_extension);
-            const ExistingPathResolution primary_resolution =
-                resolve_unique_existing_path_casefold(primary_candidate, true);
+            const vfp::SidecarPathResolution primary_resolution =
+                vfp::resolve_unique_casefold_path(primary_candidate);
             if (primary_resolution.ambiguous) {
                 return {
                     .ok = false,
@@ -975,7 +916,25 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         }
     }
 
-    const std::string memo_sidecar_path = opened_sidecar_path.value_or(std::string{});
+    vfp::SidecarPathResolution inferred_sidecar_resolution;
+    const bool defer_table_sidecar_resolution =
+        lowercase_ascii(std::filesystem::path(document_path).extension().string()) == ".dbf";
+    if (!opened_sidecar_path.has_value() && !defer_table_sidecar_resolution) {
+        inferred_sidecar_resolution =
+            vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+        if (inferred_sidecar_resolution.ambiguous) {
+            return {
+                .ok = false,
+                .error = document_text(
+                    "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                    {{"path", inferred_sidecar_resolution.requested_path.string()}})
+            };
+        }
+    }
+
+    const std::string memo_sidecar_path = opened_sidecar_path.value_or(
+        inferred_sidecar_resolution.path.value_or(
+            inferred_sidecar_resolution.requested_path).string());
     const vfp::AssetInspectionResult inspection =
         vfp::inspect_asset(document_path, memo_sidecar_path);
     if (!inspection.ok) {
@@ -987,10 +946,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.display_name = filename_of(document_path);
     document.selection_symbol = request.symbol;
     document.kind = studio_asset_kind_from_vfp_family(inspection.family);
-    document.sidecar_path = opened_sidecar_path.value_or(infer_sidecar_path(document_path, document.kind));
-    document.has_sidecar = !document.sidecar_path.empty() && std::filesystem::exists(document.sidecar_path);
-    document.read_only = request.read_only ||
-        !asset_family_is_writable(document_path, document.sidecar_path, document.has_sidecar);
+    document.sidecar_path = memo_sidecar_path;
+    document.has_sidecar = opened_sidecar_path.has_value() || inferred_sidecar_resolution.path.has_value();
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.selection_record_available = request.selection_record_available;
     document.selection_line = request.line;
@@ -1002,6 +959,22 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     }
 
     if (inspection.header_available) {
+        if (defer_table_sidecar_resolution && inspection.header.has_memo_file()) {
+            inferred_sidecar_resolution =
+                vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+            if (inferred_sidecar_resolution.ambiguous) {
+                return {
+                    .ok = false,
+                    .error = document_text(
+                        "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                        {{"path", inferred_sidecar_resolution.requested_path.string()}})
+                };
+            }
+            document.sidecar_path = inferred_sidecar_resolution.path.value_or(
+                inferred_sidecar_resolution.requested_path).string();
+            document.has_sidecar = inferred_sidecar_resolution.path.has_value();
+        }
+
         const bool unique_id_selection_requested =
             supports_unique_id_record_selection(document.kind) && !trim_copy(request.unique_id).empty();
         const std::size_t record_count = inspection.header.record_count;
@@ -1020,6 +993,29 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         const auto table_result =
             vfp::parse_dbf_table_from_file(document_path, max_records, memo_sidecar_path);
         if (table_result.ok) {
+            const bool table_declares_memo_field = std::any_of(
+                table_result.table.fields.begin(),
+                table_result.table.fields.end(),
+                [](const vfp::DbfFieldDescriptor& field) {
+                    return field.type == 'M' || field.type == 'G' || field.type == 'P';
+                });
+            if (defer_table_sidecar_resolution &&
+                document.sidecar_path.empty() &&
+                table_declares_memo_field) {
+                inferred_sidecar_resolution =
+                    vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+                if (inferred_sidecar_resolution.ambiguous) {
+                    return {
+                        .ok = false,
+                        .error = document_text(
+                            "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                            {{"path", inferred_sidecar_resolution.requested_path.string()}})
+                    };
+                }
+                document.sidecar_path = inferred_sidecar_resolution.path.value_or(
+                    inferred_sidecar_resolution.requested_path).string();
+                document.has_sidecar = inferred_sidecar_resolution.path.has_value();
+            }
             document.table_preview_available = true;
             document.table_preview = std::move(table_result.table);
             if (request.selection_record_available &&
@@ -1028,6 +1024,9 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             }
         }
     }
+
+    document.read_only = request.read_only ||
+        !asset_family_is_writable(document_path, document.sidecar_path, document.has_sidecar);
 
     if (!document.selection_record_available &&
         !request.selection_record_available &&

@@ -15,6 +15,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
 #include <atomic>
@@ -895,8 +896,6 @@ using VerifiedPackagePaths = std::vector<VerifiedPackagePath>;
 constexpr int kMinimumSupportedManifestVersion = 1;
 constexpr int kMaximumSupportedManifestVersion = 3;
 
-copperfin::studio::StudioAssetKind xasset_kind_for_path(const std::filesystem::path& path);
-
 enum class PackagePathBindingMode {
     allow_filename_fallback,
     allow_external_fidelity,
@@ -1600,10 +1599,25 @@ bool verify_manifest_hashes(
             return false;
         }
         // A copied xAsset is not fully verified until its memo table is admitted by the same manifest.
-        const auto asset_kind = xasset_kind_for_path(*bound_asset_path);
-        const std::string sidecar_path = copperfin::studio::infer_sidecar_path(
-            bound_asset_path->string(),
-            asset_kind);
+        const std::string asset_extension =
+            lowercase_copy(bound_asset_path->extension().string());
+        const bool is_executable_xasset =
+            asset_extension == ".scx" || asset_extension == ".vcx" ||
+            asset_extension == ".frx" || asset_extension == ".lbx" ||
+            asset_extension == ".mnx";
+        const copperfin::vfp::SidecarPathResolution sidecar_resolution =
+            is_executable_xasset
+                ? copperfin::vfp::resolve_vfp_memo_sidecar_path(*bound_asset_path)
+                : copperfin::vfp::SidecarPathResolution{};
+        if (sidecar_resolution.ambiguous) {
+            error = localized_message(
+                catalog,
+                "Vfp.Sidecar.Error.AmbiguousPath",
+                {{"path", sidecar_resolution.requested_path.string()}});
+            return false;
+        }
+        const std::string sidecar_path = sidecar_resolution.path.value_or(
+            sidecar_resolution.requested_path).string();
         if (!sidecar_path.empty()) {
             std::error_code sidecar_error;
             const bool sidecar_exists = std::filesystem::exists(sidecar_path, sidecar_error);
@@ -1972,26 +1986,6 @@ struct XAssetFileSnapshotResult {
     std::string error;
 };
 
-copperfin::studio::StudioAssetKind xasset_kind_for_path(const std::filesystem::path& path) {
-    const std::string extension = lowercase_copy(path.extension().string());
-    if (extension == ".scx") {
-        return copperfin::studio::StudioAssetKind::form;
-    }
-    if (extension == ".vcx") {
-        return copperfin::studio::StudioAssetKind::class_library;
-    }
-    if (extension == ".frx") {
-        return copperfin::studio::StudioAssetKind::report;
-    }
-    if (extension == ".lbx") {
-        return copperfin::studio::StudioAssetKind::label;
-    }
-    if (extension == ".mnx") {
-        return copperfin::studio::StudioAssetKind::menu;
-    }
-    return copperfin::studio::StudioAssetKind::unknown;
-}
-
 bool write_binary_snapshot_file(
     const std::filesystem::path& path,
     const std::string& bytes) {
@@ -2052,6 +2046,17 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
     const VerifiedPackagePaths& verified_package_paths) {
     const std::filesystem::path logical_path(logical_startup_source);
     XAssetFileSnapshotResult result;
+    const copperfin::vfp::SidecarPathResolution sidecar_resolution =
+        copperfin::vfp::resolve_vfp_memo_sidecar_path(logical_path);
+    if (sidecar_resolution.ambiguous) {
+        result.error = localized_message(
+            catalog,
+            "Vfp.Sidecar.Error.AmbiguousPath",
+            {{"path", sidecar_resolution.requested_path.string()}});
+        return result;
+    }
+    const std::string sidecar_path = sidecar_resolution.path.value_or(
+        sidecar_resolution.requested_path).string();
     const auto snapshot_root = create_private_xasset_snapshot_root();
     if (!snapshot_root.has_value()) {
         result.error = localized_message(
@@ -2071,10 +2076,6 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         return result;
     }
 
-    const auto kind = xasset_kind_for_path(logical_path);
-    const std::string sidecar_path = copperfin::studio::infer_sidecar_path(
-        logical_startup_source,
-        kind);
     std::error_code filesystem_error;
     const bool sidecar_exists = !sidecar_path.empty() &&
         std::filesystem::exists(sidecar_path, filesystem_error);
@@ -2209,9 +2210,17 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     open_result.document.display_name =
         std::filesystem::path(logical_startup_source).filename().string();
     open_result.document.inspection.path = logical_startup_source;
-    open_result.document.sidecar_path = copperfin::studio::infer_sidecar_path(
-        logical_startup_source,
-        open_result.document.kind);
+    const copperfin::vfp::SidecarPathResolution sidecar_resolution =
+        copperfin::vfp::resolve_vfp_memo_sidecar_path(logical_startup_source);
+    if (sidecar_resolution.ambiguous) {
+        result.error = localized_message(
+            catalog,
+            "Vfp.Sidecar.Error.AmbiguousPath",
+            {{"path", sidecar_resolution.requested_path.string()}});
+        return result;
+    }
+    open_result.document.sidecar_path = sidecar_resolution.path.value_or(
+        sidecar_resolution.requested_path).string();
     result.model = copperfin::runtime::build_xasset_executable_model(open_result.document);
     if (!result.model.ok || !result.model.runnable_startup) {
         result.error = result.model.error.empty()

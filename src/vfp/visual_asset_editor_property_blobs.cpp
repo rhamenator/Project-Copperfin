@@ -729,7 +729,8 @@ bool direct_field_change_is_noop(
                 return new_value.empty();
             }
 
-            const auto memo_path = infer_memo_sidecar_path(path);
+            const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(path);
+            const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
             if (memo_path.empty()) {
                 return false;
             }
@@ -753,7 +754,11 @@ VisualAssetEditResult apply_visual_object_property_change(
     if (request.path.empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
-    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
+    if (memo_resolution.ambiguous) {
+        return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
+    }
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     if (!memo_path.empty()) {
         const auto recovery_result = recover_visual_asset_file_transaction(request.path, memo_path);
         if (!recovery_result.ok) {

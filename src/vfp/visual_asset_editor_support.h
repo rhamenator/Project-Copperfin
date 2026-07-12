@@ -10,6 +10,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include <array>
 #include <algorithm>
@@ -97,7 +98,9 @@ VisualAssetEditResult write_visual_asset_file_transaction(
     const std::vector<std::uint8_t>& table_bytes,
     const std::string& memo_path,
     const std::vector<std::uint8_t>& memo_bytes);
-std::string infer_memo_sidecar_path(const std::string& path);
+SidecarPathResolution infer_memo_sidecar_path(const std::string& path);
+std::string selected_memo_sidecar_path(const SidecarPathResolution& resolution);
+std::string ambiguous_memo_sidecar_error(const SidecarPathResolution& resolution);
 std::string normalize_visual_object_name(std::string value);
 std::string format_visual_string_property_value(const std::string& value);
 std::string normalize_visual_property_name(std::string value);

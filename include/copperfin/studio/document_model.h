@@ -878,6 +878,7 @@ struct StudioOpenResult {
 
 [[nodiscard]] StudioAssetKind studio_asset_kind_from_vfp_family(vfp::AssetFamily family);
 [[nodiscard]] const char* studio_asset_kind_name(StudioAssetKind kind);
+// Compatibility helper: use vfp::resolve_vfp_sidecar_path when ambiguity details are required.
 [[nodiscard]] std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind);
 [[nodiscard]] std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document);
 [[nodiscard]] std::vector<StudioObjectSnapshot> build_object_snapshot(

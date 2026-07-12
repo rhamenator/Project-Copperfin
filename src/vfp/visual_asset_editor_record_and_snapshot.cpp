@@ -787,7 +787,11 @@ VisualAssetEditResult replace_memo_field_value(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& new_value) {
-    const std::string memo_path = infer_memo_sidecar_path(table_path);
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(table_path);
+    if (memo_resolution.ambiguous) {
+        return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
+    }
+    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
     if (memo_path.empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarPathMissing")};
     }

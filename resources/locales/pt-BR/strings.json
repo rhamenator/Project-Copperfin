@@ -1543,6 +1543,7 @@
   "Vfp.IndexProbe.Error.UnsupportedType": "Tipo de indice sem suporte.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall": "O arquivo e menor que o tamanho do cabecalho Visual FoxPro IDX de 512 bytes.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues": "Os valores do cabecalho nao parecem pertencer a um arquivo Visual FoxPro IDX.",
+  "Vfp.Sidecar.Error.AmbiguousPath": "Varios arquivos complementares correspondem a '{path}'.",
   "Studio.ReportLayout.Section.ColumnFooter": "Rodape da coluna",
   "Studio.ReportLayout.Section.ColumnHeader": "Cabecalho da coluna",
   "Studio.ReportLayout.Section.Detail": "Detalhe",

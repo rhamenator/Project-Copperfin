@@ -5,6 +5,56 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+void test_studio_host_json_preserves_sidecar_path_spelling(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_json_sidecar_spelling";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const fs::path form_path = temp_root / "sample.scx";
+    const fs::path inferred_sidecar_path = temp_root / "sample.sct";
+    const fs::path temporary_sidecar_path = temp_root / "sidecar.rename";
+    const fs::path actual_sidecar_path = temp_root / "Sample.SCT";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        form_path.string(),
+        {{.name = "OBJNAME", .type = 'M', .length = 4U}},
+        {{"sample-object"}});
+    expect(create_result.ok, "#3992: mixed-case sidecar JSON fixture should be created");
+    fs::rename(inferred_sidecar_path, temporary_sidecar_path, ignored);
+    ignored.clear();
+    fs::rename(temporary_sidecar_path, actual_sidecar_path, ignored);
+
+    const auto process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--json"},
+        temp_root);
+    if (process.exit_code != 0) {
+        std::cerr << "studio host sidecar spelling stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "studio host sidecar spelling stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "#3992: mixed-case sidecar JSON smoke should exit successfully");
+    const std::size_t sidecar_key = process.stdout_text.find("\"sidecarPath\":");
+    const std::size_t sidecar_line_end = sidecar_key == std::string::npos
+        ? std::string::npos
+        : process.stdout_text.find('\n', sidecar_key);
+    const std::string sidecar_line = sidecar_key == std::string::npos
+        ? std::string{}
+        : process.stdout_text.substr(sidecar_key, sidecar_line_end - sidecar_key);
+    expect(sidecar_line.find(actual_sidecar_path.filename().string()) != std::string::npos &&
+               sidecar_line.find(inferred_sidecar_path.filename().string()) == std::string::npos,
+           "#3992: sidecarPath JSON should preserve actual directory-entry spelling");
+    expect_contains(process.stdout_text, "\"hasSidecar\": true",
+                    "#3992: mixed-case sidecar JSON should report companion availability");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 

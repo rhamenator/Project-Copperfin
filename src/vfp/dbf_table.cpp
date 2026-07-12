@@ -6,6 +6,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
 #include <array>
@@ -126,32 +127,6 @@ std::string ascii_lowercase_copy(std::string text) {
     return text;
 }
 
-std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
-    std::error_code ignored;
-    if (std::filesystem::exists(candidate, ignored)) {
-        return candidate;
-    }
-
-    const std::filesystem::path directory =
-        candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
-    if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
-        return std::nullopt;
-    }
-
-    const std::string target_name = lowercase_copy(candidate.filename().string());
-    for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
-        if (ignored) {
-            break;
-        }
-
-        if (lowercase_copy(entry.path().filename().string()) == target_name) {
-            return entry.path();
-        }
-    }
-
-    return std::nullopt;
-}
-
 std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
     std::string value;
     value.reserve(length);
@@ -263,44 +238,33 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
     return true;
 }
 
-std::string infer_memo_sidecar_path(const std::string& path) {
-    std::filesystem::path file_path(path);
-    const std::string ext = lowercase_copy(file_path.extension().string());
+std::string selected_sidecar_path(const SidecarPathResolution& resolution) {
+    return resolution.path.value_or(resolution.requested_path).string();
+}
 
-    auto resolve_sidecar = [&](std::string_view extension) {
-        const auto candidate = file_path.replace_extension(extension).string();
-        if (const auto resolved = resolve_existing_path_casefold(candidate); resolved.has_value()) {
-            return resolved->string();
-        }
+std::string ambiguous_sidecar_error(const SidecarPathResolution& resolution) {
+    return dbf_table_text(
+        "Vfp.Sidecar.Error.AmbiguousPath",
+        {{"path", resolution.requested_path.string()}});
+}
 
-        return candidate;
-    };
+bool primary_always_requires_memo_sidecar(const std::string& path) {
+    const std::string extension = ascii_lowercase_copy(
+        std::filesystem::path(path).extension().string());
+    return extension == ".pjx" || extension == ".scx" || extension == ".vcx" ||
+           extension == ".frx" || extension == ".lbx" || extension == ".mnx" ||
+           extension == ".dbc";
+}
 
-    if (ext == ".scx") {
-        return resolve_sidecar(".sct");
+std::optional<std::string> ambiguous_required_sidecar_error_for_path(const std::string& path) {
+    if (!primary_always_requires_memo_sidecar(path)) {
+        return std::nullopt;
     }
-    if (ext == ".vcx") {
-        return resolve_sidecar(".vct");
+    const SidecarPathResolution resolution = resolve_vfp_memo_sidecar_path(path);
+    if (!resolution.ambiguous) {
+        return std::nullopt;
     }
-    if (ext == ".frx") {
-        return resolve_sidecar(".frt");
-    }
-    if (ext == ".lbx") {
-        return resolve_sidecar(".lbt");
-    }
-    if (ext == ".mnx") {
-        return resolve_sidecar(".mnt");
-    }
-    if (ext == ".pjx") {
-        return resolve_sidecar(".pjt");
-    }
-    if (ext == ".dbc") {
-        return resolve_sidecar(".dct");
-    }
-    if (ext == ".dbf") {
-        return resolve_sidecar(".fpt");
-    }
-    return {};
+    return ambiguous_sidecar_error(resolution);
 }
 
 struct RawFieldDescriptor {
@@ -369,6 +333,31 @@ bool supports_direct_field_writes(char field_type) {
 
 bool is_memo_pointer_field(char field_type) {
     return field_type == 'M' || field_type == 'G' || field_type == 'P';
+}
+
+template <typename FieldDescriptor>
+bool table_uses_memo_sidecar(
+    const DbfHeader& header,
+    const std::vector<FieldDescriptor>& fields) {
+    return header.has_memo_file() ||
+        std::any_of(fields.begin(), fields.end(), [](const FieldDescriptor& field) {
+            return is_memo_pointer_field(field.type);
+        });
+}
+
+template <typename FieldDescriptor>
+std::optional<std::string> ambiguous_table_sidecar_error(
+    const std::string& path,
+    const DbfHeader& header,
+    const std::vector<FieldDescriptor>& fields) {
+    if (!table_uses_memo_sidecar(header, fields)) {
+        return std::nullopt;
+    }
+    const SidecarPathResolution resolution = resolve_vfp_memo_sidecar_path(path);
+    if (!resolution.ambiguous) {
+        return std::nullopt;
+    }
+    return ambiguous_sidecar_error(resolution);
 }
 
 bool supports_table_field_storage(char field_type) {
@@ -1171,6 +1160,16 @@ DbfTableParseResult parse_dbf_table_from_file(
     const std::string& path,
     std::size_t max_records,
     const std::string& memo_sidecar_path) {
+    SidecarPathResolution memo_resolution;
+    std::string resolved_memo_sidecar_path = memo_sidecar_path;
+    if (resolved_memo_sidecar_path.empty() && primary_always_requires_memo_sidecar(path)) {
+        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        if (memo_resolution.ambiguous) {
+            return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
+        }
+        resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
+    }
+
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1208,8 +1207,16 @@ DbfTableParseResult parse_dbf_table_from_file(
         field_offset += 32U;
     }
 
-    const MemoReader memo_reader(
-        memo_sidecar_path.empty() ? infer_memo_sidecar_path(path) : memo_sidecar_path);
+    if (resolved_memo_sidecar_path.empty() &&
+        table_uses_memo_sidecar(table.header, table.fields)) {
+        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        if (memo_resolution.ambiguous) {
+            return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
+        }
+        resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
+    }
+
+    const MemoReader memo_reader(resolved_memo_sidecar_path);
     const std::size_t record_count = std::min<std::size_t>(table.header.record_count, max_records);
     const std::size_t data_offset = table.header.header_length;
     const std::size_t record_length = table.header.record_length;
@@ -1286,13 +1293,23 @@ static DbfRewriteRowsResult collect_dbf_rewrite_rows(
         return result;
     }
 
+    const bool source_uses_memo_sidecar = primary_always_requires_memo_sidecar(path) ||
+        table_uses_memo_sidecar(table.header, table.fields);
+    const SidecarPathResolution memo_resolution = source_uses_memo_sidecar
+        ? resolve_vfp_memo_sidecar_path(path)
+        : SidecarPathResolution{};
+    if (memo_resolution.ambiguous) {
+        result.error = ambiguous_sidecar_error(memo_resolution);
+        return result;
+    }
+
     const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
     if (table_bytes.empty()) {
         result.error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed");
         return result;
     }
 
-    const MemoReader memo_reader(infer_memo_sidecar_path(path));
+    const MemoReader memo_reader(selected_sidecar_path(memo_resolution));
     result.records.reserve(table.records.size());
     result.memo_payloads.reserve(table.records.size());
     result.raw_field_bytes.reserve(table.records.size());
@@ -1577,9 +1594,21 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         }
     }
 
+    const bool requires_sidecar = primary_always_requires_memo_sidecar(path) || has_memo_fields;
+    const SidecarPathResolution memo_resolution = requires_sidecar
+        ? resolve_vfp_memo_sidecar_path(path)
+        : SidecarPathResolution{};
+    if (memo_resolution.ambiguous) {
+        return {
+            .ok = false,
+            .error = ambiguous_sidecar_error(memo_resolution),
+            .record_count = records.size()
+        };
+    }
+
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(path);
     const bool had_table_file = !original_table_bytes.empty();
-    const std::string memo_path = infer_memo_sidecar_path(path);
+    const std::string memo_path = selected_sidecar_path(memo_resolution);
     const std::vector<std::uint8_t> original_memo_bytes = has_memo_fields ? read_binary_file(memo_path) : std::vector<std::uint8_t>{};
     const bool had_memo_file = has_memo_fields && !original_memo_bytes.empty();
 
@@ -1645,6 +1674,9 @@ DbfWriteResult create_dbf_table_file(
 }
 
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -1692,6 +1724,9 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
 }
 
 DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -1740,6 +1775,9 @@ DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& 
 }
 
 DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -1783,6 +1821,9 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
 }
 
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1799,6 +1840,10 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
         return {.ok = false, .error = header_result.error};
     }
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
+    }
     DbfWriteResult result = append_blank_record_bytes(bytes, header_result.header, fields);
     if (!result.ok) {
         return result;
@@ -1815,6 +1860,14 @@ static DbfWriteResult replace_record_field_value_impl(
     const std::string& field_name,
     const std::string& value,
     bool additive) {
+    SidecarPathResolution memo_resolution;
+    if (primary_always_requires_memo_sidecar(path)) {
+        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        if (memo_resolution.ambiguous) {
+            return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
+        }
+    }
+
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1832,6 +1885,14 @@ static DbfWriteResult replace_record_field_value_impl(
         return {.ok = false, .error = header_result.error};
     }
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
+    }
+    if (memo_resolution.requested_path.empty() &&
+        table_uses_memo_sidecar(header_result.header, fields)) {
+        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+    }
     const auto field = find_raw_field(fields, field_name);
     if (!field.has_value()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"), .record_count = header_result.header.record_count};
@@ -1846,7 +1907,17 @@ static DbfWriteResult replace_record_field_value_impl(
     std::string memo_path;
     bool had_memo_file = false;
     if (is_memo_pointer_field(field->type)) {
-        memo_path = infer_memo_sidecar_path(path);
+        if (memo_resolution.requested_path.empty()) {
+            memo_resolution = resolve_vfp_memo_sidecar_path(path);
+            if (memo_resolution.ambiguous) {
+                return {
+                    .ok = false,
+                    .error = ambiguous_sidecar_error(memo_resolution),
+                    .record_count = header_result.header.record_count
+                };
+            }
+        }
+        memo_path = selected_sidecar_path(memo_resolution);
         if (memo_path.empty()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoSidecarPathMissing"), .record_count = header_result.header.record_count};
         }
@@ -1939,6 +2010,9 @@ DbfWriteResult set_record_deleted_flag(
     const std::string& path,
     std::size_t record_index,
     bool deleted) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1953,6 +2027,11 @@ DbfWriteResult set_record_deleted_flag(
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
+    }
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
     }
     if (record_index >= header_result.header.record_count) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header_result.header.record_count};
@@ -1972,6 +2051,9 @@ DbfWriteResult set_record_deleted_flag(
 }
 
 DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1980,6 +2062,11 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
+    }
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
     }
 
     const auto& header = header_result.header;
@@ -2006,6 +2093,9 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
 }
 
 DbfWriteResult pack_dbf_table_file(const std::string& path) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -2014,6 +2104,11 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
+    }
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
     }
 
     const auto& header = header_result.header;
@@ -2051,6 +2146,9 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
 }
 
 DbfWriteResult pack_dbf_memo_file(const std::string& path) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     const DbfParseResult header_result = parse_dbf_header_from_file(path);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
@@ -2090,6 +2188,9 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
 }
 
 DbfWriteResult zap_dbf_table_file(const std::string& path) {
+    if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
+        return {.ok = false, .error = *error};
+    }
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -2098,6 +2199,11 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
     const DbfParseResult header_result = parse_dbf_header(bytes);
     if (!header_result.ok) {
         return {.ok = false, .error = header_result.error};
+    }
+    const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
+    if (const auto error = ambiguous_table_sidecar_error(
+            path, header_result.header, fields); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = header_result.header.record_count};
     }
 
     if (header_result.header.header_length > bytes.size()) {
