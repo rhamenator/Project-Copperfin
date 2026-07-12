@@ -148,8 +148,8 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllAnsiOnlyA(lon
     return value + 3942L;
 }
 
-COPPERFIN_TEST_EXPORT long CopperfinDeclaredDllAnsiCdeclOnlyA(long value) {
-    return value + 4000L;
+COPPERFIN_TEST_EXPORT long CopperfinDeclaredDllAnsiCdeclOnlyA() {
+    return 4002L;
 }
 
 COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllModulePathA(char* buffer, long capacity) {

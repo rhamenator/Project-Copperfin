@@ -3206,7 +3206,7 @@ void test_declared_dll_explicit_ansi_fallback_and_exact_precedence() {
         "DECLARE LONG CopperfinDeclaredDllAnsiOnly IN 'native/" + fixture_name.string() +
             "' AS RelativeAnsiAlias LONG value\n"
         "DECLARE LONG CopperfinDeclaredDllAnsiCdeclOnly IN 'native/" + fixture_name.string() +
-            "' AS RelativeCdeclAnsiAlias LONG value\n"
+            "' AS RelativeCdeclAnsiAlias\n"
         "DECLARE LONG CopperfinDeclaredDllModulePath IN 'native/" + fixture_name.string() +
             "' AS RelativeModulePathAlias STRING @ buffer, LONG capacity\n"
         "DECLARE LONG CopperfinDeclaredDllExactPrecedence IN 'native/" + fixture_name.string() +
@@ -3218,7 +3218,7 @@ void test_declared_dll_explicit_ansi_fallback_and_exact_precedence() {
         "nParentlessAnsi = ParentlessAnsiAlias(3)\n"
         "nParentlessModulePathLength = ParentlessModulePathAlias(@cParentlessModulePath, 32768)\n"
         "nRelativeAnsi = RelativeAnsiAlias(2)\n"
-        "nRelativeCdeclAnsi = RelativeCdeclAnsiAlias(2)\n"
+        "nRelativeCdeclAnsi = RelativeCdeclAnsiAlias()\n"
         "nRelativeModulePathLength = RelativeModulePathAlias(@cRelativeModulePath, 32768)\n"
         "nExact = ExactPrecedenceAlias(41)\n"
         "nSystemDirectoryLength = GetSystemDirectory(@cSystemDirectory, 32768)\n"
