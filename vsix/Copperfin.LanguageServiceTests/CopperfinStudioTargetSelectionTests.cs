@@ -110,7 +110,7 @@ internal static partial class Program
             Expect(projectItemFirst == selectedProjectItem,
                 "selected project-item files should precede the containing project path");
 
-            var repositoryRoot = FindRepositoryRoot();
+            var repositoryRoot = FindStudioTargetSelectionRepositoryRoot();
             Expect(repositoryRoot is not null,
                 "Studio target selection test should locate the repository root");
             if (repositoryRoot is not null)
@@ -204,12 +204,49 @@ internal static partial class Program
         }
         finally
         {
-            TryDelete(root);
+            TryDeleteStudioTargetSelectionRoot(root);
         }
     }
 
     private static CopperfinStudioSelectedTarget SelectedTarget(params string?[] projectItemPaths)
     {
         return new CopperfinStudioSelectedTarget(projectItemPaths, projectPath: null);
+    }
+
+    private static string? FindStudioTargetSelectionRepositoryRoot()
+    {
+        foreach (var startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
+        {
+            var directory = new DirectoryInfo(startPath);
+            while (directory is not null)
+            {
+                if (File.Exists(Path.Combine(
+                        directory.FullName,
+                        "vsix",
+                        "Copperfin.VisualStudio",
+                        "Copperfin.vsct")))
+                {
+                    return directory.FullName;
+                }
+
+                directory = directory.Parent;
+            }
+        }
+
+        return null;
+    }
+
+    private static void TryDeleteStudioTargetSelectionRoot(string root)
+    {
+        try
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+        catch
+        {
+        }
     }
 }

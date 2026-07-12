@@ -42,6 +42,8 @@ function(run_managed_test project_relative_path)
     endif()
 endfunction()
 
+run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
+run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_build("vsix/Copperfin.Studio/Copperfin.Studio.csproj")

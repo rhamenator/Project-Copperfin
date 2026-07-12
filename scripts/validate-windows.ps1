@@ -87,7 +87,7 @@ Invoke-Step -Name "Verify localized command resources" -Action {
 Invoke-Step -Name "Run managed VSIX behavior tests" -Action {
     Invoke-Checked -FilePath "dotnet" -ArgumentList @(
         "run",
-        "--project", (Join-Path $vsixDir "Copperfin.LanguageServiceTests\Copperfin.LanguageServiceTests.csproj"),
+        "--project", (Join-Path $vsixDir "Copperfin.LanguageServiceTests\Copperfin.StudioTargetSelectionTests.csproj"),
         "--configuration", "Release"
     )
 }

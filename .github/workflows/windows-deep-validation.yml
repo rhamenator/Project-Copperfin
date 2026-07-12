@@ -54,7 +54,7 @@ jobs:
         run: ./scripts/test-vsix-command-localization.ps1 -VsixPath vsix/Copperfin.VisualStudio/bin/${{ inputs.build_configuration }}/net472/Copperfin.VisualStudio.vsix
 
       - name: Run managed VSIX behavior tests
-        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj --configuration ${{ inputs.build_configuration }}
+        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj --configuration ${{ inputs.build_configuration }}
 
       - name: Build standalone Studio shell
         run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
