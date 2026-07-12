@@ -18,6 +18,16 @@ namespace Copperfin.ManagedDeclareFixture
             return left + right;
         }
 
+        public static long WidenInt64(long value)
+        {
+            return value + 1L;
+        }
+
+        public static double WidenDouble(double value)
+        {
+            return value + 0.5;
+        }
+
         public static int ReturnDependencyValue()
         {
             return Copperfin.ManagedDeclareDependency.Values.Expected;

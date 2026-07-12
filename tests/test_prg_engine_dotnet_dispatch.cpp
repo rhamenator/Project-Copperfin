@@ -280,8 +280,14 @@ namespace
                 fixture_path() + "' AS ManagedSuccess\n"
             "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.Add IN '" +
                 fixture_path() + "' AS ManagedAdd INTEGER left, INTEGER right\n"
+            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.WidenInt64 IN '" +
+                fixture_path() + "' AS ManagedLong INTEGER value\n"
+            "DECLARE DOUBLE Copperfin.ManagedDeclareFixture.Methods.WidenDouble IN '" +
+                fixture_path() + "' AS ManagedDouble INTEGER value\n"
             "nResult = ManagedSuccess()\n"
             "nSum = ManagedAdd(19, 23)\n"
+            "nLong = ManagedLong(41)\n"
+            "nDouble = ManagedDouble(42)\n"
             "RETURN\n");
 
         copperfin::runtime::reset_dispatch_exception_cleanup_stats();
@@ -304,6 +310,14 @@ namespace
             expect(copperfin::runtime::format_value(sum->second) == "42",
                    "#3945: managed dispatch should preserve INTEGER argument and return marshalling");
         }
+        const auto widened_long = state.globals.find("nlong");
+        expect(widened_long != state.globals.end() &&
+                   copperfin::runtime::format_value(widened_long->second) == "42",
+               "#3945: CLR binder should widen INTEGER arguments to System.Int64");
+        const auto widened_double = state.globals.find("ndouble");
+        expect(widened_double != state.globals.end() &&
+                   copperfin::runtime::format_value(widened_double->second) == "42.5",
+               "#3945: CLR binder should widen INTEGER arguments to System.Double");
         expect(
             std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
             {
@@ -315,6 +329,47 @@ namespace
         const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
         expect(stats.invoke_results == 0U && stats.exception_results == 0U,
                "#3943: supported CLR vtable dispatch should not expose an EXCEPINFO ownership path");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_managed_declare_requires_qualified_type()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_dotnet_declare_unqualified";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path program_path = temp_root / "managed_unqualified.prg";
+        write_text(
+            program_path,
+            "DECLARE INTEGER ReturnFortyTwo IN '" + fixture_path() + "' AS ManagedUnqualified\n"
+            "nIgnored = ManagedUnqualified()\n"
+            "cFailureMessage = MESSAGE()\n"
+            "RETURN\n");
+
+        const ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(program_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(state.completed,
+               "#3945: unqualified managed member should retain the recoverable expression contract");
+        const auto failure_message = state.globals.find("cfailuremessage");
+        expect(failure_message != state.globals.end(),
+               "#3945: unqualified managed member should retain MESSAGE() diagnostic state");
+        if (failure_message != state.globals.end())
+        {
+            const auto catalog = copperfin::localization::load_catalogs(
+                copperfin::localization::resolve_catalog_root(),
+                "qps-ploc");
+            const std::string expected = catalog.translate(
+                "Runtime.Prg.Dll.Error.DotNetTypeNotFound",
+                {{"typeName", ""}});
+            expect(copperfin::runtime::format_value(failure_message->second) == expected,
+                   "#3945: unqualified managed member should preserve type-lookup diagnostic identity");
+        }
 
         fs::remove_all(temp_root, ignored);
     }
@@ -559,6 +614,7 @@ int main()
     test_managed_pe_classification_contract();
     test_mixed_mode_native_export_precedence();
     test_deferred_exception_cleanup_contract();
+    test_managed_declare_requires_qualified_type();
     test_managed_declare_explicit_relative_path();
     test_managed_declare_success_contract();
     test_managed_declare_parentless_search_path();

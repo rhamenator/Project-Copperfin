@@ -9,6 +9,7 @@
 #include <metahost.h>
 
 #include <cstddef>
+#include <mutex>
 
 #if defined(_MSC_VER)
 #import "mscorlib.tlb" raw_interfaces_only \
@@ -53,6 +54,13 @@ namespace copperfin::runtime
                     value_->Release();
                 }
                 value_ = value;
+            }
+
+            [[nodiscard]] Interface *detach() noexcept
+            {
+                Interface *value = value_;
+                value_ = nullptr;
+                return value;
             }
 
         private:
@@ -193,8 +201,15 @@ namespace copperfin::runtime
         class ClrRuntime final
         {
         public:
-            ClrRuntime()
+            [[nodiscard]] HRESULT ensure_started()
             {
+                const std::lock_guard lock(mutex_);
+                if (SUCCEEDED(status_) && host_.get() != nullptr)
+                {
+                    return status_;
+                }
+
+                host_.reset();
                 ComOwner<ICLRMetaHost> metahost;
                 status_ = CLRCreateInstance(
                     CLSID_CLRMetaHost,
@@ -203,7 +218,7 @@ namespace copperfin::runtime
                 if (FAILED(status_))
                 {
                     stage_ = ManagedInvocationStage::create_runtime;
-                    return;
+                    return status_;
                 }
 
                 ComOwner<ICLRRuntimeInfo> runtime_info;
@@ -213,8 +228,37 @@ namespace copperfin::runtime
                     reinterpret_cast<void **>(runtime_info.put()));
                 if (FAILED(status_))
                 {
-                    stage_ = ManagedInvocationStage::locate_runtime;
-                    return;
+                    ComOwner<IEnumUnknown> runtimes;
+                    if (SUCCEEDED(metahost.get()->EnumerateInstalledRuntimes(runtimes.put())) &&
+                        runtimes.get() != nullptr)
+                    {
+                        IUnknown *unknown = nullptr;
+                        ULONG fetched = 0U;
+                        while (runtimes.get()->Next(1U, &unknown, &fetched) == S_OK &&
+                               fetched == 1U)
+                        {
+                            ComOwner<IUnknown> runtime_unknown;
+                            runtime_unknown.reset(unknown);
+                            unknown = nullptr;
+                            ComOwner<ICLRRuntimeInfo> candidate;
+                            if (SUCCEEDED(runtime_unknown.get()->QueryInterface(
+                                    IID_ICLRRuntimeInfo,
+                                    reinterpret_cast<void **>(candidate.put()))))
+                            {
+                                BOOL loadable = FALSE;
+                                if (SUCCEEDED(candidate.get()->IsLoadable(&loadable)) && loadable != FALSE)
+                                {
+                                    runtime_info.reset(candidate.detach());
+                                }
+                            }
+                            fetched = 0U;
+                        }
+                    }
+                    if (runtime_info.get() == nullptr)
+                    {
+                        stage_ = ManagedInvocationStage::locate_runtime;
+                        return status_;
+                    }
                 }
 
                 status_ = runtime_info.get()->GetInterface(
@@ -224,20 +268,16 @@ namespace copperfin::runtime
                 if (FAILED(status_) || host_.get() == nullptr)
                 {
                     stage_ = ManagedInvocationStage::acquire_runtime_host;
-                    return;
+                    return status_;
                 }
 
                 status_ = host_.get()->Start();
                 if (FAILED(status_))
                 {
                     stage_ = ManagedInvocationStage::start_runtime;
-                    return;
+                    return status_;
                 }
                 stage_ = ManagedInvocationStage::none;
-            }
-
-            [[nodiscard]] HRESULT status() const noexcept
-            {
                 return status_;
             }
 
@@ -266,88 +306,76 @@ namespace copperfin::runtime
             }
 
         private:
+            std::mutex mutex_;
             ComOwner<ICorRuntimeHost> host_;
             HRESULT status_ = E_FAIL;
             ManagedInvocationStage stage_ = ManagedInvocationStage::create_runtime;
         };
 
-        [[nodiscard]] const wchar_t *system_type_name(VARTYPE type) noexcept
-        {
-            switch (type)
-            {
-            case VT_BSTR:
-                return L"System.String";
-            case VT_R8:
-                return L"System.Double";
-            case VT_R4:
-                return L"System.Single";
-            case VT_I8:
-            case VT_UI8:
-                return L"System.Int64";
-            case VT_BOOL:
-                return L"System.Boolean";
-            case VT_I1:
-            case VT_UI1:
-                return L"System.Byte";
-            case VT_I2:
-            case VT_UI2:
-                return L"System.Int16";
-            case VT_I4:
-            case VT_UI4:
-            default:
-                return L"System.Int32";
-            }
-        }
-
-        [[nodiscard]] HRESULT get_method(
-            mscorlib::_Assembly *core_library,
+        [[nodiscard]] HRESULT has_public_static_method(
             mscorlib::_Type *type,
             const std::wstring &method_name,
-            const std::vector<VARIANT> &arguments,
-            mscorlib::_MethodInfo **method)
+            bool *found)
         {
-            *method = nullptr;
-            SafeArrayOwner parameter_types(
-                SafeArrayCreateVector(VT_UNKNOWN, 0, static_cast<ULONG>(arguments.size())));
-            if (parameter_types.get() == nullptr)
-            {
-                return E_OUTOFMEMORY;
-            }
-
-            for (LONG index = 0; index < static_cast<LONG>(arguments.size()); ++index)
-            {
-                BstrOwner type_name(system_type_name(arguments[static_cast<std::size_t>(index)].vt));
-                if (type_name.get() == nullptr)
-                {
-                    return E_OUTOFMEMORY;
-                }
-                ComOwner<mscorlib::_Type> parameter_type;
-                HRESULT hr = core_library->GetType_2(type_name.get(), parameter_type.put());
-                if (FAILED(hr) || parameter_type.get() == nullptr)
-                {
-                    return FAILED(hr) ? hr : E_NOINTERFACE;
-                }
-                hr = SafeArrayPutElement(parameter_types.get(), &index, parameter_type.get());
-                if (FAILED(hr))
-                {
-                    return hr;
-                }
-            }
-
-            BstrOwner method_name_bstr(method_name);
-            if (method_name_bstr.get() == nullptr)
-            {
-                return E_OUTOFMEMORY;
-            }
+            *found = false;
             constexpr auto flags = static_cast<mscorlib::BindingFlags>(
                 mscorlib::BindingFlags_Public | mscorlib::BindingFlags_Static);
-            return type->GetMethod(
-                method_name_bstr.get(),
-                flags,
-                nullptr,
-                parameter_types.get(),
-                nullptr,
-                method);
+            SAFEARRAY *methods = nullptr;
+            HRESULT hr = type->GetMethods(flags, &methods);
+            SafeArrayOwner method_array(methods);
+            if (FAILED(hr) || method_array.get() == nullptr)
+            {
+                return FAILED(hr) ? hr : E_NOINTERFACE;
+            }
+
+            LONG lower_bound = 0;
+            LONG upper_bound = -1;
+            hr = SafeArrayGetLBound(method_array.get(), 1U, &lower_bound);
+            if (SUCCEEDED(hr))
+            {
+                hr = SafeArrayGetUBound(method_array.get(), 1U, &upper_bound);
+            }
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+
+            for (LONG index = lower_bound; index <= upper_bound; ++index)
+            {
+                IUnknown *unknown = nullptr;
+                hr = SafeArrayGetElement(method_array.get(), &index, &unknown);
+                if (FAILED(hr) || unknown == nullptr)
+                {
+                    continue;
+                }
+                ComOwner<IUnknown> method_unknown;
+                method_unknown.reset(unknown);
+                ComOwner<mscorlib::_MethodInfo> method;
+                hr = method_unknown.get()->QueryInterface(
+                    __uuidof(mscorlib::_MethodInfo),
+                    reinterpret_cast<void **>(method.put()));
+                if (FAILED(hr) || method.get() == nullptr)
+                {
+                    continue;
+                }
+
+                BSTR candidate_name = nullptr;
+                hr = method.get()->get_name(&candidate_name);
+                if (FAILED(hr))
+                {
+                    SysFreeString(candidate_name);
+                    continue;
+                }
+                const bool matches =
+                    std::wstring(candidate_name, SysStringLen(candidate_name)) == method_name;
+                SysFreeString(candidate_name);
+                if (matches)
+                {
+                    *found = true;
+                    return S_OK;
+                }
+            }
+            return S_OK;
         }
 
         [[nodiscard]] HRESULT query_assembly(VARIANT &value, mscorlib::_Assembly **assembly)
@@ -407,18 +435,11 @@ namespace copperfin::runtime
             {
                 return E_OUTOFMEMORY;
             }
-            std::vector<VARIANT> method_arguments{path_argument};
-            ComOwner<mscorlib::_MethodInfo> load_method;
-            hr = get_method(
-                core_library.get(),
-                assembly_type.get(),
-                L"LoadFrom",
-                method_arguments,
-                load_method.put());
-            if (FAILED(hr) || load_method.get() == nullptr)
+            BstrOwner load_from_name(L"LoadFrom");
+            if (load_from_name.get() == nullptr)
             {
                 VariantClear(&path_argument);
-                return FAILED(hr) ? hr : E_NOINTERFACE;
+                return E_OUTOFMEMORY;
             }
 
             SafeArrayOwner invocation_arguments(SafeArrayCreateVector(VT_VARIANT, 0, 1U));
@@ -438,7 +459,14 @@ namespace copperfin::runtime
             VARIANT target{};
             VariantInit(&target);
             VariantOwner loaded_assembly;
-            hr = load_method.get()->Invoke_3(
+            constexpr auto flags = static_cast<mscorlib::BindingFlags>(
+                mscorlib::BindingFlags_InvokeMethod |
+                mscorlib::BindingFlags_Public |
+                mscorlib::BindingFlags_Static);
+            hr = assembly_type.get()->InvokeMember_3(
+                load_from_name.get(),
+                flags,
+                nullptr,
                 target,
                 invocation_arguments.get(),
                 loaded_assembly.put());
@@ -472,19 +500,42 @@ namespace copperfin::runtime
         (void)arguments;
         return {E_NOTIMPL, ManagedInvocationStage::acquire_runtime_host};
 #else
+        if (assembly_path_utf8.empty())
+        {
+            return {E_INVALIDARG, ManagedInvocationStage::load_assembly};
+        }
+        if (type_name_utf8.empty())
+        {
+            return {E_INVALIDARG, ManagedInvocationStage::find_type};
+        }
+        if (method_name_utf8.empty())
+        {
+            return {E_INVALIDARG, ManagedInvocationStage::find_method};
+        }
         const std::wstring assembly_path = widen_utf8(assembly_path_utf8);
-        const std::wstring type_name = widen_utf8(type_name_utf8);
-        const std::wstring method_name = widen_utf8(method_name_utf8);
-        if (assembly_path.empty() || type_name.empty() || method_name.empty())
+        if (assembly_path.empty())
         {
             return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
                     ManagedInvocationStage::load_assembly};
         }
-
-        static const ClrRuntime runtime;
-        if (FAILED(runtime.status()))
+        const std::wstring type_name = widen_utf8(type_name_utf8);
+        if (type_name.empty())
         {
-            return {runtime.status(), runtime.stage()};
+            return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
+                    ManagedInvocationStage::find_type};
+        }
+        const std::wstring method_name = widen_utf8(method_name_utf8);
+        if (method_name.empty())
+        {
+            return {HRESULT_FROM_WIN32(ERROR_NO_UNICODE_TRANSLATION),
+                    ManagedInvocationStage::find_method};
+        }
+
+        static ClrRuntime runtime;
+        const HRESULT runtime_status = runtime.ensure_started();
+        if (FAILED(runtime_status))
+        {
+            return {runtime_status, runtime.stage()};
         }
 
         ComOwner<mscorlib::_AppDomain> domain;
@@ -512,25 +563,11 @@ namespace copperfin::runtime
                     ManagedInvocationStage::find_type};
         }
 
-        BstrOwner core_name(L"mscorlib");
-        ComOwner<mscorlib::_Assembly> core_library;
-        hr = domain.get()->Load_2(core_name.get(), core_library.put());
-        if (FAILED(hr) || core_library.get() == nullptr)
+        bool method_found = false;
+        hr = has_public_static_method(type.get(), method_name, &method_found);
+        if (FAILED(hr) || !method_found)
         {
-            return {FAILED(hr) ? hr : E_NOINTERFACE,
-                    ManagedInvocationStage::find_method};
-        }
-
-        ComOwner<mscorlib::_MethodInfo> method;
-        hr = get_method(
-            core_library.get(),
-            type.get(),
-            method_name,
-            arguments,
-            method.put());
-        if (FAILED(hr) || method.get() == nullptr)
-        {
-            return {FAILED(hr) ? hr : E_NOINTERFACE,
+            return {FAILED(hr) ? hr : DISP_E_MEMBERNOTFOUND,
                     ManagedInvocationStage::find_method};
         }
 
@@ -568,7 +605,22 @@ namespace copperfin::runtime
 
         VARIANT target{};
         VariantInit(&target);
-        hr = method.get()->Invoke_3(target, argument_array, return_value);
+        BstrOwner method_name_bstr(method_name);
+        if (method_name_bstr.get() == nullptr)
+        {
+            return {E_OUTOFMEMORY, ManagedInvocationStage::invoke_method};
+        }
+        constexpr auto flags = static_cast<mscorlib::BindingFlags>(
+            mscorlib::BindingFlags_InvokeMethod |
+            mscorlib::BindingFlags_Public |
+            mscorlib::BindingFlags_Static);
+        hr = type.get()->InvokeMember_3(
+            method_name_bstr.get(),
+            flags,
+            nullptr,
+            target,
+            argument_array,
+            return_value);
         if (FAILED(hr))
         {
             VariantClear(return_value);
