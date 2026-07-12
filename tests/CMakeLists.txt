@@ -3979,6 +3979,11 @@ if(WIN32)
             "$ENV{WINDIR}/Microsoft.NET/Framework64/v4.0.30319"
     )
     if(COPPERFIN_FRAMEWORK_CSC)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM x64)
+        else()
+            set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM x86)
+        endif()
         set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH
             "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.dll")
         add_custom_command(
@@ -3987,9 +3992,11 @@ if(WIN32)
             COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
                 /nologo
                 /target:library
+                /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
                 /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}
-                "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
+                managed_declare_fixture.cs
             DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
             VERBATIM
         )
         add_custom_target(copperfin_managed_declare_fixture
