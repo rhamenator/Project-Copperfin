@@ -44,6 +44,48 @@ bool get_integer_as_int(const PayloadFields& fields, const std::string& key, int
     return true;
 }
 
+bool is_ascii_digit(char value) {
+    return value >= '0' && value <= '9';
+}
+
+bool is_leap_year(int year) {
+    return (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
+}
+
+bool is_canonical_calendar_date(const std::string& value) {
+    if (value.size() != 10U || value[4U] != '-' || value[7U] != '-') {
+        return false;
+    }
+
+    for (std::size_t index = 0U; index < value.size(); ++index) {
+        if (index == 4U || index == 7U) {
+            continue;
+        }
+        if (!is_ascii_digit(value[index])) {
+            return false;
+        }
+    }
+
+    const int year =
+        ((value[0U] - '0') * 1000) +
+        ((value[1U] - '0') * 100) +
+        ((value[2U] - '0') * 10) +
+        (value[3U] - '0');
+    const int month = ((value[5U] - '0') * 10) + (value[6U] - '0');
+    const int day = ((value[8U] - '0') * 10) + (value[9U] - '0');
+
+    if (month < 1 || month > 12 || day < 1) {
+        return false;
+    }
+
+    constexpr int month_lengths[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int maximum_day = month_lengths[month - 1];
+    if (month == 2 && is_leap_year(year)) {
+        maximum_day = 29;
+    }
+    return day <= maximum_day;
+}
+
 }  // namespace
 
 LicenseStatus classify_verified_payload(
@@ -101,6 +143,16 @@ LicenseStatus classify_verified_payload(
         if (status.subscription_expires.empty()) {
             status.state = LicenseState::malformed;
             status.diagnostic = "subscription license missing subscription_expires";
+            return status;
+        }
+        if (!is_canonical_calendar_date(status.subscription_expires)) {
+            status.state = LicenseState::malformed;
+            status.diagnostic = "subscription license has invalid subscription_expires";
+            return status;
+        }
+        if (!is_canonical_calendar_date(current_date_iso8601)) {
+            status.state = LicenseState::malformed;
+            status.diagnostic = "current date is not canonical YYYY-MM-DD";
             return status;
         }
         // ISO-8601 "YYYY-MM-DD" strings compare correctly with plain

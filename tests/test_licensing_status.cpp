@@ -222,6 +222,70 @@ void test_classifier_subscription_expired() {
     expect(status.state == LicenseState::subscription_expired, "subscription_expires in the past should be subscription_expired");
 }
 
+void expect_malformed_subscription_expiry(const std::string& expiry, const std::string& description) {
+    const auto status = classify_verified_payload(make_subscription_fields(expiry), 1, "2026-01-01");
+    expect(status.state == LicenseState::malformed, description + " should be malformed");
+    expect(
+        status.diagnostic == "subscription license has invalid subscription_expires",
+        description + " should report the invalid expiry field");
+    expect(status.subscription_expires == expiry, description + " should preserve the signed field value for diagnosis");
+}
+
+void test_classifier_subscription_calendar_boundaries() {
+    auto status = classify_verified_payload(make_subscription_fields("0000-01-01"), 1, "0000-01-01");
+    expect(status.state == LicenseState::subscription_active, "the lowest four-digit year should be active on its day");
+
+    status = classify_verified_payload(make_subscription_fields("0000-02-29"), 1, "0000-02-29");
+    expect(status.state == LicenseState::subscription_active, "year zero should follow the divisible-by-400 leap rule");
+
+    status = classify_verified_payload(make_subscription_fields("9999-12-31"), 1, "9999-12-30");
+    expect(status.state == LicenseState::subscription_active, "the latest four-digit civil date should be valid");
+
+    status = classify_verified_payload(make_subscription_fields("2000-02-29"), 1, "2000-02-29");
+    expect(status.state == LicenseState::subscription_active, "a year divisible by 400 should admit February 29");
+
+    status = classify_verified_payload(make_subscription_fields("2024-02-29"), 1, "2024-03-01");
+    expect(status.state == LicenseState::subscription_expired, "a valid leap day should compare chronologically after validation");
+
+    status = classify_verified_payload(make_subscription_fields("2026-04-30"), 1, "2026-04-29");
+    expect(status.state == LicenseState::subscription_active, "the last day of a 30-day month should be valid");
+}
+
+void test_classifier_subscription_rejects_malformed_dates() {
+    expect_malformed_subscription_expiry("1900-02-29", "a non-400 century leap day");
+    expect_malformed_subscription_expiry("2100-02-29", "a future non-400 century leap day");
+    expect_malformed_subscription_expiry("2023-02-29", "a non-leap-year February 29");
+    expect_malformed_subscription_expiry("2026-02-30", "February 30");
+    expect_malformed_subscription_expiry("2026-04-31", "the 31st day of a 30-day month");
+    expect_malformed_subscription_expiry("2026-00-01", "month zero");
+    expect_malformed_subscription_expiry("2026-13-01", "month thirteen");
+    expect_malformed_subscription_expiry("2026-01-00", "day zero");
+    expect_malformed_subscription_expiry("2026-01-32", "day thirty-two");
+    expect_malformed_subscription_expiry("2026/06/01", "alternate separators");
+    expect_malformed_subscription_expiry("2026-6-01", "a partial month");
+    expect_malformed_subscription_expiry("2026-06-1", "a partial day");
+    expect_malformed_subscription_expiry("2026-06", "a partial date");
+    expect_malformed_subscription_expiry("2026-06-01T00:00:00Z", "a timestamp");
+    expect_malformed_subscription_expiry(" 2026-06-01", "leading whitespace");
+    expect_malformed_subscription_expiry("2026-06-01 ", "trailing whitespace");
+    expect_malformed_subscription_expiry("202A-06-01", "a non-ASCII-digit year");
+    expect_malformed_subscription_expiry("foo", "unrelated text");
+}
+
+void test_classifier_subscription_rejects_malformed_current_date() {
+    auto status = classify_verified_payload(make_subscription_fields("2026-06-01"), 1, "2026-6-01");
+    expect(status.state == LicenseState::malformed, "a partial current-date month should be malformed");
+    expect(
+        status.diagnostic == "current date is not canonical YYYY-MM-DD",
+        "a malformed current date should report the classifier input contract");
+
+    status = classify_verified_payload(make_subscription_fields("2026-06-01"), 1, "2026-02-30");
+    expect(status.state == LicenseState::malformed, "an impossible current calendar date should be malformed");
+
+    status = classify_verified_payload(make_subscription_fields("2026-06-01"), 1, "foo");
+    expect(status.state == LicenseState::malformed, "an unrelated current-date string should be malformed");
+}
+
 void test_classifier_subscription_missing_expiry_is_malformed() {
     PayloadFields fields;
     fields["license_type"] = PayloadValue::make_string("subscription");
@@ -402,6 +466,9 @@ int main() {
     test_classifier_subscription_active();
     test_classifier_subscription_active_on_expiry_day();
     test_classifier_subscription_expired();
+    test_classifier_subscription_calendar_boundaries();
+    test_classifier_subscription_rejects_malformed_dates();
+    test_classifier_subscription_rejects_malformed_current_date();
     test_classifier_subscription_missing_expiry_is_malformed();
     test_classifier_unknown_license_type_is_malformed();
     test_classifier_missing_license_type_is_malformed();
