@@ -266,8 +266,26 @@ void run_column_setup_update_case(
             "#2036: record-selected deleted report/label column setup update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         issue_prefix + " update should not fabricate live page setup");
-        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root column setup");
+        expect_contains(update_process.stdout_text, "\"columnCountAvailable\": true",
+                        issue_prefix + " update should expose effective column-count availability");
+        expect_contains(update_process.stdout_text, "\"columnCount\": " +
+                                                    updated_settings.substr(5, updated_settings.find('\n') - 5),
+                        issue_prefix + " update should expose the effective column count");
+        expect_contains(update_process.stdout_text, "\"columnWidthAvailable\": true",
+                        issue_prefix + " update should expose effective column-width availability");
+        expect_contains(update_process.stdout_text, "\"columnWidth\": " +
+                                                    updated_settings.substr(
+                                                        updated_settings.find("COLWIDTH=") + 9,
+                                                        updated_settings.find('\n', updated_settings.find("COLWIDTH=")) -
+                                                            (updated_settings.find("COLWIDTH=") + 9)),
+                        issue_prefix + " update should expose the effective column width");
+        expect_contains(update_process.stdout_text, "\"columnSpacingAvailable\": true",
+                        issue_prefix + " update should expose effective column-spacing availability");
+        expect_contains(update_process.stdout_text, "\"columnSpacing\": " +
+                                                    updated_settings.substr(updated_settings.rfind('=') + 1),
+                        issue_prefix + " update should expose the effective column spacing");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -399,6 +417,18 @@ void run_column_setup_clear_case(
                         issue_prefix + " clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
                         issue_prefix + " clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"columnCountAvailable\": false",
+                        issue_prefix + " clear should clear effective column-count availability");
+        expect_contains(clear_process.stdout_text, "\"columnCount\": 0",
+                        issue_prefix + " clear should reset the effective column count");
+        expect_contains(clear_process.stdout_text, "\"columnWidthAvailable\": false",
+                        issue_prefix + " clear should clear effective column-width availability");
+        expect_contains(clear_process.stdout_text, "\"columnWidth\": 0",
+                        issue_prefix + " clear should reset the effective column width");
+        expect_contains(clear_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        issue_prefix + " clear should clear effective column-spacing availability");
+        expect_contains(clear_process.stdout_text, "\"columnSpacing\": 0",
+                        issue_prefix + " clear should reset the effective column spacing");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 0",
