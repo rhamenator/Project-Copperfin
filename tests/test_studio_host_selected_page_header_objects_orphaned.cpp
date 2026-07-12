@@ -198,10 +198,10 @@ void run_orphaned_page_header_object_selection(
                     issue_prefix + " should advertise report-selection availability");
     expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     issue_prefix + " should expose object selection kind");
-    expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
-                    issue_prefix + " should update live section counts");
-    expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 1",
-                    issue_prefix + " should expose deleted section counts");
+    expect_contains(
+        object_process.stdout_text,
+        "\"sectionCount\": 1,\n      \"deletedSectionCount\": 1",
+        issue_prefix + " should preserve top-level live and deleted section counts");
     expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
                     issue_prefix + " should preserve live object counts");
     expect_contains(object_process.stdout_text, "\"placedObjectCount\": 2",
@@ -214,16 +214,16 @@ void run_orphaned_page_header_object_selection(
                     issue_prefix + " should preserve live preview availability");
     expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
                     issue_prefix + " should preserve live preview left bounds");
-    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 2000",
-                    issue_prefix + " should drop deleted-section page-header objects out of live preview top bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 100",
+                    issue_prefix + " should preserve retained page-header-object top bounds");
     expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
                     issue_prefix + " should preserve live preview right bounds");
     expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
                     issue_prefix + " should preserve live preview bottom bounds");
     expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
                     issue_prefix + " should preserve live preview widths");
-    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 6100",
-                    issue_prefix + " should shrink live preview heights");
+    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8000",
+                    issue_prefix + " should preserve retained page-header-object preview height");
     expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     issue_prefix + " should expose deleted preview availability");
     expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
