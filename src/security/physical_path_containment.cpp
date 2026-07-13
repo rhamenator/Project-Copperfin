@@ -167,7 +167,8 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
             information.nFileSizeLow,
         .modified_ticks =
             (static_cast<std::uint64_t>(information.ftLastWriteTime.dwHighDateTime) << 32U) |
-            information.ftLastWriteTime.dwLowDateTime
+            information.ftLastWriteTime.dwLowDateTime,
+        .link_count = information.nNumberOfLinks
     };
 #else
     struct stat status{};
@@ -187,7 +188,8 @@ std::optional<PhysicalPathIdentity> read_direct_identity(
         .storage_id = static_cast<std::uint64_t>(status.st_dev),
         .file_id = static_cast<std::uint64_t>(status.st_ino),
         .file_size = static_cast<std::uint64_t>(status.st_size),
-        .modified_ticks = modified_ticks
+        .modified_ticks = modified_ticks,
+        .link_count = static_cast<std::uint64_t>(status.st_nlink)
     };
 #endif
 }
@@ -304,7 +306,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
             before_information.nFileSizeLow,
         .modified_ticks =
             (static_cast<std::uint64_t>(before_information.ftLastWriteTime.dwHighDateTime) << 32U) |
-            before_information.ftLastWriteTime.dwLowDateTime
+            before_information.ftLastWriteTime.dwLowDateTime,
+        .link_count = before_information.nNumberOfLinks
     };
     if (before_identity != expected.identity) {
         ::CloseHandle(handle);
@@ -340,7 +343,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
             after_information.nFileSizeLow,
         .modified_ticks =
             (static_cast<std::uint64_t>(after_information.ftLastWriteTime.dwHighDateTime) << 32U) |
-            after_information.ftLastWriteTime.dwLowDateTime
+            after_information.ftLastWriteTime.dwLowDateTime,
+        .link_count = after_information.nNumberOfLinks
     };
 #else
     const int descriptor = ::open(
@@ -372,7 +376,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         .storage_id = static_cast<std::uint64_t>(before_status.st_dev),
         .file_id = static_cast<std::uint64_t>(before_status.st_ino),
         .file_size = static_cast<std::uint64_t>(before_status.st_size),
-        .modified_ticks = before_modified_ticks
+        .modified_ticks = before_modified_ticks,
+        .link_count = static_cast<std::uint64_t>(before_status.st_nlink)
     };
     if (before_identity != expected.identity) {
         ::close(descriptor);
@@ -414,7 +419,8 @@ PhysicalFileSnapshotResult read_physically_contained_file_snapshot(
         .storage_id = static_cast<std::uint64_t>(after_status.st_dev),
         .file_id = static_cast<std::uint64_t>(after_status.st_ino),
         .file_size = static_cast<std::uint64_t>(after_status.st_size),
-        .modified_ticks = after_modified_ticks
+        .modified_ticks = after_modified_ticks,
+        .link_count = static_cast<std::uint64_t>(after_status.st_nlink)
     };
 #endif
 

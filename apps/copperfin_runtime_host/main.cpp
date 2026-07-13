@@ -22,6 +22,7 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
+#include <cwctype>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -1098,6 +1099,44 @@ bool relative_path_escapes_root(const std::filesystem::path& relative_path) {
     return false;
 }
 
+bool package_path_component_equal(
+    const std::filesystem::path& left,
+    const std::filesystem::path& right) {
+#if defined(_WIN32)
+    const std::wstring left_value = left.native();
+    const std::wstring right_value = right.native();
+    return left_value.size() == right_value.size() &&
+           std::equal(
+               left_value.begin(),
+               left_value.end(),
+               right_value.begin(),
+               [](const wchar_t left_ch, const wchar_t right_ch) {
+                   return std::towlower(left_ch) == std::towlower(right_ch);
+               });
+#else
+    return left == right;
+#endif
+}
+
+std::optional<std::filesystem::path> package_relative_path(
+    const std::filesystem::path& path,
+    const std::filesystem::path& root) {
+    auto path_part = path.begin();
+    for (auto root_part = root.begin(); root_part != root.end(); ++root_part, ++path_part) {
+        if (path_part == path.end() || !package_path_component_equal(*path_part, *root_part)) {
+            return std::nullopt;
+        }
+    }
+
+    std::filesystem::path relative;
+    for (; path_part != path.end(); ++path_part) {
+        relative /= *path_part;
+    }
+    return relative.empty()
+        ? std::nullopt
+        : std::optional<std::filesystem::path>(relative);
+}
+
 std::filesystem::path portable_manifest_path(std::string value) {
 #if !defined(_WIN32)
     std::replace(value.begin(), value.end(), '\\', '/');
@@ -1277,21 +1316,6 @@ std::optional<std::filesystem::path> bind_packaged_path(
     }
 
     return std::nullopt;
-}
-
-std::string resolve_manifest_bound_directory(
-    const ManifestMap& manifest,
-    const std::string& key,
-    const std::filesystem::path& manifest_directory,
-    const std::filesystem::path& fallback_relative_path) {
-    const std::string recorded_package_root = first_value(manifest, "package_root");
-    if (const auto bound = bind_packaged_path(first_value(manifest, key), recorded_package_root, manifest_directory)) {
-        return bound->string();
-    }
-
-    const std::filesystem::path fallback_path =
-        (manifest_directory / fallback_relative_path).lexically_normal();
-    return fallback_path.string();
 }
 
 bool verify_manifest_hashes(
@@ -2366,14 +2390,125 @@ std::string resolve_effective_working_directory(
     return (manifest_directory / "content").lexically_normal().string();
 }
 
-std::string resolve_effective_audit_log_path(
+std::optional<std::filesystem::path> admit_direct_packaged_output_path(
+    const std::filesystem::path& candidate,
+    const std::filesystem::path& manifest_directory) {
+    const std::filesystem::path normalized_candidate = candidate.lexically_normal();
+    const std::filesystem::path relative =
+        normalized_candidate.lexically_relative(manifest_directory);
+    if (relative.empty() ||
+        relative == normalized_candidate ||
+        relative_path_escapes_root(relative) ||
+        manifest_path_is_absolute(relative) ||
+        normalized_candidate.filename().empty()) {
+        return std::nullopt;
+    }
+
+    std::error_code status_error;
+    const std::filesystem::file_status status =
+        std::filesystem::symlink_status(normalized_candidate, status_error);
+    if (status_error && status_error != std::errc::no_such_file_or_directory) {
+        return std::nullopt;
+    }
+    if (status.type() != std::filesystem::file_type::not_found) {
+        if (!std::filesystem::is_regular_file(status)) {
+            return std::nullopt;
+        }
+        const auto containment = copperfin::security::inspect_physical_path_containment(
+            normalized_candidate,
+            manifest_directory);
+        return containment.allowed && containment.identity.link_count == 1U
+            ? std::optional<std::filesystem::path>(containment.canonical_path)
+            : std::nullopt;
+    }
+
+    std::filesystem::path existing_parent = normalized_candidate.parent_path();
+    while (!existing_parent.empty()) {
+        std::error_code parent_status_error;
+        const std::filesystem::file_status parent_status =
+            std::filesystem::symlink_status(existing_parent, parent_status_error);
+        if (parent_status_error == std::errc::no_such_file_or_directory ||
+            parent_status.type() == std::filesystem::file_type::not_found) {
+            existing_parent = existing_parent.parent_path();
+            continue;
+        }
+        if (parent_status_error || !std::filesystem::is_directory(parent_status)) {
+            return std::nullopt;
+        }
+
+        const auto parent_containment = copperfin::security::inspect_physical_path_containment(
+            existing_parent,
+            manifest_directory);
+        if (!parent_containment.allowed ||
+            !is_existing_directory(parent_containment.canonical_path)) {
+            return std::nullopt;
+        }
+        const std::filesystem::path missing_suffix =
+            normalized_candidate.lexically_relative(existing_parent);
+        if (missing_suffix.empty() ||
+            missing_suffix == normalized_candidate ||
+            relative_path_escapes_root(missing_suffix)) {
+            return std::nullopt;
+        }
+        return (parent_containment.canonical_path / missing_suffix).lexically_normal();
+    }
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> bind_packaged_output_path(
+    const std::string& manifest_value,
+    const std::string& recorded_package_root,
+    const std::filesystem::path& manifest_directory) {
+    if (trim_copy(manifest_value).empty()) {
+        return std::nullopt;
+    }
+
+    const std::filesystem::path recorded_path = portable_manifest_path(manifest_value);
+    std::filesystem::path relative_path;
+    if (!trim_copy(recorded_package_root).empty()) {
+        const std::filesystem::path package_root = portable_manifest_path(recorded_package_root);
+        if (const auto recorded_relative = package_relative_path(recorded_path, package_root)) {
+            relative_path = *recorded_relative;
+        } else if (!manifest_path_is_absolute(recorded_path) &&
+                   !relative_path_escapes_root(recorded_path)) {
+            relative_path = recorded_path;
+        } else {
+            return std::nullopt;
+        }
+    } else if (manifest_path_is_absolute(recorded_path)) {
+        const auto recorded_relative = package_relative_path(recorded_path, manifest_directory);
+        if (!recorded_relative.has_value()) {
+            return std::nullopt;
+        }
+        relative_path = *recorded_relative;
+    } else {
+        relative_path = recorded_path;
+    }
+
+    if (relative_path.empty() ||
+        manifest_path_is_absolute(relative_path) ||
+        relative_path_escapes_root(relative_path)) {
+        return std::nullopt;
+    }
+    return admit_direct_packaged_output_path(
+        manifest_directory / relative_path,
+        manifest_directory);
+}
+
+std::optional<std::filesystem::path> resolve_effective_audit_log_path(
     const ManifestMap& manifest,
     const std::filesystem::path& manifest_directory) {
-    return resolve_manifest_bound_directory(
-        manifest,
-        "audit_log_path",
-        manifest_directory,
-        "security_audit.log");
+    const std::string recorded_audit_log_path = first_value(manifest, "audit_log_path");
+    if (!trim_copy(recorded_audit_log_path).empty()) {
+        return bind_packaged_output_path(
+            recorded_audit_log_path,
+            first_value(manifest, "package_root"),
+            manifest_directory);
+    }
+
+    return admit_direct_packaged_output_path(
+        manifest_directory / "security_audit.log",
+        manifest_directory);
 }
 
 std::optional<std::filesystem::path> bind_relative_startup_item(
@@ -2798,16 +2933,40 @@ int main(int argc, char** argv) {
     const auto warnings = all_values(manifest, "warning");
     const bool security_enabled = parse_bool(first_value(manifest, "security_enabled"));
     const std::string security_role = first_value(manifest, "security_role");
-    const std::string audit_log_path =
+    const auto resolved_audit_log_path =
         resolve_effective_audit_log_path(manifest, manifest_directory);
+    if (security_enabled && !resolved_audit_log_path.has_value()) {
+        const std::filesystem::path recorded_audit_log_path = portable_manifest_path(
+            first_value(manifest, "audit_log_path"));
+        const std::string audit_log_name = recorded_audit_log_path.filename().empty()
+            ? "security_audit.log"
+            : recorded_audit_log_path.filename().string();
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", audit_log_name}}));
+        return 8;
+    }
+    const std::string audit_log_path = resolved_audit_log_path.has_value()
+        ? resolved_audit_log_path->string()
+        : std::string{};
+    const auto append_audit_event = [&](const std::string& event_name, const std::string& detail) {
+        return copperfin::security::append_immutable_audit_event_to_contained_file(
+            audit_log_path,
+            manifest_directory.string(),
+            event_name,
+            detail);
+    };
     const auto security_profile = copperfin::security::default_native_security_profile();
     VerifiedPackagePaths verified_package_paths;
 
     if (security_enabled) {
         if (!copperfin::security::role_has_permission(security_profile, security_role, "project.open")) {
             if (!audit_log_path.empty()) {
-                (void)copperfin::security::append_immutable_audit_event(
-                    audit_log_path,
+                (void)append_audit_event(
                     "policy.denied",
                     localized_message(
                         catalog,
@@ -2838,8 +2997,7 @@ int main(int argc, char** argv) {
                 verification_error,
                 verified_package_paths)) {
             if (!audit_log_path.empty()) {
-                (void)copperfin::security::append_immutable_audit_event(
-                    audit_log_path,
+                (void)append_audit_event(
                     "policy.denied",
                     verification_error);
             }
@@ -2849,8 +3007,7 @@ int main(int argc, char** argv) {
         }
 
         if (!audit_log_path.empty()) {
-            (void)copperfin::security::append_immutable_audit_event(
-                audit_log_path,
+            (void)append_audit_event(
                 "runtime.start",
                 "role=" + security_role + ",manifest=" + manifest_path);
         }
@@ -3235,8 +3392,7 @@ int main(int argc, char** argv) {
             const std::string& command = debug_commands[index];
             if (security_enabled && !copperfin::security::role_has_permission(security_profile, security_role, "runtime.admin")) {
                 if (!audit_log_path.empty()) {
-                    (void)copperfin::security::append_immutable_audit_event(
-                        audit_log_path,
+                    (void)append_audit_event(
                         "policy.denied",
                         localized_message(
                             catalog,
@@ -3430,8 +3586,7 @@ int main(int argc, char** argv) {
     }
 
     if (security_enabled && !audit_log_path.empty()) {
-        (void)copperfin::security::append_immutable_audit_event(
-            audit_log_path,
+        (void)append_audit_event(
             "runtime.complete",
             std::string("completed=") + (state.completed ? "true" : "false") + ",reason=" + copperfin::runtime::debug_pause_reason_name(state.reason));
     }

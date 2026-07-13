@@ -14,11 +14,14 @@
 #include "test_environment_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <cwctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <thread>
+#include <vector>
 
 namespace {
 
@@ -523,6 +526,91 @@ void test_audit_stream_localized_malformed_line_diagnostic() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_contained_audit_append_rechecks_open_file_identity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_contained_audit_append_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path outside_root = temp_root / "outside";
+    const fs::path outside_log = outside_root / "events.log";
+    const fs::path hard_link_log = package_root / "hard-linked.log";
+    const fs::path valid_log = package_root / "nested" / "events.log";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(package_root);
+    fs::create_directories(outside_root);
+    write_file_bytes(outside_log, {});
+
+    std::error_code hard_link_error;
+    fs::create_hard_link(outside_log, hard_link_log, hard_link_error);
+    if (!hard_link_error) {
+        const auto rejected = copperfin::security::append_immutable_audit_event_to_contained_file(
+            hard_link_log.string(),
+            package_root.string(),
+            "runtime.rejected",
+            "hard-link");
+        expect(!rejected.ok,
+               "#4015: contained audit append should reject a multiply linked file at open time");
+        expect(read_file_bytes(outside_log).empty(),
+               "#4015: append-time hard-link rejection should leave the external identity unchanged");
+        fs::remove(hard_link_log, ignored);
+    }
+
+    const auto valid = copperfin::security::append_immutable_audit_event_to_contained_file(
+        valid_log.string(),
+        package_root.string(),
+        "runtime.valid",
+        "contained");
+    expect(valid.ok,
+           "#4015: contained audit append should create missing direct package directories and the audit leaf");
+    const auto valid_chain = copperfin::security::verify_immutable_audit_chain(valid_log.string());
+    expect(valid_chain.ok && valid_chain.entries == 1U,
+           "#4015: contained audit append should preserve the immutable chain contract");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_contained_audit_append_serializes_concurrent_writers() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_contained_audit_concurrency_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path log_path = package_root / "audit" / "events.log";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(package_root);
+
+    constexpr int writer_count = 4;
+    constexpr int events_per_writer = 12;
+    std::atomic<int> append_failures{0};
+    std::vector<std::thread> writers;
+    for (int writer = 0; writer < writer_count; ++writer) {
+        writers.emplace_back([&, writer] {
+            for (int event = 0; event < events_per_writer; ++event) {
+                const auto result = copperfin::security::append_immutable_audit_event_to_contained_file(
+                    log_path.string(),
+                    package_root.string(),
+                    "runtime.concurrent",
+                    "writer=" + std::to_string(writer) + ",event=" + std::to_string(event));
+                if (!result.ok) {
+                    append_failures.fetch_add(1, std::memory_order_relaxed);
+                }
+            }
+        });
+    }
+    for (auto& writer : writers) {
+        writer.join();
+    }
+
+    expect(append_failures.load(std::memory_order_relaxed) == 0,
+           "#4015: contained audit writers should serialize without append failures");
+    const auto chain = copperfin::security::verify_immutable_audit_chain(log_path.string());
+    expect(chain.ok && chain.entries == static_cast<std::size_t>(writer_count * events_per_writer),
+           "#4015: concurrent contained audit writers should preserve every immutable chain entry");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_external_process_and_process_hardening_diagnostics() {
 #ifndef _WIN32
     const copperfin::security::ExternalProcessPolicy policy{
@@ -726,6 +814,8 @@ int main() {
     test_audit_stream_chain_verification();
     test_audit_stream_append_rejects_invalid_existing_tail();
     test_audit_stream_localized_malformed_line_diagnostic();
+    test_contained_audit_append_rechecks_open_file_identity();
+    test_contained_audit_append_serializes_concurrent_writers();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();
     test_physical_path_containment_rejects_indirection();

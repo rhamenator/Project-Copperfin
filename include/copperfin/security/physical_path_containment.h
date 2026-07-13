@@ -27,6 +27,7 @@ struct PhysicalPathIdentity {
     std::uint64_t file_id = 0U;
     std::uint64_t file_size = 0U;
     std::uint64_t modified_ticks = 0U;
+    std::uint64_t link_count = 0U;
 
     bool operator==(const PhysicalPathIdentity&) const = default;
 };

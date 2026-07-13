@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <cwctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -2441,6 +2442,213 @@ void test_runtime_host_manifest_verification_errors_localize_without_changing_co
         expect(process.stdout_text.find("Security-enabled manifest is missing runtime_host_sha256.") ==
                    std::string::npos,
                "#2588: es-419 manifest verification failures should not fall back to the raw English error");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_audit_path_containment";
+    const fs::path packages_root = temp_root / "packages";
+    const fs::path external_root = temp_root / "external";
+    const fs::path external_audit_path = external_root / "security_audit.log";
+    const fs::path locale_root = temp_root / "locales";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(packages_root);
+    fs::create_directories(external_root);
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const auto write_denial_manifest = [](
+                                           const fs::path& case_root,
+                                           const std::string& package_root,
+                                           const std::string& audit_log_path) {
+        const fs::path content_root = case_root / "content";
+        fs::create_directories(content_root);
+        write_text(content_root / "main.prg", "RETURN\n");
+        write_text(
+            case_root / "app.cfmanifest",
+            "manifest_version=1\n"
+            "project_title=AuditPathContainment\n"
+            "package_root=" + package_root + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + content_root.string() + "\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + (content_root / "main.prg").string() + "\n"
+            "security_enabled=true\n"
+            "security_role=guest\n"
+            "security_mode=native\n"
+            "audit_log_path=" + audit_log_path + "\n"
+            "dotnet_story=none\n");
+    };
+
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+
+    {
+        const fs::path case_root = packages_root / "valid_local";
+        const fs::path local_audit_path = case_root / "logs" / "custom.log";
+        write_denial_manifest(case_root, case_root.string(), "logs/custom.log");
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", (case_root / "app.cfmanifest").string()},
+            temp_root);
+
+        expect(process.exit_code == 7,
+               "#4015: a direct package-local audit path should preserve the policy-denial exit code");
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
+            local_audit_path.string());
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#4015: a new package-local audit path should create direct directories and retain valid chain behavior");
+        expect(!fs::exists(case_root / "security_audit.log"),
+               "#4015: a valid custom package-local audit path should not be replaced by the default leaf");
+    }
+
+#if defined(_WIN32)
+    {
+        const fs::path case_root = packages_root / "windows_case_fidelity";
+        const fs::path local_audit_path = case_root / "logs" / "case-sensitive-spelling.log";
+        std::wstring differently_cased_root = case_root.native();
+        std::transform(
+            differently_cased_root.begin(),
+            differently_cased_root.end(),
+            differently_cased_root.begin(),
+            [](const wchar_t ch) { return static_cast<wchar_t>(std::towupper(ch)); });
+        write_denial_manifest(
+            case_root,
+            fs::path(differently_cased_root).string(),
+            local_audit_path.string());
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", (case_root / "app.cfmanifest").string()},
+            temp_root);
+
+        expect(process.exit_code == 7,
+               "#4015: Windows audit rebinding should compare package components case-insensitively");
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
+            local_audit_path.string());
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#4015: Windows case-insensitive rebinding should preserve the exact packaged audit leaf");
+    }
+#endif
+
+    const auto expect_rejected_path = [&](const std::string& case_name,
+                                           const std::string& package_root,
+                                           const std::string& audit_log_path,
+                                           const fs::path& sentinel_path,
+                                           const std::string& expected_file_name) {
+        const fs::path case_root = packages_root / case_name;
+        fs::create_directories(case_root);
+        write_text(sentinel_path, "");
+        write_denial_manifest(case_root, package_root, audit_log_path);
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", (case_root / "app.cfmanifest").string()},
+            temp_root);
+
+        expect(process.exit_code == 8,
+               "#4015: rejected audit paths should preserve the manifest-verification exit code for " + case_name);
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#4015: rejected audit paths should preserve machine-readable error status for " + case_name);
+        expect(process.stdout_text.find(
+                   "error: Package path failed physical containment validation: " + expected_file_name) !=
+                   std::string::npos,
+               "#4015: rejected audit paths should use the localized physical-containment diagnostic for " + case_name);
+        expect(read_text(sentinel_path).empty(),
+               "#4015: rejected audit paths must not modify the sentinel for " + case_name);
+        expect(!fs::exists(case_root / "security_audit.log"),
+               "#4015: rejected explicit audit paths should fail instead of silently appending to a fallback for " + case_name);
+    };
+
+    expect_rejected_path(
+        "absolute_external",
+        (packages_root / "absolute_external").string(),
+        external_audit_path.string(),
+        external_audit_path,
+        external_audit_path.filename().string());
+    expect_rejected_path(
+        "relative_escape",
+        (packages_root / "relative_escape").string(),
+        "../../external/security_audit.log",
+        external_audit_path,
+        external_audit_path.filename().string());
+
+    {
+        const fs::path case_root = packages_root / "hard_link_leaf";
+        const fs::path hard_link_path = case_root / "hard-linked.log";
+        fs::create_directories(case_root);
+        write_text(external_audit_path, "");
+        std::error_code hard_link_error;
+        fs::create_hard_link(external_audit_path, hard_link_path, hard_link_error);
+        if (!hard_link_error) {
+            write_denial_manifest(case_root, case_root.string(), "hard-linked.log");
+            const auto process = run_process_capture(
+                runtime_host_path,
+                {"--manifest", (case_root / "app.cfmanifest").string()},
+                temp_root);
+
+            expect(process.exit_code == 8,
+                   "#4015: a package-local hard link should fail the audit containment contract");
+            expect(process.stdout_text.find(
+                       "error: Package path failed physical containment validation: hard-linked.log") !=
+                       std::string::npos,
+                   "#4015: hard-linked audit rejection should retain the localized containment diagnostic");
+            expect(read_text(external_audit_path).empty(),
+                   "#4015: rejecting a hard-linked audit leaf must leave its external identity unchanged");
+        }
+    }
+
+    {
+        const fs::path case_root = packages_root / "ambiguous_rebind";
+        const fs::path recorded_root = temp_root / "builder" / "package";
+        const fs::path ambiguous_sentinel = case_root / "ambiguous.log";
+        const fs::path exact_rebound_audit_path = case_root / "logs" / "ambiguous.log";
+        fs::create_directories(case_root);
+        write_text(ambiguous_sentinel, "");
+        write_denial_manifest(
+            case_root,
+            recorded_root.string(),
+            (recorded_root / "logs" / "ambiguous.log").string());
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", (case_root / "app.cfmanifest").string()},
+            temp_root);
+
+        expect(process.exit_code == 7,
+               "#4015: exact audit-path rebinding should preserve the policy-denial exit code");
+        expect(read_text(ambiguous_sentinel).empty(),
+               "#4015: exact audit-path rebinding must not append to a same-named package-root fallback");
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
+            exact_rebound_audit_path.string());
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#4015: exact audit-path rebinding should create the recorded nested package path");
+        expect(!fs::exists(case_root / "security_audit.log"),
+               "#4015: exact audit-path rebinding should not use the default audit leaf");
+    }
+
+    {
+        const fs::path case_root = packages_root / "redirected_component";
+        const fs::path redirected_directory = case_root / "audit-link";
+        fs::create_directories(case_root);
+        if (create_directory_indirection(external_root, redirected_directory)) {
+            expect_rejected_path(
+                "redirected_component",
+                case_root.string(),
+                "audit-link/security_audit.log",
+                external_audit_path,
+                external_audit_path.filename().string());
+            remove_directory_indirection(redirected_directory);
+        }
     }
 
     if (failures == 0) {
@@ -5102,6 +5310,7 @@ int main(int argc, char** argv) {
     test_runtime_host_validates_manifest_versions_without_changing_error_contracts(argv[1]);
     test_runtime_host_debug_privileges_require_debug_document_contract(argv[1]);
     test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);
+    test_runtime_host_rejects_audit_paths_outside_the_direct_package(argv[1]);
     test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
