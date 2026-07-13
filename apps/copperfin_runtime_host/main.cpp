@@ -2791,7 +2791,7 @@ int main(int argc, char** argv) {
     }
 
     if (license_status_requested) {
-        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        print_license_status(copperfin::licensing::load_license_status(running_executable_path));
         return 0;
     }
 

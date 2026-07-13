@@ -165,10 +165,14 @@ int main(int argc, char** argv) {
         "dotnet_story=none\n");
 
     const fs::path caller_root = temp_root / "unrelated-caller";
+    const fs::path deployed_license_path = temp_root / "license.cflicense";
+    const fs::path caller_license_path = caller_root / "license.cflicense";
     const fs::path deployed_locale_root = temp_root / "share" / "copperfin" / "locales" / "en-US";
     const fs::path caller_locale_root = caller_root / "resources" / "locales" / "en-US";
     fs::create_directories(deployed_locale_root);
     fs::create_directories(caller_locale_root);
+    write_text(deployed_license_path, "{\"deployed\":true}\n");
+    write_text(caller_license_path, "{\"caller\":true}\n");
     write_text(
         deployed_locale_root / "strings.json",
         "{\"RuntimeHost.Prefix.Error\":\"error: \","
@@ -180,6 +184,7 @@ int main(int argc, char** argv) {
 
     copperfin::test_support::ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
     copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    copperfin::test_support::ScopedEnvironmentValue license_path("COPPERFIN_LICENSE_PATH");
     copperfin::test_support::ScopedEnvironmentValue search_path("PATH", false);
 #if defined(_WIN32)
     copperfin::test_support::ScopedEnvironmentValue path_extensions(
@@ -219,6 +224,22 @@ int main(int argc, char** argv) {
            "#4013: non-debug PATH launch should select the release manifest title");
     expect(runtime_process.stdout_text.find("startup.item: release_main.prg") != std::string::npos,
            "#4013: non-debug PATH launch should select the release startup identity");
+
+    const ProcessResult license_process = run_process_capture(
+        launch_name,
+        {"--license-status"},
+        caller_root,
+        "license-status");
+    expect(license_process.exit_code == 0,
+           "#4016: PATH-launched license inspection should preserve the success exit code");
+    expect(license_process.stdout_text.find("status: ok") != std::string::npos &&
+               license_process.stdout_text.find("state: malformed") != std::string::npos,
+           "#4016: PATH-launched license inspection should preserve invariant status fields");
+    expect(license_process.stdout_text.find(
+               "source_path: " + deployed_license_path.string()) != std::string::npos,
+           "#4016: default license discovery should bind to the deployed runtime host");
+    expect(license_process.stdout_text.find(caller_license_path.string()) == std::string::npos,
+           "#4016: default license discovery must not inspect the caller-CWD license sibling");
 
     const ProcessResult localized_failure = run_process_capture(
         launch_name,
