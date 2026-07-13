@@ -39,6 +39,22 @@ std::string read_text(const std::filesystem::path& path) {
         std::istreambuf_iterator<char>());
 }
 
+std::string output_line_value(const std::string& output, const std::string& prefix) {
+    const std::size_t offset = output.find(prefix);
+    if (offset == std::string::npos) {
+        return {};
+    }
+    const std::size_t value_start = offset + prefix.size();
+    const std::size_t value_end = output.find('\n', value_start);
+    std::string value = output.substr(
+        value_start,
+        value_end == std::string::npos ? std::string::npos : value_end - value_start);
+    if (!value.empty() && value.back() == '\r') {
+        value.pop_back();
+    }
+    return value;
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     for (const char ch : value) {
@@ -235,10 +251,23 @@ int main(int argc, char** argv) {
     expect(license_process.stdout_text.find("status: ok") != std::string::npos &&
                license_process.stdout_text.find("state: malformed") != std::string::npos,
            "#4016: PATH-launched license inspection should preserve invariant status fields");
-    expect(license_process.stdout_text.find(
-               "source_path: " + deployed_license_path.string()) != std::string::npos,
+    const fs::path reported_license_path = output_line_value(
+        license_process.stdout_text,
+        "source_path: ");
+    std::error_code deployed_equivalence_error;
+    expect(!reported_license_path.empty() &&
+               fs::equivalent(
+                   reported_license_path,
+                   deployed_license_path,
+                   deployed_equivalence_error) &&
+               !deployed_equivalence_error,
            "#4016: default license discovery should bind to the deployed runtime host");
-    expect(license_process.stdout_text.find(caller_license_path.string()) == std::string::npos,
+    std::error_code caller_equivalence_error;
+    expect(reported_license_path.empty() ||
+               !fs::equivalent(
+                   reported_license_path,
+                   caller_license_path,
+                   caller_equivalence_error),
            "#4016: default license discovery must not inspect the caller-CWD license sibling");
 
     const ProcessResult localized_failure = run_process_capture(
