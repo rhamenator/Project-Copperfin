@@ -2412,7 +2412,8 @@ std::optional<std::filesystem::path> admit_direct_packaged_output_path(
     }
     const bool target_missing =
         status_error == std::errc::no_such_file_or_directory ||
-        status.type() == std::filesystem::file_type::not_found;
+        status.type() == std::filesystem::file_type::not_found ||
+        status.type() == std::filesystem::file_type::none;
     if (!target_missing) {
         if (!std::filesystem::is_regular_file(status)) {
             return std::nullopt;
