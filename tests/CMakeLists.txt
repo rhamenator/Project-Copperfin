@@ -77,6 +77,26 @@ add_test(
     COMMAND $<TARGET_FILE:test_runtime_host_debug_output> $<TARGET_FILE:copperfin_runtime_host>
 )
 
+add_executable(test_runtime_host_audit_containment
+    test_runtime_host_audit_containment.cpp
+)
+target_link_libraries(test_runtime_host_audit_containment PRIVATE cf_security cf_platform_support)
+add_dependencies(test_runtime_host_audit_containment copperfin_runtime_host)
+
+if(MSVC)
+    target_compile_options(test_runtime_host_audit_containment PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_runtime_host_audit_containment PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_runtime_host_audit_containment
+    COMMAND
+        $<TARGET_FILE:test_runtime_host_audit_containment>
+        $<TARGET_FILE:copperfin_runtime_host>
+        ${CMAKE_SOURCE_DIR}/resources/locales
+)
+
 add_executable(test_runtime_host_implicit_path_launch
     test_runtime_host_implicit_path_launch.cpp
 )
