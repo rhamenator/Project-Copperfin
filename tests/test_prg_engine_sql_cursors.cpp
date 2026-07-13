@@ -1975,6 +1975,20 @@ void test_sql_result_cursor_seek_parity() {
         "lNearFound = FOUND()\n"
         "nNearRec = RECNO()\n"
         "cOrderAfter = ORDER()\n"
+        "SET FILTER TO ID >= 2\n"
+        "lFilteredVisible = SEEK('BRAVO', 'sqlcust', 'NAME')\n"
+        "nFilteredVisibleRec = RECNO()\n"
+        "SET NEAR OFF\n"
+        "lFilteredHidden = SEEK('ALPHA', 'sqlcust', 'NAME')\n"
+        "nFilteredHiddenRec = RECNO()\n"
+        "lFilteredHiddenEof = EOF()\n"
+        "SET NEAR ON\n"
+        "lFilteredNear = SEEK('ALPHA', 'sqlcust', 'NAME')\n"
+        "nFilteredNearRec = RECNO()\n"
+        "GO 3\n"
+        "nFilteredIndexBefore = RECNO()\n"
+        "lFilteredIndexHidden = INDEXSEEK('ALPHA', .F., 'sqlcust', 'NAME')\n"
+        "nFilteredIndexAfter = RECNO()\n"
         "lDisc = SQLDISCONNECT(nConn)\n"
         "RETURN\n");
 
@@ -1995,6 +2009,16 @@ void test_sql_result_cursor_seek_parity() {
     const auto near_found = state.globals.find("lnearfound");
     const auto near_rec = state.globals.find("nnearrec");
     const auto order_after = state.globals.find("corderafter");
+    const auto filtered_visible = state.globals.find("lfilteredvisible");
+    const auto filtered_visible_rec = state.globals.find("nfilteredvisiblerec");
+    const auto filtered_hidden = state.globals.find("lfilteredhidden");
+    const auto filtered_hidden_rec = state.globals.find("nfilteredhiddenrec");
+    const auto filtered_hidden_eof = state.globals.find("lfilteredhiddeneof");
+    const auto filtered_near = state.globals.find("lfilterednear");
+    const auto filtered_near_rec = state.globals.find("nfilterednearrec");
+    const auto filtered_index_before = state.globals.find("nfilteredindexbefore");
+    const auto filtered_index_hidden = state.globals.find("lfilteredindexhidden");
+    const auto filtered_index_after = state.globals.find("nfilteredindexafter");
     const auto disc = state.globals.find("ldisc");
 
     expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL seek parity");
@@ -2008,6 +2032,16 @@ void test_sql_result_cursor_seek_parity() {
     expect(near_found != state.globals.end(), "FOUND() after SQL SEEK() miss should be captured");
     expect(near_rec != state.globals.end(), "RECNO() after SQL SEEK() miss should be captured");
     expect(order_after != state.globals.end(), "ORDER() after SQL SEEK()/INDEXSEEK() probes should be captured");
+    expect(filtered_visible != state.globals.end(), "filter-visible SQL SEEK() result should be captured");
+    expect(filtered_visible_rec != state.globals.end(), "filter-visible SQL SEEK() RECNO() should be captured");
+    expect(filtered_hidden != state.globals.end(), "filtered-out SQL SEEK() result should be captured");
+    expect(filtered_hidden_rec != state.globals.end(), "filtered-out SQL SEEK() RECNO() should be captured");
+    expect(filtered_hidden_eof != state.globals.end(), "filtered-out SQL SEEK() EOF() should be captured");
+    expect(filtered_near != state.globals.end(), "filtered SQL SET NEAR result should be captured");
+    expect(filtered_near_rec != state.globals.end(), "filtered SQL SET NEAR RECNO() should be captured");
+    expect(filtered_index_before != state.globals.end(), "filtered SQL INDEXSEEK() starting RECNO() should be captured");
+    expect(filtered_index_hidden != state.globals.end(), "filtered SQL INDEXSEEK() result should be captured");
+    expect(filtered_index_after != state.globals.end(), "filtered SQL INDEXSEEK() preserved RECNO() should be captured");
     expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL seek parity");
 
     if (exec != state.globals.end()) {
@@ -2042,6 +2076,36 @@ void test_sql_result_cursor_seek_parity() {
     }
     if (order_after != state.globals.end()) {
         expect(copperfin::runtime::format_value(order_after->second).empty(), "one-off SQL SEEK()/INDEXSEEK() order expressions should not permanently change ORDER()");
+    }
+    if (filtered_visible != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_visible->second) == "true", "SEEK() should find a filter-visible SQL row");
+    }
+    if (filtered_visible_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_visible_rec->second) == "2", "SEEK() should position on the filter-visible SQL row");
+    }
+    if (filtered_hidden != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_hidden->second) == "false", "SEEK() should not find a filtered-out SQL row");
+    }
+    if (filtered_hidden_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_hidden_rec->second) == "4", "filtered SQL SEEK() with SET NEAR OFF should move to physical EOF");
+    }
+    if (filtered_hidden_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_hidden_eof->second) == "true", "filtered SQL SEEK() with SET NEAR OFF should set EOF()");
+    }
+    if (filtered_near != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_near->second) == "false", "SET NEAR should not turn a filtered SQL key into a hit");
+    }
+    if (filtered_near_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_near_rec->second) == "2", "SET NEAR should select the next filter-visible SQL row");
+    }
+    if (filtered_index_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_index_before->second) == "3", "filtered SQL INDEXSEEK() should start on the selected row");
+    }
+    if (filtered_index_hidden != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_index_hidden->second) == "false", "INDEXSEEK() should not report a filtered-out SQL row");
+    }
+    if (filtered_index_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(filtered_index_after->second) == "3", "filtered SQL INDEXSEEK(.F.) should preserve RECNO()");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should still succeed after SQL SEEK() checks");

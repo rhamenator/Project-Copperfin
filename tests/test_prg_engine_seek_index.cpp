@@ -4250,6 +4250,168 @@ void test_set_filter_scopes_local_cursor_visibility() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_respects_active_filter_visibility() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path other_table_path = temp_root / "other.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"BRAVO", 30}, {"CHARLIE", 40}});
+    write_people_dbf(other_table_path, {{"OTHER", 99}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_filter.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "nMinimumAge = 30\n"
+        "SET FILTER TO AGE >= nMinimumAge\n"
+        "SEEK 'BRAVO'\n"
+        "lDuplicateFound = FOUND()\n"
+        "nDuplicateRec = RECNO()\n"
+        "lDuplicateBof = BOF()\n"
+        "lDuplicateEof = EOF()\n"
+        "SET NEAR OFF\n"
+        "SEEK 'ALPHA'\n"
+        "lHiddenFound = FOUND()\n"
+        "nHiddenRec = RECNO()\n"
+        "lHiddenEof = EOF()\n"
+        "SET NEAR ON\n"
+        "SEEK 'ALPHA'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "lNearEof = EOF()\n"
+        "SEEK 'CHARLIE'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "SET NEAR OFF\n"
+        "lFunctionHidden = SEEK('ALPHA')\n"
+        "nFunctionRec = RECNO()\n"
+        "GO 4\n"
+        "nIndexBefore = RECNO()\n"
+        "lIndexHidden = INDEXSEEK('ALPHA')\n"
+        "nIndexAfter = RECNO()\n"
+        "SET FILTER TO SEEK(NAME)\n"
+        "SEEK 'BRAVO'\n"
+        "lReentrantFound = FOUND()\n"
+        "nReentrantRec = RECNO()\n"
+        "SET FILTER TO SEEK('MISSING') OR AGE >= nMinimumAge\n"
+        "SEEK 'BRAVO'\n"
+        "lNestedMissFound = FOUND()\n"
+        "nNestedMissRec = RECNO()\n"
+        "SET FILTER TO IIF(NAME = 'ALPHA', 1 / 0 = 0, AGE >= nMinimumAge)\n"
+        "SEEK 'CHARLIE'\n"
+        "lLazyFilterFound = FOUND()\n"
+        "nLazyFilterRec = RECNO()\n"
+        "SET FILTER TO\n"
+        "USE '" + other_table_path.string() + "' ALIAS Other IN 0\n"
+        "SELECT People\n"
+        "SET ORDER TO 0\n"
+        "SET FILTER TO EMPTY(ORDER()) AND RECNO() = 3 AND AGE >= nMinimumAge IN People\n"
+        "SELECT Other\n"
+        "lTargetContextFound = SEEK('BRAVO', 'People', 'NAME')\n"
+        "nTargetContextRec = RECNO('People')\n"
+        "cSelectedAfterTarget = ALIAS()\n"
+        "nSelectedRecAfterTarget = RECNO()\n"
+        "SELECT People\n"
+        "SET FILTER TO EMPTY(ORDER()) AND AGE >= nMinimumAge\n"
+        "SEEK 'BRAVO'\n"
+        "lImplicitOrderFound = FOUND()\n"
+        "nImplicitOrderRec = RECNO()\n"
+        "cImplicitOrderAfter = ORDER()\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "lRushmoreFilterFound = FOUND()\n"
+        "nRushmoreFilterRec = RECNO()\n"
+        "cRushmoreFilterOrder = ORDER()\n"
+        "SET FILTER TO\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "GO 5\n"
+        "SET FIELDS TO NAME\n"
+        "cFaultFieldsBefore = SET('FIELDS')\n"
+        "SET FILTER TO 1 / 0 = 0\n"
+        "SET ORDER TO 0\n"
+        "GO 2\n"
+        "nFaultRecBefore = RECNO()\n"
+        "lFaultFoundBefore = FOUND()\n"
+        "lSeekFaultCaught = .F.\n"
+        "TRY\n"
+        "    SEEK 'BRAVO' TAG NAME\n"
+        "CATCH\n"
+        "    lSeekFaultCaught = .T.\n"
+        "ENDTRY\n"
+        "nFaultRecAfter = RECNO()\n"
+        "lFaultFoundAfter = FOUND()\n"
+        "lFaultBofAfter = BOF()\n"
+        "lFaultEofAfter = EOF()\n"
+        "cFaultOrderAfter = ORDER()\n"
+        "cFaultFieldsAfter = SET('FIELDS')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SEEK with an active filter should complete");
+
+    const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_value("lduplicatefound", "true", "SEEK should find a later visible duplicate after skipping the hidden first duplicate");
+    expect_value("nduplicaterec", "3", "SEEK should land on the first filter-visible duplicate");
+    expect_value("lduplicatebof", "false", "a filter-visible duplicate hit should clear BOF()");
+    expect_value("lduplicateeof", "false", "a filter-visible duplicate hit should clear EOF()");
+    expect_value("lhiddenfound", "false", "SEEK should not find a key available only on a filtered-out record");
+    expect_value("nhiddenrec", "5", "a filtered-out exact key with SET NEAR OFF should move to physical EOF");
+    expect_value("lhiddeneof", "true", "a filtered-out exact key with SET NEAR OFF should set EOF()");
+    expect_value("lnearfound", "false", "SET NEAR should not turn a filtered-out exact key into a hit");
+    expect_value("nnearrec", "3", "SET NEAR should land on the next filter-visible indexed record");
+    expect_value("lneareof", "false", "a filter-visible near record should clear EOF()");
+    expect_value("lvisiblefound", "true", "SEEK should continue finding filter-visible exact keys");
+    expect_value("nvisiblerec", "4", "SEEK should position on the filter-visible exact key");
+    expect_value("lfunctionhidden", "false", "SEEK() should share command visibility behavior");
+    expect_value("nfunctionrec", "5", "SEEK() with SET NEAR OFF should move to physical EOF on a filtered key");
+    expect_value("nindexbefore", "4", "INDEXSEEK() pointer-preservation setup should select a visible record");
+    expect_value("lindexhidden", "false", "INDEXSEEK() should not report a filtered-out key");
+    expect_value("nindexafter", "4", "INDEXSEEK() without pointer movement should preserve RECNO()");
+    expect_value("lreentrantfound", "true", "SEEK inside the active filter expression should not recursively overflow the runtime");
+    expect_value("nreentrantrec", "2", "a re-entrant SEEK filter should preserve ordinary duplicate-key order");
+    expect_value("lnestedmissfound", "true", "a nested same-cursor SEEK miss should not hide the candidate record from the rest of the filter");
+    expect_value("nnestedmissrec", "3", "a nested SEEK miss should still allow the first filter-visible duplicate");
+    expect_value("llazyfilterfound", "true", "SEEK should not evaluate filters for unrelated keys before the lower bound");
+    expect_value("nlazyfilterrec", "4", "lazy filter evaluation should preserve the visible exact-key position");
+    expect_value("ltargetcontextfound", "true", "SEEK should evaluate an active filter in its non-selected target work area");
+    expect_value("ntargetcontextrec", "3", "a targeted SEEK should use the target cursor's RECNO() and logical order in its filter");
+    expect_value("cselectedaftertarget", "Other", "a targeted SEEK should preserve the selected work area");
+    expect_value("nselectedrecaftertarget", "1", "a targeted SEEK should preserve the selected cursor position");
+    expect_value("limplicitorderfound", "true", "bare SEEK should evaluate filters against the logical order before implicit index selection");
+    expect_value("nimplicitorderrec", "3", "bare SEEK should find the first visible duplicate through an implicitly selected index");
+    expect_value("cimplicitorderafter", "", "bare SEEK should restore the logical controlling order after implicit index selection");
+    expect_value("lrushmorefilterfound", "true", "Rushmore LOCATE should evaluate the active filter against the logical controlling order");
+    expect_value("nrushmorefilterrec", "3", "Rushmore LOCATE should land on the first filter-visible matching record");
+    expect_value("crushmorefilterorder", "", "Rushmore LOCATE should not expose its temporary search order");
+    expect_value("nfaultrecbefore", "2", "filter-fault restoration should start from the selected physical record");
+    expect_value("lfaultfoundbefore", "true", "filter-fault restoration should start with the prior FOUND() state");
+    expect_value("cfaultfieldsbefore", "NAME", "filter-fault restoration should start with the configured SET FIELDS list");
+    expect_value("lseekfaultcaught", "true", "a filter evaluation fault during SEEK should remain catchable");
+    expect_value("nfaultrecafter", "2", "a filter evaluation fault should restore RECNO()");
+    expect_value("lfaultfoundafter", "true", "a filter evaluation fault should restore FOUND()");
+    expect_value("lfaultbofafter", "false", "a filter evaluation fault should restore BOF()");
+    expect_value("lfaulteofafter", "false", "a filter evaluation fault should restore EOF()");
+    expect_value("cfaultorderafter", "", "a filter evaluation fault should restore the prior controlling order");
+    expect_value("cfaultfieldsafter", "NAME", "a caught filter evaluation fault should restore SET FIELDS state");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_filter_in_targets_nonselected_alias() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter_in";
@@ -4373,6 +4535,7 @@ int main() {
     test_use_in_missing_alias_is_an_error();
     test_runtime_fault_containment();
     test_set_filter_scopes_local_cursor_visibility();
+    test_seek_respects_active_filter_visibility();
     test_set_filter_in_targets_nonselected_alias();
 
     if (copperfin::test_support::test_failures() != 0) {

@@ -990,7 +990,11 @@
             return true;
         }
 
-        bool seek_in_cursor(CursorState &cursor, const std::string &search_key)
+        bool seek_in_cursor(
+            CursorState &cursor,
+            const std::string &search_key,
+            const Frame &frame,
+            const CursorPositionSnapshot *filter_evaluation_context = nullptr)
         {
             cursor.found = false;
             if (!cursor.remote && cursor.source_path.empty())
@@ -1024,6 +1028,7 @@
                 cursor.active_order_collation_hint,
                 cursor.active_order_key_domain_hint);
             std::vector<IndexedCandidate> candidates;
+            std::vector<vfp::DbfRecord> local_records;
             if (cursor.remote)
             {
                 candidates.reserve(cursor.remote_records.size());
@@ -1044,15 +1049,16 @@
             }
             else
             {
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
                 if (!table_result.ok)
                 {
                     last_error_message = table_result.error;
                     return false;
                 }
 
-                candidates.reserve(table_result.table.records.size());
-                for (const auto &record : table_result.table.records)
+                local_records = std::move(table_result.table.records);
+                candidates.reserve(local_records.size());
+                for (const auto &record : local_records)
                 {
                     if (!order_for_expression_matches_record(cursor.active_order_for_expression, record))
                     {
@@ -1108,18 +1114,45 @@
                 return candidate.rfind(normalized_target, 0U) == 0U;
             };
 
-            if (lower != candidates.end() && is_match(lower->key))
+            const auto candidate_is_visible = [&](const IndexedCandidate &candidate)
             {
-                move_cursor_to(cursor, static_cast<long long>(lower->recno));
-                cursor.found = true;
-                return true;
+                const auto &records = cursor.remote ? cursor.remote_records : local_records;
+                if (candidate.recno == 0U || candidate.recno > records.size())
+                {
+                    return false;
+                }
+                return filter_expression_matches_record(
+                    cursor,
+                    frame,
+                    records[candidate.recno - 1U],
+                    candidate.recno,
+                    filter_evaluation_context);
+            };
+
+            auto next = lower;
+            while (next != candidates.end() && is_match(next->key))
+            {
+                if (candidate_is_visible(*next))
+                {
+                    move_cursor_to(cursor, static_cast<long long>(next->recno));
+                    cursor.found = true;
+                    return true;
+                }
+                ++next;
             }
 
-            if (is_set_enabled("near") && lower != candidates.end())
+            if (is_set_enabled("near"))
             {
-                move_cursor_to(cursor, static_cast<long long>(lower->recno));
-                cursor.found = false;
-                return false;
+                while (next != candidates.end())
+                {
+                    if (candidate_is_visible(*next))
+                    {
+                        move_cursor_to(cursor, static_cast<long long>(next->recno));
+                        cursor.found = false;
+                        return false;
+                    }
+                    ++next;
+                }
             }
 
             move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));

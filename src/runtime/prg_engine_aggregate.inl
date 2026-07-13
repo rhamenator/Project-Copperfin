@@ -958,6 +958,7 @@
         bool execute_seek(
             CursorState &cursor,
             const std::string &search_key,
+            const Frame &frame,
             bool move_pointer,
             bool preserve_pointer_on_miss,
             const std::string &order_designator,
@@ -979,7 +980,16 @@
                 return false;
             }
 
-            const bool found = seek_in_cursor(cursor, search_key);
+            bool found = false;
+            try
+            {
+                found = seek_in_cursor(cursor, search_key, frame, &original);
+            }
+            catch (...)
+            {
+                restore_cursor_snapshot(cursor, original);
+                throw;
+            }
             const std::string runtime_error = last_error_message;
             if (used_order_name != nullptr)
             {
@@ -1007,14 +1017,7 @@
                     cursor.found = original.found;
                 }
             }
-            cursor.active_order_name = original.active_order_name;
-            cursor.active_order_expression = original.active_order_expression;
-            cursor.active_order_for_expression = original.active_order_for_expression;
-            cursor.active_order_path = original.active_order_path;
-            cursor.active_order_normalization_hint = original.active_order_normalization_hint;
-            cursor.active_order_collation_hint = original.active_order_collation_hint;
-            cursor.active_order_key_domain_hint = original.active_order_key_domain_hint;
-            cursor.active_order_descending = original.active_order_descending;
+            restore_cursor_order_snapshot(cursor, original);
 
             if (!found && error_message != nullptr && !runtime_error.empty())
             {

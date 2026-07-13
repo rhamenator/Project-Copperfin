@@ -840,6 +840,7 @@ namespace copperfin::runtime
 
         // Index seek optimizer - pattern cache
         std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
+        std::vector<std::pair<const CursorState *, const vfp::DbfRecord *>> record_evaluation_overrides;
 
 #include "prg_engine_session.inl"
 #include "prg_engine_cursor.inl"
@@ -992,6 +993,28 @@ namespace copperfin::runtime
         const CursorState *preferred_cursor)
     {
         const std::string effective_expression = apply_with_context(expression, frame);
+        const auto resolve_expression_cursor = [this, preferred_cursor](const std::string &designator)
+        {
+            if (trim_copy(designator).empty() && preferred_cursor != nullptr)
+            {
+                return preferred_cursor;
+            }
+            return static_cast<const CursorState *>(resolve_cursor_target(designator));
+        };
+        const auto resolve_mutable_expression_cursor = [this, preferred_cursor](const std::string &designator)
+        {
+            if (trim_copy(designator).empty() && preferred_cursor != nullptr)
+            {
+                return resolve_cursor_target(std::to_string(preferred_cursor->work_area));
+            }
+            return resolve_cursor_target(designator);
+        };
+        const auto expression_cursor_designator = [preferred_cursor](const std::string &designator)
+        {
+            return trim_copy(designator).empty() && preferred_cursor != nullptr
+                       ? preferred_cursor->alias
+                       : designator;
+        };
         ExpressionParser parser(
             effective_expression,
             frame,
@@ -1004,75 +1027,75 @@ namespace copperfin::runtime
             error_handler,
             shutdown_handler,
             is_set_enabled("exact"),
-            current_selected_work_area(),
+            preferred_cursor == nullptr ? current_selected_work_area() : preferred_cursor->work_area,
             [this]()
             {
                 return next_available_work_area();
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor, preferred_cursor](const std::string &designator)
             {
-                if (designator.empty())
+                if (trim_copy(designator).empty() && preferred_cursor != nullptr)
                 {
-                    return current_selected_work_area();
+                    return preferred_cursor->work_area;
                 }
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0 : cursor->work_area;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? std::string{} : cursor->alias;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                return resolve_cursor_target(designator) != nullptr;
+                return resolve_expression_cursor(designator) != nullptr;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? std::string{} : cursor->dbf_identity;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->field_count;
             },
-            [this](std::size_t index, const std::string &designator)
+            [this, expression_cursor_designator](std::size_t index, const std::string &designator)
             {
-                return cursor_field_name(designator, index);
+                return cursor_field_name(expression_cursor_designator(designator), index);
             },
-            [this](const std::string &field_name, std::size_t index, const std::string &designator)
+            [this, expression_cursor_designator](const std::string &field_name, std::size_t index, const std::string &designator)
             {
-                return cursor_field_size(designator, field_name, index);
+                return cursor_field_size(expression_cursor_designator(designator), field_name, index);
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->record_count;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->record_length;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? 0U : cursor->recno;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? false : cursor->found;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? true : cursor->eof;
             },
-            [this](const std::string &designator)
+            [resolve_expression_cursor](const std::string &designator)
             {
-                const CursorState *cursor = resolve_cursor_target(designator);
+                const CursorState *cursor = resolve_expression_cursor(designator);
                 return cursor == nullptr ? true : cursor->bof;
             },
             [this](const std::string &function, const std::vector<std::string> &raw_arguments, const std::vector<PrgValue> &arguments)
@@ -1108,17 +1131,17 @@ namespace copperfin::runtime
             {
                 return aggregate_function_value(function_name, raw_arguments, frame);
             },
-            [this](const std::string &designator, bool include_path)
+            [this, expression_cursor_designator](const std::string &designator, bool include_path)
             {
-                return order_function_value(designator, include_path);
+                return order_function_value(expression_cursor_designator(designator), include_path);
             },
-            [this](const std::string &index_file_name, std::size_t tag_number, const std::string &designator)
+            [this, expression_cursor_designator](const std::string &index_file_name, std::size_t tag_number, const std::string &designator)
             {
-                return tag_function_value(index_file_name, tag_number, designator);
+                return tag_function_value(index_file_name, tag_number, expression_cursor_designator(designator));
             },
-            [this](const std::string &search_key, bool move_pointer, const std::string &designator, const std::string &order_designator)
+            [this, &frame, resolve_mutable_expression_cursor](const std::string &search_key, bool move_pointer, const std::string &designator, const std::string &order_designator)
             {
-                CursorState *cursor = resolve_cursor_target(designator);
+                CursorState *cursor = resolve_mutable_expression_cursor(designator);
                 if (cursor == nullptr)
                 {
                     return false;
@@ -1127,14 +1150,15 @@ namespace copperfin::runtime
                 return execute_seek(
                     *cursor,
                     search_key,
+                    frame,
                     move_pointer,
                     false,
                     parsed_order.order_designator,
                     parsed_order.descending_override);
             },
-            [this](const std::string &search_key, bool move_pointer, const std::string &designator, const std::string &order_designator)
+            [this, &frame, resolve_mutable_expression_cursor](const std::string &search_key, bool move_pointer, const std::string &designator, const std::string &order_designator)
             {
-                CursorState *cursor = resolve_cursor_target(designator);
+                CursorState *cursor = resolve_mutable_expression_cursor(designator);
                 if (cursor == nullptr)
                 {
                     return false;
@@ -1143,6 +1167,7 @@ namespace copperfin::runtime
                 return execute_seek(
                     *cursor,
                     search_key,
+                    frame,
                     move_pointer,
                     true,
                     parsed_order.order_designator,

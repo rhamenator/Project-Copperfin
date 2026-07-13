@@ -2,12 +2,8 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
-        void restore_cursor_snapshot(CursorState &cursor, const CursorPositionSnapshot &snapshot) const
+        void restore_cursor_order_snapshot(CursorState &cursor, const CursorPositionSnapshot &snapshot) const
         {
-            cursor.recno = snapshot.recno;
-            cursor.found = snapshot.found;
-            cursor.bof = snapshot.bof;
-            cursor.eof = snapshot.eof;
             cursor.active_order_name = snapshot.active_order_name;
             cursor.active_order_expression = snapshot.active_order_expression;
             cursor.active_order_for_expression = snapshot.active_order_for_expression;
@@ -16,6 +12,15 @@
             cursor.active_order_collation_hint = snapshot.active_order_collation_hint;
             cursor.active_order_key_domain_hint = snapshot.active_order_key_domain_hint;
             cursor.active_order_descending = snapshot.active_order_descending;
+        }
+
+        void restore_cursor_snapshot(CursorState &cursor, const CursorPositionSnapshot &snapshot) const
+        {
+            cursor.recno = snapshot.recno;
+            cursor.found = snapshot.found;
+            cursor.bof = snapshot.bof;
+            cursor.eof = snapshot.eof;
+            restore_cursor_order_snapshot(cursor, snapshot);
         }
 
         bool evaluate_visibility_expression(const std::string &expression, const Frame &frame, const CursorState *cursor)
@@ -35,59 +40,57 @@
             const std::string fields_value = had_fields ? saved_fields->second : std::string{};
             set_state["fields_enabled"] = "off";
 
-            const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);
-            if (evaluated.kind == PrgValueKind::string && trimmed_expression.front() == '&')
+            const auto restore_fields = [&]()
             {
-                const std::string expanded_expression = trim_copy(value_as_string(evaluated));
-                if (!expanded_expression.empty() && expanded_expression != trimmed_expression)
+                if (had_fields_enabled)
                 {
-                    const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, cursor));
-                    if (had_fields_enabled)
-                    {
-                        set_state["fields_enabled"] = fields_enabled_value;
-                    }
-                    else
-                    {
-                        set_state.erase("fields_enabled");
-                    }
-                    if (had_fields)
-                    {
-                        set_state["fields"] = fields_value;
-                    }
-                    else
-                    {
-                        set_state.erase("fields");
-                    }
-                    return result;
+                    set_state["fields_enabled"] = fields_enabled_value;
                 }
-            }
+                else
+                {
+                    set_state.erase("fields_enabled");
+                }
+                if (had_fields)
+                {
+                    set_state["fields"] = fields_value;
+                }
+                else
+                {
+                    set_state.erase("fields");
+                }
+            };
 
-            const bool result = value_as_bool(evaluated);
-            if (had_fields_enabled)
+            try
             {
-                set_state["fields_enabled"] = fields_enabled_value;
-            }
-            else
-            {
-                set_state.erase("fields_enabled");
-            }
-            if (had_fields)
-            {
-                set_state["fields"] = fields_value;
-            }
-            else
-            {
-                set_state.erase("fields");
-            }
+                const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);
+                if (evaluated.kind == PrgValueKind::string && trimmed_expression.front() == '&')
+                {
+                    const std::string expanded_expression = trim_copy(value_as_string(evaluated));
+                    if (!expanded_expression.empty() && expanded_expression != trimmed_expression)
+                    {
+                        const bool result = value_as_bool(evaluate_expression(expanded_expression, frame, cursor));
+                        restore_fields();
+                        return result;
+                    }
+                }
 
-            return result;
+                const bool result = value_as_bool(evaluated);
+                restore_fields();
+                return result;
+            }
+            catch (...)
+            {
+                restore_fields();
+                throw;
+            }
         }
 
         bool current_record_matches_visibility(
             const CursorState &cursor,
             const Frame &frame,
             const std::string &extra_expression,
-            bool honor_set_deleted = true)
+            bool honor_set_deleted = true,
+            bool honor_filter = true)
         {
             const auto record = current_record(cursor);
             if (!record.has_value())
@@ -98,7 +101,9 @@
             {
                 return false;
             }
-            if (!cursor.filter_expression.empty() && !evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
+            if (honor_filter &&
+                !cursor.filter_expression.empty() &&
+                !evaluate_visibility_expression(cursor.filter_expression, frame, &cursor))
             {
                 return false;
             }
@@ -107,6 +112,50 @@
                 return false;
             }
             return true;
+        }
+
+        bool filter_expression_matches_record(
+            CursorState &cursor,
+            const Frame &frame,
+            const vfp::DbfRecord &record,
+            std::size_t recno,
+            const CursorPositionSnapshot *evaluation_context = nullptr)
+        {
+            if (cursor.filter_expression.empty())
+            {
+                return true;
+            }
+            if (std::any_of(
+                    record_evaluation_overrides.rbegin(),
+                    record_evaluation_overrides.rend(),
+                    [&](const auto &entry)
+                    {
+                        return entry.first == &cursor;
+                    }))
+            {
+                return true;
+            }
+
+            const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            record_evaluation_overrides.emplace_back(&cursor, &record);
+            try
+            {
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                if (evaluation_context != nullptr)
+                {
+                    restore_cursor_order_snapshot(cursor, *evaluation_context);
+                }
+                const bool matches = current_record_matches_visibility(cursor, frame, {}, false);
+                restore_cursor_snapshot(cursor, original);
+                record_evaluation_overrides.pop_back();
+                return matches;
+            }
+            catch (...)
+            {
+                restore_cursor_snapshot(cursor, original);
+                record_evaluation_overrides.pop_back();
+                throw;
+            }
         }
 
         bool seek_visible_record(
@@ -174,6 +223,18 @@
 
         std::optional<vfp::DbfRecord> current_record(const CursorState &cursor) const
         {
+            const auto record_override = std::find_if(
+                record_evaluation_overrides.rbegin(),
+                record_evaluation_overrides.rend(),
+                [&](const auto &entry)
+                {
+                    return entry.first == &cursor && entry.second != nullptr;
+                });
+            if (record_override != record_evaluation_overrides.rend())
+            {
+                return *record_override->second;
+            }
+
             if (cursor.recno == 0U || cursor.eof)
             {
                 return std::nullopt;
@@ -384,14 +445,7 @@
 
                             const CursorPositionSnapshot saved_cursor = capture_cursor_snapshot(cursor);
                             const auto restore_order_metadata = [&]() {
-                                cursor.active_order_name = saved_cursor.active_order_name;
-                                cursor.active_order_expression = saved_cursor.active_order_expression;
-                                cursor.active_order_for_expression = saved_cursor.active_order_for_expression;
-                                cursor.active_order_path = saved_cursor.active_order_path;
-                                cursor.active_order_normalization_hint = saved_cursor.active_order_normalization_hint;
-                                cursor.active_order_collation_hint = saved_cursor.active_order_collation_hint;
-                                cursor.active_order_key_domain_hint = saved_cursor.active_order_key_domain_hint;
-                                cursor.active_order_descending = saved_cursor.active_order_descending;
+                                restore_cursor_order_snapshot(cursor, saved_cursor);
                             };
                             const auto restore_full_state = [&]() {
                                 restore_order_metadata();
@@ -416,7 +470,7 @@
                                 cursor.eof = (start_recno > cursor.record_count);
                                 cursor.found = false;
 
-                                if (seek_in_cursor(cursor, search_key))
+                                if (seek_in_cursor(cursor, search_key, frame, &saved_cursor))
                                 {
                                     // The index seek only guarantees the cursor landed on a record whose
                                     // key relates to search_key per the index's own ordering/match rules; for
@@ -424,10 +478,10 @@
                                     // mismatch) the landed record must still be re-checked against the actual
                                     // for_expression before trusting it, otherwise e.g. a record with AGE == 30
                                     // could be reported as matching LOCATE FOR AGE > 30.
-                                    if (current_record_matches_visibility(cursor, frame, for_expression) &&
+                                    restore_order_metadata();
+                                    if (current_record_matches_visibility(cursor, frame, for_expression, true, false) &&
                                         (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor)))
                                     {
-                                        restore_order_metadata();
                                         cursor.found = true;
                                         rushmore_detail = locate_detail + " -> index_seek via " + plan.selected_order->order_name +
                                                           " (" + plan.decision_rationale + ")";

@@ -2479,6 +2479,7 @@
                 const bool found = execute_seek(
                     *cursor,
                     search_key,
+                    frame,
                     true,
                     false,
                     statement.tertiary_expression,
