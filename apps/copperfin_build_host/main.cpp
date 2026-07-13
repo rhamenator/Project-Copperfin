@@ -43,7 +43,7 @@ std::string explicit_locale_from_arguments(int argc, char** argv) {
 }
 
 copperfin::localization::LocalizedCatalog load_localization(
-    const char* executable_path,
+    const std::filesystem::path& executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
     return copperfin::localization::load_catalogs(
@@ -139,7 +139,9 @@ void print_warning_line(
     std::cout << message(catalog, "BuildHost.Prefix.Warning") << warning << "\n";
 }
 
-std::string resolve_runtime_host_path(const std::string& override_path, const std::string& executable_path) {
+std::string resolve_runtime_host_path(
+    const std::string& override_path,
+    const std::filesystem::path& running_executable_path) {
     if (!override_path.empty()) {
         return override_path;
     }
@@ -150,8 +152,7 @@ std::string resolve_runtime_host_path(const std::string& override_path, const st
         return resolved;
     }
 
-    const std::filesystem::path host_root =
-        copperfin::platform::resolve_running_executable_path(executable_path).parent_path();
+    const std::filesystem::path host_root = running_executable_path.parent_path();
     const std::filesystem::path host_name =
 #ifdef _WIN32
         "copperfin_runtime_host.exe";
@@ -286,8 +287,12 @@ bool supports_dotnet_launcher_publish() {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const std::filesystem::path invocation_path =
+        argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
+    const std::filesystem::path running_executable_path =
+        copperfin::platform::resolve_running_executable_path(invocation_path);
     const copperfin::localization::LocalizedCatalog catalog =
-        load_localization(argv[0], explicit_locale_from_arguments(argc, argv));
+        load_localization(running_executable_path, explicit_locale_from_arguments(argc, argv));
 
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
@@ -310,7 +315,7 @@ int main(int argc, char** argv) {
     const bool license_status_requested =
         std::find(args.begin(), args.end(), "--license-status") != args.end();
     if (legacy_license_status || license_status_requested) {
-        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        print_license_status(copperfin::licensing::load_license_status(running_executable_path));
         return 0;
     }
 
@@ -472,7 +477,7 @@ int main(int argc, char** argv) {
     // what it produces. Local source-path provenance stays out of the
     // durable package artifacts. See LicenseState::perpetual_out_of_version's
     // doc comment.
-    const auto license_status = copperfin::licensing::load_license_status(argv[0]);
+    const auto license_status = copperfin::licensing::load_license_status(running_executable_path);
     plan.license_state = std::string(copperfin::licensing::license_state_name(license_status.state));
     plan.license_type = license_status.license_type;
     plan.license_id = license_status.license_id;
@@ -481,7 +486,9 @@ int main(int argc, char** argv) {
     plan.license_subscription_expires = license_status.subscription_expires;
     plan.license_perpetual_max_major_version = license_status.perpetual_max_major_version;
 
-    const std::string runtime_host_path = resolve_runtime_host_path(runtime_host_override, argv[0]);
+    const std::string runtime_host_path = resolve_runtime_host_path(
+        runtime_host_override,
+        running_executable_path);
     const auto materialized = copperfin::runtime::materialize_runtime_package(
         plan,
         security_profile,

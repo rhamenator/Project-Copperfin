@@ -3080,6 +3080,7 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
 
     {
         ScopedEnvironmentValue clear_runtime_host_env("COPPERFIN_RUNTIME_HOST_PATH");
+        ScopedEnvironmentValue clear_license_path("COPPERFIN_LICENSE_PATH");
 
         const auto process = run_process_capture(
             temp_build_host.string(),
@@ -3110,6 +3111,7 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
         fs::create_directories(caller_root);
         const fs::path caller_runtime_host = caller_root / source_runtime_host.filename();
         write_text(caller_runtime_host, "caller-cwd-runtime-host-decoy\n");
+        write_text(caller_root / "license.cflicense", "{\"caller\":true}\n");
 
         ScopedEnvironmentValue search_path("PATH", false);
         const std::string original_path = copperfin::test_support::getenv_value("PATH");
@@ -3136,6 +3138,12 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
                "#4017: PATH-launched build host should resolve its deployed runtime-host sibling");
         expect(path_process.stdout_text.find("status: ok") != std::string::npos,
                "#4017: PATH-launched sibling resolution should preserve invariant success status");
+        const fs::path path_debug_manifest = value_for_key(
+            path_process.stdout_text,
+            "debug.manifest.path");
+        expect(!path_debug_manifest.empty() &&
+                   read_text(path_debug_manifest).find("license_state=free") != std::string::npos,
+               "#4025: PATH-launched package metadata must ignore a caller-CWD license file");
         const fs::path staged_runtime_host = expected_output.parent_path() / source_runtime_host.filename();
         expect(fs::exists(staged_runtime_host),
                "#4017: PATH-launched packaging should stage the runtime host");

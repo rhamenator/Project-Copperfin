@@ -116,6 +116,26 @@ add_test(
         $<TARGET_FILE:copperfin_runtime_host>
 )
 
+add_executable(test_tool_license_path_launch
+    test_tool_license_path_launch.cpp
+)
+target_link_libraries(test_tool_license_path_launch PRIVATE cf_platform_support)
+add_dependencies(test_tool_license_path_launch copperfin_build_host copperfin_inspect)
+
+if(MSVC)
+    target_compile_options(test_tool_license_path_launch PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_tool_license_path_launch PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_tool_license_path_launch
+    COMMAND
+        $<TARGET_FILE:test_tool_license_path_launch>
+        $<TARGET_FILE:copperfin_build_host>
+        $<TARGET_FILE:copperfin_inspect>
+)
+
 add_executable(test_build_host_output
     test_build_host_output.cpp
 )

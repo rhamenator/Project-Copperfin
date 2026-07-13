@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/windows-environment-validation.yml"
       - "apps/copperfin_build_host/main.cpp"
+      - "apps/copperfin_inspect/main.cpp"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
       - "include/copperfin/platform/executable_path.h"
@@ -15,6 +16,7 @@ on:
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_build_host_output.cpp"
+      - "tests/test_tool_license_path_launch.cpp"
       - "tests/test_locale_catalog_environment_support.h"
       - "tests/test_localization.cpp"
       - "tests/test_platform_environment.cpp"
@@ -24,6 +26,7 @@ on:
     paths:
       - ".github/workflows/windows-environment-validation.yml"
       - "apps/copperfin_build_host/main.cpp"
+      - "apps/copperfin_inspect/main.cpp"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
       - "include/copperfin/platform/executable_path.h"
@@ -32,6 +35,7 @@ on:
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_build_host_output.cpp"
+      - "tests/test_tool_license_path_launch.cpp"
       - "tests/test_locale_catalog_environment_support.h"
       - "tests/test_localization.cpp"
       - "tests/test_platform_environment.cpp"
@@ -54,7 +58,7 @@ jobs:
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build environment and executable path regressions
-        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_localization test_build_host_output test_runtime_host_implicit_path_launch
+        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch
 
       - name: Run environment and executable path regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_build_host_output|test_runtime_host_implicit_path_launch)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch)$"

@@ -4,6 +4,7 @@
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/executable_path.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/security/process_hardening.h"
 
@@ -52,7 +53,7 @@ CommandLineOptions parse_arguments(int argc, char** argv) {
 }
 
 copperfin::localization::LocalizedCatalog load_localization(
-    const char* executable_path,
+    const std::filesystem::path& executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
     return copperfin::localization::load_catalogs(
@@ -219,14 +220,20 @@ void print_inspection(
 }  // namespace
 
 int main(int argc, char** argv) {
+    const std::filesystem::path invocation_path =
+        argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
+    const std::filesystem::path running_executable_path =
+        copperfin::platform::resolve_running_executable_path(invocation_path);
     const CommandLineOptions options = parse_arguments(argc, argv);
-    const copperfin::localization::LocalizedCatalog catalog = load_localization(argv[0], options.locale);
+    const copperfin::localization::LocalizedCatalog catalog = load_localization(
+        running_executable_path,
+        options.locale);
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
         print_warning_line(catalog, hardening.message);
     }
     if (options.license_status) {
-        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        print_license_status(copperfin::licensing::load_license_status(running_executable_path));
         return 0;
     }
     if (!options.valid || options.help || options.asset_path.empty()) {
