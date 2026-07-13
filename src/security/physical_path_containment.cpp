@@ -71,6 +71,9 @@ std::optional<std::filesystem::path> contained_relative_path(
     for (; path_iterator != path.end(); ++path_iterator) {
         relative /= *path_iterator;
     }
+    if (relative.empty()) {
+        relative = ".";
+    }
 #else
     const std::filesystem::path relative = path.lexically_relative(root);
 #endif

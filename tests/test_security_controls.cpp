@@ -688,6 +688,11 @@ void test_physical_path_containment_rejects_indirection() {
         package_root);
     expect(ordinary.allowed && fs::equivalent(ordinary.canonical_path, packaged_file),
            "ordinary package files should pass physical containment inspection");
+    const auto root_itself = copperfin::security::inspect_physical_path_containment(
+        package_root,
+        package_root);
+    expect(root_itself.allowed && fs::equivalent(root_itself.canonical_path, package_root),
+           "the exact package root should pass physical containment inspection");
     const auto ordinary_snapshot = copperfin::security::read_physically_contained_file_snapshot(
         ordinary,
         package_root);
