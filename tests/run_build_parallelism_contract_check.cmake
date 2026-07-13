@@ -39,3 +39,4 @@ require_text("scripts/validate-posix.sh" "cmake --build \"\$build_dir\" --parall
 require_text("scripts/validate-windows.ps1" "[int]\$BuildJobs = 2")
 require_text("scripts/validate-windows.ps1" "\"--parallel\", \"\$BuildJobs\"")
 require_text("README.md" "Native CMake validation defaults to two concurrent compile jobs")
+require_text(".github/workflows/native-validation.yml" "timeout-minutes: 120")
