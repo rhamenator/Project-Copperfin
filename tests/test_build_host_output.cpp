@@ -3103,6 +3103,48 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
                    "runtime-host resolution smoke test manifest should omit primary-output materialization state");
         }
         expect(fs::exists(expected_output), "runtime-host fallback test should materialize requested executable");
+
+        fs::remove_all(output_dir, ignored);
+        fs::create_directories(output_dir);
+        const fs::path caller_root = temp_root / "unrelated-caller";
+        fs::create_directories(caller_root);
+        const fs::path caller_runtime_host = caller_root / source_runtime_host.filename();
+        write_text(caller_runtime_host, "caller-cwd-runtime-host-decoy\n");
+
+        ScopedEnvironmentValue search_path("PATH", false);
+        const std::string original_path = copperfin::test_support::getenv_value("PATH");
+#if defined(_WIN32)
+        ScopedEnvironmentValue path_extensions("PATHEXT", ".EXE;.COM;.BAT;.CMD");
+        constexpr char path_separator = ';';
+        const std::string launch_name = temp_build_host.stem().string();
+#else
+        constexpr char path_separator = ':';
+        const std::string launch_name = temp_build_host.filename().string();
+#endif
+        search_path.set(
+            temp_bundle.string() +
+            (original_path.empty()
+                 ? std::string()
+                 : std::string(1U, path_separator) + original_path));
+
+        const auto path_process = run_process_capture(
+            launch_name,
+            {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+            caller_root);
+
+        expect(path_process.exit_code == 0,
+               "#4017: PATH-launched build host should resolve its deployed runtime-host sibling");
+        expect(path_process.stdout_text.find("status: ok") != std::string::npos,
+               "#4017: PATH-launched sibling resolution should preserve invariant success status");
+        const fs::path staged_runtime_host = expected_output.parent_path() / source_runtime_host.filename();
+        expect(fs::exists(staged_runtime_host),
+               "#4017: PATH-launched packaging should stage the runtime host");
+        if (fs::exists(staged_runtime_host)) {
+            expect(fs::file_size(staged_runtime_host) == fs::file_size(temp_runtime_host),
+                   "#4017: PATH-launched packaging should stage the deployed runtime-host bytes");
+            expect(read_text(staged_runtime_host) != "caller-cwd-runtime-host-decoy\n",
+                   "#4017: PATH-launched packaging must not stage the caller-CWD decoy");
+        }
     }
 
     fs::remove_all(temp_root, ignored);

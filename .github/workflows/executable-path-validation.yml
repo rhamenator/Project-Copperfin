@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/executable-path-validation.yml"
       - "CMakeLists.txt"
+      - "apps/copperfin_build_host/main.cpp"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
       - "include/copperfin/platform/executable_path.h"
@@ -13,6 +14,7 @@ on:
       - "src/platform/executable_path.cpp"
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
+      - "tests/test_build_host_output.cpp"
       - "tests/test_localization.cpp"
       - "tests/test_platform_environment.cpp"
       - "tests/test_runtime_host_implicit_path_launch.cpp"
@@ -20,6 +22,7 @@ on:
     paths:
       - ".github/workflows/executable-path-validation.yml"
       - "CMakeLists.txt"
+      - "apps/copperfin_build_host/main.cpp"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
       - "include/copperfin/platform/executable_path.h"
@@ -27,6 +30,7 @@ on:
       - "src/platform/executable_path.cpp"
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
+      - "tests/test_build_host_output.cpp"
       - "tests/test_localization.cpp"
       - "tests/test_platform_environment.cpp"
       - "tests/test_runtime_host_implicit_path_launch.cpp"
@@ -66,9 +70,10 @@ jobs:
           cmake --build build --parallel 2 --target
           test_platform_environment
           test_localization
+          test_build_host_output
           test_runtime_host_implicit_path_launch
 
       - name: Run executable path regressions
         run: >-
           ctest --test-dir build --output-on-failure
-          -R "^(test_platform_environment|test_localization|test_runtime_host_implicit_path_launch)$"
+          -R "^(test_platform_environment|test_localization|test_build_host_output|test_runtime_host_implicit_path_launch)$"

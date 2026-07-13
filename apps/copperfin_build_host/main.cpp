@@ -5,6 +5,7 @@
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/audit_stream.h"
@@ -149,7 +150,8 @@ std::string resolve_runtime_host_path(const std::string& override_path, const st
         return resolved;
     }
 
-    const std::filesystem::path host_root = std::filesystem::absolute(executable_path).parent_path();
+    const std::filesystem::path host_root =
+        copperfin::platform::resolve_running_executable_path(executable_path).parent_path();
     const std::filesystem::path host_name =
 #ifdef _WIN32
         "copperfin_runtime_host.exe";
