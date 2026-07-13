@@ -188,7 +188,11 @@ if(content_root_position EQUAL -1)
         "stdout:\n${run_output}")
 endif()
 
-set(expected_audit_log_path "${deployed_root}/security_audit.log")
+if(NOT EXISTS "${deployed_root}/security_audit.log")
+    message(FATAL_ERROR "Runtime host binding smoke did not write the rebound package-local audit log.")
+endif()
+
+file(REAL_PATH "${deployed_root}/security_audit.log" expected_audit_log_path)
 cmake_path(NATIVE_PATH expected_audit_log_path NORMALIZE expected_audit_log_path)
 string(FIND "${run_output}" "${expected_audit_log_path}" audit_log_path_position)
 if(audit_log_path_position EQUAL -1)
@@ -196,10 +200,6 @@ if(audit_log_path_position EQUAL -1)
         "Runtime host binding smoke did not report the rebound package-local audit log path.\n"
         "expected: ${expected_audit_log_path}\n"
         "stdout:\n${run_output}")
-endif()
-
-if(NOT EXISTS "${deployed_root}/security_audit.log")
-    message(FATAL_ERROR "Runtime host binding smoke did not write the rebound package-local audit log.")
 endif()
 
 set(separator_root "${test_root}/separator-deployed")
