@@ -423,6 +423,8 @@ add_executable(copperfin_runtime_host
 target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile cf_licensing)
 target_link_libraries(copperfin_runtime_host PRIVATE cf_localization)
 
+copperfin_apply_windows_stack_reserve(copperfin_runtime_host)
+
 if(MSVC)
     target_compile_options(copperfin_runtime_host PRIVATE /W4 /permissive-)
 else()

@@ -173,7 +173,8 @@ void test_runtime_host_audit_containment(const std::string& runtime_host_path) {
             temp_root);
 
         expect(process.exit_code == 7,
-               "#4015: a direct package-local audit path should preserve the policy-denial exit code");
+               "#4015: a direct package-local audit path should preserve the policy-denial exit code; exit=" +
+                   std::to_string(process.exit_code) + ", output=" + process.stdout_text);
         const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
             local_audit_path.string());
         expect(audit_chain.ok && audit_chain.entries == 1U,
@@ -203,7 +204,8 @@ void test_runtime_host_audit_containment(const std::string& runtime_host_path) {
             temp_root);
 
         expect(process.exit_code == 7,
-               "#4015: Windows package components should compare case-insensitively");
+               "#4015: Windows package components should compare case-insensitively; exit=" +
+                   std::to_string(process.exit_code) + ", output=" + process.stdout_text);
         const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
             local_audit_path.string());
         expect(audit_chain.ok && audit_chain.entries == 1U,
@@ -295,7 +297,8 @@ void test_runtime_host_audit_containment(const std::string& runtime_host_path) {
             temp_root);
 
         expect(process.exit_code == 7,
-               "#4015: exact nested rebinding should retain the policy-denial exit code");
+               "#4015: exact nested rebinding should retain the policy-denial exit code; exit=" +
+                   std::to_string(process.exit_code) + ", output=" + process.stdout_text);
         expect(read_text(basename_sentinel) == "external sentinel\n",
                "#4015: exact rebinding must not use a same-named root fallback");
         const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
