@@ -3140,11 +3140,47 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
         expect(fs::exists(staged_runtime_host),
                "#4017: PATH-launched packaging should stage the runtime host");
         if (fs::exists(staged_runtime_host)) {
-            expect(fs::file_size(staged_runtime_host) == fs::file_size(temp_runtime_host),
+            expect(read_text(staged_runtime_host) == read_text(temp_runtime_host),
                    "#4017: PATH-launched packaging should stage the deployed runtime-host bytes");
-            expect(read_text(staged_runtime_host) != "caller-cwd-runtime-host-decoy\n",
-                   "#4017: PATH-launched packaging must not stage the caller-CWD decoy");
         }
+
+        const fs::path environment_runtime_host = temp_root / "environment-runtime-host.bin";
+        const fs::path explicit_runtime_host = temp_root / "explicit-runtime-host.bin";
+        write_text(environment_runtime_host, "environment-runtime-host\n");
+        write_text(explicit_runtime_host, "explicit-runtime-host\n");
+
+        fs::remove_all(output_dir, ignored);
+        fs::create_directories(output_dir);
+        clear_runtime_host_env.set(environment_runtime_host.string());
+        const auto environment_process = run_process_capture(
+            launch_name,
+            {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+            caller_root);
+        expect(environment_process.exit_code == 0,
+               "#4017: COPPERFIN_RUNTIME_HOST_PATH should override sibling discovery");
+        expect(fs::exists(staged_runtime_host) &&
+                   read_text(staged_runtime_host) == read_text(environment_runtime_host),
+               "#4017: the environment runtime-host override should provide staged bytes");
+
+        fs::remove_all(output_dir, ignored);
+        fs::create_directories(output_dir);
+        const auto explicit_process = run_process_capture(
+            launch_name,
+            {
+                "build",
+                "--project",
+                project_path.string(),
+                "--output-dir",
+                output_dir.string(),
+                "--runtime-host",
+                explicit_runtime_host.string()
+            },
+            caller_root);
+        expect(explicit_process.exit_code == 0,
+               "#4017: --runtime-host should override COPPERFIN_RUNTIME_HOST_PATH");
+        expect(fs::exists(staged_runtime_host) &&
+                   read_text(staged_runtime_host) == read_text(explicit_runtime_host),
+               "#4017: the explicit runtime-host override should provide staged bytes");
     }
 
     fs::remove_all(temp_root, ignored);
