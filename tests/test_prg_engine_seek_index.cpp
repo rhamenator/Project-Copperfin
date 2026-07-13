@@ -4177,11 +4177,15 @@ void test_set_filter_scopes_local_cursor_visibility() {
         "GO TOP\n"
         "cOtherTop = NAME\n"
         "SELECT People\n"
-        "SET FILTER OFF\n"
+        "SET FILTER TO\n"
         "GO TOP\n"
         "cTopUnfiltered = NAME\n"
         "LOCATE FOR NAME = 'BRAVO'\n"
         "cLocateUnfiltered = NAME\n"
+        "SET FILTER TO AGE >= 30\n"
+        "SET FILTER OFF\n"
+        "GO TOP\n"
+        "cTopAfterOff = NAME\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -4198,6 +4202,7 @@ void test_set_filter_scopes_local_cursor_visibility() {
     const auto other_top = state.globals.find("cothertop");
     const auto top_unfiltered = state.globals.find("ctopunfiltered");
     const auto locate_unfiltered = state.globals.find("clocateunfiltered");
+    const auto top_after_off = state.globals.find("ctopafteroff");
 
     expect(top_filtered != state.globals.end(), "filtered GO TOP should expose the first visible record");
     expect(next_filtered != state.globals.end(), "filtered SKIP should expose the next visible record");
@@ -4205,8 +4210,9 @@ void test_set_filter_scopes_local_cursor_visibility() {
     expect(filtered_found != state.globals.end(), "filtered LOCATE should expose FOUND()");
     expect(filtered_locate_eof != state.globals.end(), "filtered LOCATE miss should expose EOF()");
     expect(other_top != state.globals.end(), "filters should not bleed into a second alias/work area");
-    expect(top_unfiltered != state.globals.end(), "SET FILTER OFF should restore unfiltered navigation");
-    expect(locate_unfiltered != state.globals.end(), "SET FILTER OFF should restore unfiltered LOCATE behavior");
+    expect(top_unfiltered != state.globals.end(), "bare SET FILTER TO should restore unfiltered navigation");
+    expect(locate_unfiltered != state.globals.end(), "bare SET FILTER TO should restore unfiltered LOCATE behavior");
+    expect(top_after_off != state.globals.end(), "SET FILTER OFF should remain a supported clear-filter form");
 
     if (top_filtered != state.globals.end()) {
         expect(copperfin::runtime::format_value(top_filtered->second) == "CHARLIE", "GO TOP should land on the first filtered-visible row");
@@ -4227,16 +4233,19 @@ void test_set_filter_scopes_local_cursor_visibility() {
         expect(copperfin::runtime::format_value(other_top->second) == "ALPHA", "SET FILTER should remain scoped to the targeted cursor/work area");
     }
     if (top_unfiltered != state.globals.end()) {
-        expect(copperfin::runtime::format_value(top_unfiltered->second) == "ALPHA", "SET FILTER OFF should restore full-table GO TOP semantics");
+        expect(copperfin::runtime::format_value(top_unfiltered->second) == "ALPHA", "bare SET FILTER TO should restore full-table GO TOP semantics");
     }
     if (locate_unfiltered != state.globals.end()) {
-        expect(copperfin::runtime::format_value(locate_unfiltered->second) == "BRAVO", "SET FILTER OFF should restore full-table LOCATE behavior");
+        expect(copperfin::runtime::format_value(locate_unfiltered->second) == "BRAVO", "bare SET FILTER TO should restore full-table LOCATE behavior");
+    }
+    if (top_after_off != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top_after_off->second) == "ALPHA", "SET FILTER OFF should continue restoring full-table GO TOP semantics");
     }
 
     expect(
-        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail.find("AGE >= 30") != std::string::npos; }) &&
-        std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail == "OFF"; }),
-        "SET FILTER changes should emit runtime.filter events");
+        std::count_if(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail.find("AGE >= 30") != std::string::npos; }) >= 2 &&
+        std::count_if(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.filter" && event.detail == "OFF"; }) >= 2,
+        "SET FILTER expressions and both clear forms should emit invariant runtime.filter events");
 
     fs::remove_all(temp_root, ignored);
 }

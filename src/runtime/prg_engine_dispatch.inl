@@ -3516,11 +3516,7 @@
 
                 if (normalized_name == "filter")
                 {
-                    std::string filter_clause = trim_copy(option_value);
-                    if (starts_with_insensitive(filter_clause, "TO "))
-                    {
-                        filter_clause = trim_copy(filter_clause.substr(3U));
-                    }
+                    std::string filter_clause = strip_set_to_value(option_value);
 
                     std::string filter_target;
                     const std::size_t in_position = find_keyword_top_level(filter_clause, "IN");
