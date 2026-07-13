@@ -1779,11 +1779,15 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
     namespace fs = std::filesystem;
 
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_implicit_debug_manifest_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    const fs::path source_root = temp_root / "source";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
+    fs::create_directories(content_root);
+    fs::create_directories(source_root);
 
-    const fs::path deployed_runtime_host = temp_root / fs::path(runtime_host_path).filename();
+    const fs::path deployed_runtime_host = package_root / fs::path(runtime_host_path).filename();
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
     fs::permissions(
@@ -1793,10 +1797,10 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
         ignored);
 #endif
 
-    const fs::path release_startup_path = temp_root / "release_main.prg";
-    const fs::path debug_startup_path = temp_root / "debug_main.prg";
-    const fs::path manifest_path = temp_root / "app.cfmanifest";
-    const fs::path debug_manifest_path = temp_root / "app.cfdebug";
+    const fs::path release_startup_path = content_root / "release_main.prg";
+    const fs::path debug_startup_path = source_root / "debug_main.prg";
+    const fs::path manifest_path = package_root / "app.cfmanifest";
+    const fs::path debug_manifest_path = package_root / "app.cfdebug";
     write_text(
         release_startup_path,
         "LOCAL cMode\n"
@@ -1810,13 +1814,18 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
     expect(
         quote_manifest_value("C:\\fixture\\release_main.prg") == "C:\\\\fixture\\\\release_main.prg",
         "#3669: manual manifest fixtures should escape Windows path separators before release filenames");
+    const std::string serialized_package_root = quote_manifest_value(package_root.string());
+    const std::string serialized_content_root = quote_manifest_value(content_root.string());
+    const std::string serialized_source_root = quote_manifest_value(source_root.string());
     write_text(
         manifest_path,
         "manifest_version=1\n"
         "project_title=ImplicitReleaseManifest\n"
+        "package_root=" + serialized_package_root + "\n"
+        "content_root=" + serialized_content_root + "\n"
         "startup_item=release_main.prg\n"
         "startup_source=" + quote_manifest_value(release_startup_path.string()) + "\n"
-        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
+        "working_directory=" + serialized_content_root + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
@@ -1825,9 +1834,11 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
         debug_manifest_path,
         "debug_manifest_version=2\n"
         "project_title=ImplicitDebugManifest\n"
+        "package_root=" + serialized_package_root + "\n"
+        "content_root=" + serialized_content_root + "\n"
         "startup_item=debug_main.prg\n"
         "startup_source=" + quote_manifest_value(debug_startup_path.string()) + "\n"
-        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
+        "working_directory=" + serialized_source_root + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
@@ -1840,7 +1851,7 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
             "--debug-command", "break:add:2",
             "--debug-command", "continue"
         },
-        temp_root);
+        package_root);
 
     if (debug_process.exit_code != 0) {
         std::cerr << "implicit debug manifest stdout:\n" << debug_process.stdout_text << "\n";
@@ -1858,7 +1869,7 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
     const auto non_debug_process = run_process_capture(
         deployed_runtime_host.string(),
         {},
-        temp_root);
+        package_root);
 
     if (non_debug_process.exit_code != 0) {
         std::cerr << "implicit non-debug manifest stdout:\n" << non_debug_process.stdout_text << "\n";
@@ -1868,6 +1879,10 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
 
     expect(non_debug_process.exit_code == 0,
            "#3669: implicit non-debug launches should continue to use app.cfmanifest");
+    expect(non_debug_process.stdout_text.find("project.title: ImplicitReleaseManifest") != std::string::npos,
+           "#3669: implicit non-debug launches should report the app.cfmanifest project identity");
+    expect(non_debug_process.stdout_text.find("startup.item: release_main.prg") != std::string::npos,
+           "#3669: implicit non-debug launches should report the app.cfmanifest startup identity");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
