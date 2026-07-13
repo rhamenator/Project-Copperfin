@@ -30,6 +30,13 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+bool paths_are_filesystem_equivalent(
+    const std::filesystem::path& actual,
+    const std::filesystem::path& expected) {
+    std::error_code error;
+    return std::filesystem::equivalent(actual, expected, error) && !error;
+}
+
 void test_platform_environment_round_trips_values() {
     const std::string key = "COPPERFIN_TEST_PLATFORM_ENVIRONMENT";
     copperfin::test_support::ScopedEnvironmentValue scoped(key);
@@ -277,15 +284,31 @@ void test_default_locale_environment_falls_back_for_invalid_or_missing_override(
 
     const fs::path root = make_locale_fixture_root("copperfin_locale_override_fallback_tests");
     const std::string fallback_dir = (root / "resources" / "locales").string();
-    const std::vector<std::pair<std::string, std::string>> invalid_dirs{
+    std::vector<std::pair<std::string, std::string>> invalid_dirs{
         {(root / "missing-locales").string(), "missing"},
         {(root / "locale-file").string(), "file-valued"},
         {(root / "incomplete-locales").string(), "incomplete"}
     };
     std::ofstream(root / "locale-file") << "not a locale root\n";
     fs::create_directories(root / "incomplete-locales" / "en-US");
+#if !defined(_WIN32)
+    const fs::path inaccessible_root = root / "inaccessible-locales";
+    const fs::path inaccessible_catalog = inaccessible_root / "en-US" / "strings.json";
+    fs::create_directories(inaccessible_catalog.parent_path());
+    std::ofstream(inaccessible_catalog) << "{}\n";
+    std::error_code permission_error;
+    fs::permissions(
+        inaccessible_catalog,
+        fs::perms::none,
+        fs::perm_options::replace,
+        permission_error);
+    expect(!permission_error,
+           "#3997: inaccessible locale override fixture should remove catalog permissions");
+    invalid_dirs.emplace_back(inaccessible_root.string(), "inaccessible");
+#endif
     copperfin::test_support::ScopedEnvironmentValue original_locale("COPPERFIN_LOCALE");
     copperfin::test_support::ScopedEnvironmentValue original_locale_dir("COPPERFIN_LOCALE_DIR");
+    copperfin::test_support::set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
     {
         ScopedCurrentPath current_path(root / "nested" / "build" / "tests");
 
@@ -293,9 +316,13 @@ void test_default_locale_environment_falls_back_for_invalid_or_missing_override(
             copperfin::test_support::set_env_value("COPPERFIN_LOCALE_DIR", invalid_dir, true);
             {
                 copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment default_locale;
-                expect(copperfin::test_support::getenv_value("COPPERFIN_LOCALE_DIR") == fallback_dir,
+                expect(paths_are_filesystem_equivalent(
+                           copperfin::test_support::getenv_value("COPPERFIN_LOCALE_DIR"),
+                           fallback_dir),
                        "#3997: " + description + " locale override should fall back to ancestor discovery");
             }
+            expect(copperfin::test_support::getenv_value("COPPERFIN_LOCALE") == "pt-BR",
+                   "#3997: " + description + " locale override should restore the caller locale");
             expect(copperfin::test_support::getenv_value("COPPERFIN_LOCALE_DIR") == invalid_dir,
                    "#3997: " + description + " locale override should be restored after fallback scope");
         }
@@ -303,9 +330,13 @@ void test_default_locale_environment_falls_back_for_invalid_or_missing_override(
         copperfin::test_support::set_env_value("COPPERFIN_LOCALE_DIR", "", false);
         {
             copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment default_locale;
-            expect(copperfin::test_support::getenv_value("COPPERFIN_LOCALE_DIR") == fallback_dir,
+            expect(paths_are_filesystem_equivalent(
+                       copperfin::test_support::getenv_value("COPPERFIN_LOCALE_DIR"),
+                       fallback_dir),
                    "#3997: missing locale override should fall back to ancestor discovery");
         }
+        expect(copperfin::test_support::getenv_value("COPPERFIN_LOCALE") == "pt-BR",
+               "#3997: missing locale override should restore the caller locale");
         expect(!copperfin::test_support::getenv_optional("COPPERFIN_LOCALE_DIR").has_value(),
                "#3997: missing locale override should remain missing after fallback scope");
     }
