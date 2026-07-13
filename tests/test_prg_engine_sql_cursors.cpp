@@ -2114,6 +2114,129 @@ void test_sql_result_cursor_seek_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_seek_respects_set_deleted() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_set_deleted";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_seek_set_deleted.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'BRAVO', AMOUNT WITH 40\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'DELTA', AMOUNT WITH 50\n"
+        "GO 2\n"
+        "DELETE\n"
+        "GO 3\n"
+        "DELETE\n"
+        "SET ORDER TO NAME\n"
+        "SET EXACT OFF\n"
+        "SET DELETED OFF\n"
+        "SEEK 'CHARLIE'\n"
+        "lOffDeletedFound = FOUND()\n"
+        "nOffDeletedRec = RECNO()\n"
+        "SET DELETED ON\n"
+        "SET NEAR OFF\n"
+        "SEEK 'BRAVO'\n"
+        "lDuplicateFound = FOUND()\n"
+        "nDuplicateRec = RECNO()\n"
+        "SEEK 'BRA'\n"
+        "lPrefixDuplicateFound = FOUND()\n"
+        "nPrefixDuplicateRec = RECNO()\n"
+        "lDeletedOnlyFunction = SEEK('CHARLIE', 'sqlcust', 'NAME')\n"
+        "nDeletedOnlyRec = RECNO()\n"
+        "lDeletedOnlyEof = EOF()\n"
+        "lPrefixDeletedFunction = SEEK('CHAR', 'sqlcust', 'NAME')\n"
+        "nPrefixDeletedRec = RECNO()\n"
+        "GO TOP\n"
+        "nIndexBefore = RECNO()\n"
+        "lIndexDeleted = INDEXSEEK('CHARLIE', .F., 'sqlcust', 'NAME')\n"
+        "nIndexAfter = RECNO()\n"
+        "lIndexMoveDeleted = INDEXSEEK('CHARLIE', .T., 'sqlcust', 'NAME')\n"
+        "nIndexMoveAfter = RECNO()\n"
+        "SET NEAR ON\n"
+        "lIndexMoveNearDeleted = INDEXSEEK('CHARLIE', .T., 'sqlcust', 'NAME')\n"
+        "nIndexMoveNearAfter = RECNO()\n"
+        "SEEK 'CHARLIE'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "SEEK 'CHAR'\n"
+        "lPrefixNearFound = FOUND()\n"
+        "nPrefixNearRec = RECNO()\n"
+        "SET FILTER TO NAME <> 'DELTA'\n"
+        "SEEK 'CHARLIE'\n"
+        "lFilteredNearFound = FOUND()\n"
+        "nFilteredNearRec = RECNO()\n"
+        "lFilteredNearEof = EOF()\n"
+        "SET FILTER TO\n"
+        "SET ORDER TO NAME DESCENDING\n"
+        "SEEK 'CHARLIE'\n"
+        "lDescendingNearFound = FOUND()\n"
+        "nDescendingNearRec = RECNO()\n"
+        "SET DELETED OFF\n"
+        "SET NEAR OFF\n"
+        "SEEK 'CHARLIE'\n"
+        "lOffAgainFound = FOUND()\n"
+        "nOffAgainRec = RECNO()\n"
+        "lOffAgainDeleted = DELETED()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL cursor SEEK with SET DELETED visibility should complete");
+    expect(state.sql_connections.empty(), "SQL cursor SET DELETED seek script should disconnect its SQL handle");
+
+    const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_value("loffdeletedfound", "true", "SET DELETED OFF should expose a deleted SQL exact-key match");
+    expect_value("noffdeletedrec", "3", "SET DELETED OFF should position on the deleted SQL row");
+    expect_value("lduplicatefound", "true", "SET DELETED ON should skip a deleted SQL duplicate and find the live duplicate");
+    expect_value("nduplicaterec", "4", "SQL SEEK should position on the first live duplicate");
+    expect_value("lprefixduplicatefound", "true", "SQL prefix SEEK should skip a deleted duplicate and find the live duplicate");
+    expect_value("nprefixduplicaterec", "4", "SQL prefix SEEK should position on the first live duplicate");
+    expect_value("ldeletedonlyfunction", "false", "SQL SEEK() should reject a deleted-only key under SET DELETED ON");
+    expect_value("ndeletedonlyrec", "6", "a deleted-only SQL miss with SET NEAR OFF should move to physical EOF");
+    expect_value("ldeletedonlyeof", "true", "a deleted-only SQL miss with SET NEAR OFF should set EOF()");
+    expect_value("lprefixdeletedfunction", "false", "SQL prefix SEEK() should reject a deleted-only key");
+    expect_value("nprefixdeletedrec", "6", "a deleted-only SQL prefix miss should move to physical EOF");
+    expect_value("nindexbefore", "1", "SQL INDEXSEEK() pointer-preservation setup should select the first live row");
+    expect_value("lindexdeleted", "false", "SQL INDEXSEEK() should reject a deleted-only key");
+    expect_value("nindexafter", "1", "SQL INDEXSEEK(.F.) should preserve the pointer after a deleted-only miss");
+    expect_value("lindexmovedeleted", "false", "SQL INDEXSEEK(.T.) should reject a deleted-only key with SET NEAR OFF");
+    expect_value("nindexmoveafter", "1", "SQL INDEXSEEK(.T.) should preserve the pointer when no match exists");
+    expect_value("lindexmoveneardeleted", "false", "SQL INDEXSEEK(.T.) should reject a deleted-only key with SET NEAR ON");
+    expect_value("nindexmovenearafter", "1", "SQL INDEXSEEK(.T.) should preserve the pointer on a near miss");
+    expect_value("lnearfound", "false", "SQL SET NEAR should keep a deleted exact key as a miss");
+    expect_value("nnearrec", "5", "SQL SET NEAR should position on the next live indexed row");
+    expect_value("lprefixnearfound", "false", "SQL prefix SET NEAR should keep a deleted-only prefix as a miss");
+    expect_value("nprefixnearrec", "5", "SQL prefix SET NEAR should position on the next live indexed row");
+    expect_value("lfilterednearfound", "false", "SQL SET FILTER should compose with SET DELETED during near lookup");
+    expect_value("nfilterednearrec", "6", "a filter-hidden SQL near candidate should leave the cursor at physical EOF");
+    expect_value("lfilteredneareof", "true", "a filter-hidden SQL near candidate should set EOF()");
+    expect_value("ldescendingnearfound", "false", "descending SQL SET NEAR should keep a deleted exact key as a miss");
+    expect_value("ndescendingnearrec", "4", "descending SQL SET NEAR should skip deleted candidates and choose the live duplicate");
+    expect_value("loffagainfound", "true", "SET DELETED OFF should restore SQL deleted-record SEEK access");
+    expect_value("noffagainrec", "3", "SET DELETED OFF should restore the deleted SQL exact-key position");
+    expect_value("loffagaindeleted", "true", "the restored SQL deleted exact hit should expose DELETED() true");
+    expect_value("ldisc", "1", "SQLDISCONNECT should succeed after SET DELETED seek checks");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_temporary_order_normalization_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_seek_normalization_parity";
@@ -4937,6 +5060,7 @@ int main() {
     test_sql_result_cursors_and_ole_actions();
     test_sql_result_cursor_read_only_parity();
     test_sql_result_cursor_seek_parity();
+    test_sql_result_cursor_seek_respects_set_deleted();
     test_sql_result_cursor_derived_string_temporary_order_parity();
     test_sql_result_cursor_right_and_str_temporary_order_parity();
     test_sql_result_cursor_default_padding_and_str_variant_parity();

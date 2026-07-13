@@ -1121,6 +1121,10 @@
                 {
                     return false;
                 }
+                if (is_set_enabled("deleted") && records[candidate.recno - 1U].deleted)
+                {
+                    return false;
+                }
                 return filter_expression_matches_record(
                     cursor,
                     frame,

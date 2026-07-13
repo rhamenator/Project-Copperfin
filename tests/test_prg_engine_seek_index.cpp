@@ -1853,6 +1853,143 @@ void test_seek_respects_grounded_order_for_expression_hints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_respects_set_deleted_visibility() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_set_deleted";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "BRAVO", "CHARLIE", "DELTA"});
+    mark_simple_dbf_record_deleted(table_path, 2U);
+    mark_simple_dbf_record_deleted(table_path, 4U);
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "seek_set_deleted.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SET EXACT OFF\n"
+        "SET DELETED OFF\n"
+        "SEEK 'CHARLIE'\n"
+        "lOffDeletedFound = FOUND()\n"
+        "nOffDeletedRec = RECNO()\n"
+        "lOffDeletedFlag = DELETED()\n"
+        "SET DELETED ON\n"
+        "SET NEAR OFF\n"
+        "SEEK 'BRAVO'\n"
+        "lDuplicateFound = FOUND()\n"
+        "nDuplicateRec = RECNO()\n"
+        "lDuplicateBof = BOF()\n"
+        "lDuplicateEof = EOF()\n"
+        "SEEK 'BRA'\n"
+        "lPrefixDuplicateFound = FOUND()\n"
+        "nPrefixDuplicateRec = RECNO()\n"
+        "SEEK 'CHARLIE'\n"
+        "lDeletedOnlyFound = FOUND()\n"
+        "nDeletedOnlyRec = RECNO()\n"
+        "lDeletedOnlyBof = BOF()\n"
+        "lDeletedOnlyEof = EOF()\n"
+        "lFunctionDeleted = SEEK('CHARLIE')\n"
+        "nFunctionDeletedRec = RECNO()\n"
+        "lPrefixDeleted = SEEK('CHAR')\n"
+        "nPrefixDeletedRec = RECNO()\n"
+        "GO TOP\n"
+        "nIndexBefore = RECNO()\n"
+        "lIndexDeleted = INDEXSEEK('CHARLIE')\n"
+        "nIndexAfter = RECNO()\n"
+        "lIndexMoveDeleted = INDEXSEEK('CHARLIE', .T.)\n"
+        "nIndexMoveAfter = RECNO()\n"
+        "SET NEAR ON\n"
+        "lIndexMoveNearDeleted = INDEXSEEK('CHARLIE', .T.)\n"
+        "nIndexMoveNearAfter = RECNO()\n"
+        "SET FILTER TO NAME <> 'DELTA'\n"
+        "SEEK 'CHARLIE'\n"
+        "lFilteredNearFound = FOUND()\n"
+        "nFilteredNearRec = RECNO()\n"
+        "lFilteredNearEof = EOF()\n"
+        "SET FILTER TO\n"
+        "SEEK 'CHARLIE'\n"
+        "lNearFound = FOUND()\n"
+        "nNearRec = RECNO()\n"
+        "lNearEof = EOF()\n"
+        "SEEK 'CHAR'\n"
+        "lPrefixNearFound = FOUND()\n"
+        "nPrefixNearRec = RECNO()\n"
+        "SET ORDER TO TAG NAME DESCENDING\n"
+        "SEEK 'CHARLIE'\n"
+        "lDescendingNearFound = FOUND()\n"
+        "nDescendingNearRec = RECNO()\n"
+        "SEEK 'ALPHA'\n"
+        "lVisibleFound = FOUND()\n"
+        "nVisibleRec = RECNO()\n"
+        "SET DELETED OFF\n"
+        "SET NEAR OFF\n"
+        "SEEK 'CHARLIE'\n"
+        "lOffAgainFound = FOUND()\n"
+        "nOffAgainRec = RECNO()\n"
+        "lOffAgainDeleted = DELETED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SEEK with SET DELETED visibility should complete");
+
+    const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_value("loffdeletedfound", "true", "SET DELETED OFF should expose a deleted exact-key match");
+    expect_value("noffdeletedrec", "4", "SET DELETED OFF should position on the deleted exact-key record");
+    expect_value("loffdeletedflag", "true", "SET DELETED OFF should preserve the matched record's deleted flag");
+    expect_value("lduplicatefound", "true", "SET DELETED ON should skip an earlier deleted duplicate and find a later live key");
+    expect_value("nduplicaterec", "3", "SEEK should position on the first non-deleted duplicate");
+    expect_value("lduplicatebof", "false", "a non-deleted duplicate hit should clear BOF()");
+    expect_value("lduplicateeof", "false", "a non-deleted duplicate hit should clear EOF()");
+    expect_value("lprefixduplicatefound", "true", "prefix SEEK should skip an earlier deleted duplicate and find a later live key");
+    expect_value("nprefixduplicaterec", "3", "prefix SEEK should position on the first non-deleted duplicate");
+    expect_value("ldeletedonlyfound", "false", "SET DELETED ON should reject a deleted-only exact key");
+    expect_value("ndeletedonlyrec", "6", "a deleted-only miss with SET NEAR OFF should move to physical EOF");
+    expect_value("ldeletedonlybof", "false", "a deleted-only miss should not set BOF()");
+    expect_value("ldeletedonlyeof", "true", "a deleted-only miss with SET NEAR OFF should set EOF()");
+    expect_value("lfunctiondeleted", "false", "SEEK() should share SET DELETED visibility behavior");
+    expect_value("nfunctiondeletedrec", "6", "SEEK() should retain miss positioning for a deleted-only key");
+    expect_value("lprefixdeleted", "false", "prefix SEEK() should reject a deleted-only key under SET DELETED ON");
+    expect_value("nprefixdeletedrec", "6", "a deleted-only prefix miss should retain physical EOF positioning");
+    expect_value("nindexbefore", "1", "INDEXSEEK() pointer-preservation setup should select the first live row");
+    expect_value("lindexdeleted", "false", "INDEXSEEK() should not report a deleted-only key under SET DELETED ON");
+    expect_value("nindexafter", "1", "INDEXSEEK(.F.) should preserve the record pointer after a deleted-only miss");
+    expect_value("lindexmovedeleted", "false", "INDEXSEEK(.T.) should reject a deleted-only key with SET NEAR OFF");
+    expect_value("nindexmoveafter", "1", "INDEXSEEK(.T.) should preserve the pointer when no match exists");
+    expect_value("lindexmoveneardeleted", "false", "INDEXSEEK(.T.) should reject a deleted-only key with SET NEAR ON");
+    expect_value("nindexmovenearafter", "1", "INDEXSEEK(.T.) should preserve the pointer on a near miss");
+    expect_value("lfilterednearfound", "false", "SET FILTER should compose with SET DELETED during near lookup");
+    expect_value("nfilterednearrec", "6", "a filter-hidden near candidate should leave the cursor at physical EOF");
+    expect_value("lfilteredneareof", "true", "a filter-hidden near candidate should set EOF()");
+    expect_value("lnearfound", "false", "SET NEAR should keep FOUND() false after skipping a deleted exact key");
+    expect_value("nnearrec", "5", "SET NEAR should position on the next non-deleted indexed row");
+    expect_value("lneareof", "false", "a non-deleted near candidate should clear EOF()");
+    expect_value("lprefixnearfound", "false", "prefix SET NEAR should keep a deleted-only prefix as a miss");
+    expect_value("nprefixnearrec", "5", "prefix SET NEAR should position on the next non-deleted indexed row");
+    expect_value("ldescendingnearfound", "false", "descending SET NEAR should keep a deleted exact key as a miss");
+    expect_value("ndescendingnearrec", "3", "descending SET NEAR should skip deleted candidates and choose the next live key");
+    expect_value("lvisiblefound", "true", "SET DELETED ON should preserve exact hits on live rows");
+    expect_value("nvisiblerec", "1", "a live descending exact hit should preserve its physical RECNO()");
+    expect_value("loffagainfound", "true", "SET DELETED OFF should restore deleted-record SEEK access");
+    expect_value("noffagainrec", "4", "SET DELETED OFF should restore the deleted exact-key position");
+    expect_value("loffagaindeleted", "true", "the restored deleted exact hit should expose DELETED() true");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_respects_numeric_order_for_expression_hints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_order_for_numeric_expression";
@@ -4504,6 +4641,7 @@ int main() {
     test_local_plain_temporary_order_in_target_honors_collate_and_preserves_selection();
     test_local_temporary_order_expression_indexseek_parity();
     test_seek_respects_grounded_order_for_expression_hints();
+    test_seek_respects_set_deleted_visibility();
     test_seek_respects_numeric_order_for_expression_hints();
     test_seek_respects_string_order_for_expression_hints();
     test_ndx_numeric_domain_guides_seek_near_ordering();
