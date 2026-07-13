@@ -1,0 +1,58 @@
+name: Audit Containment Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-containment-validation.yml
+      - apps/copperfin_runtime_host/**
+      - include/copperfin/security/**
+      - src/security/**
+      - tests/test_runtime_host_debug_output.cpp
+      - tests/test_security_controls.cpp
+      - CMakeLists.txt
+      - tests/CMakeLists.txt
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-containment-validation.yml
+      - apps/copperfin_runtime_host/**
+      - include/copperfin/security/**
+      - src/security/**
+      - tests/test_runtime_host_debug_output.cpp
+      - tests/test_security_controls.cpp
+      - CMakeLists.txt
+      - tests/CMakeLists.txt
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-containment:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC
+            os: ubuntu-latest
+          - name: macOS Clang
+            os: macos-latest
+          - name: Windows MSVC
+            os: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Configure focused native build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build audit containment targets
+        run: cmake --build build --config Release --target copperfin_runtime_host test_runtime_host_debug_output test_security_controls --parallel 2
+
+      - name: Run audit containment tests
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_runtime_host_debug_output|test_security_controls)$" -j 2
