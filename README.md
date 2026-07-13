@@ -168,6 +168,8 @@ E:\Project-Copperfin\build\Release\copperfin_build_host.exe build --project "C:\
 E:\Project-Copperfin\scripts\validate-windows.ps1
 ```
 
+Native CMake validation defaults to two concurrent compile jobs to stay within hosted-runner and ordinary workstation memory limits. POSIX operators can override the local default with `COPPERFIN_BUILD_JOBS=4 scripts/validate-posix.sh`; Windows operators can use `scripts\validate-windows.ps1 -BuildJobs 4`. The hosted validation workflows retain the two-job cap unless measured runner capacity supports a deliberate increase.
+
 GitHub validation:
 
 - `.github/workflows/native-validation.yml` runs the portable native CMake build and CTest suite on hosted Linux, macOS, and Windows runners for pushes, pull requests, and manual dispatch.

@@ -2,6 +2,11 @@
 # Licensed under the Project Copperfin Source-Available License or
 # Commercial License. See LICENSE.md in the repository root.
 
+param(
+    [ValidateRange(1, 256)]
+    [int]$BuildJobs = 2
+)
+
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -69,7 +74,7 @@ Invoke-Step -Name "Configure native build" -Action {
 }
 
 Invoke-Step -Name "Build native binaries" -Action {
-    Invoke-Checked -FilePath "cmake" -ArgumentList @("--build", $buildDir, "--config", "Release")
+    Invoke-Checked -FilePath "cmake" -ArgumentList @("--build", $buildDir, "--config", "Release", "--parallel", "$BuildJobs")
 }
 
 Invoke-Step -Name "Run native CTest suite" -Action {

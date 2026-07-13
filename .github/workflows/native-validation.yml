@@ -46,11 +46,11 @@ jobs:
 
       - name: Build native targets
         if: runner.os != 'Windows'
-        run: cmake --build build --parallel
+        run: cmake --build build --parallel 2
 
       - name: Build native targets
         if: runner.os == 'Windows'
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --config Release --parallel 2
 
       - name: Run native test suite
         if: runner.os != 'Windows'

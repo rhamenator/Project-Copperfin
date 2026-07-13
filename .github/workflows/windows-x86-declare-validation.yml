@@ -84,7 +84,7 @@ jobs:
         run: cmake -S . -B build-${{ matrix.platform }} -A ${{ matrix.platform }} -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build DECLARE regression target
-        run: cmake --build build-${{ matrix.platform }} --config Release --parallel --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
+        run: cmake --build build-${{ matrix.platform }} --config Release --parallel 2 --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
 
       - name: Run managed DECLARE regression target
         run: ctest --test-dir build-${{ matrix.platform }} -C Release --verbose --timeout 180 -R "^test_prg_engine_dotnet_dispatch$"

@@ -5,6 +5,18 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(CDPATH= cd -- "$script_dir/.." && pwd)
 build_dir=${COPPERFIN_BUILD_DIR:-"$repo_root/build"}
 build_type=${COPPERFIN_BUILD_TYPE:-Release}
+build_jobs=${COPPERFIN_BUILD_JOBS:-2}
+
+case $build_jobs in
+    ''|*[!0-9]*)
+        echo "validate-posix.sh: COPPERFIN_BUILD_JOBS must be a positive integer" >&2
+        exit 2
+        ;;
+esac
+if [ "$build_jobs" -lt 1 ]; then
+    echo "validate-posix.sh: COPPERFIN_BUILD_JOBS must be a positive integer" >&2
+    exit 2
+fi
 
 venv_dir="$repo_root/.codex-venv"
 venv_cfg="$venv_dir/pyvenv.cfg"
@@ -44,5 +56,5 @@ if [ ! -f "$build_dir/CMakeCache.txt" ]; then
     fi
 fi
 
-cmake --build "$build_dir" "$@"
+cmake --build "$build_dir" --parallel "$build_jobs" "$@"
 ctest --test-dir "$build_dir" --output-on-failure
