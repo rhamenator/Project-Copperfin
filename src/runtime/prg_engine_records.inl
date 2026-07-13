@@ -262,7 +262,7 @@
             return table_result.table.records[cursor.recno - 1U];
         }
 
-        std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor) const
+        std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor)
         {
             const auto field_is_visible = [this](const std::string &field_name) -> bool
             {
@@ -309,7 +309,23 @@
                 const auto record = current_record(*cursor);
                 if (!record.has_value())
                 {
-                    return std::nullopt;
+                    const auto fields = cursor_field_descriptors(*cursor);
+                    const auto field = std::find_if(
+                        fields.begin(),
+                        fields.end(),
+                        [&](const vfp::DbfFieldDescriptor &candidate)
+                        {
+                            return collapse_identifier(candidate.name) == collapse_identifier(field_name);
+                        });
+                    if (field == fields.end())
+                    {
+                        return std::nullopt;
+                    }
+
+                    vfp::DbfRecordValue blank_field;
+                    blank_field.field_name = field->name;
+                    blank_field.field_type = field->type;
+                    return blank_value_for_field(blank_field);
                 }
                 if (collapse_identifier(field_name) == "DELETED")
                 {
@@ -1010,14 +1026,7 @@
             {
                 return fields;
             }
-            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
-            if (!table_result.ok)
-            {
-                last_error_message = table_result.error;
-                return {};
-            }
-
-            return table_result.table.fields;
+            return cursor.local_fields;
         }
 
         std::string cursor_field_name(const std::string &designator, std::size_t one_based_index)

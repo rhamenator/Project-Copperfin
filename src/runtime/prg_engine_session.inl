@@ -4826,6 +4826,7 @@
                 cursor.record_count = table_result.table.header.record_count;
                 cursor.field_count = table_result.table.fields.size();
                 cursor.record_length = table_result.table.header.record_length;
+                cursor.local_fields = table_result.table.fields;
                 std::set<std::string> visible_fields;
                 for (const auto &field : table_result.table.fields)
                 {

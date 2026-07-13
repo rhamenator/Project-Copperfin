@@ -529,6 +529,7 @@ namespace copperfin::runtime
             std::string filter_expression;
             std::vector<vfp::DbfRecord> remote_records;
             std::vector<vfp::DbfFieldDescriptor> remote_fields;
+            std::vector<vfp::DbfFieldDescriptor> local_fields;
             std::map<std::string, FieldRule> field_rules;
         };
 

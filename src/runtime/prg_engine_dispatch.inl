@@ -3070,18 +3070,15 @@
                 const std::string destination = uppercase_copy(trim_copy(statement.expression));
                 if (destination == "TOP")
                 {
-                    if (!seek_visible_record(*cursor, frame, 1, 1, {}, {}, false))
-                    {
-                        cursor->recno = 0U;
-                        cursor->bof = true;
-                        cursor->eof = true;
-                    }
+                    (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false);
                 }
                 else if (destination == "BOTTOM")
                 {
-                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false))
+                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false) &&
+                        cursor->record_count > 0U)
                     {
-                        cursor->recno = 0U;
+                        // VFP keeps physical EOF while reporting both boundary flags when the filtered set is empty.
+                        cursor->recno = cursor->record_count + 1U;
                         cursor->bof = true;
                         cursor->eof = true;
                     }
@@ -3555,11 +3552,6 @@
                     }
 
                     cursor->filter_expression = filter_clause;
-                    if (!cursor->filter_expression.empty() && cursor->record_count > 0U &&
-                        !current_record_matches_visibility(*cursor, frame, {}))
-                    {
-                        (void)seek_visible_record(*cursor, frame, static_cast<long long>(cursor->recno), 1, {}, {}, false);
-                    }
 
                     events.push_back({.category = "runtime.filter",
                                       .detail = cursor->filter_expression.empty() ? "OFF" : cursor->filter_expression,
@@ -4733,18 +4725,20 @@
                         }
                     }
 
+                    const auto schema_result = vfp::parse_dbf_table_from_file(table_path.string(), 0U);
+                    if (!schema_result.ok)
+                    {
+                        last_error_message = schema_result.error;
+                        return false;
+                    }
+
                     for (auto &[_, cursor] : current_session_state().cursors)
                     {
                         if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string()))
                         {
-                            if (action == "add")
-                            {
-                                cursor.field_count += 1U;
-                            }
-                            else if (action == "drop" && cursor.field_count > 0U)
-                            {
-                                cursor.field_count -= 1U;
-                            }
+                            cursor.field_count = schema_result.table.fields.size();
+                            cursor.record_length = schema_result.table.header.record_length;
+                            cursor.local_fields = schema_result.table.fields;
                             cursor.record_count = add_result.record_count;
                             const std::string normalized_field = collapse_identifier(affected_field);
                             if (action == "drop")

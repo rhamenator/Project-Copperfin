@@ -606,6 +606,7 @@
                 cursor.bof = record_count == 0U;
                 cursor.eof = record_count == 0U;
                 cursor.orders = std::move(orders);
+                cursor.local_fields = table_result.table.fields;
                 cursor.field_rules = field_rules;
                 session.cursors[target_area] = std::move(cursor);
                 return true;

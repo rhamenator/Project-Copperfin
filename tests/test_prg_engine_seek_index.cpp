@@ -4387,6 +4387,152 @@ void test_set_filter_scopes_local_cursor_visibility() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_filter_defers_local_cursor_evaluation_until_navigation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter_deferred";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "set_filter_deferred.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other AGAIN IN 0\n"
+        "SELECT People\n"
+        "LOCATE FOR NAME = 'DELTA'\n"
+        "SET FILTER TO AGE <= 20\n"
+        "nBeforeOnlyRec = RECNO()\n"
+        "cBeforeOnlyName = NAME\n"
+        "lBeforeOnlyFound = FOUND()\n"
+        "lBeforeOnlyBof = BOF()\n"
+        "lBeforeOnlyEof = EOF()\n"
+        "GO TOP\n"
+        "nBeforeOnlyTop = RECNO()\n"
+        "SET FILTER TO\n"
+        "LOCATE FOR NAME = 'MISSING'\n"
+        "GO 1\n"
+        "SET FILTER TO AGE >= 30\n"
+        "nAfterOnlyRec = RECNO()\n"
+        "cAfterOnlyName = NAME\n"
+        "lAfterOnlyFound = FOUND()\n"
+        "lAfterOnlyBof = BOF()\n"
+        "lAfterOnlyEof = EOF()\n"
+        "SKIP\n"
+        "nAfterOnlySkip = RECNO()\n"
+        "cAfterOnlySkipName = NAME\n"
+        "SET FILTER TO\n"
+        "GO 2\n"
+        "SET FILTER TO .F.\n"
+        "nEmptyRec = RECNO()\n"
+        "cEmptyName = NAME\n"
+        "lEmptyBof = BOF()\n"
+        "lEmptyEof = EOF()\n"
+        "lEmptyFound = FOUND()\n"
+        "GO TOP\n"
+        "nEmptyTopRec = RECNO()\n"
+        "lEmptyTopBof = BOF()\n"
+        "lEmptyTopEof = EOF()\n"
+        "lEmptyTopFound = FOUND()\n"
+        "cEmptyTopName = NAME\n"
+        "nEmptyTopAge = AGE\n"
+        "GO BOTTOM\n"
+        "nEmptyBottomRec = RECNO()\n"
+        "lEmptyBottomBof = BOF()\n"
+        "lEmptyBottomEof = EOF()\n"
+        "lEmptyBottomFound = FOUND()\n"
+        "cEmptyBottomName = NAME\n"
+        "nEmptyBottomAge = AGE\n"
+        "SET FILTER TO\n"
+        "GO 3\n"
+        "SET FILTER TO AGE >= 30\n"
+        "nVisibleRec = RECNO()\n"
+        "cVisibleName = NAME\n"
+        "lVisibleBof = BOF()\n"
+        "lVisibleEof = EOF()\n"
+        "SET FILTER TO\n"
+        "GO 4 IN People\n"
+        "SELECT Other\n"
+        "GO 2\n"
+        "SET FILTER TO AGE <= 20 IN People\n"
+        "cSelectedAfterTarget = ALIAS()\n"
+        "nSelectedRecAfterTarget = RECNO()\n"
+        "nTargetRecAfterFilter = RECNO('People')\n"
+        "cTargetNameAfterFilter = People.NAME\n"
+        "GO TOP IN People\n"
+        "nTargetTopAfterMove = RECNO('People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "deferred local SET FILTER evaluation script should complete");
+
+    const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_value("nbeforeonlyrec", "4", "SET FILTER with visible rows only before the pointer should preserve RECNO()");
+    expect_value("cbeforeonlyname", "DELTA", "field access before navigation should retain the excluded physical row");
+    expect_value("lbeforeonlyfound", "true", "SET FILTER installation should preserve FOUND()");
+    expect_value("lbeforeonlybof", "false", "SET FILTER installation should preserve BOF()");
+    expect_value("lbeforeonlyeof", "false", "SET FILTER installation should preserve EOF()");
+    expect_value("nbeforeonlytop", "1", "GO TOP should evaluate the filter and find an earlier visible row");
+    expect_value("nafteronlyrec", "1", "SET FILTER with visible rows only after the pointer should preserve RECNO()");
+    expect_value("cafteronlyname", "ALPHA", "deferred filtering should preserve immediate field access before forward navigation");
+    expect_value("lafteronlyfound", "false", "deferred SET FILTER installation should preserve a false FOUND() state");
+    expect_value("lafteronlybof", "false", "deferred SET FILTER installation should not synthesize BOF()");
+    expect_value("lafteronlyeof", "false", "deferred SET FILTER installation should not synthesize EOF()");
+    expect_value("nafteronlyskip", "3", "SKIP should evaluate the installed filter from the preserved physical row");
+    expect_value("cafteronlyskipname", "CHARLIE", "SKIP should expose the next filter-visible row");
+    expect_value("nemptyrec", "2", "an empty filter result should not move the pointer until navigation");
+    expect_value("cemptyname", "BRAVO", "an empty filter result should not hide the current field before navigation");
+    expect_value("lemptybof", "false", "an empty filter result should preserve BOF() before navigation");
+    expect_value("lemptyeof", "false", "an empty filter result should preserve EOF() before navigation");
+    expect_value("lemptyfound", "false", "an empty filter result should preserve FOUND() before navigation");
+    expect_value("nemptytoprec", "5", "GO TOP with no filter-visible rows should move past the physical record set");
+    expect_value("lemptytopbof", "false", "GO TOP with no filter-visible rows in a nonempty cursor should leave BOF() false");
+    expect_value("lemptytopeof", "true", "GO TOP should report EOF() when no records satisfy the filter");
+    expect_value("lemptytopfound", "false", "GO TOP should preserve FOUND() when no records satisfy the filter");
+    expect_value("cemptytopname", "", "field access at filtered EOF should return the field's typed blank value");
+    expect_value("nemptytopage", "0", "numeric field access at filtered EOF should return zero");
+    expect_value("nemptybottomrec", "5", "GO BOTTOM with no filter-visible rows should retain the physical EOF record number");
+    expect_value("lemptybottombof", "true", "GO BOTTOM with no filter-visible rows should set BOF()");
+    expect_value("lemptybottomeof", "true", "GO BOTTOM with no filter-visible rows should retain EOF()");
+    expect_value("lemptybottomfound", "false", "GO BOTTOM should preserve FOUND() when no records satisfy the filter");
+    expect_value("cemptybottomname", "", "character field access after empty-result GO BOTTOM should stay blank");
+    expect_value("nemptybottomage", "0", "numeric field access after empty-result GO BOTTOM should stay zero");
+    expect_value("nvisiblerec", "3", "a current filter-visible row should remain selected");
+    expect_value("cvisiblename", "CHARLIE", "a current filter-visible row should retain field access");
+    expect_value("lvisiblebof", "false", "a current filter-visible row should retain BOF()");
+    expect_value("lvisibleeof", "false", "a current filter-visible row should retain EOF()");
+    expect_value("cselectedaftertarget", "Other", "targeted SET FILTER should preserve the selected work area");
+    expect_value("nselectedrecaftertarget", "2", "targeted SET FILTER should preserve the selected cursor pointer");
+    expect_value("ntargetrecafterfilter", "4", "targeted SET FILTER should preserve the non-selected target pointer");
+    expect_value("ctargetnameafterfilter", "DELTA", "targeted SET FILTER should preserve immediate target field access");
+    expect_value("ntargettopaftermove", "1", "targeted navigation should later evaluate the installed filter");
+
+    std::vector<std::string> filter_event_details;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.filter") {
+            filter_event_details.push_back(event.detail);
+        }
+    }
+    expect(
+        filter_event_details == std::vector<std::string>{
+            "AGE <= 20", "OFF", "AGE >= 30", "OFF", ".F.", "OFF", "AGE >= 30", "OFF", "AGE <= 20"},
+        "deferred and targeted SET FILTER changes should emit one invariant event with exact detail per statement");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_seek_respects_active_filter_visibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_filter";
@@ -4673,6 +4819,7 @@ int main() {
     test_use_in_missing_alias_is_an_error();
     test_runtime_fault_containment();
     test_set_filter_scopes_local_cursor_visibility();
+    test_set_filter_defers_local_cursor_evaluation_until_navigation();
     test_seek_respects_active_filter_visibility();
     test_set_filter_in_targets_nonselected_alias();
 

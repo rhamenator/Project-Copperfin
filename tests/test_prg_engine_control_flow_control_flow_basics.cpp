@@ -852,8 +852,8 @@ void test_go_top_bottom_with_no_visible_records_sets_bof_and_eof() {
     expect(eof_after_bottom != state.globals.end(), "filtered GO BOTTOM should expose EOF()");
 
     if (bof_after_top != state.globals.end()) {
-        expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
-               "GO TOP with no visible records should leave BOF() true");
+        expect(copperfin::runtime::format_value(bof_after_top->second) == "false",
+               "GO TOP with no visible records in a nonempty table should leave BOF() false");
     }
     if (eof_after_top != state.globals.end()) {
         expect(copperfin::runtime::format_value(eof_after_top->second) == "true",
