@@ -127,6 +127,20 @@ std::string ascii_lowercase_copy(std::string text) {
     return text;
 }
 
+constexpr std::size_t dbf_descriptor_name_width = 11U;
+
+std::string serialized_dbf_field_name(std::string name) {
+    name = trim_both(std::move(name));
+    if (name.size() > dbf_descriptor_name_width) {
+        name.resize(dbf_descriptor_name_width);
+    }
+    return name;
+}
+
+std::string serialized_dbf_field_name_key(std::string name) {
+    return ascii_lowercase_copy(serialized_dbf_field_name(std::move(name)));
+}
+
 std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
     std::string value;
     value.reserve(length);
@@ -280,8 +294,8 @@ std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std
     std::size_t descriptor_offset = 32U;
     while ((descriptor_offset + 32U) <= table_bytes.size() && table_bytes[descriptor_offset] != 0x0DU) {
         fields.push_back({
-            .name = read_ascii_name(table_bytes, descriptor_offset, 11U),
-            .type = static_cast<char>(table_bytes[descriptor_offset + 11U]),
+            .name = read_ascii_name(table_bytes, descriptor_offset, dbf_descriptor_name_width),
+            .type = static_cast<char>(table_bytes[descriptor_offset + dbf_descriptor_name_width]),
             .offset = read_le_u32(table_bytes, descriptor_offset + 12U),
             .length = table_bytes[descriptor_offset + 16U],
             .decimal_count = table_bytes[descriptor_offset + 17U]
@@ -1431,12 +1445,12 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         if (trimmed_name.empty()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
         }
-        const std::string normalized_name = lowercase_copy(trimmed_name);
+        const std::string normalized_name = serialized_dbf_field_name_key(trimmed_name);
         const auto duplicate = std::find_if(
             raw_fields.begin(),
             raw_fields.end(),
             [&](const RawFieldDescriptor& existing) {
-                return lowercase_copy(trim_both(existing.name)) == normalized_name;
+                return serialized_dbf_field_name_key(existing.name) == normalized_name;
             });
         if (duplicate != raw_fields.end()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldExists")};
@@ -1494,9 +1508,9 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
 
     std::size_t descriptor_offset = 32U;
     for (const auto& field : raw_fields) {
-        const std::string field_name = field.name.substr(0U, 11U);
+        const std::string field_name = serialized_dbf_field_name(field.name);
         std::copy(field_name.begin(), field_name.end(), bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_offset));
-        bytes[descriptor_offset + 11U] = static_cast<std::uint8_t>(field.type);
+        bytes[descriptor_offset + dbf_descriptor_name_width] = static_cast<std::uint8_t>(field.type);
         write_le_u32(bytes, descriptor_offset + 12U, field.offset);
         bytes[descriptor_offset + 16U] = field.length;
         bytes[descriptor_offset + 17U] = field.decimal_count;
@@ -1687,15 +1701,16 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
         return {.ok = false, .error = table_result.error};
     }
 
-    const std::string normalized_new_name = lowercase_copy(trim_both(field.name));
-    if (normalized_new_name.empty()) {
+    const std::string trimmed_new_name = trim_both(field.name);
+    if (trimmed_new_name.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired"), .record_count = table_result.table.records.size()};
     }
+    const std::string normalized_new_name = serialized_dbf_field_name_key(trimmed_new_name);
     const auto duplicate = std::find_if(
         table_result.table.fields.begin(),
         table_result.table.fields.end(),
         [&](const DbfFieldDescriptor& existing) {
-            return lowercase_copy(trim_both(existing.name)) == normalized_new_name;
+            return serialized_dbf_field_name_key(existing.name) == normalized_new_name;
         });
     if (duplicate != table_result.table.fields.end()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldExists"), .record_count = table_result.table.records.size()};
