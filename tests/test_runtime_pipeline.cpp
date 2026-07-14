@@ -40,6 +40,11 @@ int main() {
     test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_materializes();
+    test_manifest_pair_finalization_rejects_redirected_destinations();
+    test_manifest_pair_directory_stays_pinned_and_never_overwrites();
+    test_manifest_pair_finalization_rolls_back_failed_promotions();
+    test_manifest_pair_finalization_recovers_stale_transactions();
+    test_materialize_cleanup_warning_rewrites_manifest_pair_atomically();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_library_output_warning_lines_are_mirrored_into_debug_manifest();

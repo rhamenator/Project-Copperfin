@@ -741,6 +741,11 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.LauncherArtifactMissing",
         "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
         "Runtime.Package.Error.LauncherArtifactUnexpected",
+        "Runtime.Package.Error.ManifestPairPathRejected",
+        "Runtime.Package.Error.ManifestPairPublishFailed",
+        "Runtime.Package.Error.ManifestPairRollbackFailed",
+        "Runtime.Package.Error.ManifestPairStageFailed",
+        "Runtime.Package.Error.ManifestPairTransactionCollision",
         "Runtime.Package.Error.NativeWrapperCMakeMissing",
         "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
         "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
@@ -824,6 +829,42 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             {{"path", "Copperfin.GeneratedLauncher.dll"}}) ==
             "Required generated-launcher artifact is missing: Copperfin.GeneratedLauncher.dll",
         "#4052: generated-launcher admission diagnostics should preserve package-relative path placeholders");
+    expect(
+        spanish_catalog.translate(
+            "Runtime.Package.Error.ManifestPairPublishFailed",
+            {{"path", "app.cfdebug"}}) ==
+            "No se pudo publicar atomicamente el par de manifiestos del paquete: app.cfdebug",
+        "#4056: manifest-pair publication diagnostics should localize without changing path placeholders");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.ManifestPairRollbackFailed",
+            {{"path", "package-root"}}) ==
+            copperfin::localization::format_named_placeholders(
+                copperfin::localization::pseudo_localize(
+                    "Unable to restore the previous package manifest pair: {path}"),
+                {{"path", "package-root"}}),
+        "#4056: manifest-pair rollback diagnostics should route through pseudo-localization");
+    expect(
+        english_catalog.translate(
+            "Runtime.Package.Error.ManifestPairPathRejected",
+            {{"path", "app.cfmanifest"}}) ==
+            "Runtime and debug manifest destinations must be direct regular files in the package root: app.cfmanifest",
+        "#4056: manifest-pair path diagnostics should preserve the rejected path placeholder");
+    expect(
+        portuguese_catalog.translate(
+            "Runtime.Package.Error.ManifestPairStageFailed",
+            {{"path", "app.cfmanifest.next"}}) ==
+            "Nao foi possivel preparar o par de manifestos do pacote: app.cfmanifest.next",
+        "#4056: manifest-pair staging diagnostics should localize without changing path placeholders");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.ManifestPairTransactionCollision",
+            {{"path", "reserved-entry"}}) ==
+            copperfin::localization::format_named_placeholders(
+                copperfin::localization::pseudo_localize(
+                    "A reserved manifest-transaction path is not owned by Copperfin: {path}"),
+                {{"path", "reserved-entry"}}),
+        "#4056: manifest-pair collision diagnostics should route through pseudo-localization");
     expect(
         english_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
             "Source file does not exist: missing.prg",

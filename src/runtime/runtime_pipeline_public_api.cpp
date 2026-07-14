@@ -4,6 +4,10 @@
 
 #include "runtime_pipeline_support.h"
 
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+#include "runtime_pipeline_test_hooks.h"
+#endif
+
 #include <atomic>
 #include <chrono>
 
@@ -15,6 +19,10 @@ constexpr int kDebugManifestVersion = 3;
 constexpr std::string_view kPackageBackupSuffix = ".copperfin-previous";
 constexpr std::string_view kPackageTransactionMarker = ".copperfin-materializing";
 constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+std::atomic_bool force_package_backup_cleanup_warning{false};
+#endif
 
 class PackageRootTransaction {
 public:
@@ -322,6 +330,15 @@ public:
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
                 {{"path", backup_owner_path_.string()}});
         }
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+        if (force_package_backup_cleanup_warning.exchange(
+                false,
+                std::memory_order_relaxed)) {
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", backup_root_.string()}});
+        }
+#endif
         return true;
     }
 
@@ -404,6 +421,16 @@ private:
 };
 
 }  // namespace
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+namespace test_hooks {
+
+void force_package_backup_cleanup_warning_once() {
+    force_package_backup_cleanup_warning.store(true, std::memory_order_relaxed);
+}
+
+}  // namespace test_hooks
+#endif
 
 const char* build_configuration_name(BuildConfiguration configuration) {
     switch (configuration) {
@@ -1142,15 +1169,13 @@ RuntimeMaterializeResult materialize_runtime_package(
     }
     if (!cleanup_warning.empty()) {
         result.plan.warnings.push_back(cleanup_warning);
-        std::string ignored;
-        (void)write_text_file(
-            result.plan.manifest_path,
+        if (!write_runtime_manifest_pair_atomically(
+            result.plan,
             build_runtime_manifest_text(result.plan, security_profile, extensibility_profile),
-            ignored);
-        (void)write_text_file(
-            result.plan.debug_manifest_path,
             build_debug_manifest_text(result.plan, security_profile, extensibility_profile),
-            ignored);
+            error)) {
+            return {.ok = false, .plan = std::move(result.plan), .error = error};
+        }
     }
 
     return result;
@@ -1196,10 +1221,11 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
         }
     }
     finalized_plan.primary_output_materialized = true;
-    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(finalized_plan, security_profile, extensibility_profile), error)) {
-        return {.ok = false, .error = error};
-    }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(finalized_plan, security_profile, extensibility_profile), error)) {
+    if (!write_runtime_manifest_pair_atomically(
+            plan,
+            build_runtime_manifest_text(finalized_plan, security_profile, extensibility_profile),
+            build_debug_manifest_text(finalized_plan, security_profile, extensibility_profile),
+            error)) {
         return {.ok = false, .error = error};
     }
 

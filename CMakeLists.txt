@@ -244,7 +244,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set_source_files_properties(src/studio/vs_launch_contract.cpp PROPERTIES COMPILE_OPTIONS "${copperfin_vs_launch_contract_compile_options}")
 endif()
 
-add_library(cf_runtime_pipeline
+set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_text_and_identifier_utils.cpp
     src/runtime/runtime_pipeline_file_io_and_classification.cpp
     src/runtime/runtime_pipeline_library_export_manifest.cpp
@@ -252,8 +252,19 @@ add_library(cf_runtime_pipeline
     src/runtime/runtime_pipeline_ast_ir_manifest.cpp
     src/runtime/runtime_pipeline_csharp_and_launcher.cpp
     src/runtime/runtime_pipeline_launcher_artifact_inventory.cpp
+    src/runtime/runtime_pipeline_manifest_pair.cpp
+    src/runtime/runtime_pipeline_manifest_pair_io.cpp
     src/runtime/runtime_pipeline_public_api.cpp
 )
+
+add_library(cf_runtime_pipeline ${COPPERFIN_RUNTIME_PIPELINE_SOURCES})
+
+if(COPPERFIN_BUILD_TESTS)
+    add_library(cf_runtime_pipeline_test STATIC ${COPPERFIN_RUNTIME_PIPELINE_SOURCES})
+    target_compile_definitions(cf_runtime_pipeline_test PRIVATE
+        COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS=1
+    )
+endif()
 
 add_library(cf_prg_analysis
     src/runtime/prg_engine_static_analysis.cpp
@@ -343,25 +354,29 @@ else()
     target_compile_options(cf_xbase_runtime PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_include_directories(cf_runtime_pipeline
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-target_link_libraries(cf_runtime_pipeline
-    PUBLIC
-        cf_design_model
-        cf_security
-        cf_platform_profile
-        cf_xbase_runtime
-        cf_licensing
-)
-
-if(MSVC)
-    target_compile_options(cf_runtime_pipeline PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(cf_runtime_pipeline PRIVATE -Wall -Wextra -Wpedantic)
+set(copperfin_runtime_pipeline_targets cf_runtime_pipeline)
+if(COPPERFIN_BUILD_TESTS)
+    list(APPEND copperfin_runtime_pipeline_targets cf_runtime_pipeline_test)
 endif()
+foreach(runtime_pipeline_target IN LISTS copperfin_runtime_pipeline_targets)
+    target_include_directories(${runtime_pipeline_target}
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_link_libraries(${runtime_pipeline_target}
+        PUBLIC
+            cf_design_model
+            cf_security
+            cf_platform_profile
+            cf_xbase_runtime
+            cf_licensing
+    )
+    if(MSVC)
+        target_compile_options(${runtime_pipeline_target} PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(${runtime_pipeline_target} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endforeach()
 
 target_include_directories(cf_design_model
     PUBLIC

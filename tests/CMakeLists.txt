@@ -4039,7 +4039,7 @@ copperfin_add_test(test_federation_execution cf_platform_profile
     test_federation_execution.cpp
 )
 
-copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
+copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline.cpp
     test_runtime_pipeline_shared_test_helpers.cpp
     test_runtime_pipeline_output_packaging.cpp
@@ -4047,8 +4047,13 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
     test_runtime_pipeline_startup_casefold.cpp
     test_runtime_pipeline_startup_and_staging.cpp
     test_runtime_pipeline_launcher_and_security.cpp
+    test_runtime_pipeline_manifest_pair.cpp
 )
-target_compile_definitions(test_runtime_pipeline PRIVATE COPPERFIN_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_compile_definitions(test_runtime_pipeline PRIVATE
+    COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS=1
+    COPPERFIN_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+target_include_directories(test_runtime_pipeline PRIVATE ${CMAKE_SOURCE_DIR}/src/runtime)
 
 add_executable(test_generated_launcher_process
     test_generated_launcher_process.cpp

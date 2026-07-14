@@ -55,6 +55,11 @@ std::string join_strings(const std::vector<std::string>& values);
 BuildOutputKind parse_build_output_kind(const std::string& value);
 std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier);
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error);
+bool write_runtime_manifest_pair_atomically(
+    const RuntimePackagePlan& plan,
+    const std::string& runtime_contents,
+    const std::string& debug_contents,
+    std::string& error);
 std::string read_text_file(const std::filesystem::path& path);
 std::string read_binary_file(const std::filesystem::path& path, std::string& error);
 std::string hex_encode_bytes(const std::string& bytes);
