@@ -436,11 +436,13 @@ std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
     stream << "using System;\n";
     stream << "using System.Collections.Generic;\n";
     stream << "using System.Diagnostics;\n";
-    stream << "using System.IO;\n\n";
+    stream << "using System.IO;\n";
+    stream << "using System.Text;\n\n";
     stream << "internal static class Program\n";
     stream << "{\n";
     stream << "    private static int Main(string[] args)\n";
     stream << "    {\n";
+    stream << "        Console.OutputEncoding = Encoding.UTF8;\n";
     stream << "        var locale = SelectLocale(args);\n";
     stream << "        var baseDir = AppContext.BaseDirectory;\n";
     stream << "        var runtimeHost = Path.Combine(baseDir, \"" << runtime_host_name << "\");\n";

@@ -92,6 +92,9 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("[\"qps-ploc\"] = new(StringComparer.OrdinalIgnoreCase)") != std::string::npos,
             "generated launcher should embed a qps-ploc locale bucket for pseudo-localized runtime use");
         expect(
+            launcher_source.find("Console.OutputEncoding = Encoding.UTF8;") != std::string::npos,
+            "generated launcher should emit localized console diagnostics as UTF-8");
+        expect(
             launcher_source.find("WorkingDirectory = baseDir") != std::string::npos,
             "generated launcher should run the runtime host from the package directory");
         expect(
