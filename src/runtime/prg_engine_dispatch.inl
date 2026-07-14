@@ -4248,10 +4248,20 @@
                 }
                 return {};
             case StatementKind::private_declaration:
-                for (const auto &name : statement.names)
+            {
+                const auto privatize_name = [&](const std::string &raw_name, bool create_if_missing)
                 {
-                    const std::string normalized = normalize_memory_variable_identifier(name);
+                    const std::string normalized = normalize_memory_variable_identifier(raw_name);
+                    if (normalized.empty())
+                    {
+                        return;
+                    }
                     const auto existing = globals.find(normalized);
+                    const auto existing_array = arrays.find(normalized);
+                    if (!create_if_missing && existing == globals.end() && existing_array == arrays.end())
+                    {
+                        return;
+                    }
                     if (existing != globals.end())
                     {
                         frame.private_saved_values.try_emplace(normalized, existing->second);
@@ -4260,10 +4270,53 @@
                     else
                     {
                         frame.private_saved_values.try_emplace(normalized, std::nullopt);
-                        globals[normalized] = make_empty_value();
+                        if (create_if_missing)
+                        {
+                            globals[normalized] = make_empty_value();
+                        }
+                    }
+                    if (existing_array != arrays.end())
+                    {
+                        frame.private_saved_arrays.try_emplace(normalized, existing_array->second);
+                        arrays.erase(existing_array);
+                    }
+                    else
+                    {
+                        frame.private_saved_arrays.try_emplace(normalized, std::nullopt);
+                    }
+                };
+
+                if (statement.identifier == "all")
+                {
+                    const std::string mode = statement.expression;
+                    const std::string pattern = statement.secondary_expression;
+                    std::set<std::string> candidate_names;
+                    for (const auto &[name, _] : globals)
+                    {
+                        candidate_names.insert(name);
+                    }
+                    for (const auto &[name, _] : arrays)
+                    {
+                        candidate_names.insert(name);
+                    }
+                    for (const std::string &name : candidate_names)
+                    {
+                        const bool matches = wildcard_match_insensitive(pattern, name);
+                        if (mode.empty() || (mode == "like" && matches) || (mode == "except" && !matches))
+                        {
+                            privatize_name(name, false);
+                        }
+                    }
+                }
+                else
+                {
+                    for (const auto &name : statement.names)
+                    {
+                        privatize_name(name, true);
                     }
                 }
                 return {};
+            }
             case StatementKind::parameters_declaration:
             case StatementKind::lparameters_declaration:
             {
@@ -5188,6 +5241,7 @@
                     for (auto &active_frame : stack)
                     {
                         active_frame.private_saved_values.clear();
+                        active_frame.private_saved_arrays.clear();
                         active_frame.locals.clear();
                     }
                 }
@@ -8350,7 +8404,9 @@
                     const std::string mode = statement.expression; // "like", "except", or ""
                     const std::string pattern = statement.secondary_expression;
                     std::vector<std::string> candidate_names;
-                    candidate_names.reserve(globals.size() + arrays.size() + frame.locals.size() + frame.local_names.size());
+                    candidate_names.reserve(
+                        globals.size() + arrays.size() + frame.locals.size() + frame.local_names.size() +
+                        frame.private_saved_values.size() + frame.private_saved_arrays.size());
                     for (const auto &[name, _] : globals)
                     {
                         candidate_names.push_back(name);
@@ -8370,6 +8426,20 @@
                         }
                     }
                     for (const auto &name : frame.local_names)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
+                    for (const auto &[name, _] : frame.private_saved_values)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
+                    for (const auto &[name, _] : frame.private_saved_arrays)
                     {
                         if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
                         {
@@ -8453,6 +8523,7 @@
                 for (auto &active_frame : stack)
                 {
                     active_frame.private_saved_values.clear();
+                    active_frame.private_saved_arrays.clear();
                     active_frame.locals.clear();
                 }
                 if (statement.identifier == "all")

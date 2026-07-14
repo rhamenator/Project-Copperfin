@@ -47,6 +47,83 @@ void test_private_declaration_masks_caller_variable() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_private_all_hides_matching_caller_variables_and_arrays() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_all";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "private_all.prg";
+    write_text(
+        main_path,
+        "cLikeOne = 'outer-like-one'\n"
+        "cLikeTwo = 'outer-like-two'\n"
+        "cExceptKeep = 'outer-keep'\n"
+        "cExceptHide = 'outer-hide'\n"
+        "DIMENSION aAll[1]\n"
+        "aAll[1] = 'outer-array'\n"
+        "DO private_all_scope\n"
+        "after_all_one = cLikeOne\n"
+        "after_all_two = cLikeTwo\n"
+        "after_all_keep = cExceptKeep\n"
+        "after_all_hide = cExceptHide\n"
+        "after_all_array = aAll[1]\n"
+        "DO private_like_scope\n"
+        "after_like_one = cLikeOne\n"
+        "after_like_keep = cExceptKeep\n"
+        "DO private_except_scope\n"
+        "after_except_keep = cExceptKeep\n"
+        "after_except_hide = cExceptHide\n"
+        "RETURN\n"
+        "PROCEDURE private_all_scope\n"
+        "PRIVATE ALL\n"
+        "cLikeOne = 'inner-one'\n"
+        "cLikeTwo = 'inner-two'\n"
+        "cExceptKeep = 'inner-keep'\n"
+        "cExceptHide = 'inner-hide'\n"
+        "aAll[1] = 'inner-array'\n"
+        "RETURN\n"
+        "PROCEDURE private_like_scope\n"
+        "PRIVATE ALL LIKE cLike*\n"
+        "cLikeOne = 'inner-like'\n"
+        "cExceptKeep = 'changed-through'\n"
+        "RETURN\n"
+        "PROCEDURE private_except_scope\n"
+        "PRIVATE ALL EXCEPT cExceptKeep\n"
+        "cExceptKeep = 'changed-through-except'\n"
+        "cExceptHide = 'inner-except-hide'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PRIVATE ALL script should complete");
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), name + " should be captured");
+        if (value != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(value->second) + "'");
+        }
+    };
+
+    check("after_all_one", "outer-like-one");
+    check("after_all_two", "outer-like-two");
+    check("after_all_keep", "outer-keep");
+    check("after_all_hide", "outer-hide");
+    check("after_all_array", "outer-array");
+    check("after_like_one", "outer-like-one");
+    check("after_like_keep", "changed-through");
+    check("after_except_keep", "changed-through-except");
+    check("after_except_hide", "outer-hide");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_private_variable_visible_to_called_routines() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_visible";

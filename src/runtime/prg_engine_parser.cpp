@@ -2469,6 +2469,18 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "LOCAL ")) {
             statement.kind = StatementKind::local_declaration;
             statement.names = split_csv_like(line.substr(6U));
+        } else if (upper == "PRIVATE ALL" || starts_with_insensitive(line, "PRIVATE ALL ")) {
+            // PRIVATE ALL [LIKE <pattern> | EXCEPT <pattern>]
+            statement.kind = StatementKind::private_declaration;
+            statement.identifier = "all";
+            const std::string rest = trim_copy(line.substr(11U));
+            if (starts_with_insensitive(rest, "LIKE ")) {
+                statement.expression = "like";
+                statement.secondary_expression = trim_copy(rest.substr(5U));
+            } else if (starts_with_insensitive(rest, "EXCEPT ")) {
+                statement.expression = "except";
+                statement.secondary_expression = trim_copy(rest.substr(7U));
+            }
         } else if (starts_with_insensitive(line, "PRIVATE ")) {
             statement.kind = StatementKind::private_declaration;
             statement.names = split_csv_like(line.substr(8U));

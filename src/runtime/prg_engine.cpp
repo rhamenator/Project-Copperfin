@@ -445,6 +445,13 @@ namespace copperfin::runtime
             bool return_after_finally = false;
         };
 
+        struct RuntimeArray
+        {
+            std::size_t rows = 0;
+            std::size_t columns = 1;
+            std::vector<PrgValue> values;
+        };
+
         struct Frame
         {
             std::string file_path;
@@ -458,6 +465,7 @@ namespace copperfin::runtime
             std::map<std::string, std::string> array_reference_bindings;
             std::set<std::string> local_names;
             std::map<std::string, std::optional<PrgValue>> private_saved_values;
+            std::map<std::string, std::optional<RuntimeArray>> private_saved_arrays;
             std::vector<LoopState> loops;
             std::vector<ScanState> scans;
             std::vector<WhileState> whiles;
@@ -598,13 +606,6 @@ namespace copperfin::runtime
             std::vector<std::string> popup_stack;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
-        };
-
-        struct RuntimeArray
-        {
-            std::size_t rows = 0;
-            std::size_t columns = 1;
-            std::vector<PrgValue> values;
         };
 
         struct TransactionJournalFileEntry

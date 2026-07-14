@@ -80,6 +80,7 @@ void test_for_each_foxobject_qualifier_tolerates_direct_and_member_path_collecti
 
 // ==== Variable scope and lifetime tests (PRIVATE/PUBLIC/RELEASE/CLEAR MEMORY/STORE) ====
 void test_private_declaration_masks_caller_variable();
+void test_private_all_hides_matching_caller_variables_and_arrays();
 void test_private_variable_visible_to_called_routines();
 void test_release_private_restores_saved_binding_immediately();
 void test_release_local_restores_visible_outer_global();

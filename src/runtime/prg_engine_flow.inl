@@ -17,6 +17,17 @@
                     globals.erase(name);
                 }
             }
+            for (const auto &[name, saved] : frame.private_saved_arrays)
+            {
+                if (saved.has_value())
+                {
+                    arrays[name] = *saved;
+                }
+                else
+                {
+                    arrays.erase(name);
+                }
+            }
         }
 
         void unwind_with_bindings(Frame &frame, std::size_t target_depth)
@@ -92,7 +103,23 @@
                 }
             }
 
-            arrays.erase(name);
+            if (const auto private_array = frame.private_saved_arrays.find(name);
+                private_array != frame.private_saved_arrays.end())
+            {
+                if (private_array->second.has_value())
+                {
+                    arrays[name] = *private_array->second;
+                }
+                else
+                {
+                    arrays.erase(name);
+                }
+                frame.private_saved_arrays.erase(private_array);
+            }
+            else
+            {
+                arrays.erase(name);
+            }
             frame.locals.erase(name);
         }
 

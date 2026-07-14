@@ -746,6 +746,8 @@ The `m.` variable namespace prefix is also now correctly handled as a memory-var
 
 The memory-variable lane now also restores saved outer bindings immediately when `RELEASE <name>` targets a currently shadowing `PRIVATE` variable, instead of waiting until the current frame unwinds.
 
+`PRIVATE ALL [LIKE <skeleton> | EXCEPT <skeleton>]` now hides matching existing caller variables and arrays using VFP `?`/`*` wildcard matching, restores their scalar and array state on explicit release or frame unwind, and leaves nonmatching `LIKE` / matching `EXCEPT` bindings visible to the called routine.
+
 Wildcard `RELEASE ALL LIKE ...` / `RELEASE ALL EXCEPT ...` handling now also covers array-only names rather than only scalar/global bindings, while continuing to preserve `PUBLIC` variables and arrays.
 
 `CLEAR MEMORY` now also drops deferred `PRIVATE` saved bindings so cleared names do not reappear later when nested frames unwind.
