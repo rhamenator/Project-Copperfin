@@ -526,10 +526,14 @@ std::string build_launcher_project_source(const RuntimePackagePlan& plan) {
     stream << "    <ImplicitUsings>enable</ImplicitUsings>\n";
     stream << "    <Nullable>enable</Nullable>\n";
     stream << "    <UseWindowsForms>false</UseWindowsForms>\n";
+    stream << "    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>\n";
     stream << "    <AssemblyName>" << sanitize_file_name(plan.project_title) << "</AssemblyName>\n";
     stream << "    <RootNamespace>Copperfin.Generated</RootNamespace>\n";
     stream << "    <PublishSingleFile>false</PublishSingleFile>\n";
     stream << "  </PropertyGroup>\n";
+    stream << "  <ItemGroup>\n";
+    stream << "    <Compile Include=\"Program.cs\" />\n";
+    stream << "  </ItemGroup>\n";
     stream << "</Project>\n";
     return stream.str();
 }

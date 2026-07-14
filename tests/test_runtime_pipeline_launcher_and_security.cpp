@@ -97,6 +97,10 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
         expect(
             launcher_project.find("<AssemblyName>LauncherContract</AssemblyName>") != std::string::npos,
             "generated launcher project should preserve the sanitized assembly name contract");
+        expect(
+            launcher_project.find("<EnableDefaultCompileItems>false</EnableDefaultCompileItems>") != std::string::npos &&
+            launcher_project.find("<Compile Include=\"Program.cs\" />") != std::string::npos,
+            "generated launcher project should compile Program.cs explicitly when publishing into its package root");
     }
 
     fs::remove_all(temp_root, ignored);
