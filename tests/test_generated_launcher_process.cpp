@@ -46,12 +46,12 @@ std::string manifest_value(const std::filesystem::path& path, const std::string&
 }
 
 int run_recording_runtime_host(int argc, char** argv) {
-    if (argc < 2) {
-        std::cerr << "fixture runtime host requires a manifest argument\n";
+    if (argc < 3 || std::string_view(argv[1]) != "--manifest") {
+        std::cerr << "fixture runtime host requires --manifest and a manifest path\n";
         return 90;
     }
 
-    const std::filesystem::path manifest_path = argv[1];
+    const std::filesystem::path manifest_path = argv[2];
     std::cout << "fixture.status=ok\n";
     std::cout << "fixture.cwd=" << std::filesystem::current_path().string() << "\n";
     std::cout << "fixture.argument_count=" << (argc - 1) << "\n";
@@ -271,8 +271,11 @@ void expect_manifest_selection(
         line_value(process.stdout_text, "fixture.status=") == "ok",
         context + " should reach the recording runtime host");
     expect(
+        line_value(process.stdout_text, "fixture.argument[0]=") == "--manifest",
+        context + " should preserve the invariant manifest switch");
+    expect(
         paths_are_equivalent(
-            line_value(process.stdout_text, "fixture.argument[0]="),
+            line_value(process.stdout_text, "fixture.argument[1]="),
             expected_manifest),
         context + " should forward the selected manifest as one native argument");
     expect(
@@ -438,8 +441,8 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         package_root,
         "ordinary launcher invocation");
     expect(
-        line_value(ordinary.stdout_text, "fixture.argument_count=") == "1",
-        "ordinary launcher invocation should forward only the release manifest");
+        line_value(ordinary.stdout_text, "fixture.argument_count=") == "2",
+        "ordinary launcher invocation should forward only the manifest switch and release path");
 
     const std::string quoted_debug_command = "watch:\"alpha beta\"";
     const std::string trailing_separator_argument =
@@ -465,13 +468,13 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         package_root,
         "--debug launcher invocation");
     expect(
-        line_value(long_debug.stdout_text, "fixture.argument[1]=") == "--debug",
+        line_value(long_debug.stdout_text, "fixture.argument[2]=") == "--debug",
         "--debug launcher invocation should preserve the normalized debug switch");
     expect(
-        line_value(long_debug.stdout_text, "fixture.argument[3]=") == quoted_debug_command,
+        line_value(long_debug.stdout_text, "fixture.argument[4]=") == quoted_debug_command,
         "generated launcher should preserve embedded quotes in forwarded arguments");
     expect(
-        line_value(long_debug.stdout_text, "fixture.argument[5]=") == trailing_separator_argument,
+        line_value(long_debug.stdout_text, "fixture.argument[6]=") == trailing_separator_argument,
         "generated launcher should preserve spaced native paths ending in a separator");
 
     const ProcessResult slash_debug = run_process_capture(
@@ -489,13 +492,13 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         package_root,
         "/debug launcher invocation");
     expect(
-        line_value(slash_debug.stdout_text, "fixture.argument[1]=") == "--debug",
+        line_value(slash_debug.stdout_text, "fixture.argument[2]=") == "--debug",
         "/debug launcher invocation should normalize the debug switch before forwarding");
     expect(
-        line_value(slash_debug.stdout_text, "fixture.argument[2]=") == "--locale",
+        line_value(slash_debug.stdout_text, "fixture.argument[3]=") == "--locale",
         "/locale launcher invocation should normalize the locale switch before forwarding");
     expect(
-        line_value(slash_debug.stdout_text, "fixture.argument[3]=") == "qps-ploc",
+        line_value(slash_debug.stdout_text, "fixture.argument[4]=") == "qps-ploc",
         "normalized locale forwarding should preserve the locale value");
 
     fs::remove(debug_manifest, ignored);
@@ -516,7 +519,7 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         package_root,
         "missing app.cfdebug launcher invocation");
     expect(
-        line_value(missing_debug.stdout_text, "fixture.argument[1]=") == "--debug",
+        line_value(missing_debug.stdout_text, "fixture.argument[2]=") == "--debug",
         "missing app.cfdebug fallback should still forward the normalized debug switch");
 
     const ProcessResult ordinary_after_fallback = run_process_capture(
