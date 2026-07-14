@@ -5,6 +5,16 @@
 #include "runtime_pipeline_support.h"
 #include "copperfin/platform/environment.h"
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
@@ -55,6 +65,32 @@ bool is_vfp_absolute_path(const std::string& value) {
         is_unc_path(value) ||
         std::filesystem::path(value).is_absolute();
 }
+
+#if defined(_WIN32)
+std::optional<std::filesystem::path> expand_windows_drive_relative_path(
+    const std::filesystem::path& candidate) {
+    std::wstring buffer(64U, L'\0');
+    for (;;) {
+        const DWORD length = ::GetFullPathNameW(
+            candidate.c_str(),
+            static_cast<DWORD>(buffer.size()),
+            buffer.data(),
+            nullptr);
+        if (length == 0U) {
+            return std::nullopt;
+        }
+        if (length < buffer.size()) {
+            buffer.resize(length);
+            const std::filesystem::path expanded(buffer);
+            if (!expanded.is_absolute()) {
+                return std::nullopt;
+            }
+            return expanded.lexically_normal();
+        }
+        buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
+    }
+}
+#endif
 
 std::filesystem::path resolve_vfp_path_from_base(
     const std::filesystem::path& base_dir,
@@ -549,9 +585,29 @@ std::string resolve_project_item_source(
             return normalized_relative_path;
         }
 #endif
-        if (const auto resolved = resolve_candidate(from_relative); resolved.has_value()) {
+#if defined(_WIN32)
+        std::filesystem::path lookup_path = from_relative;
+        const bool drive_relative = is_windows_drive_relative_path(normalized_relative_path);
+        if (drive_relative) {
+            const auto expanded = expand_windows_drive_relative_path(from_relative);
+            if (expanded.has_value()) {
+                lookup_path = *expanded;
+            }
+        }
+#else
+        const std::filesystem::path& lookup_path = from_relative;
+#endif
+        if (const auto resolved = resolve_candidate(lookup_path); resolved.has_value()) {
             return resolved->string();
         }
+#if defined(_WIN32)
+        if (drive_relative && error.empty() && lookup_path.is_absolute()) {
+            std::error_code exists_error;
+            if (std::filesystem::exists(lookup_path, exists_error) && !exists_error) {
+                return lookup_path.lexically_normal().string();
+            }
+        }
+#endif
         if (!error.empty()) {
             return from_relative.lexically_normal().string();
         }
@@ -601,6 +657,10 @@ bool source_path_exists_on_host(const std::string& value) {
     if (is_windows_drive_absolute_path(normalized) ||
         is_windows_drive_relative_path(normalized) ||
         is_unc_path(normalized)) {
+        return false;
+    }
+#else
+    if (is_windows_drive_relative_path(normalized)) {
         return false;
     }
 #endif

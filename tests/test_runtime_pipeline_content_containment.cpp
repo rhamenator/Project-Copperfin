@@ -123,6 +123,9 @@ void run_windows_drive_relative_case(
     const fs::path output_dir = project_parent / ("output-" + identity);
     const fs::path runtime_host = runtime_host_fixture_path(temp_root);
 
+    expect(source_target.native().size() > 64U,
+           "#4065: Windows drive-relative fixture should exercise full-path buffer growth");
+
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::remove_all(project_dir, ignored);
@@ -188,6 +191,8 @@ void run_windows_drive_relative_case(
         expect(plan.ok && asset != nullptr && asset->exists,
                "#4065: Windows drive-relative source should resolve from the drive current directory");
         if (asset != nullptr) {
+            expect(fs::path(asset->source_path).is_absolute(),
+                   "#4065: an existing drive-relative source should be frozen to an absolute identity");
             expect(read_text(asset->source_path) == "drive-current-source",
                    "#4065: Windows drive-relative source must not rebind to the PJX directory");
             expect(asset->relative_path == tail.generic_string(),
@@ -207,6 +212,10 @@ void run_windows_drive_relative_case(
                 "#4065: an unresolved drive-relative source must not rebind to a PJX-local decoy");
         }
 
+        change_current_directory(source_drive);
+        if (expect_different_drive) {
+            change_current_directory(project_dir);
+        }
         const auto result = copperfin::runtime::materialize_runtime_package(
             plan,
             copperfin::security::default_native_security_profile(),
