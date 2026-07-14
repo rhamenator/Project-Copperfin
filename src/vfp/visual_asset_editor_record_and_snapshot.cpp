@@ -800,7 +800,7 @@ VisualAssetEditResult replace_non_memo_field_value(
         case 'C': {
             const DbfTextConversionResult encoded = encode_dbf_text(
                 header_result.header.code_page_mark,
-                trim_both(new_value));
+                trim_right(new_value));
             if (!encoded.ok) {
                 return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
             }

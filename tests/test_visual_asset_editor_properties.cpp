@@ -399,6 +399,90 @@ void test_fractional_report_section_moves_follow_layout_membership() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_report_label_character_field_writes_preserve_leading_spaces() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_character_spacing_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto run_round_trip = [&](const fs::path& asset_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "UNIQUEID", .type = 'C', .length = 40U},
+            {.name = "TAG", .type = 'C', .length = 8U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            asset_path.string(), fields, {{"5", "spacing-guid", " PRIOR "}});
+        expect(create_result.ok, "#4062: report/label character-spacing fixture should be writable");
+
+        const auto query_tag = [&]() {
+            return copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "spacing-guid",
+                .property_name = "TAG"
+            });
+        };
+
+        auto tag = query_tag();
+        expect(tag.ok && tag.exists && tag.value == " PRIOR",
+            "#4062: parsed FRX/LBX character fields should retain significant leading spaces");
+
+        auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "spacing-guid",
+            .property_name = "TAG",
+            .property_value = " ALPHA  "
+        });
+        expect(update_result.ok, "#4062: direct report/label character-field updates should succeed");
+        tag = query_tag();
+        expect(tag.ok && tag.exists && tag.value == " ALPHA",
+            "#4062: direct report/label character-field edits should preserve leading spaces and remove storage padding");
+
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
+        expect(undo_result.ok, "#4062: undo should restore direct report/label character fields");
+        tag = query_tag();
+        expect(tag.ok && tag.exists && tag.value == " PRIOR",
+            "#4062: undo snapshots should restore significant leading spaces after reopening");
+
+        update_result = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "spacing-guid",
+            .property_name = "TAG",
+            .property_value = " BETA  "
+        });
+        expect(update_result.ok, "#4062: subsequent direct report/label character-field edits should succeed");
+        tag = query_tag();
+        expect(tag.ok && tag.exists && tag.value == " BETA",
+            "#4062: subsequent direct character-field edits should preserve leading spaces after undo");
+
+        const auto overflow_result = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "spacing-guid",
+            .property_name = "TAG",
+            .property_value = " TOO-LONG"
+        });
+        expect(!overflow_result.ok,
+            "#4062: fixed-width report/label character fields should reject significant overflow");
+        tag = query_tag();
+        expect(tag.ok && tag.exists && tag.value == " BETA",
+            "#4062: rejected character-field overflow should not truncate or mutate the stored value");
+    };
+
+    run_round_trip(temp_dir / "character_spacing.frx");
+    run_round_trip(temp_dir / "character_spacing.lbx");
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_query_visual_object_property_reads_selected_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
