@@ -84,6 +84,17 @@ bool copy_file_if_exists(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,
     std::string& error);
+bool prepare_package_content_root(
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& content_root,
+    std::string& error);
+bool copy_file_to_package_content(
+    const std::filesystem::path& source,
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& content_root,
+    const std::filesystem::path& relative_path,
+    std::filesystem::path& destination,
+    std::string& error);
 bool validate_runtime_host_source_path(
     const RuntimePackagePlan& plan,
     const std::string& runtime_host_source_path,
@@ -119,6 +130,8 @@ struct RuntimeCompanionCopyResult {
 };
 RuntimeCompanionCopyResult copy_companion_files_if_present(
     const RuntimePackageAsset& asset,
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& content_root,
     std::vector<std::string>& warnings);
 
 // ==== DLL/FLL native-wrapper and library-export manifest generation ====

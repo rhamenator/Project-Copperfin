@@ -4048,6 +4048,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline_startup_and_staging.cpp
     test_runtime_pipeline_launcher_and_security.cpp
     test_runtime_pipeline_manifest_pair.cpp
+    test_runtime_pipeline_content_containment.cpp
 )
 target_compile_definitions(test_runtime_pipeline PRIVATE
     COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS=1

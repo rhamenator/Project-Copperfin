@@ -46,6 +46,8 @@
   "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod": "Manual port required for FoxPro xAsset method: {methodIdentity}",
   "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement": "Unsupported FoxPro statement: {statementText}",
   "Runtime.Package.Error.CopyFileFailed": "Unable to copy file into package: {path}",
+  "Runtime.Package.Error.ContentDestinationRejected": "Package asset destination must be a direct path inside the content root: {path}",
+  "Runtime.Package.Error.ContentRootRejected": "Package content root must be the direct content directory inside the package root: {path}",
   "Runtime.Package.Error.AmbiguousProjectAssetPath": "Multiple case-insensitive project asset paths match: {path}",
   "Runtime.Package.Error.AmbiguousCompanionPath": "Multiple case-insensitive companion files match: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Unable to create package content-root directory.",

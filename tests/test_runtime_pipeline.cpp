@@ -45,6 +45,13 @@ int main() {
     test_manifest_pair_finalization_rolls_back_failed_promotions();
     test_manifest_pair_finalization_recovers_stale_transactions();
     test_materialize_cleanup_warning_rewrites_manifest_pair_atomically();
+    test_drive_relative_asset_paths_use_contained_package_identity();
+    test_materialization_rejects_external_asset_destinations();
+    test_optional_rejected_asset_identity_stays_out_of_manifests();
+    test_materialization_rejects_external_content_root();
+    test_package_content_copy_rejects_indirect_parent();
+    test_package_content_copy_rejects_hard_link_destination();
+    test_relative_output_root_preserves_plan_path_contract();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_library_output_warning_lines_are_mirrored_into_debug_manifest();

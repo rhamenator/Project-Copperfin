@@ -7,19 +7,6 @@
 #include "runtime_pipeline_test_hooks.h"
 #include "runtime_pipeline_manifest_pair_io.h"
 
-#include <cstddef>
-#include <cstring>
-#include <limits>
-
-#if defined(_WIN32)
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <winioctl.h>
-#endif
-
 namespace cf_test_runtime_pipeline {
 namespace {
 
@@ -117,86 +104,6 @@ bool has_manifest_pair_transaction_artifacts(const fs::path& package_root) {
     }
     return error || false;
 }
-
-#if defined(_WIN32)
-bool create_windows_junction(const fs::path& link, const fs::path& target) {
-    struct JunctionHeader {
-        DWORD tag;
-        WORD data_length;
-        WORD reserved;
-        WORD substitute_offset;
-        WORD substitute_length;
-        WORD print_offset;
-        WORD print_length;
-    };
-
-    const std::wstring target_path = fs::absolute(target).native();
-    const std::wstring substitute = L"\\??\\" + target_path;
-    const std::wstring print = target_path;
-    const std::size_t path_characters =
-        substitute.size() + 1U + print.size() + 1U;
-    const std::size_t path_bytes = path_characters * sizeof(wchar_t);
-    if (path_bytes + sizeof(JunctionHeader) >
-        static_cast<std::size_t>(std::numeric_limits<WORD>::max())) {
-        return false;
-    }
-
-    std::error_code error;
-    fs::create_directory(link, error);
-    if (error) {
-        return false;
-    }
-    const HANDLE handle = ::CreateFileW(
-        link.c_str(),
-        GENERIC_WRITE,
-        0,
-        nullptr,
-        OPEN_EXISTING,
-        FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS,
-        nullptr);
-    if (handle == INVALID_HANDLE_VALUE) {
-        fs::remove(link, error);
-        return false;
-    }
-
-    std::vector<std::byte> buffer(sizeof(JunctionHeader) + path_bytes);
-    auto* header = reinterpret_cast<JunctionHeader*>(buffer.data());
-    header->tag = IO_REPARSE_TAG_MOUNT_POINT;
-    header->data_length = static_cast<WORD>(8U + path_bytes);
-    header->reserved = 0U;
-    header->substitute_offset = 0U;
-    header->substitute_length =
-        static_cast<WORD>(substitute.size() * sizeof(wchar_t));
-    header->print_offset =
-        static_cast<WORD>((substitute.size() + 1U) * sizeof(wchar_t));
-    header->print_length = static_cast<WORD>(print.size() * sizeof(wchar_t));
-    auto* path_buffer = reinterpret_cast<wchar_t*>(buffer.data() + sizeof(JunctionHeader));
-    std::memcpy(
-        path_buffer,
-        substitute.c_str(),
-        (substitute.size() + 1U) * sizeof(wchar_t));
-    std::memcpy(
-        path_buffer + substitute.size() + 1U,
-        print.c_str(),
-        (print.size() + 1U) * sizeof(wchar_t));
-
-    DWORD returned = 0U;
-    const bool created = ::DeviceIoControl(
-        handle,
-        FSCTL_SET_REPARSE_POINT,
-        buffer.data(),
-        static_cast<DWORD>(buffer.size()),
-        nullptr,
-        0U,
-        &returned,
-        nullptr) != 0;
-    (void)::CloseHandle(handle);
-    if (!created) {
-        fs::remove(link, error);
-    }
-    return created;
-}
-#endif
 
 copperfin::runtime::RuntimeBuildResult finalize_manifest_pair(
     const copperfin::runtime::RuntimePackagePlan& plan) {

@@ -729,6 +729,8 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
         "Runtime.Package.Error.AmbiguousProjectAssetPath",
         "Runtime.Package.Error.AmbiguousCompanionPath",
+        "Runtime.Package.Error.ContentDestinationRejected",
+        "Runtime.Package.Error.ContentRootRejected",
         "Runtime.Package.Error.CopyFileFailed",
         "Runtime.Package.Error.CreateContentRootFailed",
         "Runtime.Package.Error.CreateDirectoryFailed",
@@ -829,6 +831,27 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             {{"path", "Copperfin.GeneratedLauncher.dll"}}) ==
             "Required generated-launcher artifact is missing: Copperfin.GeneratedLauncher.dll",
         "#4052: generated-launcher admission diagnostics should preserve package-relative path placeholders");
+    expect(
+        english_catalog.translate(
+            "Runtime.Package.Error.ContentDestinationRejected",
+            {{"path", "content/forms/customer.scx"}}) ==
+            "Package asset destination must be a direct path inside the content root: content/forms/customer.scx",
+        "#4065: package-content rejection diagnostics should preserve path placeholders");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.ContentDestinationRejected",
+            {{"path", "content/forms/customer.scx"}}) ==
+            copperfin::localization::format_named_placeholders(
+                copperfin::localization::pseudo_localize(
+                    "Package asset destination must be a direct path inside the content root: {path}"),
+                {{"path", "content/forms/customer.scx"}}),
+        "#4065: package-content rejection diagnostics should route through pseudo-localization");
+    expect(
+        spanish_catalog.translate(
+            "Runtime.Package.Error.ContentRootRejected",
+            {{"path", "outside/content"}}) ==
+            "La raiz de contenido del paquete debe ser el directorio de contenido directo dentro de la raiz del paquete: outside/content",
+        "#4065: content-root rejection diagnostics should localize without changing path placeholders");
     expect(
         spanish_catalog.translate(
             "Runtime.Package.Error.ManifestPairPublishFailed",

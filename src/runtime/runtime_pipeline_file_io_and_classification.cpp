@@ -40,6 +40,11 @@ bool is_windows_drive_absolute_path(const std::string& value) {
         (value[2] == '\\' || value[2] == '/');
 }
 
+bool is_windows_drive_relative_path(const std::string& value) {
+    return has_windows_drive_designator(value) &&
+        !is_windows_drive_absolute_path(value);
+}
+
 bool is_unc_path(const std::string& value) {
     return value.size() >= 2U &&
         ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
@@ -60,6 +65,9 @@ std::filesystem::path resolve_vfp_path_from_base(
 
     const std::string normalized = normalize_vfp_separators(value);
     const std::filesystem::path candidate(normalized);
+    if (is_windows_drive_relative_path(normalized)) {
+        return candidate.lexically_normal();
+    }
     if (!is_vfp_absolute_path(normalized) && candidate.is_relative()) {
         return (base_dir / candidate).lexically_normal();
     }
@@ -75,6 +83,11 @@ std::string sanitize_package_relative_path(const std::string& value) {
     std::string normalized = normalize_vfp_separators(value);
     if (is_vfp_absolute_path(normalized)) {
         normalized = std::filesystem::path(normalized).filename().generic_string();
+    } else if (is_windows_drive_relative_path(normalized)) {
+        normalized.erase(0U, 2U);
+        while (!normalized.empty() && normalized.front() == '/') {
+            normalized.erase(normalized.begin());
+        }
     }
 
     std::vector<std::string> segments;
@@ -531,6 +544,7 @@ std::string resolve_project_item_source(
         const std::filesystem::path from_relative = resolve_vfp_path_from_base(base_dir, entry.relative_path);
 #if !defined(_WIN32)
         if (is_windows_drive_absolute_path(normalized_relative_path) ||
+            is_windows_drive_relative_path(normalized_relative_path) ||
             is_unc_path(normalized_relative_path)) {
             return normalized_relative_path;
         }
@@ -541,7 +555,8 @@ std::string resolve_project_item_source(
         if (!error.empty()) {
             return from_relative.lexically_normal().string();
         }
-        if (is_vfp_absolute_path(normalized_relative_path)) {
+        if (is_vfp_absolute_path(normalized_relative_path) ||
+            is_windows_drive_relative_path(normalized_relative_path)) {
             return from_relative.lexically_normal().string();
         }
         if (has_parent_traversal_segment(entry.relative_path)) {
@@ -583,7 +598,9 @@ bool source_path_exists_on_host(const std::string& value) {
 
     const std::string normalized = normalize_vfp_separators(value);
 #if !defined(_WIN32)
-    if (is_windows_drive_absolute_path(normalized) || is_unc_path(normalized)) {
+    if (is_windows_drive_absolute_path(normalized) ||
+        is_windows_drive_relative_path(normalized) ||
+        is_unc_path(normalized)) {
         return false;
     }
 #endif
@@ -729,10 +746,12 @@ std::vector<std::filesystem::path> infer_companion_source_paths(const std::files
 
 RuntimeCompanionCopyResult copy_companion_files_if_present(
     const RuntimePackageAsset& asset,
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& content_root,
     std::vector<std::string>& warnings) {
     RuntimeCompanionCopyResult result;
     const std::filesystem::path source(asset.source_path);
-    const std::filesystem::path staged(asset.staged_path);
+    const std::filesystem::path staged_relative(asset.relative_path);
     for (const auto& companion_source : infer_companion_source_paths(source)) {
         bool ambiguous = false;
         const auto resolved_companion_source = resolve_existing_path_casefold(companion_source, ambiguous);
@@ -754,10 +773,17 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
             continue;
         }
 
-        const auto companion_destination =
-            staged.parent_path() / resolved_companion_source->filename();
+        const auto companion_relative =
+            staged_relative.parent_path() / resolved_companion_source->filename();
+        std::filesystem::path companion_destination;
         std::string error;
-        if (!copy_file_if_exists(*resolved_companion_source, companion_destination, error)) {
+        if (!copy_file_to_package_content(
+                *resolved_companion_source,
+                package_root,
+                content_root,
+                companion_relative,
+                companion_destination,
+                error)) {
             if (asset.required_for_runtime) {
                 result.ok = false;
                 result.error = error;

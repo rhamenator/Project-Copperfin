@@ -42,6 +42,17 @@ void expect(bool condition, const std::string& message);
 void write_text(const std::filesystem::path& path, const std::string& contents);
 std::filesystem::path runtime_host_fixture_path(const std::filesystem::path& root);
 std::string read_text(const std::filesystem::path& path);
+#if defined(_WIN32)
+bool create_windows_junction(
+    const std::filesystem::path& link,
+    const std::filesystem::path& target);
+bool create_windows_drive_mapping(
+    const std::filesystem::path& target,
+    std::filesystem::path& drive_root);
+bool remove_windows_drive_mapping(
+    const std::filesystem::path& target,
+    const std::filesystem::path& drive_root);
+#endif
 std::string hex_decode_bytes(const std::string& encoded);
 std::unordered_map<std::string, std::string> parse_app_archive_payloads(const std::string& archive_text);
 std::string trim_copy(std::string value);
@@ -156,6 +167,13 @@ void test_manifest_pair_directory_stays_pinned_and_never_overwrites();
 void test_manifest_pair_finalization_rolls_back_failed_promotions();
 void test_manifest_pair_finalization_recovers_stale_transactions();
 void test_materialize_cleanup_warning_rewrites_manifest_pair_atomically();
+void test_drive_relative_asset_paths_use_contained_package_identity();
+void test_materialization_rejects_external_asset_destinations();
+void test_optional_rejected_asset_identity_stays_out_of_manifests();
+void test_materialization_rejects_external_content_root();
+void test_package_content_copy_rejects_indirect_parent();
+void test_package_content_copy_rejects_hard_link_destination();
+void test_relative_output_root_preserves_plan_path_contract();
 void test_security_enabled_runtime_host_name_validation();
 void test_runtime_security_role_environment_fidelity();
 void test_runtime_package_diagnostics_resolve_through_localization_catalog();

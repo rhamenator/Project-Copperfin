@@ -46,6 +46,8 @@
   "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod": "Port manual necessario para o metodo xAsset do FoxPro: {methodIdentity}",
   "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement": "Instrucao FoxPro sem suporte: {statementText}",
   "Runtime.Package.Error.CopyFileFailed": "Nao foi possivel copiar o arquivo para o pacote: {path}",
+  "Runtime.Package.Error.ContentDestinationRejected": "O destino do recurso do pacote deve ser um caminho direto dentro da raiz de conteudo: {path}",
+  "Runtime.Package.Error.ContentRootRejected": "A raiz de conteudo do pacote deve ser o diretorio de conteudo direto dentro da raiz do pacote: {path}",
   "Runtime.Package.Error.AmbiguousProjectAssetPath": "Varios caminhos de recursos do projeto sem distincao de maiusculas correspondem a: {path}",
   "Runtime.Package.Error.AmbiguousCompanionPath": "Varios arquivos complementares sem distincao de maiusculas correspondem a: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Nao foi possivel criar o diretorio raiz de conteudo do pacote.",

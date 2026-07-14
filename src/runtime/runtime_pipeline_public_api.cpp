@@ -887,9 +887,12 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     if (directory_error) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreatePackageRootFailed")};
     }
-    std::filesystem::create_directories(plan.content_root, directory_error);
-    if (directory_error) {
-        return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateContentRootFailed")};
+    std::string error;
+    if (!prepare_package_content_root(
+            plan.package_root,
+            plan.content_root,
+            error)) {
+        return {.ok = false, .error = error};
     }
     if (plan.emit_dotnet_launcher) {
         std::filesystem::create_directories(std::filesystem::path(plan.launcher_project_path).parent_path(), directory_error);
@@ -901,13 +904,11 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     RuntimePackagePlan materialized_plan = plan;
     materialized_plan.primary_output_materialized = false;
     materialized_plan.launcher_artifacts.clear();
-    std::erase_if(
-        materialized_plan.extension_payload_digests,
-        [&](const RuntimeArtifactDigest& digest) {
-            return is_launcher_owned_digest(digest, plan);
-        });
-    std::string error;
+    materialized_plan.extension_payload_digests.clear();
+    materialized_plan.writable_data_payload_digests.clear();
     for (auto& asset : materialized_plan.assets) {
+        asset.copied = false;
+        asset.sha256.clear();
         if (asset.required_for_runtime && !asset.source_resolution_error.empty()) {
             return {.ok = false, .error = asset.source_resolution_error};
         }
@@ -922,16 +923,37 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             continue;
         }
 
-        const std::filesystem::path destination = std::filesystem::path(plan.content_root) / asset.relative_path;
-        if (!copy_file_if_exists(asset.source_path, destination, error)) {
+        std::filesystem::path destination;
+        if (!copy_file_to_package_content(
+                asset.source_path,
+                plan.package_root,
+                plan.content_root,
+                asset.relative_path,
+                destination,
+                error)) {
             if (asset.required_for_runtime) {
                 return {.ok = false, .error = error};
+            }
+            if (destination.empty()) {
+                asset.relative_path =
+                    "record_" + std::to_string(asset.record_index) + ".asset";
+                asset.staged_path.clear();
+            } else {
+                asset.staged_path = destination.string();
             }
             materialized_plan.warnings.push_back(error);
             continue;
         }
+        asset.staged_path = destination.string();
+        if (asset.required_for_runtime) {
+            materialized_plan.startup_source_path = asset.staged_path;
+        }
         const auto companion_copy_result =
-            copy_companion_files_if_present(asset, materialized_plan.warnings);
+            copy_companion_files_if_present(
+                asset,
+                plan.package_root,
+                plan.content_root,
+                materialized_plan.warnings);
         if (!companion_copy_result.ok) {
             return {.ok = false, .error = companion_copy_result.error};
         }

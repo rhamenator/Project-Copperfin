@@ -304,7 +304,7 @@ std::string build_ast_manifest_source(const RuntimePackagePlan& plan) {
 
     bool first_file = true;
     for (const auto& asset : plan.assets) {
-        if (!should_stage_asset(asset) ||
+        if (!asset.copied ||
             lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
             continue;
         }
@@ -369,7 +369,7 @@ std::string build_ir_manifest_source(const RuntimePackagePlan& plan) {
 
     bool first_file = true;
     for (const auto& asset : plan.assets) {
-        if (!should_stage_asset(asset) ||
+        if (!asset.copied ||
             lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
             continue;
         }
