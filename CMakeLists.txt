@@ -251,6 +251,7 @@ add_library(cf_runtime_pipeline
     src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp
     src/runtime/runtime_pipeline_ast_ir_manifest.cpp
     src/runtime/runtime_pipeline_csharp_and_launcher.cpp
+    src/runtime/runtime_pipeline_launcher_artifact_inventory.cpp
     src/runtime/runtime_pipeline_public_api.cpp
 )
 

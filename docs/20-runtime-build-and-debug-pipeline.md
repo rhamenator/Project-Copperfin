@@ -37,7 +37,10 @@ Current package layout:
 - `copperfin_runtime_host.exe`
   - native runtime/debug launch host
 - optional generated launcher
-  - `.NET` executable published beside the native runtime host
+  - configured public `.NET` apphost published beside the native runtime host
+  - stable internal runtime sidecars `Copperfin.GeneratedLauncher.dll`, `Copperfin.GeneratedLauncher.deps.json`, and `Copperfin.GeneratedLauncher.runtimeconfig.json`
+  - optional `Copperfin.GeneratedLauncher.pdb` classified separately as debug metadata
+  - both manifests record package-relative `launcher_artifact` provenance and SHA-256 digests; these lines are inventory, not a claim that the post-launch runtime manifest protects files that execute before it is read
 
 Current CLI flow:
 
@@ -96,6 +99,7 @@ Current behavior:
 - runtime packaging is `Windows-first`
 - generated packages are `x64`
 - `.NET` launchers are emitted as `net8.0-windows` executables
+- generated-launcher publication ignores ambient MSBuild response files and inherited `Directory.Build.props` / `Directory.Build.targets`, then finalization rejects missing, ambiguous, redirected, non-regular, or unexpected internal launcher artifacts
 - packaged runtime manifests now point at staged package content instead of stale legacy source paths
 - debug manifests keep source-side paths so Visual Studio and the standalone Studio shell can debug against the editable source tree
 - `PRG` startup paths now advertise real breakpoint and step-debugging support in the debug manifest

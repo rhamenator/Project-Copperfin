@@ -50,6 +50,18 @@ struct RuntimeArtifactDigest {
     std::string sha256;
 };
 
+enum class RuntimeLauncherArtifactRole {
+    public_apphost,
+    runtime_required,
+    debug_optional
+};
+
+struct RuntimeLauncherArtifact {
+    std::string package_relative_path;
+    RuntimeLauncherArtifactRole role = RuntimeLauncherArtifactRole::runtime_required;
+    std::string sha256;
+};
+
 struct RuntimeDebugLaunchPlan {
     std::string manifest_path;
     std::string startup_item;
@@ -111,6 +123,7 @@ struct RuntimePackagePlan {
     std::vector<RuntimeArtifactDigest> compiler_contract_digests;
     std::vector<RuntimeArtifactDigest> extension_payload_digests;
     std::vector<RuntimeArtifactDigest> writable_data_payload_digests;
+    std::vector<RuntimeLauncherArtifact> launcher_artifacts;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;
 };

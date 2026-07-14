@@ -479,13 +479,30 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         expect(pre_debug_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") == std::string::npos,
                "dotnet-finalize debug manifest should not claim a launcher payload before publish");
 
-        write_text(result.plan.launcher_output_path, "published-launcher");
+        const fs::path package_root(result.plan.package_root);
+        const fs::path launcher_output(result.plan.launcher_output_path);
+        const fs::path launcher_dll = package_root / "Copperfin.GeneratedLauncher.dll";
+        const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
+        const fs::path launcher_runtimeconfig = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
+        const fs::path launcher_pdb = package_root / "Copperfin.GeneratedLauncher.pdb";
+
+        write_text(launcher_output, "published-launcher");
+        const auto missing_sidecars = copperfin::runtime::finalize_runtime_package_primary_output(
+            result.plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile());
+        expect(!missing_sidecars.ok,
+               "#4052: dotnet finalization should fail when required internal sidecars are missing");
+
+        write_text(launcher_dll, "launcher-dll");
+        write_text(launcher_deps, "launcher-deps");
+        write_text(launcher_runtimeconfig, "launcher-runtimeconfig");
         const auto finalize_result = copperfin::runtime::finalize_runtime_package_primary_output(
             result.plan,
             copperfin::security::default_native_security_profile(),
             copperfin::platform::default_extensibility_profile());
         expect(finalize_result.ok,
-               "dotnet-finalize helper should succeed once the launcher output exists");
+               "#4052: dotnet finalization should succeed once the apphost and required sidecars exist");
         if (finalize_result.ok) {
             expect(finalize_result.plan.primary_output_materialized,
                    "dotnet-finalize helper should mark the primary output as materialized");
@@ -499,13 +516,192 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                    "dotnet-finalize runtime manifest should omit the materialized launcher output state after publish");
             expect(debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                    "dotnet-finalize debug manifest should report the materialized launcher output");
-            expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(finalize_result.plan.launcher_output_path) + "|") != std::string::npos,
-                   "dotnet-finalize runtime manifest should record the published launcher payload");
-            expect(debug_manifest.find("extension_payload=" + quote_manifest_value(finalize_result.plan.launcher_output_path) + "|") != std::string::npos,
-                   "dotnet-finalize debug manifest should record the published launcher payload");
-            expect(lines_with_prefix(runtime_manifest, "extension_payload=") ==
-                       lines_with_prefix(debug_manifest, "extension_payload="),
-                   "dotnet-finalize runtime and debug manifests should stay synchronized");
+            expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(finalize_result.plan.launcher_output_path) + "|") == std::string::npos,
+                   "#4052: the post-launch runtime manifest must not claim to protect the launcher apphost");
+            expect(debug_manifest.find("extension_payload=" + quote_manifest_value(finalize_result.plan.launcher_output_path) + "|") == std::string::npos,
+                   "#4052: generated-launcher provenance should not use the runtime extension-payload surface");
+
+            const std::vector<std::string> launcher_artifacts =
+                lines_with_prefix(debug_manifest, "launcher_artifact=");
+            expect(finalize_result.plan.launcher_artifacts.size() == 4U,
+                   "#4052: finalized package plans should retain the exact admitted launcher inventory");
+            if (finalize_result.plan.launcher_artifacts.size() == 4U) {
+                expect(finalize_result.plan.launcher_artifacts[0].package_relative_path ==
+                           launcher_output.filename().generic_string() &&
+                           finalize_result.plan.launcher_artifacts[0].role ==
+                               copperfin::runtime::RuntimeLauncherArtifactRole::public_apphost,
+                       "#4052: the first plan artifact should preserve the configured public apphost identity");
+                expect(std::all_of(
+                           finalize_result.plan.launcher_artifacts.begin() + 1,
+                           finalize_result.plan.launcher_artifacts.end(),
+                           [](const copperfin::runtime::RuntimeLauncherArtifact& artifact) {
+                               return artifact.role ==
+                                   copperfin::runtime::RuntimeLauncherArtifactRole::runtime_required;
+                           }),
+                       "#4052: the remaining required plan artifacts should use the runtime-required role");
+            }
+            expect(lines_with_prefix(runtime_manifest, "launcher_artifact=") == launcher_artifacts,
+                   "#4052: runtime and debug manifests should expose the same provenance-only launcher inventory");
+            expect(launcher_artifacts.size() == 4U,
+                   "#4052: debug provenance should inventory one apphost and three required internal sidecars");
+            expect(debug_manifest.find(
+                       "launcher_artifact=" + quote_manifest_value(launcher_output.filename().generic_string()) +
+                       "|public_apphost|") != std::string::npos,
+                   "#4052: debug provenance should classify the configured public apphost");
+            for (const auto& required_name : {
+                     std::string("Copperfin.GeneratedLauncher.dll"),
+                     std::string("Copperfin.GeneratedLauncher.deps.json"),
+                     std::string("Copperfin.GeneratedLauncher.runtimeconfig.json")}) {
+                expect(debug_manifest.find(
+                           "launcher_artifact=" + quote_manifest_value(required_name) +
+                           "|runtime_required|") != std::string::npos,
+                       "#4052: debug provenance should classify required internal sidecar " + required_name);
+            }
+            for (const auto& artifact_line : launcher_artifacts) {
+                expect(artifact_line.find(package_root.string()) == std::string::npos &&
+                           artifact_line.find(project_dir.string()) == std::string::npos,
+                       "#4052: launcher provenance should contain package-relative paths without source roots");
+            }
+
+            write_text(launcher_pdb, "launcher-pdb");
+            auto repeated_plan = finalize_result.plan;
+            const fs::path stale_identity = package_root / "Copperfin.GeneratedLauncher.retired";
+            repeated_plan.extension_payload_digests.push_back({
+                .path = stale_identity.string(),
+                .sha256 = "stale-digest"
+            });
+            const auto with_optional_debug = copperfin::runtime::finalize_runtime_package_primary_output(
+                repeated_plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            expect(with_optional_debug.ok,
+                   "#4052: repeated finalization should admit an optional launcher PDB");
+            if (with_optional_debug.ok) {
+                const std::string optional_debug_manifest = read_text(with_optional_debug.plan.debug_manifest_path);
+                expect(lines_with_prefix(optional_debug_manifest, "launcher_artifact=").size() == 5U &&
+                           optional_debug_manifest.find(
+                               "launcher_artifact=Copperfin.GeneratedLauncher.pdb|debug_optional|") != std::string::npos,
+                       "#4052: optional debug artifacts should be classified separately and exactly once");
+                expect(optional_debug_manifest.find(stale_identity.string()) == std::string::npos,
+                       "#4052: repeated finalization should remove stale launcher identities from provenance");
+
+                fs::remove(launcher_pdb, ignored);
+                const auto without_optional_debug = copperfin::runtime::finalize_runtime_package_primary_output(
+                    with_optional_debug.plan,
+                    copperfin::security::default_native_security_profile(),
+                    copperfin::platform::default_extensibility_profile());
+                expect(without_optional_debug.ok,
+                       "#4052: repeated finalization should succeed after an optional PDB is removed");
+                if (without_optional_debug.ok) {
+                    const std::string no_optional_debug_manifest =
+                        read_text(without_optional_debug.plan.debug_manifest_path);
+                    expect(lines_with_prefix(no_optional_debug_manifest, "launcher_artifact=").size() == 4U &&
+                               no_optional_debug_manifest.find("Copperfin.GeneratedLauncher.pdb") == std::string::npos,
+                           "#4052: repeated finalization should not retain stale optional-debug inventory");
+                }
+            }
+
+            const fs::path unexpected_sidecar = package_root / "Copperfin.GeneratedLauncher.stale.json";
+            write_text(unexpected_sidecar, "unexpected");
+            const auto unexpected_result = copperfin::runtime::finalize_runtime_package_primary_output(
+                finalize_result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            expect(!unexpected_result.ok,
+                   "#4052: unexpected stale internal launcher sidecars should fail exact inventory admission");
+            fs::remove(unexpected_sidecar, ignored);
+
+            fs::remove(launcher_deps, ignored);
+            const auto missing_required = copperfin::runtime::finalize_runtime_package_primary_output(
+                finalize_result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            expect(!missing_required.ok,
+                   "#4052: removing a required sidecar should fail repeated finalization");
+            write_text(launcher_deps, "launcher-deps-restored");
+
+            fs::remove(launcher_dll, ignored);
+            fs::create_directory(launcher_dll, ignored);
+            const auto directory_sidecar = copperfin::runtime::finalize_runtime_package_primary_output(
+                finalize_result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile());
+            expect(!directory_sidecar.ok,
+                   "#4052: a required sidecar directory should not pass direct-regular-file admission");
+            fs::remove(launcher_dll, ignored);
+            write_text(launcher_dll, "launcher-dll-restored");
+
+            const fs::path external_sidecar = temp_root / "external-launcher-sidecar";
+            write_text(external_sidecar, "external-sidecar");
+            fs::remove(launcher_dll, ignored);
+            fs::create_symlink(external_sidecar, launcher_dll, ignored);
+            if (!ignored) {
+                const auto redirected_sidecar = copperfin::runtime::finalize_runtime_package_primary_output(
+                    finalize_result.plan,
+                    copperfin::security::default_native_security_profile(),
+                    copperfin::platform::default_extensibility_profile());
+                expect(!redirected_sidecar.ok,
+                       "#4052: a redirected required sidecar should fail direct-file admission");
+                fs::remove(launcher_dll, ignored);
+            } else {
+                ignored.clear();
+                fs::remove(launcher_dll, ignored);
+            }
+            write_text(launcher_dll, "launcher-dll-restored-again");
+
+            const fs::path ambiguous_dll = package_root / "COPPERFIN.GENERATEDLAUNCHER.DLL";
+            write_text(ambiguous_dll, "ambiguous-launcher-dll");
+            std::error_code equivalent_error;
+            const bool distinct_case_entries =
+                !fs::equivalent(launcher_dll, ambiguous_dll, equivalent_error) && !equivalent_error;
+            if (distinct_case_entries) {
+                const auto ambiguous_sidecar = copperfin::runtime::finalize_runtime_package_primary_output(
+                    finalize_result.plan,
+                    copperfin::security::default_native_security_profile(),
+                    copperfin::platform::default_extensibility_profile());
+                expect(!ambiguous_sidecar.ok,
+                       "#4052: case-fold duplicate internal sidecars should fail deterministic inventory admission");
+                fs::remove(ambiguous_dll, ignored);
+            }
+
+            const fs::path external_apphost = temp_root / "external-launcher-apphost";
+            write_text(external_apphost, "external-apphost");
+            fs::remove(launcher_output, ignored);
+            fs::create_symlink(external_apphost, launcher_output, ignored);
+            if (!ignored) {
+                const auto redirected_apphost = copperfin::runtime::finalize_runtime_package_primary_output(
+                    finalize_result.plan,
+                    copperfin::security::default_native_security_profile(),
+                    copperfin::platform::default_extensibility_profile());
+                expect(!redirected_apphost.ok,
+                       "#4052: a redirected public apphost should fail direct-file admission");
+            }
+
+            const auto rematerialized = copperfin::runtime::materialize_runtime_package(
+                finalize_result.plan,
+                copperfin::security::default_native_security_profile(),
+                copperfin::platform::default_extensibility_profile(),
+                runtime_host.string());
+            expect(rematerialized.ok,
+                   "#4052: a previously finalized launcher plan should rematerialize into a fresh pre-publish package");
+            if (rematerialized.ok) {
+                expect(!rematerialized.plan.primary_output_materialized &&
+                           rematerialized.plan.launcher_artifacts.empty(),
+                       "#4052: rematerialization should clear launcher materialization state and inventory");
+                expect(!fs::exists(rematerialized.plan.launcher_output_path) &&
+                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                                       "Copperfin.GeneratedLauncher.dll") &&
+                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                                       "Copperfin.GeneratedLauncher.deps.json") &&
+                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                                       "Copperfin.GeneratedLauncher.runtimeconfig.json"),
+                       "#4052: rematerialization should remove the previous launcher publish set");
+                const std::string rematerialized_debug =
+                    read_text(rematerialized.plan.debug_manifest_path);
+                expect(lines_with_prefix(rematerialized_debug, "launcher_artifact=").empty() &&
+                           rematerialized_debug.find("primary_output_materialized=false") != std::string::npos,
+                       "#4052: fresh pre-publish debug metadata should not retain stale launcher provenance");
+            }
         }
     }
 
@@ -534,6 +730,10 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
         "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
         "Runtime.Package.Error.CreatePackageRootFailed",
+        "Runtime.Package.Error.LauncherArtifactAmbiguous",
+        "Runtime.Package.Error.LauncherArtifactMissing",
+        "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
+        "Runtime.Package.Error.LauncherArtifactUnexpected",
         "Runtime.Package.Error.NativeWrapperCMakeMissing",
         "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
         "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
@@ -611,6 +811,12 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         english_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
             "Primary-output builds are only supported for library-output packages.",
         "#2390: primary-output diagnostics should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate(
+            "Runtime.Package.Error.LauncherArtifactMissing",
+            {{"path", "Copperfin.GeneratedLauncher.dll"}}) ==
+            "Required generated-launcher artifact is missing: Copperfin.GeneratedLauncher.dll",
+        "#4052: generated-launcher admission diagnostics should preserve package-relative path placeholders");
     expect(
         english_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
             "Source file does not exist: missing.prg",

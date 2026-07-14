@@ -62,6 +62,14 @@ bool append_runtime_artifact_digest(
     std::vector<RuntimeArtifactDigest>& digests,
     const std::string& path,
     std::string& error);
+std::string_view launcher_artifact_role_name(RuntimeLauncherArtifactRole role);
+bool inventory_generated_launcher_artifacts(
+    const RuntimePackagePlan& plan,
+    std::vector<RuntimeLauncherArtifact>& inventory,
+    std::string& error);
+bool is_launcher_owned_digest(
+    const RuntimeArtifactDigest& digest,
+    const RuntimePackagePlan& plan);
 bool is_library_output_kind(const BuildOutputKind output_kind);
 bool is_native_host_output_kind(const BuildOutputKind output_kind);
 std::string runtime_host_file_name();

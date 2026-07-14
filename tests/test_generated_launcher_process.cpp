@@ -11,6 +11,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "test_environment_support.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -115,6 +116,78 @@ std::string read_text(const std::filesystem::path& path) {
     return std::string(
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>());
+}
+
+std::vector<std::string> manifest_lines_with_prefix(
+    const std::filesystem::path& path,
+    const std::string& prefix) {
+    std::vector<std::string> lines;
+    std::ifstream input(path, std::ios::binary);
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            lines.push_back(line);
+        }
+    }
+    return lines;
+}
+
+void expect_launcher_artifact_inventory(
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& runtime_manifest,
+    const std::filesystem::path& debug_manifest,
+    const std::string& public_apphost_name,
+    const std::string& context) {
+    const std::vector<std::string> required_sidecars{
+        "Copperfin.GeneratedLauncher.dll",
+        "Copperfin.GeneratedLauncher.deps.json",
+        "Copperfin.GeneratedLauncher.runtimeconfig.json"
+    };
+    for (const auto& required_sidecar : required_sidecars) {
+        expect(std::filesystem::is_regular_file(package_root / required_sidecar),
+               context + " should publish required sidecar " + required_sidecar);
+    }
+
+    const auto runtime_inventory =
+        manifest_lines_with_prefix(runtime_manifest, "launcher_artifact=");
+    const auto debug_inventory =
+        manifest_lines_with_prefix(debug_manifest, "launcher_artifact=");
+    expect(runtime_inventory == debug_inventory,
+           context + " should preserve identical runtime/debug launcher provenance");
+    expect(runtime_inventory.size() == 4U || runtime_inventory.size() == 5U,
+           context + " should inventory one apphost, three required sidecars, and at most one optional PDB");
+
+    const auto contains = [&](const std::string& marker) {
+        return std::any_of(runtime_inventory.begin(), runtime_inventory.end(), [&](const std::string& line) {
+            return line.find(marker) != std::string::npos;
+        });
+    };
+    expect(std::any_of(runtime_inventory.begin(), runtime_inventory.end(), [&](const std::string& line) {
+               return line.find(public_apphost_name) != std::string::npos &&
+                   line.find("|public_apphost|") != std::string::npos;
+           }),
+           context + " should inventory the configured public apphost");
+    for (const auto& required_sidecar : required_sidecars) {
+        expect(contains(required_sidecar + "|runtime_required|"),
+               context + " should classify required sidecar " + required_sidecar);
+    }
+
+    const bool pdb_exists = std::filesystem::is_regular_file(
+        package_root / "Copperfin.GeneratedLauncher.pdb");
+    expect(contains("Copperfin.GeneratedLauncher.pdb|debug_optional|") == pdb_exists,
+           context + " should classify the optional PDB exactly when the SDK publishes it");
+}
+
+void expect_ambient_msbuild_customizations_ignored(
+    const std::filesystem::path& package_root,
+    const std::string& context) {
+    expect(!std::filesystem::exists(package_root / "Copperfin.GeneratedLauncher.xml"),
+           context + " should ignore ambient documentation-file settings");
+    expect(!std::filesystem::exists(package_root / "Copperfin.GeneratedLauncher.ambient-target"),
+           context + " should ignore ambient Directory.Build.targets output");
 }
 
 std::string line_value(const std::string& text, const std::string& prefix) {
@@ -401,6 +474,24 @@ int run_generated_launcher_test(
     expect(!ignored, "generated launcher process test should create its recording host fixture");
 
     write_text(project_dir / "main program.prg", "RETURN\n");
+    write_text(
+        temp_root / "Directory.Build.props",
+        "<Project>\n"
+        "  <PropertyGroup>\n"
+        "    <GenerateDocumentationFile>true</GenerateDocumentationFile>\n"
+        "  </PropertyGroup>\n"
+        "</Project>\n");
+    write_text(
+        temp_root / "Directory.Build.targets",
+        "<Project>\n"
+        "  <Target Name=\"EmitAmbientLauncherSidecar\" AfterTargets=\"Publish\">\n"
+        "    <WriteLinesToFile File=\"$(PublishDir)Copperfin.GeneratedLauncher.ambient-target\" "
+        "Lines=\"ambient\" Overwrite=\"true\" />\n"
+        "  </Target>\n"
+        "</Project>\n");
+    write_text(
+        temp_root / "Directory.Build.rsp",
+        "-p:GenerateDocumentationFile=true\n");
 
     copperfin::studio::StudioDocumentModel document;
     document.path = (project_dir / "launcher process.pjx").string();
@@ -460,6 +551,9 @@ int run_generated_launcher_test(
         {
             "publish",
             materialized.plan.launcher_project_path,
+            "-noAutoResponse",
+            "-p:ImportDirectoryBuildProps=false",
+            "-p:ImportDirectoryBuildTargets=false",
             "-c",
             "Release",
             "-r",
@@ -507,6 +601,15 @@ int run_generated_launcher_test(
                manifest_value(debug_manifest, "primary_output_path").find(
                    direct_launcher_name) != std::string::npos,
            "configured launcher finalization should retain output provenance in app.cfdebug");
+    expect_launcher_artifact_inventory(
+        package_root,
+        release_manifest,
+        debug_manifest,
+        direct_launcher_name,
+        "direct SDK launcher publication");
+    expect_ambient_msbuild_customizations_ignored(
+        package_root,
+        "direct SDK launcher publication");
     if (!finalized.ok || failures != 0) {
         std::cerr << "fixture root: " << temp_root << "\n";
         return 1;
@@ -595,6 +698,15 @@ int run_generated_launcher_test(
                manifest_value(build_host_debug_manifest, "primary_output_path").find(
                    configured_launcher_name) != std::string::npos,
            "custom-output build should preserve output provenance in app.cfdebug");
+    expect_launcher_artifact_inventory(
+        build_host_package_root,
+        build_host_manifest,
+        build_host_debug_manifest,
+        configured_launcher_name,
+        "build-host SDK launcher publication");
+    expect_ambient_msbuild_customizations_ignored(
+        build_host_package_root,
+        "build-host SDK launcher publication");
     if (failures != 0) {
         std::cerr << "fixture root: " << temp_root << "\n";
         return 1;

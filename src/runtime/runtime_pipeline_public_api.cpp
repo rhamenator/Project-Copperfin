@@ -685,7 +685,13 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.path) << "|"
                << quote_manifest_value(digest.sha256) << "\n";
     }
-
+    // Provenance only: app.cfmanifest is consumed after these launcher files execute.
+    for (const auto& artifact : plan.launcher_artifacts) {
+        stream << "launcher_artifact="
+               << quote_manifest_value(artifact.package_relative_path) << "|"
+               << launcher_artifact_role_name(artifact.role) << "|"
+               << quote_manifest_value(artifact.sha256) << "\n";
+    }
     append_warning_manifest_lines(stream, plan);
 
     return stream.str();
@@ -828,6 +834,12 @@ std::string build_debug_manifest_text(
                << quote_manifest_value(digest.path) << "|"
                << quote_manifest_value(digest.sha256) << "\n";
     }
+    for (const auto& artifact : plan.launcher_artifacts) {
+        stream << "launcher_artifact="
+               << quote_manifest_value(artifact.package_relative_path) << "|"
+               << launcher_artifact_role_name(artifact.role) << "|"
+               << quote_manifest_value(artifact.sha256) << "\n";
+    }
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
@@ -860,6 +872,13 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     }
 
     RuntimePackagePlan materialized_plan = plan;
+    materialized_plan.primary_output_materialized = false;
+    materialized_plan.launcher_artifacts.clear();
+    std::erase_if(
+        materialized_plan.extension_payload_digests,
+        [&](const RuntimeArtifactDigest& digest) {
+            return is_launcher_owned_digest(digest, plan);
+        });
     std::string error;
     for (auto& asset : materialized_plan.assets) {
         if (asset.required_for_runtime && !asset.source_resolution_error.empty()) {
@@ -1144,22 +1163,39 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
-    if (!std::filesystem::exists(plan.launcher_output_path)) {
+    if (!plan.emit_dotnet_launcher && !std::filesystem::exists(plan.launcher_output_path)) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputMissing")};
     }
 
     RuntimePackagePlan finalized_plan = plan;
-    finalized_plan.primary_output_materialized = true;
-    std::erase_if(
-        finalized_plan.extension_payload_digests,
-        [&](const RuntimeArtifactDigest& digest) {
-            return digest.path == plan.launcher_output_path;
-        });
-
     std::string error;
-    if (!append_runtime_artifact_digest(finalized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
-        return {.ok = false, .error = error};
+    if (plan.emit_dotnet_launcher) {
+        std::erase_if(
+            finalized_plan.extension_payload_digests,
+            [&](const RuntimeArtifactDigest& digest) {
+                return is_launcher_owned_digest(digest, plan);
+            });
+        if (!inventory_generated_launcher_artifacts(
+                plan,
+                finalized_plan.launcher_artifacts,
+                error)) {
+            return {.ok = false, .error = error};
+        }
+    } else {
+        finalized_plan.launcher_artifacts.clear();
+        std::erase_if(
+            finalized_plan.extension_payload_digests,
+            [&](const RuntimeArtifactDigest& digest) {
+                return digest.path == plan.launcher_output_path;
+            });
+        if (!append_runtime_artifact_digest(
+                finalized_plan.extension_payload_digests,
+                plan.launcher_output_path,
+                error)) {
+            return {.ok = false, .error = error};
+        }
     }
+    finalized_plan.primary_output_materialized = true;
     if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(finalized_plan, security_profile, extensibility_profile), error)) {
         return {.ok = false, .error = error};
     }
