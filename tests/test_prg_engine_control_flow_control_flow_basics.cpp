@@ -520,11 +520,11 @@ void test_text_endtext_literal_blocks() {
     }
 
     const auto merged_recursive_second_hop = state.globals.find("cmergedrecursivesecondhop");
-    expect(merged_recursive_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign recursive second-hop merged block content");
+    expect(merged_recursive_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign second-hop merged block content");
     if (merged_recursive_second_hop != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(merged_recursive_second_hop->second) == "Recursive=Copperfin\n",
-            "TEXT TEXTMERGE should preserve recursive second-hop nested merged expressions");
+            copperfin::runtime::format_value(merged_recursive_second_hop->second) == "Recursive=<<EVAL(&cNameExprDeepHolder)>>\n",
+            "TEXT TEXTMERGE should preserve a second-pass expression as literal interpolated data");
     }
 
     const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
@@ -589,6 +589,50 @@ void test_text_endtext_honors_set_textmerge_state_and_delimiters() {
         expect(
             copperfin::runtime::format_value(merged_shared->second) == "Shared=Copperfin\n",
             "TEXT ... TEXTMERGE should honor single-argument shared delimiters from SET TEXTMERGE DELIMITERS");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_text_endtext_textmerge_keeps_interpolated_delimiters_literal() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_textmerge_single_pass";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "textmerge_single_pass.prg";
+    write_text(
+        main_path,
+        "cDefaultData = 'a<<1+1>>b'\n"
+        "TEXT TO cDefaultMerged TEXTMERGE NOSHOW\n"
+        "<<cDefaultData>>\n"
+        "ENDTEXT\n"
+        "SET TEXTMERGE DELIMITERS TO '{|', '|}'\n"
+        "cCustomData = 'x{|1+1|}y'\n"
+        "TEXT TO cCustomMerged TEXTMERGE NOSHOW\n"
+        "{|cCustomData|}\n"
+        "ENDTEXT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "single-pass TEXT TEXTMERGE script should complete");
+
+    const auto default_merged = state.globals.find("cdefaultmerged");
+    const auto custom_merged = state.globals.find("ccustommerged");
+    expect(default_merged != state.globals.end(), "default-delimiter TEXT TEXTMERGE output should be captured");
+    expect(custom_merged != state.globals.end(), "custom-delimiter TEXT TEXTMERGE output should be captured");
+    if (default_merged != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(default_merged->second) == "a<<1+1>>b\n",
+               "TEXT TEXTMERGE must not rescan default-delimiter text produced by interpolation");
+    }
+    if (custom_merged != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(custom_merged->second) == "x{|1+1|}y\n",
+               "TEXT TEXTMERGE must not rescan custom-delimiter text produced by interpolation");
     }
 
     fs::remove_all(temp_root, ignored);

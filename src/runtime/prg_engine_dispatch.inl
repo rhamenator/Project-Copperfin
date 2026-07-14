@@ -1720,19 +1720,7 @@
                             return merged_text;
                         };
 
-                    std::string merged_text = apply_textmerge(text_value);
-                    constexpr std::size_t max_recursive_merges = 16U;
-                    for (std::size_t depth = 0U; depth < max_recursive_merges; ++depth)
-                    {
-                        const std::string next_merged_text = apply_textmerge(merged_text);
-                        if (next_merged_text == merged_text)
-                        {
-                            break;
-                        }
-                        merged_text = std::move(next_merged_text);
-                    }
-
-                    text_value = std::move(merged_text);
+                    text_value = apply_textmerge(text_value);
                 }
 
                 if (normalize_identifier(statement.secondary_expression) == "additive")

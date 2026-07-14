@@ -15,6 +15,7 @@ int main() {
     test_push_pop_key_menu_popup_stack_commands();
     test_text_endtext_literal_blocks();
     test_text_endtext_honors_set_textmerge_state_and_delimiters();
+    test_text_endtext_textmerge_keeps_interpolated_delimiters_literal();
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
     test_aggregate_command_errors_use_default_locale_messages();

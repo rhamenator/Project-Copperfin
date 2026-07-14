@@ -60,6 +60,7 @@ void test_do_case_control_flow();
 void test_push_pop_key_menu_popup_stack_commands();
 void test_text_endtext_literal_blocks();
 void test_text_endtext_honors_set_textmerge_state_and_delimiters();
+void test_text_endtext_textmerge_keeps_interpolated_delimiters_literal();
 void test_scan_on_empty_table_does_not_execute_body();
 void test_locate_continue_advances_to_later_matches();
 void test_locate_on_empty_table_sets_eof();

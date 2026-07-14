@@ -858,6 +858,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Native Control Flow
 
+- Statement-form `TEXT ... ENDTEXT ... TEXTMERGE` applies one default interpolation pass, preserving delimiter-shaped merged values as literal data. Explicit recursion remains available through `TEXTMERGE(cExpression, .T.)`.
 - extend the shipped `DO CASE/CASE/OTHERWISE/ENDCASE`, `DO WHILE/ENDDO`, `WITH/ENDWITH`, `TRY/CATCH/FINALLY`, `LOOP`/`CONTINUE`/`EXIT`, first-pass richer `ON ERROR`, and first-pass literal `TEXT/ENDTEXT` slice into the rest of the FoxPro control-flow surface
 - keep tightening expression semantics around stored-expression evaluation, macro substitution, and runtime-state inspection beyond the first-pass `EVAL()` / `SET()` / `&macro` slice
 - add the next adjacent control families beyond the shipped engine core as coherent batches instead of one syntax form at a time
