@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/security_model.h"
@@ -141,6 +142,43 @@ std::wstring quote_windows_argument(const std::wstring& value) {
     return quoted;
 }
 
+std::wstring widen_utf8_argument(const std::string& value) {
+    if (value.empty()) {
+        return {};
+    }
+    const int required = MultiByteToWideChar(
+        CP_UTF8,
+        MB_ERR_INVALID_CHARS,
+        value.data(),
+        static_cast<int>(value.size()),
+        nullptr,
+        0);
+    if (required <= 0) {
+        return std::wstring(value.begin(), value.end());
+    }
+    std::wstring result(static_cast<std::size_t>(required), L'\0');
+    MultiByteToWideChar(
+        CP_UTF8,
+        MB_ERR_INVALID_CHARS,
+        value.data(),
+        static_cast<int>(value.size()),
+        result.data(),
+        required);
+    return result;
+}
+
+std::string current_windows_runtime_identifier() {
+#if defined(_M_ARM64) || defined(__aarch64__)
+    return "win-arm64";
+#elif defined(_M_IX86) || defined(__i386__)
+    return "win-x86";
+#elif defined(_M_X64) || defined(__x86_64__)
+    return "win-x64";
+#else
+    return {};
+#endif
+}
+
 ProcessResult run_process_capture(
     const std::filesystem::path& executable,
     const std::vector<std::string>& arguments,
@@ -201,7 +239,7 @@ ProcessResult run_process_capture(
     std::wstring command_line = quote_windows_argument(executable.wstring());
     for (const std::string& argument : arguments) {
         command_line.push_back(L' ');
-        command_line += quote_windows_argument(fs::path(argument).wstring());
+        command_line += quote_windows_argument(widen_utf8_argument(argument));
     }
     std::vector<wchar_t> mutable_command(command_line.begin(), command_line.end());
     mutable_command.push_back(L'\0');
@@ -296,6 +334,11 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
 
     if (!fs::exists(dotnet_path)) {
         std::cout << "SKIP: generated .NET launcher process test requires the Windows .NET SDK\n";
+        return skip_return_code;
+    }
+    const std::string runtime_identifier = current_windows_runtime_identifier();
+    if (runtime_identifier.empty()) {
+        std::cout << "SKIP: generated .NET launcher process test does not recognize this Windows architecture\n";
         return skip_return_code;
     }
 
@@ -399,7 +442,7 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
             "-c",
             "Release",
             "-r",
-            "win-x64",
+            runtime_identifier,
             "--self-contained",
             "false",
             "-o",
@@ -536,6 +579,55 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         "release startup.prg",
         package_root,
         "ordinary invocation after debug fallback");
+
+    write_text(
+        materialized.plan.runtime_host_destination_path,
+        "not a valid Windows executable image\n");
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const std::string english_start_failure = copperfin::localization::load_catalogs(
+        catalog_root,
+        "en-US").translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed");
+    const std::string portuguese_start_failure = copperfin::localization::load_catalogs(
+        catalog_root,
+        "pt-BR").translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed");
+    const std::string pseudo_start_failure = copperfin::localization::load_catalogs(
+        catalog_root,
+        "qps-ploc").translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed");
+    expect(!portuguese_start_failure.empty() &&
+               portuguese_start_failure != english_start_failure,
+           "invalid-host fixture should resolve a distinct pt-BR start failure");
+    expect(!pseudo_start_failure.empty() && pseudo_start_failure != english_start_failure,
+           "invalid-host fixture should resolve a pseudo-localized start failure");
+
+    const ProcessResult portuguese_failure = run_process_capture(
+        launcher,
+        {"--locale", "pt-BR"},
+        caller_dir,
+        temp_root,
+        "invalid-host-portuguese",
+        30000U);
+    expect(portuguese_failure.start_error == 0U,
+           "generated launcher should start when its runtime-host image is invalid");
+    expect(!portuguese_failure.timed_out,
+           "invalid runtime-host launch should not time out");
+    expect(portuguese_failure.exit_code == 5,
+           "invalid runtime-host launch should preserve exit code 5");
+    expect(portuguese_failure.stderr_text.find(portuguese_start_failure) != std::string::npos,
+           "invalid runtime-host launch should emit the pt-BR localized start failure");
+    expect(portuguese_failure.stderr_text.find("Exception") == std::string::npos,
+           "invalid runtime-host launch should not leak an unhandled .NET exception");
+
+    const ProcessResult pseudo_failure = run_process_capture(
+        launcher,
+        {"/locale", "qps-ploc"},
+        caller_dir,
+        temp_root,
+        "invalid-host-pseudo",
+        30000U);
+    expect(pseudo_failure.exit_code == 5,
+           "pseudo-localized invalid runtime-host launch should preserve exit code 5");
+    expect(pseudo_failure.stderr_text.find(pseudo_start_failure) != std::string::npos,
+           "invalid runtime-host launch should emit the pseudo-localized start failure");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

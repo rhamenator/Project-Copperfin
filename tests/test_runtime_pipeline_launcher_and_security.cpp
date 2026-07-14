@@ -85,7 +85,8 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
         expect(
             launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostMissing") != std::string::npos &&
             launcher_source.find("Runtime.Package.Launcher.Error.ManifestMissing") != std::string::npos &&
-            launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostStartFailed") != std::string::npos,
+            launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostStartFailed") != std::string::npos &&
+            launcher_source.find("catch (Exception)") != std::string::npos,
             "generated launcher should route launcher failure text through localization keys");
         expect(
             launcher_source.find("[\"qps-ploc\"] = new(StringComparer.OrdinalIgnoreCase)") != std::string::npos,
