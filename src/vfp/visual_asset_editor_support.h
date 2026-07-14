@@ -71,6 +71,11 @@ struct VisualPropertyState {
     bool record_deleted = false;
 };
 
+struct VisualAssetRawRecordAppend {
+    std::optional<std::size_t> source_record_index;
+    std::vector<VisualObjectPropertyChange> field_values;
+};
+
 // ==== Shared low-level helpers (byte I/O, text/name normalization, localized text) ====
 const copperfin::localization::LocalizedCatalog& visual_asset_editor_catalog();
 std::string visual_asset_text(std::string_view key);
@@ -90,6 +95,10 @@ std::string trim_both(std::string text);
 std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length);
 std::vector<std::uint8_t> read_binary_file(const std::string& path);
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes);
+VisualAssetEditResult recover_visual_asset_table_transaction(const std::string& table_path);
+VisualAssetEditResult write_visual_asset_table_transaction(
+    const std::string& table_path,
+    const std::vector<std::uint8_t>& table_bytes);
 VisualAssetEditResult recover_visual_asset_file_transaction(
     const std::string& table_path,
     const std::string& memo_path);
@@ -98,6 +107,10 @@ VisualAssetEditResult write_visual_asset_file_transaction(
     const std::vector<std::uint8_t>& table_bytes,
     const std::string& memo_path,
     const std::vector<std::uint8_t>& memo_bytes);
+VisualAssetEditResult resolve_visual_asset_storage_memo_path(
+    const std::string& table_path,
+    std::string& memo_path);
+VisualAssetEditResult recover_visual_asset_storage_transaction(const std::string& table_path);
 SidecarPathResolution infer_memo_sidecar_path(const std::string& path);
 std::string selected_memo_sidecar_path(const SidecarPathResolution& resolution);
 std::string ambiguous_memo_sidecar_error(const SidecarPathResolution& resolution);
@@ -276,6 +289,12 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
 std::vector<std::vector<std::string>> visual_record_values_for_write(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<DbfRecord>& records);
+VisualAssetEditResult append_visual_asset_records_preserving_raw(
+    const std::string& path,
+    const std::vector<VisualAssetRawRecordAppend>& appends);
+VisualAssetEditResult reorder_visual_asset_records_preserving_raw(
+    const std::string& path,
+    const std::vector<std::size_t>& record_order);
 std::optional<char> normalize_logical_value(std::string value);
 VisualAssetEditResult replace_non_memo_field_value(
     const std::string& table_path,

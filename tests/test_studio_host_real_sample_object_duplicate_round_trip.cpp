@@ -331,8 +331,8 @@ void exercise_real_sample_object_duplicate_round_trip(
 
     expect(read_binary(copied_primary) != original_primary_bytes,
            "#3653: real sample object duplicate should change primary asset bytes");
-    expect(read_binary(copied_sidecar) != original_sidecar_bytes,
-           "#3653: real sample object duplicate should change sidecar bytes");
+    expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+           "#4057: real sample object duplicate should preserve exact sidecar bytes");
 
     const auto reopen_process = run_process_capture(
         studio_host_path,

@@ -134,6 +134,58 @@ VisualAssetEditResult transaction_failure(
     return {.ok = false, .error = std::move(error)};
 }
 
+std::string lowercase_extension(const std::string& path) {
+    std::string extension = std::filesystem::path(path).extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return extension;
+}
+
+bool primary_requires_memo_sidecar(const std::string& path) {
+    const std::string extension = lowercase_extension(path);
+    return extension == ".pjx" || extension == ".scx" || extension == ".vcx" ||
+           extension == ".frx" || extension == ".lbx" || extension == ".mnx" ||
+           extension == ".dbc";
+}
+
+bool dbf_storage_requires_memo_sidecar(const std::string& table_path) {
+    std::vector<std::uint8_t> table_bytes = read_binary_file(table_path);
+    if (table_bytes.empty()) {
+        table_bytes = read_binary_file(table_path + ".cpbak");
+    }
+    const DbfParseResult header_result = parse_dbf_header(table_bytes);
+    if (!header_result.ok) {
+        return false;
+    }
+    if (header_result.header.has_memo_file()) {
+        return true;
+    }
+    if (header_result.header.header_length > table_bytes.size()) {
+        return false;
+    }
+
+    constexpr std::size_t DbfFieldDescriptorSize = 32U;
+    constexpr std::size_t DbfFieldTypeOffset = 11U;
+    for (std::size_t descriptor_offset = 32U;
+         descriptor_offset < header_result.header.header_length;
+         descriptor_offset += DbfFieldDescriptorSize) {
+        if (table_bytes[descriptor_offset] == 0x0DU) {
+            return false;
+        }
+        if (DbfFieldDescriptorSize >
+            header_result.header.header_length - descriptor_offset) {
+            return false;
+        }
+        const char field_type = static_cast<char>(
+            table_bytes[descriptor_offset + DbfFieldTypeOffset]);
+        if (field_type == 'M' || field_type == 'G' || field_type == 'P') {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 const copperfin::localization::LocalizedCatalog& visual_asset_editor_catalog() {
@@ -254,6 +306,82 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
 
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     return static_cast<bool>(output);
+}
+
+VisualAssetEditResult recover_visual_asset_table_transaction(
+    const std::string& table_path) {
+    const auto table = transaction_file(table_path);
+    std::error_code error;
+    const bool target_exists = std::filesystem::exists(table.target, error);
+    if (error) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+    const bool backup_exists = std::filesystem::exists(table.backup, error);
+    if (error) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    bool recovered = true;
+    if (target_exists) {
+        recovered = remove_transaction_path(table.staged) &&
+            remove_transaction_path(table.backup);
+    } else if (backup_exists) {
+        recovered = rename_transaction_path(table.backup, table.target) &&
+            remove_transaction_path(table.staged);
+    } else {
+        recovered = remove_transaction_path(table.staged);
+    }
+    if (!recovered) {
+        return {
+            .ok = false,
+            .error = visual_asset_rollback_failed_text(
+                visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"),
+                visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"))
+        };
+    }
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult write_visual_asset_table_transaction(
+    const std::string& table_path,
+    const std::vector<std::uint8_t>& table_bytes) {
+    const auto recovery_result = recover_visual_asset_table_transaction(table_path);
+    if (!recovery_result.ok) {
+        return recovery_result;
+    }
+
+    const auto table = transaction_file(table_path, &table_bytes);
+    const auto fail = [&](std::string error, bool inject_rollback_failure = false) {
+        if (!restore_transaction_file(table) || inject_rollback_failure) {
+            return VisualAssetEditResult{
+                .ok = false,
+                .error = visual_asset_rollback_failed_text(
+                    std::move(error),
+                    visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"))
+            };
+        }
+        return VisualAssetEditResult{.ok = false, .error = std::move(error)};
+    };
+
+    if (transaction_failure_requested(table_path, {}, "primary-stage") ||
+        !stage_transaction_file(table)) {
+        return fail(visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"));
+    }
+    if (!rename_transaction_path(table.target, table.backup)) {
+        return fail(visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"));
+    }
+    const bool inject_rollback_failure =
+        transaction_failure_requested(table_path, {}, "rollback");
+    if (transaction_failure_requested(table_path, {}, "first-commit") ||
+        inject_rollback_failure ||
+        !rename_transaction_path(table.staged, table.target)) {
+        return fail(
+            visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"),
+            inject_rollback_failure);
+    }
+
+    (void)remove_transaction_path(table.backup);
+    return {.ok = true, .error = {}};
 }
 
 VisualAssetEditResult recover_visual_asset_file_transaction(
@@ -414,6 +542,70 @@ std::string ambiguous_memo_sidecar_error(const SidecarPathResolution& resolution
     return visual_asset_text(
         "Vfp.Sidecar.Error.AmbiguousPath",
         {{"path", resolution.requested_path.string()}});
+}
+
+VisualAssetEditResult resolve_visual_asset_storage_memo_path(
+    const std::string& table_path,
+    std::string& memo_path) {
+    memo_path.clear();
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(table_path);
+    const bool requires_memo_sidecar = primary_requires_memo_sidecar(table_path) ||
+        (lowercase_extension(table_path) == ".dbf" &&
+         dbf_storage_requires_memo_sidecar(table_path));
+    if (!requires_memo_sidecar) {
+        return {.ok = true, .error = {}};
+    }
+    if (memo_resolution.ambiguous) {
+        return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
+    }
+    memo_path = selected_memo_sidecar_path(memo_resolution);
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult recover_visual_asset_storage_transaction(
+    const std::string& table_path) {
+    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(table_path);
+
+    for (const std::string_view suffix : {".cpbak", ".cptmp"}) {
+        if (memo_resolution.requested_path.empty()) {
+            break;
+        }
+        const SidecarPathResolution artifact_resolution = resolve_unique_casefold_path(
+            memo_resolution.requested_path.string() + std::string(suffix));
+        if (artifact_resolution.ambiguous) {
+            return {.ok = false, .error = ambiguous_memo_sidecar_error(artifact_resolution)};
+        }
+        if (artifact_resolution.path.has_value()) {
+            std::filesystem::path recovered_memo_path = *artifact_resolution.path;
+            recovered_memo_path.replace_extension();
+            return recover_visual_asset_file_transaction(
+                table_path,
+                recovered_memo_path.string());
+        }
+    }
+
+    const SidecarPathResolution commit_resolution = resolve_unique_casefold_path(
+        table_path + ".cpcommit");
+    if (commit_resolution.ambiguous) {
+        return {.ok = false, .error = ambiguous_memo_sidecar_error(commit_resolution)};
+    }
+    if (commit_resolution.path.has_value() && !memo_resolution.requested_path.empty()) {
+        return recover_visual_asset_file_transaction(
+            table_path,
+            memo_resolution.requested_path.string());
+    }
+
+    std::string memo_path;
+    const auto resolution_result = resolve_visual_asset_storage_memo_path(
+        table_path,
+        memo_path);
+    if (!resolution_result.ok) {
+        return resolution_result;
+    }
+    if (memo_path.empty()) {
+        return recover_visual_asset_table_transaction(table_path);
+    }
+    return recover_visual_asset_file_transaction(table_path, memo_path);
 }
 
 std::string normalize_visual_object_name(std::string value) {

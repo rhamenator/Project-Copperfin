@@ -324,8 +324,8 @@ void exercise_real_sample_object_reorder_round_trip(
 
     expect(read_binary(copied_primary) != original_primary_bytes,
            "#3655: real sample object reorder should change primary asset bytes");
-    expect(read_binary(copied_sidecar) != original_sidecar_bytes,
-           "#3655: real sample object reorder should change sidecar bytes");
+    expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+           "#4057: real sample object reorder should preserve exact sidecar bytes");
 
     const auto reopen_process = run_process_capture(
         studio_host_path,

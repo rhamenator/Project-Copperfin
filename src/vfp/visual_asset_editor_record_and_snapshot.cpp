@@ -4,6 +4,8 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "dbf_table_raw_mutation.h"
+
 namespace copperfin::vfp {
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
@@ -662,6 +664,89 @@ std::vector<std::vector<std::string>> visual_record_values_for_write(
         values.push_back(std::move(record_values));
     }
     return values;
+}
+
+namespace {
+
+VisualAssetEditResult recover_visual_asset_before_raw_record_mutation(
+    const std::string& path) {
+    return recover_visual_asset_storage_transaction(path);
+}
+
+VisualAssetEditResult commit_raw_record_mutation(
+    const std::string& path,
+    DbfRawRecordMutationResult mutation) {
+    if (!mutation.ok) {
+        return {.ok = false, .error = std::move(mutation.error)};
+    }
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(path);
+    if (original_table_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    if (!mutation.has_memo_sidecar) {
+        if (mutation.table_bytes == original_table_bytes) {
+            return {.ok = true, .error = {}};
+        }
+        return write_visual_asset_table_transaction(path, mutation.table_bytes);
+    }
+
+    const std::vector<std::uint8_t> original_memo_bytes = read_binary_file(mutation.memo_path);
+    if (original_memo_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarOpenFailed")};
+    }
+    if (mutation.table_bytes == original_table_bytes &&
+        mutation.memo_bytes == original_memo_bytes) {
+        return {.ok = true, .error = {}};
+    }
+    return write_visual_asset_file_transaction(
+        path,
+        mutation.table_bytes,
+        mutation.memo_path,
+        mutation.memo_bytes);
+}
+
+}  // namespace
+
+VisualAssetEditResult append_visual_asset_records_preserving_raw(
+    const std::string& path,
+    const std::vector<VisualAssetRawRecordAppend>& appends) {
+    const auto recovery_result = recover_visual_asset_before_raw_record_mutation(path);
+    if (!recovery_result.ok) {
+        return recovery_result;
+    }
+
+    std::vector<DbfRawRecordAppend> raw_appends;
+    raw_appends.reserve(appends.size());
+    for (const auto& append : appends) {
+        DbfRawRecordAppend raw_append{
+            .source_record_index = append.source_record_index,
+            .field_values = {}
+        };
+        raw_append.field_values.reserve(append.field_values.size());
+        for (const auto& field_value : append.field_values) {
+            raw_append.field_values.emplace_back(
+                field_value.property_name,
+                field_value.property_value);
+        }
+        raw_appends.push_back(std::move(raw_append));
+    }
+    return commit_raw_record_mutation(
+        path,
+        stage_dbf_raw_record_appends(path, raw_appends));
+}
+
+VisualAssetEditResult reorder_visual_asset_records_preserving_raw(
+    const std::string& path,
+    const std::vector<std::size_t>& record_order) {
+    const auto recovery_result = recover_visual_asset_before_raw_record_mutation(path);
+    if (!recovery_result.ok) {
+        return recovery_result;
+    }
+    return commit_raw_record_mutation(
+        path,
+        stage_dbf_raw_record_reorder(path, record_order));
 }
 
 std::optional<char> normalize_logical_value(std::string value) {

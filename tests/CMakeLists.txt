@@ -3952,6 +3952,7 @@ set_tests_properties(
 copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor.cpp
     test_visual_asset_editor_shared_test_helpers.cpp
+    test_visual_asset_editor_raw_preservation.cpp
     test_visual_asset_editor_object_lifecycle.cpp
     test_visual_asset_editor_methods.cpp
     test_visual_asset_editor_properties.cpp

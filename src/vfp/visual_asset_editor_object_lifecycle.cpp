@@ -5,6 +5,57 @@
 #include "visual_asset_editor_support.h"
 
 namespace copperfin::vfp {
+namespace {
+
+struct VisualAssetRollbackSnapshot {
+    std::vector<std::uint8_t> table_bytes;
+    std::string memo_path;
+    std::vector<std::uint8_t> memo_bytes;
+};
+
+VisualAssetEditResult capture_visual_asset_rollback_snapshot(
+    const std::string& path,
+    VisualAssetRollbackSnapshot& snapshot) {
+    const auto recovery_result = recover_visual_asset_storage_transaction(path);
+    if (!recovery_result.ok) {
+        return recovery_result;
+    }
+
+    snapshot.table_bytes = read_binary_file(path);
+    if (snapshot.table_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    const auto memo_resolution_result = resolve_visual_asset_storage_memo_path(
+        path,
+        snapshot.memo_path);
+    if (!memo_resolution_result.ok) {
+        return memo_resolution_result;
+    }
+    if (!snapshot.memo_path.empty()) {
+        snapshot.memo_bytes = read_binary_file(snapshot.memo_path);
+        if (snapshot.memo_bytes.empty()) {
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarOpenFailed")};
+        }
+    }
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult restore_visual_asset_rollback_snapshot(
+    const std::string& path,
+    const VisualAssetRollbackSnapshot& snapshot) {
+    if (snapshot.memo_path.empty()) {
+        return write_visual_asset_table_transaction(path, snapshot.table_bytes);
+    }
+    return write_visual_asset_file_transaction(
+        path,
+        snapshot.table_bytes,
+        snapshot.memo_path,
+        snapshot.memo_bytes);
+}
+
+}  // namespace
+
 VisualObjectListResult list_visual_objects(const std::string& path) {
     if (path.empty()) {
         return {
@@ -1233,22 +1284,12 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
         }
     }
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table.records.size() + 1U);
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size() + 1U);
-    for (const auto& record : table.records) {
-        std::vector<std::string> values;
-        values.reserve(table.fields.size());
-        for (const auto& field : table.fields) {
-            const auto* value = find_record_value(record, field.name);
-            values.push_back(value == nullptr ? std::string{} : value->display_value);
-        }
-        records.push_back(std::move(values));
-        deleted_flags.push_back(record.deleted);
+    std::vector<std::string> duplicate_values;
+    duplicate_values.reserve(table.fields.size());
+    for (const auto& field : table.fields) {
+        const auto* value = find_record_value(table.records[source_record_index], field.name);
+        duplicate_values.push_back(value == nullptr ? std::string{} : value->display_value);
     }
-
-    std::vector<std::string> duplicate_values = records[source_record_index];
     replace_duplicate_field_value(table, duplicate_values, "OBJNAME", request.new_object_name);
     replace_duplicate_field_value(table, duplicate_values, "NAME", request.new_name);
     replace_duplicate_field_value(table, duplicate_values, "UNIQUEID", request.new_unique_id);
@@ -1264,22 +1305,23 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
         }
     }
 
-    const std::size_t duplicate_record_index = records.size();
-    records.push_back(std::move(duplicate_values));
-    deleted_flags.push_back(table.records[source_record_index].deleted);
-
-    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
-    if (!create_result.ok) {
-        return failed_visual_object_duplicate_result(create_result.error);
+    std::vector<VisualObjectPropertyChange> replacement_values;
+    for (const auto& [field_name, value] : {
+             std::pair{"OBJNAME", request.new_object_name},
+             std::pair{"NAME", request.new_name},
+             std::pair{"UNIQUEID", request.new_unique_id}
+         }) {
+        if (!value.empty()) {
+            replacement_values.push_back({.property_name = field_name, .property_value = value});
+        }
     }
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            return failed_visual_object_duplicate_result(delete_result.error);
-        }
+
+    const std::size_t duplicate_record_index = table.records.size();
+    const auto append_result = append_visual_asset_records_preserving_raw(
+        request.path,
+        {{.source_record_index = source_record_index, .field_values = std::move(replacement_values)}});
+    if (!append_result.ok) {
+        return failed_visual_object_duplicate_result(append_result.error);
     }
 
     const auto duplicated_table_result = parse_dbf_table_from_file(request.path, duplicate_record_index + 1U);
@@ -1310,25 +1352,16 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
         return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Object.DuplicateBatchRequired"));
     }
 
-    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
-    if (memo_resolution.ambiguous) {
-        return failed_visual_object_duplicate_batch_result(
-            ambiguous_memo_sidecar_error(memo_resolution));
+    VisualAssetRollbackSnapshot original_asset;
+    const auto snapshot_result = capture_visual_asset_rollback_snapshot(
+        request.path,
+        original_asset);
+    if (!snapshot_result.ok) {
+        return failed_visual_object_duplicate_batch_result(snapshot_result.error);
     }
-    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
-    if (original_table_bytes.empty()) {
-        return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
-    }
-    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
-    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
-        ? std::vector<std::uint8_t>{}
-        : read_binary_file(memo_path);
 
-    const auto restore_original_asset = [&]() {
-        write_binary_file(request.path, original_table_bytes);
-        if (!memo_path.empty() && !original_memo_bytes.empty()) {
-            write_binary_file(memo_path, original_memo_bytes);
-        }
+    const auto restore_original_asset = [&]() -> VisualAssetEditResult {
+        return restore_visual_asset_rollback_snapshot(request.path, original_asset);
     };
 
     std::vector<std::size_t> duplicated_record_indexes;
@@ -1346,7 +1379,11 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
             .new_unique_id = object.new_unique_id
         });
         if (!duplicate_result.ok) {
-            restore_original_asset();
+            const auto rollback_result = restore_original_asset();
+            if (!rollback_result.ok) {
+                return failed_visual_object_duplicate_batch_result(
+                    visual_asset_rollback_failed_text(duplicate_result.error, rollback_result.error));
+            }
             return failed_visual_object_duplicate_batch_result(duplicate_result.error);
         }
         duplicated_record_indexes.push_back(duplicate_result.record_index);
@@ -1557,44 +1594,27 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
         }
     }
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table.records.size() + copy_plan.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size() + copy_plan.size());
-    for (const auto& record : table.records) {
-        std::vector<std::string> values;
-        values.reserve(table.fields.size());
-        for (const auto& field : table.fields) {
-            const auto* value = find_record_value(record, field.name);
-            values.push_back(value == nullptr ? std::string{} : value->display_value);
-        }
-        records.push_back(std::move(values));
-        deleted_flags.push_back(record.deleted);
-    }
-
-    const std::size_t copied_root_record_index = records.size();
+    const std::size_t copied_root_record_index = table.records.size();
+    std::vector<VisualAssetRawRecordAppend> appends;
+    appends.reserve(copy_plan.size());
     for (const auto& plan : copy_plan) {
-        std::vector<std::string> values = records[plan.record_index];
-        replace_duplicate_field_value(table, values, "OBJNAME", plan.replacement->new_object_name);
-        replace_duplicate_field_value(table, values, "NAME", plan.replacement->new_name);
-        replace_duplicate_field_value(table, values, "UNIQUEID", plan.replacement->new_unique_id);
-        replace_duplicate_field_value(table, values, "PARENT", plan.copied_parent_name);
-        records.push_back(std::move(values));
-        deleted_flags.push_back(table.records[plan.record_index].deleted);
+        std::vector<VisualObjectPropertyChange> field_values{
+            {.property_name = "OBJNAME", .property_value = plan.replacement->new_object_name},
+            {.property_name = "NAME", .property_value = plan.replacement->new_name},
+            {.property_name = "UNIQUEID", .property_value = plan.replacement->new_unique_id}
+        };
+        if (!plan.copied_parent_name.empty()) {
+            field_values.push_back({.property_name = "PARENT", .property_value = plan.copied_parent_name});
+        }
+        appends.push_back({
+            .source_record_index = plan.record_index,
+            .field_values = std::move(field_values)
+        });
     }
 
-    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
-    if (!create_result.ok) {
-        return failed_visual_object_subtree_duplicate_result(create_result.error);
-    }
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            return failed_visual_object_subtree_duplicate_result(delete_result.error);
-        }
+    const auto append_result = append_visual_asset_records_preserving_raw(request.path, appends);
+    if (!append_result.ok) {
+        return failed_visual_object_subtree_duplicate_result(append_result.error);
     }
 
     const auto copied_table_result = parse_dbf_table_from_file(request.path, copied_root_record_index + 1U);
@@ -1675,36 +1695,12 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
         }
     }
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table.records.size() + 1U);
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size());
-    for (const auto& record : table.records) {
-        std::vector<std::string> values;
-        values.reserve(table.fields.size());
-        for (const auto& field : table.fields) {
-            const auto* value = find_record_value(record, field.name);
-            values.push_back(value == nullptr ? std::string{} : value->display_value);
-        }
-        records.push_back(std::move(values));
-        deleted_flags.push_back(record.deleted);
-    }
-
-    const std::size_t created_record_index = records.size();
-    records.push_back(std::move(created_values));
-
-    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
-    if (!create_result.ok) {
-        return failed_visual_object_create_result(create_result.error);
-    }
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            return failed_visual_object_create_result(delete_result.error);
-        }
+    const std::size_t created_record_index = table.records.size();
+    const auto append_result = append_visual_asset_records_preserving_raw(
+        request.path,
+        {{.source_record_index = std::nullopt, .field_values = request.field_values}});
+    if (!append_result.ok) {
+        return failed_visual_object_create_result(append_result.error);
     }
 
     const auto created_table_result = parse_dbf_table_from_file(request.path, created_record_index + 1U);
@@ -1742,14 +1738,10 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
     const auto& table = table_result.table;
 
     std::vector<std::vector<std::string>> records = visual_record_values_for_write(table.fields, table.records);
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size());
-    for (const auto& record : table.records) {
-        deleted_flags.push_back(record.deleted);
-    }
-
     std::vector<std::size_t> created_record_indexes;
     created_record_indexes.reserve(request.objects.size());
+    std::vector<VisualAssetRawRecordAppend> appends;
+    appends.reserve(request.objects.size());
     for (const auto& object : request.objects) {
         if (object.field_values.empty()) {
             return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Object.FieldValuesRequired"));
@@ -1791,38 +1783,15 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 
         created_record_indexes.push_back(records.size());
         records.push_back(std::move(created_values));
+        appends.push_back({
+            .source_record_index = std::nullopt,
+            .field_values = object.field_values
+        });
     }
 
-    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
-    if (memo_resolution.ambiguous) {
-        return failed_visual_object_create_batch_result(
-            ambiguous_memo_sidecar_error(memo_resolution));
-    }
-    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
-    if (original_table_bytes.empty()) {
-        return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
-    }
-    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
-    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
-        ? std::vector<std::uint8_t>{}
-        : read_binary_file(memo_path);
-
-    const auto create_result = create_dbf_table_file(request.path, table.fields, records);
-    if (!create_result.ok) {
-        return failed_visual_object_create_batch_result(create_result.error);
-    }
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            write_binary_file(request.path, original_table_bytes);
-            if (!memo_path.empty() && !original_memo_bytes.empty()) {
-                write_binary_file(memo_path, original_memo_bytes);
-            }
-            return failed_visual_object_create_batch_result(delete_result.error);
-        }
+    const auto append_result = append_visual_asset_records_preserving_raw(request.path, appends);
+    if (!append_result.ok) {
+        return failed_visual_object_create_batch_result(append_result.error);
     }
 
     const auto created_table_result = parse_dbf_table_from_file(request.path, records.size());
@@ -2019,25 +1988,24 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
         return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupSelectionRequired"));
     }
 
-    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
-    if (memo_resolution.ambiguous) {
-        return failed_visual_object_group_result(
-            ambiguous_memo_sidecar_error(memo_resolution));
+    VisualAssetRollbackSnapshot original_asset;
+    const auto snapshot_result = capture_visual_asset_rollback_snapshot(
+        request.path,
+        original_asset);
+    if (!snapshot_result.ok) {
+        return failed_visual_object_group_result(snapshot_result.error);
     }
-    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
-    if (original_table_bytes.empty()) {
-        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
-    }
-    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
-    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
-        ? std::vector<std::uint8_t>{}
-        : read_binary_file(memo_path);
 
-    const auto restore_original_asset = [&]() {
-        write_binary_file(request.path, original_table_bytes);
-        if (!memo_path.empty() && !original_memo_bytes.empty()) {
-            write_binary_file(memo_path, original_memo_bytes);
+    const auto fail_with_rollback = [&](std::string error) {
+        const auto rollback_result = restore_visual_asset_rollback_snapshot(
+            request.path,
+            original_asset);
+        if (!rollback_result.ok) {
+            error = visual_asset_rollback_failed_text(
+                std::move(error),
+                rollback_result.error);
         }
+        return failed_visual_object_group_result(std::move(error));
     };
 
     const auto create_result = create_visual_object({
@@ -2045,21 +2013,18 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
         .field_values = request.container_field_values
     });
     if (!create_result.ok) {
-        restore_original_asset();
-        return failed_visual_object_group_result(create_result.error);
+        return fail_with_rollback(create_result.error);
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, create_result.record_index + 1U);
     if (!table_result.ok || create_result.record_index >= table_result.table.records.size()) {
-        restore_original_asset();
-        return failed_visual_object_group_result(
+        return fail_with_rollback(
             table_result.ok ? visual_asset_text("VisualAssetEditor.Object.GroupContainerUnavailable") : table_result.error);
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[create_result.record_index]);
     if (container_name.empty()) {
-        restore_original_asset();
-        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupContainerNameMissing"));
+        return fail_with_rollback(visual_asset_text("VisualAssetEditor.Object.GroupContainerNameMissing"));
     }
 
     std::vector<VisualObjectReparentBatchItem> reparent_items;
@@ -2080,8 +2045,7 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
         .objects = reparent_items
     });
     if (!reparent_result.ok) {
-        restore_original_asset();
-        return failed_visual_object_group_result(reparent_result.error);
+        return fail_with_rollback(reparent_result.error);
     }
 
     return {
@@ -2168,6 +2132,14 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
 
+    VisualAssetRollbackSnapshot original_asset;
+    const auto snapshot_result = capture_visual_asset_rollback_snapshot(
+        request.path,
+        original_asset);
+    if (!snapshot_result.ok) {
+        return failed_visual_object_ungroup_result(snapshot_result.error);
+    }
+
     std::size_t container_record_index = 0U;
     const auto resolution = resolve_visual_object_record_index({
         .path = request.path,
@@ -2216,27 +2188,6 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Object.SelectedContainerChildrenRequired"));
     }
 
-    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
-    if (memo_resolution.ambiguous) {
-        return failed_visual_object_ungroup_result(
-            ambiguous_memo_sidecar_error(memo_resolution));
-    }
-    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
-    if (original_table_bytes.empty()) {
-        return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
-    }
-    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
-    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
-        ? std::vector<std::uint8_t>{}
-        : read_binary_file(memo_path);
-
-    const auto restore_original_asset = [&]() {
-        write_binary_file(request.path, original_table_bytes);
-        if (!memo_path.empty() && !original_memo_bytes.empty()) {
-            write_binary_file(memo_path, original_memo_bytes);
-        }
-    };
-
     std::vector<VisualObjectReparentBatchItem> reparent_items;
     reparent_items.reserve(children_result.children.size());
     for (const auto& child : children_result.children) {
@@ -2266,7 +2217,13 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         .objects = reparent_items
     });
     if (!reparent_result.ok) {
-        restore_original_asset();
+        const auto restore_result = restore_visual_asset_rollback_snapshot(
+            request.path,
+            original_asset);
+        if (!restore_result.ok) {
+            return failed_visual_object_ungroup_result(
+                visual_asset_rollback_failed_text(reparent_result.error, restore_result.error));
+        }
         return failed_visual_object_ungroup_result(reparent_result.error);
     }
 
@@ -2274,10 +2231,20 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         request.path, container_record_index, {}, {}, true);
     if (!delete_result.ok) {
         const auto rollback_result = rollback_reparents();
-        restore_original_asset();
-        if (!rollback_result.ok) {
+        const auto restore_result = restore_visual_asset_rollback_snapshot(
+            request.path,
+            original_asset);
+        if (!rollback_result.ok || !restore_result.ok) {
+            std::string rollback_error = rollback_result.ok
+                ? restore_result.error
+                : rollback_result.error;
+            if (!rollback_result.ok && !restore_result.ok) {
+                rollback_error = visual_asset_rollback_failed_text(
+                    rollback_result.error,
+                    restore_result.error);
+            }
             return failed_visual_object_ungroup_result(
-                visual_asset_rollback_failed_text(delete_result.error, rollback_result.error));
+                visual_asset_rollback_failed_text(delete_result.error, std::move(rollback_error)));
         }
         return failed_visual_object_ungroup_result(delete_result.error);
     }
@@ -2865,24 +2832,9 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetRecordUnavailable")};
     }
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table.records.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size());
-    for (const auto& record : table.records) {
-        std::vector<std::string> values;
-        values.reserve(table.fields.size());
-        for (const auto& field : table.fields) {
-            const auto* value = find_record_value(record, field.name);
-            values.push_back(value == nullptr ? std::string{} : value->display_value);
-        }
-        records.push_back(std::move(values));
-        deleted_flags.push_back(record.deleted);
-    }
-
     std::vector<std::size_t> order;
-    order.reserve(records.size());
-    for (std::size_t index = 0U; index < records.size(); ++index) {
+    order.reserve(table.records.size());
+    for (std::size_t index = 0U; index < table.records.size(); ++index) {
         if (index != source_record_index) {
             order.push_back(index);
         }
@@ -2903,27 +2855,9 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
     }
     order.insert(order.begin() + static_cast<std::ptrdiff_t>(insert_position), source_record_index);
 
-    std::vector<std::vector<std::string>> reordered_records;
-    reordered_records.reserve(records.size());
-    std::vector<bool> reordered_deleted_flags;
-    reordered_deleted_flags.reserve(deleted_flags.size());
-    for (const auto record_index : order) {
-        reordered_records.push_back(records[record_index]);
-        reordered_deleted_flags.push_back(deleted_flags[record_index]);
-    }
-
-    const auto create_result = create_dbf_table_file(request.path, table.fields, reordered_records);
-    if (!create_result.ok) {
-        return {.ok = false, .error = create_result.error};
-    }
-    for (std::size_t index = 0U; index < reordered_deleted_flags.size(); ++index) {
-        if (!reordered_deleted_flags[index]) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            return {.ok = false, .error = delete_result.error};
-        }
+    const auto reorder_result = reorder_visual_asset_records_preserving_raw(request.path, order);
+    if (!reorder_result.ok) {
+        return reorder_result;
     }
 
     return {.ok = true, .error = {}, .affected_object_count = 1U};
@@ -2950,39 +2884,16 @@ VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchReque
         }
     }
 
-    const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(request.path);
-    if (memo_resolution.ambiguous) {
-        return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
+    std::vector<std::size_t> record_order;
+    record_order.reserve(reordered_records.size());
+    for (const auto& record : reordered_records) {
+        record_order.push_back(record.record_index);
     }
-    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
-    if (original_table_bytes.empty()) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
-    }
-    const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
-    const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
-        ? std::vector<std::uint8_t>{}
-        : read_binary_file(memo_path);
-
-    const auto create_result = create_dbf_table_file(
+    const auto reorder_result = reorder_visual_asset_records_preserving_raw(
         request.path,
-        table_result.table.fields,
-        visual_record_values_for_write(table_result.table.fields, reordered_records));
-    if (!create_result.ok) {
-        return {.ok = false, .error = create_result.error};
-    }
-
-    for (std::size_t index = 0U; index < reordered_records.size(); ++index) {
-        if (!reordered_records[index].deleted) {
-            continue;
-        }
-        const auto delete_result = set_record_deleted_flag(request.path, index, true);
-        if (!delete_result.ok) {
-            write_binary_file(request.path, original_table_bytes);
-            if (!memo_path.empty() && !original_memo_bytes.empty()) {
-                write_binary_file(memo_path, original_memo_bytes);
-            }
-            return {.ok = false, .error = delete_result.error};
-        }
+        record_order);
+    if (!reorder_result.ok) {
+        return reorder_result;
     }
 
     return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};

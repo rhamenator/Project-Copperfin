@@ -4,6 +4,8 @@
 
 #include "copperfin/vfp/dbf_table.h"
 
+#include "dbf_table_raw_mutation.h"
+
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/vfp/sidecar_path.h"
@@ -1678,6 +1680,483 @@ static DbfWriteResult rewrite_dbf_table_schema(
         .deleted_flags = &rewrite_rows.deleted_flags
     };
     return create_dbf_table_file_with_memo_payloads(path, fields, rewrite_rows.records, &overrides);
+}
+
+namespace {
+
+struct RawDbfMutationState {
+    DbfHeader header{};
+    std::vector<RawFieldDescriptor> fields;
+    std::vector<std::uint8_t> table_bytes;
+    bool has_memo_sidecar = false;
+    std::string memo_path;
+    std::vector<std::uint8_t> memo_bytes;
+    std::size_t records_end = 0U;
+};
+
+DbfRawRecordMutationResult failed_raw_record_mutation(
+    std::string error,
+    std::size_t record_count = 0U) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .table_bytes = {},
+        .has_memo_sidecar = false,
+        .memo_path = {},
+        .memo_bytes = {},
+        .record_count = record_count
+    };
+}
+
+bool load_raw_dbf_mutation_state(
+    const std::string& path,
+    RawDbfMutationState& state,
+    DbfRawRecordMutationResult& failure) {
+    state.table_bytes = read_binary_file(path);
+    if (state.table_bytes.empty()) {
+        failure = failed_raw_record_mutation(dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed"));
+        return false;
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(state.table_bytes);
+    if (!header_result.ok) {
+        failure = failed_raw_record_mutation(header_result.error);
+        return false;
+    }
+    state.header = header_result.header;
+
+    if (state.header.header_length > state.table_bytes.size()) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated"),
+            state.header.record_count);
+        return false;
+    }
+    if (state.header.record_count >
+        (std::numeric_limits<std::size_t>::max() - state.header.header_length) /
+            state.header.record_length) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"),
+            state.header.record_count);
+        return false;
+    }
+    state.records_end = state.header.header_length +
+        (static_cast<std::size_t>(state.header.record_count) * state.header.record_length);
+    if (state.records_end > state.table_bytes.size()) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"),
+            state.header.record_count);
+        return false;
+    }
+
+    std::size_t descriptor_offset = 32U;
+    std::size_t descriptor_count = 0U;
+    bool descriptor_terminator_found = false;
+    while (descriptor_offset < state.header.header_length) {
+        if (state.table_bytes[descriptor_offset] == 0x0DU) {
+            descriptor_terminator_found = true;
+            break;
+        }
+        if ((descriptor_offset + 32U) > state.header.header_length) {
+            break;
+        }
+        ++descriptor_count;
+        descriptor_offset += 32U;
+    }
+    if (!descriptor_terminator_found) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated"),
+            state.header.record_count);
+        return false;
+    }
+
+    state.fields = read_raw_field_descriptors(state.table_bytes);
+    if (state.fields.size() != descriptor_count) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"),
+            state.header.record_count);
+        return false;
+    }
+
+    std::vector<bool> occupied(state.header.record_length, false);
+    occupied[0] = true;
+    for (const auto& field : state.fields) {
+        if (field.length == 0U || field.offset == 0U ||
+            field.offset >= state.header.record_length ||
+            field.length > state.header.record_length - field.offset) {
+            failure = failed_raw_record_mutation(
+                dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"),
+                state.header.record_count);
+            return false;
+        }
+        for (std::size_t offset = field.offset; offset < field.offset + field.length; ++offset) {
+            if (occupied[offset]) {
+                failure = failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"),
+                    state.header.record_count);
+                return false;
+            }
+            occupied[offset] = true;
+        }
+    }
+
+    const bool requires_sidecar =
+        primary_always_requires_memo_sidecar(path) ||
+        table_uses_memo_sidecar(state.header, state.fields);
+    if (!requires_sidecar) {
+        return true;
+    }
+
+    const SidecarPathResolution memo_resolution = resolve_vfp_memo_sidecar_path(path);
+    if (memo_resolution.ambiguous) {
+        failure = failed_raw_record_mutation(
+            ambiguous_sidecar_error(memo_resolution),
+            state.header.record_count);
+        return false;
+    }
+    state.memo_path = selected_sidecar_path(memo_resolution);
+    if (state.memo_path.empty()) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.MemoSidecarPathMissing"),
+            state.header.record_count);
+        return false;
+    }
+    state.memo_bytes = read_binary_file(state.memo_path);
+    if (state.memo_bytes.size() < 8U) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            state.header.record_count);
+        return false;
+    }
+
+    const std::uint16_t block_size = read_be_u16(state.memo_bytes, 6U);
+    const std::uint32_t next_free_block = read_be_u32(state.memo_bytes, 0U);
+    if (block_size < 8U || next_free_block == 0U ||
+        next_free_block > std::numeric_limits<std::size_t>::max() / block_size ||
+        (static_cast<std::size_t>(next_free_block) * block_size) > state.memo_bytes.size()) {
+        failure = failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            state.header.record_count);
+        return false;
+    }
+
+    for (std::size_t record_index = 0U; record_index < state.header.record_count; ++record_index) {
+        const std::size_t record_offset = state.header.header_length +
+            (record_index * state.header.record_length);
+        for (const auto& field : state.fields) {
+            if (!is_memo_pointer_field(field.type)) {
+                continue;
+            }
+            if (field.length < 4U) {
+                failure = failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.MemoFieldWidthTooSmall"),
+                    state.header.record_count);
+                return false;
+            }
+            const std::uint32_t block_number = read_le_u32(
+                state.table_bytes,
+                record_offset + field.offset);
+            if (block_number == 0U) {
+                continue;
+            }
+            if (block_number >= next_free_block ||
+                block_number > std::numeric_limits<std::size_t>::max() / block_size) {
+                failure = failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+                    state.header.record_count);
+                return false;
+            }
+            const std::size_t block_offset = static_cast<std::size_t>(block_number) * block_size;
+            if (block_offset > state.memo_bytes.size() ||
+                (state.memo_bytes.size() - block_offset) < 8U) {
+                failure = failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+                    state.header.record_count);
+                return false;
+            }
+            const std::uint32_t payload_length = read_be_u32(state.memo_bytes, block_offset + 4U);
+            const std::size_t declared_memo_end =
+                static_cast<std::size_t>(next_free_block) * block_size;
+            if ((declared_memo_end - block_offset) < 8U ||
+                payload_length > declared_memo_end - block_offset - 8U) {
+                failure = failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+                    state.header.record_count);
+                return false;
+            }
+        }
+    }
+
+    state.has_memo_sidecar = true;
+    return true;
+}
+
+std::vector<std::uint8_t> make_blank_raw_record(
+    const DbfHeader& header,
+    const std::vector<RawFieldDescriptor>& fields) {
+    std::vector<std::uint8_t> record(header.record_length, static_cast<std::uint8_t>(' '));
+    record[0] = 0x20U;
+    for (const auto& field : fields) {
+        auto first = record.begin() + static_cast<std::ptrdiff_t>(field.offset);
+        switch (field.type) {
+            case 'C':
+            case 'N':
+            case 'F':
+            case 'D':
+                std::fill_n(first, field.length, static_cast<std::uint8_t>(' '));
+                break;
+            case 'L':
+                std::fill_n(first, field.length, static_cast<std::uint8_t>(0U));
+                *first = static_cast<std::uint8_t>('?');
+                break;
+            default:
+                std::fill_n(first, field.length, static_cast<std::uint8_t>(0U));
+                break;
+        }
+    }
+    return record;
+}
+
+DbfWriteResult write_memo_field_bytes_preserving_prefix(
+    std::vector<std::uint8_t>& table_bytes,
+    std::size_t field_offset,
+    std::vector<std::uint8_t>& memo_bytes,
+    const std::string& value,
+    std::size_t record_count) {
+    if ((field_offset + 4U) > table_bytes.size()) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"),
+            .record_count = record_count
+        };
+    }
+    if (value.empty()) {
+        write_le_u32(table_bytes, field_offset, 0U);
+        return {.ok = true, .error = {}, .record_count = record_count};
+    }
+    if (memo_bytes.size() < 8U) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            .record_count = record_count
+        };
+    }
+
+    const std::uint16_t block_size = read_be_u16(memo_bytes, 6U);
+    const std::uint32_t declared_next_free_block = read_be_u32(memo_bytes, 0U);
+    if (block_size == 0U || declared_next_free_block == 0U) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            .record_count = record_count
+        };
+    }
+
+    if (value.size() > std::numeric_limits<std::uint32_t>::max() ||
+        value.size() > std::numeric_limits<std::size_t>::max() - 8U) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            .record_count = record_count
+        };
+    }
+    const std::size_t physical_next_block =
+        (memo_bytes.size() / block_size) +
+        (memo_bytes.size() % block_size == 0U ? 0U : 1U);
+    const std::size_t next_block = std::max<std::size_t>(declared_next_free_block, physical_next_block);
+    const std::size_t required_bytes = 8U + value.size();
+    const std::size_t required_blocks =
+        (required_bytes / block_size) +
+        (required_bytes % block_size == 0U ? 0U : 1U);
+    if (next_block > std::numeric_limits<std::uint32_t>::max() ||
+        required_blocks > std::numeric_limits<std::uint32_t>::max() - next_block ||
+        next_block > std::numeric_limits<std::size_t>::max() / block_size ||
+        required_blocks >
+            (std::numeric_limits<std::size_t>::max() / block_size) - next_block) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+            .record_count = record_count
+        };
+    }
+
+    const std::size_t block_offset = next_block * block_size;
+    const std::size_t new_size = (next_block + required_blocks) * block_size;
+    memo_bytes.resize(new_size, 0U);
+    memo_bytes[block_offset + 3U] = 1U;
+    write_be_u32(memo_bytes, block_offset + 4U, static_cast<std::uint32_t>(value.size()));
+    std::copy(
+        value.begin(),
+        value.end(),
+        memo_bytes.begin() + static_cast<std::ptrdiff_t>(block_offset + 8U));
+    write_be_u32(
+        memo_bytes,
+        0U,
+        static_cast<std::uint32_t>(next_block + required_blocks));
+    write_le_u32(table_bytes, field_offset, static_cast<std::uint32_t>(next_block));
+    return {.ok = true, .error = {}, .record_count = record_count};
+}
+
+}  // namespace
+
+DbfRawRecordMutationResult stage_dbf_raw_record_appends(
+    const std::string& path,
+    const std::vector<DbfRawRecordAppend>& appends) {
+    RawDbfMutationState state;
+    DbfRawRecordMutationResult failure;
+    if (!load_raw_dbf_mutation_state(path, state, failure)) {
+        return failure;
+    }
+
+    if (appends.size() >
+        std::numeric_limits<std::uint32_t>::max() - state.header.record_count) {
+        return failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"),
+            state.header.record_count);
+    }
+    if (appends.size() >
+        (std::numeric_limits<std::size_t>::max() - state.table_bytes.size()) /
+            state.header.record_length) {
+        return failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"),
+            state.header.record_count);
+    }
+
+    std::vector<std::uint8_t> appended_record_bytes;
+    appended_record_bytes.reserve(appends.size() * state.header.record_length);
+    for (const auto& append : appends) {
+        if (append.source_record_index.has_value()) {
+            if (*append.source_record_index >= state.header.record_count) {
+                return failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"),
+                    state.header.record_count);
+            }
+            const std::size_t source_offset = state.header.header_length +
+                (*append.source_record_index * state.header.record_length);
+            appended_record_bytes.insert(
+                appended_record_bytes.end(),
+                state.table_bytes.begin() + static_cast<std::ptrdiff_t>(source_offset),
+                state.table_bytes.begin() + static_cast<std::ptrdiff_t>(
+                    source_offset + state.header.record_length));
+        } else {
+            const auto blank_record = make_blank_raw_record(state.header, state.fields);
+            appended_record_bytes.insert(
+                appended_record_bytes.end(),
+                blank_record.begin(),
+                blank_record.end());
+        }
+    }
+
+    state.table_bytes.insert(
+        state.table_bytes.begin() + static_cast<std::ptrdiff_t>(state.records_end),
+        appended_record_bytes.begin(),
+        appended_record_bytes.end());
+    const std::uint32_t new_record_count =
+        state.header.record_count + static_cast<std::uint32_t>(appends.size());
+    write_le_u32(state.table_bytes, 4U, new_record_count);
+    DbfHeader staged_header = state.header;
+    staged_header.record_count = new_record_count;
+
+    for (std::size_t append_index = 0U; append_index < appends.size(); ++append_index) {
+        const std::size_t record_index = state.header.record_count + append_index;
+        for (const auto& [field_name, value] : appends[append_index].field_values) {
+            const auto field = find_raw_field(state.fields, field_name);
+            if (!field.has_value()) {
+                return failed_raw_record_mutation(
+                    dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"),
+                    state.header.record_count);
+            }
+
+            DbfWriteResult write_result;
+            if (is_memo_pointer_field(field->type)) {
+                if (!state.has_memo_sidecar || field->length < 4U) {
+                    return failed_raw_record_mutation(
+                        state.has_memo_sidecar
+                            ? dbf_table_text("Vfp.DbfTable.Error.MemoFieldWidthTooSmall")
+                            : dbf_table_text("Vfp.DbfTable.Error.MemoSidecarPathMissing"),
+                        state.header.record_count);
+                }
+                const std::size_t field_offset = staged_header.header_length +
+                    (record_index * staged_header.record_length) + field->offset;
+                write_result = write_memo_field_bytes_preserving_prefix(
+                    state.table_bytes,
+                    field_offset,
+                    state.memo_bytes,
+                    value,
+                    staged_header.record_count);
+            } else {
+                write_result = write_field_bytes(
+                    state.table_bytes,
+                    staged_header,
+                    record_index,
+                    *field,
+                    value);
+            }
+            if (!write_result.ok) {
+                return failed_raw_record_mutation(write_result.error, state.header.record_count);
+            }
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .table_bytes = std::move(state.table_bytes),
+        .has_memo_sidecar = state.has_memo_sidecar,
+        .memo_path = std::move(state.memo_path),
+        .memo_bytes = std::move(state.memo_bytes),
+        .record_count = staged_header.record_count
+    };
+}
+
+DbfRawRecordMutationResult stage_dbf_raw_record_reorder(
+    const std::string& path,
+    const std::vector<std::size_t>& record_order) {
+    RawDbfMutationState state;
+    DbfRawRecordMutationResult failure;
+    if (!load_raw_dbf_mutation_state(path, state, failure)) {
+        return failure;
+    }
+    if (record_order.size() != state.header.record_count) {
+        return failed_raw_record_mutation(
+            dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"),
+            state.header.record_count);
+    }
+
+    std::vector<bool> seen(record_order.size(), false);
+    for (const auto record_index : record_order) {
+        if (record_index >= state.header.record_count || seen[record_index]) {
+            return failed_raw_record_mutation(
+                dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"),
+                state.header.record_count);
+        }
+        seen[record_index] = true;
+    }
+
+    const std::vector<std::uint8_t> original_record_bytes{
+        state.table_bytes.begin() + static_cast<std::ptrdiff_t>(state.header.header_length),
+        state.table_bytes.begin() + static_cast<std::ptrdiff_t>(state.records_end)
+    };
+    for (std::size_t destination_index = 0U;
+         destination_index < record_order.size();
+         ++destination_index) {
+        const std::size_t source_offset = record_order[destination_index] * state.header.record_length;
+        const std::size_t destination_offset = state.header.header_length +
+            (destination_index * state.header.record_length);
+        std::copy_n(
+            original_record_bytes.begin() + static_cast<std::ptrdiff_t>(source_offset),
+            state.header.record_length,
+            state.table_bytes.begin() + static_cast<std::ptrdiff_t>(destination_offset));
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .table_bytes = std::move(state.table_bytes),
+        .has_memo_sidecar = state.has_memo_sidecar,
+        .memo_path = std::move(state.memo_path),
+        .memo_bytes = std::move(state.memo_bytes),
+        .record_count = state.header.record_count
+    };
 }
 
 DbfWriteResult create_dbf_table_file(

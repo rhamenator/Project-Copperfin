@@ -76,6 +76,13 @@ void write_synthetic_named_geometry_asset(
     const std::filesystem::path& memo_path);
 std::string vfp_string_literal_for_test(const std::string& value);
 void test_visual_asset_editor_errors_resolve_through_localization_catalog();
+void test_visual_asset_raw_reorder_preserves_frx_frt_and_lbx_lbt_bytes();
+void test_visual_asset_raw_duplicate_preserves_frx_frt_and_lbx_lbt_bytes();
+void test_visual_asset_raw_create_preserves_frx_frt_and_lbx_lbt_records();
+void test_visual_asset_raw_batch_and_subtree_edits_preserve_bytes();
+void test_visual_asset_raw_malformed_layouts_fail_without_writes();
+void test_visual_asset_raw_create_preserves_binary_memo_payloads();
+void test_visual_asset_raw_create_write_faults_are_atomic();
 void test_update_visual_object_property_preserves_equals_for_blank_property_values();
 void test_update_visual_object_report_settings_property_preserves_comment_lines();
 void test_report_settings_bottom_margin_memo_round_trips();
