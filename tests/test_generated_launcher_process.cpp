@@ -456,7 +456,8 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
     expect(!publish.timed_out, "dotnet publish should not time out for the generated launcher");
     expect(
         publish.exit_code == 0,
-        "dotnet publish should build the generated launcher: " + publish.stderr_text);
+        "dotnet publish should build the generated launcher\nstdout:\n" +
+            publish.stdout_text + "\nstderr:\n" + publish.stderr_text);
     expect(fs::exists(materialized.plan.launcher_output_path),
            "dotnet publish should materialize the planned launcher executable");
     if (failures != 0) {
