@@ -1358,6 +1358,17 @@ std::filesystem::path logical_deployment_path(
     return (logical_manifest_directory / *relative_path).lexically_normal();
 }
 
+void add_verified_deployment_bytes(
+    std::map<std::string, std::string>& verified_bytes,
+    const std::filesystem::path& admitted_path,
+    const std::filesystem::path& manifest_directory,
+    const std::string& bytes) {
+    verified_bytes.emplace(admitted_path.lexically_normal().string(), bytes);
+    verified_bytes.emplace(
+        logical_deployment_path(admitted_path, manifest_directory).string(),
+        bytes);
+}
+
 bool verify_manifest_hashes(
     const ManifestMap& manifest,
     const std::filesystem::path& manifest_directory,
@@ -3194,8 +3205,10 @@ int main(int argc, char** argv) {
         }
         verified_startup_bytes = startup_snapshot.bytes;
         if (security_enabled && packaged_source_text_extension(startup_source)) {
-            verified_source_texts.emplace(
-                current_identity.canonical_path.string(),
+            add_verified_deployment_bytes(
+                verified_source_texts,
+                current_identity.canonical_path,
+                manifest_directory,
                 startup_snapshot.bytes);
         }
 
@@ -3229,10 +3242,18 @@ int main(int argc, char** argv) {
                     return 8;
                 }
                 if (source_text) {
-                    verified_source_texts.emplace(source_path.string(), source_snapshot.bytes);
+                    add_verified_deployment_bytes(
+                        verified_source_texts,
+                        source_path,
+                        manifest_directory,
+                        source_snapshot.bytes);
                 }
                 if (database_component) {
-                    verified_file_bytes.emplace(source_path.string(), source_snapshot.bytes);
+                    add_verified_deployment_bytes(
+                        verified_file_bytes,
+                        source_path,
+                        manifest_directory,
+                        source_snapshot.bytes);
                 }
             }
         }

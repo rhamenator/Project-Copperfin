@@ -1017,7 +1017,10 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
     fs::remove_all(test_root, ignored);
     fs::create_directories(physical_content);
     write_runtime_host_usage_catalogs(locale_root);
-    write_text(physical_content / "main.prg", "LOCAL nValue\nnValue = 1\nRETURN\n");
+    write_text(
+        physical_content / "main.prg",
+        "#INCLUDE 'verified.h'\nLOCAL nValue\nnValue = VERIFIED_VALUE\nRETURN\n");
+    write_text(physical_content / "verified.h", "#DEFINE VERIFIED_VALUE 1\n");
     write_synthetic_form_asset(physical_content / "alias.scx");
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
@@ -1027,6 +1030,19 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
         fs::perm_options::add,
         ignored);
 #endif
+
+    const auto runtime_host_hash =
+        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto prg_hash =
+        copperfin::security::sha256_hex_for_file((physical_content / "main.prg").string());
+    const auto include_hash =
+        copperfin::security::sha256_hex_for_file((physical_content / "verified.h").string());
+    expect(runtime_host_hash.ok && prg_hash.ok && include_hash.ok,
+           "nested-alias PRG fixture should hash its executable package inputs");
+    if (!runtime_host_hash.ok || !prg_hash.ok || !include_hash.ok) {
+        fs::remove_all(test_root, ignored);
+        return;
+    }
 
     const bool namespace_alias_created =
         create_directory_indirection(physical_namespace, logical_namespace);
@@ -1047,9 +1063,14 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
         "content_root=" + recorded_content.string() + "\n"
         "working_directory=" + recorded_content.string() + "\n"
         "startup_item=main.prg\n"
-        "security_enabled=false\n"
-        "security_role=\n"
+        "security_enabled=true\n"
+        "security_role=runtime-operator\n"
         "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|main.prg|" + (recorded_content / "main.prg").string() +
+            "|Program|false|true|" + prg_hash.hex_digest + "|true\n"
+        "extension_payload=" + (recorded_content / "verified.h").string() +
+            "|" + include_hash.hex_digest + "\n"
         "dotnet_story=none\n");
 
     {
@@ -1060,7 +1081,7 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
             {
                 "--manifest", (logical_package / manifest_path.filename()).string(),
                 "--debug",
-                "--debug-command", "break:remove:2"
+                "--debug-command", "break:remove:3"
             },
             logical_package);
         if (process.exit_code != 5) {
@@ -1072,7 +1093,7 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
         expect(process.exit_code == 5,
                "nested-alias unknown breakpoint should retain the debug error exit code");
         expect(process.stdout_text.find(
-                   "Breakpoint desconocido: " + logical_prg.string() + ":2") !=
+                   "Breakpoint desconocido: " + logical_prg.string() + ":3") !=
                    std::string::npos,
                "nested-alias unknown breakpoint should preserve the logical PRG identity");
     }
@@ -1085,7 +1106,7 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
             {
                 "--manifest", (logical_package / manifest_path.filename()).string(),
                 "--debug",
-                "--breakpoint", logical_prg.string() + ":2",
+                "--breakpoint", logical_prg.string() + ":3",
                 "--debug-command", "continue",
                 "--debug-command", "watch:"
             },
@@ -1101,13 +1122,13 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
                "nested-alias PRG summary should preserve the logical startup identity");
         expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
                "nested-alias logical breakpoint should match the physically verified PRG");
-        expect(process.stdout_text.find("debug.location: " + logical_prg.string() + ":2") !=
+        expect(process.stdout_text.find("debug.location: " + logical_prg.string() + ":3") !=
                    std::string::npos,
                "nested-alias PRG pause location should preserve the logical source identity");
-        expect(process.stdout_text.find("debug.breakpoint[0]: " + logical_prg.string() + ":2") !=
+        expect(process.stdout_text.find("debug.breakpoint[0]: " + logical_prg.string() + ":3") !=
                    std::string::npos,
                "nested-alias PRG breakpoint inventory should preserve the logical source identity");
-        expect(process.stdout_text.find("debug.frame[0]: main@" + logical_prg.string() + ":2") !=
+        expect(process.stdout_text.find("debug.frame[0]: main@" + logical_prg.string() + ":3") !=
                    std::string::npos,
                "nested-alias PRG stack frames should preserve the logical source identity");
         expect(process.stdout_text.find("debug.watch.ok: false") != std::string::npos,
@@ -1120,8 +1141,6 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
     const fs::path physical_sidecar = copperfin::studio::infer_sidecar_path(
         physical_form.string(),
         copperfin::studio::StudioAssetKind::form);
-    const auto runtime_host_hash =
-        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
     const auto form_hash = copperfin::security::sha256_hex_for_file(physical_form.string());
     const auto sidecar_hash =
         copperfin::security::sha256_hex_for_file(physical_sidecar.string());
