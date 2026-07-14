@@ -35,6 +35,12 @@ namespace
             "cPosixPath = '/home/rich/dev/Project-Copperfin/src/runtime/prg_engine.cpp'\n"
             "cDrive = JUSTDRIVE(cWinPath)\n"
             "cUncDrive = JUSTDRIVE(cUncPath)\n"
+            "cUncRootBackslashDrive = JUSTDRIVE('\\\\server\\share')\n"
+            "cUncRootBackslashTrailingDrive = JUSTDRIVE('\\\\server\\share\\')\n"
+            "cUncRootSlashDrive = JUSTDRIVE('//server/share')\n"
+            "cUncRootSlashTrailingDrive = JUSTDRIVE('//server/share/')\n"
+            R"(cMalformedUncBackslashEmptyServer = JUSTDRIVE('\\\share'))" "\n"
+            "cMalformedUncSlashEmptyServer = JUSTDRIVE('///share')\n"
             "cExtendedUncDrive = JUSTDRIVE('\\\\?\\UNC\\server\\share\\reports\\invoice.frx')\n"
             "cExtendedUncRootDrive = JUSTDRIVE('\\\\?\\UNC\\server\\share')\n"
             "cLowerExtendedUncDrive = JUSTDRIVE('\\\\?\\unc\\server\\share\\reports\\invoice.frx')\n"
@@ -110,6 +116,12 @@ namespace
 
         const auto drive = state.globals.find("cdrive");
         const auto unc_drive = state.globals.find("cuncdrive");
+        const auto unc_root_backslash_drive = state.globals.find("cuncrootbackslashdrive");
+        const auto unc_root_backslash_trailing_drive = state.globals.find("cuncrootbackslashtrailingdrive");
+        const auto unc_root_slash_drive = state.globals.find("cuncrootslashdrive");
+        const auto unc_root_slash_trailing_drive = state.globals.find("cuncrootslashtrailingdrive");
+        const auto malformed_unc_backslash_empty_server = state.globals.find("cmalformeduncbackslashemptyserver");
+        const auto malformed_unc_slash_empty_server = state.globals.find("cmalformeduncslashemptyserver");
         const auto extended_unc_drive = state.globals.find("cextendeduncdrive");
         const auto extended_unc_root_drive = state.globals.find("cextendeduncrootdrive");
         const auto lower_extended_unc_drive = state.globals.find("clowerextendeduncdrive");
@@ -178,6 +190,12 @@ namespace
 
         expect(drive != state.globals.end(), "JUSTDRIVE result should be captured");
         expect(unc_drive != state.globals.end(), "UNC JUSTDRIVE result should be captured");
+        expect(unc_root_backslash_drive != state.globals.end(), "backslash UNC root JUSTDRIVE result should be captured");
+        expect(unc_root_backslash_trailing_drive != state.globals.end(), "trailing backslash UNC root JUSTDRIVE result should be captured");
+        expect(unc_root_slash_drive != state.globals.end(), "slash UNC root JUSTDRIVE result should be captured");
+        expect(unc_root_slash_trailing_drive != state.globals.end(), "trailing slash UNC root JUSTDRIVE result should be captured");
+        expect(malformed_unc_backslash_empty_server != state.globals.end(), "empty-server backslash UNC JUSTDRIVE result should be captured");
+        expect(malformed_unc_slash_empty_server != state.globals.end(), "empty-server slash UNC JUSTDRIVE result should be captured");
         expect(extended_unc_drive != state.globals.end(), "extended UNC JUSTDRIVE result should be captured");
         expect(extended_unc_root_drive != state.globals.end(), "extended UNC root JUSTDRIVE result should be captured");
         expect(lower_extended_unc_drive != state.globals.end(), "lowercase extended UNC JUSTDRIVE result should be captured");
@@ -252,6 +270,36 @@ namespace
         {
             expect(copperfin::runtime::format_value(unc_drive->second) == "\\\\server\\share",
                    "#3964: JUSTDRIVE should preserve ordinary UNC server/share roots");
+        }
+        if (unc_root_backslash_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_root_backslash_drive->second) == "\\\\server\\share",
+                   "#4050: JUSTDRIVE should preserve an ordinary backslash UNC share root");
+        }
+        if (unc_root_backslash_trailing_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_root_backslash_trailing_drive->second) == "\\\\server\\share",
+                   "#4050: JUSTDRIVE should remove a trailing separator from a backslash UNC share root");
+        }
+        if (unc_root_slash_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_root_slash_drive->second) == "//server/share",
+                   "#4050: JUSTDRIVE should preserve an ordinary slash UNC share root");
+        }
+        if (unc_root_slash_trailing_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_root_slash_trailing_drive->second) == "//server/share",
+                   "#4050: JUSTDRIVE should remove a trailing separator from a slash UNC share root");
+        }
+        if (malformed_unc_backslash_empty_server != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(malformed_unc_backslash_empty_server->second).empty(),
+                   "#4050: JUSTDRIVE should reject an ordinary backslash UNC root with an empty server");
+        }
+        if (malformed_unc_slash_empty_server != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(malformed_unc_slash_empty_server->second).empty(),
+                   "#4050: JUSTDRIVE should reject an ordinary slash UNC root with an empty server");
         }
         if (extended_unc_drive != state.globals.end())
         {

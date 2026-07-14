@@ -1030,6 +1030,9 @@ std::string portable_path_drive(const std::string& path) {
             if (share_end != std::string::npos) {
                 return path.substr(0U, share_end);
             }
+            if (server_end > 2U && server_end + 1U < path.size()) {
+                return path;
+            }
         }
     }
     return {};
