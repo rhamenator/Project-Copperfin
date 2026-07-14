@@ -72,6 +72,25 @@ DatabaseFixture create_database_fixture(
     return fixture;
 }
 
+#if !defined(_WIN32)
+bool directory_supports_distinct_case_entries(const std::filesystem::path& directory) {
+    namespace fs = std::filesystem;
+    const fs::path lowercase_probe = directory / "copperfin_case_probe";
+    const fs::path uppercase_probe = directory / "COPPERFIN_CASE_PROBE";
+    std::error_code ignored;
+    fs::remove(lowercase_probe, ignored);
+    fs::remove(uppercase_probe, ignored);
+    write_text(lowercase_probe, "probe");
+
+    ignored.clear();
+    const bool uppercase_exists = fs::exists(uppercase_probe, ignored);
+    const bool supports_distinct_entries = !ignored && !uppercase_exists;
+    fs::remove(lowercase_probe, ignored);
+    fs::remove(uppercase_probe, ignored);
+    return supports_distinct_entries;
+}
+#endif
+
 copperfin::runtime::RuntimePauseState run_program(
     const std::filesystem::path& root,
     const std::string& name,
@@ -274,19 +293,23 @@ void test_path_resolution_casefold_and_verified_bytes() {
            "POSIX case-collision denial should retain the verified-byte diagnostic");
 
     write_text(fixture.dbc, verified_components.at(fixture.dbc.string()));
-    const fs::path extension_case_sibling = fixture.dbc.parent_path() / "Catalog.dbc";
-    write_text(extension_case_sibling, verified_components.at(fixture.dbc.string()));
-    const auto exact_extension_case = run_program(
-        root,
-        "exact_extension_case.prg",
-        "OPEN DATABASE '" + fixture.dbc.string() + "' SHARED\n"
-        "cExactExtensionCase = DBC()\n"
-        "RETURN\n");
-    expect(exact_extension_case.completed,
-           "an exact DBC filename should win over an extension-case sibling");
-    expect(global_text(exact_extension_case, "cexactextensioncase") == fixture.dbc.string(),
-           "exact DBC filename precedence should preserve the requested on-disk path");
-    fs::remove(extension_case_sibling, ignored);
+    const bool supports_distinct_case_entries =
+        directory_supports_distinct_case_entries(fixture.dbc.parent_path());
+    if (supports_distinct_case_entries) {
+        const fs::path extension_case_sibling = fixture.dbc.parent_path() / "Catalog.dbc";
+        write_text(extension_case_sibling, verified_components.at(fixture.dbc.string()));
+        const auto exact_extension_case = run_program(
+            root,
+            "exact_extension_case.prg",
+            "OPEN DATABASE '" + fixture.dbc.string() + "' SHARED\n"
+            "cExactExtensionCase = DBC()\n"
+            "RETURN\n");
+        expect(exact_extension_case.completed,
+               "an exact DBC filename should win over an extension-case sibling");
+        expect(global_text(exact_extension_case, "cexactextensioncase") == fixture.dbc.string(),
+               "exact DBC filename precedence should preserve the requested on-disk path");
+        fs::remove(extension_case_sibling, ignored);
+    }
 
     const auto non_listed_fixture = create_database_fixture(root / "NoList", "exact_access");
     std::error_code permission_error;
@@ -312,17 +335,20 @@ void test_path_resolution_casefold_and_verified_bytes() {
            "an exact readable DBC path should survive unavailable parent enumeration: " +
                non_listed.message);
 
-    const auto lowercase_fixture = create_database_fixture(root / "Data", "catalog");
-    const auto distinct_case = run_program(
-        root,
-        "distinct_case.prg",
-        "OPEN DATABASE '" + fixture.dbc.string() + "' SHARED\n"
-        "OPEN DATABASE '" + lowercase_fixture.dbc.string() + "' SHARED\n"
-        "RETURN\n");
-    expect(distinct_case.completed,
-           "POSIX should admit distinct database paths that differ only by case: " + distinct_case.message);
-    expect(distinct_case.databases.size() == 2U,
-           "POSIX database identity should not collapse distinct case-sensitive paths");
+    if (supports_distinct_case_entries) {
+        const auto lowercase_fixture = create_database_fixture(root / "Data", "catalog");
+        const auto distinct_case = run_program(
+            root,
+            "distinct_case.prg",
+            "OPEN DATABASE '" + fixture.dbc.string() + "' SHARED\n"
+            "OPEN DATABASE '" + lowercase_fixture.dbc.string() + "' SHARED\n"
+            "RETURN\n");
+        expect(distinct_case.completed,
+               "case-sensitive POSIX paths should admit distinct database names: " +
+                   distinct_case.message);
+        expect(distinct_case.databases.size() == 2U,
+               "database identity should preserve distinct case-sensitive paths");
+    }
 #endif
     fs::remove_all(root, ignored);
 }
