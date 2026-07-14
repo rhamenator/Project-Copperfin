@@ -675,7 +675,7 @@ The native runtime/parser currently has first-pass support for these command fam
 - `READ EVENTS`, `CLEAR EVENTS`
 - `REPLACE`
 - `APPEND BLANK`
-- `DELETE`, `RECALL`
+- `DELETE`, `RECALL` — current-record commands plus `ALL`, `NEXT <n>`, `RECORD <n>`, and `REST` physical record scopes composed with `FOR`, `WHILE`, `IN`, active filters, and the existing `SET DELETED` behavior for local and synthetic SQL/result cursors
 - `DELETE FROM`
 - `INSERT INTO`
 - `PACK`, `ZAP`

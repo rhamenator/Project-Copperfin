@@ -2056,27 +2056,65 @@ Program parse_program_impl(
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;
             const std::string body = upper == "DELETE" ? std::string{} : trim_copy(line.substr(7U));
+            const std::size_t clause_position = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
+            const std::string scope_text = clause_position == std::string::npos
+                                               ? body
+                                               : trim_copy(body.substr(0U, clause_position));
+            std::string remaining_scope_text;
+            const AggregateScopeClause scope = parse_aggregate_scope_clause(scope_text, remaining_scope_text);
+            if (remaining_scope_text != trim_copy(scope_text)) {
+                switch (scope.kind) {
+                case AggregateScopeKind::all_records:
+                    statement.identifier = "all";
+                    break;
+                case AggregateScopeKind::rest_records:
+                    statement.identifier = "rest";
+                    break;
+                case AggregateScopeKind::next_records:
+                    statement.identifier = "next";
+                    break;
+                case AggregateScopeKind::record:
+                    statement.identifier = "record";
+                    break;
+                }
+                if (!scope.raw_value.empty()) {
+                    statement.names.push_back(scope.raw_value);
+                }
+            }
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
-            const std::string first_word = normalize_identifier(split_first_word(body).first);
-            if (first_word == "all" &&
-                trim_copy(statement.expression).empty() &&
-                trim_copy(statement.tertiary_expression).empty()) {
-                statement.quaternary_expression = "all";
-            }
         } else if (upper == "RECALL" || starts_with_insensitive(line, "RECALL ")) {
             statement.kind = StatementKind::recall_command;
             const std::string body = upper == "RECALL" ? std::string{} : trim_copy(line.substr(7U));
+            const std::size_t clause_position = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
+            const std::string scope_text = clause_position == std::string::npos
+                                               ? body
+                                               : trim_copy(body.substr(0U, clause_position));
+            std::string remaining_scope_text;
+            const AggregateScopeClause scope = parse_aggregate_scope_clause(scope_text, remaining_scope_text);
+            if (remaining_scope_text != trim_copy(scope_text)) {
+                switch (scope.kind) {
+                case AggregateScopeKind::all_records:
+                    statement.identifier = "all";
+                    break;
+                case AggregateScopeKind::rest_records:
+                    statement.identifier = "rest";
+                    break;
+                case AggregateScopeKind::next_records:
+                    statement.identifier = "next";
+                    break;
+                case AggregateScopeKind::record:
+                    statement.identifier = "record";
+                    break;
+                }
+                if (!scope.raw_value.empty()) {
+                    statement.names.push_back(scope.raw_value);
+                }
+            }
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
-            const std::string first_word = normalize_identifier(split_first_word(body).first);
-            if (first_word == "all" &&
-                trim_copy(statement.expression).empty() &&
-                trim_copy(statement.tertiary_expression).empty()) {
-                statement.quaternary_expression = "all";
-            }
         } else if (upper == "PACK" || starts_with_insensitive(line, "PACK ")) {
             statement.kind = StatementKind::pack_command;
             const std::string body = upper == "PACK" ? std::string{} : trim_copy(line.substr(5U));

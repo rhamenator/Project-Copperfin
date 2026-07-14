@@ -1335,6 +1335,7 @@
         bool set_deleted_flag(
             CursorState &cursor,
             const Frame &frame,
+            const std::optional<AggregateScopeClause> &scope,
             const std::string &for_expression,
             const std::string &while_expression,
             bool deleted)
@@ -1342,7 +1343,7 @@
             if (cursor.remote)
             {
                 std::vector<std::size_t> target_records;
-                if (for_expression.empty() && while_expression.empty())
+                if (!scope.has_value() && for_expression.empty() && while_expression.empty())
                 {
                     if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size())
                     {
@@ -1353,20 +1354,13 @@
                 }
                 else
                 {
-                    const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
-                    for (std::size_t index = 0; index < cursor.remote_records.size(); ++index)
-                    {
-                        move_cursor_to(cursor, static_cast<long long>(index + 1U));
-                        if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor)))
-                        {
-                            break;
-                        }
-                        if (current_record_matches_visibility(cursor, frame, for_expression, deleted))
-                        {
-                            target_records.push_back(index + 1U);
-                        }
-                    }
-                    restore_cursor_snapshot(cursor, original);
+                    target_records = collect_aggregate_scope_records(
+                        cursor,
+                        frame,
+                        scope.value_or(AggregateScopeClause{}),
+                        for_expression,
+                        while_expression,
+                        deleted);
                 }
 
                 for (const std::size_t recno : target_records)
@@ -1386,7 +1380,7 @@
             }
 
             std::vector<std::size_t> target_records;
-            if (for_expression.empty() && while_expression.empty())
+            if (!scope.has_value() && for_expression.empty() && while_expression.empty())
             {
                 if (cursor.recno == 0U || cursor.eof)
                 {
@@ -1397,27 +1391,13 @@
             }
             else
             {
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
-                if (!table_result.ok)
-                {
-                    last_error_message = table_result.error;
-                    return false;
-                }
-
-                const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
-                for (const auto &record : table_result.table.records)
-                {
-                    move_cursor_to(cursor, static_cast<long long>(record.record_index + 1U));
-                    if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor)))
-                    {
-                        break;
-                    }
-                    if (current_record_matches_visibility(cursor, frame, for_expression, deleted))
-                    {
-                        target_records.push_back(record.record_index + 1U);
-                    }
-                }
-                restore_cursor_snapshot(cursor, original);
+                target_records = collect_aggregate_scope_records(
+                    cursor,
+                    frame,
+                    scope.value_or(AggregateScopeClause{}),
+                    for_expression,
+                    while_expression,
+                    deleted);
             }
 
             for (const std::size_t recno : target_records)

@@ -351,6 +351,100 @@ void test_replace_scope_clauses_bound_physical_record_ranges() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_delete_and_recall_scope_clauses_bound_physical_record_ranges() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delete_recall_scopes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(
+        table_path,
+        {{"ALPHA", 1}, {"BRAVO", 2}, {"CHARLIE", 3}, {"DELTA", 4}, {"ECHO", 5}});
+
+    const fs::path main_path = temp_root / "delete_recall_scopes.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "nNext = 2\n"
+        "DELETE NEXT nNext IN People\n"
+        "GO 1 IN People\n"
+        "lDeleteNext1 = DELETED()\n"
+        "GO 2 IN People\n"
+        "lDeleteNext2 = DELETED()\n"
+        "GO 3 IN People\n"
+        "lDeleteNext3 = DELETED()\n"
+        "GO 4 IN People\n"
+        "lDeleteNext4 = DELETED()\n"
+        "GO 2 IN People\n"
+        "RECALL NEXT nNext IN People\n"
+        "GO 2 IN People\n"
+        "lRecallNext2 = DELETED()\n"
+        "GO 3 IN People\n"
+        "lRecallNext3 = DELETED()\n"
+        "DELETE RECORD 4 IN People\n"
+        "GO 4 IN People\n"
+        "lDeleteRecord4 = DELETED()\n"
+        "RECALL RECORD 4 IN People\n"
+        "GO 4 IN People\n"
+        "lRecallRecord4 = DELETED()\n"
+        "GO 3 IN People\n"
+        "DELETE REST IN People\n"
+        "GO 2 IN People\n"
+        "lDeleteRest2 = DELETED()\n"
+        "GO 3 IN People\n"
+        "lDeleteRest3 = DELETED()\n"
+        "GO 5 IN People\n"
+        "lDeleteRest5 = DELETED()\n"
+        "GO 3 IN People\n"
+        "RECALL REST IN People\n"
+        "GO 3 IN People\n"
+        "lRecallRest3 = DELETED()\n"
+        "GO 5 IN People\n"
+        "lRecallRest5 = DELETED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#4030: DELETE/RECALL scope-clause script should complete");
+
+    const auto expect_global = [&](const std::string& name, const std::string& expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), "#4030: scope script should capture " + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   "#4030: scope result mismatch for " + name);
+        }
+    };
+    expect_global("ldeletenext1", "false");
+    expect_global("ldeletenext2", "true");
+    expect_global("ldeletenext3", "true");
+    expect_global("ldeletenext4", "false");
+    expect_global("lrecallnext2", "false");
+    expect_global("lrecallnext3", "false");
+    expect_global("ldeleterecord4", "true");
+    expect_global("lrecallrecord4", "false");
+    expect_global("ldeleterest2", "false");
+    expect_global("ldeleterest3", "true");
+    expect_global("ldeleterest5", "true");
+    expect_global("lrecallrest3", "false");
+    expect_global("lrecallrest5", "false");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok && parse_result.table.records.size() == 5U,
+           "#4030: DELETE/RECALL scope table should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 5U) {
+        expect(std::none_of(parse_result.table.records.begin(), parse_result.table.records.end(), [](const auto& record) {
+            return record.deleted;
+        }), "#4030: matching RECALL scopes should restore every scoped record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_replace_additive_appends_only_memo_assignments() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_additive";
@@ -3002,6 +3096,7 @@ int main() {
     test_delete_all_and_recall_all_affect_whole_local_table();
     test_replace_for_updates_all_matching_records();
     test_replace_scope_clauses_bound_physical_record_ranges();
+    test_delete_and_recall_scope_clauses_bound_physical_record_ranges();
     test_replace_additive_appends_only_memo_assignments();
     test_replace_matches_local_field_names_case_insensitively();
     test_undo_restores_scoped_additive_replace_bytes();

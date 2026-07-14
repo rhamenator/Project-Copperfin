@@ -2731,14 +2731,32 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                const std::string delete_for_expression =
-                    normalize_identifier(statement.quaternary_expression) == "all" &&
-                            trim_copy(statement.expression).empty()
-                        ? ".T."
-                        : statement.expression;
+                std::optional<AggregateScopeClause> delete_scope;
+                if (!statement.identifier.empty())
+                {
+                    AggregateScopeClause parsed_scope;
+                    if (!statement.names.empty())
+                    {
+                        parsed_scope.raw_value = statement.names.front();
+                    }
+                    if (statement.identifier == "rest")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::rest_records;
+                    }
+                    else if (statement.identifier == "next")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::next_records;
+                    }
+                    else if (statement.identifier == "record")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::record;
+                    }
+                    delete_scope = std::move(parsed_scope);
+                }
                 if (!execute_with_command_undo(cursor->source_path, "DELETE", [&]
                     {
-                        return set_deleted_flag(*cursor, frame, delete_for_expression, statement.tertiary_expression, true);
+                        return set_deleted_flag(
+                            *cursor, frame, delete_scope, statement.expression, statement.tertiary_expression, true);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2746,11 +2764,15 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string delete_detail =
-                    normalize_identifier(statement.quaternary_expression) == "all" &&
-                            trim_copy(statement.expression).empty()
-                        ? "ALL"
-                        : (statement.expression.empty() ? cursor->alias : statement.expression);
+                std::string delete_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+                if (delete_scope.has_value())
+                {
+                    delete_detail = uppercase_copy(statement.identifier);
+                    if (!delete_scope->raw_value.empty())
+                    {
+                        delete_detail += " " + delete_scope->raw_value;
+                    }
+                }
                 if (!trim_copy(statement.tertiary_expression).empty())
                 {
                     delete_detail += " WHILE " + statement.tertiary_expression;
@@ -2776,7 +2798,8 @@
                                                          : statement.expression;
                 if (!execute_with_command_undo(cursor->source_path, "DELETE FROM", [&]
                     {
-                        return set_deleted_flag(*cursor, frame, where_expression, statement.tertiary_expression, true);
+                        return set_deleted_flag(
+                            *cursor, frame, std::nullopt, where_expression, statement.tertiary_expression, true);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2805,14 +2828,32 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                const std::string recall_for_expression =
-                    normalize_identifier(statement.quaternary_expression) == "all" &&
-                            trim_copy(statement.expression).empty()
-                        ? ".T."
-                        : statement.expression;
+                std::optional<AggregateScopeClause> recall_scope;
+                if (!statement.identifier.empty())
+                {
+                    AggregateScopeClause parsed_scope;
+                    if (!statement.names.empty())
+                    {
+                        parsed_scope.raw_value = statement.names.front();
+                    }
+                    if (statement.identifier == "rest")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::rest_records;
+                    }
+                    else if (statement.identifier == "next")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::next_records;
+                    }
+                    else if (statement.identifier == "record")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::record;
+                    }
+                    recall_scope = std::move(parsed_scope);
+                }
                 if (!execute_with_command_undo(cursor->source_path, "RECALL", [&]
                     {
-                        return set_deleted_flag(*cursor, frame, recall_for_expression, statement.tertiary_expression, false);
+                        return set_deleted_flag(
+                            *cursor, frame, recall_scope, statement.expression, statement.tertiary_expression, false);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2820,11 +2861,15 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string recall_detail =
-                    normalize_identifier(statement.quaternary_expression) == "all" &&
-                            trim_copy(statement.expression).empty()
-                        ? "ALL"
-                        : (statement.expression.empty() ? cursor->alias : statement.expression);
+                std::string recall_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+                if (recall_scope.has_value())
+                {
+                    recall_detail = uppercase_copy(statement.identifier);
+                    if (!recall_scope->raw_value.empty())
+                    {
+                        recall_detail += " " + recall_scope->raw_value;
+                    }
+                }
                 if (!trim_copy(statement.tertiary_expression).empty())
                 {
                     recall_detail += " WHILE " + statement.tertiary_expression;
