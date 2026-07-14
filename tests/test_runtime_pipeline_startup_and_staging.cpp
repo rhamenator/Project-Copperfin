@@ -210,6 +210,125 @@ void test_file_valued_home_directory_falls_back_to_project_directory() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_relative_home_directory_resolves_from_project_directory() {
+    namespace fs = std::filesystem;
+
+    struct RelativeHomeCase {
+        std::string spelling;
+        fs::path relative_path;
+        bool exists_in_project = false;
+    };
+
+    const fs::path original_working_directory = fs::current_path();
+    const std::vector<RelativeHomeCase> home_cases{
+        {"source/home", fs::path("source") / "home", true},
+        {"source\\home", fs::path("source") / "home", true},
+        {"missing/home", fs::path("missing") / "home", false}
+    };
+
+    for (std::size_t case_index = 0U; case_index < home_cases.size(); ++case_index) {
+        const RelativeHomeCase& home_case = home_cases[case_index];
+        const fs::path temp_root =
+            fs::temp_directory_path() /
+            ("copperfin_runtime_pipeline_relative_home_" + std::to_string(case_index));
+        const fs::path project_dir = temp_root / "project";
+        const fs::path expected_home = project_dir / home_case.relative_path;
+        const fs::path expected_working_directory =
+            home_case.exists_in_project ? expected_home : project_dir;
+        const fs::path unrelated_working_directory = temp_root / "unrelated";
+        const fs::path cwd_decoy_home = unrelated_working_directory / home_case.relative_path;
+        const fs::path output_dir = temp_root / "output";
+        const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(project_dir);
+        if (home_case.exists_in_project) {
+            fs::create_directories(expected_home);
+        }
+        fs::create_directories(cwd_decoy_home);
+        write_text(project_dir / "main.prg", "RETURN\n");
+        write_text(runtime_host, "runtime-host");
+
+        copperfin::studio::StudioDocumentModel document;
+        document.path = (project_dir / "relative_home.pjx").string();
+
+        copperfin::studio::StudioProjectWorkspace workspace;
+        workspace.available = true;
+        workspace.project_title = "RelativeHome" + std::to_string(case_index);
+        workspace.home_directory = home_case.spelling;
+        workspace.build_plan.available = true;
+        workspace.build_plan.can_build = true;
+        workspace.build_plan.project_title = workspace.project_title;
+        workspace.build_plan.output_path =
+            (output_dir / (workspace.project_title + ".exe")).string();
+        workspace.build_plan.startup_item = "main.prg";
+        workspace.build_plan.startup_record_index = 1U;
+        workspace.entries = {
+            {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+        };
+
+        std::error_code current_path_error;
+        fs::current_path(unrelated_working_directory, current_path_error);
+        expect(!current_path_error,
+               "#4051: relative-home fixture should enter an unrelated working directory");
+        const auto plan = copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            false,
+            false);
+        fs::current_path(original_working_directory, current_path_error);
+        expect(!current_path_error,
+               "#4051: relative-home fixture should restore its original working directory");
+
+        const std::string expected_working_directory_path =
+            expected_working_directory.lexically_normal().string();
+        expect(plan.ok,
+               "#4051: a project-relative home should permit package planning");
+        expect(plan.debug_plan.working_directory == expected_working_directory_path,
+               "#4051: a project-relative home should resolve from the PJX directory or fall back there when missing");
+        expect(plan.debug_plan.source_roots.size() == 2U,
+               "#4051: relative-home debug planning should retain source and content roots");
+        if (plan.debug_plan.source_roots.size() == 2U) {
+            expect(plan.debug_plan.source_roots.front() == expected_working_directory_path,
+                   "#4051: the resolved or fallback project directory should be the first debug source root");
+            expect(plan.debug_plan.source_roots.back() == plan.content_root,
+                   "#4051: the package content root should remain the second debug source root");
+        }
+        expect(std::find(
+                   plan.debug_plan.source_roots.begin(),
+                   plan.debug_plan.source_roots.end(),
+                   cwd_decoy_home.lexically_normal().string()) == plan.debug_plan.source_roots.end(),
+               "#4051: process-CWD decoys must not enter debug source roots");
+
+        const auto result = copperfin::runtime::materialize_runtime_package(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            runtime_host.string());
+        expect(result.ok,
+               "#4051: a package with a project-relative home should materialize");
+        if (result.ok) {
+            const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+            expect(manifest_value_for_key(debug_manifest, "working_directory") ==
+                       quote_manifest_value(expected_working_directory_path),
+                   "#4051: app.cfdebug should record the resolved or fallback project-relative home");
+            const std::string expected_source_roots =
+                expected_working_directory_path + ";" + result.plan.content_root;
+            expect(manifest_value_for_key(debug_manifest, "source_roots") ==
+                       quote_manifest_value(expected_source_roots),
+                   "#4051: app.cfdebug should preserve resolved source-root ordering");
+            expect(debug_manifest.find(cwd_decoy_home.lexically_normal().string()) == std::string::npos,
+                   "#4051: app.cfdebug must not serialize a process-CWD decoy home");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_materialize_runtime_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_tests";

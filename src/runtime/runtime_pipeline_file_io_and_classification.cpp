@@ -28,10 +28,15 @@ std::vector<std::string> split_normalized_path_segments(const std::string& value
     return segments;
 }
 
+bool has_windows_drive_designator(const std::string& value) {
+    return value.size() >= 2U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':';
+}
+
 bool is_windows_drive_absolute_path(const std::string& value) {
     return value.size() >= 3U &&
-        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
-        value[1] == ':' &&
+        has_windows_drive_designator(value) &&
         (value[2] == '\\' || value[2] == '/');
 }
 
@@ -619,7 +624,17 @@ std::string resolve_working_directory(
     const studio::StudioProjectWorkspace& workspace) {
     const std::filesystem::path document_dir = std::filesystem::path(document.path).parent_path();
     if (!workspace.home_directory.empty()) {
-        const std::filesystem::path home_directory(workspace.home_directory);
+        const std::string normalized_home_directory =
+            normalize_vfp_separators(workspace.home_directory);
+        const std::filesystem::path normalized_home_path(normalized_home_directory);
+        const bool is_project_relative =
+            !is_vfp_absolute_path(normalized_home_directory) &&
+            !has_windows_drive_designator(normalized_home_directory) &&
+            !normalized_home_path.has_root_path() &&
+            normalized_home_path.is_relative();
+        const std::filesystem::path home_directory = is_project_relative
+            ? resolve_vfp_path_from_base(document_dir, workspace.home_directory)
+            : std::filesystem::path(workspace.home_directory);
         std::error_code directory_error;
         if (std::filesystem::is_directory(home_directory, directory_error) && !directory_error) {
             return home_directory.lexically_normal().string();
