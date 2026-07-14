@@ -293,7 +293,22 @@ bool run_dotnet_publish(
         return false;
     }
 
-    if (!std::filesystem::exists(plan.launcher_output_path)) {
+    const std::filesystem::path published_launcher =
+        output_dir / (project_path.stem().string() + ".exe");
+    const std::filesystem::path configured_launcher(plan.launcher_output_path);
+    if (!std::filesystem::exists(published_launcher)) {
+        error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+        return false;
+    }
+    if (published_launcher != configured_launcher) {
+        std::error_code rename_error;
+        std::filesystem::rename(published_launcher, configured_launcher, rename_error);
+        if (rename_error) {
+            error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+            return false;
+        }
+    }
+    if (!std::filesystem::exists(configured_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }

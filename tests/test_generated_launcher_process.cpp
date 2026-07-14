@@ -412,10 +412,9 @@ int run_generated_launcher_test(
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = workspace.project_title;
-    const std::string configured_launcher_name =
-        "Configured $(Configuration) @(Items); 100% & Launcher.exe";
+    const std::string direct_launcher_name = "Copperfin.GeneratedLauncher.exe";
     workspace.build_plan.output_path =
-        (output_dir / configured_launcher_name).string();
+        (output_dir / direct_launcher_name).string();
     workspace.build_plan.startup_item = "main program.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -483,12 +482,10 @@ int run_generated_launcher_test(
     expect(fs::exists(materialized.plan.launcher_output_path),
            "dotnet publish should materialize the planned launcher executable");
     expect(
-        fs::path(materialized.plan.launcher_output_path).filename() == configured_launcher_name,
-        "dotnet publish should preserve the configured launcher filename");
+        fs::path(materialized.plan.launcher_output_path).filename() == direct_launcher_name,
+        "direct dotnet publish should materialize the stable internal launcher filename");
     expect(!fs::exists(package_root / "Generated_Launcher_Project.exe"),
            "dotnet publish should not leave a title-derived alternate launcher");
-    expect(!fs::exists(package_root / "Copperfin.GeneratedLauncher.exe"),
-           "dotnet publish should not leave a legacy alternate launcher");
     if (failures != 0) {
         std::cerr << "fixture root: " << temp_root << "\n";
         return 1;
@@ -508,7 +505,7 @@ int run_generated_launcher_test(
     expect(manifest_value(debug_manifest, "debug_manifest_version") == "3" &&
                manifest_value(debug_manifest, "primary_output_materialized") == "true" &&
                manifest_value(debug_manifest, "primary_output_path").find(
-                   configured_launcher_name) != std::string::npos,
+                   direct_launcher_name) != std::string::npos,
            "configured launcher finalization should retain output provenance in app.cfdebug");
     if (!finalized.ok || failures != 0) {
         std::cerr << "fixture root: " << temp_root << "\n";
@@ -538,6 +535,8 @@ int run_generated_launcher_test(
     const std::string build_host_project_title = "Build Host Launcher Project";
     const fs::path build_host_package_root =
         build_host_output_root / "Build_Host_Launcher_Project";
+    const std::string configured_launcher_name =
+        "Configured $(Configuration) @(Items); 100% & Launcher.exe";
     const fs::path build_host_launcher = build_host_package_root / configured_launcher_name;
     fs::create_directories(build_host_project_dir);
     fs::create_directories(build_host_output_root);

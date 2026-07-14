@@ -102,9 +102,8 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             fs::path(result.plan.launcher_output_path).filename() ==
                 "Configured $(Configuration) @(Items); 100% & Launcher.exe" &&
             launcher_project.find(
-                "<AssemblyName>Configured %24%28Configuration%29 %40%28Items%29%3B 100%25 &amp; Launcher</AssemblyName>") !=
-                std::string::npos,
-            "generated launcher project should derive its assembly name from the configured output filename");
+                "<AssemblyName>Copperfin.GeneratedLauncher</AssemblyName>") != std::string::npos,
+            "generated launcher project should keep a stable internal assembly name beside the configured output contract");
         expect(
             launcher_project.find("<EnableDefaultCompileItems>false</EnableDefaultCompileItems>") != std::string::npos &&
             launcher_project.find("<Compile Include=\"Program.cs\" />") != std::string::npos,

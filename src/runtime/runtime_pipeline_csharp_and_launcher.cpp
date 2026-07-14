@@ -8,58 +8,6 @@ namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
 
-static std::string msbuild_property_text_escape(std::string_view value) {
-    std::string escaped;
-    escaped.reserve(value.size());
-    for (const char ch : value) {
-        switch (ch) {
-            case '%':
-                escaped += "%25";
-                break;
-            case '$':
-                escaped += "%24";
-                break;
-            case '@':
-                escaped += "%40";
-                break;
-            case '\'':
-                escaped += "%27";
-                break;
-            case ';':
-                escaped += "%3B";
-                break;
-            case '?':
-                escaped += "%3F";
-                break;
-            case '*':
-                escaped += "%2A";
-                break;
-            case '(':
-                escaped += "%28";
-                break;
-            case ')':
-                escaped += "%29";
-                break;
-            case '&':
-                escaped += "&amp;";
-                break;
-            case '<':
-                escaped += "&lt;";
-                break;
-            case '>':
-                escaped += "&gt;";
-                break;
-            case '\"':
-                escaped += "&quot;";
-                break;
-            default:
-                escaped.push_back(ch);
-                break;
-        }
-    }
-    return escaped;
-}
-
 std::map<std::string, std::map<std::string, std::string>> build_generated_launcher_localized_messages() {
     static const std::vector<std::string_view> locales{
         "en-US",
@@ -573,10 +521,8 @@ std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
 
 std::string build_launcher_project_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
-    std::string assembly_name = std::filesystem::path(plan.launcher_output_path).stem().string();
-    if (assembly_name.empty()) {
-        assembly_name = sanitize_file_name(plan.project_title);
-    }
+    const std::string assembly_name =
+        std::filesystem::path(plan.launcher_project_path).stem().string();
     stream << "<Project Sdk=\"Microsoft.NET.Sdk\">\n";
     stream << "  <PropertyGroup>\n";
     stream << "    <OutputType>Exe</OutputType>\n";
@@ -585,7 +531,7 @@ std::string build_launcher_project_source(const RuntimePackagePlan& plan) {
     stream << "    <Nullable>enable</Nullable>\n";
     stream << "    <UseWindowsForms>false</UseWindowsForms>\n";
     stream << "    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>\n";
-    stream << "    <AssemblyName>" << msbuild_property_text_escape(assembly_name) << "</AssemblyName>\n";
+    stream << "    <AssemblyName>" << assembly_name << "</AssemblyName>\n";
     stream << "    <RootNamespace>Copperfin.Generated</RootNamespace>\n";
     stream << "    <PublishSingleFile>false</PublishSingleFile>\n";
     stream << "  </PropertyGroup>\n";
