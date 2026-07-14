@@ -137,11 +137,13 @@ namespace
             "padr_truncate = PADR('abcdef', 3)\n"
             "padc_truncate = PADC('abcdef', 3)\n"
             "pad_custom = PADL('7', 3, '0')\n"
-            "like_hit = LIKE('A?C*', 'abc legacy')\n"
+            "like_hit = LIKE('a?c*', 'abc legacy')\n"
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
+            "like_case_miss_exact_default = LIKE('A?C*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
             "inlist_miss = INLIST(4, 1, 2, 3)\n"
             "SET EXACT ON\n"
+            "like_case_miss_exact_on = LIKE('A?C*', 'abc legacy')\n"
             "inlist_exact_leading_miss = INLIST(' beta', 'beta')\n"
             "inlist_exact_leading_hit = INLIST(' beta', ' beta')\n"
             "inlist_exact_trailing_hit = INLIST('beta  ', 'beta')\n"
@@ -149,6 +151,7 @@ namespace
             "inlist_exact_tab_miss = INLIST('beta' + CHR(9), 'beta')\n"
             "inlist_exact_nul_miss = INLIST('beta' + CHR(0), 'beta')\n"
             "SET EXACT OFF\n"
+            "like_case_miss_exact_off = LIKE('A?C*', 'abc legacy')\n"
             "inlist_off_prefix_hit = INLIST('alphabet', 'alpha')\n"
             "inlist_off_reverse_miss = INLIST('alpha', 'alphabet')\n"
             "getwordcount_1 = GETWORDCOUNT('one two three')\n"
@@ -356,6 +359,9 @@ namespace
         check("pad_custom", "007");
         check("like_hit", "true");
         check("like_miss", "false");
+        check("like_case_miss_exact_default", "false");
+        check("like_case_miss_exact_on", "false");
+        check("like_case_miss_exact_off", "false");
         check("inlist_hit", "true");
         check("inlist_miss", "false");
         check("inlist_exact_leading_miss", "false");

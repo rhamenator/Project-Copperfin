@@ -21,9 +21,9 @@ namespace copperfin::runtime {
 
 namespace {
 
-bool wildcard_match_insensitive_local(const std::string& pattern, const std::string& text) {
-    const std::string p = lowercase_copy(pattern);
-    const std::string t = lowercase_copy(text);
+bool wildcard_match_case_sensitive_local(const std::string& pattern, const std::string& text) {
+    const std::string& p = pattern;
+    const std::string& t = text;
     std::size_t pattern_index = 0U;
     std::size_t text_index = 0U;
     std::size_t star_index = std::string::npos;
@@ -609,7 +609,7 @@ std::optional<PrgValue> evaluate_string_function(
         return make_number_value(static_cast<double>(score));
     }
     if (function == "like" && arguments.size() >= 2U) {
-        return make_boolean_value(wildcard_match_insensitive_local(
+        return make_boolean_value(wildcard_match_case_sensitive_local(
             value_as_string(arguments[0]),
             value_as_string(arguments[1])));
     }
