@@ -116,7 +116,7 @@ std::optional<int> parse_scaled_int(const DbfRecord& record, std::string_view fi
         return std::nullopt;
     }
 
-    return value;
+    return vfp::truncate_report_layout_geometry(static_cast<double>(value));
 }
 
 int parse_scaled_int_or_default(const DbfRecord& record, std::string_view field_name, int fallback = 0) {

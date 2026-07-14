@@ -31,7 +31,7 @@ int parse_record_int_or_default(const DbfRecord& record, const std::string& fiel
         return 0;
     }
 
-    return static_cast<int>(std::llround(*parsed));
+    return truncate_report_layout_geometry(*parsed);
 }
 
 bool is_report_band_record(const DbfRecord& record) {

@@ -350,6 +350,55 @@ void test_report_settings_topmargin_and_tag_memo_round_trips() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_fractional_report_section_moves_follow_layout_membership() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_fractional_section_move_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto run_move = [&](const fs::path& asset_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "VPOS", .type = 'N', .length = 12U, .decimal_count = 2U},
+            {.name = "HEIGHT", .type = 'N', .length = 12U, .decimal_count = 2U},
+            {.name = "UNIQUEID", .type = 'C', .length = 40U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            asset_path.string(), fields, {
+                {"9", "0.60", "10.60", "first-section"},
+                {"9", "10.60", "10.60", "second-section"},
+                {"5", "10.40", "1.00", "boundary-object"}
+            });
+        expect(create_result.ok, "#4061: fractional section fixture should be writable");
+
+        const auto move_result = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "second-section",
+            .property_name = "VPOS",
+            .property_value = "20.60"
+        });
+        expect(move_result.ok,
+               "#4061: moving the displayed containing section should include its fractional-boundary object");
+        const auto object_top = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 2U,
+            .object_name = {},
+            .unique_id = "boundary-object",
+            .property_name = "VPOS"
+        });
+        expect(object_top.ok && object_top.exists && object_top.value == "20.4",
+               "#4061: fractional section move should preserve the object's layout membership and relative top after reopen");
+    };
+
+    run_move(temp_dir / "fractional_section_move.frx");
+    run_move(temp_dir / "fractional_section_move.lbx");
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_query_visual_object_property_reads_selected_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
