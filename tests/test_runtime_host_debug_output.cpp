@@ -60,12 +60,6 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
-std::string canonical_existing_path_string(const std::filesystem::path& path) {
-    std::error_code error;
-    const std::filesystem::path canonical_path = std::filesystem::canonical(path, error);
-    return error ? path.lexically_normal().string() : canonical_path.string();
-}
-
 void write_synthetic_database_index(const std::filesystem::path& path) {
     std::vector<std::uint8_t> bytes(16U * 512U, 0U);
     const auto write_le_u16 = [&](std::size_t offset, std::uint16_t value) {
@@ -1913,7 +1907,7 @@ void test_runtime_host_supports_breakpoint_management_commands(const std::string
         "nValue = 1\n"
         "nValue = 2\n"
         "RETURN\n");
-    const std::string expected_startup_path = canonical_existing_path_string(startup_path);
+    const std::string expected_startup_path = startup_path.string();
     write_text(
         manifest_path,
         "manifest_version=1\n"
@@ -1987,7 +1981,7 @@ void test_runtime_host_supports_single_breakpoint_removal(const std::string& run
         "nValue = 1\n"
         "nValue = 2\n"
         "RETURN\n");
-    const std::string expected_startup_path = canonical_existing_path_string(startup_path);
+    const std::string expected_startup_path = startup_path.string();
     write_text(
         manifest_path,
         "manifest_version=1\n"
