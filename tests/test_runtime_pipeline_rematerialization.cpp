@@ -109,8 +109,21 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
     expect(fs::exists(content_root / "old_name.prg"),
            "initial package should stage the original named asset");
 
-    fs::remove(project_dir / "startup.sct", ignored);
     fs::remove(project_dir / "old_name.prg", ignored);
+    const auto stale_plan_result = materialize_rematerialization_plan(first_result.plan, runtime_host);
+    expect(stale_plan_result.ok,
+           "re-materializing a returned plan should tolerate a removed optional asset");
+    const auto stale_asset = std::find_if(
+        stale_plan_result.plan.assets.begin(),
+        stale_plan_result.plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.relative_path == "old_name.prg";
+        });
+    expect(stale_asset != stale_plan_result.plan.assets.end() &&
+               !stale_asset->copied &&
+               stale_asset->sha256.empty(),
+           "re-materializing a returned plan must clear stale optional-asset copy and digest state");
+    fs::remove(project_dir / "startup.sct", ignored);
     write_text(project_dir / "new_name.prg", "RETURN\n");
     workspace.entries = {
         {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form"},

@@ -904,6 +904,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     RuntimePackagePlan materialized_plan = plan;
     materialized_plan.primary_output_materialized = false;
     materialized_plan.launcher_artifacts.clear();
+    materialized_plan.runtime_host_sha256.clear();
+    materialized_plan.compiler_contract_digests.clear();
     materialized_plan.extension_payload_digests.clear();
     materialized_plan.writable_data_payload_digests.clear();
     for (auto& asset : materialized_plan.assets) {
