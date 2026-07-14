@@ -108,9 +108,9 @@ void run_windows_drive_relative_case(
     }
     const fs::path source_temp_parent = user_profile / "AppData" / "Local" / "Temp";
     const fs::path temp_root = source_temp_parent /
-        ("copperfin_drive_relative_" + identity);
-    const fs::path source_current = temp_root / "source-current";
-    const fs::path external_root = temp_root / "external-sentinel";
+        (expect_different_drive ? "cf4065d" : "cf4065s");
+    const fs::path source_current = temp_root / "s";
+    const fs::path external_root = temp_root / "e";
     const fs::path external_target =
         external_root / ("payload" + primary_extension);
     fs::path external_companion = external_target;
@@ -119,8 +119,8 @@ void run_windows_drive_relative_case(
     const fs::path source_target = source_current / tail;
     fs::path source_companion = source_target;
     source_companion.replace_extension(companion_extension);
-    const fs::path project_dir = project_parent / ("project-" + identity);
-    const fs::path output_dir = project_parent / ("output-" + identity);
+    const fs::path project_dir = project_parent / "p";
+    const fs::path output_dir = project_parent / "o";
     const fs::path runtime_host = runtime_host_fixture_path(temp_root);
 
     expect(source_target.native().size() > 64U,
@@ -144,7 +144,7 @@ void run_windows_drive_relative_case(
 
     const std::string source_root_name = source_drive.root_name().string();
     const std::string drive_relative = source_root_name + tail.generic_string();
-    const fs::path missing_tail = fs::path("missing-" + identity) / missing_name;
+    const fs::path missing_tail = fs::path("m") / missing_name;
     const std::string missing_drive_relative =
         source_root_name + missing_tail.generic_string();
     const bool different_drive =
@@ -273,7 +273,7 @@ void test_drive_relative_asset_paths_use_contained_package_identity() {
     }
     const fs::path same_drive_parent =
         user_profile / "AppData" / "Local" / "Temp" /
-        "copperfin_drive_relative_same_drive_parent";
+        "cf4065p";
     run_windows_drive_relative_case(
         same_drive_parent,
         "same_drive_report",
@@ -284,7 +284,7 @@ void test_drive_relative_asset_paths_use_contained_package_identity() {
 
     const fs::path mapping_target =
         user_profile / "AppData" / "Local" / "Temp" /
-        "copperfin_drive_relative_project_mapping";
+        "cf4065m";
     std::error_code ignored;
     fs::remove_all(mapping_target, ignored);
     fs::create_directories(mapping_target);
@@ -293,8 +293,7 @@ void test_drive_relative_asset_paths_use_contained_package_identity() {
     expect(mapped,
            "#4065: different-drive validation should create a temporary drive mapping");
     if (mapped) {
-        const fs::path different_drive_parent = mapped_drive_root /
-            "copperfin_drive_relative_different_drive_parent";
+        const fs::path different_drive_parent = mapped_drive_root / "p";
         run_windows_drive_relative_case(
             different_drive_parent,
             "different_drive_label",
