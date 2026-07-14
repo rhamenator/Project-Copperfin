@@ -1331,6 +1331,8 @@
             const std::string normalized_source = normalize_identifier(source);
             if (normalized_source == "createobject" || normalized_source == "newobject")
             {
+                Program &program = load_program(frame.file_path);
+                const bool native_class_found = find_native_class_lookup(program, prog_id).has_value();
                 RuntimeOleObjectState *runtime_object = instantiate_native_class_object(
                     frame,
                     prog_id,
@@ -1341,6 +1343,10 @@
                 if (runtime_object != nullptr)
                 {
                     return runtime_object->handle;
+                }
+                if (native_class_found)
+                {
+                    return 0;
                 }
             }
             else if (lowercase_copy(std::filesystem::path(trim_copy(source)).extension().string()) == ".prg")
@@ -1355,6 +1361,8 @@
                 std::error_code ignored;
                 if (std::filesystem::exists(program_path, ignored))
                 {
+                    Program &program = load_program(program_path.string());
+                    const bool native_class_found = find_native_class_lookup(program, prog_id).has_value();
                     RuntimeOleObjectState *runtime_object = instantiate_native_class_object(
                         frame,
                         prog_id,
@@ -1365,6 +1373,10 @@
                     if (runtime_object != nullptr)
                     {
                         return runtime_object->handle;
+                    }
+                    if (native_class_found)
+                    {
+                        return 0;
                     }
                 }
             }

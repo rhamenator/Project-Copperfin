@@ -1120,6 +1120,10 @@
                         create_argument_references.push_back(argument_references[index]);
                     }
                     const int handle = register_ole_callback_(prog_id, "createobject", create_arguments, create_argument_references);
+                    if (handle == 0)
+                    {
+                        return make_null_value();
+                    }
                     record_event_callback_("ole.createobject", prog_id);
                     return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
                 }
@@ -1197,6 +1201,10 @@
                     if (!trim_copy(server).empty())
                     {
                         detail += "@" + server;
+                    }
+                    if (handle == 0)
+                    {
+                        return make_null_value();
                     }
                     record_event_callback_("ole.newobject", detail);
                     return make_string_value("object:" + class_name + "#" + std::to_string(handle));

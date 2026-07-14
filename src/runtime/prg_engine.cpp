@@ -963,6 +963,7 @@ namespace copperfin::runtime
         PrgValue release_native_object(
             RuntimeOleObjectState &runtime_object,
             const std::string &effective_member_path);
+        void discard_native_object_tree_without_destroy(RuntimeOleObjectState &runtime_object);
         std::optional<PrgValue> invoke_expression_base_method(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -6647,6 +6648,79 @@ namespace copperfin::runtime
         }
 
         return perform_property_write();
+    }
+
+    void PrgRuntimeSession::Impl::discard_native_object_tree_without_destroy(
+        RuntimeOleObjectState &runtime_object)
+    {
+        std::vector<int> pending_handles = {runtime_object.handle};
+        std::set<int> discarded_handles;
+        std::set<std::intptr_t> discarded_native_hwnds;
+        while (!pending_handles.empty())
+        {
+            const int handle = pending_handles.back();
+            pending_handles.pop_back();
+            if (!discarded_handles.insert(handle).second)
+            {
+                continue;
+            }
+
+            const auto found = ole_objects.find(handle);
+            if (found == ole_objects.end())
+            {
+                continue;
+            }
+            if (found->second.native_hwnd.has_value())
+            {
+                discarded_native_hwnds.insert(*found->second.native_hwnd);
+            }
+            for (const int child_handle : collect_native_owned_child_handles(found->second))
+            {
+                pending_handles.push_back(child_handle);
+            }
+        }
+
+        native_event_bindings.erase(
+            std::remove_if(
+                native_event_bindings.begin(),
+                native_event_bindings.end(),
+                [&discarded_handles](const NativeEventBinding &binding)
+                {
+                    return discarded_handles.contains(binding.source_handle) ||
+                           (!binding.target_is_routine && discarded_handles.contains(binding.target_handle));
+                }),
+            native_event_bindings.end());
+        window_message_bindings.erase(
+            std::remove_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&discarded_handles, &discarded_native_hwnds](const WindowMessageBinding &binding)
+                {
+                    return discarded_handles.contains(binding.target_handle) ||
+                           discarded_native_hwnds.contains(binding.window_handle);
+                }),
+            window_message_bindings.end());
+
+        for (const int handle : discarded_handles)
+        {
+            native_property_expression_text_by_handle.erase(handle);
+            native_default_property_expression_text_by_handle.erase(handle);
+            ole_objects.erase(handle);
+        }
+        if (representative_active_form_handle.has_value() &&
+            discarded_handles.contains(*representative_active_form_handle))
+        {
+            representative_active_form_handle.reset();
+        }
+        if (representative_application_forms_collection_handle.has_value() &&
+            discarded_handles.contains(*representative_application_forms_collection_handle))
+        {
+            representative_application_forms_collection_handle.reset();
+        }
+        else if (representative_application_forms_collection_handle.has_value())
+        {
+            (void)ensure_representative_application_forms_collection_object();
+        }
     }
 
     PrgValue PrgRuntimeSession::Impl::release_native_object(

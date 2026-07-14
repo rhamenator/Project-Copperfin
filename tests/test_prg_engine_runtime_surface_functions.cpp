@@ -27262,6 +27262,138 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_init_returning_false_prevents_object_creation()
+    {
+        namespace fs = std::filesystem;
+        const std::array<std::pair<std::string, std::string>, 2U> scenarios = {{
+            {"CREATEOBJECT", "CREATEOBJECT('RejectedWidget')"},
+            {"NEWOBJECT", "NEWOBJECT('RejectedWidget')"},
+        }};
+        for (const auto &[operation, construction_expression] : scenarios)
+        {
+            const fs::path temp_root = fs::temp_directory_path() /
+                ("copperfin_native_prg_init_rejection_" +
+                 (operation == "CREATEOBJECT" ? std::string{"createobject"} : std::string{"newobject"}));
+            std::error_code ignored;
+            fs::remove_all(temp_root, ignored);
+            fs::create_directories(temp_root);
+
+            const fs::path main_path = temp_root / "native_init_rejection.prg";
+            write_text(
+                main_path,
+                "oRejected = " + construction_expression + "\n"
+                "lRejectedIsNull = ISNULL(oRejected)\n"
+                "RETURN\n"
+                "DEFINE CLASS RejectedWidget AS Container\n"
+                "    ADD OBJECT Probe AS Custom\n"
+                "    PROCEDURE Init\n"
+                "        RETURN .F.\n"
+                "    ENDPROC\n"
+                "    PROCEDURE Destroy\n"
+                "        RETURN\n"
+                "    ENDPROC\n"
+                "ENDDEFINE\n");
+
+            copperfin::runtime::PrgRuntimeSession session =
+                copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+            const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed,
+                   operation + " should continue when a native Init explicitly returns .F.: " + state.message);
+            expect(state.ole_objects.empty(),
+                   operation + " should not retain a container or child object rejected by Init");
+            const auto rejected = state.globals.find("orejected");
+            expect(rejected != state.globals.end() && rejected->second.is_null,
+                   operation + " should return a null object reference when Init rejects construction");
+            const auto rejected_is_null = state.globals.find("lrejectedisnull");
+            expect(rejected_is_null != state.globals.end() &&
+                       copperfin::runtime::format_value(rejected_is_null->second) == "true",
+                   operation + " should expose the rejected object reference as .NULL.");
+            const bool has_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+            {
+                return event.category == "prg.object.destroy" && event.detail == "RejectedWidget.Destroy";
+            });
+            expect(!has_destroy_event,
+                   operation + " should not dispatch Destroy for an object rejected by Init");
+            const std::string creation_category = operation == "CREATEOBJECT"
+                ? "ole.createobject"
+                : "ole.newobject";
+            const bool has_creation_event = std::any_of(state.events.begin(), state.events.end(),
+                [&creation_category](const auto &event)
+                {
+                    return event.category == creation_category &&
+                           event.detail == "RejectedWidget";
+                });
+            expect(!has_creation_event,
+                   operation + " should not emit an object-created event when Init rejects construction");
+            const bool has_child_creation_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+            {
+                return event.category == "prg.object.addobject" &&
+                       event.detail.rfind("RejectedWidget.Probe:", 0U) == 0U;
+            });
+            expect(!has_child_creation_event,
+                   operation + " should not retain a declarative child-created event after Init rejects construction");
+
+            fs::remove_all(temp_root, ignored);
+        }
+    }
+
+    void test_explicit_prg_newobject_init_returning_false_prevents_object_creation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_explicit_prg_init_rejection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "rejected_library.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS RejectedLibraryWidget AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        RETURN .F.\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Destroy\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+        const fs::path main_path = temp_root / "explicit_prg_init_rejection.prg";
+        write_text(
+            main_path,
+            "oRejected = NEWOBJECT('RejectedLibraryWidget', 'rejected_library.prg')\n"
+            "lRejectedIsNull = ISNULL(oRejected)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "explicit PRG NEWOBJECT should continue when Init returns .F.: " + state.message);
+        expect(state.ole_objects.empty(),
+               "explicit PRG NEWOBJECT should not retain an object rejected by Init");
+        const auto rejected = state.globals.find("orejected");
+        expect(rejected != state.globals.end() && rejected->second.is_null,
+               "explicit PRG NEWOBJECT should return a null object reference when Init rejects construction");
+        const auto rejected_is_null = state.globals.find("lrejectedisnull");
+        expect(rejected_is_null != state.globals.end() &&
+                   copperfin::runtime::format_value(rejected_is_null->second) == "true",
+               "explicit PRG NEWOBJECT should expose the rejected reference as .NULL.");
+        const bool has_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" && event.detail == "RejectedLibraryWidget.Destroy";
+        });
+        expect(!has_destroy_event,
+               "an explicit PRG object rejected by Init should not dispatch Destroy");
+        const bool has_creation_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "ole.newobject" && event.detail == "RejectedLibraryWidget:rejected_library.prg";
+        });
+        expect(!has_creation_event,
+               "an explicit PRG object rejected by Init should not emit an object-created event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable()
     {
         namespace fs = std::filesystem;
@@ -54472,6 +54604,8 @@ int main()
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
+    test_native_prg_init_returning_false_prevents_object_creation();
+    test_explicit_prg_newobject_init_returning_false_prevents_object_creation();
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();

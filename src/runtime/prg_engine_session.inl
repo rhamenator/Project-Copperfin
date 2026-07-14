@@ -2844,6 +2844,7 @@
 
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
             RuntimeOleObjectState *runtime_object = &object_it->second;
+            const std::size_t construction_event_start = events.size();
             const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
             {
                 return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
@@ -3013,6 +3014,7 @@
                     throw std::runtime_error(call_depth_limit_message());
                 }
 
+                const std::size_t init_event_start = events.size();
                 events.push_back({.category = "prg.object.init",
                                   .detail = init_method_name,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
@@ -3041,7 +3043,21 @@
                                   native_object_owner_formset_reference(*runtime_object),
                                   effective_constructor_arguments,
                                   constructor_argument_references);
-                (void)run_expression_invoked_routine_until_return(return_depth);
+                const PrgValue init_result = run_expression_invoked_routine_until_return(return_depth);
+                if (init_result.kind == PrgValueKind::boolean && !init_result.boolean_value)
+                {
+                    events.erase(
+                        std::remove_if(
+                            events.begin() + static_cast<std::ptrdiff_t>(construction_event_start),
+                            events.begin() + static_cast<std::ptrdiff_t>(init_event_start),
+                            [](const RuntimeEvent &event)
+                            {
+                                return event.category == "prg.object.addobject";
+                            }),
+                        events.begin() + static_cast<std::ptrdiff_t>(init_event_start));
+                    discard_native_object_tree_without_destroy(*runtime_object);
+                    return nullptr;
+                }
             }
 
             return runtime_object;
