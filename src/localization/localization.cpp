@@ -152,6 +152,10 @@ bool parse_json_string(std::string_view text, std::size_t& offset, std::string& 
             return true;
         }
         if (ch != '\\') {
+            if (static_cast<unsigned char>(ch) <= 0x1FU) {
+                error = "Catalog.Json.InvalidControlCharacter";
+                return false;
+            }
             value.push_back(ch);
             continue;
         }

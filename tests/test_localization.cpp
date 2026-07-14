@@ -220,6 +220,23 @@ void test_catalog_json_unicode_escapes_support_surrogate_pairs() {
         "#3213: a high surrogate followed by a non-low-surrogate escape should be rejected");
 }
 
+void test_catalog_json_rejects_literal_string_control_characters() {
+    for (const std::string& malformed : std::vector<std::string>{
+             "{\"key\":\"line1\nline2\"}",
+             "{\"key\":\"left\tright\"}",
+             std::string{"{\"key\":\"before"} + '\0' + "after\"}"}) {
+        const auto parsed = copperfin::localization::parse_catalog_json(malformed);
+        expect(!parsed.ok && parsed.error == "Catalog.Json.InvalidControlCharacter",
+               "#3908: literal control bytes inside catalog JSON strings should be rejected");
+    }
+
+    const auto escaped = copperfin::localization::parse_catalog_json(
+        "{\"key\":\"\\b\\f\\n\\r\\t\\u0001\"}");
+    expect(escaped.ok && escaped.entries.contains("key") &&
+               escaped.entries.at("key") == std::string{"\b\f\n\r\t\x01"},
+           "#3908: legal JSON control escapes should remain accepted and decoded");
+}
+
 void test_machine_contract_fields_remain_invariant() {
     const std::string diagnostic_code = "CFP1007";
     const std::string severity = "error";
@@ -3397,6 +3414,7 @@ int main(int argc, char** argv) {
     test_posix_locale_suffixes_normalize_before_catalog_fallback();
     test_placeholders_pseudo_locale_and_unicode();
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
+    test_catalog_json_rejects_literal_string_control_characters();
     test_machine_contract_fields_remain_invariant();
     test_product_locale_catalogs_have_key_parity();
     test_catalog_root_resolution_searches_parent_directories();
