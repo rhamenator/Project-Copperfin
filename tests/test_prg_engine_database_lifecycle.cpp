@@ -274,6 +274,44 @@ void test_path_resolution_casefold_and_verified_bytes() {
            "POSIX case-collision denial should retain the verified-byte diagnostic");
 
     write_text(fixture.dbc, verified_components.at(fixture.dbc.string()));
+    const fs::path extension_case_sibling = fixture.dbc.parent_path() / "Catalog.dbc";
+    write_text(extension_case_sibling, verified_components.at(fixture.dbc.string()));
+    const auto exact_extension_case = run_program(
+        root,
+        "exact_extension_case.prg",
+        "OPEN DATABASE '" + fixture.dbc.string() + "' SHARED\n"
+        "cExactExtensionCase = DBC()\n"
+        "RETURN\n");
+    expect(exact_extension_case.completed,
+           "an exact DBC filename should win over an extension-case sibling");
+    expect(global_text(exact_extension_case, "cexactextensioncase") == fixture.dbc.string(),
+           "exact DBC filename precedence should preserve the requested on-disk path");
+    fs::remove(extension_case_sibling, ignored);
+
+    const auto non_listed_fixture = create_database_fixture(root / "NoList", "exact_access");
+    std::error_code permission_error;
+    fs::permissions(
+        non_listed_fixture.dbc.parent_path(),
+        fs::perms::owner_exec,
+        fs::perm_options::replace,
+        permission_error);
+    expect(!permission_error,
+           "exact-path fallback fixture should remove parent-directory listing permission");
+    const auto non_listed = run_program(
+        root,
+        "non_listed_parent.prg",
+        "OPEN DATABASE '" + non_listed_fixture.dbc.string() + "' SHARED\nRETURN\n");
+    fs::permissions(
+        non_listed_fixture.dbc.parent_path(),
+        fs::perms::owner_all,
+        fs::perm_options::replace,
+        permission_error);
+    expect(!permission_error,
+           "exact-path fallback fixture should restore parent-directory permissions");
+    expect(non_listed.completed,
+           "an exact readable DBC path should survive unavailable parent enumeration: " +
+               non_listed.message);
+
     const auto lowercase_fixture = create_database_fixture(root / "Data", "catalog");
     const auto distinct_case = run_program(
         root,

@@ -3293,49 +3293,61 @@
             const std::filesystem::path &candidate) const
         {
             std::error_code ignored;
-            if (std::filesystem::is_regular_file(candidate, ignored) && !ignored)
-            {
-                return candidate.lexically_normal();
-            }
+            const bool candidate_exists =
+                std::filesystem::is_regular_file(candidate, ignored) && !ignored;
+            ignored.clear();
 
             const std::filesystem::path parent =
                 candidate.parent_path().empty() ? std::filesystem::path{"."} : candidate.parent_path();
             if (!std::filesystem::is_directory(parent, ignored) || ignored)
             {
-                return std::nullopt;
+                return candidate_exists
+                    ? std::optional<std::filesystem::path>(candidate.lexically_normal())
+                    : std::nullopt;
             }
 
-            const std::string expected_name = lowercase_copy(candidate.filename().string());
+            const std::string requested_name = candidate.filename().string();
+            const std::string expected_name = lowercase_copy(requested_name);
             const std::string expected_stem = candidate.stem().string();
             std::optional<std::filesystem::path> exact_stem_match;
             std::optional<std::filesystem::path> folded_match;
             bool folded_match_ambiguous = false;
-            for (const auto &entry : std::filesystem::directory_iterator(parent, ignored))
+            std::filesystem::directory_iterator iterator(parent, ignored);
+            const std::filesystem::directory_iterator end;
+            for (; iterator != end && !ignored; iterator.increment(ignored))
             {
-                if (ignored)
-                {
-                    return std::nullopt;
-                }
-                if (lowercase_copy(entry.path().filename().string()) != expected_name)
+                const std::filesystem::path entry_path = iterator->path();
+                const std::string entry_name = entry_path.filename().string();
+                if (lowercase_copy(entry_name) != expected_name)
                 {
                     continue;
                 }
                 std::error_code type_error;
-                if (!entry.is_regular_file(type_error) || type_error)
+                if (!iterator->is_regular_file(type_error) || type_error)
                 {
                     continue;
                 }
-                if (entry.path().stem().string() == expected_stem)
+                if (entry_name == requested_name)
+                {
+                    return entry_path.lexically_normal();
+                }
+                if (entry_path.stem().string() == expected_stem)
                 {
                     if (exact_stem_match.has_value())
                     {
                         return std::nullopt;
                     }
-                    exact_stem_match = entry.path().lexically_normal();
+                    exact_stem_match = entry_path.lexically_normal();
                     continue;
                 }
                 folded_match_ambiguous = folded_match.has_value();
-                folded_match = entry.path().lexically_normal();
+                folded_match = entry_path.lexically_normal();
+            }
+            if (ignored)
+            {
+                return candidate_exists
+                    ? std::optional<std::filesystem::path>(candidate.lexically_normal())
+                    : std::nullopt;
             }
             if (exact_stem_match.has_value())
             {
