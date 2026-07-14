@@ -1,0 +1,61 @@
+name: Generated Launcher Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/generated-launcher-validation.yml"
+      - "CMakeLists.txt"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_generated_launcher_process.cpp"
+      - "tests/test_runtime_pipeline*.cpp"
+      - "tests/test_runtime_pipeline*.h"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/generated-launcher-validation.yml"
+      - "CMakeLists.txt"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_generated_launcher_process.cpp"
+      - "tests/test_runtime_pipeline*.cpp"
+      - "tests/test_runtime_pipeline*.h"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: generated-launcher-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-generated-launcher:
+    name: Windows generated launcher process
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Configure native build
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build generated-launcher process target
+        run: cmake --build build --config Release --target test_generated_launcher_process --parallel 2
+
+      - name: Run generated-launcher process test
+        run: ctest --test-dir build -C Release --output-on-failure -R "^test_generated_launcher_process$"
