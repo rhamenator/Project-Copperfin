@@ -4047,6 +4047,7 @@ add_executable(test_generated_launcher_process
     test_generated_launcher_process.cpp
 )
 target_link_libraries(test_generated_launcher_process PRIVATE cf_runtime_pipeline)
+add_dependencies(test_generated_launcher_process copperfin_build_host)
 
 if(MSVC)
     target_compile_options(test_generated_launcher_process PRIVATE /W4 /permissive-)
@@ -4057,7 +4058,9 @@ endif()
 if(DOTNET_EXECUTABLE)
     add_test(
         NAME test_generated_launcher_process
-        COMMAND $<TARGET_FILE:test_generated_launcher_process> ${DOTNET_EXECUTABLE}
+        COMMAND $<TARGET_FILE:test_generated_launcher_process>
+            ${DOTNET_EXECUTABLE}
+            $<TARGET_FILE:copperfin_build_host>
     )
 else()
     add_test(

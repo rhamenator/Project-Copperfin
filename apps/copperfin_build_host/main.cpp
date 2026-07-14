@@ -248,23 +248,9 @@ bool run_dotnet_publish(
         return false;
     }
 
-    const std::filesystem::path expected = output_dir / (project_path.stem().string() == "Copperfin.GeneratedLauncher"
-        ? (std::filesystem::path(plan.launcher_output_path).filename().string())
-        : (project_path.stem().string() + ".exe"));
-    if (!std::filesystem::exists(expected)) {
-        const std::filesystem::path generated = output_dir / "Copperfin.GeneratedLauncher.exe";
-        if (std::filesystem::exists(generated)) {
-            std::error_code rename_error;
-            std::filesystem::rename(generated, plan.launcher_output_path, rename_error);
-            if (!rename_error) {
-                return true;
-            }
-        }
-
-        if (!std::filesystem::exists(plan.launcher_output_path)) {
-            error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
-            return false;
-        }
+    if (!std::filesystem::exists(plan.launcher_output_path)) {
+        error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+        return false;
     }
 
     return true;

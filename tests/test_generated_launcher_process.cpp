@@ -8,6 +8,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "test_environment_support.h"
 
 #include <chrono>
@@ -82,6 +83,31 @@ void expect(bool condition, const std::string& message) {
 void write_text(const std::filesystem::path& path, const std::string& text) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     output << text;
+}
+
+void write_synthetic_executable_project(
+    const std::filesystem::path& project_path,
+    const std::filesystem::path& project_dir,
+    const std::filesystem::path& output_path,
+    const std::string& project_title) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 1U},
+        {.name = "KEY", .type = 'C', .length = 32U},
+        {.name = "HOMEDIR", .type = 'C', .length = 200U},
+        {.name = "OUTFILE", .type = 'C', .length = 200U},
+        {.name = "NAME", .type = 'C', .length = 200U},
+        {.name = "MAINPROG", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"H", project_title, project_dir.string(), output_path.string(), "", "false"},
+        {"K", "", "", "", "main.prg", "true"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        project_path.string(),
+        fields,
+        records);
+    expect(create_result.ok,
+           "generated launcher process test should create its synthetic PJX fixture");
 }
 
 std::string read_text(const std::filesystem::path& path) {
@@ -329,12 +355,19 @@ void expect_manifest_selection(
         context + " should run the host from the package directory");
 }
 
-int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char** argv) {
+int run_generated_launcher_test(
+    const std::filesystem::path& dotnet_path,
+    const std::filesystem::path& build_host_path,
+    char** argv) {
     namespace fs = std::filesystem;
 
     if (!fs::exists(dotnet_path)) {
         std::cout << "SKIP: generated .NET launcher process test requires the Windows .NET SDK\n";
         return skip_return_code;
+    }
+    if (!fs::exists(build_host_path)) {
+        std::cerr << "FAIL: generated launcher process test requires the Copperfin build host\n";
+        return 1;
     }
     const std::string runtime_identifier = current_windows_runtime_identifier();
     if (runtime_identifier.empty()) {
@@ -374,13 +407,15 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
 
     copperfin::studio::StudioProjectWorkspace workspace;
     workspace.available = true;
-    workspace.project_title = "GeneratedLauncherProcess";
+    workspace.project_title = "Generated Launcher Project";
     workspace.home_directory = project_dir.string();
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = workspace.project_title;
+    const std::string configured_launcher_name =
+        "Configured $(Configuration) @(Items); 100% & Launcher.exe";
     workspace.build_plan.output_path =
-        (output_dir / "GeneratedLauncherProcess.exe").string();
+        (output_dir / configured_launcher_name).string();
     workspace.build_plan.startup_item = "main program.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -421,19 +456,6 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
     const fs::path package_root = materialized.plan.package_root;
     const fs::path release_manifest = materialized.plan.manifest_path;
     const fs::path debug_manifest = materialized.plan.debug_manifest_path;
-    write_text(
-        release_manifest,
-        "manifest_version=1\n"
-        "project_title=Generated Launcher Release\n"
-        "startup_item=release startup.prg\n"
-        "startup_source=release source path with spaces.prg\n");
-    write_text(
-        debug_manifest,
-        "debug_manifest_version=2\n"
-        "project_title=Generated Launcher Debug\n"
-        "startup_item=debug startup.prg\n"
-        "startup_source=debug source path with spaces.prg\n");
-
     const ProcessResult publish = run_process_capture(
         dotnet_path,
         {
@@ -460,14 +482,139 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
             publish.stdout_text + "\nstderr:\n" + publish.stderr_text);
     expect(fs::exists(materialized.plan.launcher_output_path),
            "dotnet publish should materialize the planned launcher executable");
+    expect(
+        fs::path(materialized.plan.launcher_output_path).filename() == configured_launcher_name,
+        "dotnet publish should preserve the configured launcher filename");
+    expect(!fs::exists(package_root / "Generated_Launcher_Project.exe"),
+           "dotnet publish should not leave a title-derived alternate launcher");
+    expect(!fs::exists(package_root / "Copperfin.GeneratedLauncher.exe"),
+           "dotnet publish should not leave a legacy alternate launcher");
     if (failures != 0) {
         std::cerr << "fixture root: " << temp_root << "\n";
         return 1;
     }
 
+    const auto finalized = copperfin::runtime::finalize_runtime_package_primary_output(
+        materialized.plan,
+        security_profile,
+        extensibility_profile);
+    expect(finalized.ok,
+           "configured generated launcher output should finalize: " + finalized.error);
+    expect(finalized.plan.primary_output_materialized,
+           "configured generated launcher finalization should record materialized output");
+    expect(manifest_value(release_manifest, "manifest_version") == "3" &&
+               manifest_value(release_manifest, "primary_output_path").empty(),
+           "configured launcher finalization should preserve the runtime manifest contract");
+    expect(manifest_value(debug_manifest, "debug_manifest_version") == "3" &&
+               manifest_value(debug_manifest, "primary_output_materialized") == "true" &&
+               manifest_value(debug_manifest, "primary_output_path").find(
+                   configured_launcher_name) != std::string::npos,
+           "configured launcher finalization should retain output provenance in app.cfdebug");
+    if (!finalized.ok || failures != 0) {
+        std::cerr << "fixture root: " << temp_root << "\n";
+        return 1;
+    }
+
+    write_text(
+        release_manifest,
+        "manifest_version=1\n"
+        "project_title=Generated Launcher Release\n"
+        "startup_item=release startup.prg\n"
+        "startup_source=release source path with spaces.prg\n");
+    write_text(
+        debug_manifest,
+        "debug_manifest_version=2\n"
+        "project_title=Generated Launcher Debug\n"
+        "startup_item=debug startup.prg\n"
+        "startup_source=debug source path with spaces.prg\n");
+
     copperfin::test_support::ScopedEnvironmentValue fixture_mode{
         std::string(fixture_environment)};
     fixture_mode.set("1");
+
+    const fs::path build_host_project_dir = temp_root / "build host source project with spaces";
+    const fs::path build_host_output_root = temp_root / "build host package output with spaces";
+    const fs::path build_host_project_path = build_host_project_dir / "custom launcher project.pjx";
+    const std::string build_host_project_title = "Build Host Launcher Project";
+    const fs::path build_host_package_root =
+        build_host_output_root / "Build_Host_Launcher_Project";
+    const fs::path build_host_launcher = build_host_package_root / configured_launcher_name;
+    fs::create_directories(build_host_project_dir);
+    fs::create_directories(build_host_output_root);
+    write_text(build_host_project_dir / "main.prg", "RETURN\n");
+    write_synthetic_executable_project(
+        build_host_project_path,
+        build_host_project_dir,
+        fs::path(configured_launcher_name),
+        build_host_project_title);
+
+    const ProcessResult build_host = run_process_capture(
+        build_host_path,
+        {
+            "build",
+            "--project",
+            build_host_project_path.string(),
+            "--output-dir",
+            build_host_output_root.string(),
+            "--runtime-host",
+            runtime_host_source.string(),
+            "--emit-dotnet-launcher"
+        },
+        caller_dir,
+        temp_root,
+        "build-host-custom-launcher",
+        300000U);
+    expect(build_host.start_error == 0U,
+           "custom-output build host invocation should start");
+    expect(!build_host.timed_out,
+           "custom-output build host invocation should not time out");
+    expect(
+        build_host.exit_code == 0,
+        "custom-output build host invocation should succeed\nstdout:\n" +
+            build_host.stdout_text + "\nstderr:\n" + build_host.stderr_text);
+    expect(line_value(build_host.stdout_text, "status: ") == "ok" &&
+               line_value(build_host.stdout_text, "primary.output.materialized: ") == "true",
+           "custom-output build host invocation should preserve invariant success fields");
+    expect(fs::exists(build_host_launcher) &&
+               paths_are_equivalent(
+                   line_value(build_host.stdout_text, "launcher.output: "),
+                   build_host_launcher),
+           "build host should report and materialize the configured launcher path");
+    expect(!fs::exists(build_host_package_root / "Build_Host_Launcher_Project.exe") &&
+               !fs::exists(build_host_package_root / "Copperfin.GeneratedLauncher.exe"),
+           "build host should not retain title-derived or legacy alternate launchers");
+
+    const fs::path build_host_manifest =
+        line_value(build_host.stdout_text, "manifest.path: ");
+    const fs::path build_host_debug_manifest =
+        line_value(build_host.stdout_text, "debug.manifest.path: ");
+    expect(manifest_value(build_host_manifest, "manifest_version") == "3" &&
+               manifest_value(build_host_manifest, "primary_output_path").empty(),
+           "custom-output build should preserve the runtime manifest schema");
+    expect(manifest_value(build_host_debug_manifest, "debug_manifest_version") == "3" &&
+               manifest_value(build_host_debug_manifest, "primary_output_materialized") == "true" &&
+               manifest_value(build_host_debug_manifest, "primary_output_path").find(
+                   configured_launcher_name) != std::string::npos,
+           "custom-output build should preserve output provenance in app.cfdebug");
+    if (failures != 0) {
+        std::cerr << "fixture root: " << temp_root << "\n";
+        return 1;
+    }
+
+    const ProcessResult built_launcher = run_process_capture(
+        build_host_launcher,
+        {},
+        caller_dir,
+        temp_root,
+        "build-host-generated-launcher",
+        30000U);
+    expect_manifest_selection(
+        built_launcher,
+        build_host_manifest,
+        build_host_project_title,
+        "main.prg",
+        build_host_package_root,
+        "build-host generated custom launcher invocation");
 
     const fs::path launcher = materialized.plan.launcher_output_path;
     const ProcessResult ordinary = run_process_capture(
@@ -663,11 +810,11 @@ int main(int argc, char** argv) {
     }
 
 #if defined(_WIN32)
-    if (argc < 2 || std::string(argv[1]).empty()) {
+    if (argc < 3 || std::string(argv[1]).empty()) {
         std::cout << "SKIP: generated .NET launcher process test requires the Windows .NET SDK\n";
         return skip_return_code;
     }
-    return run_generated_launcher_test(argv[1], argv);
+    return run_generated_launcher_test(argv[1], argv[2], argv);
 #else
     (void)argc;
     (void)argv;

@@ -23,12 +23,13 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
 
     copperfin::studio::StudioProjectWorkspace workspace;
     workspace.available = true;
-    workspace.project_title = "LauncherContract";
+    workspace.project_title = "Launcher Project Title";
     workspace.home_directory = project_dir.string();
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
-    workspace.build_plan.project_title = "LauncherContract";
-    workspace.build_plan.output_path = (output_dir / "LauncherContract.exe").string();
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path =
+        (output_dir / "Configured $(Configuration) @(Items); 100% & Launcher.exe").string();
     workspace.build_plan.startup_item = "main.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -98,8 +99,12 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("WorkingDirectory = baseDir") != std::string::npos,
             "generated launcher should run the runtime host from the package directory");
         expect(
-            launcher_project.find("<AssemblyName>LauncherContract</AssemblyName>") != std::string::npos,
-            "generated launcher project should preserve the sanitized assembly name contract");
+            fs::path(result.plan.launcher_output_path).filename() ==
+                "Configured $(Configuration) @(Items); 100% & Launcher.exe" &&
+            launcher_project.find(
+                "<AssemblyName>Configured %24%28Configuration%29 %40%28Items%29%3B 100%25 &amp; Launcher</AssemblyName>") !=
+                std::string::npos,
+            "generated launcher project should derive its assembly name from the configured output filename");
         expect(
             launcher_project.find("<EnableDefaultCompileItems>false</EnableDefaultCompileItems>") != std::string::npos &&
             launcher_project.find("<Compile Include=\"Program.cs\" />") != std::string::npos,
