@@ -4,6 +4,8 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "copperfin/vfp/report_layout_records.h"
+
 #include <limits>
 #include <set>
 
@@ -42,8 +44,7 @@ bool is_report_layout_object_record(const DbfRecord& record) {
 }
 
 bool is_report_settings_record(const DbfRecord& record) {
-    return parse_record_int_or_default(record, "OBJTYPE") == 1 &&
-           parse_record_int_or_default(record, "OBJCODE") == 53;
+    return is_report_settings_root_record(parse_record_int_or_default(record, "OBJTYPE"));
 }
 
 bool is_known_report_settings_expr_property(const std::string& normalized_property_name) {

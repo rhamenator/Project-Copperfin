@@ -5,6 +5,7 @@
 #include "copperfin/studio/report_layout.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/vfp/report_layout_records.h"
 
 #include <algorithm>
 #include <charconv>
@@ -326,7 +327,7 @@ bool is_layout_object_type(int objtype) {
 }
 
 bool is_report_root_record(const DbfRecord& record) {
-    return parse_scaled_int_or_default(record, "OBJTYPE") == 1;
+    return vfp::is_report_settings_root_record(parse_scaled_int_or_default(record, "OBJTYPE"));
 }
 
 bool is_band_record(const DbfRecord& record) {

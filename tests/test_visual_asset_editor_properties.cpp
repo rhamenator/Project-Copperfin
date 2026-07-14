@@ -230,6 +230,51 @@ void test_report_settings_bottom_margin_memo_round_trips() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_report_settings_fallback_root_gridv_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_fallback_root_settings_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto run_round_trip = [&](const fs::path& asset_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "UNIQUEID", .type = 'C', .length = 40U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            asset_path.string(), fields, {{"1", "GRIDV=1\r\nGRIDH=0", "fallback-settings-guid"}});
+        expect(create_result.ok, "#4059: fallback settings fixture should be writable");
+
+        const auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "fallback-settings-guid",
+            .property_name = "GRIDV",
+            .property_value = "7"
+        });
+        expect(update_result.ok,
+               "#4059: exposed fallback-root GRIDV should be writable");
+
+        const auto query = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "fallback-settings-guid",
+            .property_name = "GRIDV"
+        });
+        expect(query.ok && query.exists && !query.direct_field && query.value == "7",
+               "#4059: fallback-root GRIDV should round-trip through the memo settings path");
+    };
+
+    run_round_trip(temp_dir / "fallback_settings.frx");
+    run_round_trip(temp_dir / "fallback_settings.lbx");
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_query_visual_object_property_reads_selected_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
