@@ -994,6 +994,220 @@ void test_security_enabled_form_class_and_menu_companion_integrity(
     }
 }
 
+void test_runtime_host_preserves_logical_identity_across_nested_directory_aliases(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const int failures_before_test = failures;
+    const fs::path test_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_nested_alias_identity";
+    const fs::path physical_namespace = test_root / "physical";
+    const fs::path logical_namespace = test_root / "logical";
+    const fs::path physical_package = physical_namespace / "deployed";
+    const fs::path logical_package = logical_namespace / "deployed";
+    const fs::path logical_package_alias = logical_namespace / "deployed-alias";
+    const fs::path physical_content = physical_package / "content";
+    const fs::path logical_prg = logical_package / "content" / "main.prg";
+    const fs::path logical_form = logical_package / "content" / "alias.scx";
+    const fs::path manifest_path = physical_package / "app.cfmanifest";
+    const fs::path deployed_runtime_host =
+        deployed_runtime_host_path(physical_package, runtime_host_path);
+    const fs::path locale_root = physical_namespace / "locales";
+    std::error_code ignored;
+    fs::remove_all(test_root, ignored);
+    fs::create_directories(physical_content);
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(physical_content / "main.prg", "LOCAL nValue\nnValue = 1\nRETURN\n");
+    write_synthetic_form_asset(physical_content / "alias.scx");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const bool namespace_alias_created =
+        create_directory_indirection(physical_namespace, logical_namespace);
+    expect(namespace_alias_created,
+           "nested-alias identity smoke should create its outer namespace alias");
+    if (!namespace_alias_created) {
+        fs::remove_all(test_root, ignored);
+        return;
+    }
+
+    const fs::path recorded_package = logical_namespace / "builder" / "DemoApp";
+    const fs::path recorded_content = recorded_package / "content";
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=NestedAliasPrg\n"
+        "package_root=" + recorded_package.string() + "\n"
+        "content_root=" + recorded_content.string() + "\n"
+        "working_directory=" + recorded_content.string() + "\n"
+        "startup_item=main.prg\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            (logical_package / deployed_runtime_host.filename()).string(),
+            {
+                "--manifest", (logical_package / manifest_path.filename()).string(),
+                "--debug",
+                "--debug-command", "break:remove:2"
+            },
+            logical_package);
+        if (process.exit_code != 5) {
+            std::cerr << "nested-alias unknown-breakpoint stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "nested-alias unknown-breakpoint stderr:\n"
+                      << process.stderr_text << "\n";
+        }
+        expect(process.exit_code == 5,
+               "nested-alias unknown breakpoint should retain the debug error exit code");
+        expect(process.stdout_text.find(
+                   "Breakpoint desconocido: " + logical_prg.string() + ":2") !=
+                   std::string::npos,
+               "nested-alias unknown breakpoint should preserve the logical PRG identity");
+    }
+
+    {
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(
+            (logical_package / deployed_runtime_host.filename()).string(),
+            {
+                "--manifest", (logical_package / manifest_path.filename()).string(),
+                "--debug",
+                "--breakpoint", logical_prg.string() + ":2",
+                "--debug-command", "continue",
+                "--debug-command", "watch:"
+            },
+            logical_package);
+        if (process.exit_code != 0) {
+            std::cerr << "nested-alias PRG debug stdout:\n" << process.stdout_text << "\n";
+            std::cerr << "nested-alias PRG debug stderr:\n" << process.stderr_text << "\n";
+        }
+        expect(process.exit_code == 0,
+               "nested-alias PRG debug flow should retain the runtime-host success exit code");
+        expect(process.stdout_text.find("startup.source: " + logical_prg.string()) !=
+                   std::string::npos,
+               "nested-alias PRG summary should preserve the logical startup identity");
+        expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+               "nested-alias logical breakpoint should match the physically verified PRG");
+        expect(process.stdout_text.find("debug.location: " + logical_prg.string() + ":2") !=
+                   std::string::npos,
+               "nested-alias PRG pause location should preserve the logical source identity");
+        expect(process.stdout_text.find("debug.breakpoint[0]: " + logical_prg.string() + ":2") !=
+                   std::string::npos,
+               "nested-alias PRG breakpoint inventory should preserve the logical source identity");
+        expect(process.stdout_text.find("debug.frame[0]: main@" + logical_prg.string() + ":2") !=
+                   std::string::npos,
+               "nested-alias PRG stack frames should preserve the logical source identity");
+        expect(process.stdout_text.find("debug.watch.ok: false") != std::string::npos,
+               "nested-alias watch errors should preserve invariant watch fields");
+        expect(process.stdout_text.find("debug.watch.error: [!! ") != std::string::npos,
+               "nested-alias watch errors should preserve pseudo-localized prose");
+    }
+
+    const fs::path physical_form = physical_content / "alias.scx";
+    const fs::path physical_sidecar = copperfin::studio::infer_sidecar_path(
+        physical_form.string(),
+        copperfin::studio::StudioAssetKind::form);
+    const auto runtime_host_hash =
+        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto form_hash = copperfin::security::sha256_hex_for_file(physical_form.string());
+    const auto sidecar_hash =
+        copperfin::security::sha256_hex_for_file(physical_sidecar.string());
+    expect(runtime_host_hash.ok && form_hash.ok && sidecar_hash.ok,
+           "nested-alias xAsset fixture should hash its executable package inputs");
+    if (runtime_host_hash.ok && form_hash.ok && sidecar_hash.ok) {
+        const std::string page_activate_action = "frmdemo.pgfmain.page2.activate";
+        write_text(
+            manifest_path,
+            "manifest_version=1\n"
+            "project_title=NestedAliasXAsset\n"
+            "package_root=" + recorded_package.string() + "\n"
+            "content_root=" + recorded_content.string() + "\n"
+            "working_directory=" + recorded_content.string() + "\n"
+            "startup_item=alias.scx\n"
+            "startup_source=" + (recorded_content / "alias.scx").string() + "\n"
+            "security_enabled=true\n"
+            "security_role=runtime-operator\n"
+            "security_mode=native\n"
+            "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+            "asset=1|alias.scx|" + (recorded_content / "alias.scx").string() +
+                "|Form|false|true|" + form_hash.hex_digest + "|true\n"
+            "extension_payload=" + (recorded_content / physical_sidecar.filename()).string() +
+                "|" + sidecar_hash.hex_digest + "\n"
+            "dotnet_story=none\n");
+
+        const bool package_alias_created = create_directory_indirection(
+            physical_package,
+            physical_namespace / "deployed-alias");
+        expect(package_alias_created,
+               "nested-alias xAsset smoke should create its package-root alias");
+        if (package_alias_created) {
+            ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+            const auto process = run_process_capture(
+                (logical_package_alias / deployed_runtime_host.filename()).string(),
+                {
+                    "--manifest", (logical_package_alias / manifest_path.filename()).string(),
+                    "--debug",
+                    "--debug-command", "continue",
+                    "--debug-command", "break:add-action:" + page_activate_action,
+                    "--debug-command", "select:" + page_activate_action,
+                    "--debug-command", "break:remove-action:" + page_activate_action
+                },
+                logical_package_alias);
+            if (process.exit_code != 0) {
+                std::cerr << "nested-alias xAsset stdout:\n" << process.stdout_text << "\n";
+                std::cerr << "nested-alias xAsset stderr:\n" << process.stderr_text << "\n";
+            }
+            expect(process.exit_code == 0,
+                   "nested-alias verified xAsset should execute through both aliases");
+            expect(process.stdout_text.find("runtime.mode: xasset-bootstrap") !=
+                       std::string::npos,
+                   "nested-alias verified xAsset should retain bootstrap execution mode");
+            expect(process.stdout_text.find("debug.reason: breakpoint") !=
+                       std::string::npos,
+                   "nested-alias xAsset action breakpoint should hit through the verified bootstrap");
+            expect(process.stdout_text.find(
+                       "debug.breakpoint[0].xasset.action_id: " + page_activate_action) !=
+                       std::string::npos,
+                   "nested-alias xAsset breakpoint inventory should preserve the logical action identity");
+            expect(process.stdout_text.find("debug.xasset.action_id: " + page_activate_action) !=
+                       std::string::npos,
+                   "nested-alias xAsset pause output should preserve the logical action identity");
+            expect(process.stdout_text.find("debug.breakpoint.count: 0") !=
+                       std::string::npos,
+                   "nested-alias xAsset action breakpoint should remove cleanly after the hit");
+            expect(process.stdout_text.find("startup.source: " + logical_form.string()) !=
+                       std::string::npos,
+                   "nested-alias xAsset summary should resolve the package alias while preserving the logical namespace");
+            expect(process.stdout_text.find("copperfin_xasset_snapshot_") ==
+                       std::string::npos,
+                   "nested-alias xAsset output should not leak private snapshot identities");
+            const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
+                (physical_package / "security_audit.log").string());
+            expect(audit_chain.ok && audit_chain.entries >= 2U,
+                   "nested-alias security audit output should remain contained in the physical package");
+            remove_directory_indirection(physical_namespace / "deployed-alias");
+        }
+    }
+
+    remove_directory_indirection(logical_namespace);
+    if (failures == failures_before_test) {
+        fs::remove_all(test_root, ignored);
+    }
+}
+
 void test_app_cfdebug_preserves_external_xasset_source_compatibility(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
@@ -5313,6 +5527,7 @@ int main(int argc, char** argv) {
     test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
     test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
     test_security_enabled_form_class_and_menu_companion_integrity(argv[1]);
+    test_runtime_host_preserves_logical_identity_across_nested_directory_aliases(argv[1]);
     test_app_cfdebug_preserves_external_xasset_source_compatibility(argv[1]);
     test_app_cfdebug_rejects_file_valued_working_directory(argv[1]);
     test_security_enabled_writable_package_data_contract(argv[1]);

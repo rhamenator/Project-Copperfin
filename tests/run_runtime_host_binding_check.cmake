@@ -570,11 +570,18 @@ dotnet_story=none
         OUTPUT_VARIABLE mac_alias_output
         ERROR_VARIABLE mac_alias_error
     )
+    string(
+        FIND
+        "${mac_alias_output}"
+        "startup.source: ${mac_alias_root}/content/main.prg"
+        mac_logical_startup_position
+    )
     if(NOT IS_DIRECTORY "${mac_canonical_root}" OR
        NOT mac_alias_result EQUAL 0 OR
        NOT mac_alias_output MATCHES "status: ok" OR
+       mac_logical_startup_position EQUAL -1 OR
        NOT mac_alias_output MATCHES "runtime\\.completed: true")
-        message(FATAL_ERROR "Runtime host rejected the macOS /var versus /private/var rootless startup alias.\nstdout:\n${mac_alias_output}\nstderr:\n${mac_alias_error}")
+        message(FATAL_ERROR "Runtime host did not preserve the macOS /var logical startup identity across the /private/var physical alias.\nstdout:\n${mac_alias_output}\nstderr:\n${mac_alias_error}")
     endif()
     file(REMOVE_RECURSE "${mac_alias_root}")
 endif()

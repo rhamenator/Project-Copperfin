@@ -1318,6 +1318,46 @@ std::optional<std::filesystem::path> bind_packaged_path(
     return std::nullopt;
 }
 
+std::filesystem::path logical_deployment_path(
+    const std::filesystem::path& admitted_path,
+    const std::filesystem::path& manifest_directory) {
+    std::error_code filesystem_error;
+    const std::filesystem::path absolute_manifest_directory =
+        std::filesystem::absolute(manifest_directory, filesystem_error).lexically_normal();
+    if (filesystem_error) {
+        return admitted_path.lexically_normal();
+    }
+
+    const std::filesystem::path canonical_manifest_directory =
+        std::filesystem::canonical(absolute_manifest_directory, filesystem_error);
+    if (filesystem_error) {
+        return admitted_path.lexically_normal();
+    }
+    const auto relative_path =
+        package_relative_path(admitted_path, canonical_manifest_directory);
+    if (!relative_path.has_value()) {
+        return admitted_path.lexically_normal();
+    }
+
+    std::filesystem::path logical_manifest_directory = absolute_manifest_directory;
+    const std::filesystem::path manifest_parent =
+        absolute_manifest_directory.parent_path();
+    // Resolve package-root indirection while retaining namespace aliases above it.
+    if (!manifest_parent.empty() && manifest_parent != absolute_manifest_directory) {
+        const std::filesystem::path canonical_parent =
+            std::filesystem::canonical(manifest_parent, filesystem_error);
+        if (!filesystem_error) {
+            if (const auto physical_root_from_parent =
+                    package_relative_path(canonical_manifest_directory, canonical_parent)) {
+                logical_manifest_directory =
+                    (manifest_parent / *physical_root_from_parent).lexically_normal();
+            }
+        }
+    }
+
+    return (logical_manifest_directory / *relative_path).lexically_normal();
+}
+
 bool verify_manifest_hashes(
     const ManifestMap& manifest,
     const std::filesystem::path& manifest_directory,
@@ -2426,6 +2466,8 @@ std::optional<std::filesystem::path> admit_direct_packaged_output_path(
     }
 
     std::filesystem::path existing_parent = normalized_candidate.parent_path();
+    const std::filesystem::path normalized_manifest_directory =
+        manifest_directory.lexically_normal();
     while (!existing_parent.empty()) {
         std::error_code parent_status_error;
         const std::filesystem::file_status parent_status =
@@ -2435,7 +2477,18 @@ std::optional<std::filesystem::path> admit_direct_packaged_output_path(
             existing_parent = existing_parent.parent_path();
             continue;
         }
-        if (parent_status_error || !std::filesystem::is_directory(parent_status)) {
+        const bool is_manifest_directory =
+            existing_parent.lexically_normal() == normalized_manifest_directory;
+        std::error_code directory_error;
+        const bool is_directory = std::filesystem::is_directory(
+            existing_parent,
+            directory_error);
+        // The admitted manifest directory may itself be a symlink or junction. Redirects
+        // beneath that trust root remain rejected by the symlink-status condition.
+        if (parent_status_error ||
+            directory_error ||
+            !is_directory ||
+            (!std::filesystem::is_directory(parent_status) && !is_manifest_directory)) {
             return std::nullopt;
         }
 
@@ -2599,7 +2652,9 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 PackagePathBindingMode::strict_relative_fidelity,
                 containment_failure)) {
-            return contained_startup->string();
+            return logical_deployment_path(
+                *contained_startup,
+                manifest_directory).string();
         }
     }
     if (const auto bound_startup = bind_packaged_path(
@@ -2608,7 +2663,9 @@ std::optional<std::string> resolve_startup_source(
             manifest_directory,
             PackagePathBindingMode::strict_relative_fidelity,
             containment_failure)) {
-        return bound_startup->string();
+        return logical_deployment_path(
+            *bound_startup,
+            manifest_directory).string();
     }
 
     const std::string startup_item = first_value(manifest, "startup_item");
@@ -2635,7 +2692,9 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 allow_external_debug_source,
                 containment_failure)) {
-            return candidate->string();
+            return logical_deployment_path(
+                *candidate,
+                manifest_directory).string();
         }
     }
 
@@ -2654,7 +2713,9 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 allow_external_debug_source,
                 containment_failure)) {
-            return candidate->string();
+            return logical_deployment_path(
+                *candidate,
+                manifest_directory).string();
         }
     }
 
