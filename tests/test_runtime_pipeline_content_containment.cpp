@@ -5,6 +5,12 @@
 #include "test_runtime_pipeline_support.h"
 #include "runtime_pipeline_support.h"
 
+#include <cerrno>
+
+#if defined(_WIN32)
+#include <direct.h>
+#endif
+
 namespace cf_test_runtime_pipeline {
 namespace {
 
@@ -19,17 +25,34 @@ std::string lowercase_ascii(std::string value) {
 }
 #endif
 
+void change_current_directory(const fs::path& next) {
+#if defined(_WIN32)
+    if (::_wchdir(next.c_str()) != 0) {
+        throw fs::filesystem_error(
+            "unable to change current directory",
+            next,
+            std::error_code(errno, std::generic_category()));
+    }
+#else
+    fs::current_path(next);
+#endif
+}
+
 struct ScopedCurrentDirectory {
     fs::path previous;
 
     explicit ScopedCurrentDirectory(const fs::path& next)
         : previous(fs::current_path()) {
-        fs::current_path(next);
+        change_current_directory(next);
     }
 
     ~ScopedCurrentDirectory() {
+#if defined(_WIN32)
+        (void)::_wchdir(previous.c_str());
+#else
         std::error_code ignored;
         fs::current_path(previous, ignored);
+#endif
     }
 };
 
@@ -150,7 +173,7 @@ void run_windows_drive_relative_case(
     {
         ScopedCurrentDirectory current_directory(source_current);
         if (expect_different_drive) {
-            fs::current_path(project_dir);
+            change_current_directory(project_dir);
         }
         const auto plan = copperfin::runtime::create_runtime_package_plan(
             document,
