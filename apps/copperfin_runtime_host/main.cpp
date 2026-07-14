@@ -1362,11 +1362,31 @@ void add_verified_deployment_bytes(
     std::map<std::string, std::string>& verified_bytes,
     const std::filesystem::path& admitted_path,
     const std::filesystem::path& manifest_directory,
+    const std::filesystem::path& canonical_startup_path,
+    const std::filesystem::path& logical_startup_path,
     const std::string& bytes) {
     verified_bytes.emplace(admitted_path.lexically_normal().string(), bytes);
     verified_bytes.emplace(
         logical_deployment_path(admitted_path, manifest_directory).string(),
         bytes);
+
+    const std::filesystem::path canonical_startup_parent =
+        canonical_startup_path.parent_path();
+    const std::filesystem::path logical_startup_parent =
+        logical_startup_path.parent_path();
+    const std::filesystem::path startup_relative_path =
+        admitted_path.lexically_relative(canonical_startup_parent);
+    if (!canonical_startup_parent.empty() &&
+        !logical_startup_parent.empty() &&
+        !startup_relative_path.empty() &&
+        startup_relative_path != admitted_path &&
+        !startup_relative_path.is_absolute()) {
+        // Rootless manifests can retain an admitted alias after implicit manifest
+        // discovery has canonicalized its directory.
+        verified_bytes.emplace(
+            (logical_startup_parent / startup_relative_path).lexically_normal().string(),
+            bytes);
+    }
 }
 
 bool verify_manifest_hashes(
@@ -2658,14 +2678,12 @@ std::optional<std::string> resolve_startup_source(
         std::filesystem::path(startup_source).lexically_normal();
     if (trim_copy(recorded_package_root).empty() &&
         native_startup_source.is_absolute()) {
-        if (const auto contained_startup = admit_existing_packaged_path(
+        if (admit_existing_packaged_path(
                 native_startup_source,
                 manifest_directory,
                 PackagePathBindingMode::strict_relative_fidelity,
-                containment_failure)) {
-            return logical_deployment_path(
-                *contained_startup,
-                manifest_directory).string();
+                containment_failure).has_value()) {
+            return native_startup_source.string();
         }
     }
     if (const auto bound_startup = bind_packaged_path(
@@ -3209,6 +3227,8 @@ int main(int argc, char** argv) {
                 verified_source_texts,
                 current_identity.canonical_path,
                 manifest_directory,
+                current_identity.canonical_path,
+                startup_source,
                 startup_snapshot.bytes);
         }
 
@@ -3246,6 +3266,8 @@ int main(int argc, char** argv) {
                         verified_source_texts,
                         source_path,
                         manifest_directory,
+                        current_identity.canonical_path,
+                        startup_source,
                         source_snapshot.bytes);
                 }
                 if (database_component) {
@@ -3253,6 +3275,8 @@ int main(int argc, char** argv) {
                         verified_file_bytes,
                         source_path,
                         manifest_directory,
+                        current_identity.canonical_path,
+                        startup_source,
                         source_snapshot.bytes);
                 }
             }

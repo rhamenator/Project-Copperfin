@@ -1137,6 +1137,38 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
                "nested-alias watch errors should preserve pseudo-localized prose");
     }
 
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=NestedAliasRootlessPrg\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + logical_prg.string() + "\n"
+        "security_enabled=true\n"
+        "security_role=runtime-operator\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|main.prg|" + (physical_content / "main.prg").string() +
+            "|Program|false|true|" + prg_hash.hex_digest + "|true\n"
+        "extension_payload=" + (physical_content / "verified.h").string() +
+            "|" + include_hash.hex_digest + "\n"
+        "dotnet_story=none\n");
+    {
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            physical_package);
+        if (process.exit_code != 0) {
+            std::cerr << "rootless nested-alias PRG stdout:\n" << process.stdout_text << "\n";
+            std::cerr << "rootless nested-alias PRG stderr:\n" << process.stderr_text << "\n";
+        }
+        expect(process.exit_code == 0,
+               "rootless logical startup should execute after physical alias admission");
+        expect(process.stdout_text.find("startup.source: " + logical_prg.string()) !=
+                   std::string::npos,
+               "rootless startup summary should preserve the admitted manifest path spelling");
+    }
+
     const fs::path physical_form = physical_content / "alias.scx";
     const fs::path physical_sidecar = copperfin::studio::infer_sidecar_path(
         physical_form.string(),
