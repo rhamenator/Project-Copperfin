@@ -1,0 +1,401 @@
+# Copyright © 2026 Richard M. Hamilton. All rights reserved.
+# Licensed under the Project Copperfin Source-Available License or
+# Commercial License. See LICENSE.md in the repository root.
+
+if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required")
+endif()
+
+function(read_contract_file relative_path output_variable)
+    set(workflow_path "${SOURCE_DIR}/${relative_path}")
+    if(NOT EXISTS "${workflow_path}")
+        message(FATAL_ERROR "Required native validation workflow is missing: ${relative_path}")
+    endif()
+
+    file(READ "${workflow_path}" contents)
+    string(REPLACE "\r\n" "\n" contents "${contents}")
+    set(${output_variable} "${contents}" PARENT_SCOPE)
+endfunction()
+
+function(require_text relative_path expected_text description)
+    read_contract_file("${relative_path}" contents)
+    string(FIND "${contents}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "${relative_path} is missing ${description}")
+    endif()
+endfunction()
+
+function(forbid_text relative_path forbidden_text description)
+    read_contract_file("${relative_path}" contents)
+    string(FIND "${contents}" "${forbidden_text}" match_index)
+    if(NOT match_index EQUAL -1)
+        message(FATAL_ERROR "${relative_path} contains forbidden ${description}")
+    endif()
+endfunction()
+
+function(require_regex relative_path expected_regex description)
+    read_contract_file("${relative_path}" contents)
+    string(REGEX MATCH "${expected_regex}" match "${contents}")
+    if("${match}" STREQUAL "")
+        message(FATAL_ERROR "${relative_path} is missing ${description}")
+    endif()
+endfunction()
+
+function(forbid_regex relative_path forbidden_regex description)
+    read_contract_file("${relative_path}" contents)
+    string(REGEX MATCH "${forbidden_regex}" match "${contents}")
+    if(NOT "${match}" STREQUAL "")
+        message(FATAL_ERROR "${relative_path} contains forbidden ${description}: ${match}")
+    endif()
+endfunction()
+
+function(require_regex_count relative_path expected_regex expected_count description)
+    read_contract_file("${relative_path}" contents)
+    string(REGEX MATCHALL "${expected_regex}" matches "${contents}")
+    list(LENGTH matches actual_count)
+    if(NOT actual_count EQUAL expected_count)
+        message(FATAL_ERROR
+            "${relative_path} must contain ${expected_count} ${description}; found ${actual_count}")
+    endif()
+endfunction()
+
+function(require_text_count relative_path expected_text expected_count description)
+    read_contract_file("${relative_path}" contents)
+    string(LENGTH "${expected_text}" expected_length)
+    if(expected_length EQUAL 0)
+        message(FATAL_ERROR "Cannot count an empty contract string")
+    endif()
+
+    string(LENGTH "${contents}" original_length)
+    string(REPLACE "${expected_text}" "" stripped_contents "${contents}")
+    string(LENGTH "${stripped_contents}" stripped_length)
+    math(EXPR removed_length "${original_length} - ${stripped_length}")
+    math(EXPR actual_count "${removed_length} / ${expected_length}")
+    if(NOT actual_count EQUAL expected_count)
+        message(FATAL_ERROR
+            "${relative_path} must contain ${expected_count} ${description}; found ${actual_count}")
+    endif()
+endfunction()
+
+function(validate_artifact_upload_paths relative_path)
+    set(workflow_path "${SOURCE_DIR}/${relative_path}")
+    if(NOT EXISTS "${workflow_path}")
+        message(FATAL_ERROR "Required artifact workflow is missing: ${relative_path}")
+    endif()
+    file(STRINGS "${workflow_path}" lines)
+    set(in_path_block FALSE)
+    set(path_block_indent 0)
+    set(allowed_build_artifact
+        [=[build/${{ inputs.build_configuration }}/*.exe]=])
+
+    foreach(line IN LISTS lines)
+        set(candidate "")
+        if(line MATCHES "^([ \t]*)path:[ \t]*(.*)$")
+            string(LENGTH "${CMAKE_MATCH_1}" path_block_indent)
+            set(candidate "${CMAKE_MATCH_2}")
+            string(STRIP "${candidate}" candidate)
+            if(candidate STREQUAL "|")
+                set(in_path_block TRUE)
+                continue()
+            endif()
+            set(in_path_block FALSE)
+        elseif(in_path_block)
+            if(line MATCHES "^([ \t]*)(.*)$")
+                string(LENGTH "${CMAKE_MATCH_1}" line_indent)
+                set(candidate "${CMAKE_MATCH_2}")
+                string(STRIP "${candidate}" candidate)
+                if(candidate STREQUAL "")
+                    continue()
+                endif()
+                if(line_indent LESS_EQUAL path_block_indent)
+                    set(in_path_block FALSE)
+                    continue()
+                endif()
+            endif()
+        else()
+            continue()
+        endif()
+
+        if(candidate MATCHES "CMakeCache\\.txt" OR candidate MATCHES "CMakeFiles")
+            message(FATAL_ERROR
+                "${relative_path} publishes CMake build metadata: ${candidate}")
+        endif()
+        if(candidate STREQUAL "build" OR candidate STREQUAL "build/" OR
+                (candidate MATCHES "^build/" AND
+                 NOT candidate STREQUAL "${allowed_build_artifact}"))
+            message(FATAL_ERROR
+                "${relative_path} publishes a reusable CMake build tree: ${candidate}")
+        endif()
+    endforeach()
+endfunction()
+
+function(check_caller relative_path workflow_name platform runner check_name)
+    require_regex("${relative_path}"
+        "^name:[ \t]*${workflow_name}[ \t]*\n"
+        "the stable top-level name '${workflow_name}'")
+
+    require_text("${relative_path}" [=[on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:]=]
+        "push/pull_request main and workflow_dispatch triggers")
+    require_text("${relative_path}" [=[permissions:
+  contents: read]=]
+        "top-level read-only contents permission")
+    require_regex("${relative_path}"
+        "\nconcurrency:\n  group:[^\n]*${platform}[^\n]*github\\.event_name[^\n]*\n  cancel-in-progress:[ \t]*true([ \t]*\n|$)"
+        "event- and platform-scoped concurrency with cancellation")
+
+    require_regex_count("${relative_path}"
+        "\n[ \t]+uses:[ \t]*\\./\\.github/actions/native-validation[ \t]*\n"
+        1 "local shared-action reference")
+    require_regex_count("${relative_path}" "\n[ \t]+uses:[ \t]*" 2 "uses entries")
+    require_text_count("${relative_path}"
+        "uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
+        1 "immutable checkout action")
+
+    require_regex("${relative_path}"
+        "\n  [A-Za-z_][A-Za-z0-9_-]*:\n    name: ${check_name}\n    runs-on: ${runner}\n    timeout-minutes: 120\n    steps:"
+        "stable '${check_name}' job identity, runner, and timeout")
+    require_regex("${relative_path}"
+        "\n        uses: \\./\\.github/actions/native-validation\n        with:\n          platform: ${platform}([ \t]*\n|$)"
+        "exact shared-action input for ${platform}")
+
+    forbid_regex("${relative_path}" "\n[ \t]+run:[ \t]*" "caller shell commands")
+    forbid_text("${relative_path}" "cmake " "duplicated CMake command")
+    forbid_text("${relative_path}" "ctest " "duplicated CTest command")
+endfunction()
+
+set(shared_action ".github/actions/native-validation/action.yml")
+set(legacy_workflow "${SOURCE_DIR}/.github/workflows/native-validation.yml")
+set(legacy_reusable_workflow
+    "${SOURCE_DIR}/.github/workflows/native-validation-reusable.yml")
+
+if(EXISTS "${legacy_workflow}")
+    message(FATAL_ERROR
+        ".github/workflows/native-validation.yml must be removed after splitting native validation")
+endif()
+if(EXISTS "${legacy_reusable_workflow}")
+    message(FATAL_ERROR
+        "The reusable-workflow form changes required-check identities; use the shared composite action")
+endif()
+
+check_caller(
+    ".github/workflows/native-validation-linux.yml"
+    "Linux Native Validation"
+    "linux"
+    "ubuntu-latest"
+    "Linux GCC")
+check_caller(
+    ".github/workflows/native-validation-macos.yml"
+    "macOS Native Validation"
+    "macos"
+    "macos-latest"
+    "macOS Clang")
+check_caller(
+    ".github/workflows/native-validation-windows.yml"
+    "Windows Native Validation"
+    "windows"
+    "windows-latest"
+    "Windows MSVC")
+
+set(release_workflow ".github/workflows/native-release-readiness.yml")
+require_text("${release_workflow}" [=[name: Native Release Readiness
+
+on:
+  workflow_dispatch:]=]
+    "manual-only native release trigger")
+require_text("${release_workflow}" [=[permissions:
+  contents: read]=]
+    "read-only native release permission")
+foreach(release_contract IN ITEMS
+        "linux-native-validation|Release Linux GCC|ubuntu-latest|linux"
+        "macos-native-validation|Release macOS Clang|macos-latest|macos"
+        "windows-native-validation|Release Windows MSVC|windows-latest|windows")
+    string(REPLACE "|" ";" release_fields "${release_contract}")
+    list(GET release_fields 0 release_job)
+    list(GET release_fields 1 release_name)
+    list(GET release_fields 2 release_runner)
+    list(GET release_fields 3 release_platform)
+    require_text("${release_workflow}"
+        "  ${release_job}:\n    name: ${release_name}\n    runs-on: ${release_runner}\n    timeout-minutes: 120"
+        "release job '${release_name}'")
+    require_text("${release_workflow}"
+        "uses: ./.github/actions/native-validation\n        with:\n          platform: ${release_platform}"
+        "shared release contract for ${release_platform}")
+endforeach()
+require_text_count("${release_workflow}"
+    "uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
+    3 "immutable release checkout actions")
+require_text("${release_workflow}" [=[  native-release-readiness:
+    name: Native Release Readiness
+    needs:
+      - linux-native-validation
+      - macos-native-validation
+      - windows-native-validation]=]
+    "final gate dependent on all three native platforms")
+forbid_text("${release_workflow}" "actions/upload-artifact" "release build-tree upload")
+forbid_text("${release_workflow}" "actions/download-artifact" "release build-tree reuse")
+forbid_text("${release_workflow}" "cmake " "duplicated release CMake command")
+forbid_text("${release_workflow}" "ctest " "duplicated release CTest command")
+
+foreach(preserved_workflow IN ITEMS
+        .github/workflows/windows-environment-validation.yml
+        .github/workflows/build-vsix.yml
+        .github/workflows/build-installers.yml
+        .github/workflows/windows-deep-validation.yml
+        .github/workflows/windows-x86-declare-validation.yml)
+    if(NOT EXISTS "${SOURCE_DIR}/${preserved_workflow}")
+        message(FATAL_ERROR
+            "Focused product/platform workflow must remain separate: ${preserved_workflow}")
+    endif()
+endforeach()
+
+require_text(".github/workflows/windows-environment-validation.yml"
+    "name: Windows Environment and Executable Path Validation"
+    "focused Windows environment workflow identity")
+require_text(".github/workflows/windows-environment-validation.yml"
+    "--target test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch"
+    "focused Windows environment target inventory")
+require_text(".github/workflows/build-vsix.yml"
+    "name: Build Visual Studio VSIX"
+    "focused VSIX workflow identity")
+require_text(".github/workflows/build-vsix.yml"
+    "path: vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix"
+    "intended VSIX artifact path")
+require_text(".github/workflows/build-installers.yml"
+    "windows-installer:"
+    "Windows installer job")
+require_text(".github/workflows/build-installers.yml"
+    "macos-installer:"
+    "macOS installer job")
+require_text(".github/workflows/build-installers.yml"
+    "linux-deb-rpm-installers:"
+    "Linux installer job")
+require_text(".github/workflows/build-installers.yml"
+    "cpack --config build/CPackConfig.cmake -C Release -G \"NSIS;ZIP\""
+    "Windows CPack generator inventory")
+require_text(".github/workflows/build-installers.yml"
+    "cpack --config build/CPackConfig.cmake -G \"productbuild;TGZ\""
+    "macOS CPack generator inventory")
+foreach(installer_pattern IN ITEMS
+        "copperfin-*.exe"
+        "copperfin-*.zip"
+        "copperfin-*.pkg"
+        "copperfin-*.deb"
+        "copperfin-*.rpm"
+        "copperfin-*.tar.gz")
+    require_text(".github/workflows/build-installers.yml"
+        "${installer_pattern}"
+        "intended installer artifact pattern '${installer_pattern}'")
+endforeach()
+require_text(".github/workflows/windows-deep-validation.yml"
+    "name: Windows Deep Validation"
+    "Windows deep-validation workflow identity")
+foreach(deep_step IN ITEMS
+        "Build Visual Studio extension"
+        "Build standalone Studio shell"
+        "Build designer smoke tests"
+        "Run native CTest suite")
+    require_text(".github/workflows/windows-deep-validation.yml"
+        "${deep_step}"
+        "Windows deep-validation step '${deep_step}'")
+endforeach()
+require_text(".github/workflows/windows-x86-declare-validation.yml"
+    "name: Windows DECLARE ABI Validation"
+    "focused DECLARE workflow identity")
+require_text(".github/workflows/windows-x86-declare-validation.yml"
+    "name: Windows \${{ matrix.platform }} DECLARE"
+    "focused DECLARE check identity")
+require_text(".github/workflows/windows-x86-declare-validation.yml"
+    "--target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization"
+    "focused DECLARE target inventory")
+
+require_text("README.md"
+    "Release readiness requires successful `Linux GCC`, `macOS Clang`, and `Windows MSVC` checks."
+    "three-platform release-readiness guidance")
+require_text("README.md"
+    "Manual `.github/workflows/native-release-readiness.yml` runs all three shared contracts and exposes a final dependent gate."
+    "manual release-gate guidance")
+
+require_text("${shared_action}" "runs:\n  using: composite\n  steps:"
+    "composite-action execution contract")
+require_regex("${shared_action}"
+    "\ninputs:\n  platform:\n    description:[^\n]*\n    required:[ \t]*true([ \t]*\n|$)"
+    "required platform input")
+require_regex_count("${shared_action}"
+    "\n  [A-Za-z_][A-Za-z0-9_-]*:\n    description:[^\n]*\n    required:[ \t]*true([ \t]*\n|$)"
+    1 "composite-action input declaration")
+require_text_count("${shared_action}"
+    "uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0"
+    1 "immutable setup-dotnet action")
+require_text("${shared_action}" [=[uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+      with:
+        dotnet-version: 10.0.x]=]
+    ".NET 10 SDK setup")
+
+require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON]=]
+    "non-Windows configure command")
+require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON]=]
+    "Windows configure command")
+require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: cmake --build build --parallel 2]=]
+    "bounded non-Windows build command")
+require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: cmake --build build --config Release --parallel 2]=]
+    "bounded Windows build command")
+require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: ctest --test-dir build --output-on-failure]=]
+    "full non-Windows CTest command")
+require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: ctest --test-dir build -C Release --output-on-failure]=]
+    "full Windows CTest command")
+
+require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake -S "
+    2 "configure commands")
+require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake --build "
+    2 "build commands")
+require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*ctest "
+    2 "CTest commands")
+require_text_count("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}]=]
+    3 "non-Windows platform conditions")
+require_text_count("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}]=]
+    3 "Windows platform conditions")
+
+forbid_text("${shared_action}" "upload-artifact" "artifact upload")
+forbid_regex("${shared_action}" "ctest[^\n]*[ \t]-R([ \t=]|\n|$)" "CTest -R filtering")
+forbid_text("${shared_action}" "--tests-regex" "CTest regex filtering")
+
+foreach(native_workflow IN ITEMS
+        .github/actions/native-validation/action.yml
+        .github/workflows/native-validation-linux.yml
+        .github/workflows/native-validation-macos.yml
+        .github/workflows/native-validation-windows.yml
+        .github/workflows/native-release-readiness.yml)
+    forbid_text("${native_workflow}" "actions/upload-artifact" "artifact upload action")
+    forbid_text("${native_workflow}" "actions/download-artifact" "artifact download action")
+    forbid_regex("${native_workflow}"
+        "path:[^\n]*(CMakeCache\\.txt|CMakeFiles|(^|[/\\\\])build([/\\\\]|$))"
+        "CMake build-tree artifact path")
+endforeach()
+
+foreach(artifact_workflow IN ITEMS
+        .github/workflows/build-vsix.yml
+        .github/workflows/build-installers.yml
+        .github/workflows/windows-deep-validation.yml)
+    forbid_text("${artifact_workflow}" "CMakeCache.txt" "CMake cache artifact")
+    forbid_text("${artifact_workflow}" "CMakeFiles" "CMake metadata artifact")
+    validate_artifact_upload_paths("${artifact_workflow}")
+endforeach()
+
+message(STATUS "Native platform workflow contract check passed")

@@ -15,7 +15,7 @@ function(require_text relative_path expected_text)
 endfunction()
 
 foreach(workflow_path IN ITEMS
-        .github/workflows/native-validation.yml
+        .github/actions/native-validation/action.yml
         .github/workflows/windows-deep-validation.yml
         .github/workflows/windows-x86-declare-validation.yml)
     file(STRINGS "${SOURCE_DIR}/${workflow_path}" workflow_lines)
@@ -39,4 +39,9 @@ require_text("scripts/validate-posix.sh" "cmake --build \"\$build_dir\" --parall
 require_text("scripts/validate-windows.ps1" "[int]\$BuildJobs = 2")
 require_text("scripts/validate-windows.ps1" "\"--parallel\", \"\$BuildJobs\"")
 require_text("README.md" "Native CMake validation defaults to two concurrent compile jobs")
-require_text(".github/workflows/native-validation.yml" "timeout-minutes: 120")
+foreach(native_workflow IN ITEMS
+        .github/workflows/native-validation-linux.yml
+        .github/workflows/native-validation-macos.yml
+        .github/workflows/native-validation-windows.yml)
+    require_text("${native_workflow}" "timeout-minutes: 120")
+endforeach()

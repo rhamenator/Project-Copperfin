@@ -1,6 +1,8 @@
 # Project Copperfin
 
-[![Native CMake Validation](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation.yml)
+[![Linux Native Validation](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-linux.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-linux.yml)
+[![macOS Native Validation](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-macos.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-macos.yml)
+[![Windows Native Validation](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-windows.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/native-validation-windows.yml)
 [![Build Standalone Installers](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-installers.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-installers.yml)
 [![Build Visual Studio VSIX](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-vsix.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/build-vsix.yml)
 [![Security Supply Chain Gate](https://github.com/rhamenator/Project-Copperfin/actions/workflows/security-supply-chain.yml/badge.svg?branch=main)](https://github.com/rhamenator/Project-Copperfin/actions/workflows/security-supply-chain.yml)
@@ -172,7 +174,8 @@ Native CMake validation defaults to two concurrent compile jobs to stay within h
 
 GitHub validation:
 
-- `.github/workflows/native-validation.yml` runs the portable native CMake build and CTest suite on hosted Linux, macOS, and Windows runners for pushes, pull requests, and manual dispatch.
+- `.github/workflows/native-validation-linux.yml`, `.github/workflows/native-validation-macos.yml`, and `.github/workflows/native-validation-windows.yml` provide independently dispatchable platform checks. All three call `.github/actions/native-validation/action.yml`, which keeps configure, bounded compilation, and the full CTest suite in one platform job while preserving the stable platform check names.
+- Release readiness requires successful `Linux GCC`, `macOS Clang`, and `Windows MSVC` checks. Manual `.github/workflows/native-release-readiness.yml` runs all three shared contracts and exposes a final dependent gate. Native validation does not publish or reuse CMake build trees between jobs or workflow runs.
 - `.github/workflows/build-installers.yml` remains focused on packaging standalone installer artifacts and intentionally builds with tests disabled.
 - `.github/workflows/windows-deep-validation.yml` is manual dispatch only and runs a deeper Windows hosted build across native tests, VSIX, standalone Studio, and designer smoke test binaries.
 

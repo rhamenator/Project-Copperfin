@@ -1,0 +1,45 @@
+name: Native CMake validation
+description: Configure, build, and run the full native CTest inventory for one platform.
+
+inputs:
+  platform:
+    description: Platform contract used to select single- or multi-config CMake commands.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Configure native build
+      if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
+
+    - name: Configure native build
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+    - name: Build native targets
+      if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: cmake --build build --parallel 2
+
+    - name: Build native targets
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: cmake --build build --config Release --parallel 2
+
+    - name: Run native test suite
+      if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: ctest --test-dir build --output-on-failure
+
+    - name: Run native test suite
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: ctest --test-dir build -C Release --output-on-failure

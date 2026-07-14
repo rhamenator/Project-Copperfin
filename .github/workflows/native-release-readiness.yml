@@ -1,0 +1,59 @@
+name: Native Release Readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-native-validation:
+    name: Release Linux GCC
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run shared native validation
+        uses: ./.github/actions/native-validation
+        with:
+          platform: linux
+
+  macos-native-validation:
+    name: Release macOS Clang
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run shared native validation
+        uses: ./.github/actions/native-validation
+        with:
+          platform: macos
+
+  windows-native-validation:
+    name: Release Windows MSVC
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run shared native validation
+        uses: ./.github/actions/native-validation
+        with:
+          platform: windows
+
+  native-release-readiness:
+    name: Native Release Readiness
+    needs:
+      - linux-native-validation
+      - macos-native-validation
+      - windows-native-validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm native release gate
+        shell: bash
+        run: echo "Linux GCC, macOS Clang, and Windows MSVC validation passed."
