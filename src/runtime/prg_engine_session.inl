@@ -2872,6 +2872,28 @@
             {
                 for (const Statement &property_statement : lineage_class.class_definition->property_statements)
                 {
+                    if (property_statement.kind == StatementKind::dimension_command)
+                    {
+                        for (const std::string &declaration : property_statement.names)
+                        {
+                            std::string property_name;
+                            std::size_t rows = 0U;
+                            std::size_t columns = 1U;
+                            if (!parse_array_reference(declaration, frame, property_name, rows, columns) ||
+                                !is_bare_identifier_text(property_name))
+                            {
+                                continue;
+                            }
+                            property_name = normalize_identifier(property_name);
+                            RuntimeArray array;
+                            array.rows = rows;
+                            array.columns = columns;
+                            array.values.resize(rows * columns);
+                            native_object_arrays[runtime_object->handle][property_name] = std::move(array);
+                            runtime_object->properties[property_name] = make_empty_value();
+                        }
+                        continue;
+                    }
                     if (property_statement.kind != StatementKind::assignment)
                     {
                         continue;

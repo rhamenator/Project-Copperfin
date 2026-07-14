@@ -1375,6 +1375,59 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_class_dimension_properties_are_per_instance_arrays()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_class_dimension_properties";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_dimension_properties.prg";
+        write_text(
+            main_path,
+            "oFirst = CREATEOBJECT('ArrayHolder')\n"
+            "oSecond = CREATEOBJECT('ArrayHolder')\n"
+            "cType = TYPE('oFirst.aValues')\n"
+            "nRows = ALEN(oFirst.aValues, 1)\n"
+            "nColumns = ALEN(oFirst.aValues, 2)\n"
+            "oFirst.aValues[1, 2] = 'first'\n"
+            "oSecond.aValues[1, 2] = 'second'\n"
+            "cFirst = oFirst.aValues[1, 2]\n"
+            "cSecond = oSecond.aValues[1, 2]\n"
+            "RETURN\n"
+            "DEFINE CLASS ArrayHolder AS Custom\n"
+            "    DIMENSION aValues[2, 2]\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native class DIMENSION script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("ctype", "A");
+        check("nrows", "2");
+        check("ncolumns", "2");
+        check("cfirst", "first");
+        check("csecond", "second");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject()
     {
         namespace fs = std::filesystem;
@@ -54658,6 +54711,7 @@ int main()
     test_cursor_xml_cardinality_mismatch_preserves_destinations();
     test_newobject_getpem_setpem_compobj_functions();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
+    test_native_prg_class_dimension_properties_are_per_instance_arrays();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_createobject_and_newobject_instantiate_same_prg_session_native_class();
     test_createobject_and_newobject_instantiate_same_prg_session_olepublic_native_class();

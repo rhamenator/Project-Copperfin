@@ -15,6 +15,10 @@
             const auto resolve_array_argument_name = [&](std::size_t index)
             {
                 std::string candidate = index < raw_arguments.size() ? trim_copy(raw_arguments[index]) : std::string{};
+                if (has_array(candidate, frame))
+                {
+                    return candidate;
+                }
                 if (!is_bare_identifier_text(candidate) &&
                     index < arguments.size() &&
                     arguments[index].kind == PrgValueKind::string)
@@ -54,7 +58,7 @@
                         candidate = next;
                     }
                 }
-                return canonical_array_name(candidate, frame);
+                return has_array(candidate, frame) ? candidate : canonical_array_name(candidate, frame);
             };
             const std::string array_name = resolve_array_argument_name(0U);
             const std::string normalized_function = normalize_identifier(function);

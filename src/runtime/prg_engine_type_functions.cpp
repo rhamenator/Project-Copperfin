@@ -133,7 +133,7 @@ std::optional<PrgValue> evaluate_type_function(
     }
     if (function == "type" && !arguments.empty()) {
         const std::string expr = normalize_type_expression(value_as_string(arguments[0]));
-        if (is_bare_identifier_text(expr) && array_exists_callback(expr)) {
+        if (array_exists_callback(expr)) {
             return make_string_value("A");
         }
         return make_string_value(vartype_code(eval_expression_callback(expr)));

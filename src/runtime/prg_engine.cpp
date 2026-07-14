@@ -762,6 +762,7 @@ namespace copperfin::runtime
         std::optional<PrgValue> last_return_value;
         bool last_popped_frame_requested_nodefault = false;
         std::map<std::string, RuntimeArray> arrays;
+        std::map<int, std::map<std::string, RuntimeArray>> native_object_arrays;
         std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;
         std::optional<SourceLocation> resume_skip_breakpoint_location;
@@ -6705,6 +6706,7 @@ namespace copperfin::runtime
         {
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
+            native_object_arrays.erase(handle);
             ole_objects.erase(handle);
         }
         if (representative_active_form_handle.has_value() &&
@@ -6868,6 +6870,7 @@ namespace copperfin::runtime
                 native_event_bindings.end());
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
+            native_object_arrays.erase(handle);
             ole_objects.erase(handle);
         }
 

@@ -123,26 +123,115 @@
                        : canonical_array_name(name, stack.back());
         }
 
+        std::optional<std::pair<int, std::string>> find_native_object_array_reference(
+            const std::string &name,
+            const Frame &frame) const
+        {
+            const std::string reference = trim_copy(name);
+            if (reference.find('.') == std::string::npos)
+            {
+                return std::nullopt;
+            }
+
+            std::vector<std::string> segments;
+            std::size_t segment_start = 0U;
+            while (segment_start < reference.size())
+            {
+                const std::size_t separator = reference.find('.', segment_start);
+                const std::string segment = trim_copy(reference.substr(
+                    segment_start,
+                    separator == std::string::npos ? std::string::npos : separator - segment_start));
+                if (!is_bare_identifier_text(segment))
+                {
+                    return std::nullopt;
+                }
+                segments.push_back(segment);
+                if (separator == std::string::npos)
+                {
+                    break;
+                }
+                segment_start = separator + 1U;
+            }
+            if (segments.size() < 2U)
+            {
+                return std::nullopt;
+            }
+
+            PrgValue object_reference = lookup_variable(frame, segments.front());
+            int object_handle = 0;
+            std::string object_prog_id;
+            if (!parse_object_handle_reference(object_reference, object_handle, object_prog_id))
+            {
+                return std::nullopt;
+            }
+
+            for (std::size_t index = 1U; index + 1U < segments.size(); ++index)
+            {
+                const auto object = ole_objects.find(object_handle);
+                if (object == ole_objects.end())
+                {
+                    return std::nullopt;
+                }
+                const auto property = object->second.properties.find(normalize_identifier(segments[index]));
+                if (property == object->second.properties.end() ||
+                    !parse_object_handle_reference(property->second, object_handle, object_prog_id))
+                {
+                    return std::nullopt;
+                }
+            }
+
+            const std::string property_name = normalize_identifier(segments.back());
+            const auto object_arrays = native_object_arrays.find(object_handle);
+            if (property_name.empty() || object_arrays == native_object_arrays.end() ||
+                !object_arrays->second.contains(property_name))
+            {
+                return std::nullopt;
+            }
+            return std::pair<int, std::string>{object_handle, property_name};
+        }
+
         RuntimeArray *find_array(const std::string &name)
         {
+            if (!stack.empty())
+            {
+                if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
+                {
+                    return &native_object_arrays[native_array->first][native_array->second];
+                }
+            }
             const auto found = arrays.find(canonical_array_name(name));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
         const RuntimeArray *find_array(const std::string &name) const
         {
+            if (!stack.empty())
+            {
+                if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
+                {
+                    return &native_object_arrays.at(native_array->first).at(native_array->second);
+                }
+            }
             const auto found = arrays.find(canonical_array_name(name));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
         RuntimeArray *find_array(const std::string &name, const Frame &frame)
         {
+            if (const auto native_array = find_native_object_array_reference(name, frame); native_array.has_value())
+            {
+                return &native_object_arrays[native_array->first][native_array->second];
+            }
             const auto found = arrays.find(canonical_array_name(name, frame));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
         const RuntimeArray *find_array(const std::string &name, const Frame &frame) const
         {
+            if (const auto native_array = find_native_object_array_reference(name, frame); native_array.has_value())
+            {
+                return &native_object_arrays.at(native_array->first).at(native_array->second);
+            }
             const auto found = arrays.find(canonical_array_name(name, frame));
             return found == arrays.end() ? nullptr : &found->second;
         }
@@ -254,6 +343,14 @@
             array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
             array.values = std::move(values);
             array.values.resize(array.rows * array.columns);
+            if (!stack.empty())
+            {
+                if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
+                {
+                    native_object_arrays[native_array->first][native_array->second] = std::move(array);
+                    return;
+                }
+            }
             arrays[canonical_array_name(name)] = std::move(array);
         }
 
