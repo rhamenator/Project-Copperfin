@@ -437,7 +437,8 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = "DotNetFinalize";
-    workspace.build_plan.output_path = (output_dir / "DotNetFinalize.exe").string();
+    workspace.build_plan.output_path =
+        (output_dir / "Copperfin.GeneratedLauncher.exe").string();
     workspace.build_plan.startup_item = "main.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -485,6 +486,12 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
         const fs::path launcher_runtimeconfig = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
         const fs::path launcher_pdb = package_root / "Copperfin.GeneratedLauncher.pdb";
+
+        expect(
+            fs::is_regular_file(result.plan.ast_manifest_path) &&
+                fs::path(result.plan.ast_manifest_path).filename().string().starts_with(
+                    "Copperfin.GeneratedLauncher."),
+            "#4052: a valid public OUTFILE may give Copperfin-owned compiler artifacts the internal launcher prefix");
 
         write_text(launcher_output, "published-launcher");
         const auto missing_sidecars = copperfin::runtime::finalize_runtime_package_primary_output(

@@ -5,6 +5,8 @@
 #include "runtime_pipeline_support.h"
 #include "copperfin/security/physical_path_containment.h"
 
+#include <array>
+
 #if defined(_WIN32)
 #include <windows.h>
 #endif
@@ -143,6 +145,49 @@ bool admit_launcher_artifact(
     return true;
 }
 
+void append_plan_owned_direct_file_name(
+    std::vector<std::string>& names,
+    const std::filesystem::path& package_root,
+    const std::string& path_text) {
+    if (path_text.empty()) {
+        return;
+    }
+    const std::filesystem::path path(path_text);
+    if (path.parent_path().lexically_normal() != package_root.lexically_normal()) {
+        return;
+    }
+    names.push_back(path.filename().generic_string());
+}
+
+void append_plan_owned_direct_file_names(
+    std::vector<std::string>& names,
+    const RuntimePackagePlan& plan,
+    const std::filesystem::path& package_root) {
+    const std::array<const std::string*, 17U> paths{
+        &plan.manifest_path,
+        &plan.debug_manifest_path,
+        &plan.ast_manifest_path,
+        &plan.ir_manifest_path,
+        &plan.transpiled_csharp_path,
+        &plan.launcher_project_path,
+        &plan.launcher_source_path,
+        &plan.module_definition_path,
+        &plan.native_wrapper_source_path,
+        &plan.native_wrapper_cmake_path,
+        &plan.native_wrapper_build_script_path,
+        &plan.native_wrapper_build_powershell_path,
+        &plan.library_api_manifest_path,
+        &plan.fll_api_manifest_path,
+        &plan.fxp_token_manifest_path,
+        &plan.app_archive_manifest_path,
+        &plan.runtime_host_destination_path
+    };
+    for (const auto* path : paths) {
+        append_plan_owned_direct_file_name(names, package_root, *path);
+    }
+    append_plan_owned_direct_file_name(names, package_root, plan.audit_log_path);
+}
+
 }  // namespace
 
 std::string_view launcher_artifact_role_name(const RuntimeLauncherArtifactRole role) {
@@ -203,6 +248,7 @@ bool inventory_generated_launcher_artifacts(
     for (const auto& spec : specs) {
         allowed_names.push_back(spec.path.filename().generic_string());
     }
+    append_plan_owned_direct_file_names(allowed_names, plan, package_root);
     std::error_code iterator_error;
     for (std::filesystem::directory_iterator it(package_root, iterator_error), end;
          it != end;
