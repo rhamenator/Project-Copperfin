@@ -176,6 +176,35 @@ std::string resolve_runtime_host_path(
     return (host_root / host_name).string();
 }
 
+#if defined(_WIN32)
+std::wstring quote_windows_spawn_argument(const std::wstring& value) {
+    if (!value.empty() && value.find_first_of(L" \t\n\v\"") == std::wstring::npos) {
+        return value;
+    }
+
+    std::wstring quoted = L"\"";
+    std::size_t backslashes = 0U;
+    for (const wchar_t ch : value) {
+        if (ch == L'\\') {
+            ++backslashes;
+            continue;
+        }
+        if (ch == L'\"') {
+            quoted.append(backslashes * 2U + 1U, L'\\');
+            quoted.push_back(ch);
+            backslashes = 0U;
+            continue;
+        }
+        quoted.append(backslashes, L'\\');
+        backslashes = 0U;
+        quoted.push_back(ch);
+    }
+    quoted.append(backslashes * 2U, L'\\');
+    quoted.push_back(L'\"');
+    return quoted;
+}
+#endif
+
 bool run_dotnet_publish(
     const copperfin::runtime::RuntimePackagePlan& plan,
     const copperfin::localization::LocalizedCatalog& catalog,
@@ -212,17 +241,33 @@ bool run_dotnet_publish(
         output_dir.string()
     };
 
+    intptr_t exit_code = -1;
+#if defined(_WIN32)
+    std::vector<std::wstring> wide_args;
+    wide_args.reserve(publish_args.size());
+    wide_args.push_back(std::filesystem::path(auth.resolved_path).filename().wstring());
+    for (std::size_t index = 1U; index < publish_args.size(); ++index) {
+        wide_args.push_back(quote_windows_spawn_argument(
+            std::filesystem::path(publish_args[index]).wstring()));
+    }
+
+    std::vector<const wchar_t*> argv;
+    argv.reserve(wide_args.size() + 1U);
+    for (const auto& arg : wide_args) {
+        argv.push_back(arg.c_str());
+    }
+    argv.push_back(nullptr);
+    exit_code = _wspawnv(
+        _P_WAIT,
+        std::filesystem::path(auth.resolved_path).c_str(),
+        argv.data());
+#else
     std::vector<const char*> argv;
     argv.reserve(publish_args.size() + 1U);
     for (const auto& arg : publish_args) {
         argv.push_back(arg.c_str());
     }
     argv.push_back(nullptr);
-
-    intptr_t exit_code = -1;
-#if defined(_WIN32)
-    exit_code = _spawnvp(_P_WAIT, auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
-#else
     const pid_t child = fork();
     if (child == 0) {
         execvp(auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
