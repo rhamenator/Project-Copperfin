@@ -162,6 +162,7 @@ add_library(cf_vfp_assets
     src/vfp/asset_inspector.cpp
     src/vfp/cdx_header.cpp
     src/vfp/dbf_header.cpp
+    src/vfp/dbf_text_encoding.cpp
     src/vfp/dbf_table.cpp
     src/vfp/index_probe.cpp
     src/vfp/sidecar_path.cpp

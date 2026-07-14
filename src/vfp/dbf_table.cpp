@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/dbf_text_encoding.h"
 
 #include "dbf_table_raw_mutation.h"
 
@@ -611,17 +612,26 @@ DbfWriteResult write_memo_field_bytes(
     return {.ok = true, .error = {}, .record_count = record_count};
 }
 
-DbfWriteResult write_memo_field_bytes(
+DbfWriteResult write_memo_field_text(
     std::vector<std::uint8_t>& table_bytes,
+    const DbfHeader& header,
     std::size_t field_offset,
     std::vector<std::uint8_t>& memo_bytes,
     const std::string& value,
     std::size_t record_count) {
+    const DbfTextConversionResult encoded = encode_dbf_text(header.code_page_mark, value);
+    if (!encoded.ok) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"),
+            .record_count = record_count
+        };
+    }
     return write_memo_field_bytes(
         table_bytes,
         field_offset,
         memo_bytes,
-        std::vector<std::uint8_t>(value.begin(), value.end()),
+        std::vector<std::uint8_t>(encoded.text.begin(), encoded.text.end()),
         record_count,
         false);
 }
@@ -650,11 +660,19 @@ DbfWriteResult write_field_bytes(
 
     switch (field.type) {
         case 'C': {
-            const std::string text = trim_right(value);
-            if (text.size() > field.length) {
+            const DbfTextConversionResult encoded = encode_dbf_text(
+                header.code_page_mark,
+                trim_right(value));
+            if (!encoded.ok) {
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"), .record_count = header.record_count};
+            }
+            if (encoded.text.size() > field.length) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CharacterValueTooLarge"), .record_count = header.record_count};
             }
-            std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
+            std::copy(
+                encoded.text.begin(),
+                encoded.text.end(),
+                table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
         }
         case 'N':
@@ -1012,10 +1030,22 @@ std::string format_binary_bytes(const std::vector<std::uint8_t>& bytes) {
     return stream.str();
 }
 
-std::string decode_value(
+struct DecodedDbfValue {
+    bool ok = true;
+    std::string display_value;
+
+    DecodedDbfValue() = default;
+    DecodedDbfValue(const char* value) : display_value(value) {}
+    DecodedDbfValue(std::string value) : display_value(std::move(value)) {}
+    DecodedDbfValue(bool success, std::string value)
+        : ok(success), display_value(std::move(value)) {}
+};
+
+DecodedDbfValue decode_value(
     char field_type,
     const std::vector<std::uint8_t>& raw,
     const MemoReader& memo_reader,
+    std::uint8_t code_page_mark,
     bool& is_null,
     std::uint32_t& memo_block_number) {
     is_null = false;
@@ -1026,7 +1056,12 @@ std::string decode_value(
 
     switch (field_type) {
         case 'C': {
-            return trim_right(std::string(raw.begin(), raw.end()));
+            const DbfTextConversionResult decoded = decode_dbf_text(
+                code_page_mark,
+                trim_right(std::string(raw.begin(), raw.end())));
+            return decoded.ok
+                ? DecodedDbfValue(std::move(decoded.text))
+                : DecodedDbfValue(format_binary_bytes(raw));
         }
         case 'N':
         case 'F': {
@@ -1082,7 +1117,11 @@ std::string decode_value(
             const std::size_t payload_length = std::min<std::size_t>(payload_capacity, raw.back());
             std::string value(raw.begin(), raw.begin() + static_cast<std::ptrdiff_t>(payload_length));
             if (field_type == 'V') {
-                return trim_right(std::move(value));
+                const DbfTextConversionResult decoded = decode_dbf_text(code_page_mark, trim_right(std::move(value)));
+                return decoded.ok
+                    ? DecodedDbfValue(std::move(decoded.text))
+                    : DecodedDbfValue(format_binary_bytes(
+                        std::vector<std::uint8_t>(value.begin(), value.end())));
             }
             return value;
         }
@@ -1096,7 +1135,32 @@ std::string decode_value(
             stream << "julian:" << julian_day << " millis:" << millis;
             return stream.str();
         }
-        case 'M':
+        case 'M': {
+            if (raw.size() < 4U) {
+                return {};
+            }
+            const std::uint32_t block_number = read_le_u32(raw, 0U);
+            memo_block_number = block_number;
+            if (block_number == 0U) {
+                return {};
+            }
+            const auto memo_bytes = memo_reader.read_block_raw(block_number);
+            if (memo_bytes.has_value()) {
+                const DbfTextConversionResult decoded = decode_dbf_text(
+                    code_page_mark,
+                    std::string_view(
+                        reinterpret_cast<const char*>(memo_bytes->data()),
+                        memo_bytes->size()));
+                if (!decoded.ok) {
+                    const auto legacy_display = memo_reader.read_block(block_number);
+                    return legacy_display.has_value() ? DecodedDbfValue(*legacy_display) : DecodedDbfValue{};
+                }
+                return trim_right(std::move(decoded.text));
+            }
+            std::ostringstream stream;
+            stream << "<memo block " << block_number << ">";
+            return stream.str();
+        }
         case 'G':
         case 'P': {
             if (raw.size() < 4U) {
@@ -1260,12 +1324,25 @@ DbfTableParseResult parse_dbf_table_from_file(
 
             bool is_null = false;
             std::uint32_t memo_block_number = 0U;
-            const std::string display_value = decode_value(field.type, raw, memo_reader, is_null, memo_block_number);
+            const DecodedDbfValue decoded_value = decode_value(
+                field.type,
+                raw,
+                memo_reader,
+                table.header.code_page_mark,
+                is_null,
+                memo_block_number);
+            if (!decoded_value.ok) {
+                return {
+                    .ok = false,
+                    .table = {},
+                    .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed")
+                };
+            }
             record.values.push_back({
                 .field_name = field.name,
                 .field_type = field.type,
                 .is_null = is_null,
-                .display_value = display_value,
+                .display_value = decoded_value.display_value,
                 .memo_block_number = memo_block_number
             });
         }
@@ -1421,7 +1498,8 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records,
-    const DbfCreateOverrides* overrides) {
+    const DbfCreateOverrides* overrides,
+    std::uint8_t code_page_mark = 0U) {
     if (fields.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
     }
@@ -1507,6 +1585,7 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     write_le_u32(bytes, 4U, static_cast<std::uint32_t>(records.size()));
     write_le_u16(bytes, 8U, header_length);
     write_le_u16(bytes, 10U, record_length);
+    bytes[29U] = code_page_mark;
 
     std::size_t descriptor_offset = 32U;
     for (const auto& field : raw_fields) {
@@ -1530,7 +1609,7 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         .header_length = header_length,
         .record_length = record_length,
         .table_flags = 0U,
-        .code_page_mark = 0U
+        .code_page_mark = code_page_mark
     };
 
     std::vector<std::uint8_t> memo_bytes = has_memo_fields ? create_empty_memo_sidecar() : std::vector<std::uint8_t>{};
@@ -1589,8 +1668,9 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
                         records.size(),
                         true);
                 } else {
-                    write_result = write_memo_field_bytes(
+                    write_result = write_memo_field_text(
                         bytes,
+                        header,
                         record_offset + raw_fields[field_index].offset,
                         memo_bytes,
                         records[record_index][field_index],
@@ -1679,7 +1759,12 @@ static DbfWriteResult rewrite_dbf_table_schema(
         .preserved_raw_fields = &rewrite_rows.preserved_raw_fields,
         .deleted_flags = &rewrite_rows.deleted_flags
     };
-    return create_dbf_table_file_with_memo_payloads(path, fields, rewrite_rows.records, &overrides);
+    return create_dbf_table_file_with_memo_payloads(
+        path,
+        fields,
+        rewrite_rows.records,
+        &overrides,
+        table.header.code_page_mark);
 }
 
 namespace {
@@ -2444,7 +2529,15 @@ static DbfWriteResult replace_record_field_value_impl(
                 }
                 appended_payload = *payload;
             }
-            appended_payload.insert(appended_payload.end(), value.begin(), value.end());
+            const DbfTextConversionResult encoded = encode_dbf_text(header_result.header.code_page_mark, value);
+            if (!encoded.ok) {
+                return {
+                    .ok = false,
+                    .error = dbf_table_text("Vfp.DbfTable.Error.TextEncodingConversionFailed"),
+                    .record_count = header_result.header.record_count
+                };
+            }
+            appended_payload.insert(appended_payload.end(), encoded.text.begin(), encoded.text.end());
             result = write_memo_field_bytes(
                 bytes,
                 field_offset,
@@ -2453,8 +2546,9 @@ static DbfWriteResult replace_record_field_value_impl(
                 header_result.header.record_count,
                 block_number != 0U);
         } else {
-            result = write_memo_field_bytes(
+            result = write_memo_field_text(
                 bytes,
+                header_result.header,
                 field_offset,
                 memo_bytes,
                 value,

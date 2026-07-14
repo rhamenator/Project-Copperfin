@@ -5,6 +5,7 @@
 #include "visual_asset_editor_support.h"
 
 #include "dbf_table_raw_mutation.h"
+#include "copperfin/vfp/dbf_text_encoding.h"
 
 namespace copperfin::vfp {
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
@@ -797,12 +798,17 @@ VisualAssetEditResult replace_non_memo_field_value(
 
     switch (field.type) {
         case 'C': {
-            const std::string text = trim_both(new_value);
-            if (text.size() > field.length) {
+            const DbfTextConversionResult encoded = encode_dbf_text(
+                header_result.header.code_page_mark,
+                trim_both(new_value));
+            if (!encoded.ok) {
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
+            }
+            if (encoded.text.size() > field.length) {
                 return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.CharacterValueTooLarge")};
             }
-            std::copy(text.begin(),
-                      text.end(),
+            std::copy(encoded.text.begin(),
+                      encoded.text.end(),
                       table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
         }
@@ -896,6 +902,13 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = header_result.error};
     }
 
+    const DbfTextConversionResult encoded = encode_dbf_text(
+        header_result.header.code_page_mark,
+        new_value);
+    if (!encoded.ok) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
+    }
+
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(table_bytes);
 
     const auto field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
@@ -946,7 +959,7 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarNextFreeBlockInvalid")};
     }
 
-    const auto required_bytes = static_cast<std::size_t>(8U + new_value.size());
+    const auto required_bytes = static_cast<std::size_t>(8U + encoded.text.size());
     const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
     const std::size_t new_block_offset = static_cast<std::size_t>(next_free_block) * block_size;
     const std::size_t new_total_size = new_block_offset + (static_cast<std::size_t>(required_blocks) * block_size);
@@ -957,14 +970,14 @@ VisualAssetEditResult replace_memo_field_value(
     for (std::size_t index = 0; index < original_block_header.size(); ++index) {
         memo_bytes[new_block_offset + index] = original_block_header[index];
     }
-    write_be_u32(memo_bytes, new_block_offset + 4U, static_cast<std::uint32_t>(new_value.size()));
+    write_be_u32(memo_bytes, new_block_offset + 4U, static_cast<std::uint32_t>(encoded.text.size()));
     std::fill(
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_block_offset + 8U),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_total_size),
         static_cast<std::uint8_t>(0U));
     std::copy(
-        new_value.begin(),
-        new_value.end(),
+        encoded.text.begin(),
+        encoded.text.end(),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_block_offset + 8U));
 
     write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);

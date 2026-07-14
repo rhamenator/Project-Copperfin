@@ -3939,6 +3939,19 @@ copperfin_apply_windows_stack_reserve(test_studio_host)
 copperfin_add_test(test_dbf_table cf_vfp_assets
     test_dbf_table.cpp
 )
+
+copperfin_add_test(test_dbf_text_encoding cf_vfp_assets
+    test_dbf_text_encoding.cpp
+)
+
+copperfin_add_test(test_visual_asset_editor_code_page cf_vfp_assets
+    test_visual_asset_editor_code_page.cpp
+)
+add_test(
+    NAME test_studio_host_code_page
+    COMMAND $<TARGET_FILE:test_visual_asset_editor_code_page> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_test(
     NAME test_dbf_table_active_locale
     COMMAND $<TARGET_FILE:test_dbf_table> --active-locale-missing-field

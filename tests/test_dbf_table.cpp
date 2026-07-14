@@ -1319,6 +1319,75 @@ void test_schema_rewrites_preserve_raw_memo_and_unaffected_field_bytes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_schema_rewrites_preserve_code_page_marks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_schema_code_page_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "marked.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "NOTES", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"", ""}});
+    expect(create_result.ok, "marked schema fixture should be created");
+
+    {
+        std::fstream output(table_path, std::ios::binary | std::ios::in | std::ios::out);
+        output.seekp(29U);
+        output.put(static_cast<char>(0x03U));
+    }
+    const auto name_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "NAME", "caf\xC3\xA9");
+    const auto notes_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "NOTES", "na\xC3\xAFve");
+    expect(name_result.ok && notes_result.ok, "marked schema fixture text should be writable");
+
+    const auto expect_marked_text = [&](const std::string& stage) {
+        const auto header = copperfin::vfp::parse_dbf_header_from_file(table_path.string());
+        const auto table = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(header.ok && header.header.code_page_mark == 0x03U,
+               stage + " should preserve the CP1252 header mark");
+        expect(table.ok && table.table.records.size() == 1U,
+               stage + " should remain readable");
+        if (table.ok && !table.table.records.empty()) {
+            const auto field_value = [&](const std::string& field_name) {
+                const auto value = std::find_if(
+                    table.table.records.front().values.begin(),
+                    table.table.records.front().values.end(),
+                    [&](const copperfin::vfp::DbfRecordValue& candidate) {
+                        return candidate.field_name == field_name;
+                    });
+                return value == table.table.records.front().values.end() ? nullptr : &*value;
+            };
+            const auto* name = field_value("NAME");
+            const auto* notes = field_value("NOTES");
+            expect(name != nullptr && name->display_value == "caf\xC3\xA9",
+                   stage + " should preserve decoded character text");
+            expect(notes != nullptr && notes->display_value == "na\xC3\xAFve",
+                   stage + " should preserve decoded memo text");
+        }
+    };
+
+    expect(copperfin::vfp::add_dbf_table_field(
+               table_path.string(), {.name = "EXTRA", .type = 'C', .length = 8U}).ok,
+           "ADD COLUMN should succeed on a marked table");
+    expect_marked_text("ADD COLUMN");
+    expect(copperfin::vfp::drop_dbf_table_field(table_path.string(), "EXTRA").ok,
+           "DROP COLUMN should succeed on a marked table");
+    expect_marked_text("DROP COLUMN");
+    expect(copperfin::vfp::alter_dbf_table_field(
+               table_path.string(), {.name = "NAME", .type = 'C', .length = 32U}).ok,
+           "ALTER COLUMN should succeed on a marked table");
+    expect_marked_text("ALTER COLUMN");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_indexed_table_mutations_succeed_with_production_flags_and_companions() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2759,6 +2828,7 @@ int main(int argc, char* argv[]) {
     test_pack_memo_fails_when_referenced_payload_cannot_be_recovered();
     test_additive_memo_replace_preserves_raw_payload_and_fails_closed();
     test_schema_rewrites_preserve_raw_memo_and_unaffected_field_bytes();
+    test_schema_rewrites_preserve_code_page_marks();
     test_indexed_table_mutations_succeed_with_production_flags_and_companions();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
