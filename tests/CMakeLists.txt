@@ -4043,6 +4043,33 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
 )
 target_compile_definitions(test_runtime_pipeline PRIVATE COPPERFIN_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
+add_executable(test_generated_launcher_process
+    test_generated_launcher_process.cpp
+)
+target_link_libraries(test_generated_launcher_process PRIVATE cf_runtime_pipeline)
+
+if(MSVC)
+    target_compile_options(test_generated_launcher_process PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_generated_launcher_process PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+if(DOTNET_EXECUTABLE)
+    add_test(
+        NAME test_generated_launcher_process
+        COMMAND $<TARGET_FILE:test_generated_launcher_process> ${DOTNET_EXECUTABLE}
+    )
+else()
+    add_test(
+        NAME test_generated_launcher_process
+        COMMAND $<TARGET_FILE:test_generated_launcher_process>
+    )
+endif()
+set_tests_properties(test_generated_launcher_process PROPERTIES
+    SKIP_RETURN_CODE 77
+    TIMEOUT 600
+)
+
 copperfin_add_test(test_security_controls cf_security
     test_security_controls.cpp
 )
