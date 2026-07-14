@@ -2590,6 +2590,18 @@ std::optional<std::string> resolve_startup_source(
         std::filesystem::exists(normalized_startup_source)) {
         return normalized_startup_source.string();
     }
+    const std::filesystem::path native_startup_source =
+        std::filesystem::path(startup_source).lexically_normal();
+    if (trim_copy(recorded_package_root).empty() &&
+        native_startup_source.is_absolute()) {
+        if (const auto contained_startup = admit_existing_packaged_path(
+                native_startup_source,
+                manifest_directory,
+                PackagePathBindingMode::strict_relative_fidelity,
+                containment_failure)) {
+            return contained_startup->string();
+        }
+    }
     if (const auto bound_startup = bind_packaged_path(
             startup_source,
             recorded_package_root,

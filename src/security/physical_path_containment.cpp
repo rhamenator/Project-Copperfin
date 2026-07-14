@@ -235,9 +235,30 @@ PhysicalPathContainmentResult inspect_physical_path_containment(
     if (!lexical_relative.has_value()) {
         lexical_relative = contained_relative_path(absolute_path, canonical_root);
         component_root = canonical_root;
-        if (!lexical_relative.has_value()) {
-            return failed_result(PhysicalPathContainmentFailure::outside_root);
+    }
+    if (!lexical_relative.has_value()) {
+        std::filesystem::path candidate_root = absolute_path;
+        while (!candidate_root.empty()) {
+            std::error_code equivalent_error;
+            if (std::filesystem::equivalent(
+                    candidate_root,
+                    canonical_root,
+                    equivalent_error) &&
+                !equivalent_error) {
+                lexical_relative = contained_relative_path(absolute_path, candidate_root);
+                component_root = candidate_root;
+                break;
+            }
+
+            const std::filesystem::path parent = candidate_root.parent_path();
+            if (parent.empty() || parent == candidate_root) {
+                break;
+            }
+            candidate_root = parent;
         }
+    }
+    if (!lexical_relative.has_value()) {
+        return failed_result(PhysicalPathContainmentFailure::outside_root);
     }
 
     if (const auto component_failure =

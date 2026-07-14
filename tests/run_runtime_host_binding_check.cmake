@@ -489,6 +489,181 @@ if(NOT package_alias_run_result EQUAL 0 OR
    NOT package_alias_run_output MATCHES "runtime\\.completed: true")
     message(FATAL_ERROR "Runtime host rejected a valid relocated package reached through its package-root symlink or junction.\nstdout:\n${package_alias_run_output}\nstderr:\n${package_alias_run_error}")
 endif()
+
+set(rootless_alias_manifest_text
+"manifest_version=1
+project_title=RootlessAliasDemo
+startup_item=main.prg
+startup_source=${package_alias}/content/main.prg
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+file(WRITE "${deployed_root}/app.cfmanifest" "${rootless_alias_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE rootless_alias_result
+    OUTPUT_VARIABLE rootless_alias_output
+    ERROR_VARIABLE rootless_alias_error
+)
+if(NOT rootless_alias_result EQUAL 0 OR
+   NOT rootless_alias_output MATCHES "status: ok" OR
+   NOT rootless_alias_output MATCHES "runtime\\.completed: true")
+    message(FATAL_ERROR "Runtime host rejected a rootless manifest startup reached through an equivalent package-root alias.\nstdout:\n${rootless_alias_output}\nstderr:\n${rootless_alias_error}")
+endif()
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${package_alias}/DemoApp${runtime_host_extension}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE rootless_aliased_launch_result
+    OUTPUT_VARIABLE rootless_aliased_launch_output
+    ERROR_VARIABLE rootless_aliased_launch_error
+)
+if(NOT rootless_aliased_launch_result EQUAL 0 OR
+   NOT rootless_aliased_launch_output MATCHES "status: ok" OR
+   NOT rootless_aliased_launch_output MATCHES "runtime\\.completed: true")
+    message(FATAL_ERROR "Runtime host rejected a rootless manifest when the host itself was launched through the package-root alias.\nstdout:\n${rootless_aliased_launch_output}\nstderr:\n${rootless_aliased_launch_error}")
+endif()
+
+if(APPLE)
+    set(mac_alias_root "/var/tmp/copperfin-rootless-alias-${timestamp}")
+    set(mac_canonical_root "/private${mac_alias_root}")
+    set(mac_alias_entrypoint "${mac_alias_root}/DemoApp${runtime_host_extension}")
+    file(REMOVE_RECURSE "${mac_alias_root}")
+    file(MAKE_DIRECTORY "${mac_alias_root}/content")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${RUNTIME_HOST_EXECUTABLE}"
+            "${mac_alias_entrypoint}"
+        RESULT_VARIABLE mac_alias_copy_result
+    )
+    if(NOT mac_alias_copy_result EQUAL 0)
+        message(FATAL_ERROR "Failed to stage the macOS /var rootless-alias runtime host.")
+    endif()
+    execute_process(COMMAND chmod +x "${mac_alias_entrypoint}")
+    file(WRITE "${mac_alias_root}/content/main.prg" "RETURN\n")
+    file(WRITE "${mac_alias_root}/app.cfmanifest"
+"manifest_version=1
+project_title=MacCanonicalAliasDemo
+startup_item=main.prg
+startup_source=${mac_alias_root}/content/main.prg
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E env
+            "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+            "COPPERFIN_LOCALE=en-US"
+            "${mac_alias_entrypoint}"
+        WORKING_DIRECTORY "${mac_alias_root}"
+        RESULT_VARIABLE mac_alias_result
+        OUTPUT_VARIABLE mac_alias_output
+        ERROR_VARIABLE mac_alias_error
+    )
+    if(NOT IS_DIRECTORY "${mac_canonical_root}" OR
+       NOT mac_alias_result EQUAL 0 OR
+       NOT mac_alias_output MATCHES "status: ok" OR
+       NOT mac_alias_output MATCHES "runtime\\.completed: true")
+        message(FATAL_ERROR "Runtime host rejected the macOS /var versus /private/var rootless startup alias.\nstdout:\n${mac_alias_output}\nstderr:\n${mac_alias_error}")
+    endif()
+    file(REMOVE_RECURSE "${mac_alias_root}")
+endif()
+
+set(rootless_external_root "${test_root}/rootless-external")
+file(MAKE_DIRECTORY "${rootless_external_root}")
+file(WRITE "${rootless_external_root}/main.prg" "? \"ROOTLESS_EXTERNAL_EXECUTED\"\nRETURN\n")
+string(
+    REPLACE
+    "startup_source=${package_alias}/content/main.prg"
+    "startup_source=${rootless_external_root}/main.prg"
+    rootless_external_manifest_text
+    "${rootless_alias_manifest_text}"
+)
+file(WRITE "${deployed_root}/app.cfmanifest" "${rootless_external_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE rootless_external_result
+    OUTPUT_VARIABLE rootless_external_output
+    ERROR_VARIABLE rootless_external_error
+)
+if(NOT rootless_external_result EQUAL 4 OR
+   NOT rootless_external_output MATCHES "status: error" OR
+   rootless_external_output MATCHES "ROOTLESS_EXTERNAL_EXECUTED")
+    message(FATAL_ERROR "Runtime host accepted an external rootless startup through alias or basename fallback.\nstdout:\n${rootless_external_output}\nstderr:\n${rootless_external_error}")
+endif()
+
+file(WRITE "${deployed_root}/root-only.prg" "? \"ROOT_FIELD_ALIAS_EXECUTED\"\nRETURN\n")
+set(rootless_content_alias_manifest_text
+"manifest_version=1
+project_title=RootlessContentAliasDenied
+content_root=${package_alias}
+startup_item=root-only.prg
+startup_source=
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+file(WRITE "${deployed_root}/app.cfmanifest" "${rootless_content_alias_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE rootless_content_alias_result
+    OUTPUT_VARIABLE rootless_content_alias_output
+    ERROR_VARIABLE rootless_content_alias_error
+)
+if(NOT rootless_content_alias_result EQUAL 4 OR
+   rootless_content_alias_output MATCHES "ROOT_FIELD_ALIAS_EXECUTED")
+    message(FATAL_ERROR "Runtime host broadened the startup-source alias exception to rootless content_root.\nstdout:\n${rootless_content_alias_output}\nstderr:\n${rootless_content_alias_error}")
+endif()
+
+set(rootless_working_alias_manifest_text
+"manifest_version=1
+project_title=RootlessWorkingAliasDenied
+content_root=missing-content
+working_directory=${package_alias}
+startup_item=root-only.prg
+startup_source=
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+file(WRITE "${deployed_root}/app.cfmanifest" "${rootless_working_alias_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE rootless_working_alias_result
+    OUTPUT_VARIABLE rootless_working_alias_output
+    ERROR_VARIABLE rootless_working_alias_error
+)
+if(NOT rootless_working_alias_result EQUAL 4 OR
+   rootless_working_alias_output MATCHES "ROOT_FIELD_ALIAS_EXECUTED")
+    message(FATAL_ERROR "Runtime host broadened the startup-source alias exception to rootless working_directory.\nstdout:\n${rootless_working_alias_output}\nstderr:\n${rootless_working_alias_error}")
+endif()
+file(REMOVE "${deployed_root}/root-only.prg")
+
+file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
 remove_directory_indirection("${package_alias}")
 
 string(REPLACE "security_role=developer" "security_role=runtime-operator" snapshot_manifest_text "${manifest_text}")

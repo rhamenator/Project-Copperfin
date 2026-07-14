@@ -18,10 +18,17 @@
 #include <cstdlib>
 #include <cwctype>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iostream>
 #include <thread>
 #include <vector>
+
+#if defined(_WIN32)
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 namespace {
 
@@ -754,6 +761,7 @@ void test_physical_path_containment_rejects_indirection() {
     ignored.clear();
     const fs::path directory_link = content_root / "linked-dir";
     fs::create_directory_symlink(outside_root, directory_link, ignored);
+    const bool directory_link_created = !ignored;
     if (!ignored) {
         const auto linked_child = copperfin::security::inspect_physical_path_containment(
             directory_link / "outside.prg",
@@ -767,6 +775,22 @@ void test_physical_path_containment_rejects_indirection() {
     const fs::path package_alias = temp_root / "package-alias";
     fs::create_directory_symlink(package_root, package_alias, ignored);
     if (!ignored) {
+        const auto aliased_path = copperfin::security::inspect_physical_path_containment(
+            package_alias / "content" / "main.prg",
+            package_root);
+        expect(aliased_path.allowed && fs::equivalent(aliased_path.canonical_path, packaged_file),
+               "a package-root path alias should preserve containment against the physical package root");
+        if (directory_link_created) {
+            const auto aliased_linked_child =
+                copperfin::security::inspect_physical_path_containment(
+                    package_alias / "content" / "linked-dir" / "outside.prg",
+                    package_root);
+            expect(!aliased_linked_child.allowed &&
+                       aliased_linked_child.failure ==
+                           PhysicalPathContainmentFailure::indirect_component,
+                   "a package-root alias must not hide indirection beneath the package root");
+        }
+
         const auto relocated = copperfin::security::inspect_physical_path_containment(
             package_alias / "content" / "main.prg",
             package_alias);
@@ -787,6 +811,71 @@ void test_physical_path_containment_rejects_indirection() {
             fs::remove(package_alias, ignored);
         }
     }
+
+#if defined(_WIN32)
+    const DWORD short_root_size = ::GetShortPathNameW(package_root.c_str(), nullptr, 0U);
+    if (short_root_size > 0U) {
+        std::vector<wchar_t> short_root_buffer(short_root_size, L'\0');
+        const DWORD short_root_length = ::GetShortPathNameW(
+            package_root.c_str(),
+            short_root_buffer.data(),
+            static_cast<DWORD>(short_root_buffer.size()));
+        if (short_root_length > 0U && short_root_length < short_root_buffer.size()) {
+            const fs::path short_root(
+                std::wstring(short_root_buffer.data(), short_root_length));
+            if (short_root != package_root) {
+                const auto short_candidate =
+                    copperfin::security::inspect_physical_path_containment(
+                        short_root / "content" / "main.prg",
+                        package_root);
+                expect(short_candidate.allowed &&
+                           fs::equivalent(short_candidate.canonical_path, packaged_file),
+                       "Windows short-path package aliases should remain physically contained");
+
+                const auto short_root_containment =
+                    copperfin::security::inspect_physical_path_containment(
+                        packaged_file,
+                        short_root);
+                expect(short_root_containment.allowed &&
+                           fs::equivalent(short_root_containment.canonical_path, packaged_file),
+                       "Windows long package paths should remain contained beneath a short-path root alias");
+            }
+        }
+    }
+#endif
+
+#if !defined(_WIN32)
+    const fs::path secondary_root = "/dev/shm";
+    std::error_code secondary_status_error;
+    const fs::file_status secondary_status =
+        fs::symlink_status(secondary_root, secondary_status_error);
+    if (!secondary_status_error && fs::is_directory(secondary_status)) {
+        const fs::path cross_device_file =
+            secondary_root /
+            ("copperfin_physical_path_cross_device_" +
+             std::to_string(std::hash<std::thread::id>{}(std::this_thread::get_id())) +
+             ".prg");
+        write_file_bytes(cross_device_file, "RETURN\n");
+        const auto filesystem_root =
+            copperfin::security::inspect_physical_path_containment("/", "/");
+        const auto secondary_file =
+            copperfin::security::inspect_physical_path_containment(
+                cross_device_file,
+                secondary_root);
+        if (filesystem_root.allowed && secondary_file.allowed &&
+            filesystem_root.identity.storage_id != secondary_file.identity.storage_id) {
+            const auto crossed_device =
+                copperfin::security::inspect_physical_path_containment(
+                    cross_device_file,
+                    "/");
+            expect(!crossed_device.allowed &&
+                       crossed_device.failure ==
+                           PhysicalPathContainmentFailure::cross_device_component,
+                   "physical containment should reject a mounted filesystem below its root");
+        }
+        fs::remove(cross_device_file, ignored);
+    }
+#endif
 
     ignored.clear();
     const fs::path dangling_link = content_root / "dangling.prg";
