@@ -476,18 +476,21 @@ std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
     stream << "                forwarded.Add(\"--locale\");\n";
     stream << "                continue;\n";
     stream << "            }\n";
-    stream << "            forwarded.Add(Quote(arg));\n";
+    stream << "            forwarded.Add(arg);\n";
     stream << "        }\n";
     stream << "        var selectedManifest = debugRequested && File.Exists(debugManifest) ? debugManifest : manifest;\n";
-    stream << "        forwarded.Insert(0, Quote(selectedManifest));\n";
+    stream << "        forwarded.Insert(0, selectedManifest);\n";
     stream << "        forwarded.Insert(0, \"--manifest\");\n\n";
     stream << "        var startInfo = new ProcessStartInfo\n";
     stream << "        {\n";
     stream << "            FileName = runtimeHost,\n";
-    stream << "            Arguments = string.Join(\" \", forwarded),\n";
     stream << "            WorkingDirectory = baseDir,\n";
     stream << "            UseShellExecute = false\n";
     stream << "        };\n\n";
+    stream << "        foreach (var argument in forwarded)\n";
+    stream << "        {\n";
+    stream << "            startInfo.ArgumentList.Add(argument);\n";
+    stream << "        }\n\n";
     stream << "        using var process = Process.Start(startInfo);\n";
     stream << "        if (process is null)\n";
     stream << "        {\n";
@@ -498,10 +501,6 @@ std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
     stream << "        return process.ExitCode;\n";
     stream << "    }\n\n";
     append_generated_launcher_localization_helpers(stream);
-    stream << "    private static string Quote(string value)\n";
-    stream << "    {\n";
-    stream << "        return \"\\\"\" + value.Replace(\"\\\"\", \"\\\"\\\"\") + \"\\\"\";\n";
-    stream << "    }\n";
     stream << "}\n";
     return stream.str();
 }

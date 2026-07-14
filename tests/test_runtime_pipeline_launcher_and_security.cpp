@@ -63,7 +63,7 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
         expect(
             launcher_source.find("var debugManifest = Path.Combine(baseDir, \"app.cfdebug\");") != std::string::npos &&
             launcher_source.find("var selectedManifest = debugRequested && File.Exists(debugManifest) ? debugManifest : manifest;") != std::string::npos &&
-            launcher_source.find("forwarded.Insert(0, Quote(selectedManifest));") != std::string::npos,
+            launcher_source.find("forwarded.Insert(0, selectedManifest);") != std::string::npos,
             "generated launcher should prefer the debug manifest for implicit debug launches");
         expect(
             launcher_source.find("string.Equals(arg, \"--debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
@@ -78,7 +78,9 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\")") != std::string::npos,
             "generated launcher should resolve locale from forwarded arguments and COPPERFIN_LOCALE");
         expect(
-            launcher_source.find("forwarded.Add(Quote(arg));") != std::string::npos,
+            launcher_source.find("forwarded.Add(arg);") != std::string::npos &&
+            launcher_source.find("startInfo.ArgumentList.Add(argument);") != std::string::npos &&
+            launcher_source.find("Arguments = string.Join") == std::string::npos,
             "generated launcher should preserve ordinary application arguments instead of dropping them");
         expect(
             launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostMissing") != std::string::npos &&
