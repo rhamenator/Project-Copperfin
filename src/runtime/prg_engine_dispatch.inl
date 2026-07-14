@@ -4489,9 +4489,12 @@
             }
             case StatementKind::create_cursor_command:
             {
-                std::string alias = statement.identifier.empty()
+                const std::string alias_expression = statement.secondary_expression.empty()
+                                                         ? statement.identifier
+                                                         : statement.secondary_expression;
+                std::string alias = alias_expression.empty()
                                         ? "CURSOR1"
-                                        : normalize_identifier(unquote_identifier(trim_copy(statement.identifier)));
+                                        : normalize_identifier(unquote_identifier(trim_copy(alias_expression)));
                 if (alias.empty())
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias");

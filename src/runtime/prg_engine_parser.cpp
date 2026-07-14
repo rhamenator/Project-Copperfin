@@ -1139,7 +1139,14 @@ bool parse_table_definition_statement(const std::string& line, Statement& statem
         const std::string body = trim_copy(line.substr(14U));
         const auto paren_open = body.find('(');
         if (paren_open != std::string::npos && body.back() == ')') {
-            statement.identifier = trim_copy(body.substr(0U, paren_open));
+            const std::string declaration = trim_copy(body.substr(0U, paren_open));
+            const std::size_t name_position = find_keyword_top_level(declaration, "NAME");
+            if (name_position == std::string::npos) {
+                statement.identifier = declaration;
+            } else {
+                statement.identifier = trim_copy(declaration.substr(0U, name_position));
+                statement.secondary_expression = trim_copy(declaration.substr(name_position + 4U));
+            }
             statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
         } else {
             statement.identifier = body;

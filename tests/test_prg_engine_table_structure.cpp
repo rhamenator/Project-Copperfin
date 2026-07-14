@@ -514,6 +514,54 @@ void test_create_cursor_uses_temp_backed_local_table_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_create_cursor_name_clause_uses_named_alias() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_create_cursor_name";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "create_cursor_name.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR DefaultCursor NAME WorkItems (ITEM C(12))\n"
+        "cAlias = ALIAS()\n"
+        "INSERT INTO WorkItems (ITEM) VALUES ('ALPHA')\n"
+        "nCount = RECCOUNT('WorkItems')\n"
+        "SELECT WorkItems\n"
+        "cSelectedAlias = ALIAS()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "CREATE CURSOR NAME script should complete");
+    const auto alias = state.globals.find("calias");
+    const auto count = state.globals.find("ncount");
+    const auto selected_alias = state.globals.find("cselectedalias");
+    expect(alias != state.globals.end(), "CREATE CURSOR NAME should expose the initial alias");
+    expect(count != state.globals.end(), "CREATE CURSOR NAME alias should be usable by INSERT and RECCOUNT");
+    expect(selected_alias != state.globals.end(), "CREATE CURSOR NAME alias should be selectable");
+    if (alias != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(alias->second)) == "WORKITEMS",
+               "CREATE CURSOR NAME should select the explicit alias");
+    }
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1",
+               "CREATE CURSOR NAME should make the explicit alias addressable");
+    }
+    if (selected_alias != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(selected_alias->second)) == "WORKITEMS",
+               "SELECT should resolve the CREATE CURSOR NAME alias");
+    }
+    expect(std::none_of(state.cursors.begin(), state.cursors.end(), [](const auto& cursor) {
+        return uppercase_ascii(cursor.alias) == "DEFAULTCURSOR NAME WORKITEMS";
+    }), "CREATE CURSOR NAME must not register a combined multi-word alias");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_create_cursor_not_null_insert_failure_rolls_back() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_create_cursor_not_null";
@@ -906,6 +954,7 @@ int main() {
     test_create_table_rejects_serialized_field_name_collisions();
     test_table_field_dimensions_require_complete_bounded_integers();
     test_create_cursor_uses_temp_backed_local_table_flow();
+    test_create_cursor_name_clause_uses_named_alias();
     test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();
     test_table_structure_runtime_errors_localize();
