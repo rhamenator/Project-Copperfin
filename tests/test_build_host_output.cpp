@@ -3290,6 +3290,30 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "default build host usage should advertise the normalized license-status flag");
         expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
                "default build host usage should preserve configuration tokens");
+
+        const auto invalid_configuration = run_process_capture(
+            build_host_path, {"build", "--configuration", "releaes"}, temp_root);
+        expect(invalid_configuration.exit_code == 2,
+               "invalid build configuration should fail before package planning");
+        expect(invalid_configuration.stdout_text.find("status: error") != std::string::npos &&
+                   invalid_configuration.stdout_text.find(
+                       "Invalid build configuration: releaes. Expected debug or release.") != std::string::npos,
+               "invalid build configuration should use the localized validation diagnostic");
+
+        const auto empty_configuration = run_process_capture(
+            build_host_path, {"build", "--configuration", ""}, temp_root);
+        expect(empty_configuration.exit_code == 2 &&
+                   empty_configuration.stdout_text.find("Invalid build configuration:") != std::string::npos,
+               "empty build configuration should fail explicitly");
+
+        for (const char* configuration : {" DEBUG ", " RELEASE "}) {
+            const auto normalized_configuration = run_process_capture(
+                build_host_path, {"build", "--configuration", configuration}, temp_root);
+            expect(normalized_configuration.exit_code == 2 &&
+                       normalized_configuration.stdout_text.find("Invalid build configuration:") == std::string::npos &&
+                       normalized_configuration.stdout_text.find("--project and --output-dir are required.") != std::string::npos,
+                   "case-insensitive whitespace-padded build configuration should be accepted before required-option validation");
+        }
     }
 
     {

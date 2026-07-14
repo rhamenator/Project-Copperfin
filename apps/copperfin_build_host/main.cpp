@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <cctype>
 #include <filesystem>
 #include <iostream>
 #if defined(_WIN32)
@@ -81,6 +82,20 @@ std::string message(
     const std::string& key,
     const copperfin::localization::PlaceholderMap& placeholders = {}) {
     return catalog.translate(key, placeholders);
+}
+
+std::string normalized_build_configuration(std::string value) {
+    const auto not_space = [](unsigned char ch) { return std::isspace(ch) == 0; };
+    const auto first = std::find_if(value.begin(), value.end(), not_space);
+    const auto last = std::find_if(value.rbegin(), value.rend(), not_space).base();
+    if (first >= last) {
+        return {};
+    }
+    value = std::string(first, last);
+    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return value;
 }
 
 void print_license_status(const copperfin::licensing::LicenseStatus& status) {
@@ -388,7 +403,18 @@ int main(int argc, char** argv) {
         } else if (arg == "--output-dir" && (index + 1U) < args.size()) {
             output_dir = args[++index];
         } else if (arg == "--configuration" && (index + 1U) < args.size()) {
-            configuration = copperfin::runtime::parse_build_configuration(args[++index]);
+            const std::string configuration_value = normalized_build_configuration(args[++index]);
+            if (configuration_value != "debug" && configuration_value != "release") {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    message(
+                        catalog,
+                        "BuildHost.Error.InvalidConfiguration",
+                        {{"configuration", configuration_value}}));
+                return 2;
+            }
+            configuration = copperfin::runtime::parse_build_configuration(configuration_value);
         } else if (arg == "--enable-security") {
             enable_security = true;
         } else if (arg == "--emit-dotnet-launcher") {

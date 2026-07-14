@@ -313,3 +313,4 @@ Read only what is needed for the chosen slice:
 - Before a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive the report.
 - Update `agent-handoff.md` only when the last shipped slice, current lane, or next action changes.
 - Update `CHANGELOG.md` for lasting repo changes or material tracked-documentation changes.
+- Shipped build-host validation slice `#3886` rejects invalid or empty `--configuration` values before plan creation. Accept only the invariant `debug` and `release` tokens after ASCII case/edge-whitespace normalization; preserve nonzero CLI failure, `status: error`, and catalog-backed prose across locales.

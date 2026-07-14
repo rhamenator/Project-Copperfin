@@ -15,6 +15,7 @@
   "VSIX.Command.RunProject": "Ejecutar proyecto Copperfin",
   "VSIX.Command.DebugProject": "Depurar proyecto Copperfin",
   "BuildHost.Error.BuildPlanCreationFailed": "No se pudo crear el plan de build.",
+  "BuildHost.Error.InvalidConfiguration": "Configuracion de build no valida: {configuration}. Se esperaba debug o release.",
   "BuildHost.Error.DotnetPublishDenied": "dotnet publish fue denegado por la politica de procesos externos: {error}",
   "BuildHost.Error.DotnetPublishFailed": "dotnet publish fallo para el launcher generado.",
   "BuildHost.Error.DotnetPublishFailedToStart": "dotnet publish no pudo iniciarse: {error}",
