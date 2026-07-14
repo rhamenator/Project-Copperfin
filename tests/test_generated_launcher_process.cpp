@@ -464,8 +464,8 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         return 1;
     }
 
-    copperfin::test_support::ScopedEnvironmentValue fixture_mode(
-        std::string(fixture_environment));
+    copperfin::test_support::ScopedEnvironmentValue fixture_mode{
+        std::string(fixture_environment)};
     fixture_mode.set("1");
 
     const fs::path launcher = materialized.plan.launcher_output_path;
