@@ -26,6 +26,7 @@ int main() {
     test_update_visual_object_report_settings_property_preserves_comment_lines();
     test_report_settings_bottom_margin_memo_round_trips();
     test_report_settings_fallback_root_gridv_round_trips();
+    test_report_settings_topmargin_and_tag_memo_round_trips();
     test_query_visual_object_property_reads_selected_values();
     test_clear_visual_object_property_resets_selected_values();
     test_clear_visual_object_properties_rolls_back_failed_batches();

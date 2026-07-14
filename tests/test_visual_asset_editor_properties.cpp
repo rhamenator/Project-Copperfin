@@ -275,6 +275,81 @@ void test_report_settings_fallback_root_gridv_round_trips() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_report_settings_topmargin_and_tag_memo_round_trips() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_topmargin_tag_settings_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto query = [](const fs::path& asset_path, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = property_name
+        });
+    };
+    const auto run_round_trip = [&](const fs::path& asset_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "OBJCODE", .type = 'N', .length = 8U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "UNIQUEID", .type = 'C', .length = 40U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            asset_path.string(), fields, {{"1", "53", "CUSTOMSETTING=preserve\r\nTOPMARGIN=10\r\nGRIDV=4", "settings-guid"}});
+        expect(create_result.ok, "#4060: memo-backed settings fixture should be writable");
+
+        auto topmargin = query(asset_path, "TOPMARGIN");
+        auto tag = query(asset_path, "TAG");
+        expect(topmargin.ok && topmargin.exists && topmargin.value == "10",
+               "#4060: existing TOPMARGIN should be readable through the memo settings path");
+        expect(tag.ok && !tag.exists && !tag.direct_field,
+               "#4060: absent TAG should remain an admitted memo setting");
+
+        const auto clear_topmargin = copperfin::vfp::clear_visual_object_property({
+            .path = asset_path.string(), .record_index = 0U, .object_name = {}, .unique_id = "settings-guid", .property_name = "TOPMARGIN"});
+        expect(clear_topmargin.ok, "#4060: existing TOPMARGIN should clear successfully");
+        topmargin = query(asset_path, "TOPMARGIN");
+        expect(topmargin.ok && !topmargin.exists,
+               "#4060: cleared TOPMARGIN should stay writable after reopen");
+
+        const auto restore_topmargin = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(), .record_index = 0U, .object_name = {}, .unique_id = "settings-guid", .property_name = "TOPMARGIN", .property_value = "20"});
+        const auto create_tag = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(), .record_index = 0U, .object_name = {}, .unique_id = "settings-guid", .property_name = "TAG", .property_value = "CustomerId"});
+        expect(restore_topmargin.ok && create_tag.ok,
+               "#4060: TOPMARGIN and absent TAG should be materialized in EXPR");
+
+        const auto clear_tag = copperfin::vfp::clear_visual_object_property({
+            .path = asset_path.string(), .record_index = 0U, .object_name = {}, .unique_id = "settings-guid", .property_name = "TAG"});
+        const auto restore_tag = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(), .record_index = 0U, .object_name = {}, .unique_id = "settings-guid", .property_name = "TAG", .property_value = "ClientId"});
+        expect(clear_tag.ok && restore_tag.ok,
+               "#4060: TAG should clear and re-add through the memo settings path");
+
+        topmargin = query(asset_path, "TOPMARGIN");
+        tag = query(asset_path, "TAG");
+        expect(topmargin.ok && topmargin.exists && topmargin.value == "20" &&
+                   tag.ok && tag.exists && tag.value == "ClientId",
+               "#4060: restored TOPMARGIN and TAG should survive reopen");
+        const auto parsed = copperfin::vfp::parse_dbf_table_from_file(asset_path.string(), 1U);
+        if (parsed.ok && parsed.table.records.size() == 1U) {
+            const auto* expr = find_record_field(parsed.table.records[0], "EXPR");
+            expect(expr != nullptr && expr->display_value.find("CUSTOMSETTING=preserve") != std::string::npos &&
+                       expr->display_value.find("GRIDV=4") != std::string::npos,
+                   "#4060: TOPMARGIN/TAG edits must preserve unrelated EXPR assignments");
+        }
+    };
+
+    run_round_trip(temp_dir / "topmargin_tag.frx");
+    run_round_trip(temp_dir / "topmargin_tag.lbx");
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_query_visual_object_property_reads_selected_values() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /

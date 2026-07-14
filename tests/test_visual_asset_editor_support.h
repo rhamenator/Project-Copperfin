@@ -87,6 +87,7 @@ void test_update_visual_object_property_preserves_equals_for_blank_property_valu
 void test_update_visual_object_report_settings_property_preserves_comment_lines();
 void test_report_settings_bottom_margin_memo_round_trips();
 void test_report_settings_fallback_root_gridv_round_trips();
+void test_report_settings_topmargin_and_tag_memo_round_trips();
 template <typename AssignTextProperty>
 void test_visual_object_text_property_assigns_text(
     const std::string& issue_id,
