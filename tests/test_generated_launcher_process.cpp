@@ -581,9 +581,20 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         package_root,
         "ordinary invocation after debug fallback");
 
-    write_text(
-        materialized.plan.runtime_host_destination_path,
-        "not a valid Windows executable image\n");
+    const HANDLE runtime_host_lock = CreateFileW(
+        fs::path(materialized.plan.runtime_host_destination_path).c_str(),
+        GENERIC_READ,
+        0U,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+    expect(runtime_host_lock != INVALID_HANDLE_VALUE,
+           "generated launcher process fixture should lock the runtime host exclusively");
+    if (runtime_host_lock == INVALID_HANDLE_VALUE) {
+        std::cerr << "fixture root: " << temp_root << "\n";
+        return 1;
+    }
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const std::string english_start_failure = copperfin::localization::load_catalogs(
         catalog_root,
@@ -596,39 +607,40 @@ int run_generated_launcher_test(const std::filesystem::path& dotnet_path, char**
         "qps-ploc").translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed");
     expect(!portuguese_start_failure.empty() &&
                portuguese_start_failure != english_start_failure,
-           "invalid-host fixture should resolve a distinct pt-BR start failure");
+           "unstartable-host fixture should resolve a distinct pt-BR start failure");
     expect(!pseudo_start_failure.empty() && pseudo_start_failure != english_start_failure,
-           "invalid-host fixture should resolve a pseudo-localized start failure");
+           "unstartable-host fixture should resolve a pseudo-localized start failure");
 
     const ProcessResult portuguese_failure = run_process_capture(
         launcher,
         {"--locale", "pt-BR"},
         caller_dir,
         temp_root,
-        "invalid-host-portuguese",
+        "unstartable-host-portuguese",
         30000U);
     expect(portuguese_failure.start_error == 0U,
-           "generated launcher should start when its runtime-host image is invalid");
+           "generated launcher should start when its runtime host is unstartable");
     expect(!portuguese_failure.timed_out,
-           "invalid runtime-host launch should not time out");
+           "unstartable runtime-host launch should not time out");
     expect(portuguese_failure.exit_code == 5,
-           "invalid runtime-host launch should preserve exit code 5");
+           "unstartable runtime-host launch should preserve exit code 5");
     expect(portuguese_failure.stderr_text.find(portuguese_start_failure) != std::string::npos,
-           "invalid runtime-host launch should emit the pt-BR localized start failure");
+           "unstartable runtime-host launch should emit the pt-BR localized start failure");
     expect(portuguese_failure.stderr_text.find("Exception") == std::string::npos,
-           "invalid runtime-host launch should not leak an unhandled .NET exception");
+           "unstartable runtime-host launch should not leak an unhandled .NET exception");
 
     const ProcessResult pseudo_failure = run_process_capture(
         launcher,
         {"/locale", "qps-ploc"},
         caller_dir,
         temp_root,
-        "invalid-host-pseudo",
+        "unstartable-host-pseudo",
         30000U);
     expect(pseudo_failure.exit_code == 5,
-           "pseudo-localized invalid runtime-host launch should preserve exit code 5");
+           "pseudo-localized unstartable runtime-host launch should preserve exit code 5");
     expect(pseudo_failure.stderr_text.find(pseudo_start_failure) != std::string::npos,
-           "invalid runtime-host launch should emit the pseudo-localized start failure");
+           "unstartable runtime-host launch should emit the pseudo-localized start failure");
+    CloseHandle(runtime_host_lock);
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
