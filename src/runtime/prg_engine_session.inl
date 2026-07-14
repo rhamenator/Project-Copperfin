@@ -2906,6 +2906,48 @@
             native_default_property_expression_text_by_handle[runtime_object->handle] =
                 native_property_expression_text_by_handle[runtime_object->handle];
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
+
+            const std::string normalized_base_class_name =
+                normalize_identifier(runtime_object->base_class_name);
+            if (normalized_base_class_name == "form" || normalized_base_class_name == "formset")
+            {
+                std::string load_program_path;
+                std::string load_method_name;
+                if (const Routine *load_method = find_native_object_method(
+                        *runtime_object,
+                        "load",
+                        load_program_path,
+                        load_method_name);
+                    load_method != nullptr)
+                {
+                    if (!can_push_frame())
+                    {
+                        throw std::runtime_error(call_depth_limit_message());
+                    }
+
+                    events.push_back({.category = "prg.object.load",
+                                      .detail = load_method_name,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    const std::size_t return_depth = stack.size();
+                    push_method_frame(load_program_path,
+                                      load_method_name,
+                                      *load_method,
+                                      runtime_object_reference,
+                                      load_method_name.substr(0U, load_method_name.rfind('.')),
+                                      "load",
+                                      parent_reference,
+                                      native_object_owner_form_reference(*runtime_object),
+                                      native_object_owner_formset_reference(*runtime_object),
+                                      {},
+                                      {});
+                    const PrgValue load_result = run_expression_invoked_routine_until_return(return_depth);
+                    if (load_result.kind == PrgValueKind::boolean && !load_result.boolean_value)
+                    {
+                        discard_native_object_tree_without_destroy(*runtime_object);
+                        return nullptr;
+                    }
+                }
+            }
             for (const NativeClassLookup &lineage_class : class_lineage)
             {
                 for (const NativeChildObjectDeclaration &child_declaration : lineage_class.class_definition->child_object_declarations)

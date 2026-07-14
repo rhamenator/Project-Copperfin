@@ -1979,6 +1979,197 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_load_precedes_child_and_init_lifecycle_events()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_load_lifecycle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_load_lifecycle.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('LifecycleForm')\n"
+            "oLeaf = NEWOBJECT('LifecycleForm')\n"
+            "cCreateSequence = oCreate.cSequence\n"
+            "cLeafSequence = oLeaf.cSequence\n"
+            "lCreateLoadSawChild = oCreate.lLoadSawChild\n"
+            "lLeafLoadSawChild = oLeaf.lLoadSawChild\n"
+            "lCreateInitSawChild = oCreate.lInitSawChild\n"
+            "lLeafInitSawChild = oLeaf.lInitSawChild\n"
+            "lCreateLoadSawThisForm = oCreate.lLoadSawThisForm\n"
+            "lLeafLoadSawThisForm = oLeaf.lLoadSawThisForm\n"
+            "RETURN\n"
+            "DEFINE CLASS LifecycleForm AS Form\n"
+            "    ADD OBJECT cmdProbe AS LifecycleProbe\n"
+            "    cSequence = ''\n"
+            "    lLoadSawChild = .F.\n"
+            "    lInitSawChild = .F.\n"
+            "    lLoadSawThisForm = .F.\n"
+            "    PROCEDURE Load\n"
+            "        THIS.cSequence = THIS.cSequence + 'L'\n"
+            "        THIS.lLoadSawChild = PEMSTATUS(THIS, 'cmdProbe', 1)\n"
+            "        THIS.lLoadSawThisForm = THISFORM.Class == THIS.Class\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cSequence = THIS.cSequence + 'I'\n"
+            "        THIS.lInitSawChild = PEMSTATUS(THIS, 'cmdProbe', 1)\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LifecycleProbe AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Parent.cSequence = THIS.Parent.cSequence + 'C'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "native Form Load lifecycle script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreatesequence", "LCI");
+        check("cleafsequence", "LCI");
+        check("lcreateloadsawchild", "false");
+        check("lleafloadsawchild", "false");
+        check("lcreateinitsawchild", "true");
+        check("lleafinitsawchild", "true");
+        check("lcreateloadsawthisform", "true");
+        check("lleafloadsawthisform", "true");
+
+        const std::size_t load_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.load" &&
+                       event.detail == "LifecycleForm.Load";
+            }));
+        expect(load_event_count == 2U,
+               "CREATEOBJECT and NEWOBJECT should each dispatch one Form Load event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_formset_load_precedes_contained_form_load()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_formset_load_lifecycle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_formset_load_lifecycle.prg";
+        write_text(
+            main_path,
+            "oSet = CREATEOBJECT('LifecycleFormSet')\n"
+            "cSequence = oSet.cSequence\n"
+            "lFormSawThisFormSet = oSet.frmProbe.lLoadSawThisFormSet\n"
+            "RETURN\n"
+            "DEFINE CLASS LifecycleFormSet AS FormSet\n"
+            "    ADD OBJECT frmProbe AS LifecycleForm\n"
+            "    cSequence = ''\n"
+            "    PROCEDURE Load\n"
+            "        THIS.cSequence = THIS.cSequence + 'S'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cSequence = THIS.cSequence + 'I'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LifecycleForm AS Form\n"
+            "    lLoadSawThisFormSet = .F.\n"
+            "    PROCEDURE Load\n"
+            "        THISFORMSET.cSequence = THISFORMSET.cSequence + 'L'\n"
+            "        THIS.lLoadSawThisFormSet = THISFORMSET.Class == 'LifecycleFormSet'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Init\n"
+            "        THISFORMSET.cSequence = THISFORMSET.cSequence + 'F'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "native FormSet Load lifecycle script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("csequence", "SLFI");
+        check("lformsawthisformset", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_form_load_returning_false_prevents_object_creation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_load_rejection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_load_rejection.prg";
+        write_text(
+            main_path,
+            "oRejected = CREATEOBJECT('RejectedForm')\n"
+            "lRejectedIsNull = ISNULL(oRejected)\n"
+            "RETURN\n"
+            "DEFINE CLASS RejectedForm AS Form\n"
+            "    PROCEDURE Load\n"
+            "        RETURN .F.\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Init\n"
+            "        nInitCount = nInitCount + 1\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Destroy\n"
+            "        nDestroyCount = nDestroyCount + 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "native Form Load rejection should continue caller execution: " + state.message);
+        expect(state.ole_objects.empty(),
+               "Form Load returning .F. should remove the rejected native object without Destroy");
+
+        const auto rejected = state.globals.find("lrejectedisnull");
+        expect(rejected != state.globals.end() &&
+                   copperfin::runtime::format_value(rejected->second) == "true",
+               "Form Load returning .F. should yield .NULL. to CREATEOBJECT");
+        expect(state.globals.find("ninitcount") == state.globals.end(),
+               "Form Load returning .F. should prevent Init");
+        expect(state.globals.find("ndestroycount") == state.globals.end(),
+               "Form Load returning .F. should not invoke Destroy");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_commandbutton_native_class()
     {
         namespace fs = std::filesystem;
@@ -54472,6 +54663,9 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_session_olepublic_native_class();
     test_createobject_and_newobject_instantiate_same_prg_form_native_class();
     test_createobject_and_newobject_instantiate_same_prg_formset_native_class();
+    test_native_form_load_precedes_child_and_init_lifecycle_events();
+    test_native_formset_load_precedes_contained_form_load();
+    test_native_form_load_returning_false_prevents_object_creation();
     test_createobject_and_newobject_instantiate_same_prg_commandbutton_native_class();
     test_createobject_and_newobject_instantiate_same_prg_textbox_native_class();
     test_createobject_and_newobject_instantiate_same_prg_label_native_class();
