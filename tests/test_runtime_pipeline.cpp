@@ -12,6 +12,10 @@ void test_file_valued_home_directory_falls_back_to_project_directory();
 using namespace cf_test_runtime_pipeline;
 
 int main() {
+    const ScopedEnvironmentVariable locale_root(
+        "COPPERFIN_LOCALE_DIR",
+        runtime_pipeline_locale_root().string());
+
     test_materialize_runtime_package();
     test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families();
     test_exact_startup_path_wins_over_casefold_siblings();

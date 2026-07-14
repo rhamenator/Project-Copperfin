@@ -97,9 +97,13 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
+std::filesystem::path runtime_pipeline_locale_root() {
+    return std::filesystem::path(COPPERFIN_TEST_SOURCE_DIR) / "resources" / "locales";
+}
+
 const copperfin::localization::LocalizedCatalog& runtime_pipeline_english_catalog() {
     static const auto catalog = copperfin::localization::load_catalogs(
-        copperfin::localization::resolve_catalog_root(),
+        runtime_pipeline_locale_root(),
         "en-US");
     return catalog;
 }

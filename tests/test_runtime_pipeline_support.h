@@ -46,6 +46,7 @@ std::string hex_decode_bytes(const std::string& encoded);
 std::unordered_map<std::string, std::string> parse_app_archive_payloads(const std::string& archive_text);
 std::string trim_copy(std::string value);
 std::string quote_manifest_value(const std::string& value);
+std::filesystem::path runtime_pipeline_locale_root();
 const copperfin::localization::LocalizedCatalog& runtime_pipeline_english_catalog();
 std::size_t count_missing_locale_keys(
     const copperfin::localization::LocalizedCatalog& catalog,

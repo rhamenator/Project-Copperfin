@@ -212,8 +212,7 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
 
 void test_security_enabled_runtime_host_name_validation() {
     namespace fs = std::filesystem;
-    const fs::path locale_root =
-        fs::path(COPPERFIN_TEST_SOURCE_DIR) / "resources" / "locales";
+    const fs::path locale_root = runtime_pipeline_locale_root();
     expect(fs::is_directory(locale_root),
            "security-enabled runtime-host path test should resolve the source localization catalogs");
     ScopedEnvironmentVariable locale_dir(
@@ -514,7 +513,7 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
 }
 
 void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
-    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto catalog_root = runtime_pipeline_locale_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
