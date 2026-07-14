@@ -226,12 +226,33 @@ void run_windows_drive_relative_case(
                "#4065: Windows drive-relative staging must not overwrite the drive-root target");
         expect(read_text(external_companion) == "external-companion-sentinel",
                "#4065: drive-relative companion staging must not overwrite the drive-root target");
-        expect(read_text(fs::path(plan.content_root) / tail) == "drive-current-source",
-               "#4065: Windows drive-relative bytes should be staged inside content_root");
-        fs::path staged_companion = fs::path(plan.content_root) / tail;
+        const auto* materialized_asset = asset_by_record(result.plan, 2U);
+        const fs::path staged_primary = fs::path(result.plan.content_root) / tail;
+        fs::path staged_companion = staged_primary;
         staged_companion.replace_extension(companion_extension);
-        expect(read_text(staged_companion) == "drive-current-companion",
-               "#4065: drive-relative companion bytes should be staged inside content_root");
+        const std::string staged_primary_bytes = read_text(staged_primary);
+        const std::string staged_companion_bytes = read_text(staged_companion);
+        std::ostringstream failure_context;
+        failure_context
+            << " [fixture=" << identity
+            << ", copied="
+            << (materialized_asset != nullptr && materialized_asset->copied ? "true" : "false")
+            << ", source="
+            << (materialized_asset != nullptr ? materialized_asset->source_path : "<missing>")
+            << ", staged="
+            << (materialized_asset != nullptr ? materialized_asset->staged_path : "<missing>")
+            << ", primaryBytes=" << staged_primary_bytes
+            << ", companionBytes=" << staged_companion_bytes;
+        for (const auto& warning : result.plan.warnings) {
+            failure_context << ", warning=" << warning;
+        }
+        failure_context << ']';
+        expect(staged_primary_bytes == "drive-current-source",
+               "#4065: Windows drive-relative bytes should be staged inside content_root" +
+                   failure_context.str());
+        expect(staged_companion_bytes == "drive-current-companion",
+               "#4065: drive-relative companion bytes should be staged inside content_root" +
+                   failure_context.str());
     }
 
     fs::remove_all(project_dir, ignored);
