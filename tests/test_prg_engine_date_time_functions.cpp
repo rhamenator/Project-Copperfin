@@ -200,6 +200,14 @@ namespace
             "hours_12 = SET('HOURS')\n"
             "ttoc_hours_12 = TTOC('04/18/2026 13:45:56')\n"
             "datetime_arithmetic_hours_12 = DATETIME(2026, 4, 18, 13, 45, 56) + 60\n"
+            "midnight_12_text = TTOC(DATETIME(2026, 4, 18, 0, 5, 6))\n"
+            "midnight_12_round_trip = TTOS(CTOT(midnight_12_text))\n"
+            "morning_12_text = TTOC(DATETIME(2026, 4, 18, 11, 5, 6))\n"
+            "morning_12_round_trip = TTOS(CTOT(morning_12_text))\n"
+            "noon_12_text = TTOC(DATETIME(2026, 4, 18, 12, 5, 6))\n"
+            "noon_12_round_trip = TTOS(CTOT(noon_12_text))\n"
+            "afternoon_12_text = TTOC(DATETIME(2026, 4, 18, 23, 5, 6))\n"
+            "afternoon_12_round_trip = TTOS(CTOT(afternoon_12_text))\n"
             "SET SECONDS OFF\n"
             "seconds_off = SET('SECONDS')\n"
             "ttoc_hours_12_seconds_off = TTOC('04/18/2026 13:45:56')\n"
@@ -399,6 +407,14 @@ namespace
         check("hours_12", "12");
         check("ttoc_hours_12", "04/18/2026 01:45:56 PM");
         check("datetime_arithmetic_hours_12", "04/18/2026 01:46:56 PM");
+        check("midnight_12_text", "04/18/2026 12:05:06 AM");
+        check("midnight_12_round_trip", "20260418000506");
+        check("morning_12_text", "04/18/2026 11:05:06 AM");
+        check("morning_12_round_trip", "20260418110506");
+        check("noon_12_text", "04/18/2026 12:05:06 PM");
+        check("noon_12_round_trip", "20260418120506");
+        check("afternoon_12_text", "04/18/2026 11:05:06 PM");
+        check("afternoon_12_round_trip", "20260418230506");
         check("seconds_off", "OFF");
         check("ttoc_hours_12_seconds_off", "04/18/2026 01:45 PM");
         check("hours_24", "24");
