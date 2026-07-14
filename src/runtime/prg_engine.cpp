@@ -778,6 +778,7 @@ namespace copperfin::runtime
         std::vector<FaultMetadataSnapshot> error_metadata_stack;
         std::string error_handler;
         std::string shutdown_handler;
+        std::string udfparms_mode = "VALUE";
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
@@ -881,6 +882,7 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
+            const std::vector<std::string> &raw_arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         bool requery_native_list_control(
             RuntimeOleObjectState &runtime_object,
@@ -1681,7 +1683,11 @@ namespace copperfin::runtime
                     option_variant = trim_copy(trimmed_option_name.substr(comma_position + 1U));
                 }
 
-                const std::string normalized_name = normalize_identifier(base_option_name);
+                std::string normalized_name = normalize_identifier(base_option_name);
+                if (normalized_name == "udfp")
+                {
+                    normalized_name = "udfparms";
+                }
                 const std::string normalized_variant = normalize_identifier(option_variant);
                 if (normalized_name == "textmerge" && normalized_variant == "1")
                 {
@@ -1712,6 +1718,10 @@ namespace copperfin::runtime
                 if (normalized_name == "txnlevel")
                 {
                     return std::to_string(current_transaction_level());
+                }
+                if (normalized_name == "udfparms")
+                {
+                    return udfparms_mode;
                 }
                 if (normalized_name == "fields")
                 {
@@ -2252,9 +2262,10 @@ namespace copperfin::runtime
             [this, &frame](
                 const std::string &identifier,
                 const std::vector<PrgValue> &arguments,
+                const std::vector<std::string> &raw_arguments,
                 const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
             {
-                return invoke_expression_user_routine(frame, identifier, arguments, argument_references);
+                return invoke_expression_user_routine(frame, identifier, arguments, raw_arguments, argument_references);
             },
             [this](
                 const std::string &fn_key,
@@ -3127,6 +3138,7 @@ namespace copperfin::runtime
         const Frame &source_frame,
         const std::string &identifier,
         const std::vector<PrgValue> &arguments,
+        const std::vector<std::string> &raw_arguments,
         const std::vector<std::optional<std::string>> &argument_references)
     {
         Program &program = load_program(source_frame.file_path);
@@ -3163,8 +3175,29 @@ namespace copperfin::runtime
             throw std::runtime_error(call_depth_limit_message());
         }
 
+        std::vector<std::optional<std::string>> resolved_references = argument_references;
+        resolved_references.resize(arguments.size());
+        if (udfparms_mode == "REFERENCE")
+        {
+            const std::size_t candidate_count = std::min(arguments.size(), raw_arguments.size());
+            for (std::size_t index = 0U; index < candidate_count; ++index)
+            {
+                if (resolved_references[index].has_value())
+                {
+                    continue;
+                }
+
+                const std::string candidate = trim_copy(raw_arguments[index]);
+                if (is_memory_variable_reference_text(candidate) &&
+                    (find_variable(source_frame, candidate) != nullptr || find_array(candidate, source_frame) != nullptr))
+                {
+                    resolved_references[index] = candidate;
+                }
+            }
+        }
+
         const std::size_t return_depth = stack.size();
-        push_routine_frame(found->program->path, *found->routine, arguments, argument_references);
+        push_routine_frame(found->program->path, *found->routine, arguments, resolved_references);
         return run_expression_invoked_routine_until_return(return_depth);
     }
 

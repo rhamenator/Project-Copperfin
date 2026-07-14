@@ -1106,16 +1106,14 @@
                             if (argument_expression.front() == '@')
                             {
                                 const std::string reference_name = trim_copy(argument_expression.substr(1U));
-                                if (is_bare_identifier_text(reference_name))
+                                if (is_memory_variable_reference_text(reference_name))
                                 {
                                     call_arguments.push_back(lookup_variable(frame, reference_name));
                                     call_argument_references.push_back(reference_name);
                                     continue;
                                 }
                             }
-                            if (is_bare_identifier_text(argument_expression) &&
-                                (std::isalpha(static_cast<unsigned char>(argument_expression.front())) != 0 ||
-                                 argument_expression.front() == '_'))
+                            if (is_memory_variable_reference_text(argument_expression))
                             {
                                 call_arguments.push_back(lookup_variable(frame, argument_expression));
                                 call_argument_references.push_back(argument_expression);
@@ -1262,7 +1260,7 @@
                             if (argument_expression.front() == '@')
                             {
                                 const std::string reference_name = trim_copy(argument_expression.substr(1U));
-                                if (is_bare_identifier_text(reference_name))
+                                if (is_memory_variable_reference_text(reference_name))
                                 {
                                     call_arguments.push_back(lookup_variable(frame, reference_name));
                                     call_argument_references.push_back(reference_name);
@@ -1481,16 +1479,14 @@
                                 if (argument_expression.front() == '@')
                                 {
                                     const std::string reference_name = trim_copy(argument_expression.substr(1U));
-                                    if (is_bare_identifier_text(reference_name))
+                                    if (is_memory_variable_reference_text(reference_name))
                                     {
                                         call_arguments.push_back(lookup_variable(frame, reference_name));
                                         call_argument_references.push_back(reference_name);
                                         continue;
                                     }
                                 }
-                                if (is_bare_identifier_text(argument_expression) &&
-                                    (std::isalpha(static_cast<unsigned char>(argument_expression.front())) != 0 ||
-                                     argument_expression.front() == '_'))
+                                if (is_memory_variable_reference_text(argument_expression))
                                 {
                                     call_arguments.push_back(lookup_variable(frame, argument_expression));
                                     call_argument_references.push_back(argument_expression);
@@ -3322,7 +3318,11 @@
             case StatementKind::set_command:
             {
                 const auto [option_name, option_value] = split_first_word(statement.expression);
-                const std::string normalized_name = normalize_identifier(option_name);
+                std::string normalized_name = normalize_identifier(option_name);
+                if (normalized_name == "udfp")
+                {
+                    normalized_name = "udfparms";
+                }
                 const auto strip_set_to_value = [](const std::string &raw_value) -> std::string
                 {
                     std::string candidate = trim_copy(raw_value);
@@ -3650,7 +3650,16 @@
                 }
                 if (!normalized_name.empty())
                 {
-                    if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
+                    if (normalized_name == "udfparms")
+                    {
+                        const std::string udfparms_value = normalize_identifier(
+                            evaluate_set_string_value(option_value, "VALUE"));
+                        udfparms_mode =
+                            udfparms_value == "reference" || udfparms_value == "refe"
+                                ? std::string{"REFERENCE"}
+                                : std::string{"VALUE"};
+                    }
+                    else if (normalized_name == "exact" || normalized_name == "deleted" || normalized_name == "near" ||
                         normalized_name == "strictdate" || normalized_name == "optimize" ||
                         normalized_name == "talk" || normalized_name == "safety" || normalized_name == "escape" ||
                         normalized_name == "century" || normalized_name == "seconds" || normalized_name == "exclusive" ||

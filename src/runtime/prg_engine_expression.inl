@@ -145,7 +145,7 @@
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
-                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
@@ -1672,7 +1672,7 @@
                 if (user_routine_invoke_callback_)
                 {
                     const auto user_routine_result =
-                        user_routine_invoke_callback_(function, arguments, argument_references);
+                        user_routine_invoke_callback_(function, arguments, raw_arguments, argument_references);
                     if (user_routine_result.has_value())
                     {
                         return *user_routine_result;
@@ -2018,7 +2018,7 @@
                                 ++lookahead;
                             }
                             const char delimiter = lookahead < text_.size() ? text_[lookahead] : '\0';
-                            if (is_bare_identifier_text(reference_name) &&
+                            if (is_memory_variable_reference_text(reference_name) &&
                                 (delimiter == ',' || delimiter == ')' || delimiter == '\0'))
                             {
                                 argument_reference = reference_name;
@@ -2076,7 +2076,7 @@
                     }
                     const std::string raw_argument =
                         trim_copy(text_.substr(argument_start, argument_end - argument_start));
-                    if (is_bare_identifier_text(raw_argument) && array_exists_callback_(raw_argument))
+                    if (is_memory_variable_reference_text(raw_argument) && array_exists_callback_(raw_argument))
                     {
                         invocation.arguments.back() = array_value_callback_(raw_argument, 1U, 1U);
                     }
@@ -3224,7 +3224,7 @@
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
-            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;

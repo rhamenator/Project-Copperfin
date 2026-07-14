@@ -41,6 +41,7 @@ std::string take_keyword_value(const std::string& text, const std::string& keywo
 std::string runtime_error_parameter(const std::string& message);
 std::string uppercase_copy(std::string value);
 bool is_bare_identifier_text(const std::string& value);
+bool is_memory_variable_reference_text(const std::string& value);
 std::string collapse_identifier(const std::string& value);
 std::string unquote_identifier(std::string value);
 std::string normalize_index_value(std::string value);

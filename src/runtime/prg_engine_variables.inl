@@ -2,25 +2,101 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
+        using VariableStorageIdentity = std::pair<const Frame *, std::string>;
+
+        VariableStorageIdentity resolve_stacked_variable_storage_identity(
+            std::size_t frame_index,
+            const std::string &name,
+            bool include_declared_locals) const
+        {
+            std::string current_name = normalize_memory_variable_identifier(name);
+            while (true)
+            {
+                const Frame *current_frame = &stack[frame_index];
+                const auto binding = current_frame->parameter_reference_bindings.find(current_name);
+                if (binding == current_frame->parameter_reference_bindings.end())
+                {
+                    if (current_frame->locals.contains(current_name) ||
+                        (include_declared_locals && current_frame->local_names.contains(current_name)))
+                    {
+                        return {current_frame, std::move(current_name)};
+                    }
+                    return {nullptr, std::move(current_name)};
+                }
+
+                current_name = normalize_memory_variable_identifier(binding->second);
+                if (frame_index == 0U)
+                {
+                    return {nullptr, std::move(current_name)};
+                }
+                --frame_index;
+            }
+        }
+
+        VariableStorageIdentity resolve_variable_storage_identity(
+            const Frame &frame,
+            const std::string &name,
+            bool include_declared_locals) const
+        {
+            for (std::size_t index = 0U; index < stack.size(); ++index)
+            {
+                if (&stack[index] == &frame)
+                {
+                    return resolve_stacked_variable_storage_identity(
+                        index,
+                        name,
+                        include_declared_locals);
+                }
+            }
+
+            const std::string normalized = normalize_memory_variable_identifier(name);
+            if (frame.locals.contains(normalized) ||
+                (include_declared_locals && frame.local_names.contains(normalized)))
+            {
+                return {&frame, normalized};
+            }
+            return {nullptr, normalized};
+        }
+
         void assign_variable(Frame &frame, const std::string &name, const PrgValue &value)
         {
             const std::string normalized = normalize_memory_variable_identifier(name);
-            if (frame.local_names.contains(normalized) || frame.locals.contains(normalized))
+            const VariableStorageIdentity target =
+                resolve_variable_storage_identity(frame, normalized, true);
+            if (target.first != nullptr)
             {
-                frame.locals[normalized] = value;
-                return;
+                const_cast<Frame *>(target.first)->locals[target.second] = value;
             }
-            globals[normalized] = value;
+            else
+            {
+                globals[target.second] = value;
+            }
+
+            for (std::size_t frame_index = 0U; frame_index < stack.size(); ++frame_index)
+            {
+                Frame &active_frame = stack[frame_index];
+                for (const auto &peer_binding : active_frame.parameter_reference_bindings)
+                {
+                    const VariableStorageIdentity peer =
+                        resolve_stacked_variable_storage_identity(frame_index, peer_binding.first, true);
+                    if (peer == target)
+                    {
+                        active_frame.locals[peer_binding.first] = value;
+                    }
+                }
+            }
         }
 
         const PrgValue *find_variable(const Frame &frame, const std::string &name) const
         {
-            const std::string normalized = normalize_memory_variable_identifier(name);
-            if (const auto local = frame.locals.find(normalized); local != frame.locals.end())
+            const VariableStorageIdentity target =
+                resolve_variable_storage_identity(frame, name, false);
+            if (target.first != nullptr)
             {
-                return &local->second;
+                const auto local = target.first->locals.find(target.second);
+                return local == target.first->locals.end() ? nullptr : &local->second;
             }
-            if (const auto global = globals.find(normalized); global != globals.end())
+            if (const auto global = globals.find(target.second); global != globals.end())
             {
                 return &global->second;
             }

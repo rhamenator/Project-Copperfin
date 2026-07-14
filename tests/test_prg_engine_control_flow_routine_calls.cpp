@@ -247,6 +247,278 @@ void test_expression_level_function_call_supports_by_reference_arguments() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_udfparms_controls_expression_routine_parameter_aliasing() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_udfparms";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "set_udfparms.prg";
+    write_text(
+        main_path,
+        "DIMENSION aValue[2], aReference[2], aExplicit[2]\n"
+        "aValue[1] = 10\n"
+        "aValue[2] = 20\n"
+        "aReference[1] = 30\n"
+        "aReference[2] = 40\n"
+        "aExplicit[1] = 50\n"
+        "aExplicit[2] = 60\n"
+        "scalarValue = 5\n"
+        "defaultMode = SET('UDFPARMS')\n"
+        "defaultResult = bump(scalarValue)\n"
+        "defaultScalar = scalarValue\n"
+        "defaultArrayResult = bump(m.aValue)\n"
+        "defaultArrayOne = aValue[1]\n"
+        "defaultArrayTwo = aValue[2]\n"
+        "SET UDFPARMS TO REFERENCE\n"
+        "referenceMode = SET('UDFP')\n"
+        "referenceResult = bump(scalarValue)\n"
+        "referenceScalar = scalarValue\n"
+        "parenthesizedResult = bump((scalarValue))\n"
+        "parenthesizedScalar = scalarValue\n"
+        "expressionResult = bump(scalarValue + 10)\n"
+        "expressionScalar = scalarValue\n"
+        "literalResult = bump(90)\n"
+        "referenceArrayResult = mutatearray(aReference)\n"
+        "referenceArrayOne = aReference[1]\n"
+        "referenceArrayTwo = aReference[2]\n"
+        "sameAliasValue = 1\n"
+        "sameAliasResult = mutatetwo(sameAliasValue, sameAliasValue)\n"
+        "sameAliasAfter = sameAliasValue\n"
+        "nestedAliasValue = 2\n"
+        "nestedAliasResult = forwardaliases(nestedAliasValue, nestedAliasValue)\n"
+        "nestedAliasAfter = nestedAliasValue\n"
+        "indirectAliasValue = 8\n"
+        "indirectAliasResult = readindirectalias(indirectAliasValue)\n"
+        "indirectAliasAfter = indirectAliasValue\n"
+        "TRY\n"
+        "    ignoredFaultResult = faulting(scalarValue)\n"
+        "CATCH\n"
+        "    modeAfterFault = SET('UDFPARMS')\n"
+        "ENDTRY\n"
+        "afterFaultResult = bump(scalarValue)\n"
+        "afterFaultScalar = scalarValue\n"
+        "SET UDFPARMS TO VALUE\n"
+        "valueMode = SET('UDFPARMS')\n"
+        "explicitResult = bump(@scalarValue)\n"
+        "explicitScalar = scalarValue\n"
+        "qualifiedValue = 70\n"
+        "qualifiedResult = bump(@m.qualifiedValue)\n"
+        "qualifiedScalar = qualifiedValue\n"
+        "explicitArrayResult = mutatearraydirect(@m.aExplicit)\n"
+        "explicitArrayOne = aExplicit[1]\n"
+        "explicitArrayTwo = aExplicit[2]\n"
+        "DO bumpprocedure WITH m.scalarValue\n"
+        "doScalar = scalarValue\n"
+        "callValue = 30\n"
+        "CALL bumpprocedure WITH m.callValue\n"
+        "callScalar = callValue\n"
+        "RETURN\n"
+        "FUNCTION bump\n"
+        "LPARAMETERS value\n"
+        "value = value + 1\n"
+        "RETURN value\n"
+        "FUNCTION mutatearray\n"
+        "LPARAMETERS values\n"
+        "values[1] = values[1] + 1\n"
+        "RETURN forwardarray(values)\n"
+        "FUNCTION forwardarray\n"
+        "LPARAMETERS forwarded\n"
+        "forwarded[2] = forwarded[2] + 2\n"
+        "RETURN ALEN(forwarded)\n"
+        "FUNCTION mutatearraydirect\n"
+        "LPARAMETERS values\n"
+        "values[1] = values[1] + 3\n"
+        "values[2] = values[2] + 4\n"
+        "RETURN ALEN(values)\n"
+        "FUNCTION mutatetwo\n"
+        "LPARAMETERS firstValue, secondValue\n"
+        "firstValue = firstValue + 1\n"
+        "secondValue = secondValue + 2\n"
+        "RETURN firstValue * 10 + secondValue\n"
+        "FUNCTION forwardaliases\n"
+        "LPARAMETERS outerFirst, outerSecond\n"
+        "RETURN mutatetwo(outerFirst, outerSecond)\n"
+        "FUNCTION readindirectalias\n"
+        "LPARAMETERS aliased\n"
+        "DO mutateindirectglobal\n"
+        "RETURN aliased\n"
+        "FUNCTION faulting\n"
+        "LPARAMETERS value\n"
+        "value = value + 10\n"
+        "DO missing_udfparms_fault_target\n"
+        "RETURN value\n"
+        "PROCEDURE bumpprocedure\n"
+        "LPARAMETERS value\n"
+        "value = value + 5\n"
+        "RETURN\n"
+        "PROCEDURE mutateindirectglobal\n"
+        "indirectAliasValue = indirectAliasValue + 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET UDFPARMS compatibility script should complete: " + state.message);
+
+    const auto expect_global = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should remain visible");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_global("defaultmode", "VALUE", "new sessions should default SET UDFPARMS to VALUE");
+    expect_global("defaultresult", "6", "VALUE mode should still pass the scalar value into the UDF");
+    expect_global("defaultscalar", "5", "VALUE mode should not alias a bare scalar");
+    expect_global("defaultarrayresult", "11", "VALUE mode should pass m.-qualified bare array element 1 by value");
+    expect_global("defaultarrayone", "10", "VALUE mode should not alias a bare array");
+    expect_global("defaultarraytwo", "20", "VALUE mode should not expose the rest of a bare array");
+    expect_global("referencemode", "REFERENCE", "SET('UDFP') should query REFERENCE mode");
+    expect_global("referenceresult", "6", "REFERENCE mode should return the mutated scalar");
+    expect_global("referencescalar", "6", "REFERENCE mode should alias an eligible bare scalar");
+    expect_global("parenthesizedresult", "7", "parentheses should force value passing in REFERENCE mode");
+    expect_global("parenthesizedscalar", "6", "parenthesized variables should not alias caller storage");
+    expect_global("expressionresult", "17", "expressions should remain values in REFERENCE mode");
+    expect_global("expressionscalar", "6", "expression arguments should not alias their input variables");
+    expect_global("literalresult", "91", "literal arguments should remain values in REFERENCE mode");
+    expect_global("referencearrayresult", "2", "REFERENCE mode should expose the full bare array");
+    expect_global("referencearrayone", "31", "REFERENCE mode should alias direct array element writes");
+    expect_global("referencearraytwo", "42", "REFERENCE mode should preserve nested bare-array forwarding");
+    expect_global("samealiasresult", "44", "multiple formals bound to one scalar should observe one aliased value");
+    expect_global("samealiasafter", "4", "multiple scalar aliases should update one caller binding immediately");
+    expect_global("nestedaliasresult", "55", "nested forwarding should preserve one coherent scalar alias");
+    expect_global("nestedaliasafter", "5", "nested scalar aliases should update the original caller binding");
+    expect_global("indirectaliasresult", "10", "scalar aliases should observe direct writes to their caller storage");
+    expect_global("indirectaliasafter", "10", "direct caller-storage writes should not be overwritten by stale alias caches");
+    expect_global("modeafterfault", "REFERENCE", "caught UDF faults should preserve SET UDFPARMS state");
+    expect_global("afterfaultresult", "17", "UDF calls should continue using REFERENCE mode after a caught fault");
+    expect_global("afterfaultscalar", "17", "post-fault reference updates should reach caller storage");
+    expect_global("valuemode", "VALUE", "SET UDFPARMS TO VALUE should restore value mode in the same session");
+    expect_global("explicitresult", "18", "explicit @ should force scalar reference passing in VALUE mode");
+    expect_global("explicitscalar", "18", "explicit @ should alias scalar caller storage in VALUE mode");
+    expect_global("qualifiedresult", "71", "explicit @ should accept an m.-qualified scalar in VALUE mode");
+    expect_global("qualifiedscalar", "71", "m.-qualified references should alias caller storage");
+    expect_global("explicitarrayresult", "2", "explicit @ should expose an m.-qualified full array in VALUE mode");
+    expect_global("explicitarrayone", "53", "explicit @ should alias the first array element in VALUE mode");
+    expect_global("explicitarraytwo", "64", "explicit @ should alias the second array element in VALUE mode");
+    expect_global("doscalar", "23", "DO WITH should keep m.-qualified variables reference-default independently of SET UDFPARMS");
+    expect_global("callscalar", "35", "CALL WITH should keep m.-qualified variables reference-default independently of SET UDFPARMS");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_udfparms_isolation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path first_path = temp_root / "first_session.prg";
+    write_text(
+        first_path,
+        "SET UDFPARMS TO REFERENCE\n"
+        "sessionOneMode = SET('UDFPARMS')\n"
+        "SET DATASESSION TO 2\n"
+        "dataSessionTwoInherited = SET('UDFPARMS')\n"
+        "SET UDFPARMS TO VALUE\n"
+        "dataSessionTwoChanged = SET('UDFPARMS')\n"
+        "SET DATASESSION TO 1\n"
+        "dataSessionOneSeesChange = SET('UDFPARMS')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession first_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(first_path.string(), temp_root.string(), false));
+    const auto first_state = first_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(first_state.completed, "first SET UDFPARMS isolation session should complete: " + first_state.message);
+
+    const auto second_path = temp_root / "second_session.prg";
+    write_text(
+        second_path,
+        "freshRuntimeMode = SET('UDFPARMS')\n"
+        "value = 2\n"
+        "result = bump(value)\n"
+        "valueAfter = value\n"
+        "RETURN\n"
+        "FUNCTION bump\n"
+        "LPARAMETERS value\n"
+        "value = value + 1\n"
+        "RETURN value\n");
+
+    copperfin::runtime::PrgRuntimeSession second_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(second_path.string(), temp_root.string(), false));
+    const auto second_state = second_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(second_state.completed, "second SET UDFPARMS isolation session should complete: " + second_state.message);
+
+    const auto expect_global = [](const auto &state, const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should remain visible");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_global(first_state, "sessiononemode", "REFERENCE", "the first data session should retain its selected mode");
+    expect_global(first_state, "datasessiontwoinherited", "REFERENCE", "UDFPARMS should remain runtime-session-wide across data sessions");
+    expect_global(first_state, "datasessiontwochanged", "VALUE", "a data-session change should update the runtime-session-wide mode");
+    expect_global(first_state, "datasessiononeseeschange", "VALUE", "returning to a data session should keep the session-wide mode");
+    expect_global(second_state, "freshruntimemode", "VALUE", "a new runtime session should not inherit UDFPARMS state");
+    expect_global(second_state, "result", "3", "a fresh runtime session should evaluate bare scalar UDF arguments by value");
+    expect_global(second_state, "valueafter", "2", "a fresh runtime session should not alias bare scalar UDF arguments");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_deep_scalar_reference";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    constexpr std::size_t forwarding_depth = 768U;
+    std::ostringstream script;
+    script << "value = 1\n"
+           << "DO forward1 WITH value\n"
+           << "deepResult = value\n"
+           << "RETURN\n";
+    for (std::size_t depth = 1U; depth <= forwarding_depth; ++depth) {
+        script << "PROCEDURE forward" << depth << "\n"
+               << "LPARAMETERS forwarded\n";
+        if (depth == forwarding_depth) {
+            script << "forwarded = forwarded + 1\n";
+        } else {
+            script << "DO forward" << (depth + 1U) << " WITH forwarded\n";
+        }
+        script << "RETURN\n";
+    }
+
+    const fs::path main_path = temp_root / "deep_scalar_reference.prg";
+    write_text(main_path, script.str());
+
+    auto options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    options.max_call_depth = forwarding_depth + 8U;
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(options);
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "deep scalar reference forwarding should complete without host-stack propagation: " + state.message);
+
+    const auto result = state.globals.find("deepresult");
+    expect(result != state.globals.end(), "deep scalar reference forwarding should leave the caller result visible");
+    if (result != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(result->second) == "2",
+            "the deepest scalar alias should update the original caller storage exactly once");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_parameters_alias_caller_storage_across_nested_function_calls() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_array_byref";

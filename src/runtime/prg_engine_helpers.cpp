@@ -273,6 +273,16 @@ bool is_bare_identifier_text(const std::string& value) {
     });
 }
 
+bool is_memory_variable_reference_text(const std::string& value) {
+    const std::string identifier =
+        value.size() > 2U && starts_with_insensitive(value, "m.")
+            ? value.substr(2U)
+            : value;
+    return is_bare_identifier_text(identifier) &&
+           (std::isalpha(static_cast<unsigned char>(identifier.front())) != 0 ||
+            identifier.front() == '_');
+}
+
 std::string collapse_identifier(const std::string& value) {
     std::string normalized;
     normalized.reserve(value.size());
