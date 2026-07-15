@@ -21,16 +21,6 @@
 #include <string_view>
 #include <vector>
 
-#if !defined(_WIN32)
-#include <sys/wait.h>
-#endif
-
-
-
-
-
-
-
 namespace cf_test_studio_host_json {
 
 #if !defined(COPPERFIN_TEST_SUCCESS_COMMAND)
@@ -67,7 +57,6 @@ void expect_contains_in_order(
     const std::string& text,
     const std::vector<std::string>& needles,
     const std::string& message);
-std::string quote_command_argument(const std::string& value);
 std::string expected_json_shell_quote(const std::string& value);
 std::string expected_json_shell_command(
     const std::string& launch_command,

@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_studio_host_json_support.h"
+#include "test_process_capture_support.h"
 
 namespace cf_test_studio_host_json {
 int failures = 0;
@@ -54,20 +55,6 @@ void expect_contains_in_order(
         }
         offset = position + needle.size();
     }
-}
-
-std::string quote_command_argument(const std::string& value) {
-    std::string quoted = "\"";
-    quoted.reserve(value.size() + 2U);
-    for (const char ch : value) {
-        if (ch == '"') {
-            quoted += "\\\"";
-        } else {
-            quoted.push_back(ch);
-        }
-    }
-    quoted.push_back('"');
-    return quoted;
 }
 
 std::string expected_json_shell_quote(const std::string& value) {
@@ -162,45 +149,15 @@ ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
-    namespace fs = std::filesystem;
-
-    const fs::path resolved_executable_path = fs::absolute(executable_path);
-    const fs::path stdout_path = working_directory / "studio_host_stdout.log";
-    const fs::path stderr_path = working_directory / "studio_host_stderr.log";
-
-    std::string command = quote_command_argument(resolved_executable_path.string());
-    for (const auto& argument : arguments) {
-        command += " ";
-        command += quote_command_argument(argument);
-    }
-    command += " > ";
-    command += quote_command_argument(stdout_path.string());
-    command += " 2> ";
-    command += quote_command_argument(stderr_path.string());
-
-    const fs::path original_directory = fs::current_path();
-    fs::current_path(working_directory);
-    const int raw_exit_code = copperfin::test_support::run_shell_command(command);
-    fs::current_path(original_directory);
-
-    ProcessResult result;
-    if (fs::exists(stdout_path)) {
-        result.stdout_text = normalize_captured_line_endings(read_text(stdout_path));
-    }
-    if (fs::exists(stderr_path)) {
-        result.stderr_text = normalize_captured_line_endings(read_text(stderr_path));
-    }
-
-#if defined(_WIN32)
-    result.exit_code = raw_exit_code;
-#else
-    if (raw_exit_code != -1 && WIFEXITED(raw_exit_code)) {
-        result.exit_code = WEXITSTATUS(raw_exit_code);
-    } else {
-        result.exit_code = raw_exit_code;
-    }
-#endif
-    return result;
+    const auto captured = copperfin::test_support::run_process_capture(
+        copperfin::test_support::path_from_utf8_string(executable_path),
+        arguments,
+        working_directory);
+    return {
+        .exit_code = captured.exit_code,
+        .stdout_text = normalize_captured_line_endings(captured.stdout_text),
+        .stderr_text = normalize_captured_line_endings(captured.stderr_text)
+    };
 }
 
 std::vector<std::uint8_t> make_vfp_header() {

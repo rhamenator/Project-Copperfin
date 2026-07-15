@@ -4,10 +4,11 @@
 
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
+#include "test_environment_support.h"
+#include "test_process_capture_support.h"
 
 #include <algorithm>
 #include <cstdint>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -61,49 +62,6 @@ void write_field_descriptor(
 }
 
 std::vector<std::uint8_t> read_file_bytes(const std::filesystem::path& path) {
-    std::ifstream input(path, std::ios::binary);
-    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
-}
-
-std::string quote_shell_argument(const std::string& value) {
-#if defined(_WIN32)
-    std::string result = "\"";
-    std::size_t backslash_count = 0U;
-    for (char character : value) {
-        if (character == '\\') {
-            ++backslash_count;
-        } else if (character == '\"') {
-            result.append(backslash_count * 2U + 1U, '\\');
-            result.push_back(character);
-            backslash_count = 0U;
-        } else {
-            result.append(backslash_count, '\\');
-            backslash_count = 0U;
-            if (character == '%') {
-                result += "%%";
-            } else {
-                result.push_back(character);
-            }
-        }
-    }
-    result.append(backslash_count * 2U, '\\');
-    result.push_back('\"');
-    return result;
-#else
-    std::string result = "'";
-    for (char character : value) {
-        if (character == '\'') {
-            result += "'\\''";
-        } else {
-            result.push_back(character);
-        }
-    }
-    result += "'";
-    return result;
-#endif
-}
-
-std::string read_text(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
@@ -222,14 +180,17 @@ void verify_marked_asset_round_trip(
     }
 
     if (!studio_host_path.empty()) {
-        const std::filesystem::path json_path = fixture.table_path.string() + ".json";
-        const std::string command = quote_shell_argument(studio_host_path) +
-            " --path " + quote_shell_argument(fixture.table_path.string()) +
-            " --json > " + quote_shell_argument(json_path.string());
-        const int host_result = std::system(command.c_str());
-        const std::string host_json = read_text(json_path);
-        expect(host_result == 0, label + " Studio host JSON command should succeed");
-        expect(host_json.find(replacement_utf8) != std::string::npos,
+        const auto host_result = copperfin::test_support::run_process_capture(
+            copperfin::test_support::path_from_utf8_string(studio_host_path),
+            {
+                "--path",
+                copperfin::test_support::path_to_utf8_string(fixture.table_path),
+                "--json"
+            },
+            root);
+        expect(host_result.started && host_result.exit_code == 0,
+               label + " Studio host JSON command should succeed");
+        expect(host_result.stdout_text.find(replacement_utf8) != std::string::npos,
                label + " Studio host JSON should expose the UTF-8 text value");
     }
 

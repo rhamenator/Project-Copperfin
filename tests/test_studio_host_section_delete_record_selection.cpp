@@ -5,16 +5,13 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 #include "test_locale_catalog_environment_support.h"
+#include "test_process_capture_support.h"
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#if !defined(_WIN32)
-#include <sys/wait.h>
-#endif
 
 namespace {
 
@@ -56,77 +53,16 @@ bool dbf_record_deleted(const std::filesystem::path& table_path, std::size_t rec
     return table_result.table.records[record_index].deleted;
 }
 
-std::string quote_command_argument(const std::string& value) {
-    std::string quoted = "\"";
-    quoted.reserve(value.size() + 2U);
-    for (const char ch : value) {
-        if (ch == '"') {
-            quoted += "\\\"";
-        } else {
-            quoted.push_back(ch);
-        }
-    }
-    quoted.push_back('"');
-    return quoted;
-}
-
-std::string read_text(const std::filesystem::path& path) {
-    std::ifstream input(path, std::ios::binary);
-    return {
-        std::istreambuf_iterator<char>(input),
-        std::istreambuf_iterator<char>()
-    };
-}
-
-struct ProcessResult {
-    int exit_code = -1;
-    std::string stdout_text;
-    std::string stderr_text;
-};
+using ProcessResult = copperfin::test_support::CapturedProcessResult;
 
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
-    namespace fs = std::filesystem;
-
-    const fs::path resolved_executable_path = fs::absolute(executable_path);
-    const fs::path stdout_path = working_directory / "studio_host_stdout.log";
-    const fs::path stderr_path = working_directory / "studio_host_stderr.log";
-
-    std::string command = quote_command_argument(resolved_executable_path.string());
-    for (const auto& argument : arguments) {
-        command += " ";
-        command += quote_command_argument(argument);
-    }
-    command += " > ";
-    command += quote_command_argument(stdout_path.string());
-    command += " 2> ";
-    command += quote_command_argument(stderr_path.string());
-
-    const fs::path original_directory = fs::current_path();
-    fs::current_path(working_directory);
-    const int raw_exit_code = copperfin::test_support::run_shell_command(command);
-    fs::current_path(original_directory);
-
-    ProcessResult result;
-    if (fs::exists(stdout_path)) {
-        result.stdout_text = read_text(stdout_path);
-    }
-    if (fs::exists(stderr_path)) {
-        result.stderr_text = read_text(stderr_path);
-    }
-
-#if defined(_WIN32)
-    result.exit_code = raw_exit_code;
-#else
-    if (raw_exit_code != -1 && WIFEXITED(raw_exit_code)) {
-        result.exit_code = WEXITSTATUS(raw_exit_code);
-    } else {
-        result.exit_code = raw_exit_code;
-    }
-#endif
-    return result;
+    return copperfin::test_support::run_process_capture(
+        copperfin::test_support::path_from_utf8_string(executable_path),
+        arguments,
+        working_directory);
 }
 
 void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem::path& report_path) {
@@ -164,7 +100,7 @@ void run_section_delete_case(
     const auto delete_process = run_process_capture(
         studio_host_path,
         {
-            "--path", asset_path.string(),
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
             "--delete-object",
             "--record", "1",
             "--json"

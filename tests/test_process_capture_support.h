@@ -1,0 +1,29 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#ifndef COPPERFIN_TEST_PROCESS_CAPTURE_SUPPORT_H
+#define COPPERFIN_TEST_PROCESS_CAPTURE_SUPPORT_H
+
+#include <filesystem>
+#include <string>
+#include <vector>
+
+namespace copperfin::test_support {
+
+struct CapturedProcessResult {
+    bool started = false;
+    int exit_code = -1;
+    int launch_error = 0;
+    std::string stdout_text;
+    std::string stderr_text;
+};
+
+CapturedProcessResult run_process_capture(
+    const std::filesystem::path& executable_path,
+    const std::vector<std::string>& utf8_arguments,
+    const std::filesystem::path& working_directory);
+
+}  // namespace copperfin::test_support
+
+#endif

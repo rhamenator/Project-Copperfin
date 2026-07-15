@@ -11,6 +11,15 @@ function(copperfin_add_test TARGET_NAME LINK_LIBS)
     add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
 endfunction()
 
+add_library(cf_test_process_capture_support STATIC
+    test_process_capture_support.cpp
+)
+if(MSVC)
+    target_compile_options(cf_test_process_capture_support PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_test_process_capture_support PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 find_program(DOTNET_EXECUTABLE NAMES dotnet)
 if(DOTNET_EXECUTABLE)
     add_test(
@@ -230,6 +239,11 @@ target_compile_definitions(test_process_success PRIVATE COPPERFIN_TEST_PROCESS_E
 
 add_executable(test_process_failure test_process_exit.cpp)
 target_compile_definitions(test_process_failure PRIVATE COPPERFIN_TEST_PROCESS_EXIT_CODE=1)
+
+copperfin_add_test(test_process_capture cf_test_process_capture_support
+    test_process_capture.cpp
+)
+target_link_libraries(test_process_capture PRIVATE cf_platform_support)
 
 add_executable(test_studio_host_json
     test_studio_host_json.cpp
@@ -4449,6 +4463,36 @@ copperfin_add_test(test_xasset_methods cf_xbase_runtime
 # Studio-host tests launch this executable out of process. A TARGET_FILE generator
 # expression in add_test() does not make narrow test-target builds rebuild the host.
 get_property(copperfin_test_directory_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+set(copperfin_process_capture_test_sources
+    test_studio_host_json_shared_test_helpers.cpp
+    test_studio_host_settings_memo_stable.cpp
+    test_studio_host_selected_sections_stable.cpp
+    test_studio_host_selected_page_header_sections_stable.cpp
+    test_studio_host_selected_page_header_objects_orphaned.cpp
+    test_studio_host_selected_detail_objects_orphaned.cpp
+    test_studio_host_selected_report_sections.cpp
+    test_studio_host_selected_label_sections.cpp
+    test_studio_host_settings_memo_record.cpp
+    test_studio_host_column_setup_record_settings.cpp
+    test_studio_host_column_setup_stable_settings.cpp
+    test_studio_host_section_delete_record_selection.cpp
+    test_studio_host_section_delete_stable_selection.cpp
+    test_visual_asset_editor_code_page.cpp
+)
+foreach(copperfin_test_target IN LISTS copperfin_test_directory_targets)
+    get_target_property(copperfin_test_target_type ${copperfin_test_target} TYPE)
+    if(NOT copperfin_test_target_type STREQUAL "EXECUTABLE")
+        continue()
+    endif()
+    get_target_property(copperfin_test_target_sources ${copperfin_test_target} SOURCES)
+    foreach(copperfin_capture_source IN LISTS copperfin_process_capture_test_sources)
+        if(copperfin_capture_source IN_LIST copperfin_test_target_sources)
+            target_link_libraries(${copperfin_test_target} PRIVATE cf_test_process_capture_support)
+            break()
+        endif()
+    endforeach()
+endforeach()
+
 set(copperfin_self_contained_studio_host_tests
     test_studio_host
     test_studio_host_shell_command
