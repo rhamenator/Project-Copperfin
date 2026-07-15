@@ -332,7 +332,7 @@
                         restore_predicate_bindings();
                         return make_number_value(0.0);
                     }
-                    const std::size_t start_row = (start - 1U) / array->columns;
+                    const std::size_t start_row = start - 1U;
                     const std::size_t available_rows = array->rows > start_row ? array->rows - start_row : 0U;
                     const std::size_t rows_to_scan = count == 0U ? available_rows : std::min(count, available_rows);
                     for (std::size_t row = start_row; row < start_row + rows_to_scan; ++row)

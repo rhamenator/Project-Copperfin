@@ -26,6 +26,53 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_ascan_column_start_uses_column_relative_row() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_column_start";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ascan_column_start.prg";
+    write_text(
+        main_path,
+        "DIMENSION aValues[4,2]\n"
+        "aValues[1,2] = 'X'\n"
+        "aValues[2,2] = 'M'\n"
+        "aValues[3,2] = 'Z'\n"
+        "aValues[4,2] = 'Q'\n"
+        "nExcludedMatch = ASCAN(aValues, 'M', 3, 2, 2)\n"
+        "nWindowMatch = ASCAN(aValues, 'Z', 3, 2, 2)\n"
+        "nWindowRow = ASCAN(aValues, 'Z', 3, 2, 2, 8)\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ASCAN column-relative start script should complete");
+
+    const auto excluded_match = state.globals.find("nexcludedmatch");
+    const auto window_match = state.globals.find("nwindowmatch");
+    const auto window_row = state.globals.find("nwindowrow");
+    expect(excluded_match != state.globals.end(), "ASCAN column-relative excluded-match result should be captured");
+    expect(window_match != state.globals.end(), "ASCAN column-relative window-match result should be captured");
+    expect(window_row != state.globals.end(), "ASCAN column-relative row result should be captured");
+    if (excluded_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(excluded_match->second) == "0",
+               "ASCAN column-relative start should exclude matches before the requested row");
+    }
+    if (window_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(window_match->second) == "6",
+               "ASCAN column-relative start should return the matched linear element index");
+    }
+    if (window_row != state.globals.end()) {
+        expect(copperfin::runtime::format_value(window_row->second) == "3",
+               "ASCAN column-relative start should retain the matched row return mode");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_ascan_predicate_expression_search() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_predicate";
@@ -1446,6 +1493,7 @@ void test_agetfileversion_existing_and_missing_files() {
 }
 
 int main() {
+    test_ascan_column_start_uses_column_relative_row();
     test_ascan_predicate_expression_search();
     test_acopy_two_dimensional_row_and_column_workflows();
     test_acopy_clamps_to_existing_target_capacity();
