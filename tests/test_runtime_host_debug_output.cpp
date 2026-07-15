@@ -352,6 +352,40 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string json_escape_string(const std::string& value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const unsigned char ch : value) {
+        switch (ch) {
+            case '"': escaped += "\\\""; break;
+            case '\\': escaped += "\\\\"; break;
+            case '\b': escaped += "\\b"; break;
+            case '\f': escaped += "\\f"; break;
+            case '\n': escaped += "\\n"; break;
+            case '\r': escaped += "\\r"; break;
+            case '\t': escaped += "\\t"; break;
+            default:
+                if (ch < 0x20U) {
+                    static constexpr char hex[] = "0123456789abcdef";
+                    escaped += "\\u00";
+                    escaped.push_back(hex[(ch >> 4U) & 0x0FU]);
+                    escaped.push_back(hex[ch & 0x0FU]);
+                } else {
+                    escaped.push_back(static_cast<char>(ch));
+                }
+                break;
+        }
+    }
+    return escaped;
+}
+
+void normalize_captured_newlines(std::string& text) {
+    std::size_t offset = 0U;
+    while ((offset = text.find("\r\n", offset)) != std::string::npos) {
+        text.erase(offset, 1U);
+    }
+}
+
 std::string output_line_value(const std::string& output, const std::string& prefix) {
     const std::size_t offset = output.find(prefix);
     if (offset == std::string::npos) {
@@ -456,6 +490,8 @@ ProcessResult run_process_capture(
     if (fs::exists(stderr_path)) {
         result.stderr_text = read_text(stderr_path);
     }
+    normalize_captured_newlines(result.stdout_text);
+    normalize_captured_newlines(result.stderr_text);
 
 #if defined(_WIN32)
     result.exit_code = raw_exit_code;
@@ -3582,7 +3618,7 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 7,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"\",\n"
@@ -3722,13 +3758,7 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         "dotnet_story=none\n");
 
     const auto write_request = [&](const fs::path& requested_source) {
-        std::string escaped_source_path;
-        for (const char ch : requested_source.string()) {
-            if (ch == '\\' || ch == '"') {
-                escaped_source_path.push_back('\\');
-            }
-            escaped_source_path.push_back(ch);
-        }
+        const std::string escaped_source_path = json_escape_string(requested_source.string());
         write_text(
             request_path,
             std::string("{\n"
@@ -3823,7 +3853,7 @@ void test_runtime_host_invokes_zero_argument_bridge_export(const std::string& ru
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"GetAnswer\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"\",\n"
@@ -3918,7 +3948,7 @@ void test_runtime_host_removes_bridge_routine_bootstrap_after_execution(const st
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"GetAnswer\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"\",\n"
@@ -4003,12 +4033,7 @@ void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::stri
         "RETURN 42\n"
         "ENDPROC\n");
 
-    std::string escaped_source_path = source_path.string();
-    std::size_t slash_offset = 0;
-    while ((slash_offset = escaped_source_path.find('\\', slash_offset)) != std::string::npos) {
-        escaped_source_path.replace(slash_offset, 1U, "\\\\");
-        slash_offset += 2U;
-    }
+    const std::string escaped_source_path = json_escape_string(source_path.string());
     write_text(
         request_path,
         std::string("{\n"
@@ -4100,7 +4125,7 @@ void test_runtime_host_passes_bridge_request_parameters_to_export(const std::str
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight\",\n"
@@ -4195,7 +4220,7 @@ void test_runtime_host_rejects_bridge_parameter_count_mismatch(const std::string
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight|tnExtra\",\n"
@@ -4281,7 +4306,7 @@ void test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity(c
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight\",\n"
@@ -4369,7 +4394,7 @@ void test_runtime_host_rejects_nested_bridge_parameter_values_for_nonzero_arity(
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight\",\n"
@@ -4454,7 +4479,7 @@ void test_runtime_host_rejects_bridge_parameter_name_mismatch(const std::string&
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight\",\n"
@@ -4606,7 +4631,7 @@ void test_runtime_host_rejects_nested_bridge_descriptor_fields(const std::string
         "  \"descriptor_shadow\": {\n"
         "    \"export_name\": \"AddNumbers\",\n"
         "    \"routine_kind\": \"procedure\",\n"
-        "    \"source_path\": \"") + source_path.string() + "\",\n"
+        "    \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "    \"parameter_count\": 0,\n"
         "    \"schema_version\": \"v1\",\n"
         "    \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\"\n"
@@ -4680,7 +4705,7 @@ void test_runtime_host_rejects_bridge_descriptor_identity_mismatch(const std::st
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"WrongExport\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"LPARAMETERS\",\n"
         "  \"parameter_names\": \"left,right\",\n"
@@ -4757,7 +4782,7 @@ void test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(const std::st
         "  \"payload_shape\": \"bridge_request_v1\",\n"
         "  \"export_name\": \"AddNumbers\",\n"
         "  \"routine_kind\": \"procedure\",\n"
-        "  \"source_path\": \"") + source_path.string() + "\",\n"
+        "  \"source_path\": \"") + json_escape_string(source_path.string()) + "\",\n"
         "  \"source_line\": 1,\n"
         "  \"parameter_declaration\": \"PARAMETERS\",\n"
         "  \"parameter_names\": \"tnLeft|tnRight\",\n"
@@ -5559,6 +5584,15 @@ void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_token
     fs::remove_all(temp_root, ignored);
 }
 
+void run_runtime_host_test(
+    const char* name,
+    const std::string& runtime_host_path,
+    void (*test)(const std::string&)) {
+    std::cerr << "BEGIN: " << name << '\n';
+    test(runtime_host_path);
+    std::cerr << "END: " << name << '\n';
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -5567,46 +5601,47 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    test_runtime_host_supports_breakpoint_management_commands(argv[1]);
-    test_runtime_host_supports_single_breakpoint_removal(argv[1]);
-    test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
-    test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
-    test_security_enabled_form_class_and_menu_companion_integrity(argv[1]);
-    test_runtime_host_preserves_logical_identity_across_nested_directory_aliases(argv[1]);
-    test_app_cfdebug_preserves_external_xasset_source_compatibility(argv[1]);
-    test_app_cfdebug_rejects_file_valued_working_directory(argv[1]);
-    test_security_enabled_writable_package_data_contract(argv[1]);
-    test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
-    test_runtime_host_reports_xasset_pause_identity(argv[1]);
-    test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
-    test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
-    test_runtime_host_removes_xasset_bootstrap_after_execution(argv[1]);
-    test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
-    test_runtime_host_validates_manifest_versions_without_changing_error_contracts(argv[1]);
-    test_runtime_host_debug_privileges_require_debug_document_contract(argv[1]);
-    test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);
-    test_runtime_host_rejects_audit_paths_outside_the_direct_package(argv[1]);
-    test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(argv[1]);
-    test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
-    test_runtime_host_writes_bridge_response_artifact(argv[1]);
-    test_security_enabled_bridge_source_stays_inside_verified_package(argv[1]);
-    test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
-    test_runtime_host_removes_bridge_routine_bootstrap_after_execution(argv[1]);
-    test_runtime_host_unescapes_bridge_descriptor_string_fields(argv[1]);
-    test_runtime_host_passes_bridge_request_parameters_to_export(argv[1]);
-    test_runtime_host_rejects_bridge_parameter_count_mismatch(argv[1]);
-    test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity(argv[1]);
-    test_runtime_host_rejects_nested_bridge_parameter_values_for_nonzero_arity(argv[1]);
-    test_runtime_host_rejects_bridge_parameter_name_mismatch(argv[1]);
-    test_runtime_host_rejects_bridge_request_contract_mismatch(argv[1]);
-    test_runtime_host_rejects_nested_bridge_descriptor_fields(argv[1]);
-    test_runtime_host_rejects_bridge_descriptor_identity_mismatch(argv[1]);
-    test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(argv[1]);
-    test_runtime_host_usage_text_localizes_without_changing_cli_tokens(argv[1]);
-    test_runtime_host_debug_errors_localize_without_changing_command_tokens(argv[1]);
-    test_runtime_host_pause_messages_localize_without_changing_pause_reasons(argv[1]);
-    test_runtime_host_watch_errors_localize_without_changing_watch_fields(argv[1]);
-    test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(argv[1]);
+    const std::string runtime_host_path = argv[1];
+    run_runtime_host_test("breakpoint management", runtime_host_path, test_runtime_host_supports_breakpoint_management_commands);
+    run_runtime_host_test("single breakpoint removal", runtime_host_path, test_runtime_host_supports_single_breakpoint_removal);
+    run_runtime_host_test("implicit debug manifest", runtime_host_path, test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches);
+    run_runtime_host_test("verified report and label snapshots", runtime_host_path, test_security_enabled_report_and_label_execute_verified_snapshots);
+    run_runtime_host_test("verified xAsset companions", runtime_host_path, test_security_enabled_form_class_and_menu_companion_integrity);
+    run_runtime_host_test("nested directory alias identity", runtime_host_path, test_runtime_host_preserves_logical_identity_across_nested_directory_aliases);
+    run_runtime_host_test("external xAsset debug source", runtime_host_path, test_app_cfdebug_preserves_external_xasset_source_compatibility);
+    run_runtime_host_test("file-valued working directory", runtime_host_path, test_app_cfdebug_rejects_file_valued_working_directory);
+    run_runtime_host_test("writable package data", runtime_host_path, test_security_enabled_writable_package_data_contract);
+    run_runtime_host_test("compatibility launcher note", runtime_host_path, test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback);
+    run_runtime_host_test("xAsset pause identity", runtime_host_path, test_runtime_host_reports_xasset_pause_identity);
+    run_runtime_host_test("xAsset action breakpoints", runtime_host_path, test_runtime_host_supports_xasset_action_breakpoint_commands);
+    run_runtime_host_test("xAsset breakpoint metadata", runtime_host_path, test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output);
+    run_runtime_host_test("xAsset bootstrap cleanup", runtime_host_path, test_runtime_host_removes_xasset_bootstrap_after_execution);
+    run_runtime_host_test("extension payload basename fallback", runtime_host_path, test_runtime_host_rejects_extension_payload_basename_fallback);
+    run_runtime_host_test("manifest versions", runtime_host_path, test_runtime_host_validates_manifest_versions_without_changing_error_contracts);
+    run_runtime_host_test("debug privilege document", runtime_host_path, test_runtime_host_debug_privileges_require_debug_document_contract);
+    run_runtime_host_test("manifest verification localization", runtime_host_path, test_runtime_host_manifest_verification_errors_localize_without_changing_contracts);
+    run_runtime_host_test("audit package boundary", runtime_host_path, test_runtime_host_rejects_audit_paths_outside_the_direct_package);
+    run_runtime_host_test("security audit localization", runtime_host_path, test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts);
+    run_runtime_host_test("AI federation permission", runtime_host_path, test_runtime_host_rejects_ai_federation_planning_without_ai_permission);
+    run_runtime_host_test("bridge response", runtime_host_path, test_runtime_host_writes_bridge_response_artifact);
+    run_runtime_host_test("verified bridge source", runtime_host_path, test_security_enabled_bridge_source_stays_inside_verified_package);
+    run_runtime_host_test("zero-argument bridge export", runtime_host_path, test_runtime_host_invokes_zero_argument_bridge_export);
+    run_runtime_host_test("bridge bootstrap cleanup", runtime_host_path, test_runtime_host_removes_bridge_routine_bootstrap_after_execution);
+    run_runtime_host_test("escaped bridge descriptor", runtime_host_path, test_runtime_host_unescapes_bridge_descriptor_string_fields);
+    run_runtime_host_test("bridge parameters", runtime_host_path, test_runtime_host_passes_bridge_request_parameters_to_export);
+    run_runtime_host_test("bridge parameter count mismatch", runtime_host_path, test_runtime_host_rejects_bridge_parameter_count_mismatch);
+    run_runtime_host_test("nested bridge parameter array", runtime_host_path, test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity);
+    run_runtime_host_test("nested bridge parameter values", runtime_host_path, test_runtime_host_rejects_nested_bridge_parameter_values_for_nonzero_arity);
+    run_runtime_host_test("bridge parameter name mismatch", runtime_host_path, test_runtime_host_rejects_bridge_parameter_name_mismatch);
+    run_runtime_host_test("bridge request contract", runtime_host_path, test_runtime_host_rejects_bridge_request_contract_mismatch);
+    run_runtime_host_test("nested bridge descriptor", runtime_host_path, test_runtime_host_rejects_nested_bridge_descriptor_fields);
+    run_runtime_host_test("bridge descriptor identity", runtime_host_path, test_runtime_host_rejects_bridge_descriptor_identity_mismatch);
+    run_runtime_host_test("bridge descriptor metadata", runtime_host_path, test_runtime_host_rejects_bridge_descriptor_metadata_mismatch);
+    run_runtime_host_test("usage localization", runtime_host_path, test_runtime_host_usage_text_localizes_without_changing_cli_tokens);
+    run_runtime_host_test("debug error localization", runtime_host_path, test_runtime_host_debug_errors_localize_without_changing_command_tokens);
+    run_runtime_host_test("pause localization", runtime_host_path, test_runtime_host_pause_messages_localize_without_changing_pause_reasons);
+    run_runtime_host_test("watch localization", runtime_host_path, test_runtime_host_watch_errors_localize_without_changing_watch_fields);
+    run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
