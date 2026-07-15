@@ -643,11 +643,19 @@ void test_build_project_workspace_normalizes_vfp_absolute_item_paths() {
         make_record(3, {
             {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
             {.field_name = "NAME", .field_type = 'M', .display_value = R"(reports\invoice.frx)"}
+        }),
+        make_record(4, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms/preview.scx"}
+        }),
+        make_record(5, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = R"(reports\.\drafts/preview.frx)"}
         })
     };
 
     const auto workspace = copperfin::studio::build_project_workspace(document);
-    expect(workspace.entries.size() == 4U, "#700: workspace should include all absolute-path fixture entries");
+    expect(workspace.entries.size() == 6U, "#700: workspace should include all path-spelling fixture entries");
     expect(workspace.entries[1].relative_path == R"(forms\customer.scx)",
            "#700: absolute VFP paths under the project directory should normalize to project-relative text");
     expect(workspace.entries[1].relative_path_field_index == 1U,
@@ -658,6 +666,10 @@ void test_build_project_workspace_normalizes_vfp_absolute_item_paths() {
            "#700: outside-path fallback should still retain NAME provenance");
     expect(workspace.entries[3].relative_path == R"(reports\invoice.frx)",
            "#700: existing relative VFP paths should remain unchanged");
+    expect(workspace.entries[4].relative_path == "forms/preview.scx",
+           "#4078: existing forward-slash VFP paths should remain unchanged");
+    expect(workspace.entries[5].relative_path == R"(reports\.\drafts/preview.frx)",
+           "#4078: mixed separators and dot segments should remain unchanged in VFP metadata");
 }
 
 void test_build_project_workspace_normalizes_unc_item_paths() {

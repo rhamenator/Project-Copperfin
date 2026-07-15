@@ -194,19 +194,7 @@ std::string fallback_relative_path(const StudioDocumentModel& document, const st
         return filename_for_vfp_path(value);
     }
 
-    std::filesystem::path item_path(value);
-    if (item_path.is_relative()) {
-        return item_path.generic_string();
-    }
-
-    const std::filesystem::path document_dir = std::filesystem::path(document.path).parent_path();
-    std::error_code error;
-    const std::filesystem::path relative = std::filesystem::relative(item_path, document_dir, error);
-    if (!error && !relative.empty()) {
-        return relative.generic_string();
-    }
-
-    return item_path.filename().generic_string();
+    return value;
 }
 
 struct ProjectTypeDescriptor {
