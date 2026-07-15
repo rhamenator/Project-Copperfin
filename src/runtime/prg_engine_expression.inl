@@ -145,7 +145,7 @@
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
-                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, bool)> user_routine_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
@@ -686,6 +686,8 @@
                     return make_number_value(parse_number());
                 }
 
+                skip_whitespace();
+                const std::size_t primary_start = position_;
                 const std::string identifier = parse_identifier();
                 if (identifier.empty())
                 {
@@ -738,6 +740,15 @@
                     const auto &arguments = invocation.arguments;
                     const auto &raw_arguments = invocation.raw_arguments;
                     const auto &argument_references = invocation.argument_references;
+                    std::size_t invocation_tail = position_;
+                    while (invocation_tail < text_.size() &&
+                           std::isspace(static_cast<unsigned char>(text_[invocation_tail])) != 0)
+                    {
+                        ++invocation_tail;
+                    }
+                    const std::size_t expression_start = text_.find_first_not_of(" \t\r\n");
+                    const bool direct_root_invocation =
+                        primary_start == expression_start && invocation_tail == text_.size();
                     const bool prefer_function_call =
                         normalized_identifier == "aclass" ||
                         normalized_identifier == "acopy" ||
@@ -770,7 +781,12 @@
                             array_value_callback_(identifier, row, column));
                     }
                     return apply_postfix_member_and_collection_access(
-                        evaluate_function(identifier, arguments, raw_arguments, argument_references));
+                        evaluate_function(
+                            identifier,
+                            arguments,
+                            raw_arguments,
+                            argument_references,
+                            direct_root_invocation));
                 }
 
                 if (suppress_evaluation_)
@@ -785,7 +801,8 @@
                 const std::string &identifier,
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::string> &raw_arguments,
-                const std::vector<std::optional<std::string>> &argument_references)
+                const std::vector<std::optional<std::string>> &argument_references,
+                bool direct_root_invocation)
             {
                 const std::string function = normalize_identifier(identifier);
                 const auto is_selector_style_native_member_name =
@@ -1680,7 +1697,12 @@
                 if (user_routine_invoke_callback_)
                 {
                     const auto user_routine_result =
-                        user_routine_invoke_callback_(function, arguments, raw_arguments, argument_references);
+                        user_routine_invoke_callback_(
+                            function,
+                            arguments,
+                            raw_arguments,
+                            argument_references,
+                            direct_root_invocation);
                     if (user_routine_result.has_value())
                     {
                         return *user_routine_result;
@@ -3232,7 +3254,7 @@
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
-            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, bool)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;

@@ -587,6 +587,106 @@ void test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_direct_recursive_return";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "depth_limit.prg";
+    write_text(
+        depth_path,
+        "result = recurse(1)\n"
+        "RETURN\n"
+        "FUNCTION recurse\n"
+        "LPARAMETERS depth\n"
+        "RETURN recurse(depth + 1)\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep direct recursive RETURN should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep direct recursive RETURN should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "continuation_semantics.prg";
+    write_text(
+        semantics_path,
+        "SET UDFPARMS TO REFERENCE\n"
+        "scalarValue = 2\n"
+        "argumentCalls = 0\n"
+        "finallyCalls = 0\n"
+        "DIMENSION values[2]\n"
+        "values[1] = 10\n"
+        "values[2] = 20\n"
+        "DIMENSION namedLikeRoutine[1]\n"
+        "namedLikeRoutine[1] = 6\n"
+        "result = outer(@scalarValue, @values)\n"
+        "builtinResult = returnbuiltin()\n"
+        "arrayResult = returnarray()\n"
+        "scalarAfter = scalarValue\n"
+        "arrayOneAfter = values[1]\n"
+        "arrayTwoAfter = values[2]\n"
+        "RETURN\n"
+        "FUNCTION outer\n"
+        "LPARAMETERS forwardedScalar, forwardedValues\n"
+        "forwardedScalar = forwardedScalar + 3\n"
+        "forwardedValues[1] = forwardedValues[1] + 4\n"
+        "TRY\n"
+        "RETURN inner(countargument(forwardedScalar), forwardedValues)\n"
+        "FINALLY\n"
+        "finallyCalls = finallyCalls + 1\n"
+        "ENDTRY\n"
+        "FUNCTION countargument\n"
+        "LPARAMETERS value\n"
+        "argumentCalls = argumentCalls + 1\n"
+        "RETURN value\n"
+        "FUNCTION inner\n"
+        "LPARAMETERS receivedScalar, receivedValues\n"
+        "receivedValues[2] = receivedValues[2] + 5\n"
+        "RETURN receivedScalar + receivedValues[1] + receivedValues[2]\n"
+        "FUNCTION returnbuiltin\n"
+        "RETURN ABS(-7)\n"
+        "FUNCTION abs\n"
+        "RETURN 99\n"
+        "FUNCTION returnarray\n"
+        "RETURN namedLikeRoutine(1)\n"
+        "FUNCTION namedLikeRoutine\n"
+        "RETURN 99\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        semantics_state.completed,
+        "direct-return continuation semantics script should complete: " + semantics_state.message);
+
+    const auto expect_global = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = semantics_state.globals.find(name);
+        expect(found != semantics_state.globals.end(), name + " should remain visible");
+        if (found != semantics_state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    expect_global("result", "44", "the continued RETURN should preserve the nested routine result");
+    expect_global("builtinresult", "7", "built-ins should retain precedence over same-named user routines");
+    expect_global("arrayresult", "6", "array access should retain precedence over same-named user routines");
+    expect_global("scalarafter", "5", "the explicit scalar reference should reach caller storage");
+    expect_global("arrayoneafter", "14", "the direct caller array mutation should remain visible");
+    expect_global("arraytwoafter", "25", "SET UDFPARMS reference forwarding should retain the array alias");
+    expect_global("argumentcalls", "1", "a suspended direct-return argument should be evaluated exactly once");
+    expect_global("finallycalls", "1", "the suspended direct return should run FINALLY exactly once");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_parameters_alias_caller_storage_across_nested_function_calls() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_array_byref";

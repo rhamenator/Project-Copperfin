@@ -65,6 +65,7 @@ int main() {
     test_set_udfparms_controls_expression_routine_parameter_aliasing();
     test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions();
     test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk();
+    test_direct_recursive_return_uses_heap_backed_frame_continuations();
     test_array_parameters_alias_caller_storage_across_nested_function_calls();
     test_do_and_call_array_parameters_alias_caller_storage();
     test_expression_level_function_call_works_in_if_predicates();

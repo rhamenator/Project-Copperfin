@@ -499,6 +499,7 @@ namespace copperfin::runtime
             std::string native_method_name;
             bool requested_nodefault = false;
             bool return_pending = false;
+            bool direct_routine_return_pending = false;
             bool evaluate_conditional_else = false;
         };
 
@@ -812,6 +813,10 @@ namespace copperfin::runtime
         std::string error_handler;
         std::string shutdown_handler;
         std::string udfparms_mode = "VALUE";
+        std::size_t expression_evaluation_depth = 0U;
+        bool direct_return_dispatch_active = false;
+        bool direct_return_dispatch_deferred = false;
+        std::size_t direct_return_expression_depth = 0U;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
@@ -916,7 +921,9 @@ namespace copperfin::runtime
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::string> &raw_arguments,
-            const std::vector<std::optional<std::string>> &argument_references);
+            const std::vector<std::optional<std::string>> &argument_references,
+            bool direct_root_invocation);
+        std::optional<PrgValue> evaluate_return_expression(Frame &source_frame, const std::string &expression);
         bool requery_native_list_control(
             RuntimeOleObjectState &runtime_object,
             const Frame &frame,
@@ -1029,6 +1036,20 @@ namespace copperfin::runtime
         const Frame &frame,
         const CursorState *preferred_cursor)
     {
+        struct ScopedExpressionDepth
+        {
+            explicit ScopedExpressionDepth(std::size_t &depth_value)
+                : depth(depth_value)
+            {
+                ++depth;
+            }
+            ~ScopedExpressionDepth()
+            {
+                --depth;
+            }
+            std::size_t &depth;
+        } scoped_expression_depth(expression_evaluation_depth);
+
         const std::string effective_expression = apply_with_context(expression, frame);
         const auto resolve_expression_cursor = [this, preferred_cursor](const std::string &designator)
         {
@@ -2297,9 +2318,16 @@ namespace copperfin::runtime
                 const std::string &identifier,
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::string> &raw_arguments,
-                const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
+                const std::vector<std::optional<std::string>> &argument_references,
+                bool direct_root_invocation) -> std::optional<PrgValue>
             {
-                return invoke_expression_user_routine(frame, identifier, arguments, raw_arguments, argument_references);
+                return invoke_expression_user_routine(
+                    frame,
+                    identifier,
+                    arguments,
+                    raw_arguments,
+                    argument_references,
+                    direct_root_invocation);
             },
             [this](
                 const std::string &fn_key,
@@ -3173,7 +3201,8 @@ namespace copperfin::runtime
         const std::string &identifier,
         const std::vector<PrgValue> &arguments,
         const std::vector<std::string> &raw_arguments,
-        const std::vector<std::optional<std::string>> &argument_references)
+        const std::vector<std::optional<std::string>> &argument_references,
+        bool direct_root_invocation)
     {
         Program &program = load_program(source_frame.file_path);
         if (!source_frame.native_method_class_name.empty())
@@ -3232,7 +3261,47 @@ namespace copperfin::runtime
 
         const std::size_t return_depth = stack.size();
         push_routine_frame(found->program->path, *found->routine, arguments, resolved_references);
+        if (direct_return_dispatch_active &&
+            direct_root_invocation &&
+            expression_evaluation_depth == direct_return_expression_depth)
+        {
+            direct_return_dispatch_deferred = true;
+            return make_empty_value();
+        }
         return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::evaluate_return_expression(
+        Frame &source_frame,
+        const std::string &expression)
+    {
+        const bool previous_active = direct_return_dispatch_active;
+        const bool previous_deferred = direct_return_dispatch_deferred;
+        const std::size_t previous_depth = direct_return_expression_depth;
+        direct_return_dispatch_active = true;
+        direct_return_dispatch_deferred = false;
+        direct_return_expression_depth = expression_evaluation_depth + 1U;
+        try
+        {
+            PrgValue result = evaluate_expression(expression, source_frame);
+            const bool deferred = direct_return_dispatch_deferred;
+            direct_return_dispatch_active = previous_active;
+            direct_return_dispatch_deferred = previous_deferred;
+            direct_return_expression_depth = previous_depth;
+            if (deferred)
+            {
+                source_frame.direct_routine_return_pending = true;
+                return std::nullopt;
+            }
+            return result;
+        }
+        catch (...)
+        {
+            direct_return_dispatch_active = previous_active;
+            direct_return_dispatch_deferred = previous_deferred;
+            direct_return_expression_depth = previous_depth;
+            throw;
+        }
     }
 
     bool PrgRuntimeSession::Impl::requery_native_list_control(
@@ -7003,6 +7072,7 @@ namespace copperfin::runtime
         while (true)
         {
             while (stack.size() > return_depth &&
+                   !stack.back().direct_routine_return_pending &&
                    (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size()))
             {
                 pop_frame();
@@ -7573,6 +7643,7 @@ namespace copperfin::runtime
                     return finalize_pause_state(DebugPauseReason::error, last_error_message);
                 }
                 while (!stack.empty() &&
+                       !stack.back().direct_routine_return_pending &&
                        (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size()))
                 {
                     pop_frame();

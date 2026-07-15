@@ -11,6 +11,16 @@
         }
 
         Frame &frame = stack.back();
+        if (frame.direct_routine_return_pending)
+        {
+            frame.direct_routine_return_pending = false;
+            frame.return_pending = true;
+            if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+            {
+                return *outcome;
+            }
+            return {};
+        }
         if (frame.routine == nullptr || frame.pc >= frame.routine->statements.size())
         {
             pop_frame();
@@ -1895,9 +1905,19 @@
                 return {};
             }
             case StatementKind::return_statement:
-                last_return_value = trim_copy(statement.expression).empty()
-                    ? make_empty_value()
-                    : evaluate_expression(statement.expression, frame);
+                if (trim_copy(statement.expression).empty())
+                {
+                    last_return_value = make_empty_value();
+                }
+                else
+                {
+                    const auto return_value = evaluate_return_expression(frame, statement.expression);
+                    if (!return_value.has_value())
+                    {
+                        return {};
+                    }
+                    last_return_value = *return_value;
+                }
                 frame.return_pending = true;
                 if (const auto outcome = continue_pending_return(frame); outcome.has_value())
                 {
