@@ -35,6 +35,19 @@ function(require_path_filter_contract workflow_name)
     endforeach()
 endfunction()
 
+function(require_workflow_text workflow_name expected_text description)
+    set(workflow_path "${COPPERFIN_SOURCE_DIR}/.github/workflows/${workflow_name}")
+    if(NOT EXISTS "${workflow_path}")
+        message(FATAL_ERROR "Missing focused workflow: ${workflow_path}")
+    endif()
+
+    file(READ "${workflow_path}" workflow_contents)
+    string(FIND "${workflow_contents}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "${workflow_name} is missing ${description}")
+    endif()
+endfunction()
+
 set(common_focused_inputs
     "CMakeLists.txt"
     "cmake/**"
@@ -61,3 +74,12 @@ set(declare_abi_inputs
 require_path_filter_contract("windows-environment-validation.yml" ${environment_host_inputs})
 require_path_filter_contract("executable-path-validation.yml" ${executable_path_inputs})
 require_path_filter_contract("windows-x86-declare-validation.yml" ${declare_abi_inputs})
+
+require_workflow_text(
+    "audit-containment-validation.yml"
+    "--target copperfin_runtime_host test_runtime_host_debug_output test_runtime_host_audit_containment test_security_controls --parallel 2"
+    "the runtime-host debug-output build target")
+require_workflow_text(
+    "audit-containment-validation.yml"
+    "^(test_focused_workflow_path_filters|test_runtime_host_binding|test_runtime_host_debug_output|test_runtime_host_audit_containment|test_security_controls)$"
+    "the runtime-host debug-output focused CTest selection")

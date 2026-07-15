@@ -12,6 +12,7 @@ on:
       - tests/test_runtime_host_debug_output.cpp
       - tests/run_runtime_host_binding_check.cmake
       - tests/test_security_controls.cpp
+      - cmake/validate_focused_workflow_path_filters.cmake
       - CMakeLists.txt
       - tests/CMakeLists.txt
   pull_request:
@@ -25,6 +26,7 @@ on:
       - tests/test_runtime_host_debug_output.cpp
       - tests/run_runtime_host_binding_check.cmake
       - tests/test_security_controls.cpp
+      - cmake/validate_focused_workflow_path_filters.cmake
       - CMakeLists.txt
       - tests/CMakeLists.txt
   workflow_dispatch:
@@ -56,7 +58,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build audit containment targets
-        run: cmake --build build --config Release --target copperfin_runtime_host test_runtime_host_audit_containment test_security_controls --parallel 2
+        run: cmake --build build --config Release --target copperfin_runtime_host test_runtime_host_debug_output test_runtime_host_audit_containment test_security_controls --parallel 2
 
       - name: Run audit containment tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_runtime_host_binding|test_runtime_host_audit_containment|test_security_controls)$" -j 2
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_focused_workflow_path_filters|test_runtime_host_binding|test_runtime_host_debug_output|test_runtime_host_audit_containment|test_security_controls)$" -j 2
