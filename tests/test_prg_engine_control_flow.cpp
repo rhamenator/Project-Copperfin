@@ -7,6 +7,11 @@
 using namespace cf_test_prg_engine_control_flow;
 
 int main() {
+    const std::filesystem::path repository_runtime_temp =
+        std::filesystem::current_path() / "runtime-temp";
+    const bool repository_runtime_temp_existed =
+        std::filesystem::exists(repository_runtime_temp);
+
     test_command_keyword_scanner_ignores_nested_text();
     test_do_while_and_loop_control_flow();
     test_logical_operators_drive_control_flow();
@@ -188,6 +193,12 @@ int main() {
     test_division_by_zero_dispatches_runtime_error();
     test_numeric_field_overflow_is_diagnosed_not_silently_truncated();
     test_aerror_line_number_is_innermost_faulting_line_not_catch_site();
+
+    if (!repository_runtime_temp_existed) {
+        copperfin::test_support::expect(
+            !std::filesystem::exists(repository_runtime_temp),
+            "#4075: control-flow fixtures must not create repository-root runtime-temp state");
+    }
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
