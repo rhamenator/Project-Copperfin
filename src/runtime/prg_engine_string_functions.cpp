@@ -498,9 +498,40 @@ std::optional<PrgValue> evaluate_string_function(
         if (src.empty()) {
             return make_number_value(0.0);
         }
+        std::size_t numeric_end = 0U;
+        if (src[numeric_end] == '+' || src[numeric_end] == '-') {
+            ++numeric_end;
+        }
+        const std::size_t integer_start = numeric_end;
+        while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
+            ++numeric_end;
+        }
+        if (numeric_end == integer_start) {
+            return make_number_value(0.0);
+        }
+        if (numeric_end < src.size() && src[numeric_end] == '.') {
+            ++numeric_end;
+            while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
+                ++numeric_end;
+            }
+        }
+        if (numeric_end < src.size() && (src[numeric_end] == 'E' || src[numeric_end] == 'e')) {
+            const std::size_t exponent_start = numeric_end;
+            ++numeric_end;
+            if (numeric_end < src.size() && (src[numeric_end] == '+' || src[numeric_end] == '-')) {
+                ++numeric_end;
+            }
+            const std::size_t exponent_digits_start = numeric_end;
+            while (numeric_end < src.size() && std::isdigit(static_cast<unsigned char>(src[numeric_end]))) {
+                ++numeric_end;
+            }
+            if (numeric_end == exponent_digits_start) {
+                numeric_end = exponent_start;
+            }
+        }
         double result = 0.0;
         try {
-            result = std::stod(src);
+            result = std::stod(src.substr(0U, numeric_end));
         } catch (...) {
             result = 0.0;
         }

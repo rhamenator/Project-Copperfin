@@ -99,6 +99,11 @@ namespace
             "g = BETWEEN(5, 1, 10)\n"
             "h = OCCURS('l', 'hello world')\n"
             "v = VAL('42')\n"
+            "val_plus = VAL('+5')\n"
+            "val_exponent = VAL('1.25E3')\n"
+            "val_nan = VAL('nan')\n"
+            "val_infinity = VAL('inf')\n"
+            "val_hex = VAL('0x1A')\n"
             "at_second = AT('ha', 'ha ha ha', 2)\n"
             "rat_second = RAT('ha', 'ha ha ha', 2)\n"
             "rat_overlap_second = RAT('aa', 'aaaa', 2)\n"
@@ -320,6 +325,11 @@ namespace
         check("g", "true");
         check("h", "3");
         check("v", "42");
+        check("val_plus", "5");
+        check("val_exponent", "1250");
+        check("val_nan", "0");
+        check("val_infinity", "0");
+        check("val_hex", "0");
         check("at_second", "4");
         check("rat_second", "4");
         check("rat_overlap_second", "1");
