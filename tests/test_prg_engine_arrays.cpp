@@ -26,6 +26,76 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_ascan_matches_object_references_and_nulls_exactly() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_identity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "ascan_identity.prg";
+    write_text(
+        main_path,
+        "SET EXACT OFF\n"
+        "oTarget = CREATEOBJECT('Empty')\n"
+        "oFill2 = CREATEOBJECT('Empty')\n"
+        "oFill3 = CREATEOBJECT('Empty')\n"
+        "oFill4 = CREATEOBJECT('Empty')\n"
+        "oFill5 = CREATEOBJECT('Empty')\n"
+        "oFill6 = CREATEOBJECT('Empty')\n"
+        "oFill7 = CREATEOBJECT('Empty')\n"
+        "oFill8 = CREATEOBJECT('Empty')\n"
+        "oFill9 = CREATEOBJECT('Empty')\n"
+        "oFill10 = CREATEOBJECT('Empty')\n"
+        "oFill11 = CREATEOBJECT('Empty')\n"
+        "DIMENSION aObjects[2], aValues[2]\n"
+        "aObjects[1] = CREATEOBJECT('Empty')\n"
+        "aObjects[2] = oTarget\n"
+        "aValues[1] = .NULL.\n"
+        "aValues[2] = 0\n"
+        "cFirstObject = aObjects[1]\n"
+        "nObjectMatch = ASCAN(aObjects, oTarget)\n"
+        "nZeroMatch = ASCAN(aValues, 0)\n"
+        "nNullMatch = ASCAN(aValues, .NULL.)\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ASCAN identity script should complete");
+
+    const auto target = state.globals.find("otarget");
+    const auto first_object = state.globals.find("cfirstobject");
+    const auto object_match = state.globals.find("nobjectmatch");
+    const auto zero_match = state.globals.find("nzeromatch");
+    const auto null_match = state.globals.find("nnullmatch");
+    expect(target != state.globals.end(), "ASCAN object reference target should be captured");
+    expect(first_object != state.globals.end(), "ASCAN object reference candidate should be captured");
+    expect(object_match != state.globals.end(), "ASCAN object-reference result should be captured");
+    expect(zero_match != state.globals.end(), "ASCAN zero result should be captured");
+    expect(null_match != state.globals.end(), "ASCAN null result should be captured");
+    if (target != state.globals.end() && first_object != state.globals.end()) {
+        const std::string target_value = copperfin::runtime::format_value(target->second);
+        const std::string first_object_value = copperfin::runtime::format_value(first_object->second);
+        expect(first_object_value != target_value && first_object_value.rfind(target_value, 0U) == 0U,
+               "ASCAN identity regression must create a distinct object whose reference starts with the target reference");
+    }
+    if (object_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(object_match->second) == "2",
+               "ASCAN must compare live object references by exact identity when SET EXACT is OFF");
+    }
+    if (zero_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(zero_match->second) == "2",
+               "ASCAN must not match .NULL. while searching for numeric zero");
+    }
+    if (null_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(null_match->second) == "1",
+               "ASCAN must match .NULL. only against another null value");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_aelement_single_subscript_uses_linear_index() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_aelement_linear";
@@ -1591,6 +1661,7 @@ void test_agetfileversion_existing_and_missing_files() {
 }
 
 int main() {
+    test_ascan_matches_object_references_and_nulls_exactly();
     test_aelement_single_subscript_uses_linear_index();
     test_asort_order_values_follow_vfp_contract();
     test_ascan_column_start_uses_column_relative_row();

@@ -181,6 +181,28 @@
                 const std::string predicate_text = predicate_search ? trim_copy(value_as_string(arguments[1])) : std::string{};
                 const auto array_value_matches = [&](const PrgValue &left, const PrgValue &right)
                 {
+                    if (left.is_null || right.is_null)
+                    {
+                        return left.is_null && right.is_null;
+                    }
+                    const auto is_live_runtime_object_reference = [&](const PrgValue &value)
+                    {
+                        int handle = 0;
+                        std::string prog_id;
+                        if (!parse_object_handle_reference(value, handle, prog_id))
+                        {
+                            return false;
+                        }
+                        const auto object = ole_objects.find(handle);
+                        return object != ole_objects.end() && object->second.prog_id == prog_id;
+                    };
+                    const bool left_is_object_reference = is_live_runtime_object_reference(left);
+                    const bool right_is_object_reference = is_live_runtime_object_reference(right);
+                    if (left_is_object_reference || right_is_object_reference)
+                    {
+                        return left_is_object_reference && right_is_object_reference &&
+                               value_as_string(left) == value_as_string(right);
+                    }
                     if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                     {
                         std::string left_value = value_as_string(left);
