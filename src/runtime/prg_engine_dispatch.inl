@@ -2047,6 +2047,7 @@
                 }
                 frame.loops.push_back({.for_statement_index = frame.pc - 1U,
                                        .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                       .case_stack_depth_at_entry = frame.cases.size(),
                                        .with_stack_depth_at_entry = frame.withs.size(),
                                        .variable_name = normalize_identifier(statement.identifier),
                                        .end_value = end_value,
@@ -2065,6 +2066,7 @@
                     {
                         frame.whiles.push_back({.do_while_statement_index = frame.pc - 1U,
                                                 .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                                .case_stack_depth_at_entry = frame.cases.size(),
                                                 .with_stack_depth_at_entry = frame.withs.size(),
                                                 .iteration_count = 0});
                     }
@@ -2101,6 +2103,7 @@
                 case ActiveLoopKind::while_loop:
                     if (!frame.whiles.empty())
                     {
+                        unwind_case_contexts(frame, frame.whiles.back().case_stack_depth_at_entry);
                         unwind_with_bindings(frame, frame.whiles.back().with_stack_depth_at_entry);
                     }
                     frame.pc = active_loop->start_statement_index;
@@ -2163,6 +2166,7 @@
                 case ActiveLoopKind::for_loop:
                     if (!frame.loops.empty())
                     {
+                        unwind_case_contexts(frame, frame.loops.back().case_stack_depth_at_entry);
                         unwind_with_bindings(frame, frame.loops.back().with_stack_depth_at_entry);
                     }
                     frame.loops.pop_back();
@@ -2171,6 +2175,7 @@
                 case ActiveLoopKind::scan_loop:
                     if (!frame.scans.empty())
                     {
+                        unwind_case_contexts(frame, frame.scans.back().case_stack_depth_at_entry);
                         unwind_with_bindings(frame, frame.scans.back().with_stack_depth_at_entry);
                     }
                     frame.scans.pop_back();
@@ -2179,6 +2184,7 @@
                 case ActiveLoopKind::while_loop:
                     if (!frame.whiles.empty())
                     {
+                        unwind_case_contexts(frame, frame.whiles.back().case_stack_depth_at_entry);
                         unwind_with_bindings(frame, frame.whiles.back().with_stack_depth_at_entry);
                     }
                     frame.whiles.pop_back();
@@ -2543,6 +2549,7 @@
 
                 frame.scans.push_back({.scan_statement_index = frame.pc - 1U,
                                        .endscan_statement_index = find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                       .case_stack_depth_at_entry = frame.cases.size(),
                                        .with_stack_depth_at_entry = frame.withs.size(),
                                        .work_area = cursor->work_area,
                                        .for_expression = statement.expression,
@@ -8476,6 +8483,7 @@
                 frame.loops.push_back({
                     .for_statement_index = frame.pc - 1U,
                     .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                    .case_stack_depth_at_entry = frame.cases.size(),
                     .with_stack_depth_at_entry = frame.withs.size(),
                     .variable_name = var_name,
                     .is_for_each = true,

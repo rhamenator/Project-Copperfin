@@ -40,6 +40,14 @@
             }
         }
 
+        void unwind_case_contexts(Frame &frame, std::size_t target_depth)
+        {
+            if (frame.cases.size() > target_depth)
+            {
+                frame.cases.resize(target_depth);
+            }
+        }
+
         std::optional<ExecutionOutcome> continue_pending_return(Frame &frame)
         {
             while (!frame.tries.empty())
@@ -626,6 +634,7 @@
             LoopState &loop = frame.loops.back();
             if (jump_after_completion)
             {
+                unwind_case_contexts(frame, loop.case_stack_depth_at_entry);
                 unwind_with_bindings(frame, loop.with_stack_depth_at_entry);
             }
 
@@ -693,6 +702,7 @@
             ScanState &scan = frame.scans.back();
             if (jump_after_completion)
             {
+                unwind_case_contexts(frame, scan.case_stack_depth_at_entry);
                 unwind_with_bindings(frame, scan.with_stack_depth_at_entry);
             }
             ++scan.iteration_count;

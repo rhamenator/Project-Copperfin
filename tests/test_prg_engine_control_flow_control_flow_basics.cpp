@@ -1316,6 +1316,132 @@ void test_loop_and_exit_unwind_with_bindings_before_jump() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_loop_and_exit_unwind_case_contexts_before_jump() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_case_loop_unwind";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 21}, {"BRAVO", 28}, {"CHARLIE", 33}});
+
+    const fs::path main_path = temp_root / "case_loop_unwind.prg";
+    write_text(
+        main_path,
+        "lOuterCasePreserved = .T.\n"
+        "DO CASE\n"
+        "    CASE .T.\n"
+        "        nWhileLoop = 0\n"
+        "        DO WHILE nWhileLoop < 3\n"
+        "            nWhileLoop = nWhileLoop + 1\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    LOOP\n"
+        "            ENDCASE\n"
+        "        ENDDO\n"
+        "        nWhileExit = 0\n"
+        "        DO WHILE .T.\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nWhileExit = nWhileExit + 1\n"
+        "                    EXIT\n"
+        "            ENDCASE\n"
+        "        ENDDO\n"
+        "        nForLoop = 0\n"
+        "        FOR i = 1 TO 3\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nForLoop = nForLoop + 1\n"
+        "                    LOOP\n"
+        "            ENDCASE\n"
+        "        ENDFOR\n"
+        "        nForExit = 0\n"
+        "        FOR j = 1 TO 3\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nForExit = nForExit + 1\n"
+        "                    EXIT\n"
+        "            ENDCASE\n"
+        "        ENDFOR\n"
+        "        DIMENSION aItems(3)\n"
+        "        aItems(1) = 'A'\n"
+        "        aItems(2) = 'B'\n"
+        "        aItems(3) = 'C'\n"
+        "        nEachLoop = 0\n"
+        "        FOR EACH cItem IN aItems\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nEachLoop = nEachLoop + 1\n"
+        "                    LOOP\n"
+        "            ENDCASE\n"
+        "        ENDFOR\n"
+        "        nEachExit = 0\n"
+        "        FOR EACH cItem IN aItems\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nEachExit = nEachExit + 1\n"
+        "                    EXIT\n"
+        "            ENDCASE\n"
+        "        ENDFOR\n"
+        "        USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "        SELECT People\n"
+        "        nScanLoop = 0\n"
+        "        SCAN\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nScanLoop = nScanLoop + 1\n"
+        "                    LOOP\n"
+        "            ENDCASE\n"
+        "        ENDSCAN\n"
+        "        GO TOP\n"
+        "        nScanExit = 0\n"
+        "        SCAN\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    nScanExit = nScanExit + 1\n"
+        "                    EXIT\n"
+        "            ENDCASE\n"
+        "        ENDSCAN\n"
+        "        FOR nStress = 1 TO 10000\n"
+        "            DO CASE\n"
+        "                CASE .T.\n"
+        "                    LOOP\n"
+        "            ENDCASE\n"
+        "        ENDFOR\n"
+        "    CASE .T.\n"
+        "        lOuterCasePreserved = .F.\n"
+        "ENDCASE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#4019: LOOP/EXIT inside DO CASE should complete without retaining case contexts");
+
+    const auto expect_value = [&](const char *name, const char *expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), std::string("#4019: expected result ") + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   std::string("#4019: unexpected result for ") + name);
+        }
+    };
+
+    expect_value("loutercasepreserved", "true");
+    expect_value("nwhileloop", "3");
+    expect_value("nwhileexit", "1");
+    expect_value("nforloop", "3");
+    expect_value("nforexit", "1");
+    expect_value("neachloop", "3");
+    expect_value("neachexit", "1");
+    expect_value("nscanloop", "3");
+    expect_value("nscanexit", "1");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_print_command_emits_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_print_cmd";

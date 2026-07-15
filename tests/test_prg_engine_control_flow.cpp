@@ -88,6 +88,7 @@ int main() {
     test_with_endwith_resolves_leading_dot_member_access();
     test_with_endwith_preserves_reserved_dotted_logical_tokens();
     test_loop_and_exit_unwind_with_bindings_before_jump();
+    test_loop_and_exit_unwind_case_contexts_before_jump();
     test_try_catch_finally_handles_runtime_errors();
     test_try_catch_unwinds_leaked_with_binding_before_catch();
     test_outer_try_does_not_catch_fault_from_unrelated_expression_invoked_routine();
