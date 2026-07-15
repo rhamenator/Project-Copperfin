@@ -73,10 +73,12 @@ std::string expected_json_shell_command(
     const std::string& launch_command,
     std::initializer_list<std::string> arguments);
 std::string read_text(const std::filesystem::path& path);
+std::string normalize_captured_line_endings(std::string_view text);
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory);
+void test_captured_process_output_line_endings_normalize(const std::string& studio_host_path);
 std::vector<std::uint8_t> make_vfp_header();
 void write_synthetic_form_asset(const std::filesystem::path& form_path);
 void write_synthetic_form_table_with_objects(const std::filesystem::path& form_path);

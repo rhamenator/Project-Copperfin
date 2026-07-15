@@ -120,6 +120,44 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string normalize_captured_line_endings(const std::string_view text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0U; index < text.size(); ++index) {
+        if (text[index] != '\r') {
+            normalized.push_back(text[index]);
+            continue;
+        }
+        if (index + 1U < text.size() && text[index + 1U] == '\n') {
+            ++index;
+        }
+        normalized.push_back('\n');
+    }
+    return normalized;
+}
+
+void test_captured_process_output_line_endings_normalize(const std::string&) {
+    expect(normalize_captured_line_endings("") == "",
+           "#4080: empty captured output should remain empty");
+    expect(normalize_captured_line_endings("alpha\nbeta\n") == "alpha\nbeta\n",
+           "#4080: LF captured output should remain unchanged");
+    expect(normalize_captured_line_endings("alpha\r\nbeta\r\n") == "alpha\nbeta\n",
+           "#4080: CRLF captured output should normalize to LF");
+    expect(normalize_captured_line_endings("alpha\rbeta\r") == "alpha\nbeta\n",
+           "#4080: lone CR captured output should normalize to LF");
+
+    std::string mixed_input = "alpha\r\nbeta\rgamma\n";
+    mixed_input.push_back('\0');
+    mixed_input += "delta";
+    std::string mixed_expected = "alpha\nbeta\ngamma\n";
+    mixed_expected.push_back('\0');
+    mixed_expected += "delta";
+    expect(normalize_captured_line_endings(mixed_input) == mixed_expected,
+           "#4080: mixed captured output should preserve non-line-ending bytes");
+    expect(normalize_captured_line_endings("unterminated\r\nline") == "unterminated\nline",
+           "#4080: normalization should not add a final line ending");
+}
+
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
@@ -147,10 +185,10 @@ ProcessResult run_process_capture(
 
     ProcessResult result;
     if (fs::exists(stdout_path)) {
-        result.stdout_text = read_text(stdout_path);
+        result.stdout_text = normalize_captured_line_endings(read_text(stdout_path));
     }
     if (fs::exists(stderr_path)) {
-        result.stderr_text = read_text(stderr_path);
+        result.stderr_text = normalize_captured_line_endings(read_text(stderr_path));
     }
 
 #if defined(_WIN32)

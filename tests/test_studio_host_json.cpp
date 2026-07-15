@@ -135,6 +135,7 @@ private:
 int main(int argc, char** argv) {
     StudioHostJsonTestRunner runner(argc, argv);
 
+    RUN_STUDIO_HOST_JSON_TEST(test_captured_process_output_line_endings_normalize);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_usage_exposes_selected_execution_catalogs);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_list_subsystems_localizes_descriptor_text);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_builder_parse_diagnostics_localize);
