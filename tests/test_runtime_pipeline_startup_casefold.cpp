@@ -178,14 +178,30 @@ void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families()
                     quote_manifest_value(primary_source.lexically_normal().string()),
                 "#3953: debug manifest startup path should preserve actual spelling for " + family.type_title);
             if (!family.companion_extension.empty()) {
-                const fs::path staged_companion = expected_staged.parent_path() / companion_source.filename();
-                expect(fs::exists(staged_companion),
+                const fs::path staged_companion =
+                    fs::path(result.plan.content_root) /
+                    fs::path(expected_relative).parent_path() /
+                    companion_source.filename();
+                expect(has_exact_directory_entry(
+                           staged_companion.parent_path(),
+                           companion_source.filename().string()),
                        "#3953: required startup companion should preserve actual spelling for " + family.type_title);
-                expect(
-                    runtime_manifest.find(
-                        "extension_payload=" + quote_manifest_value(staged_companion.string()) + "|") !=
-                        std::string::npos,
-                    "#3953: companion manifest identity should preserve actual spelling for " + family.type_title);
+                const auto companion_digest = std::find_if(
+                    result.plan.extension_payload_digests.begin(),
+                    result.plan.extension_payload_digests.end(),
+                    [&](const copperfin::runtime::RuntimeArtifactDigest& digest) {
+                        return fs::path(digest.path).filename().string() ==
+                            companion_source.filename().string();
+                    });
+                expect(companion_digest != result.plan.extension_payload_digests.end(),
+                       "#3953: companion digest should preserve actual spelling for " + family.type_title);
+                if (companion_digest != result.plan.extension_payload_digests.end()) {
+                    expect(
+                        runtime_manifest.find(
+                            "extension_payload=" + quote_manifest_value(companion_digest->path) + "|") !=
+                            std::string::npos,
+                        "#3953: companion manifest identity should preserve actual spelling for " + family.type_title);
+                }
             }
         }
 
@@ -502,10 +518,14 @@ void test_absolute_project_item_paths_never_rebind_to_project_decoys() {
             normalized_recorded_path.end(),
             '\\',
             '/');
-        const fs::path expected_unresolved =
-            normalized_recorded_path.rfind("//", 0U) == 0U
-                ? fs::path(normalized_recorded_path)
-                : fs::path(normalized_recorded_path).lexically_normal();
+        fs::path expected_unresolved(normalized_recorded_path);
+#if !defined(_WIN32)
+        if (normalized_recorded_path.rfind("//", 0U) != 0U) {
+            expected_unresolved = expected_unresolved.lexically_normal();
+        }
+#else
+        expected_unresolved = expected_unresolved.lexically_normal();
+#endif
         expect(plan.assets.size() == 1U,
                "#3991: " + missing_case.label + " missing-absolute plan should retain one startup asset");
         if (plan.assets.size() == 1U) {
@@ -582,8 +602,8 @@ void test_absolute_project_item_paths_never_rebind_to_project_decoys() {
         expect(read_text(result.plan.assets[0U].staged_path) == "authoritative-absolute-bytes",
                "#3991: valid absolute materialization should stage source bytes, not decoy bytes");
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
-        expect(debug_manifest.find(absolute_source.string()) != std::string::npos &&
-                   debug_manifest.find(decoy_path.string()) == std::string::npos,
+        expect(debug_manifest.find(quote_manifest_value(absolute_source.string())) != std::string::npos &&
+                   debug_manifest.find(quote_manifest_value(decoy_path.string())) == std::string::npos,
                "#3991: valid absolute debug metadata should retain only authoritative provenance");
     }
 
