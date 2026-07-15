@@ -69,6 +69,74 @@ void test_call_with_parameters_binds_arguments_in_called_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_unsupplied_parameters_initialize_to_logical_false() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_unsupplied_parameters";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "unsupplied_parameters.prg";
+    write_text(
+        main_path,
+        "DO inspectlocal WITH 'supplied'\n"
+        "cPrivateType = inspectprivate('supplied')\n"
+        "cInlineType = inspectinline('supplied')\n"
+        "oProbe = CREATEOBJECT('ParameterProbe')\n"
+        "cMethodType = oProbe.Inspect('supplied')\n"
+        "RETURN\n"
+        "PROCEDURE inspectlocal\n"
+        "LPARAMETERS supplied, omitted, explicitDefault = 17\n"
+        "cLocalType = VARTYPE(omitted)\n"
+        "lLocalValue = omitted\n"
+        "nLocalPCount = PCOUNT()\n"
+        "nExplicitDefault = explicitDefault\n"
+        "RETURN\n"
+        "FUNCTION inspectprivate\n"
+        "PARAMETERS supplied, omitted\n"
+        "RETURN VARTYPE(omitted)\n"
+        "ENDFUNC\n"
+        "FUNCTION inspectinline(supplied, omitted)\n"
+        "RETURN VARTYPE(omitted)\n"
+        "ENDFUNC\n"
+        "DEFINE CLASS ParameterProbe AS Custom\n"
+        "    FUNCTION Inspect\n"
+        "        LPARAMETERS supplied, omitted\n"
+        "        RETURN VARTYPE(omitted)\n"
+        "    ENDFUNC\n"
+        "ENDDEFINE\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "unsupplied parameter script should complete: " + state.message);
+
+    const auto expect_formatted = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should remain visible");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+
+    expect_formatted("clocaltype", "L", "unsupplied LPARAMETERS formal should have logical type");
+    const auto local_value = state.globals.find("llocalvalue");
+    expect(local_value != state.globals.end(), "unsupplied LPARAMETERS value should remain visible");
+    if (local_value != state.globals.end()) {
+        expect(local_value->second.kind == copperfin::runtime::PrgValueKind::boolean,
+               "unsupplied LPARAMETERS value should be logical");
+        expect(!local_value->second.boolean_value, "unsupplied LPARAMETERS value should be false");
+    }
+    expect_formatted("nlocalpcount", "1", "PCOUNT() should retain the actual caller argument count");
+    expect_formatted("nexplicitdefault", "17", "explicit parameter defaults should remain unchanged");
+    expect_formatted("cprivatetype", "L", "unsupplied PARAMETERS formal should have logical type");
+    expect_formatted("cinlinetype", "L", "unsupplied inline formal should have logical type");
+    expect_formatted("cmethodtype", "L", "unsupplied object-method formal should have logical type");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_call_external_target_with_by_reference_updates_caller_variable() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_external_byref";

@@ -4468,7 +4468,7 @@
                     else
                     {
                         frame.locals[normalized] = default_expression.empty()
-                                                       ? make_empty_value()
+                                                       ? make_boolean_value(false)
                                                        : evaluate_expression(default_expression, frame);
                     }
                     if (index < frame.call_argument_references.size() && frame.call_argument_references[index].has_value())

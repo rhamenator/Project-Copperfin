@@ -57,6 +57,7 @@ int main() {
     test_elseif_control_flow_executes_matching_branch();
     test_do_with_parameters_binds_arguments_in_called_routine();
     test_call_with_parameters_binds_arguments_in_called_routine();
+    test_unsupplied_parameters_initialize_to_logical_false();
     test_call_external_target_with_by_reference_updates_caller_variable();
     test_expression_level_function_call_assigns_return_value();
     test_expression_level_procedure_call_assigns_return_value();
