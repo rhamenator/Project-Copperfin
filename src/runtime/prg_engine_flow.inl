@@ -456,13 +456,46 @@
             return rewritten;
         }
 
+        bool dispatch_fault_finally(Frame &frame, TryState &active_try, const Statement &statement)
+        {
+            if (!active_try.finally_statement_index.has_value() || active_try.entered_finally)
+            {
+                return false;
+            }
+
+            unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
+            active_try.handling_error = true;
+            active_try.entered_catch = false;
+            active_try.entered_finally = true;
+            active_try.propagate_after_finally = true;
+            active_try.return_after_finally = false;
+            last_error_compatibility.explicit_error_code = last_error_code;
+            last_error_compatibility.preserve_fault_context = true;
+            frame.pc = *active_try.finally_statement_index + 1U;
+
+            events.push_back({.category = "runtime.try_handler",
+                              .detail = statement.text,
+                              .location = statement.location});
+            return true;
+        }
+
         bool dispatch_try_handler(Frame &frame, const Statement &statement)
         {
             for (std::size_t try_index = frame.tries.size(); try_index > 0U; --try_index)
             {
                 TryState &active_try = frame.tries[try_index - 1U];
+                if (active_try.entered_finally)
+                {
+                    frame.tries.erase(frame.tries.begin() + static_cast<std::ptrdiff_t>(try_index - 1U));
+                    continue;
+                }
                 if (active_try.handling_error)
                 {
+                    if (dispatch_fault_finally(frame, active_try, statement))
+                    {
+                        return true;
+                    }
+                    frame.tries.erase(frame.tries.begin() + static_cast<std::ptrdiff_t>(try_index - 1U));
                     continue;
                 }
 
@@ -520,21 +553,8 @@
                     return true;
                 }
 
-                if (active_try.finally_statement_index.has_value())
+                if (dispatch_fault_finally(frame, active_try, statement))
                 {
-                    unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
-                    active_try.handling_error = true;
-                    active_try.entered_catch = false;
-                    active_try.entered_finally = true;
-                    active_try.propagate_after_finally = true;
-                    active_try.return_after_finally = false;
-                    last_error_compatibility.explicit_error_code = last_error_code;
-                    last_error_compatibility.preserve_fault_context = true;
-                    frame.pc = *active_try.finally_statement_index + 1U;
-
-                    events.push_back({.category = "runtime.try_handler",
-                                      .detail = statement.text,
-                                      .location = statement.location});
                     return true;
                 }
 

@@ -179,6 +179,7 @@ void test_catch_when_false_falls_through_to_later_clause();
 void test_catch_to_when_false_resets_variable_and_falls_to_outer_handler();
 void test_catch_when_false_with_finally_reaches_outer_catch_with_original_metadata();
 void test_catch_when_false_with_finally_reaches_on_error_with_original_metadata();
+void test_catch_fault_runs_pending_finally_before_propagation();
 void test_try_finally_runs_without_catch_on_success();
 void test_return_inside_try_runs_finally_before_return();
 void test_return_inside_catch_runs_all_enclosing_finally_before_return();

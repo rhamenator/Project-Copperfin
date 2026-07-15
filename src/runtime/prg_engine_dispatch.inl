@@ -8732,8 +8732,17 @@
                               .location = statement.location});
             return {.ok = false, .message = last_error_message};
         }
+        catch (const PrgPropagatedRuntimeError &error)
+        {
+            if (last_error_message.empty())
+            {
+                last_error_message = error.what();
+            }
+            return {.ok = false, .message = last_error_message};
+        }
         catch (const std::bad_alloc &)
         {
+            clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
@@ -8744,6 +8753,7 @@
         }
         catch (const std::filesystem::filesystem_error &error)
         {
+            clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
                 {
@@ -8758,6 +8768,7 @@
         }
         catch (const std::system_error &error)
         {
+            clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceSystemError",
                 {
@@ -8772,6 +8783,7 @@
         }
         catch (const std::exception &error)
         {
+            clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.RuntimeFault",
                 {
@@ -8786,6 +8798,7 @@
         }
         catch (...)
         {
+            clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.UnknownRuntimeFault");
             last_fault_location = statement.location;
             last_fault_statement = statement.text;

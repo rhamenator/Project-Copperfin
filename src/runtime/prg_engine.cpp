@@ -99,6 +99,12 @@ namespace copperfin::runtime
             int error_code_;
         };
 
+        class PrgPropagatedRuntimeError final : public std::runtime_error
+        {
+        public:
+            using std::runtime_error::runtime_error;
+        };
+
         PrgValue canonicalize_native_olecontrol_doverb_argument(const PrgValue &verb)
         {
             if (verb.kind == PrgValueKind::string)
@@ -448,6 +454,19 @@ namespace copperfin::runtime
             bool return_after_finally = false;
         };
 
+        bool try_state_can_process_fault(const TryState &state)
+        {
+            if (state.entered_finally)
+            {
+                return false;
+            }
+            if (!state.handling_error)
+            {
+                return true;
+            }
+            return state.finally_statement_index.has_value();
+        }
+
         struct RuntimeArray
         {
             std::size_t rows = 0;
@@ -725,6 +744,14 @@ namespace copperfin::runtime
             std::optional<PrgValue> active_exception_reference;
             bool preserve_fault_context = false;
         };
+
+        void clear_caught_exception_identity(AErrorCompatibilitySnapshot &compatibility)
+        {
+            compatibility.thrown_user_value.reset();
+            compatibility.explicit_error_code.reset();
+            compatibility.active_exception_reference.reset();
+            compatibility.preserve_fault_context = false;
+        }
 
         struct FaultMetadataSnapshot
         {
@@ -7023,7 +7050,7 @@ namespace copperfin::runtime
                 events.push_back({.category = "runtime.error",
                                   .detail = last_error_message,
                                   .location = next->location});
-                throw std::runtime_error(last_error_message);
+                throw PrgPropagatedRuntimeError(last_error_message);
             }
 
             const ExecutionOutcome outcome = execute_current_statement();
@@ -7053,7 +7080,7 @@ namespace copperfin::runtime
                             parent.tries.end(),
                             [](const TryState &state)
                             {
-                                return !state.handling_error;
+                                return try_state_can_process_fault(state);
                             });
                         if (has_open_try)
                         {
@@ -7077,7 +7104,7 @@ namespace copperfin::runtime
                 {
                     continue;
                 }
-                throw std::runtime_error(outcome.message);
+                throw PrgPropagatedRuntimeError(outcome.message);
             }
 
             if (outcome.waiting_for_events)
@@ -7653,7 +7680,7 @@ namespace copperfin::runtime
                             Frame &parent = stack[depth_at_fault - 1U - i];
                             const bool has_open_try = std::any_of(
                                 parent.tries.begin(), parent.tries.end(),
-                                [](const TryState &t) { return !t.handling_error; });
+                                [](const TryState &state) { return try_state_can_process_fault(state); });
                             if (has_open_try)
                             {
                                 // Pop intermediate frames back to this parent.

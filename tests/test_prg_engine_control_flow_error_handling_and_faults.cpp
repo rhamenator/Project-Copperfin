@@ -2213,6 +2213,143 @@ void test_catch_when_false_with_finally_reaches_on_error_with_original_metadata(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catch_fault_runs_pending_finally_before_propagation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_fault_finally";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "catch_fault_finally.prg";
+    write_text(
+        main_path,
+        "cSame = ''\n"
+        "TRY\n"
+        "  TRY\n"
+        "    THROW 'initial-same'\n"
+        "  CATCH TO oInitialSame\n"
+        "    cSame = cSame + 'C'\n"
+        "    nSameBad = LOG(-1)\n"
+        "  FINALLY\n"
+        "    cSame = cSame + 'F'\n"
+        "  ENDTRY\n"
+        "CATCH TO oSame\n"
+        "  cSame = cSame + 'O'\n"
+        "  cSameMessage = oSame.Message\n"
+        "  cSameStatement = oSame.LineContents\n"
+        "ENDTRY\n"
+        "cDo = ''\n"
+        "TRY\n"
+        "  DO WorkerDo\n"
+        "CATCH TO oDo\n"
+        "  cDo = cDo + 'O'\n"
+        "  cDoMessage = oDo.Message\n"
+        "  cDoStatement = oDo.LineContents\n"
+        "ENDTRY\n"
+        "cExpr = ''\n"
+        "TRY\n"
+        "  nExprResult = WorkerExpr()\n"
+        "CATCH TO oExpr\n"
+        "  cExpr = cExpr + 'O'\n"
+        "  cExprMessage = oExpr.Message\n"
+        "  cExprStatement = oExpr.LineContents\n"
+        "ENDTRY\n"
+        "cFinally = ''\n"
+        "TRY\n"
+        "  TRY\n"
+        "    cFinally = cFinally + 'T'\n"
+        "  CATCH TO oWrong\n"
+        "    cFinally = cFinally + 'X'\n"
+        "  FINALLY\n"
+        "    cFinally = cFinally + 'F'\n"
+        "    nFinallyBad = LOG(-1)\n"
+        "  ENDTRY\n"
+        "CATCH TO oFinally\n"
+        "  cFinally = cFinally + 'O'\n"
+        "  cFinallyMessage = oFinally.Message\n"
+        "  cFinallyStatement = oFinally.LineContents\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "PROCEDURE WorkerDo\n"
+        "TRY\n"
+        "  THROW 'initial-do'\n"
+        "CATCH TO oInitialDo\n"
+        "  cDo = cDo + 'C'\n"
+        "  DO FailDo\n"
+        "FINALLY\n"
+        "  cDo = cDo + 'F'\n"
+        "ENDTRY\n"
+        "cDo = cDo + 'A'\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE FailDo\n"
+        "nDoBad = LOG(-1)\n"
+        "RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE WorkerExpr\n"
+        "TRY\n"
+        "  THROW 'initial-expr'\n"
+        "CATCH TO oInitialExpr\n"
+        "  cExpr = cExpr + 'C'\n"
+        "  DO FailExpr\n"
+        "FINALLY\n"
+        "  cExpr = cExpr + 'F'\n"
+        "ENDTRY\n"
+        "cExpr = cExpr + 'A'\n"
+        "RETURN 42\n"
+        "ENDPROC\n"
+        "PROCEDURE FailExpr\n"
+        "nExprBad = LOG(-1)\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#4020: CATCH faults should run pending FINALLY blocks before outer propagation: " + state.message);
+
+    const auto expect_value = [&](const char *name, const char *expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), std::string("#4020: expected result ") + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   std::string("#4020: unexpected result for ") + name);
+        }
+    };
+    const auto expect_log_fault = [&](const char *message_name, const char *statement_name, const char *statement) {
+        const auto message = state.globals.find(message_name);
+        const auto fault_statement = state.globals.find(statement_name);
+        expect(message != state.globals.end(), std::string("#4020: expected fault message ") + message_name);
+        expect(fault_statement != state.globals.end(), std::string("#4020: expected fault statement ") + statement_name);
+        if (message != state.globals.end()) {
+            const std::string actual_message = copperfin::runtime::format_value(message->second);
+            expect(actual_message.find("LOG()") != std::string::npos,
+                   std::string("#4020: outer handler should receive the replacement LOG() fault for ") +
+                       message_name + ", got '" + actual_message + "'");
+        }
+        if (fault_statement != state.globals.end()) {
+            const std::string actual_statement = copperfin::runtime::format_value(fault_statement->second);
+            expect(actual_statement == statement,
+                   std::string("#4020: outer handler should receive the replacement fault statement for ") +
+                       statement_name + ", got '" + actual_statement + "'");
+        }
+    };
+
+    expect_value("csame", "CFO");
+    expect_value("cdo", "CFO");
+    expect_value("cexpr", "CFO");
+    expect_value("cfinally", "TFO");
+    expect_log_fault("csamemessage", "csamestatement", "nSameBad = LOG(-1)");
+    expect_log_fault("cdomessage", "cdostatement", "nDoBad = LOG(-1)");
+    expect_log_fault("cexprmessage", "cexprstatement", "nExprBad = LOG(-1)");
+    expect_log_fault("cfinallymessage", "cfinallystatement", "nFinallyBad = LOG(-1)");
+    expect(state.globals.find("nexprresult") == state.globals.end(),
+           "#4020: a faulting expression-invoked routine should not complete its caller assignment");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_try_finally_runs_without_catch_on_success() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_finally_success";
