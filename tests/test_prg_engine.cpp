@@ -216,6 +216,8 @@ void test_local_variables_in_stack_frame() {
     const fs::path main_path = temp_root / "locals.prg";
     write_text(
         main_path,
+        "PUBLIC publicCount\n"
+        "public_default = publicCount\n"
         "DO localproc\n"
         "RETURN\n"
         "PROCEDURE localproc\n"
@@ -225,7 +227,7 @@ void test_local_variables_in_stack_frame() {
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
-    session.add_breakpoint({.file_path = main_path.string(), .line = 5});
+    session.add_breakpoint({.file_path = main_path.string(), .line = 7});
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::breakpoint, "local-variable test should stop on the itemCount assignment");
     expect(state.statement_text == "itemCount = 9",
@@ -235,8 +237,21 @@ void test_local_variables_in_stack_frame() {
         const auto local = state.call_stack.front().locals.find("itemcount");
         expect(local != state.call_stack.front().locals.end(), "stack frame should expose declared LOCAL variables");
         if (local != state.call_stack.front().locals.end()) {
-            expect(copperfin::runtime::format_value(local->second) == "", "LOCAL variables should exist before assignment");
+            expect(copperfin::runtime::format_value(local->second) == "false",
+                   "LOCAL variables should initialize to logical false before assignment");
         }
+    }
+    const auto public_value = state.globals.find("publiccount");
+    const auto public_default = state.globals.find("public_default");
+    expect(public_value != state.globals.end(), "PUBLIC variable should be captured before assignment");
+    expect(public_default != state.globals.end(), "PUBLIC default value should be captured");
+    if (public_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(public_value->second) == "false",
+               "PUBLIC variables should initialize to logical false");
+    }
+    if (public_default != state.globals.end()) {
+        expect(copperfin::runtime::format_value(public_default->second) == "false",
+               "PUBLIC default reads should return logical false");
     }
 
     fs::remove_all(temp_root, ignored);

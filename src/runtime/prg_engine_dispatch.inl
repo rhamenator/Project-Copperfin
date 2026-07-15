@@ -4247,7 +4247,7 @@
                         continue;
                     }
                     public_names.insert(normalized);
-                    globals.try_emplace(normalized, make_empty_value());
+                    globals.try_emplace(normalized, make_boolean_value(false));
                 }
                 return {};
             case StatementKind::local_declaration:
@@ -4276,7 +4276,7 @@
                 {
                     const std::string normalized = normalize_memory_variable_identifier(name);
                     frame.local_names.insert(normalized);
-                    frame.locals.try_emplace(normalized, make_empty_value());
+                    frame.locals.try_emplace(normalized, make_boolean_value(false));
                 }
                 return {};
             case StatementKind::private_declaration:
