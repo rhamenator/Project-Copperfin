@@ -8,58 +8,20 @@ on:
     paths:
       - ".github/workflows/windows-x86-declare-validation.yml"
       - "CMakeLists.txt"
-      - "resources/locales/**/strings.json"
-      - "src/runtime/prg_engine.cpp"
-      - "src/runtime/prg_engine_dll.inl"
-      - "src/runtime/dispatch_exception_info.cpp"
-      - "src/runtime/dispatch_exception_info.h"
-      - "src/runtime/managed_declared_call.cpp"
-      - "src/runtime/managed_declared_call.h"
-      - "src/runtime/managed_pe_image.cpp"
-      - "src/runtime/managed_pe_image.h"
-      - "src/runtime/prg_engine_dispatch.inl"
-      - "src/runtime/prg_engine_helpers.cpp"
-      - "src/runtime/prg_engine_helpers.h"
-      - "src/runtime/prg_engine_session.inl"
-      - "src/runtime/win64_native_call.cpp"
-      - "src/runtime/win64_native_call.h"
-      - "tests/CMakeLists.txt"
-      - "tests/fixtures/declared_dll_fixture.cpp"
-      - "tests/fixtures/managed_declare_dependency.cs"
-      - "tests/fixtures/managed_declare_fixture.cs"
-      - "tests/fixtures/mixed_mode_declared_dll_fixture.cpp"
-      - "tests/test_prg_engine_dotnet_dispatch.cpp"
-      - "tests/test_prg_engine_parser_classes.cpp"
-      - "tests/test_prg_engine_seek_index.cpp"
-      - "tests/test_localization.cpp"
+      - "cmake/**"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/windows-x86-declare-validation.yml"
       - "CMakeLists.txt"
-      - "resources/locales/**/strings.json"
-      - "src/runtime/prg_engine.cpp"
-      - "src/runtime/prg_engine_dll.inl"
-      - "src/runtime/dispatch_exception_info.cpp"
-      - "src/runtime/dispatch_exception_info.h"
-      - "src/runtime/managed_declared_call.cpp"
-      - "src/runtime/managed_declared_call.h"
-      - "src/runtime/managed_pe_image.cpp"
-      - "src/runtime/managed_pe_image.h"
-      - "src/runtime/prg_engine_dispatch.inl"
-      - "src/runtime/prg_engine_helpers.cpp"
-      - "src/runtime/prg_engine_helpers.h"
-      - "src/runtime/prg_engine_session.inl"
-      - "src/runtime/win64_native_call.cpp"
-      - "src/runtime/win64_native_call.h"
-      - "tests/CMakeLists.txt"
-      - "tests/fixtures/declared_dll_fixture.cpp"
-      - "tests/fixtures/managed_declare_dependency.cs"
-      - "tests/fixtures/managed_declare_fixture.cs"
-      - "tests/fixtures/mixed_mode_declared_dll_fixture.cpp"
-      - "tests/test_prg_engine_dotnet_dispatch.cpp"
-      - "tests/test_prg_engine_parser_classes.cpp"
-      - "tests/test_prg_engine_seek_index.cpp"
-      - "tests/test_localization.cpp"
+      - "cmake/**"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/**"
 
 permissions:
   contents: read
@@ -79,6 +41,9 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v6.0.2
+
+      - name: Validate focused workflow path filters
+        run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure native build
         run: cmake -S . -B build-${{ matrix.platform }} -A ${{ matrix.platform }} -DCOPPERFIN_BUILD_TESTS=ON

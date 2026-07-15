@@ -204,6 +204,13 @@ add_test(
     COMMAND $<TARGET_FILE:test_licensing_status>
 )
 
+add_test(
+    NAME test_focused_workflow_path_filters
+    COMMAND ${CMAKE_COMMAND}
+        -DCOPPERFIN_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_SOURCE_DIR}/cmake/validate_focused_workflow_path_filters.cmake
+)
+
 add_executable(test_process_success test_process_exit.cpp)
 target_compile_definitions(test_process_success PRIVATE COPPERFIN_TEST_PROCESS_EXIT_CODE=0)
 

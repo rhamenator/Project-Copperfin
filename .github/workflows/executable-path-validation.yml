@@ -6,38 +6,26 @@ on:
     paths:
       - ".github/workflows/executable-path-validation.yml"
       - "CMakeLists.txt"
-      - "apps/copperfin_build_host/main.cpp"
-      - "apps/copperfin_inspect/main.cpp"
-      - "apps/copperfin_runtime_host/main.cpp"
-      - "include/copperfin/platform/environment.h"
-      - "include/copperfin/platform/executable_path.h"
-      - "src/localization/localization.cpp"
-      - "src/platform/executable_path.cpp"
-      - "tests/CMakeLists.txt"
-      - "tests/test_environment_support.h"
-      - "tests/test_build_host_output.cpp"
-      - "tests/test_tool_license_path_launch.cpp"
-      - "tests/test_localization.cpp"
-      - "tests/test_platform_environment.cpp"
-      - "tests/test_runtime_host_implicit_path_launch.cpp"
+      - "cmake/**"
+      - "apps/copperfin_build_host/**"
+      - "apps/copperfin_inspect/**"
+      - "apps/copperfin_runtime_host/**"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/**"
   pull_request:
     paths:
       - ".github/workflows/executable-path-validation.yml"
       - "CMakeLists.txt"
-      - "apps/copperfin_build_host/main.cpp"
-      - "apps/copperfin_inspect/main.cpp"
-      - "apps/copperfin_runtime_host/main.cpp"
-      - "include/copperfin/platform/environment.h"
-      - "include/copperfin/platform/executable_path.h"
-      - "src/localization/localization.cpp"
-      - "src/platform/executable_path.cpp"
-      - "tests/CMakeLists.txt"
-      - "tests/test_environment_support.h"
-      - "tests/test_build_host_output.cpp"
-      - "tests/test_tool_license_path_launch.cpp"
-      - "tests/test_localization.cpp"
-      - "tests/test_platform_environment.cpp"
-      - "tests/test_runtime_host_implicit_path_launch.cpp"
+      - "cmake/**"
+      - "apps/copperfin_build_host/**"
+      - "apps/copperfin_inspect/**"
+      - "apps/copperfin_runtime_host/**"
+      - "include/**"
+      - "resources/locales/**"
+      - "src/**"
+      - "tests/**"
 
 permissions:
   contents: read
@@ -60,6 +48,9 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v6.0.2
+
+      - name: Validate focused workflow path filters
+        run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure focused build
         run: >-
