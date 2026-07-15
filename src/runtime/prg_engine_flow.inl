@@ -162,9 +162,8 @@
 
         bool breakpoint_matches(const SourceLocation &location) const
         {
-            const std::string normalized = normalize_path(location.file_path);
             return std::any_of(breakpoints.begin(), breakpoints.end(), [&](const RuntimeBreakpoint &breakpoint)
-                               { return normalize_path(breakpoint.file_path) == normalized && breakpoint.line == location.line; });
+                               { return paths_equal_for_platform(breakpoint.file_path, location.file_path) && breakpoint.line == location.line; });
         }
 
         std::optional<std::size_t> find_matching_branch(const Frame &frame, std::size_t pc, bool seek_else) const

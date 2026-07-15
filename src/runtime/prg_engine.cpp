@@ -7611,7 +7611,7 @@ namespace copperfin::runtime
                 if (breakpoint_matches(next->location))
                 {
                     if (resume_skip_breakpoint_location.has_value() &&
-                        normalize_path(resume_skip_breakpoint_location->file_path) == normalize_path(next->location.file_path) &&
+                        paths_equal_for_platform(resume_skip_breakpoint_location->file_path, next->location.file_path) &&
                         resume_skip_breakpoint_location->line == next->location.line)
                     {
                         resume_skip_breakpoint_location.reset();
@@ -7887,7 +7887,7 @@ namespace copperfin::runtime
             impl_->breakpoints.begin(),
             impl_->breakpoints.end(),
             [&](const RuntimeBreakpoint& candidate) {
-                return candidate.file_path == normalized.file_path &&
+                return paths_equal_for_platform(candidate.file_path, normalized.file_path) &&
                     candidate.line == normalized.line;
             });
         if (existing == impl_->breakpoints.end())
@@ -7906,7 +7906,7 @@ namespace copperfin::runtime
             impl_->breakpoints.begin(),
             impl_->breakpoints.end(),
             [&](const RuntimeBreakpoint& candidate) {
-                return candidate.file_path == normalized.file_path &&
+                return paths_equal_for_platform(candidate.file_path, normalized.file_path) &&
                     candidate.line == normalized.line;
             });
         if (existing == impl_->breakpoints.end())

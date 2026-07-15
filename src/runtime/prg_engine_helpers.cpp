@@ -187,6 +187,14 @@ std::string normalize_path(const std::string& value) {
     return std::filesystem::path(value).lexically_normal().string();
 }
 
+bool paths_equal_for_platform(const std::string& left, const std::string& right) {
+#if defined(_WIN32)
+    return paths_equal_insensitive(left, right);
+#else
+    return normalize_path(left) == normalize_path(right);
+#endif
+}
+
 bool is_index_file_path(const std::string& value) {
     const std::string extension = lowercase_copy(std::filesystem::path(trim_copy(value)).extension().string());
     return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||

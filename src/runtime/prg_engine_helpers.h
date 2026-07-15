@@ -33,6 +33,7 @@ bool declared_dll_parameter_list_contains_type(
 std::size_t declared_dll_x86_stdcall_stack_bytes(const std::string& parameter_types);
 std::string normalize_memory_variable_identifier(std::string value);
 std::string normalize_path(const std::string& value);
+bool paths_equal_for_platform(const std::string& left, const std::string& right);
 bool is_index_file_path(const std::string& value);
 std::string unquote_string(std::string value);
 std::string take_first_token(std::string value);
