@@ -5031,7 +5031,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
 
     {
         std::cerr << "USAGE: BEGIN es-419 bridge\n";
-        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
 
         const fs::path bridge_manifest_path = temp_root / "bridge_es.cfmanifest";
@@ -5073,7 +5073,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
 
     {
         std::cerr << "USAGE: BEGIN pt-BR\n";
-        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
 
         const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
