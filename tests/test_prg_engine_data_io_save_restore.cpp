@@ -317,8 +317,8 @@ void test_save_restore_round_trips_escaped_string_and_types() {
             "SAVE TO should escape newline and tab control characters");
         expect(contents.find("dstamp=D:01/15/2026") != std::string::npos,
             "SAVE TO should persist recognized date values using type code D");
-        expect(contents.find("eonly=E,PUBLIC:") != std::string::npos,
-            "SAVE TO should persist explicit empty PUBLIC values with type code E");
+        expect(contents.find("eonly=L,PUBLIC:false") != std::string::npos,
+            "SAVE TO should persist bare PUBLIC values as scoped logical false values");
     }
 
     const fs::path restore_path = temp_root / "restore_escaped.prg";
@@ -343,14 +343,14 @@ void test_save_restore_round_trips_escaped_string_and_types() {
     const auto restored_n = restore_state.globals.find("restored_n");
     const auto restored_d = restore_state.globals.find("restored_d");
     const auto restored_e_type = restore_state.globals.find("restored_e_type");
-    const auto restored_empty = restore_state.globals.find("eonly");
+    const auto restored_public = restore_state.globals.find("eonly");
 
     expect(restored_s != restore_state.globals.end(), "RESTORE FROM should restore escaped string variable");
     expect(restored_l != restore_state.globals.end(), "RESTORE FROM should restore logical variable");
     expect(restored_n != restore_state.globals.end(), "RESTORE FROM should restore numeric variable");
     expect(restored_d != restore_state.globals.end(), "RESTORE FROM should restore date variable");
-    expect(restored_e_type != restore_state.globals.end(), "RESTORE FROM should restore explicit empty variable");
-    expect(restored_empty != restore_state.globals.end(), "RESTORE FROM should materialize explicit empty variables");
+    expect(restored_e_type != restore_state.globals.end(), "RESTORE FROM should restore bare PUBLIC variable type");
+    expect(restored_public != restore_state.globals.end(), "RESTORE FROM should materialize bare PUBLIC variables");
 
     if (restored_s != restore_state.globals.end()) {
         const std::string expected = std::string("left=right:slash\\") + "\n" + "line2" + "\t" + "tail";
@@ -371,8 +371,13 @@ void test_save_restore_round_trips_escaped_string_and_types() {
     }
     if (restored_e_type != restore_state.globals.end()) {
         const std::string restored_type = copperfin::runtime::format_value(restored_e_type->second);
-        expect(restored_type == "X" || restored_type == "U",
-            "RESTORE FROM should preserve explicit empty value kind");
+        expect(restored_type == "L",
+            "RESTORE FROM should preserve the logical type of a bare PUBLIC declaration");
+    }
+    if (restored_public != restore_state.globals.end()) {
+        expect(restored_public->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+                   !restored_public->second.boolean_value,
+               "RESTORE FROM should preserve the false value of a bare PUBLIC declaration");
     }
 
     fs::remove_all(temp_root, ignored);

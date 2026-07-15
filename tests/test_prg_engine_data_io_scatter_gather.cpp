@@ -160,7 +160,6 @@ void test_gather_memvar_preserves_fields_without_matching_variables() {
         main_path,
         "USE '" + table_path.string() + "'\n"
         "GO 1\n"
-        "LOCAL NOTE\n"
         "m.NAME = 'Updated'\n"
         "GATHER MEMVAR\n"
         "RETURN\n");
@@ -178,8 +177,8 @@ void test_gather_memvar_preserves_fields_without_matching_variables() {
             "GATHER MEMVAR should update a field with a matching memvar");
         expect(values[1U].display_value == "42",
             "GATHER MEMVAR should preserve a numeric field with no matching memvar");
-        expect(values[2U].display_value.empty(),
-            "GATHER MEMVAR should write a matching memvar whose value is genuinely empty");
+        expect(values[2U].display_value == "Keep",
+            "GATHER MEMVAR should preserve a character field with no matching memvar");
         expect(values[3U].display_value == "true",
             "GATHER MEMVAR should preserve a logical field with no matching memvar");
     }
