@@ -4842,14 +4842,17 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    std::cerr << "USAGE: fixture root ready\n";
 #if defined(_WIN32)
     const fs::path locale_root = temp_root / fs::path(L"locales_\u0416_\u6F22");
 #else
     const fs::path locale_root = temp_root / "locales_\xD0\x96_\xE6\xBC\xA2";
 #endif
     write_runtime_host_usage_catalogs(locale_root);
+    std::cerr << "USAGE: catalogs ready\n";
 
     {
+        std::cerr << "USAGE: BEGIN en-US\n";
         ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
@@ -4877,9 +4880,11 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
         expect(invalid_federation_bool.stdout_text.find("--federation-planning-enable") != std::string::npos &&
                    invalid_federation_bool.stdout_text.find("<true|false>") != std::string::npos,
                "#3791: invalid federation planning booleans should preserve invariant CLI tokens in usage output");
+        std::cerr << "USAGE: END en-US\n";
     }
 
     {
+        std::cerr << "USAGE: BEGIN es-419\n";
         ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
@@ -4918,9 +4923,11 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
         expect(invalid_federation_bool.stdout_text.find(
                    "error: The --federation-planning-require value must be true or false.") == std::string::npos,
                "#3791: es-419 invalid federation planning booleans should not fall back to raw English prose");
+        std::cerr << "USAGE: END es-419\n";
     }
 
     {
+        std::cerr << "USAGE: BEGIN qps-ploc\n";
         ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
@@ -5019,9 +5026,11 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2352: pseudo-localized bridge errors should preserve bridge runtime mode");
         expect(bridge_error.stdout_text.find("[!! ") != std::string::npos,
                "#2352: pseudo-localized bridge errors should decorate prose");
+        std::cerr << "USAGE: END qps-ploc\n";
     }
 
     {
+        std::cerr << "USAGE: BEGIN es-419 bridge\n";
         ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
 
@@ -5059,9 +5068,11 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2587: es-419 bridge request-artifact errors should localize prose");
         expect(bridge_error.stdout_text.find("error: Bridge request artifact not found.") == std::string::npos,
                "#2587: es-419 bridge request-artifact errors should not fall back to raw English prose");
+        std::cerr << "USAGE: END es-419 bridge\n";
     }
 
     {
+        std::cerr << "USAGE: BEGIN pt-BR\n";
         ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
 
@@ -5123,6 +5134,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2587: pt-BR bridge request-artifact errors should localize prose");
         expect(bridge_error.stdout_text.find("error: Bridge request artifact not found.") == std::string::npos,
                "#2587: pt-BR bridge request-artifact errors should not fall back to raw English prose");
+        std::cerr << "USAGE: END pt-BR\n";
     }
 
     fs::remove_all(temp_root, ignored);
