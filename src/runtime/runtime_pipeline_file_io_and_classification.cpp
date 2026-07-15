@@ -220,6 +220,12 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(
             return std::nullopt;
         }
         if (casefold_matches.empty()) {
+            const std::filesystem::path host_resolved = (resolved / part).lexically_normal();
+            std::error_code exists_error;
+            if (std::filesystem::exists(host_resolved, exists_error) && !exists_error) {
+                resolved = host_resolved;
+                continue;
+            }
             return std::nullopt;
         }
         resolved = casefold_matches.front().lexically_normal();
