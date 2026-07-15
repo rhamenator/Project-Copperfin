@@ -32,7 +32,7 @@ bool is_internal_generated_launcher_name(const std::string& file_name) {
     return folded_name.starts_with(folded_prefix);
 }
 
-bool launcher_file_names_equal_case_insensitive(
+bool file_names_equal_case_insensitive(
     const std::filesystem::path& left,
     const std::filesystem::path& right) {
 #if defined(_WIN32)
@@ -48,6 +48,12 @@ bool launcher_file_names_equal_case_insensitive(
     return lowercase_copy(left.filename().string()) ==
         lowercase_copy(right.filename().string());
 #endif
+}
+
+bool launcher_file_names_equal_case_insensitive(
+    const std::filesystem::path& left,
+    const std::filesystem::path& right) {
+    return file_names_equal_case_insensitive(left, right);
 }
 
 std::vector<std::filesystem::path> casefold_package_entries(
@@ -200,6 +206,41 @@ std::string_view launcher_artifact_role_name(const RuntimeLauncherArtifactRole r
             return "debug_optional";
     }
     return "runtime_required";
+}
+
+bool validate_public_output_artifact_name(
+    const RuntimePackagePlan& plan,
+    std::string& error) {
+    error.clear();
+    if (plan.package_root.empty() || plan.launcher_output_path.empty()) {
+        return true;
+    }
+
+    const std::filesystem::path output_name(plan.launcher_output_path);
+    std::vector<std::filesystem::path> reserved_names;
+    if (is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) {
+        reserved_names.emplace_back(plan.runtime_host_destination_path);
+    }
+    if (plan.emit_dotnet_launcher) {
+        reserved_names.emplace_back(kGeneratedLauncherDll);
+        reserved_names.emplace_back(kGeneratedLauncherDeps);
+        reserved_names.emplace_back(kGeneratedLauncherRuntimeConfig);
+        reserved_names.emplace_back(kGeneratedLauncherPdb);
+    }
+
+    for (const auto& reserved_name : reserved_names) {
+        if (!reserved_name.empty() &&
+            file_names_equal_case_insensitive(output_name, reserved_name)) {
+            error = runtime_text(
+                "Runtime.Package.Error.OutputNameReserved",
+                {
+                    {"outputName", output_name.filename().generic_string()},
+                    {"reservedName", reserved_name.filename().generic_string()}
+                });
+            return false;
+        }
+    }
+    return true;
 }
 
 bool inventory_generated_launcher_artifacts(

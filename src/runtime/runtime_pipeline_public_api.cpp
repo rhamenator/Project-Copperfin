@@ -561,6 +561,11 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.app_archive_manifest_path = (package_root / app_archive_manifest_file_name).string();
     }
     plan.runtime_host_destination_path = (package_root / runtime_host_file_name()).string();
+    std::string output_name_error;
+    if (!validate_public_output_artifact_name(plan, output_name_error)) {
+        plan.warnings.push_back(std::move(output_name_error));
+        return plan;
+    }
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
     plan.security_role = resolve_security_role(enable_security);
@@ -1168,11 +1173,13 @@ RuntimeMaterializeResult materialize_runtime_package(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
+    std::string error;
+    if (!validate_public_output_artifact_name(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
-
-    std::string error;
     if ((is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) &&
         !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
@@ -1223,6 +1230,10 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
+    std::string error;
+    if (!validate_public_output_artifact_name(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
@@ -1231,7 +1242,6 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     }
 
     RuntimePackagePlan finalized_plan = plan;
-    std::string error;
     if (plan.emit_dotnet_launcher) {
         std::erase_if(
             finalized_plan.extension_payload_digests,
@@ -1274,6 +1284,10 @@ RuntimeBuildResult build_runtime_package_primary_output(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
+    std::string error;
+    if (!validate_public_output_artifact_name(plan, error)) {
+        return {.ok = false, .error = error};
+    }
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
@@ -1285,7 +1299,6 @@ RuntimeBuildResult build_runtime_package_primary_output(
     }
 
     RuntimePackagePlan built_plan = plan;
-    std::string error;
     const std::filesystem::path source_root = std::filesystem::path(plan.native_wrapper_cmake_path).parent_path();
     const std::filesystem::path build_root = source_root / "cmake_pipeline_build";
     const std::filesystem::path configure_log_path = build_root / "cmake-configure.log";

@@ -840,6 +840,7 @@
   "Runtime.Package.Error.LauncherArtifactMissing": "Required generated-launcher artifact is missing: {path}",
   "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile": "Generated-launcher artifact is not a direct regular file: {path}",
   "Runtime.Package.Error.LauncherArtifactUnexpected": "Unexpected generated-launcher artifact is present: {path}",
+  "Runtime.Package.Error.OutputNameReserved": "Package output name conflicts with a reserved Copperfin artifact: {outputName} conflicts with {reservedName}",
   "Runtime.Package.Error.ManifestPairPathRejected": "Runtime and debug manifest destinations must be direct regular files in the package root: {path}",
   "Runtime.Package.Error.ManifestPairPublishFailed": "Unable to publish the package manifest pair atomically: {path}",
   "Runtime.Package.Error.ManifestPairRollbackFailed": "Unable to restore the previous package manifest pair: {path}",

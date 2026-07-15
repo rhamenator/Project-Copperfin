@@ -715,6 +715,116 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
     fs::remove_all(temp_root, ignored);
 }
 
+void test_package_output_names_reject_reserved_artifacts() {
+    namespace fs = std::filesystem;
+    const ScopedEnvironmentVariable scoped_locale("COPPERFIN_LOCALE", "en-US");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_reserved_output_name";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    write_text(project_dir / "main.prg", "RETURN\n");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "reserved_output_name.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ReservedOutputName";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    extensibility_profile.dotnet_output.available = true;
+    const auto make_plan = [&](const std::string& output_name,
+                               const std::string& output_kind,
+                               const bool emit_dotnet_launcher) {
+        workspace.build_plan.output_path = (output_dir / output_name).string();
+        workspace.build_plan.output_kind = output_kind;
+        return copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            extensibility_profile,
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            false,
+            emit_dotnet_launcher);
+    };
+
+#if defined(_WIN32)
+    const std::string runtime_host_name = "copperfin_runtime_host.exe";
+    const std::string alternate_platform_host_name = "copperfin_runtime_host";
+#else
+    const std::string runtime_host_name = "copperfin_runtime_host";
+    const std::string alternate_platform_host_name = "copperfin_runtime_host.exe";
+#endif
+    const auto assert_rejected = [&](const std::string& output_name,
+                                     const std::string& reserved_name,
+                                     const bool emit_dotnet_launcher) {
+        const auto plan = make_plan(output_name, "executable", emit_dotnet_launcher);
+        const std::string expected_error =
+            "Package output name conflicts with a reserved Copperfin artifact: " + output_name +
+            " conflicts with " + reserved_name;
+        expect(!plan.ok,
+               "#4054: package planning should reject reserved public output names");
+        expect(plan.warnings.size() == 1U && plan.warnings.front() == expected_error,
+               "#4054: planning should report the localized reserved-output diagnostic");
+
+        const auto materialize_result = copperfin::runtime::materialize_runtime_package(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            extensibility_profile,
+            "unused-runtime-host");
+        expect(!materialize_result.ok && materialize_result.error == expected_error,
+               "#4054: materialization should reject reserved output names before changing the package root");
+        expect(!fs::exists(plan.package_root),
+               "#4054: rejected package planning must not create a package root");
+
+        const auto finalize_result = copperfin::runtime::finalize_runtime_package_primary_output(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            extensibility_profile);
+        expect(!finalize_result.ok && finalize_result.error == expected_error,
+               "#4054: primary-output publication should reject reserved output names");
+
+        const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            extensibility_profile);
+        expect(!build_result.ok && build_result.error == expected_error,
+               "#4054: native wrapper publication should reject reserved output names");
+    };
+
+    assert_rejected(runtime_host_name, runtime_host_name, false);
+    assert_rejected("COPPERFIN_RUNTIME_HOST" + std::string(runtime_host_name.ends_with(".exe") ? ".EXE" : ""),
+                    runtime_host_name,
+                    false);
+    assert_rejected("Copperfin.GeneratedLauncher.dll", "Copperfin.GeneratedLauncher.dll", true);
+    assert_rejected("COPPERFIN.GENERATEDLAUNCHER.DEPS.JSON",
+                    "Copperfin.GeneratedLauncher.deps.json",
+                    true);
+
+    expect(make_plan("CustomerApp.exe", "executable", true).ok,
+           "#4054: noncolliding custom executable output names should remain valid");
+    expect(make_plan("Copperfin.GeneratedLauncher.exe", "executable", true).ok,
+           "#4054: the configured public apphost identity should remain valid");
+    expect(make_plan(alternate_platform_host_name, "executable", false).ok,
+           "#4054: the other platform runtime-host filename should remain valid");
+    expect(make_plan(runtime_host_name, "app", false).ok,
+           "#4054: output modes that do not bundle a runtime host should not reserve its filename");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
     const auto catalog_root = runtime_pipeline_locale_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -743,6 +853,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.LauncherArtifactMissing",
         "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
         "Runtime.Package.Error.LauncherArtifactUnexpected",
+        "Runtime.Package.Error.OutputNameReserved",
         "Runtime.Package.Error.ManifestPairPathRejected",
         "Runtime.Package.Error.ManifestPairPublishFailed",
         "Runtime.Package.Error.ManifestPairRollbackFailed",
@@ -831,6 +942,26 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             {{"path", "Copperfin.GeneratedLauncher.dll"}}) ==
             "Required generated-launcher artifact is missing: Copperfin.GeneratedLauncher.dll",
         "#4052: generated-launcher admission diagnostics should preserve package-relative path placeholders");
+    expect(
+        english_catalog.translate(
+            "Runtime.Package.Error.OutputNameReserved",
+            {{"outputName", "COPPERFIN.GENERATEDLAUNCHER.DLL"},
+             {"reservedName", "Copperfin.GeneratedLauncher.dll"}}) ==
+            "Package output name conflicts with a reserved Copperfin artifact: "
+            "COPPERFIN.GENERATEDLAUNCHER.DLL conflicts with Copperfin.GeneratedLauncher.dll",
+        "#4054: reserved-output diagnostics should preserve the public and reserved artifact identities");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.OutputNameReserved",
+            {{"outputName", "COPPERFIN.GENERATEDLAUNCHER.DLL"},
+             {"reservedName", "Copperfin.GeneratedLauncher.dll"}}) ==
+            copperfin::localization::format_named_placeholders(
+                copperfin::localization::pseudo_localize(
+                    "Package output name conflicts with a reserved Copperfin artifact: "
+                    "{outputName} conflicts with {reservedName}"),
+                {{"outputName", "COPPERFIN.GENERATEDLAUNCHER.DLL"},
+                 {"reservedName", "Copperfin.GeneratedLauncher.dll"}}),
+        "#4054: reserved-output diagnostics should route through pseudo-localization");
     expect(
         english_catalog.translate(
             "Runtime.Package.Error.ContentDestinationRejected",
