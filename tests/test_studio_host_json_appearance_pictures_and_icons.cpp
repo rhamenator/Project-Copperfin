@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_down_picture(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DOWNPICTURE", .type = 'C', .length = 64U}
+        {.name = "DOWNPICTUR", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "forms\\save_down.bmp"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_disabled_picture(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISABLEDPICTURE", .type = 'C', .length = 64U}
+        {.name = "DISABLEDPI", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "forms\\save_disabled.bmp"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_ole_drag_picture(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "OLEDRAGPICTURE", .type = 'C', .length = 64U}
+        {.name = "OLEDRAGPIC", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "forms\\save_ole_drag.bmp"},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_picture_margin(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "PICTUREMARGIN", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "PICTUREMAR", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_picture_position(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "PICTUREPOSITION", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "PICTUREPOS", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_picture_spacing(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "PICTURESPACING", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "PICTURESPA", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -172,7 +172,7 @@ void write_synthetic_form_table_for_object_picture_selection_display(const std::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "PICTURESELECTIONDISPLAY", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "PICTURESEL", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},

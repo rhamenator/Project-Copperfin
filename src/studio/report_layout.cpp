@@ -53,9 +53,22 @@ bool equals_ignore_case(std::string_view left, std::string_view right) {
            });
 }
 
+bool physical_field_name_matches(std::string_view physical_name, std::string_view logical_name) {
+    if (equals_ignore_case(physical_name, logical_name)) {
+        return true;
+    }
+
+    constexpr std::size_t vfp_free_table_field_name_max_bytes = 10U;
+    return logical_name.size() > vfp_free_table_field_name_max_bytes &&
+           physical_name.size() == vfp_free_table_field_name_max_bytes &&
+           equals_ignore_case(
+               physical_name,
+               logical_name.substr(0U, vfp_free_table_field_name_max_bytes));
+}
+
 const vfp::DbfRecordValue* find_value(const DbfRecord& record, std::string_view field_name) {
     for (const auto& value : record.values) {
-        if (value.field_name == field_name) {
+        if (physical_field_name_matches(value.field_name, field_name)) {
             return &value;
         }
     }
@@ -74,7 +87,7 @@ struct FieldSelection {
 
 std::optional<std::size_t> find_field_index(const DbfRecord& record, std::string_view field_name) {
     for (std::size_t index = 0U; index < record.values.size(); ++index) {
-        if (record.values[index].field_name == field_name) {
+        if (physical_field_name_matches(record.values[index].field_name, field_name)) {
             return index;
         }
     }

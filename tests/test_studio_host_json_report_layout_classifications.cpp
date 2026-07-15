@@ -308,7 +308,7 @@ void write_synthetic_report_table_for_invalid_direct_page_setup_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 48U}

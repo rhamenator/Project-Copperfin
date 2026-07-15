@@ -1051,7 +1051,7 @@ void run_joined_query_requery_test(int row_source_type, const JoinedQueryVariant
     const fs::path regions_path = temp_root / "regions.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
         {.name = "REGION_ID", .type = 'N', .length = 3U},
-        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+        {.name = "REGION_NAM", .type = 'C', .length = 24U}};
     const std::vector<std::vector<std::string>> region_records{
         {"1", "West"},
         {"2", "East"}};
@@ -1073,14 +1073,14 @@ void run_joined_query_requery_test(int row_source_type, const JoinedQueryVariant
         const fs::path query_path = temp_root / "region_join.qpr";
         write_text(
             query_path,
-            "SELECT employee.last_name, regions.region_name ;\n"
+            "SELECT employee.last_name, regions.region_nam ;\n"
             " FROM employee " + join_keyword +
                 " regions ON employee.region_id = regions.region_id ;\n"
             " ORDER BY employee.last_name INTO CURSOR temp2\n");
         row_source_assignment = "oList.RowSource = 'region_join.qpr'\n";
     } else {
         row_source_assignment =
-            "oList.RowSource = \"SELECT employee.last_name, regions.region_name "
+            "oList.RowSource = \"SELECT employee.last_name, regions.region_nam "
             "FROM employee " +
             join_keyword +
             " regions ON employee.region_id = regions.region_id ORDER BY "
@@ -1113,10 +1113,10 @@ void run_joined_query_requery_test(int row_source_type, const JoinedQueryVariant
         "GO 1 IN employee\n"
         "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
         "GO 2 IN regions\n"
-        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "REPLACE REGION_NAM WITH 'South' IN regions\n"
         "APPEND BLANK IN regions\n"
         "REPLACE REGION_ID WITH 3 IN regions\n"
-        "REPLACE REGION_NAME WITH 'North' IN regions\n"
+        "REPLACE REGION_NAM WITH 'North' IN regions\n"
         "GO 3 IN employee\n"
         "GO 3 IN regions\n"
         "nEmployeeRecnoBeforeSecond = RECNO('employee')\n"
@@ -1309,7 +1309,7 @@ void run_right_joined_query_requery_test(int row_source_type) {
     const fs::path regions_path = temp_root / "regions.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
         {.name = "REGION_ID", .type = 'N', .length = 3U},
-        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+        {.name = "REGION_NAM", .type = 'C', .length = 24U}};
     const std::vector<std::vector<std::string>> region_records{
         {"1", "West"},
         {"2", "East"},
@@ -1332,13 +1332,13 @@ void run_right_joined_query_requery_test(int row_source_type) {
         const fs::path query_path = temp_root / "region_right_join.qpr";
         write_text(
             query_path,
-            "SELECT employee.last_name, regions.region_name ;\n"
+            "SELECT employee.last_name, regions.region_nam ;\n"
             " FROM employee RIGHT JOIN regions ON employee.region_id = regions.region_id ;\n"
             " ORDER BY employee.last_name INTO CURSOR temp2\n");
         row_source_assignment = "oList.RowSource = 'region_right_join.qpr'\n";
     } else {
         row_source_assignment =
-            "oList.RowSource = \"SELECT employee.last_name, regions.region_name "
+            "oList.RowSource = \"SELECT employee.last_name, regions.region_nam "
             "FROM employee RIGHT JOIN regions ON employee.region_id = regions.region_id ORDER BY "
             "employee.last_name INTO CURSOR temp2\"\n";
     }
@@ -1364,10 +1364,10 @@ void run_right_joined_query_requery_test(int row_source_type) {
         "GO 1 IN employee\n"
         "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
         "GO 2 IN regions\n"
-        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "REPLACE REGION_NAM WITH 'South' IN regions\n"
         "APPEND BLANK IN regions\n"
         "REPLACE REGION_ID WITH 3 IN regions\n"
-        "REPLACE REGION_NAME WITH 'Central' IN regions\n"
+        "REPLACE REGION_NAM WITH 'Central' IN regions\n"
         "oList.Requery()\n"
         "nAfterSecond = oList.ListCount\n"
         "cSecond11 = oList.List(1, 1)\n"
@@ -1475,7 +1475,7 @@ void run_right_joined_query_requery_test_with_aliases(int row_source_type) {
     const fs::path regions_path = temp_root / "regions.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
         {.name = "REGION_ID", .type = 'N', .length = 3U},
-        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+        {.name = "REGION_NAM", .type = 'C', .length = 24U}};
     const std::vector<std::vector<std::string>> region_records{
         {"1", "West"},
         {"2", "East"},
@@ -1498,13 +1498,13 @@ void run_right_joined_query_requery_test_with_aliases(int row_source_type) {
         const fs::path query_path = temp_root / "region_alias_right_join.qpr";
         write_text(
             query_path,
-            "SELECT e.last_name, r.region_name ;\n"
+            "SELECT e.last_name, r.region_nam ;\n"
             " FROM employee e RIGHT JOIN regions r ON e.region_id = r.region_id ;\n"
             " ORDER BY e.last_name INTO CURSOR temp2\n");
         row_source_assignment = "oList.RowSource = 'region_alias_right_join.qpr'\n";
     } else {
         row_source_assignment =
-            "oList.RowSource = \"SELECT e.last_name, r.region_name "
+            "oList.RowSource = \"SELECT e.last_name, r.region_nam "
             "FROM employee e RIGHT JOIN regions r ON e.region_id = r.region_id ORDER BY "
             "e.last_name INTO CURSOR temp2\"\n";
     }
@@ -1530,10 +1530,10 @@ void run_right_joined_query_requery_test_with_aliases(int row_source_type) {
         "GO 1 IN employee\n"
         "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
         "GO 2 IN regions\n"
-        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "REPLACE REGION_NAM WITH 'South' IN regions\n"
         "APPEND BLANK IN regions\n"
         "REPLACE REGION_ID WITH 3 IN regions\n"
-        "REPLACE REGION_NAME WITH 'Central' IN regions\n"
+        "REPLACE REGION_NAM WITH 'Central' IN regions\n"
         "oList.Requery()\n"
         "nAfterSecond = oList.ListCount\n"
         "cSecond11 = oList.List(1, 1)\n"
@@ -1641,7 +1641,7 @@ void run_joined_query_requery_test_with_aliases(int row_source_type) {
     const fs::path regions_path = temp_root / "regions.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
         {.name = "REGION_ID", .type = 'N', .length = 3U},
-        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+        {.name = "REGION_NAM", .type = 'C', .length = 24U}};
     const std::vector<std::vector<std::string>> region_records{
         {"1", "West"},
         {"2", "East"}};
@@ -1663,13 +1663,13 @@ void run_joined_query_requery_test_with_aliases(int row_source_type) {
         const fs::path query_path = temp_root / "region_alias_join.qpr";
         write_text(
             query_path,
-            "SELECT e.last_name, r.region_name ;\n"
+            "SELECT e.last_name, r.region_nam ;\n"
             " FROM employee AS e LEFT JOIN regions AS r ON e.region_id = r.region_id ;\n"
             " ORDER BY e.last_name INTO CURSOR temp2\n");
         row_source_assignment = "oList.RowSource = 'region_alias_join.qpr'\n";
     } else {
         row_source_assignment =
-            "oList.RowSource = \"SELECT e.last_name, r.region_name "
+            "oList.RowSource = \"SELECT e.last_name, r.region_nam "
             "FROM employee e LEFT JOIN regions r ON e.region_id = r.region_id ORDER BY "
             "e.last_name INTO CURSOR temp2\"\n";
     }
@@ -1699,10 +1699,10 @@ void run_joined_query_requery_test_with_aliases(int row_source_type) {
         "GO 1 IN employee\n"
         "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
         "GO 2 IN regions\n"
-        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "REPLACE REGION_NAM WITH 'South' IN regions\n"
         "APPEND BLANK IN regions\n"
         "REPLACE REGION_ID WITH 3 IN regions\n"
-        "REPLACE REGION_NAME WITH 'North' IN regions\n"
+        "REPLACE REGION_NAM WITH 'North' IN regions\n"
         "GO 3 IN employee\n"
         "GO 3 IN regions\n"
         "nEmployeeRecnoBeforeSecond = RECNO('employee')\n"

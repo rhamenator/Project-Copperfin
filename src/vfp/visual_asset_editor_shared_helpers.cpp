@@ -652,8 +652,10 @@ bool contains_case_insensitive(std::string_view value, const std::string& lowere
 }
 
 std::string direct_field_descriptor_prefix(const std::string& normalized_property_name) {
-    constexpr std::size_t DbfDescriptorNameWidth = 11U;
-    return normalized_property_name.substr(0U, std::min(normalized_property_name.size(), DbfDescriptorNameWidth));
+    constexpr std::size_t VfpFreeTableFieldNameMaxBytes = 10U;
+    return normalized_property_name.substr(
+        0U,
+        std::min(normalized_property_name.size(), VfpFreeTableFieldNameMaxBytes));
 }
 
 const DbfRecordValue* find_direct_visual_property_value(

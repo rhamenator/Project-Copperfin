@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_control_source(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "CONTROLSOURCE", .type = 'C', .length = 70U}
+        {.name = "CONTROLSOU", .type = 'C', .length = 70U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", "customers.name"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_current_control(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "CURRENTCONTROL", .type = 'C', .length = 40U}
+        {.name = "CURRENTCON", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "txtName"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_auto_verb_menu(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "AUTOVERBMENU", .type = 'L', .length = 1U}
+        {.name = "AUTOVERBME", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_bind_controls(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BINDCONTROLS", .type = 'L', .length = 1U}
+        {.name = "BINDCONTRO", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_auto_release(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "AUTORELEASE", .type = 'L', .length = 1U}
+        {.name = "AUTORELEAS", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_clip_controls(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "CLIPCONTROLS", .type = 'L', .length = 1U}
+        {.name = "CLIPCONTRO", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},

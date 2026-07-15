@@ -1151,11 +1151,13 @@ void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
         "nConn = SQLCONNECT('dsn=Northwind')\n"
         "nMissingPk = SQLPRIMARYKEYS(nConn, 'DOES_NOT_EXIST', 'missingpk')\n"
         "SELECT missingpk\n"
+        "cLogicalField2 = FIELD(2, 'missingpk')\n"
         "COPY STRUCTURE TO '" + export_path.string() + "'\n"
         "cAliasAfterCopy = ALIAS()\n"
         "USE '" + export_path.string() + "' ALIAS local IN 0\n"
         "nRows = RECCOUNT('local')\n"
         "nFields = FCOUNT('local')\n"
+        "cField2 = FIELD(2, 'local')\n"
         "cField4 = FIELD(4, 'local')\n"
         "lDisc = SQLDISCONNECT(nConn)\n"
         "RETURN\n");
@@ -1168,12 +1170,16 @@ void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
     const auto alias_after_copy = state.globals.find("caliasaftercopy");
     const auto rows = state.globals.find("nrows");
     const auto fields = state.globals.find("nfields");
+    const auto logical_field2 = state.globals.find("clogicalfield2");
+    const auto field2 = state.globals.find("cfield2");
     const auto field4 = state.globals.find("cfield4");
     const auto disc = state.globals.find("ldisc");
 
     expect(alias_after_copy != state.globals.end(), "selected alias after SQL metadata COPY STRUCTURE TO should be captured");
     expect(rows != state.globals.end(), "schema-exported local row count should be captured");
     expect(fields != state.globals.end(), "schema-exported local field count should be captured");
+    expect(logical_field2 != state.globals.end(), "logical SQL metadata FIELD(2) should be captured");
+    expect(field2 != state.globals.end(), "schema-exported FIELD(2) should be captured");
     expect(field4 != state.globals.end(), "schema-exported FIELD(4) should be captured");
     expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured after SQL metadata schema export checks");
 
@@ -1189,9 +1195,17 @@ void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
         expect(copperfin::runtime::format_value(fields->second) == "6",
             "COPY STRUCTURE TO should export all SQL metadata cursor fields");
     }
+    if (logical_field2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(logical_field2->second) == "TABLE_SCHEM",
+            "DBF export should not change the SQL metadata cursor's logical field names");
+    }
+    if (field2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(field2->second) == "TABLE_SCHE",
+            "COPY STRUCTURE TO should map long logical SQL metadata names to 10-byte physical names");
+    }
     if (field4 != state.globals.end()) {
-        expect(copperfin::runtime::format_value(field4->second) == "COLUMN_NAME",
-            "COPY STRUCTURE TO should preserve SQL metadata cursor field order/names");
+        expect(copperfin::runtime::format_value(field4->second) == "COLUMN_NAM",
+            "COPY STRUCTURE TO should preserve SQL metadata field order while mapping physical names");
     }
     if (disc != state.globals.end()) {
         expect(copperfin::runtime::format_value(disc->second) == "1",
@@ -1206,6 +1220,10 @@ void test_copy_structure_to_exports_sql_metadata_cursor_schema() {
             "SQL metadata COPY STRUCTURE TO output should be schema-only");
         expect(parse_result.table.fields.size() == 6U,
             "SQL metadata COPY STRUCTURE TO output should keep metadata field count");
+        for (const auto &field : parse_result.table.fields) {
+            expect(field.name.size() <= 10U,
+                "SQL metadata COPY STRUCTURE TO output should use valid free-table physical field names");
+        }
     }
 
     fs::remove_all(temp_root, ignored);

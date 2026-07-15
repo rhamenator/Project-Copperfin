@@ -142,7 +142,7 @@ void write_synthetic_report_table_for_right_margin_field_json(const std::filesys
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "RIGHTMARGIN", .type = 'N', .length = 10U},
+        {.name = "RIGHTMARGI", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
@@ -307,7 +307,7 @@ void write_synthetic_report_table_for_orientation_field_json(const std::filesyst
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "ORIENTATIO", .type = 'N', .length = 8U},
         {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{

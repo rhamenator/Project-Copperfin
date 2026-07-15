@@ -11,7 +11,7 @@ void write_synthetic_report_table_for_duplicate_setting_precedence_layout_json(
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "COLS", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 48U}
     };

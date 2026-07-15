@@ -478,7 +478,7 @@ void test_create_dbf_table_file_rejects_duplicate_field_names() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_dbf_schema_writes_reject_serialized_field_name_collisions() {
+void test_dbf_schema_writes_enforce_field_name_boundaries() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_serialized_field_collision_tests_" + std::to_string(_getpid()));
@@ -490,6 +490,11 @@ void test_dbf_schema_writes_reject_serialized_field_name_collisions() {
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const std::string duplicate_error =
         english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists");
+    const auto too_long_error = [&](const std::string& field_name) {
+        return english_catalog.translate(
+            "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
+            {{"fieldName", field_name}, {"maxBytes", "10"}});
+    };
 
     const fs::path boundary_path = temp_dir / "vfp_boundary_fields.dbf";
     const auto boundary_result = copperfin::vfp::create_dbf_table_file(
@@ -506,26 +511,44 @@ void test_dbf_schema_writes_reject_serialized_field_name_collisions() {
                boundary_parse.table.fields[1U].name == "KLMNOPQRST",
            "#4028: VFP9 boundary-length DBF field names should round trip exactly");
 
-    const fs::path collision_path = temp_dir / "colliding_fields.dbf";
-    const auto collision_result = copperfin::vfp::create_dbf_table_file(
-        collision_path.string(),
+    const std::string code_page_boundary_name =
+        std::string("ABCDEFGHI") + static_cast<char>(0xD1);
+    const fs::path code_page_boundary_path = temp_dir / "code_page_boundary_field.dbf";
+    const auto code_page_boundary_result = copperfin::vfp::create_dbf_table_file(
+        code_page_boundary_path.string(),
+        {{.name = code_page_boundary_name, .type = 'C', .length = 1U}},
+        {});
+    expect(code_page_boundary_result.ok,
+           "#4034: a free-table field name containing exactly 10 code-page bytes should remain valid");
+    const auto code_page_boundary_parse =
+        copperfin::vfp::parse_dbf_table_from_file(code_page_boundary_path.string(), 0U);
+    expect(code_page_boundary_parse.ok && code_page_boundary_parse.table.fields.size() == 1U &&
+               code_page_boundary_parse.table.fields[0U].name == code_page_boundary_name,
+           "#4034: the writer should preserve all 10 code-page bytes in a boundary-length name");
+
+    const fs::path overlong_path = temp_dir / "overlong_fields.dbf";
+    const auto overlong_result = copperfin::vfp::create_dbf_table_file(
+        overlong_path.string(),
         {
-            {.name = "ABCDEFGHIJK1", .type = 'C', .length = 1U},
-            {.name = "abcdefghijk2", .type = 'C', .length = 1U},
+            {.name = "ABCDEFGHIJK", .type = 'M', .length = 4U},
+            {.name = "OTHER", .type = 'C', .length = 1U},
         },
         {});
-    expect(!collision_result.ok,
-           "#4028: create_dbf_table_file should reject names that collide after serialization");
-    expect(collision_result.error == duplicate_error,
-           "#4028: serialized field-name collisions should use the localized duplicate-field error");
-    expect(!fs::exists(collision_path),
-           "#4028: serialized field-name collision rejection should not create a DBF");
+    expect(!overlong_result.ok,
+           "#4034: create_dbf_table_file should reject names beyond the VFP9 10-byte limit");
+    expect(overlong_result.error == too_long_error("ABCDEFGHIJK"),
+           "#4034: over-limit field names should use the localized byte-limit error");
+    expect(!fs::exists(overlong_path) && !fs::exists(overlong_path.parent_path() / "overlong_fields.fpt"),
+           "#4034: over-limit memo schemas should not create DBF or FPT output");
+    expect(!fs::exists(overlong_path.string() + ".cptmp") &&
+               !fs::exists(overlong_path.string() + ".cpbak"),
+           "#4034: direct over-limit rejection should leave no staged DBF artifacts");
 
     const fs::path add_path = temp_dir / "add_collision.dbf";
     const auto add_fixture = copperfin::vfp::create_dbf_table_file(
         add_path.string(),
         {
-            {.name = "ABCDEFGHIJK", .type = 'C', .length = 2U},
+            {.name = "ABCDEFGHIJ", .type = 'C', .length = 2U},
             {.name = "OTHER", .type = 'C', .length = 2U},
         },
         {{"A", "B"}});
@@ -533,11 +556,17 @@ void test_dbf_schema_writes_reject_serialized_field_name_collisions() {
     const std::vector<std::uint8_t> add_bytes_before = read_binary_file(add_path);
     const auto add_result = copperfin::vfp::add_dbf_table_field(
         add_path.string(),
-        {.name = "abcdefghijk2", .type = 'C', .length = 1U});
+        {.name = "abcdefghij", .type = 'C', .length = 1U});
     expect(!add_result.ok && add_result.error == duplicate_error,
            "#4028: ADD should reject a field name that collides after serialization");
+    const auto overlong_add_result = copperfin::vfp::add_dbf_table_field(
+        add_path.string(),
+        {.name = "ABCDEFGHIJK", .type = 'C', .length = 1U});
+    expect(!overlong_add_result.ok &&
+               overlong_add_result.error == too_long_error("ABCDEFGHIJK"),
+           "#4034: ADD should reject an over-limit field before rewriting the table");
     expect(read_binary_file(add_path) == add_bytes_before,
-           "#4028: rejected ADD collisions should preserve the original DBF bytes");
+           "#4028/#4034: rejected ADD names should preserve the original DBF bytes");
     expect(!fs::exists(add_path.string() + ".cptmp") &&
                !fs::exists(add_path.string() + ".cpbak"),
            "#4028: rejected ADD collisions should leave no staged write artifacts");
@@ -2389,6 +2418,7 @@ void test_dbf_table_locale_catalog_parity() {
         "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
         "Vfp.DbfTable.Error.FieldLengthRequired",
         "Vfp.DbfTable.Error.FieldNameRequired",
+        "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
         "Vfp.DbfTable.Error.HeaderLengthExceedsFile",
         "Vfp.DbfTable.Error.IntegerFieldWidthInvalid",
         "Vfp.DbfTable.Error.IntegerValueInvalid",
@@ -2818,7 +2848,7 @@ int main(int argc, char* argv[]) {
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
     test_create_dbf_table_file_rejects_duplicate_field_names();
-    test_dbf_schema_writes_reject_serialized_field_name_collisions();
+    test_dbf_schema_writes_enforce_field_name_boundaries();
     test_record_field_updates_match_descriptor_names_case_insensitively();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();

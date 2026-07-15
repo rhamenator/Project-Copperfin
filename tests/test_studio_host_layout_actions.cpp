@@ -86,7 +86,7 @@ void write_synthetic_form_table_for_object_dynamic_alignment(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICALIGNMENT", .type = 'C', .length = 80U}
+        {.name = "DYNAMICALI", .type = 'C', .length = 80U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtNotes", "txtNotes", "one-guid", "OLDALIGNONE"},

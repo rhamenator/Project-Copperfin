@@ -10,7 +10,7 @@ void write_synthetic_form_table_for_object_dynamic_line_height(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICLINEHEIGHT", .type = 'C', .length = 80U}
+        {.name = "DYNAMICLIN", .type = 'C', .length = 80U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtNotes", "txtNotes", "one-guid", "OLDHEIGHTONE"},
@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_dynamic_font_name(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTNAME", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", "OLDNAMEONE"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_dynamic_font_size(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTSIZE", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", "10"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_dynamic_font_bold(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTBOLD", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_dynamic_font_italic(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTITALIC", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -100,7 +100,7 @@ void write_synthetic_form_table_for_object_dynamic_font_underline(const std::fil
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTUNDERLINE", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_dynamic_font_strikethru(const std::fi
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTSTRIKETHRU", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_dynamic_font_outline(const std::files
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTOUTLINE", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_dynamic_font_shadow(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFONTSHADOW", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -244,7 +244,7 @@ void write_synthetic_form_table_for_object_font_underline(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "FONTUNDERLINE", .type = 'C', .length = 3U}
+        {.name = "FONTUNDERL", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -262,7 +262,7 @@ void write_synthetic_form_table_for_object_font_strikethru(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "FONTSTRIKETHRU", .type = 'C', .length = 3U}
+        {.name = "FONTSTRIKE", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},
@@ -280,7 +280,7 @@ void write_synthetic_form_table_for_object_font_outline(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "FONTOUTLINE", .type = 'C', .length = 3U}
+        {.name = "FONTOUTLIN", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtName", "txtName", "one-guid", ".F."},

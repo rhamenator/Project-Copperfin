@@ -100,7 +100,7 @@ void write_synthetic_form_table_for_object_grid_line_color(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "GRIDLINECOLOR", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "GRIDLINECO", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_grid_line_width(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "GRIDLINEWIDTH", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "GRIDLINEWI", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -190,7 +190,7 @@ void write_synthetic_form_table_for_object_border_style(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BORDERSTYLE", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "BORDERSTYL", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -208,7 +208,7 @@ void write_synthetic_form_table_for_object_border_width(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BORDERWIDTH", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "BORDERWIDT", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "1"},
@@ -226,7 +226,7 @@ void write_synthetic_form_table_for_object_border_color(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BORDERCOLOR", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "BORDERCOLO", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -244,7 +244,7 @@ void write_synthetic_form_table_for_object_special_effect(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "SPECIALEFFECT", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "SPECIALEFF", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},

@@ -5882,8 +5882,42 @@
                     return {};
                 }
 
+                // Cursor schemas can carry logical names longer than a free DBF's
+                // 10-byte physical-name limit (notably ODBC metadata cursors).
+                // Preserve already-valid names, then shorten and disambiguate only
+                // the physical descriptors passed to the DBF writer.
+                std::set<std::string> assigned_physical_names;
+                for (const auto &field : out_fields)
+                {
+                    if (field.name.size() <= 10U)
+                    {
+                        assigned_physical_names.insert(collapse_identifier(field.name));
+                    }
+                }
+
+                std::vector<vfp::DbfFieldDescriptor> physical_out_fields = out_fields;
+                for (auto &field : physical_out_fields)
+                {
+                    if (field.name.size() <= 10U)
+                    {
+                        continue;
+                    }
+
+                    const std::string logical_name = field.name;
+                    std::string candidate = logical_name.substr(0U, 10U);
+                    for (std::size_t suffix_number = 2U;
+                         assigned_physical_names.contains(collapse_identifier(candidate));
+                         ++suffix_number)
+                    {
+                        const std::string suffix = "_" + std::to_string(suffix_number);
+                        candidate = logical_name.substr(0U, 10U - std::min<std::size_t>(10U, suffix.size())) + suffix;
+                    }
+                    field.name = candidate;
+                    assigned_physical_names.insert(collapse_identifier(candidate));
+                }
+
                 const auto write_result = vfp::create_dbf_table_file(
-                    dest_path.string(), out_fields, out_rows);
+                    dest_path.string(), physical_out_fields, out_rows);
                 if (!write_result.ok)
                 {
                     last_error_message = runtime_text(

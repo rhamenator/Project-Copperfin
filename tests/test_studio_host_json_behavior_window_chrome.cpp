@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_whats_this_help_id(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "WHATSTHISHELPID", .type = 'N', .length = 6U, .decimal_count = 0U}
+        {.name = "WHATSTHISH", .type = 'N', .length = 6U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_whats_this_help(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "WHATSTHISHELP", .type = 'C', .length = 10U}
+        {.name = "WHATSTHISH", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", ".F."},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_whats_this_button(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "WHATSTHISBUTTON", .type = 'C', .length = 10U}
+        {.name = "WHATSTHISB", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", ".F."},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_status_bar_text(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "STATUSBARTEXT", .type = 'C', .length = 70U}
+        {.name = "STATUSBART", .type = 'C', .length = 70U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "Save"},
@@ -316,7 +316,7 @@ void write_synthetic_form_table_for_object_half_height_caption(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HALFHEIGHTCAPTION", .type = 'L', .length = 1U}
+        {.name = "HALFHEIGHT", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -496,7 +496,7 @@ void write_synthetic_form_table_for_object_always_on_top(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALWAYSONTOP", .type = 'L', .length = 1U}
+        {.name = "ALWAYSONTO", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -514,7 +514,7 @@ void write_synthetic_form_table_for_object_always_on_bottom(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALWAYSONBOTTOM", .type = 'L', .length = 1U}
+        {.name = "ALWAYSONBO", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},

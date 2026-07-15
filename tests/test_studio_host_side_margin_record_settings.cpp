@@ -169,7 +169,7 @@ void write_synthetic_report_table_for_side_margin_layout_json(
         {.name = "WIDTH", .type = 'N', .length = 10U},
         {.name = "HEIGHT", .type = 'N', .length = 10U},
         {.name = "FONTFACE", .type = 'M', .length = 4U},
-        {.name = property_name, .type = 'N', .length = 10U},
+        {.name = property_name.substr(0U, 10U), .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{

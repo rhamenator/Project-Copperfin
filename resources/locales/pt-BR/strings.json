@@ -1525,6 +1525,7 @@
   "Vfp.DbfTable.Error.EightByteFieldWidthInvalid": "Campos {fieldType} exigem largura de exatamente 8 bytes.",
   "Vfp.DbfTable.Error.FieldLengthRequired": "Os comprimentos de campo devem ser maiores que zero.",
   "Vfp.DbfTable.Error.FieldNameRequired": "Os nomes de campo nao podem estar vazios.",
+  "Vfp.DbfTable.Error.FreeTableFieldNameTooLong": "Nomes de campo de tabela livre nao podem exceder {maxBytes} bytes: {fieldName}",
   "Vfp.DbfTable.Error.HeaderLengthExceedsFile": "O arquivo da tabela e menor que o comprimento do cabecalho.",
   "Vfp.DbfTable.Error.IntegerFieldWidthInvalid": "Campos Integer exigem largura de exatamente 4 bytes.",
   "Vfp.DbfTable.Error.IntegerValueInvalid": "Campos Integer aceitam apenas valores inteiros.",

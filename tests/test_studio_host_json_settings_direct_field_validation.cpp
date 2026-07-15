@@ -10,7 +10,7 @@ void write_synthetic_report_table_for_blank_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},
@@ -39,7 +39,7 @@ void write_synthetic_report_table_for_mixed_invalid_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},
@@ -68,7 +68,7 @@ void write_synthetic_report_table_for_trimmed_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},
@@ -97,7 +97,7 @@ void write_synthetic_report_table_for_fractional_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},
@@ -126,7 +126,7 @@ void write_synthetic_report_table_for_oversized_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 32U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 32U},
         {.name = "PAPERSIZE", .type = 'C', .length = 32U},
         {.name = "TOPMARGIN", .type = 'C', .length = 32U},
         {.name = "BOTMARGIN", .type = 'C', .length = 32U},
@@ -157,7 +157,7 @@ void write_synthetic_report_table_for_dot_leading_direct_setting_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},

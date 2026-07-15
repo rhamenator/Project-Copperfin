@@ -1281,7 +1281,7 @@ void test_set_visual_object_tooltip_text_assigns_text() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "TOOLTIPTEXT", .type = 'C', .length = 60U}
+        {.name = "TOOLTIPTEX", .type = 'C', .length = 60U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdOne", "oneButton", "one-guid", "One tip"},
@@ -1474,7 +1474,7 @@ void test_set_visual_object_status_bar_text_assigns_text() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "STATUSBARTEXT", .type = 'C', .length = 70U}
+        {.name = "STATUSBART", .type = 'C', .length = 70U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdOne", "oneButton", "one-guid", "One status"},
@@ -1663,7 +1663,7 @@ void test_set_visual_object_control_source_assigns_text() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "CONTROLSOURCE", .type = 'C', .length = 70U}
+        {.name = "CONTROLSOU", .type = 'C', .length = 70U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtOne", "oneBox", "one-guid", "customers.name"},

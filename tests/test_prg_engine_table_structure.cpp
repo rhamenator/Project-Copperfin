@@ -261,22 +261,21 @@ void test_create_table_rejects_duplicate_field_names() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_create_table_rejects_serialized_field_name_collisions() {
+void test_create_table_rejects_overlong_free_table_field_names() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_prg_engine_table_structure_serialized_collisions";
+        fs::temp_directory_path() / "copperfin_prg_engine_table_structure_overlong_field";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const fs::path table_path = temp_root / "colliding_fields.dbf";
-    const fs::path main_path = temp_root / "colliding_fields.prg";
+    const fs::path table_path = temp_root / "overlong_field.dbf";
+    const fs::path main_path = temp_root / "overlong_field.prg";
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     write_text(
         main_path,
-        "CREATE TABLE '" + table_path.string() +
-            "' (ABCDEFGHIJK1 C(1), abcdefghijk2 N(3,0))\n"
+        "CREATE TABLE '" + table_path.string() + "' (ABCDEFGHIJK C(1))\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -284,11 +283,14 @@ void test_create_table_rejects_serialized_field_name_collisions() {
             make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(!state.completed, "#4028: CREATE TABLE should reject serialized field-name collisions");
-    expect(state.message == english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists"),
-           "#4028: CREATE TABLE collisions should surface the localized duplicate-field error");
+    expect(!state.completed, "#4034: CREATE TABLE should reject free-table field names beyond 10 bytes");
+    expect(
+        state.message == english_catalog.translate(
+            "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
+            {{"fieldName", "ABCDEFGHIJK"}, {"maxBytes", "10"}}),
+        "#4034: CREATE TABLE should surface the localized field-name byte-limit error");
     expect(!fs::exists(table_path),
-           "#4028: failed CREATE TABLE collision validation should not leave a DBF on disk");
+           "#4034: rejected CREATE TABLE field names should not leave a DBF on disk");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -951,7 +953,7 @@ int main() {
     test_alter_table_rollback_restores_schema_and_disk_readability();
     test_create_table_defaults_and_not_null_constraints();
     test_create_table_rejects_duplicate_field_names();
-    test_create_table_rejects_serialized_field_name_collisions();
+    test_create_table_rejects_overlong_free_table_field_names();
     test_table_field_dimensions_require_complete_bounded_integers();
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_name_clause_uses_named_alias();

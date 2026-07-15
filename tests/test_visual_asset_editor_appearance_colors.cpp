@@ -133,7 +133,7 @@ void test_set_visual_object_selected_item_back_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "SELECTEDITEMBACKCOLOR", .type = 'C', .length = 12U}
+        {.name = "SELECTEDIT", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -333,7 +333,7 @@ void test_set_visual_object_selected_item_fore_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "SELECTEDITEMFORECOLOR", .type = 'C', .length = 12U}
+        {.name = "SELECTEDIT", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "0"},
@@ -533,7 +533,7 @@ void test_set_visual_object_disabled_item_back_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DISABLEDITEMBACKCOLOR", .type = 'C', .length = 12U}
+        {.name = "DISABLEDIT", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -733,7 +733,7 @@ void test_set_visual_object_disabled_item_fore_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DISABLEDITEMFORECOLOR", .type = 'C', .length = 12U}
+        {.name = "DISABLEDIT", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "0"},
@@ -933,7 +933,7 @@ void test_set_visual_object_item_back_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "ITEMBACKCOLOR", .type = 'C', .length = 12U}
+        {.name = "ITEMBACKCO", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -1133,7 +1133,7 @@ void test_set_visual_object_item_fore_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "ITEMFORECOLOR", .type = 'C', .length = 12U}
+        {.name = "ITEMFORECO", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "0"},
@@ -1333,7 +1333,7 @@ void test_set_visual_object_highlight_back_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "HIGHLIGHTBACKCOLOR", .type = 'C', .length = 12U}
+        {.name = "HIGHLIGHTB", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -1533,7 +1533,7 @@ void test_set_visual_object_highlight_fore_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "HIGHLIGHTFORECOLOR", .type = 'C', .length = 12U}
+        {.name = "HIGHLIGHTF", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -2133,7 +2133,7 @@ void test_set_visual_object_disabled_back_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DISABLEDBACKCOLOR", .type = 'C', .length = 12U}
+        {.name = "DISABLEDBA", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -2333,7 +2333,7 @@ void test_set_visual_object_disabled_fore_color_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DISABLEDFORECOLOR", .type = 'C', .length = 12U}
+        {.name = "DISABLEDFO", .type = 'C', .length = 12U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "16777215"},
@@ -2533,7 +2533,7 @@ void test_set_visual_object_dynamic_back_color_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICBACKCOLOR", .type = 'C', .length = 96U}
+        {.name = "DYNAMICBAC", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "RGB(255,255,255)"},
@@ -2724,7 +2724,7 @@ void test_set_visual_object_dynamic_fore_color_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFORECOLOR", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFOR", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "RGB(255,255,255)"},

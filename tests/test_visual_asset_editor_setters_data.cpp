@@ -479,7 +479,7 @@ void test_set_visual_object_row_source_type_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "ROWSOURCETYPE", .type = 'C', .length = 10U}
+        {.name = "ROWSOURCET", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "2"},
@@ -673,7 +673,7 @@ void test_set_visual_object_bound_column_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "BOUNDCOLUMN", .type = 'C', .length = 10U}
+        {.name = "BOUNDCOLUM", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "1"},
@@ -890,7 +890,7 @@ void test_set_visual_object_column_count_assigns_numeric_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "COLUMNCOUNT", .type = 'C', .length = 10U}
+        {.name = "COLUMNCOUN", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "2"},
@@ -1084,7 +1084,7 @@ void test_set_visual_object_column_widths_assigns_text() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "COLUMNWIDTHS", .type = 'C', .length = 40U}
+        {.name = "COLUMNWIDT", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "75,125"},
@@ -1269,7 +1269,7 @@ void test_set_visual_object_column_lines_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "COLUMNLINES", .type = 'C', .length = 4U}
+        {.name = "COLUMNLINE", .type = 'C', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", ".F."},
@@ -1453,7 +1453,7 @@ void test_set_visual_object_integral_height_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "INTEGRALHEIGHT", .type = 'C', .length = 4U}
+        {.name = "INTEGRALHE", .type = 'C', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", ".F."},
@@ -1637,7 +1637,7 @@ void test_set_visual_object_incremental_search_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "INCREMENTALSEARCH", .type = 'C', .length = 4U}
+        {.name = "INCREMENTA", .type = 'C', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", ".F."},
@@ -1821,7 +1821,7 @@ void test_set_visual_object_multi_select_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "MULTISELECT", .type = 'C', .length = 4U}
+        {.name = "MULTISELEC", .type = 'C', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", ".F."},
@@ -2222,7 +2222,7 @@ void test_set_visual_object_display_value_assigns_text() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DISPLAYVALUE", .type = 'C', .length = 40U}
+        {.name = "DISPLAYVAL", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "customerCombo", "customer-guid", "Alice"},

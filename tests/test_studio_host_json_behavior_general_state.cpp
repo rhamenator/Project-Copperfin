@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_tab_orientation(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "TABORIENTATION", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "TABORIENTA", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_display_orientation(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISPLAYORIENTATION", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "DISPLAYORI", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_help_context_id(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HELPCONTEXTID", .type = 'N', .length = 6U, .decimal_count = 0U}
+        {.name = "HELPCONTEX", .type = 'N', .length = 6U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -172,7 +172,7 @@ void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "TOOLTIPTEXT", .type = 'C', .length = 64U}
+        {.name = "TOOLTIPTEX", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "Save"},
@@ -208,7 +208,7 @@ void write_synthetic_form_table_for_object_allow_output(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALLOWOUTPUT", .type = 'L', .length = 1U}
+        {.name = "ALLOWOUTPU", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -226,7 +226,7 @@ void write_synthetic_form_table_for_object_add_line_feeds(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ADDLINEFEEDS", .type = 'L', .length = 1U}
+        {.name = "ADDLINEFEE", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},

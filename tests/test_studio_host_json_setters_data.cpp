@@ -10,7 +10,7 @@ void write_synthetic_form_table_for_object_button_count(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BUTTONCOUNT", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "BUTTONCOUN", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_data_session(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DATASESSION", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "DATASESSIO", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_lock_columns(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "LOCKCOLUMNS", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "LOCKCOLUMN", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_lock_columns_left(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "LOCKCOLUMNSLEFT", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "LOCKCOLUMN", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -100,7 +100,7 @@ void write_synthetic_form_table_for_object_record_source_type(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "RECORDSOURCETYPE", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "RECORDSOUR", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_column_order(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "COLUMNORDER", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "COLUMNORDE", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_record_source(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "RECORDSOURCE", .type = 'C', .length = 64U}
+        {.name = "RECORDSOUR", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "Save"},
@@ -172,7 +172,7 @@ void write_synthetic_form_table_for_object_form_set_class(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "FORMSETCLASS", .type = 'C', .length = 64U}
+        {.name = "FORMSETCLA", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSaveFormSet", "cmdSaveFormSet", "one-guid", "SaveFormSet"},
@@ -190,7 +190,7 @@ void write_synthetic_form_table_for_object_default_file_path(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DEFAULTFILEPATH", .type = 'C', .length = 64U}
+        {.name = "DEFAULTFIL", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdDefaultPath", "cmdDefaultPath", "one-guid", "Data\\Save"},
@@ -208,7 +208,7 @@ void write_synthetic_form_table_for_object_initial_selected_alias(const std::fil
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "INITIALSELECTEDALIAS", .type = 'C', .length = 64U}
+        {.name = "INITIALSEL", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdInitialAlias", "cmdInitialAlias", "one-guid", "orders"},
@@ -262,7 +262,7 @@ void write_synthetic_form_table_for_object_column_widths(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "COLUMNWIDTHS", .type = 'C', .length = 80U}
+        {.name = "COLUMNWIDT", .type = 'C', .length = 80U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", "75,125"},
@@ -280,7 +280,7 @@ void write_synthetic_form_table_for_object_column_lines(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "COLUMNLINES", .type = 'C', .length = 3U}
+        {.name = "COLUMNLINE", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", ".F."},
@@ -298,7 +298,7 @@ void write_synthetic_form_table_for_object_integral_height(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "INTEGRALHEIGHT", .type = 'C', .length = 3U}
+        {.name = "INTEGRALHE", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", ".F."},
@@ -316,7 +316,7 @@ void write_synthetic_form_table_for_object_incremental_search(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "INCREMENTALSEARCH", .type = 'C', .length = 3U}
+        {.name = "INCREMENTA", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", ".F."},
@@ -334,7 +334,7 @@ void write_synthetic_form_table_for_object_multi_select(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "MULTISELECT", .type = 'C', .length = 3U}
+        {.name = "MULTISELEC", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", ".F."},
@@ -352,7 +352,7 @@ void write_synthetic_form_table_for_object_row_source_type(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ROWSOURCETYPE", .type = 'C', .length = 10U}
+        {.name = "ROWSOURCET", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", "2"},
@@ -370,7 +370,7 @@ void write_synthetic_form_table_for_object_bound_column(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BOUNDCOLUMN", .type = 'C', .length = 10U}
+        {.name = "BOUNDCOLUM", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", "1"},
@@ -388,7 +388,7 @@ void write_synthetic_form_table_for_object_column_count(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "COLUMNCOUNT", .type = 'C', .length = 10U}
+        {.name = "COLUMNCOUN", .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", "2"},
@@ -442,7 +442,7 @@ void write_synthetic_form_table_for_object_display_value(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISPLAYVALUE", .type = 'C', .length = 80U}
+        {.name = "DISPLAYVAL", .type = 'C', .length = 80U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cboCustomer", "cboCustomer", "one-guid", "Alice"},

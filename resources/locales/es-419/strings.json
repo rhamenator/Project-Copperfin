@@ -1525,6 +1525,7 @@
   "Vfp.DbfTable.Error.EightByteFieldWidthInvalid": "Los campos {fieldType} requieren un ancho de exactamente 8 bytes.",
   "Vfp.DbfTable.Error.FieldLengthRequired": "Las longitudes de campo deben ser mayores que cero.",
   "Vfp.DbfTable.Error.FieldNameRequired": "Los nombres de campo no pueden estar vacios.",
+  "Vfp.DbfTable.Error.FreeTableFieldNameTooLong": "Los nombres de campo de tabla libre no pueden superar {maxBytes} bytes: {fieldName}",
   "Vfp.DbfTable.Error.HeaderLengthExceedsFile": "El archivo de tabla es mas corto que la longitud de su encabezado.",
   "Vfp.DbfTable.Error.IntegerFieldWidthInvalid": "Los campos Integer requieren un ancho de exactamente 4 bytes.",
   "Vfp.DbfTable.Error.IntegerValueInvalid": "Los campos Integer solo aceptan valores enteros.",

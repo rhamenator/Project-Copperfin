@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_ole_drag_mode(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "OLEDRAGMODE", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "OLEDRAGMOD", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_ole_drop_mode(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "OLEDROPMODE", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "OLEDROPMOD", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_ole_drop_effects(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "OLEDROPEFFECTS", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "OLEDROPEFF", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_ole_drop_text_insertion(const std::fi
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "OLEDROPTEXTINSERTION", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "OLEDROPTEX", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_buffer_mode_override(const std::files
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "BUFFERMODEOVERRIDE", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "BUFFERMODE", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},

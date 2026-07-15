@@ -10,7 +10,7 @@ void write_synthetic_form_table_for_object_selected_back_color(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "SELECTEDBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "SELECTEDBA", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_selected_fore_color(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "SELECTEDFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "SELECTEDFO", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_selected_item_back_color(const std::f
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "SELECTEDITEMBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "SELECTEDIT", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_selected_item_fore_color(const std::f
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "SELECTEDITEMFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "SELECTEDIT", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_disabled_item_back_color(const std::f
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISABLEDITEMBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "DISABLEDIT", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -100,7 +100,7 @@ void write_synthetic_form_table_for_object_disabled_item_fore_color(const std::f
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISABLEDITEMFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "DISABLEDIT", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_item_back_color(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ITEMBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "ITEMBACKCO", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_item_fore_color(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ITEMFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "ITEMFORECO", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_highlight_back_color(const std::files
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIGHLIGHTBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "HIGHLIGHTB", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -172,7 +172,7 @@ void write_synthetic_form_table_for_object_highlight_fore_color(const std::files
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIGHLIGHTFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "HIGHLIGHTF", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -226,7 +226,7 @@ void write_synthetic_form_table_for_object_disabled_back_color(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISABLEDBACKCOLOR", .type = 'C', .length = 16U}
+        {.name = "DISABLEDBA", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
@@ -244,7 +244,7 @@ void write_synthetic_form_table_for_object_disabled_fore_color(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DISABLEDFORECOLOR", .type = 'C', .length = 16U}
+        {.name = "DISABLEDFO", .type = 'C', .length = 16U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "0"},
@@ -262,7 +262,7 @@ void write_synthetic_form_table_for_object_dynamic_back_color(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICBACKCOLOR", .type = 'C', .length = 64U}
+        {.name = "DYNAMICBAC", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "RGB(0,0,0)"},
@@ -280,7 +280,7 @@ void write_synthetic_form_table_for_object_dynamic_fore_color(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICFORECOLOR", .type = 'C', .length = 64U}
+        {.name = "DYNAMICFOR", .type = 'C', .length = 64U}
     };
     const std::vector<std::vector<std::string>> records{
         {"lstCustomers", "lstCustomers", "one-guid", "RGB(0,0,0)"},

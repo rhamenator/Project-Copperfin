@@ -132,7 +132,7 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
         {.name = "TAG", .type = 'M', .length = 4U},
         {.name = "LEFTMARGIN", .type = 'N', .length = 10U},
-        {.name = "RIGHTMARGIN", .type = 'N', .length = 10U},
+        {.name = "RIGHTMARGI", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{

@@ -806,7 +806,7 @@ void test_set_visual_object_font_underline_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "FONTUNDERLINE", .type = 'C', .length = 3U}
+        {.name = "FONTUNDERL", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},
@@ -991,7 +991,7 @@ void test_set_visual_object_font_strikethru_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "FONTSTRIKETHRU", .type = 'C', .length = 3U}
+        {.name = "FONTSTRIKE", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},
@@ -1180,7 +1180,7 @@ void test_set_visual_object_font_outline_assigns_logical_state() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "FONTOUTLINE", .type = 'C', .length = 3U}
+        {.name = "FONTOUTLIN", .type = 'C', .length = 3U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},
@@ -1558,7 +1558,7 @@ void test_set_visual_object_dynamic_font_name_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFONTNAME", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", "\"Arial\""},
@@ -1749,7 +1749,7 @@ void test_set_visual_object_dynamic_font_size_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFONTSIZE", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", "10"},
@@ -1963,7 +1963,7 @@ void test_set_visual_object_dynamic_font_bold_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFONTBOLD", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},
@@ -2154,7 +2154,7 @@ void test_set_visual_object_dynamic_font_italic_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFONTITALIC", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},
@@ -2345,7 +2345,7 @@ void test_set_visual_object_dynamic_font_underline_assigns_expression_value() {
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = "DYNAMICFONTUNDERLINE", .type = 'C', .length = 96U}
+        {.name = "DYNAMICFON", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},

@@ -34,6 +34,11 @@
 
 namespace cf_test_visual_asset_editor {
 
+inline std::string vfp_free_table_field_name(std::string_view logical_name) {
+    constexpr std::size_t max_field_name_bytes = 10U;
+    return std::string(logical_name.substr(0U, max_field_name_bytes));
+}
+
 struct SyntheticNamedVisualObject;
 
 // ==== Shared test helpers and fixtures ====
@@ -116,7 +121,7 @@ void test_visual_object_text_property_assigns_text(
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = field_name, .type = 'C', .length = 96U}
+        {.name = vfp_free_table_field_name(field_name), .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtOne", "oneBox", "one-guid", first_value},
@@ -311,7 +316,7 @@ void test_visual_object_non_negative_numeric_property_assigns_value(
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = field_name, .type = 'C', .length = 10U}
+        {.name = vfp_free_table_field_name(field_name), .type = 'C', .length = 10U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtOne", "oneBox", "one-guid", std::to_string(first_value)},
@@ -508,7 +513,7 @@ void test_visual_object_logical_property_assigns_state(
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = field_name, .type = 'C', .length = 8U}
+        {.name = vfp_free_table_field_name(field_name), .type = 'C', .length = 8U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtOne", "oneBox", "one-guid", ".F."},
@@ -698,7 +703,7 @@ void test_dynamic_raw_scalar_property_assigns_expression_value(
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = field_name, .type = 'C', .length = 96U}
+        {.name = vfp_free_table_field_name(field_name), .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", first_value},
@@ -880,7 +885,7 @@ void test_dynamic_logical_font_property_assigns_expression_value(
         {.name = "OBJNAME", .type = 'C', .length = 20U},
         {.name = "NAME", .type = 'C', .length = 20U},
         {.name = "UNIQUEID", .type = 'C', .length = 20U},
-        {.name = field_name, .type = 'C', .length = 96U}
+        {.name = vfp_free_table_field_name(field_name), .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtCustomer", "customerBox", "customer-guid", ".F."},

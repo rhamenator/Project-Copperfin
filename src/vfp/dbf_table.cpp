@@ -131,6 +131,19 @@ std::string ascii_lowercase_copy(std::string text) {
 }
 
 constexpr std::size_t dbf_descriptor_name_width = 11U;
+constexpr std::size_t dbf_free_table_field_name_max_bytes = 10U;
+
+std::optional<std::string> free_table_field_name_length_error(const std::string& field_name) {
+    if (field_name.size() <= dbf_free_table_field_name_max_bytes) {
+        return std::nullopt;
+    }
+    return dbf_table_text(
+        "Vfp.DbfTable.Error.FreeTableFieldNameTooLong",
+        {
+            {"fieldName", field_name},
+            {"maxBytes", std::to_string(dbf_free_table_field_name_max_bytes)}
+        });
+}
 
 std::string serialized_dbf_field_name(std::string name) {
     name = trim_both(std::move(name));
@@ -1525,6 +1538,9 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         if (trimmed_name.empty()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
         }
+        if (const auto error = free_table_field_name_length_error(trimmed_name); error.has_value()) {
+            return {.ok = false, .error = *error, .record_count = records.size()};
+        }
         const std::string normalized_name = serialized_dbf_field_name_key(trimmed_name);
         const auto duplicate = std::find_if(
             raw_fields.begin(),
@@ -2268,6 +2284,9 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
     const std::string trimmed_new_name = trim_both(field.name);
     if (trimmed_new_name.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired"), .record_count = table_result.table.records.size()};
+    }
+    if (const auto error = free_table_field_name_length_error(trimmed_new_name); error.has_value()) {
+        return {.ok = false, .error = *error, .record_count = table_result.table.records.size()};
     }
     const std::string normalized_new_name = serialized_dbf_field_name_key(trimmed_new_name);
     const auto duplicate = std::find_if(

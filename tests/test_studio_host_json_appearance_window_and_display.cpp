@@ -28,7 +28,7 @@ void write_synthetic_form_table_for_object_header_height(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HEADERHEIGHT", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "HEADERHEIG", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_highlight_row_line_width(const std::f
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIGHLIGHTROWLINEWIDTH", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "HIGHLIGHTR", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -82,7 +82,7 @@ void write_synthetic_form_table_for_object_highlight_style(const std::filesystem
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIGHLIGHTSTYLE", .type = 'N', .length = 3U, .decimal_count = 0U}
+        {.name = "HIGHLIGHTS", .type = 'N', .length = 3U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"cmdSave", "cmdSave", "one-guid", "0"},
@@ -154,7 +154,7 @@ void write_synthetic_form_table_for_object_window_state(const std::filesystem::p
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "WINDOWSTATE", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "WINDOWSTAT", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -208,7 +208,7 @@ void write_synthetic_form_table_for_object_mouse_pointer(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "MOUSEPOINTER", .type = 'N', .length = 10U, .decimal_count = 0U}
+        {.name = "MOUSEPOINT", .type = 'N', .length = 10U, .decimal_count = 0U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", "0"},
@@ -226,7 +226,7 @@ void write_synthetic_form_table_for_object_dynamic_input_mask(const std::filesys
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICINPUTMASK", .type = 'C', .length = 80U}
+        {.name = "DYNAMICINP", .type = 'C', .length = 80U}
     };
     const std::vector<std::vector<std::string>> records{
         {"txtSsn", "txtSsn", "one-guid", "OLDMASKONE"},
@@ -244,7 +244,7 @@ void write_synthetic_form_table_for_object_dynamic_current_control(const std::fi
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "DYNAMICCURRENTCONTROL", .type = 'C', .length = 96U}
+        {.name = "DYNAMICCUR", .type = 'C', .length = 96U}
     };
     const std::vector<std::vector<std::string>> records{
         {"grdOrders", "grdOrders", "one-guid", "OLDCURRENTONE"},

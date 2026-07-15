@@ -1202,6 +1202,7 @@
   "Vfp.DbfTable.Error.EightByteFieldWidthInvalid": "{fieldType} fields require a width of exactly 8 bytes.",
   "Vfp.DbfTable.Error.FieldLengthRequired": "Field lengths must be greater than zero.",
   "Vfp.DbfTable.Error.FieldNameRequired": "Field names cannot be empty.",
+  "Vfp.DbfTable.Error.FreeTableFieldNameTooLong": "Free-table field names cannot exceed {maxBytes} bytes: {fieldName}",
   "Vfp.DbfTable.Error.HeaderLengthExceedsFile": "Table file is shorter than its header length.",
   "Vfp.DbfTable.Error.IntegerFieldWidthInvalid": "Integer fields require a width of exactly 4 bytes.",
   "Vfp.DbfTable.Error.IntegerValueInvalid": "Integer fields only accept whole-number values.",

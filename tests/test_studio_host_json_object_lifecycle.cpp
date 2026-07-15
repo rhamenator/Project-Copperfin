@@ -42,15 +42,16 @@ void write_synthetic_form_table_for_subtree_deleted_state(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "PARENT", .type = 'C', .length = 24U}
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"cntMain", "cntMain", "container-guid", ""},
-        {"cmdSave", "cmdSave", "save-guid", "cntMain"},
-        {"txtName", "txtName", "name-guid", "cntMain"},
-        {"lblNested", "lblNested", "nested-guid", "txtName"},
-        {"cmdOther", "cmdOther", "other-guid", ""},
-        {"", "", "nameless-guid", ""}
+        {"cntMain", "cntMain", "container-guid", "", ""},
+        {"cmdSave", "cmdSave", "save-guid", "cntMain", ""},
+        {"txtName", "txtName", "name-guid", "cntMain", ""},
+        {"lblNested", "lblNested", "nested-guid", "txtName", ""},
+        {"cmdOther", "cmdOther", "other-guid", "", ""},
+        {"", "", "nameless-guid", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);

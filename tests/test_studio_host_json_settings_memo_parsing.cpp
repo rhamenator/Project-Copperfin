@@ -10,7 +10,7 @@ void write_synthetic_report_table_for_unresolved_direct_setting_memo_layout_json
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},
@@ -43,7 +43,7 @@ void write_synthetic_report_table_for_mixed_direct_setting_memo_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "PAPERSIZE", .type = 'C', .length = 24U},
         {.name = "TOPMARGIN", .type = 'C', .length = 24U},
         {.name = "BOTMARGIN", .type = 'C', .length = 24U},

@@ -10,7 +10,7 @@ void write_synthetic_form_table_for_object_continuous_scroll(const std::filesyst
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "CONTINUOUSSCROLL", .type = 'L', .length = 1U}
+        {.name = "CONTINUOUS", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -46,7 +46,7 @@ void write_synthetic_form_table_for_object_allow_cell_selection(const std::files
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALLOWCELLSELECTION", .type = 'L', .length = 1U}
+        {.name = "ALLOWCELLS", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -64,7 +64,7 @@ void write_synthetic_form_table_for_object_hide_selection(const std::filesystem:
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIDESELECTION", .type = 'L', .length = 1U}
+        {.name = "HIDESELECT", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -100,7 +100,7 @@ void write_synthetic_form_table_for_object_highlight_row(const std::filesystem::
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "HIGHLIGHTROW", .type = 'L', .length = 1U}
+        {.name = "HIGHLIGHTR", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -118,7 +118,7 @@ void write_synthetic_form_table_for_object_allow_header_sizing(const std::filesy
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALLOWHEADERSIZING", .type = 'L', .length = 1U}
+        {.name = "ALLOWHEADE", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},
@@ -136,7 +136,7 @@ void write_synthetic_form_table_for_object_allow_row_sizing(const std::filesyste
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 32U},
-        {.name = "ALLOWROWSIZING", .type = 'L', .length = 1U}
+        {.name = "ALLOWROWSI", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
         {"frmCustomer", "frmCustomer", "one-guid", ".T."},

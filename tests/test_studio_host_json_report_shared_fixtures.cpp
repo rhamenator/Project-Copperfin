@@ -162,7 +162,7 @@ void write_synthetic_report_table_for_missing_root_objcode_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "ORIENTATIO", .type = 'N', .length = 8U},
         {.name = "PAPERSIZE", .type = 'N', .length = 8U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 48U}
@@ -203,7 +203,7 @@ void write_synthetic_report_table_for_invalid_first_duplicate_setting_layout_jso
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "ORIENTATIO", .type = 'C', .length = 24U},
         {.name = "COLS", .type = 'C', .length = 24U},
         {.name = "UNIQUEID", .type = 'C', .length = 48U}
     };
@@ -233,7 +233,7 @@ void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "ORIENTATIO", .type = 'N', .length = 8U},
         {.name = "PAPERSIZE", .type = 'N', .length = 8U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 48U}
