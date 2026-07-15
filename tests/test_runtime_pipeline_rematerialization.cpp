@@ -123,6 +123,87 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
                !stale_asset->copied &&
                stale_asset->sha256.empty(),
            "re-materializing a returned plan must clear stale optional-asset copy and digest state");
+
+    write_text(project_dir / "old_name.prg", "RETURN\n");
+    const auto restored_optional_result = materialize_rematerialization_plan(stale_plan_result.plan, runtime_host);
+    expect(restored_optional_result.ok,
+           "re-materializing after an optional source is restored should succeed");
+    const auto restored_optional_asset = std::find_if(
+        restored_optional_result.plan.assets.begin(),
+        restored_optional_result.plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.relative_path == "old_name.prg";
+        });
+    expect(restored_optional_result.plan.warnings.empty(),
+           "re-materializing after an optional source is restored should discard stale materialization warnings");
+    expect(restored_optional_asset != restored_optional_result.plan.assets.end() &&
+               restored_optional_asset->copied && !restored_optional_asset->staged_path.empty() &&
+               !restored_optional_asset->sha256.empty(),
+           "re-materializing after an optional source is restored should rebuild its stage and digest state");
+
+    auto excluded_asset_plan = restored_optional_result.plan;
+    const auto excluded_asset = std::find_if(
+        excluded_asset_plan.assets.begin(),
+        excluded_asset_plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.relative_path == "old_name.prg";
+        });
+    if (excluded_asset != excluded_asset_plan.assets.end()) {
+        excluded_asset->excluded = true;
+        excluded_asset->staged_path = (temp_root / "stale-stage.prg").string();
+        excluded_asset->copied = true;
+        excluded_asset->sha256 = "stale-asset-digest";
+    }
+    const auto excluded_asset_result = materialize_rematerialization_plan(excluded_asset_plan, runtime_host);
+    expect(excluded_asset_result.ok,
+           "re-materializing an excluded optional source should succeed");
+    const auto rematerialized_excluded_asset = std::find_if(
+        excluded_asset_result.plan.assets.begin(),
+        excluded_asset_result.plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.relative_path == "old_name.prg";
+        });
+    expect(rematerialized_excluded_asset != excluded_asset_result.plan.assets.end() &&
+               !rematerialized_excluded_asset->copied &&
+               rematerialized_excluded_asset->staged_path.empty() &&
+               rematerialized_excluded_asset->sha256.empty(),
+           "re-materializing an excluded optional source should discard stale stage, copy, and digest state");
+
+    auto library_workspace = workspace;
+    library_workspace.build_plan.output_kind = "dll";
+    library_workspace.build_plan.output_path = (output_dir / "RematerializeLibrary.dll").string();
+    const auto library_plan = create_rematerialization_plan(document, library_workspace, output_dir);
+    const auto initial_library_result = materialize_rematerialization_plan(library_plan, runtime_host);
+    expect(initial_library_result.ok,
+           "initial library rematerialization fixture package should materialize");
+
+    auto library_rematerialization_plan = initial_library_result.plan;
+    library_rematerialization_plan.primary_output_materialized = true;
+    library_rematerialization_plan.runtime_host_sha256 = "stale-runtime-host-digest";
+    library_rematerialization_plan.compiler_contract_digests.push_back({
+        .path = (temp_root / "stale-wrapper.cpp").string(),
+        .sha256 = "stale-compiler-digest"
+    });
+    library_rematerialization_plan.launcher_artifacts.push_back({
+        .package_relative_path = "stale-launcher.exe",
+        .role = copperfin::runtime::RuntimeLauncherArtifactRole::public_apphost,
+        .sha256 = "stale-launcher-digest"
+    });
+    const auto library_rematerialization_result =
+        materialize_rematerialization_plan(library_rematerialization_plan, runtime_host);
+    expect(library_rematerialization_result.ok,
+           "re-materializing a returned library plan should succeed: " +
+               library_rematerialization_result.error);
+    expect(!library_rematerialization_result.plan.primary_output_materialized &&
+               library_rematerialization_result.plan.runtime_host_sha256 != "stale-runtime-host-digest" &&
+               library_rematerialization_result.plan.launcher_artifacts.empty() &&
+               std::none_of(
+                   library_rematerialization_result.plan.compiler_contract_digests.begin(),
+                   library_rematerialization_result.plan.compiler_contract_digests.end(),
+                   [](const copperfin::runtime::RuntimeArtifactDigest& digest) {
+                       return digest.sha256 == "stale-compiler-digest";
+                   }),
+           "library rematerialization should rebuild primary output, runtime-host, compiler, and launcher-derived state");
     fs::remove(project_dir / "startup.sct", ignored);
     write_text(project_dir / "new_name.prg", "RETURN\n");
     workspace.entries = {

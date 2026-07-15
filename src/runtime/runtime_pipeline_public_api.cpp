@@ -666,6 +666,8 @@ RuntimePackagePlan create_runtime_package_plan(
         }
     }
 
+    plan.planning_warning_count = plan.warnings.size();
+    plan.planning_warnings_captured = true;
     plan.ok = true;
     return plan;
 }
@@ -902,13 +904,25 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     }
 
     RuntimePackagePlan materialized_plan = plan;
+    if (plan.planning_warnings_captured) {
+        const std::size_t planning_warning_count = std::min(
+            plan.planning_warning_count,
+            plan.warnings.size());
+        materialized_plan.warnings.assign(
+            plan.warnings.begin(),
+            plan.warnings.begin() + planning_warning_count);
+    }
+    materialized_plan.planning_warning_count = materialized_plan.warnings.size();
+    materialized_plan.planning_warnings_captured = true;
     materialized_plan.primary_output_materialized = false;
     materialized_plan.launcher_artifacts.clear();
     materialized_plan.runtime_host_sha256.clear();
     materialized_plan.compiler_contract_digests.clear();
     materialized_plan.extension_payload_digests.clear();
     materialized_plan.writable_data_payload_digests.clear();
+    materialized_plan.startup_source_path.clear();
     for (auto& asset : materialized_plan.assets) {
+        asset.staged_path.clear();
         asset.copied = false;
         asset.sha256.clear();
         if (asset.required_for_runtime && !asset.source_resolution_error.empty()) {

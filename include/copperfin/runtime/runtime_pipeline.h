@@ -126,6 +126,8 @@ struct RuntimePackagePlan {
     std::vector<RuntimeLauncherArtifact> launcher_artifacts;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;
+    std::size_t planning_warning_count = 0;
+    bool planning_warnings_captured = false;
 };
 
 struct RuntimeMaterializeResult {
