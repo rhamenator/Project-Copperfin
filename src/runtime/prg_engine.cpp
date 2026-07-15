@@ -7160,6 +7160,7 @@ namespace copperfin::runtime
                             }
                             if (!stack.empty())
                             {
+                                stack.back().direct_routine_return_pending = false;
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
                             }
                             break;
@@ -7761,6 +7762,7 @@ namespace copperfin::runtime
                                 }
                                 if (!stack.empty())
                                 {
+                                    stack.back().direct_routine_return_pending = false;
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);
                                 }
                                 break;

@@ -622,6 +622,7 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
         "scalarValue = 2\n"
         "argumentCalls = 0\n"
         "finallyCalls = 0\n"
+        "caughtCalls = 0\n"
         "DIMENSION values[2]\n"
         "values[1] = 10\n"
         "values[2] = 20\n"
@@ -630,6 +631,7 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
         "result = outer(@scalarValue, @values)\n"
         "builtinResult = returnbuiltin()\n"
         "arrayResult = returnarray()\n"
+        "caughtResult = catchchildfault()\n"
         "scalarAfter = scalarValue\n"
         "arrayOneAfter = values[1]\n"
         "arrayTwoAfter = values[2]\n"
@@ -658,7 +660,16 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
         "FUNCTION returnarray\n"
         "RETURN namedLikeRoutine(1)\n"
         "FUNCTION namedLikeRoutine\n"
-        "RETURN 99\n");
+        "RETURN 99\n"
+        "FUNCTION catchchildfault\n"
+        "TRY\n"
+        "RETURN throwfromchild()\n"
+        "CATCH\n"
+        "caughtCalls = caughtCalls + 1\n"
+        "ENDTRY\n"
+        "RETURN 42\n"
+        "FUNCTION throwfromchild\n"
+        "THROW 'child fault'\n");
 
     copperfin::runtime::PrgRuntimeSession semantics_session =
         copperfin::runtime::PrgRuntimeSession::create(
@@ -678,11 +689,13 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
     expect_global("result", "44", "the continued RETURN should preserve the nested routine result");
     expect_global("builtinresult", "7", "built-ins should retain precedence over same-named user routines");
     expect_global("arrayresult", "6", "array access should retain precedence over same-named user routines");
+    expect_global("caughtresult", "42", "a caller CATCH should cancel its aborted direct-return continuation");
     expect_global("scalarafter", "5", "the explicit scalar reference should reach caller storage");
     expect_global("arrayoneafter", "14", "the direct caller array mutation should remain visible");
     expect_global("arraytwoafter", "25", "SET UDFPARMS reference forwarding should retain the array alias");
     expect_global("argumentcalls", "1", "a suspended direct-return argument should be evaluated exactly once");
     expect_global("finallycalls", "1", "the suspended direct return should run FINALLY exactly once");
+    expect_global("caughtcalls", "1", "a deferred child fault should enter the caller CATCH exactly once");
 
     fs::remove_all(temp_root, ignored);
 }
