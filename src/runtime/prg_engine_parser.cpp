@@ -2457,9 +2457,9 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "SET ")) {
             statement.kind = StatementKind::set_command;
             statement.expression = trim_copy(line.substr(4U));
-        } else if (starts_with_insensitive(line, "ON ERROR ")) {
+        } else if (upper == "ON ERROR" || starts_with_insensitive(line, "ON ERROR ")) {
             statement.kind = StatementKind::on_error;
-            statement.expression = trim_copy(line.substr(9U));
+            statement.expression = upper == "ON ERROR" ? std::string{} : trim_copy(line.substr(9U));
         } else if (starts_with_insensitive(line, "ON SHUTDOWN ")) {
             statement.kind = StatementKind::on_shutdown;
             statement.expression = trim_copy(line.substr(12U));
