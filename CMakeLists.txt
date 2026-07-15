@@ -184,6 +184,11 @@ target_include_directories(cf_vfp_assets
 
 target_link_libraries(cf_vfp_assets PUBLIC cf_localization)
 
+if(NOT WIN32)
+    find_package(Iconv REQUIRED)
+    target_link_libraries(cf_vfp_assets PRIVATE Iconv::Iconv)
+endif()
+
 if(MSVC)
     target_compile_options(cf_vfp_assets PRIVATE /W4 /permissive-)
 else()
@@ -330,11 +335,6 @@ target_link_libraries(cf_xbase_runtime
     PRIVATE
         cf_localization
 )
-
-if(NOT WIN32)
-    find_package(Iconv REQUIRED)
-    target_link_libraries(cf_xbase_runtime PRIVATE Iconv::Iconv)
-endif()
 
 if(WIN32)
     target_sources(cf_xbase_runtime PRIVATE
