@@ -26,6 +26,61 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_asort_order_values_follow_vfp_contract() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_asort_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "asort_order.prg";
+    write_text(
+        main_path,
+        "DIMENSION aAscending[3], aInsensitive[3], aDescending[3]\n"
+        "aAscending[1] = 'B'\n"
+        "aAscending[2] = 'A'\n"
+        "aAscending[3] = 'C'\n"
+        "nAscending = ASORT(aAscending, 1, -1, 1)\n"
+        "cAscending = aAscending[1] + aAscending[2] + aAscending[3]\n"
+        "aInsensitive[1] = 'b'\n"
+        "aInsensitive[2] = 'A'\n"
+        "aInsensitive[3] = 'c'\n"
+        "nInsensitive = ASORT(aInsensitive, 1, -1, 3)\n"
+        "cInsensitive = aInsensitive[1] + aInsensitive[2] + aInsensitive[3]\n"
+        "aDescending[1] = 'a'\n"
+        "aDescending[2] = 'B'\n"
+        "aDescending[3] = 'c'\n"
+        "nDescending = ASORT(aDescending, 1, -1, 4)\n"
+        "cDescending = aDescending[1] + aDescending[2] + aDescending[3]\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ASORT order-value script should complete");
+
+    const auto ascending = state.globals.find("cascending");
+    const auto insensitive = state.globals.find("cinsensitive");
+    const auto descending = state.globals.find("cdescending");
+    expect(ascending != state.globals.end(), "ASORT order-1 result should be captured");
+    expect(insensitive != state.globals.end(), "ASORT order-3 result should be captured");
+    expect(descending != state.globals.end(), "ASORT order-4 result should be captured");
+    if (ascending != state.globals.end()) {
+        expect(copperfin::runtime::format_value(ascending->second) == "ABC",
+               "ASORT order 1 should sort ascending case-sensitively");
+    }
+    if (insensitive != state.globals.end()) {
+        expect(copperfin::runtime::format_value(insensitive->second) == "Abc",
+               "ASORT order 3 should sort ascending case-insensitively");
+    }
+    if (descending != state.globals.end()) {
+        expect(copperfin::runtime::format_value(descending->second) == "cBa",
+               "ASORT order 4 should sort descending case-insensitively");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_ascan_column_start_uses_column_relative_row() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_ascan_column_start";
@@ -1493,6 +1548,7 @@ void test_agetfileversion_existing_and_missing_files() {
 }
 
 int main() {
+    test_asort_order_values_follow_vfp_contract();
     test_ascan_column_start_uses_column_relative_row();
     test_ascan_predicate_expression_search();
     test_acopy_two_dimensional_row_and_column_workflows();

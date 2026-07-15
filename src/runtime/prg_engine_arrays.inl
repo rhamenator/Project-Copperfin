@@ -491,10 +491,11 @@
             {
                 const double raw_start = arguments.size() >= 2U ? value_as_number(arguments[1]) : 1.0;
                 const double raw_count = arguments.size() >= 3U ? value_as_number(arguments[2]) : -1.0;
-                const double raw_order = arguments.size() >= 4U ? value_as_number(arguments[3]) : 0.0;
-                const int flags = arguments.size() >= 5U ? static_cast<int>(std::llround(value_as_number(arguments[4]))) : 0;
-                const bool descending = raw_order > 0.0;
-                const bool case_insensitive = (flags & 1) != 0;
+                const int sort_order = arguments.size() >= 4U
+                                           ? static_cast<int>(std::llround(value_as_number(arguments[3])))
+                                           : 0;
+                const bool descending = sort_order == 2 || sort_order == 4;
+                const bool case_insensitive = sort_order == 3 || sort_order == 4;
                 const auto is_numeric_array_value = [](const PrgValue &value)
                 {
                     return value.kind == PrgValueKind::number ||

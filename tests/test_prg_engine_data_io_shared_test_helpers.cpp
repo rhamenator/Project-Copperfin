@@ -85,7 +85,7 @@ void test_runtime_array_mutator_functions() {
         "aSortWindow[3] = 'D'\n"
         "aSortWindow[4] = 'C'\n"
         "aSortWindow[5] = 'E'\n"
-        "nSortWindow = ASORT(aSortWindow, 2, 3, 1)\n"
+        "nSortWindow = ASORT(aSortWindow, 2, 3, 2)\n"
         "cSortWindowOne = aSortWindow[1]\n"
         "cSortWindowTwo = aSortWindow[2]\n"
         "cSortWindowThree = aSortWindow[3]\n"
