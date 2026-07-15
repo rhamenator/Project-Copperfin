@@ -88,6 +88,7 @@ int main() {
     test_m_dot_namespace_shares_bare_memory_variable_binding();
     test_browse_emits_effective_cursor_view_metadata();
     test_browse_like_and_except_field_filters_surface_event_metadata();
+    test_browse_nowait_remains_a_clause_boundary();
     test_edit_command_emits_runtime_edit_event();
     test_change_command_emits_runtime_change_event();
     test_input_command_emits_runtime_input_event_with_prompt();

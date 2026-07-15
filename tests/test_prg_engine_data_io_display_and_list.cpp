@@ -115,6 +115,54 @@ void test_browse_like_and_except_field_filters_surface_event_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_browse_nowait_remains_a_clause_boundary() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_browse_nowait";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}, {"Bob", 25}});
+
+    const fs::path main_path = temp_root / "browse_nowait.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "' ALIAS people\n"
+        "BROWSE FIELDS NAME, AGE NOWAIT IN people\n"
+        "BROWSE IN people NOWAIT FIELDS NAME, AGE\n"
+        "BROWSE IN people FIELDS NAME, AGE FOR AGE > 25 NOWAIT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "BROWSE NOWAIT clause-boundary script should complete");
+
+    std::vector<copperfin::runtime::RuntimeEvent> browse_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.browse") {
+            browse_events.push_back(event);
+        }
+    }
+
+    expect(browse_events.size() == 3U, "BROWSE NOWAIT commands should emit three runtime.browse events");
+    for (const auto &event : browse_events) {
+        expect(event.detail.find("people@") != std::string::npos,
+               "NOWAIT should not become part of the BROWSE IN target");
+        expect(event.detail.find("fields=NAME,AGE") != std::string::npos,
+               "NOWAIT should not become part of the final BROWSE FIELDS entry");
+    }
+    if (browse_events.size() >= 3U) {
+        expect(browse_events[2].detail.find("for=AGE > 25") != std::string::npos,
+               "NOWAIT should not become part of the BROWSE FOR expression");
+        expect(browse_events[2].detail.find("for=AGE > 25 NOWAIT") == std::string::npos,
+               "BROWSE FOR metadata should exclude the independent NOWAIT clause");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_display_structure_emits_runtime_display_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_cmd";

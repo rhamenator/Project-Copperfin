@@ -2160,9 +2160,9 @@ Program parse_program_impl(
             statement.kind = StatementKind::browse_command;
             const std::string body = upper == "BROWSE" ? std::string{} : trim_copy(line.substr(7U));
             statement.expression = body;
-            statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE"});
-            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN"});
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS"});
+            statement.secondary_expression = extract_command_clause(body, "IN", {"FIELDS", "FOR", "WHILE", "NOWAIT"});
+            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE", "IN", "NOWAIT"});
+            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN", "FIELDS", "NOWAIT"});
         } else if (upper == "EDIT" || starts_with_insensitive(line, "EDIT ")) {
             statement.kind = StatementKind::edit_command;
             const std::string body = upper == "EDIT" ? std::string{} : trim_copy(line.substr(5U));

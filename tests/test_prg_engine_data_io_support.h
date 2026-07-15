@@ -130,6 +130,7 @@ void test_restore_from_without_additive_clears_private_shadow_state();
 // ==== DISPLAY/LIST/BROWSE tests ====
 void test_browse_emits_effective_cursor_view_metadata();
 void test_browse_like_and_except_field_filters_surface_event_metadata();
+void test_browse_nowait_remains_a_clause_boundary();
 void test_display_structure_emits_runtime_display_event();
 void test_display_status_surfaces_session_metadata();
 void test_display_memory_surfaces_visible_variable_and_array_metadata();
