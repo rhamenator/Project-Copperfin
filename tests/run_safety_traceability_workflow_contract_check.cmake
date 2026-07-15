@@ -1,0 +1,111 @@
+# Copyright © 2026 Richard M. Hamilton. All rights reserved.
+# Licensed under the Project Copperfin Source-Available License or
+# Commercial License. See LICENSE.md in the repository root.
+
+if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required")
+endif()
+
+set(workflow_path "${SOURCE_DIR}/.github/workflows/safety-traceability-gate.yml")
+if(NOT EXISTS "${workflow_path}")
+    message(FATAL_ERROR "Safety traceability workflow is missing")
+endif()
+
+file(READ "${workflow_path}" workflow)
+string(REPLACE "\r\n" "\n" workflow "${workflow}")
+
+function(require_text expected_text description)
+    string(FIND "${workflow}" "${expected_text}" match_index)
+    if(match_index EQUAL -1)
+        message(FATAL_ERROR "Safety traceability workflow is missing ${description}")
+    endif()
+endfunction()
+
+function(forbid_text forbidden_text description)
+    string(FIND "${workflow}" "${forbidden_text}" match_index)
+    if(NOT match_index EQUAL -1)
+        message(FATAL_ERROR "Safety traceability workflow contains forbidden ${description}")
+    endif()
+endfunction()
+
+function(require_text_count expected_text expected_count description)
+    string(LENGTH "${expected_text}" expected_length)
+    string(LENGTH "${workflow}" original_length)
+    string(REPLACE "${expected_text}" "" stripped_workflow "${workflow}")
+    string(LENGTH "${stripped_workflow}" stripped_length)
+    math(EXPR removed_length "${original_length} - ${stripped_length}")
+    math(EXPR actual_count "${removed_length} / ${expected_length}")
+    if(NOT actual_count EQUAL expected_count)
+        message(FATAL_ERROR
+            "Safety traceability workflow must contain ${expected_count} ${description}; found ${actual_count}")
+    endif()
+endfunction()
+
+function(assert_probe_is_environment_data probe)
+    set(environment_binding "ISSUE_NUMBERS: ${probe}")
+    set(invocation [=[-IssueNumbers $env:ISSUE_NUMBERS]=])
+    string(FIND "${invocation}" "${probe}" probe_index)
+    if(NOT probe_index EQUAL -1)
+        message(FATAL_ERROR "Safety dispatch probe escaped its environment-data boundary")
+    endif()
+    string(FIND "${environment_binding}" "${probe}" binding_index)
+    if(binding_index EQUAL -1)
+        message(FATAL_ERROR "Safety dispatch probe was not retained as environment data")
+    endif()
+endfunction()
+
+function(assert_invalid_issue_numbers probe)
+    execute_process(
+        COMMAND
+            "${CMAKE_COMMAND}" -E env "GITHUB_TOKEN=fixture-token"
+            "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -Repository "owner/repository"
+            -IssueNumbers "${probe}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted a hostile issue-number probe")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "is not numeric" numeric_error_index)
+    if(numeric_error_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject a hostile issue-number probe before API access: ${all_output}")
+    endif()
+endfunction()
+
+require_text("uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
+    "pinned checkout action")
+require_text("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
+    "pinned report uploader")
+require_text("run: cmake -DSOURCE_DIR=\"$env:GITHUB_WORKSPACE\" -P tests/run_safety_traceability_workflow_contract_check.cmake"
+    "self-validating dispatch-boundary step")
+require_text("ISSUE_NUMBERS: \${{ inputs.issue_numbers }}" "environment-bound issue input")
+require_text("-IssueNumbers $env:ISSUE_NUMBERS" "environment-bound PowerShell argument")
+require_text("REQUIRE_CLOSED_ISSUES: \${{ inputs.require_closed_issues }}" "environment-bound closed-issue input")
+require_text("REQUIRE_PRIMARY_HAZARDS: \${{ inputs.require_primary_hazards }}" "environment-bound primary-hazard input")
+require_text_count("\${{ inputs.issue_numbers }}" 1 "issue-number dispatch interpolation")
+forbid_text("-IssueNumbers \"\${{ inputs.issue_numbers }}\"" "quoted direct issue-number interpolation")
+
+assert_probe_is_environment_data([=[2201"; Write-Output injected]=])
+assert_probe_is_environment_data([=[2201; Write-Output injected]=])
+assert_probe_is_environment_data([=[2201$env:RUNNER_TEMP]=])
+assert_probe_is_environment_data([=[2201
+Write-Output injected]=])
+assert_probe_is_environment_data([=[2201 # injected comment]=])
+
+find_program(POWERSHELL_EXECUTABLE NAMES pwsh powershell)
+if(POWERSHELL_EXECUTABLE)
+    assert_invalid_issue_numbers([=[2201"; Write-Output injected]=])
+    assert_invalid_issue_numbers([=[2201; Write-Output injected]=])
+    assert_invalid_issue_numbers([=[2201$env:RUNNER_TEMP]=])
+    assert_invalid_issue_numbers([=[2201
+Write-Output injected]=])
+    assert_invalid_issue_numbers([=[2201 # injected comment]=])
+else()
+    message(STATUS "PowerShell is unavailable; hostile issue-number script probes are skipped")
+endif()
+
+message(STATUS "Safety traceability workflow contract check passed")

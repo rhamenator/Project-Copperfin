@@ -105,7 +105,9 @@ function Get-IssuesFromGitHub {
         if ($num -notmatch '^\d+$') {
             throw "Issue number '$num' is not numeric."
         }
+    }
 
+    foreach ($num in $numberList) {
         $uri = "https://api.github.com/repos/$Repo/issues/$num"
         $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
         $issues += $response

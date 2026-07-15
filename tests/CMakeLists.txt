@@ -55,6 +55,13 @@ add_test(
 )
 
 add_test(
+    NAME test_safety_traceability_workflow_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_safety_traceability_workflow_contract_check.cmake
+)
+
+add_test(
     NAME test_runtime_host_binding
     COMMAND ${CMAKE_COMMAND}
         -DRUNTIME_HOST_EXECUTABLE=$<TARGET_FILE:copperfin_runtime_host>
