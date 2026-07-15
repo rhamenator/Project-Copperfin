@@ -104,7 +104,7 @@ internal static class CopperfinRuntimeDebugClient
         }, localization);
     }
 
-    private static Task<CopperfinRuntimeDebugSession> ReplayAsync(
+    internal static Task<CopperfinRuntimeDebugSession> ReplayAsync(
         CopperfinRuntimeDebugSession session,
         CopperfinLocalization? localization = null)
     {
@@ -128,16 +128,7 @@ internal static class CopperfinRuntimeDebugClient
                 arguments.Append(" --debug-command ").Append(Quote(command));
             }
 
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = runtimeHostPath,
-                Arguments = arguments.ToString(),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-            CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
+            var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments.ToString(), localization);
 
             try
             {
@@ -145,7 +136,11 @@ internal static class CopperfinRuntimeDebugClient
                 if (!processResult.Started)
                 {
                     session.Success = false;
-                    session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
+                    session.Error = string.IsNullOrWhiteSpace(processResult.StandardError)
+                        ? localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart")
+                        : localization.Format(
+                            "AssetEditor.Dialog.RuntimeHostCouldNotStartWithMessage",
+                            processResult.StandardError.Trim());
                     return session;
                 }
 
@@ -184,6 +179,21 @@ internal static class CopperfinRuntimeDebugClient
                 TryDeleteReplayManifest(session.DebugManifestPath, effectiveDebugManifestPath);
             }
         });
+    }
+
+    internal static ProcessStartInfo CreateReplayProcessStartInfo(
+        string runtimeHostPath,
+        string arguments,
+        CopperfinLocalization? localization = null,
+        bool? isWindowsOverride = null)
+    {
+        return CopperfinStudioHostBridge.CreateProcessStartInfo(
+            runtimeHostPath,
+            arguments,
+            localization,
+            redirectOutput: true,
+            createNoWindow: true,
+            isWindowsOverride);
     }
 
     private static CopperfinRuntimePauseState ParsePauseState(string stdout)

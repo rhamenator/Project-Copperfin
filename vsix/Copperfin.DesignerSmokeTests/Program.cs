@@ -34838,9 +34838,52 @@ internal static class Program
                 $"managed project workflow should preserve direct-executable behavior for {extension} paths off Windows");
         }
 
+        const string debugArguments = "--manifest \"C:\\debug manifest\\app.cfdebug\" --debug --locale \"es-419\" --debug-command \"step into\" --debug-command \"\"";
+        foreach (var directPath in new[] { @"C:\tools\copperfin_runtime_host.exe", @"C:\tools\copperfin_runtime_host" })
+        {
+            var directStartInfo = CopperfinRuntimeDebugClient.CreateReplayProcessStartInfo(
+                directPath,
+                debugArguments,
+                localization: new CopperfinLocalization("es-419"),
+                isWindowsOverride: true);
+            Expect(string.Equals(directStartInfo.FileName, directPath, StringComparison.Ordinal) &&
+                   string.Equals(directStartInfo.Arguments, debugArguments, StringComparison.Ordinal) &&
+                   !directStartInfo.UseShellExecute &&
+                   directStartInfo.RedirectStandardOutput &&
+                   directStartInfo.RedirectStandardError &&
+                   directStartInfo.CreateNoWindow &&
+                   string.Equals(directStartInfo.EnvironmentVariables["COPPERFIN_LOCALE"], "es-419", StringComparison.Ordinal) &&
+                   string.Equals(directStartInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"], "es-419", StringComparison.Ordinal),
+                $"runtime debug replay should launch direct Windows host path without a command-shell wrapper: {directPath}");
+        }
+
+        foreach (var extension in new[] { ".cmd", ".bat" })
+        {
+            var wrapperPath = @"C:\tools\runtime host" + extension;
+            var wrapperStartInfo = CopperfinRuntimeDebugClient.CreateReplayProcessStartInfo(
+                wrapperPath,
+                debugArguments,
+                isWindowsOverride: true);
+            Expect(string.Equals(wrapperStartInfo.FileName, expectedCommandInterpreter, StringComparison.OrdinalIgnoreCase) &&
+                   wrapperStartInfo.Arguments.StartsWith("/d /c \"", StringComparison.OrdinalIgnoreCase) &&
+                   wrapperStartInfo.Arguments.IndexOf("\"" + wrapperPath + "\"", StringComparison.Ordinal) >= 0 &&
+                   wrapperStartInfo.Arguments.IndexOf("\"C:\\debug manifest\\app.cfdebug\"", StringComparison.Ordinal) >= 0 &&
+                   wrapperStartInfo.Arguments.IndexOf("--debug-command \"\"", StringComparison.Ordinal) >= 0,
+                $"runtime debug replay should route Windows {extension} hosts through COMSPEC without dropping manifest, debug-command, or empty arguments");
+
+            var posixStartInfo = CopperfinRuntimeDebugClient.CreateReplayProcessStartInfo(
+                wrapperPath,
+                debugArguments,
+                isWindowsOverride: false);
+            Expect(string.Equals(posixStartInfo.FileName, wrapperPath, StringComparison.Ordinal) &&
+                   string.Equals(posixStartInfo.Arguments, debugArguments, StringComparison.Ordinal),
+                $"runtime debug replay should preserve direct-executable behavior for {extension} paths off Windows");
+        }
+
         var tempRoot = Path.Combine(Path.GetTempPath(), "copperfin-managed-process-launch-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
         try
         {
             foreach (var configuredFileName in new[]
@@ -34891,6 +34934,51 @@ internal static class Program
                     .StartsWith("Não foi possível iniciar o processo do Copperfin:", StringComparison.Ordinal),
                 "managed project workflow process-start detail should route through the Portuguese catalog");
 
+            var unlaunchableRuntimeHostPath = Path.Combine(tempRoot, "unlaunchable runtime host.exe");
+            var missingRuntimeHostPath = Path.Combine(tempRoot, "missing runtime host.exe");
+            var debugManifestPath = Path.Combine(tempRoot, "app.cfdebug");
+            File.WriteAllText(unlaunchableRuntimeHostPath, "not an executable runtime host");
+            File.WriteAllText(debugManifestPath, "manifest_version=1\n");
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", missingRuntimeHostPath);
+            #pragma warning disable VSTHRD002
+            var debugMissingHost = CopperfinRuntimeDebugClient.ReplayAsync(
+                    new CopperfinRuntimeDebugSession
+                    {
+                        Success = true,
+                        DebugManifestPath = debugManifestPath,
+                        Commands = new List<string> { "continue" }
+                    },
+                    new CopperfinLocalization("es-419"))
+                .GetAwaiter()
+                .GetResult();
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", unlaunchableRuntimeHostPath);
+            var debugStartFailure = CopperfinRuntimeDebugClient.ReplayAsync(
+                    new CopperfinRuntimeDebugSession
+                    {
+                        Success = true,
+                        DebugManifestPath = debugManifestPath,
+                        Commands = new List<string> { "continue" }
+                    },
+                    new CopperfinLocalization("es-419"))
+                .GetAwaiter()
+                .GetResult();
+            #pragma warning restore VSTHRD002
+            Expect(!debugMissingHost.Success &&
+                   string.Equals(debugMissingHost.Error, "No se encontró el host de runtime de Copperfin.", StringComparison.Ordinal),
+                "runtime debug replay should report a missing runtime host through the localized debug-client contract");
+            Expect(!debugStartFailure.Success &&
+                   debugStartFailure.Error.StartsWith("No se pudo iniciar el host de runtime de Copperfin:", StringComparison.Ordinal) &&
+                   debugStartFailure.Error.Length > "No se pudo iniciar el host de runtime de Copperfin:".Length,
+                "runtime debug replay should localize process-start failures without discarding runtime-host diagnostics");
+            Expect(new CopperfinLocalization("qps-ploc")
+                    .Format("AssetEditor.Dialog.RuntimeHostCouldNotStartWithMessage", "detail")
+                    .IndexOf("detail", StringComparison.Ordinal) >= 0,
+                "runtime debug replay process-start detail should survive pseudo-localization");
+            Expect(new CopperfinLocalization("pt-BR")
+                    .Format("AssetEditor.Dialog.RuntimeHostCouldNotStartWithMessage", "detalhe")
+                    .StartsWith("Não foi possível iniciar o host de runtime do Copperfin:", StringComparison.Ordinal),
+                "runtime debug replay process-start detail should route through the Portuguese catalog");
+
             if (IsWindowsPlatform())
             {
                 var batchHostPath = Path.Combine(tempRoot, "working build host.cmd");
@@ -34931,6 +35019,7 @@ internal static class Program
         finally
         {
             Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
             Directory.Delete(tempRoot, recursive: true);
         }
     }
