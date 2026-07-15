@@ -4063,6 +4063,7 @@ copperfin_add_test(test_federation_execution cf_platform_profile
 copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
     test_runtime_pipeline.cpp
     test_runtime_pipeline_shared_test_helpers.cpp
+    test_runtime_pipeline_fixture_isolation.cpp
     test_runtime_pipeline_output_packaging.cpp
     test_runtime_pipeline_rematerialization.cpp
     test_runtime_pipeline_startup_casefold.cpp

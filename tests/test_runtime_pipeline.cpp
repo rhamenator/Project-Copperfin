@@ -12,11 +12,14 @@ void test_relative_home_directory_resolves_from_project_directory();
 
 using namespace cf_test_runtime_pipeline;
 
-int main() {
+namespace {
+int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
+    const ScopedRuntimePipelineFixtureNamespace fixture_namespace;
     const ScopedEnvironmentVariable locale_root(
         "COPPERFIN_LOCALE_DIR",
         runtime_pipeline_locale_root().string());
 
+    test_runtime_pipeline_fixtures_are_process_isolated(executable_path);
     test_materialize_runtime_package();
     test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families();
     test_exact_startup_path_wins_over_casefold_siblings();
@@ -88,3 +91,32 @@ int main() {
     std::cout << "All tests passed.\n";
     return EXIT_SUCCESS;
 }
+}  // namespace
+
+#if defined(_WIN32)
+int wmain(int argc, wchar_t* argv[]) {
+    if (argc == 6 && std::wstring(argv[1]) == L"--fixture-isolation-probe") {
+        std::string probe_id;
+        for (const wchar_t character : std::wstring(argv[2])) {
+            probe_id.push_back(static_cast<char>(character));
+        }
+        return run_runtime_pipeline_fixture_isolation_probe(
+            probe_id,
+            std::filesystem::path(argv[3]),
+            std::filesystem::path(argv[4]),
+            std::filesystem::path(argv[5]));
+    }
+    return run_runtime_pipeline_tests(std::filesystem::absolute(std::filesystem::path(argv[0])));
+}
+#else
+int main(int argc, char* argv[]) {
+    if (argc == 6 && std::string(argv[1]) == "--fixture-isolation-probe") {
+        return run_runtime_pipeline_fixture_isolation_probe(
+            argv[2],
+            argv[3],
+            argv[4],
+            argv[5]);
+    }
+    return run_runtime_pipeline_tests(std::filesystem::absolute(argv[0]));
+}
+#endif

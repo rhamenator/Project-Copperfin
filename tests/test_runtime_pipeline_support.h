@@ -42,6 +42,31 @@ void expect(bool condition, const std::string& message);
 void write_text(const std::filesystem::path& path, const std::string& contents);
 std::filesystem::path runtime_host_fixture_path(const std::filesystem::path& root);
 std::string read_text(const std::filesystem::path& path);
+
+class ScopedRuntimePipelineFixtureNamespace {
+public:
+    ScopedRuntimePipelineFixtureNamespace();
+    ScopedRuntimePipelineFixtureNamespace(const ScopedRuntimePipelineFixtureNamespace&) = delete;
+    ScopedRuntimePipelineFixtureNamespace& operator=(const ScopedRuntimePipelineFixtureNamespace&) = delete;
+    ~ScopedRuntimePipelineFixtureNamespace();
+
+    [[nodiscard]] const std::filesystem::path& root() const;
+
+private:
+    std::filesystem::path root_;
+    copperfin::test_support::ScopedEnvironmentValue tmpdir_;
+    copperfin::test_support::ScopedEnvironmentValue temp_;
+    copperfin::test_support::ScopedEnvironmentValue tmp_;
+};
+
+int run_runtime_pipeline_fixture_isolation_probe(
+    const std::string& probe_id,
+    const std::filesystem::path& ready_path,
+    const std::filesystem::path& go_path,
+    const std::filesystem::path& result_path);
+void test_runtime_pipeline_fixtures_are_process_isolated(
+    const std::filesystem::path& executable_path);
+
 #if defined(_WIN32)
 bool create_windows_junction(
     const std::filesystem::path& link,
