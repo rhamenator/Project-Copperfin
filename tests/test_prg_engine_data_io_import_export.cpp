@@ -405,6 +405,58 @@ void test_append_from_copies_records_into_current_table() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_honors_open_source_cursor_filter() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_source_filter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path dest_path = temp_root / "dest.dbf";
+    write_simple_dbf(source_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_simple_dbf(dest_path, {"DESTINATION"});
+
+    const fs::path main_path = temp_root / "append_from_source_filter.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "GO 2 IN Source\n"
+        "SET FILTER TO NAME == 'BRAVO' IN Source\n"
+        "nSourceRecBefore = RECNO('Source')\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "APPEND FROM '" + source_path.string() + "'\n"
+        "nDestCount = RECCOUNT()\n"
+        "GO 2\n"
+        "cAppendedName = NAME\n"
+        "nSourceRecAfter = RECNO('Source')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM should honor an already-open source filter: " + state.message);
+
+    const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    expect_value("ndestcount", "2", "APPEND FROM should add only source rows visible through the active filter");
+    expect_value("cappendedname", "BRAVO", "APPEND FROM should copy the source filter-visible row");
+    expect_value("nsourcerecbefore", "2", "APPEND FROM source fixture should begin on the preserved source record");
+    expect_value("nsourcerecafter", "2", "APPEND FROM should preserve the source cursor position while evaluating its filter");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 100U);
+    expect(result.ok, "filter-aware APPEND FROM destination DBF should remain readable");
+    expect(result.ok && result.table.records.size() == 2U,
+           "filter-aware APPEND FROM should persist exactly one appended row");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_skips_extra_source_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_extra_source_field";

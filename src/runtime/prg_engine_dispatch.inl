@@ -7117,6 +7117,18 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                CursorState *open_source_cursor = nullptr;
+                const std::string normalized_source_path = normalize_path(src_path.string());
+                for (auto &[_, candidate] : current_session_state().cursors)
+                {
+                    if (&candidate != cursor && !candidate.remote &&
+                        normalize_path(candidate.source_path) == normalized_source_path)
+                    {
+                        open_source_cursor = &candidate;
+                        break;
+                    }
+                }
+
                 // Append each qualifying source record into the destination cursor
                 if (!ensure_transaction_backup_for_table(cursor->source_path))
                 {
@@ -7127,9 +7139,21 @@
                 std::size_t appended_count = 0U;
                 const std::vector<vfp::DbfFieldDescriptor> destination_fields =
                     cursor_field_descriptors(*cursor);
-                for (const auto &src_rec : src_result.table.records)
+                for (std::size_t source_record_index = 0U;
+                     source_record_index < src_result.table.records.size();
+                     ++source_record_index)
                 {
+                    const vfp::DbfRecord &src_rec = src_result.table.records[source_record_index];
                     if (src_rec.deleted)
+                    {
+                        continue;
+                    }
+                    if (open_source_cursor != nullptr &&
+                        !filter_expression_matches_record(
+                            *open_source_cursor,
+                            frame,
+                            src_rec,
+                            source_record_index + 1U))
                     {
                         continue;
                     }
