@@ -26,6 +26,49 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_aelement_single_subscript_uses_linear_index() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_aelement_linear";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "aelement_linear.prg";
+    write_text(
+        main_path,
+        "DIMENSION aValues[3,2]\n"
+        "nSecond = AELEMENT(aValues, 2)\n"
+        "nFourth = AELEMENT(aValues, 4)\n"
+        "nOutOfRange = AELEMENT(aValues, 7)\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "AELEMENT linear-index script should complete");
+
+    const auto second = state.globals.find("nsecond");
+    const auto fourth = state.globals.find("nfourth");
+    const auto out_of_range = state.globals.find("noutofrange");
+    expect(second != state.globals.end(), "AELEMENT linear index 2 should be captured");
+    expect(fourth != state.globals.end(), "AELEMENT linear index 4 should be captured");
+    expect(out_of_range != state.globals.end(), "AELEMENT out-of-range result should be captured");
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "2",
+               "AELEMENT single-subscript form should preserve a valid linear index");
+    }
+    if (fourth != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fourth->second) == "4",
+               "AELEMENT single-subscript form should not interpret a linear index as a row number");
+    }
+    if (out_of_range != state.globals.end()) {
+        expect(copperfin::runtime::format_value(out_of_range->second) == "0",
+               "AELEMENT single-subscript form should reject indexes beyond the array size");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_asort_order_values_follow_vfp_contract() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_asort_order";
@@ -1548,6 +1591,7 @@ void test_agetfileversion_existing_and_missing_files() {
 }
 
 int main() {
+    test_aelement_single_subscript_uses_linear_index();
     test_asort_order_values_follow_vfp_contract();
     test_ascan_column_start_uses_column_relative_row();
     test_ascan_predicate_expression_search();

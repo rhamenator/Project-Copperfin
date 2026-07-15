@@ -150,11 +150,16 @@
             }
             if (normalized_function == "aelement" && arguments.size() >= 2U)
             {
-                const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
-                const std::size_t column = arguments.size() >= 3U
-                                               ? static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[2])))
-                                               : 1U;
-                return make_number_value(static_cast<double>(array_linear_index(*array, row, column)));
+                const std::size_t index_or_row =
+                    static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
+                if (arguments.size() < 3U)
+                {
+                    return make_number_value(static_cast<double>(
+                        index_or_row <= array->values.size() ? index_or_row : 0U));
+                }
+                const std::size_t column =
+                    static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[2])));
+                return make_number_value(static_cast<double>(array_linear_index(*array, index_or_row, column)));
             }
             if (normalized_function == "asubscript" && arguments.size() >= 3U)
             {
