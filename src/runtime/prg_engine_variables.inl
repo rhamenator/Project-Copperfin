@@ -198,6 +198,15 @@
                 {
                     return &native_object_arrays[native_array->first][native_array->second];
                 }
+                const std::string normalized = normalize_memory_variable_identifier(name);
+                if (!stack.back().array_reference_bindings.contains(normalized))
+                {
+                    const auto local = stack.back().local_arrays.find(normalized);
+                    if (local != stack.back().local_arrays.end())
+                    {
+                        return &local->second;
+                    }
+                }
             }
             const auto found = arrays.find(canonical_array_name(name));
             return found == arrays.end() ? nullptr : &found->second;
@@ -211,18 +220,17 @@
                 {
                     return &native_object_arrays.at(native_array->first).at(native_array->second);
                 }
+                const std::string normalized = normalize_memory_variable_identifier(name);
+                if (!stack.back().array_reference_bindings.contains(normalized))
+                {
+                    const auto local = stack.back().local_arrays.find(normalized);
+                    if (local != stack.back().local_arrays.end())
+                    {
+                        return &local->second;
+                    }
+                }
             }
             const auto found = arrays.find(canonical_array_name(name));
-            return found == arrays.end() ? nullptr : &found->second;
-        }
-
-        RuntimeArray *find_array(const std::string &name, const Frame &frame)
-        {
-            if (const auto native_array = find_native_object_array_reference(name, frame); native_array.has_value())
-            {
-                return &native_object_arrays[native_array->first][native_array->second];
-            }
-            const auto found = arrays.find(canonical_array_name(name, frame));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
@@ -231,6 +239,15 @@
             if (const auto native_array = find_native_object_array_reference(name, frame); native_array.has_value())
             {
                 return &native_object_arrays.at(native_array->first).at(native_array->second);
+            }
+            const std::string normalized = normalize_memory_variable_identifier(name);
+            if (!frame.array_reference_bindings.contains(normalized))
+            {
+                const auto local = frame.local_arrays.find(normalized);
+                if (local != frame.local_arrays.end())
+                {
+                    return &local->second;
+                }
             }
             const auto found = arrays.find(canonical_array_name(name, frame));
             return found == arrays.end() ? nullptr : &found->second;
@@ -349,6 +366,16 @@
                 {
                     native_object_arrays[native_array->first][native_array->second] = std::move(array);
                     return;
+                }
+                const std::string normalized = normalize_memory_variable_identifier(name);
+                if (!stack.back().array_reference_bindings.contains(normalized))
+                {
+                    const auto local = stack.back().local_arrays.find(normalized);
+                    if (local != stack.back().local_arrays.end())
+                    {
+                        local->second = std::move(array);
+                        return;
+                    }
                 }
             }
             arrays[canonical_array_name(name)] = std::move(array);

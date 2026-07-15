@@ -76,6 +76,11 @@
                 return;
             }
 
+            if (frame.local_arrays.erase(name) != 0U)
+            {
+                return;
+            }
+
             if (const auto private_saved = frame.private_saved_values.find(name);
                 private_saved != frame.private_saved_values.end())
             {

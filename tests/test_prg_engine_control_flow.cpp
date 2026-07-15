@@ -38,6 +38,7 @@ int main() {
     test_total_command_for_sql_result_cursors();
     test_private_declaration_masks_caller_variable();
     test_private_all_hides_matching_caller_variables_and_arrays();
+    test_scoped_array_declarations_follow_vfp_lifetime_rules();
     test_private_variable_visible_to_called_routines();
     test_release_private_restores_saved_binding_immediately();
     test_release_local_restores_visible_outer_global();

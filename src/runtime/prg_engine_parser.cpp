@@ -2465,10 +2465,24 @@ Program parse_program_impl(
             statement.expression = trim_copy(line.substr(12U));
         } else if (starts_with_insensitive(line, "PUBLIC ")) {
             statement.kind = StatementKind::public_declaration;
-            statement.names = split_csv_like(line.substr(7U));
+            const std::string body = trim_copy(line.substr(7U));
+            if (starts_with_insensitive(body, "ARRAY ") &&
+                looks_like_array_declaration_body(body.substr(6U))) {
+                statement.identifier = "array";
+                statement.names = split_csv_like(body.substr(6U));
+            } else {
+                statement.names = split_csv_like(body);
+            }
         } else if (starts_with_insensitive(line, "LOCAL ")) {
             statement.kind = StatementKind::local_declaration;
-            statement.names = split_csv_like(line.substr(6U));
+            const std::string body = trim_copy(line.substr(6U));
+            if (starts_with_insensitive(body, "ARRAY ") &&
+                looks_like_array_declaration_body(body.substr(6U))) {
+                statement.identifier = "array";
+                statement.names = split_csv_like(body.substr(6U));
+            } else {
+                statement.names = split_csv_like(body);
+            }
         } else if (upper == "PRIVATE ALL" || starts_with_insensitive(line, "PRIVATE ALL ")) {
             // PRIVATE ALL [LIKE <pattern> | EXCEPT <pattern>]
             statement.kind = StatementKind::private_declaration;
@@ -2483,7 +2497,14 @@ Program parse_program_impl(
             }
         } else if (starts_with_insensitive(line, "PRIVATE ")) {
             statement.kind = StatementKind::private_declaration;
-            statement.names = split_csv_like(line.substr(8U));
+            const std::string body = trim_copy(line.substr(8U));
+            if (starts_with_insensitive(body, "ARRAY ") &&
+                looks_like_array_declaration_body(body.substr(6U))) {
+                statement.identifier = "array";
+                statement.names = split_csv_like(body.substr(6U));
+            } else {
+                statement.names = split_csv_like(body);
+            }
         } else if (starts_with_insensitive(line, "DIMENSION ")) {
             statement.kind = StatementKind::dimension_command;
             statement.names = split_csv_like(line.substr(10U));

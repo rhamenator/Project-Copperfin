@@ -4216,6 +4216,29 @@
                 shutdown_handler = statement.expression;
                 return {};
             case StatementKind::public_declaration:
+                if (statement.identifier == "array")
+                {
+                    for (const auto &declaration : statement.names)
+                    {
+                        std::string array_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        {
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        const std::string normalized = normalize_memory_variable_identifier(array_name);
+                        public_names.insert(normalized);
+                        arrays[normalized] = RuntimeArray{
+                            .rows = rows,
+                            .columns = columns,
+                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                    }
+                    return {};
+                }
                 for (const auto &name : statement.names)
                 {
                     const std::string normalized = normalize_memory_variable_identifier(name);
@@ -4228,6 +4251,27 @@
                 }
                 return {};
             case StatementKind::local_declaration:
+                if (statement.identifier == "array")
+                {
+                    for (const auto &declaration : statement.names)
+                    {
+                        std::string array_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        {
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        frame.local_arrays[normalize_memory_variable_identifier(array_name)] = RuntimeArray{
+                            .rows = rows,
+                            .columns = columns,
+                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                    }
+                    return {};
+                }
                 for (const auto &name : statement.names)
                 {
                     const std::string normalized = normalize_memory_variable_identifier(name);
@@ -4237,6 +4281,38 @@
                 return {};
             case StatementKind::private_declaration:
             {
+                if (statement.identifier == "array")
+                {
+                    for (const auto &declaration : statement.names)
+                    {
+                        std::string array_name;
+                        std::size_t rows = 0U;
+                        std::size_t columns = 1U;
+                        if (!parse_array_reference(declaration, frame, array_name, rows, columns))
+                        {
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        const std::string normalized = normalize_memory_variable_identifier(array_name);
+                        const auto existing_array = arrays.find(normalized);
+                        frame.private_saved_arrays.try_emplace(
+                            normalized,
+                            existing_array == arrays.end()
+                                ? std::optional<RuntimeArray>{std::nullopt}
+                                : std::optional<RuntimeArray>{existing_array->second});
+                        if (existing_array != arrays.end())
+                        {
+                            arrays.erase(existing_array);
+                        }
+                        arrays[normalized] = RuntimeArray{
+                            .rows = rows,
+                            .columns = columns,
+                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                    }
+                    return {};
+                }
                 const auto privatize_name = [&](const std::string &raw_name, bool create_if_missing)
                 {
                     const std::string normalized = normalize_memory_variable_identifier(raw_name);
@@ -8417,7 +8493,7 @@
                     const std::string pattern = statement.secondary_expression;
                     std::vector<std::string> candidate_names;
                     candidate_names.reserve(
-                        globals.size() + arrays.size() + frame.locals.size() + frame.local_names.size() +
+                        globals.size() + arrays.size() + frame.locals.size() + frame.local_arrays.size() + frame.local_names.size() +
                         frame.private_saved_values.size() + frame.private_saved_arrays.size());
                     for (const auto &[name, _] : globals)
                     {
@@ -8431,6 +8507,13 @@
                         }
                     }
                     for (const auto &[name, _] : frame.locals)
+                    {
+                        if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
+                        {
+                            candidate_names.push_back(name);
+                        }
+                    }
+                    for (const auto &[name, _] : frame.local_arrays)
                     {
                         if (std::find(candidate_names.begin(), candidate_names.end(), name) == candidate_names.end())
                         {
@@ -8537,6 +8620,7 @@
                     active_frame.private_saved_values.clear();
                     active_frame.private_saved_arrays.clear();
                     active_frame.locals.clear();
+                    active_frame.local_arrays.clear();
                 }
                 if (statement.identifier == "all")
                 {

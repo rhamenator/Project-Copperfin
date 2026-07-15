@@ -124,6 +124,70 @@ void test_private_all_hides_matching_caller_variables_and_arrays() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scoped_array_declarations_follow_vfp_lifetime_rules() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scoped_array_declarations";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "scoped_arrays.prg";
+    write_text(
+        main_path,
+        "PUBLIC ARRAY aPublic[1]\n"
+        "aPublic[1] = 'public'\n"
+        "DIMENSION aPrivate[1]\n"
+        "aPrivate[1] = 'outer-private'\n"
+        "DO scoped_arrays\n"
+        "after_public = aPublic[1]\n"
+        "after_private = aPrivate[1]\n"
+        "after_local_type = TYPE('aLocal')\n"
+        "RETURN\n"
+        "PROCEDURE scoped_arrays\n"
+        "LOCAL ARRAY aLocal[1]\n"
+        "local_initial = aLocal[1]\n"
+        "aLocal[1] = 'local'\n"
+        "PRIVATE ARRAY aPrivate[1]\n"
+        "aPrivate[1] = 'private'\n"
+        "DO scoped_array_observer\n"
+        "local_release = TYPE('aReleased')\n"
+        "LOCAL ARRAY aReleased[1]\n"
+        "RELEASE aReleased\n"
+        "local_release = TYPE('aReleased')\n"
+        "RETURN\n"
+        "PROCEDURE scoped_array_observer\n"
+        "observer_public = aPublic[1]\n"
+        "observer_private = aPrivate[1]\n"
+        "observer_local_type = TYPE('aLocal')\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "scoped-array declaration script should complete: " + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), name + " should be captured");
+        if (value != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   name + " should be " + expected);
+        }
+    };
+    check("after_public", "public");
+    check("observer_public", "public");
+    check("observer_private", "private");
+    check("after_private", "outer-private");
+    check("local_initial", "false");
+    check("observer_local_type", "U");
+    check("after_local_type", "U");
+    check("local_release", "U");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_private_variable_visible_to_called_routines() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_visible";

@@ -464,6 +464,7 @@ namespace copperfin::runtime
             std::map<std::string, std::string> parameter_reference_bindings;
             std::map<std::string, std::string> array_reference_bindings;
             std::set<std::string> local_names;
+            std::map<std::string, RuntimeArray> local_arrays;
             std::map<std::string, std::optional<PrgValue>> private_saved_values;
             std::map<std::string, std::optional<RuntimeArray>> private_saved_arrays;
             std::vector<LoopState> loops;
