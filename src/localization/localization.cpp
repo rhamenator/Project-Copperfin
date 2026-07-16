@@ -430,7 +430,12 @@ CatalogLoadResult load_catalog_file(const std::filesystem::path& path) {
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
-    CatalogLoadResult result = parse_catalog_json(text);
+    constexpr std::string_view utf8_bom = "\xEF\xBB\xBF";
+    std::string_view json_text = text;
+    if (json_text.starts_with(utf8_bom)) {
+        json_text.remove_prefix(utf8_bom.size());
+    }
+    CatalogLoadResult result = parse_catalog_json(json_text);
     if (!result.ok && result.error.empty()) {
         result.error = "Catalog.ParseFailed";
     }

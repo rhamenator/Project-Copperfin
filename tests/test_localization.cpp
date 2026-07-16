@@ -128,6 +128,66 @@ void test_catalog_loading_and_fallback() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catalog_file_accepts_one_leading_utf8_bom() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_bom_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string bom = "\xEF\xBB\xBF";
+    write_catalog(
+        temp_root,
+        "en-US",
+        "{\"Fallback.Message\":\"English fallback\"}\n");
+    write_catalog(
+        temp_root,
+        "es-419",
+        bom + "{\"Localized.Message\":\"Espa\xC3\xB1ol {name}\"}\n");
+
+    const auto direct = copperfin::localization::load_catalog_file(
+        temp_root / "es-419" / "strings.json");
+    expect(
+        direct.ok && direct.entries.contains("Localized.Message") &&
+            direct.entries.at("Localized.Message") == "Espa\xC3\xB1ol {name}",
+        "#3893: catalog file loading should accept one leading UTF-8 BOM and preserve UTF-8 values");
+
+    const auto spanish_mexico = copperfin::localization::load_catalogs(temp_root, "es-MX");
+    expect(
+        spanish_mexico.translate("Localized.Message", {{"name", "Ana"}}) ==
+            "Espa\xC3\xB1ol Ana" &&
+            spanish_mexico.translate("Fallback.Message") == "English fallback",
+        "#3893: a BOM-prefixed regional catalog should participate in normal locale fallback");
+
+    write_catalog(temp_root, "double-bom", bom + bom + "{}\n");
+    const auto double_bom = copperfin::localization::load_catalog_file(
+        temp_root / "double-bom" / "strings.json");
+    expect(
+        !double_bom.ok && double_bom.error == "Catalog.Json.ExpectedObject",
+        "#3893: catalog file loading should not accept more than one leading UTF-8 BOM");
+
+    write_catalog(temp_root, "indented-bom", " " + bom + "{}\n");
+    const auto indented_bom = copperfin::localization::load_catalog_file(
+        temp_root / "indented-bom" / "strings.json");
+    expect(
+        !indented_bom.ok && indented_bom.error == "Catalog.Json.ExpectedObject",
+        "#3893: a UTF-8 BOM should only be accepted at the first file byte");
+
+    write_catalog(temp_root, "trailing-bom", "{}" + bom);
+    const auto trailing_bom = copperfin::localization::load_catalog_file(
+        temp_root / "trailing-bom" / "strings.json");
+    expect(
+        !trailing_bom.ok && trailing_bom.error == "Catalog.Json.TrailingContent",
+        "#3893: a trailing UTF-8 BOM should remain invalid JSON content");
+
+    const auto parser_result = copperfin::localization::parse_catalog_json(bom + "{}");
+    expect(
+        !parser_result.ok && parser_result.error == "Catalog.Json.ExpectedObject",
+        "#3893: the JSON parser should remain strict when it is called directly");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_posix_locale_suffixes_normalize_before_catalog_fallback() {
     expect(
         copperfin::localization::normalize_locale("pt-BR.UTF-8") == "pt-BR",
@@ -3411,6 +3471,7 @@ void test_inspect_error_prefix_routes_through_localization(const std::string& in
 
 int main(int argc, char** argv) {
     test_catalog_loading_and_fallback();
+    test_catalog_file_accepts_one_leading_utf8_bom();
     test_posix_locale_suffixes_normalize_before_catalog_fallback();
     test_placeholders_pseudo_locale_and_unicode();
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
