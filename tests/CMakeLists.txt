@@ -51,6 +51,45 @@ function(copperfin_reuse_test_support_object SOURCE_FILE OBJECT_TARGET)
     endif()
 endfunction()
 
+function(copperfin_reuse_test_support_object_for_targets
+         SOURCE_FILE OBJECT_TARGET EXPECTED_DEFINITIONS)
+    if(NOT TARGET ${OBJECT_TARGET})
+        message(FATAL_ERROR "Unknown targeted test-support object: ${OBJECT_TARGET}")
+    endif()
+
+    foreach(copperfin_reuse_target IN LISTS ARGN)
+        if(NOT TARGET ${copperfin_reuse_target})
+            message(FATAL_ERROR "Unknown targeted test executable: ${copperfin_reuse_target}")
+        endif()
+
+        get_target_property(copperfin_reuse_sources ${copperfin_reuse_target} SOURCES)
+        if(NOT SOURCE_FILE IN_LIST copperfin_reuse_sources)
+            message(FATAL_ERROR
+                "Target ${copperfin_reuse_target} does not compile reusable source ${SOURCE_FILE}")
+        endif()
+
+        get_target_property(
+            copperfin_reuse_definitions
+            ${copperfin_reuse_target}
+            COMPILE_DEFINITIONS
+        )
+        if(copperfin_reuse_definitions STREQUAL "copperfin_reuse_definitions-NOTFOUND")
+            set(copperfin_reuse_definitions)
+        endif()
+        set(copperfin_expected_definitions ${EXPECTED_DEFINITIONS})
+        list(SORT copperfin_reuse_definitions)
+        list(SORT copperfin_expected_definitions)
+        if(NOT "${copperfin_reuse_definitions}" STREQUAL "${copperfin_expected_definitions}")
+            message(FATAL_ERROR
+                "Target ${copperfin_reuse_target} compile definitions no longer match reusable object ${OBJECT_TARGET}")
+        endif()
+
+        list(REMOVE_ITEM copperfin_reuse_sources ${SOURCE_FILE})
+        set_property(TARGET ${copperfin_reuse_target} PROPERTY SOURCES "${copperfin_reuse_sources}")
+        target_sources(${copperfin_reuse_target} PRIVATE $<TARGET_OBJECTS:${OBJECT_TARGET}>)
+    endforeach()
+endfunction()
+
 add_library(cf_test_process_capture_support STATIC
     test_process_capture_support.cpp
 )
@@ -96,6 +135,77 @@ copperfin_add_test_support_object(
     cf_studio_host_json_report_section_shared_fixtures
     "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_section_shared_fixtures.cpp"
     cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_geometry_preview_helpers
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_geometry_preview_helpers.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_geometry_preview_helpers_with_unresolved
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_geometry_preview_bounds.cpp"
+    cf_vfp_assets
+)
+target_compile_definitions(
+    cf_studio_host_json_geometry_preview_helpers_with_unresolved
+    PRIVATE
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_objects_dhf_expressions_and_exposure
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_objects_dhf_expressions_and_exposure.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_objects_layout_and_expressions
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_objects_layout_and_expressions.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_report_object_fallbacks
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_object_fallbacks.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_geometry_dimensions_with_unresolved
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_geometry_dimensions.cpp"
+    cf_vfp_assets
+)
+target_compile_definitions(
+    cf_studio_host_json_geometry_dimensions_with_unresolved
+    PRIVATE
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_sections_diagnostics_with_unresolved
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_sections_diagnostics_and_misc.cpp"
+    cf_vfp_assets
+)
+target_compile_definitions(
+    cf_studio_host_json_sections_diagnostics_with_unresolved
+    PRIVATE
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+        COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_settings_column_setup_helpers
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_settings_column_setup.cpp"
+    cf_vfp_assets
+)
+target_compile_definitions(
+    cf_studio_host_json_settings_column_setup_helpers
+    PRIVATE COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_settings_page_layout_helpers
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_settings_page_layout_fields.cpp"
+    cf_vfp_assets
+)
+target_compile_definitions(
+    cf_studio_host_json_settings_page_layout_helpers
+    PRIVATE COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
 )
 
 find_program(DOTNET_EXECUTABLE NAMES dotnet)
@@ -4613,4 +4723,83 @@ copperfin_reuse_test_support_object(
 copperfin_reuse_test_support_object(
     test_studio_host_json_report_section_shared_fixtures.cpp
     cf_studio_host_json_report_section_shared_fixtures
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
+    cf_studio_host_json_objects_dhf_expressions_and_exposure
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_objects_layout_and_expressions.cpp
+    cf_studio_host_json_objects_layout_and_expressions
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_report_object_fallbacks.cpp
+    cf_studio_host_json_report_object_fallbacks
+)
+
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_geometry_preview_helpers.cpp
+    cf_studio_host_json_geometry_preview_helpers
+    ""
+    test_studio_host_label_layout_actions
+    test_studio_host_report_font_metadata
+    test_studio_host_report_layout_actions
+    test_studio_host_report_layout_placement
+    test_studio_host_report_live_section_geometry
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_geometry_preview_bounds.cpp
+    cf_studio_host_json_geometry_preview_helpers
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    test_studio_host_deleted_object_height_top_geometry
+    test_studio_host_deleted_object_restore_geometry
+    test_studio_host_deleted_object_width_left_geometry
+    test_studio_host_deleted_report_visual_property_copies
+    test_studio_host_deleted_report_visual_property_rejections
+    test_studio_host_deleted_section_geometry
+    test_studio_host_detail_header_footer_object_geometry
+    test_studio_host_edited_object_delete_geometry
+    test_studio_host_report_column_setup
+    test_studio_host_report_column_width_fields
+    test_studio_host_report_direct_setting_fields
+    test_studio_host_report_geometry_defaults
+    test_studio_host_report_layout_classifications
+    test_studio_host_report_page_setup_fields
+    test_studio_host_report_settings_diagnostics
+    test_studio_host_report_settings_memo_parsing
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_geometry_preview_bounds.cpp
+    cf_studio_host_json_geometry_preview_helpers_with_unresolved
+    "COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS;COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS"
+    test_studio_host_report_schema_fallbacks
+    test_studio_host_report_unresolved_memo_placeholders
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_geometry_dimensions.cpp
+    cf_studio_host_json_geometry_dimensions_with_unresolved
+    "COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS;COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS"
+    test_studio_host_report_schema_fallbacks
+    test_studio_host_report_unresolved_memo_placeholders
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_sections_diagnostics_and_misc.cpp
+    cf_studio_host_json_sections_diagnostics_with_unresolved
+    "COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS;COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS"
+    test_studio_host_report_schema_fallbacks
+    test_studio_host_report_unresolved_memo_placeholders
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_settings_column_setup.cpp
+    cf_studio_host_json_settings_column_setup_helpers
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    test_studio_host_report_column_setup
+    test_studio_host_report_direct_setting_fields
+)
+copperfin_reuse_test_support_object_for_targets(
+    test_studio_host_json_settings_page_layout_fields.cpp
+    cf_studio_host_json_settings_page_layout_helpers
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    test_studio_host_report_direct_setting_fields
+    test_studio_host_report_page_setup_fields
 )
