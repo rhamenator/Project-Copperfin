@@ -121,6 +121,8 @@ require_text("${workflow}" "Reset cold-build cache statistics"
     "cold configure/build statistics boundary")
 require_text("${workflow}" "Reset warm-build cache statistics"
     "warm configure/build statistics boundary")
+require_text_count("${workflow}" "-MaximumWriteErrors 1" 1
+    "bounded cold-population write-error allowance")
 require_text("${workflow}"
     "-CommandArguments @('--test-dir', 'build-sccache-warm', '--output-on-failure')"
     "full unfiltered warm CTest invocation")
@@ -161,6 +163,10 @@ require_text("${stats_script}" "cache_write_errors"
     "cache write-error accounting")
 require_text("${stats_script}" "cacheable_requests"
     "cacheable-request accounting")
+require_text("${stats_script}" "cache_read_errors"
+    "separate fail-closed cache read-error accounting")
+require_text("${stats_script}" "MaximumWriteErrors"
+    "bounded cache write-error policy")
 foreach(invalidation_marker IN ITEMS
         "source change"
         "generated-header change"

@@ -16,7 +16,10 @@ param(
     [long]$MinimumHits = 0,
 
     [ValidateRange(0, [long]::MaxValue)]
-    [long]$MinimumMisses = 0
+    [long]$MinimumMisses = 0,
+
+    [ValidateRange(0, [long]::MaxValue)]
+    [long]$MaximumWriteErrors = 0
 )
 
 Set-StrictMode -Version Latest
@@ -53,9 +56,10 @@ if ($null -eq $payload.stats) {
 $hits = Get-CountTotal $payload.stats.cache_hits
 $misses = Get-CountTotal $payload.stats.cache_misses
 $requests = [long]$payload.stats.compile_requests
-$errors = [long]$payload.stats.cache_read_errors +
-    [long]$payload.stats.cache_write_errors +
-    (Get-CountTotal $payload.stats.cache_errors)
+$readErrors = [long]$payload.stats.cache_read_errors
+$writeErrors = [long]$payload.stats.cache_write_errors
+$otherErrors = Get-CountTotal $payload.stats.cache_errors
+$errors = $readErrors + $writeErrors + $otherErrors
 
 $evidence = [ordered]@{
     schema_version = 1
@@ -68,6 +72,9 @@ $evidence = [ordered]@{
     cache_hits = $hits
     cache_misses = $misses
     cache_errors = $errors
+    cache_read_errors = $readErrors
+    cache_write_errors = $writeErrors
+    other_cache_errors = $otherErrors
     cache_location = [string]$payload.cache_location
     cache_size = $payload.cache_size
     max_cache_size = $payload.max_cache_size
@@ -86,8 +93,11 @@ if ($hits -lt $MinimumHits) {
 if ($misses -lt $MinimumMisses) {
     throw "$Name recorded $misses cache miss(es); at least $MinimumMisses were required."
 }
-if ($errors -ne 0) {
-    throw "$Name recorded $errors cache error(s)."
+if ($readErrors -ne 0 -or $otherErrors -ne 0) {
+    throw "$Name recorded $readErrors read error(s) and $otherErrors other cache error(s)."
+}
+if ($writeErrors -gt $MaximumWriteErrors) {
+    throw "$Name recorded $writeErrors cache write error(s); at most $MaximumWriteErrors were allowed."
 }
 
-Write-Host "${Name}: requests=$requests hits=$hits misses=$misses errors=$errors"
+Write-Host "${Name}: requests=$requests hits=$hits misses=$misses read-errors=$readErrors write-errors=$writeErrors other-errors=$otherErrors"

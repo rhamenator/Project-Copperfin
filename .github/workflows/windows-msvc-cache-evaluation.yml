@@ -132,6 +132,7 @@ jobs:
           -Name 'Cold full build'
           -OutputPath artifacts/windows-sccache-evaluation/sccache-cold.json
           -MinimumMisses 1
+          -MaximumWriteErrors 1
 
       - name: Restart cache server for warm build
         shell: pwsh
