@@ -260,13 +260,10 @@ require_text(".github/workflows/windows-environment-validation.yml"
     "--target test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch test_studio_host_report_section_selection_diagnostics"
     "focused Windows environment target inventory")
 require_text(".github/workflows/windows-environment-validation.yml"
-    [=[COPPERFIN_OUT_OF_TREE_BUILD: ${{ runner.temp }}\copperfin-environment-build]=]
-    "non-adjacent absolute build root")
-require_text(".github/workflows/windows-environment-validation.yml"
-    [=[cmake -S . -B "$env:COPPERFIN_OUT_OF_TREE_BUILD" -DCOPPERFIN_BUILD_TESTS=ON]=]
+    [=[cmake -S . -B "$env:RUNNER_TEMP/copperfin-environment-build" -DCOPPERFIN_BUILD_TESTS=ON]=]
     "out-of-tree configure command")
 require_text(".github/workflows/windows-environment-validation.yml"
-    [=[ctest --test-dir "$env:COPPERFIN_OUT_OF_TREE_BUILD" -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_report_section_selection_diagnostics)$"]=]
+    [=[ctest --test-dir "$env:RUNNER_TEMP/copperfin-environment-build" -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_report_section_selection_diagnostics)$"]=]
     "out-of-tree localization, runtime-host, and Studio-host CTest contract")
 require_text(".github/workflows/build-vsix.yml"
     "name: Build Visual Studio VSIX"
