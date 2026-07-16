@@ -5,10 +5,30 @@ inputs:
   platform:
     description: Platform contract used to select single- or multi-config CMake commands.
     required: true
+  build_jobs:
+    description: Bounded Windows build concurrency (2 or 3). Non-Windows lanes retain their fixed two-job cap.
+    required: false
+    default: '2'
+  metrics_directory:
+    description: Repository-relative directory for Windows phase metrics.
+    required: false
+    default: artifacts/windows-native-validation-metrics
 
 runs:
   using: composite
   steps:
+    - name: Initialize Windows validation metrics
+      if: ${{ inputs.platform == 'windows' }}
+      shell: pwsh
+      run: |
+        $buildJobs = '${{ inputs.build_jobs }}'
+        if ($buildJobs -notin @('2', '3')) {
+          throw "Hosted Windows native validation build_jobs must be 2 or 3."
+        }
+        & ./scripts/measure-windows-validation.ps1
+          -Mode Initialize
+          -MetricsDirectory '${{ inputs.metrics_directory }}'
+
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
       with:
@@ -22,7 +42,14 @@ runs:
     - name: Configure native build
       if: ${{ inputs.platform == 'windows' }}
       shell: pwsh
-      run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+      run: >-
+        & ./scripts/measure-windows-validation.ps1
+        -Mode Run
+        -MetricsDirectory '${{ inputs.metrics_directory }}'
+        -Name 'Configure native build'
+        -Category configure
+        -FilePath cmake
+        -CommandArguments @('-S', '.', '-B', 'build', '-DCOPPERFIN_BUILD_TESTS=ON')
 
     - name: Build native targets
       if: ${{ inputs.platform != 'windows' }}
@@ -32,7 +59,16 @@ runs:
     - name: Build native targets
       if: ${{ inputs.platform == 'windows' }}
       shell: pwsh
-      run: cmake --build build --config Release --parallel 2
+      run: >-
+        & ./scripts/measure-windows-validation.ps1
+        -Mode Run
+        -MetricsDirectory '${{ inputs.metrics_directory }}'
+        -Name 'Build native targets'
+        -Category native-compile
+        -FilePath cmake
+        -CommandArguments @('--build', 'build', '--config', 'Release', '--parallel', '${{ inputs.build_jobs }}')
+        -BuildJobs ([int]'${{ inputs.build_jobs }}')
+        -SampleResources
 
     - name: Run native test suite
       if: ${{ inputs.platform != 'windows' }}
@@ -42,4 +78,20 @@ runs:
     - name: Run native test suite
       if: ${{ inputs.platform == 'windows' }}
       shell: pwsh
-      run: ctest --test-dir build -C Release --output-on-failure
+      run: >-
+        & ./scripts/measure-windows-validation.ps1
+        -Mode Run
+        -MetricsDirectory '${{ inputs.metrics_directory }}'
+        -Name 'Run native test suite'
+        -Category native-test
+        -FilePath ctest
+        -CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure')
+        -SampleResources
+
+    - name: Finalize Windows validation metrics
+      if: ${{ always() && inputs.platform == 'windows' }}
+      shell: pwsh
+      run: >-
+        & ./scripts/measure-windows-validation.ps1
+        -Mode Finalize
+        -MetricsDirectory '${{ inputs.metrics_directory }}'

@@ -340,37 +340,46 @@ require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
       shell: bash
       run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON]=]
     "non-Windows configure command")
-require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
-      shell: pwsh
-      run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON]=]
-    "Windows configure command")
 require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
       shell: bash
       run: cmake --build build --parallel 2]=]
     "bounded non-Windows build command")
-require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
-      shell: pwsh
-      run: cmake --build build --config Release --parallel 2]=]
-    "bounded Windows build command")
 require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
       shell: bash
       run: ctest --test-dir build --output-on-failure]=]
     "full non-Windows CTest command")
-require_text("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}
-      shell: pwsh
-      run: ctest --test-dir build -C Release --output-on-failure]=]
+require_text("${shared_action}"
+    "-Name 'Configure native build'"
+    "measured Windows configure phase")
+require_text("${shared_action}"
+    "-CommandArguments @('-S', '.', '-B', 'build', '-DCOPPERFIN_BUILD_TESTS=ON')"
+    "Windows configure command")
+require_text("${shared_action}"
+    "-Name 'Build native targets'"
+    "measured Windows native-build phase")
+require_text("${shared_action}"
+    [=[-CommandArguments @('--build', 'build', '--config', 'Release', '--parallel', '${{ inputs.build_jobs }}')]=]
+    "bounded Windows build command")
+require_text("${shared_action}"
+    "-Name 'Run native test suite'"
+    "measured Windows CTest phase")
+require_text("${shared_action}"
+    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure')"
     "full Windows CTest command")
+require_text("${shared_action}"
+    "-Mode Finalize"
+    "Windows metric finalization")
 
 require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake -S "
-    2 "configure commands")
+    1 "direct non-Windows configure command")
 require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake --build "
-    2 "build commands")
+    1 "direct non-Windows build command")
 require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*ctest "
-    2 "CTest commands")
+    1 "direct non-Windows CTest command")
 require_text_count("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}]=]
     3 "non-Windows platform conditions")
 require_text_count("${shared_action}" [=[if: ${{ inputs.platform == 'windows' }}]=]
-    3 "Windows platform conditions")
+    4 "Windows platform conditions")
 
 forbid_text("${shared_action}" "upload-artifact" "artifact upload")
 forbid_regex("${shared_action}" "ctest[^\n]*[ \t]-R([ \t=]|\n|$)" "CTest -R filtering")

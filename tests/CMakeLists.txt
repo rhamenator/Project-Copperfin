@@ -46,6 +46,7 @@ add_test(
     NAME test_build_parallelism_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DBINARY_DIR=${CMAKE_BINARY_DIR}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_build_parallelism_contract_check.cmake
 )
 

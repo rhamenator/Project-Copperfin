@@ -170,14 +170,14 @@ E:\Project-Copperfin\build\Release\copperfin_build_host.exe build --project "C:\
 E:\Project-Copperfin\scripts\validate-windows.ps1
 ```
 
-Native CMake validation defaults to two concurrent compile jobs to stay within hosted-runner and ordinary workstation memory limits. POSIX operators can override the local default with `COPPERFIN_BUILD_JOBS=4 scripts/validate-posix.sh`; Windows operators can use `scripts\validate-windows.ps1 -BuildJobs 4`. The hosted validation workflows retain the two-job cap unless measured runner capacity supports a deliberate increase.
+Native CMake validation defaults to two concurrent compile jobs to stay within hosted-runner and ordinary workstation memory limits. POSIX operators can override the local default with `COPPERFIN_BUILD_JOBS=4 scripts/validate-posix.sh`; Windows operators can use `scripts\validate-windows.ps1 -BuildJobs 4`. The ordinary hosted validation workflows retain the two-job cap unless measured runner capacity supports a deliberate increase. Manual Windows Deep Validation exposes bounded two- and three-job trial choices; its JSON artifact and GitHub summary report per-phase duration plus sampled runner CPU and memory headroom, and do not authorize changing the default by themselves.
 
 GitHub validation:
 
 - `.github/workflows/native-validation-linux.yml`, `.github/workflows/native-validation-macos.yml`, and `.github/workflows/native-validation-windows.yml` provide independently dispatchable platform checks. All three call `.github/actions/native-validation/action.yml`, which keeps configure, bounded compilation, and the full CTest suite in one platform job while preserving the stable platform check names.
 - Release readiness requires successful `Linux GCC`, `macOS Clang`, and `Windows MSVC` checks. Manual `.github/workflows/native-release-readiness.yml` runs all three shared contracts and exposes a final dependent gate. Native validation does not publish or reuse CMake build trees between jobs or workflow runs.
 - `.github/workflows/build-installers.yml` remains focused on packaging standalone installer artifacts and intentionally builds with tests disabled.
-- `.github/workflows/windows-deep-validation.yml` is manual dispatch only and runs a deeper Windows hosted build across native tests, VSIX, standalone Studio, and designer smoke test binaries.
+- `.github/workflows/windows-deep-validation.yml` is manual dispatch only and runs a deeper Windows hosted build across native tests, VSIX, standalone Studio, and designer smoke test binaries. `scripts/measure-windows-validation.ps1` records configure, native compile/test, and managed compile/test evidence under `artifacts/windows-deep-validation-metrics`; those JSON files are uploaded even when a measured phase fails.
 
 Current MVP scope:
 

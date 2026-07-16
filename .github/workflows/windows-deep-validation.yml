@@ -16,6 +16,14 @@ on:
         required: true
         default: false
         type: boolean
+      build_jobs:
+        description: Bounded native compile concurrency for measured Windows trials.
+        required: true
+        default: '2'
+        type: choice
+        options:
+          - '2'
+          - '3'
 
 permissions:
   contents: read
@@ -29,6 +37,13 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v6.0.2
 
+      - name: Initialize Windows validation metrics
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Initialize
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
         with:
@@ -38,45 +53,140 @@ jobs:
         uses: microsoft/setup-msbuild@v3
 
       - name: Configure native build
-        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Configure native build'
+          -Category configure
+          -FilePath cmake
+          -CommandArguments @('-S', '.', '-B', 'build', '-DCOPPERFIN_BUILD_TESTS=ON')
 
       - name: Build native binaries and tests
-        run: cmake --build build --config ${{ inputs.build_configuration }} --parallel 2
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Build native binaries and tests'
+          -Category native-compile
+          -FilePath cmake
+          -CommandArguments @('--build', 'build', '--config', '${{ inputs.build_configuration }}', '--parallel', '${{ inputs.build_jobs }}')
+          -BuildJobs ([int]'${{ inputs.build_jobs }}')
+          -SampleResources
 
       - name: Run native CTest suite
-        run: ctest --test-dir build -C ${{ inputs.build_configuration }} --output-on-failure
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run native CTest suite'
+          -Category native-test
+          -FilePath ctest
+          -CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure')
+          -SampleResources
 
       - name: Build Visual Studio extension
-        run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }} /p:DeployExtension=false
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Build Visual Studio extension'
+          -Category managed-compile
+          -FilePath msbuild
+          -CommandArguments @('vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj', '/restore', '/t:Rebuild', '/p:Configuration=${{ inputs.build_configuration }}', '/p:DeployExtension=false')
+          -SampleResources
 
       - name: Verify localized command resources
         shell: pwsh
         run: ./scripts/test-vsix-command-localization.ps1 -VsixPath vsix/Copperfin.VisualStudio/bin/${{ inputs.build_configuration }}/net472/Copperfin.VisualStudio.vsix
 
       - name: Run managed VSIX behavior tests
-        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj --configuration ${{ inputs.build_configuration }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run managed VSIX behavior tests'
+          -Category managed-test
+          -FilePath dotnet
+          -CommandArguments @('run', '--project', 'vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj', '--configuration', '${{ inputs.build_configuration }}')
 
       - name: Run managed language-service tests
-        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj --configuration ${{ inputs.build_configuration }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run managed language-service tests'
+          -Category managed-test
+          -FilePath dotnet
+          -CommandArguments @('run', '--project', 'vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj', '--configuration', '${{ inputs.build_configuration }}')
 
       - name: Run .NET Framework process-runner tests
-        run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration ${{ inputs.build_configuration }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run .NET Framework process-runner tests'
+          -Category managed-test
+          -FilePath dotnet
+          -CommandArguments @('run', '--project', 'vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj', '--configuration', '${{ inputs.build_configuration }}')
 
       - name: Build standalone Studio shell
-        run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Build standalone Studio shell'
+          -Category managed-compile
+          -FilePath msbuild
+          -CommandArguments @('vsix/Copperfin.Studio/Copperfin.Studio.csproj', '/restore', '/t:Rebuild', '/p:Configuration=${{ inputs.build_configuration }}')
+          -SampleResources
 
       - name: Build designer smoke tests
-        run: msbuild vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Build designer smoke tests'
+          -Category managed-compile
+          -FilePath msbuild
+          -CommandArguments @('vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj', '/restore', '/t:Rebuild', '/p:Configuration=${{ inputs.build_configuration }}')
+          -SampleResources
 
       - name: Run designer smoke tests
         if: ${{ inputs.run_designer_smoke_tests }}
-        run: vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run designer smoke tests'
+          -Category managed-test
+          -FilePath 'vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe'
+
+      - name: Finalize Windows validation metrics
+        if: ${{ always() }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Finalize
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
 
       - name: Upload Windows deep validation artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}
+          name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-jobs-${{ inputs.build_jobs }}
           path: |
+            artifacts/windows-deep-validation-metrics/*.json
             build/${{ inputs.build_configuration }}/*.exe
             vsix/Copperfin.VisualStudio/bin/${{ inputs.build_configuration }}/net472/*.vsix
             vsix/Copperfin.Studio/bin/${{ inputs.build_configuration }}/net472/*.exe
