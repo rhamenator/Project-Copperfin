@@ -102,7 +102,15 @@ jobs:
           -Name 'Configure cold native build'
           -Category configure
           -FilePath cmake
-          -CommandArguments @('-S', '.', '-B', 'build-sccache-cold', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+          -CommandArguments @('-S', '.', '-B', 'build-sccache-cold', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', '-DCMAKE_CXX_FLAGS=/DWIN32 /D_WINDOWS', '-DCOPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+
+      - name: Reset cold-build cache statistics
+        shell: pwsh
+        run: |
+          & $env:SCCACHE_PATH --zero-stats
+          if ($LASTEXITCODE -ne 0) {
+            throw "sccache could not reset post-configure cold-build statistics."
+          }
 
       - name: Build cold native targets
         shell: pwsh
@@ -146,7 +154,15 @@ jobs:
           -Name 'Configure warm native build'
           -Category configure
           -FilePath cmake
-          -CommandArguments @('-S', '.', '-B', 'build-sccache-warm', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+          -CommandArguments @('-S', '.', '-B', 'build-sccache-warm', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', '-DCMAKE_CXX_FLAGS=/DWIN32 /D_WINDOWS', '-DCOPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+
+      - name: Reset warm-build cache statistics
+        shell: pwsh
+        run: |
+          & $env:SCCACHE_PATH --zero-stats
+          if ($LASTEXITCODE -ne 0) {
+            throw "sccache could not reset post-configure warm-build statistics."
+          }
 
       - name: Build warm native targets
         shell: pwsh
@@ -169,6 +185,17 @@ jobs:
           -OutputPath artifacts/windows-sccache-evaluation/sccache-warm.json
           -MinimumHits 1
 
+      - name: Test compiler-cache invalidation and malformed entries
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Test compiler-cache invalidation and malformed entries'
+          -Category cache-validation
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/test-windows-sccache-contract.ps1', '-EvidencePath', 'artifacts/windows-sccache-evaluation/sccache-contract-probe.json')
+
       - name: Run full warm native test suite
         shell: pwsh
         run: >-
@@ -181,18 +208,14 @@ jobs:
           -CommandArguments @('--test-dir', 'build-sccache-warm', '--output-on-failure')
           -SampleResources
 
-      - name: Test compiler-cache invalidation and malformed entries
-        shell: pwsh
-        run: >-
-          & ./scripts/test-windows-sccache-contract.ps1
-          -EvidencePath artifacts/windows-sccache-evaluation/sccache-contract-probe.json
-
       - name: Compare cold and warm evidence
         shell: pwsh
         run: >-
           & ./scripts/compare-windows-sccache-evidence.ps1
           -MetricsDirectory artifacts/windows-sccache-evaluation
           -MinimumImprovementPercent 25
+          -MinimumColdMissPercent 90
+          -MinimumWarmHitPercent 90
 
       - name: Finalize Windows validation metrics
         if: ${{ always() }}

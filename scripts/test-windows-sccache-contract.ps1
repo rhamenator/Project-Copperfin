@@ -46,15 +46,17 @@ function Get-SccacheStats {
 function Invoke-ProbeCompile {
     param(
         [Parameter(Mandatory = $true)][string]$ObjectPath,
+        [string]$CompilerPath = "cl.exe",
         [string[]]$Definitions = @(),
+        [string[]]$CompilerArguments = @(),
         [switch]$AllowFailure
     )
 
     Remove-Item -LiteralPath $ObjectPath -Force -ErrorAction SilentlyContinue
     $arguments = @(
-        "cl.exe", "/nologo", "/c", "/EHsc", "/std:c++20", "/Z7", "/Brepro",
+        $CompilerPath, "/nologo", "/c", "/EHsc", "/std:c++20", "/Z7", "/Brepro",
         "/I$probeRoot"
-    ) + $Definitions + @($sourcePath, "/Fo$ObjectPath")
+    ) + $CompilerArguments + $Definitions + @($sourcePath, "/Fo$ObjectPath")
     & $env:SCCACHE_PATH @arguments 2>&1 | Write-Host
     $exitCode = $LASTEXITCODE
     if ($exitCode -ne 0 -and -not $AllowFailure) {
@@ -70,6 +72,21 @@ if ([string]::IsNullOrWhiteSpace($env:SCCACHE_PATH)) {
     throw "SCCACHE_PATH is required."
 }
 Get-Command cl.exe -ErrorAction Stop | Out-Null
+$x64CompilerPath = (Get-Command cl.exe -ErrorAction Stop).Source
+if ([string]::IsNullOrWhiteSpace($env:llvmX64)) {
+    throw "The initialized Visual Studio environment did not expose its x64 LLVM tool directory."
+}
+$clangCompilerPath = Join-Path $env:llvmX64 "clang-cl.exe"
+if (-not (Test-Path -LiteralPath $clangCompilerPath -PathType Leaf)) {
+    throw "The Visual Studio x64 clang-cl compiler was not found at $clangCompilerPath."
+}
+if ([string]::IsNullOrWhiteSpace($env:VCToolsInstallDir)) {
+    throw "VCToolsInstallDir is required to locate the x86 MSVC compiler."
+}
+$x86CompilerPath = Join-Path $env:VCToolsInstallDir "bin\Hostx64\x86\cl.exe"
+if (-not (Test-Path -LiteralPath $x86CompilerPath -PathType Leaf)) {
+    throw "The x86 MSVC compiler was not found at $x86CompilerPath."
+}
 
 $evidenceFile = [System.IO.Path]::GetFullPath($EvidencePath)
 $evidenceDirectory = Split-Path -Parent $evidenceFile
@@ -169,6 +186,69 @@ try {
     }
     if ($results.flag_change.misses -ne 1) {
         throw "A compiler-flag change did not invalidate the focused compiler-cache entry."
+    }
+
+    Stop-SccacheServer
+    Reset-SccacheStats
+    Invoke-ProbeCompile -ObjectPath $objectPath `
+        -Definitions @("/DCOPPERFIN_FLAG_VALUE=19") -CompilerArguments @("/O2") | Out-Null
+    $configurationStats = Get-SccacheStats
+    $results.configuration_change = [ordered]@{
+        hits = Get-CountTotal $configurationStats.cache_hits
+        misses = Get-CountTotal $configurationStats.cache_misses
+    }
+    if ($results.configuration_change.misses -ne 1) {
+        throw "A build-configuration change did not invalidate the focused compiler-cache entry."
+    }
+
+    Stop-SccacheServer
+    Reset-SccacheStats
+    Invoke-ProbeCompile -ObjectPath $objectPath -CompilerPath $x64CompilerPath `
+        -Definitions @("/DCOPPERFIN_FLAG_VALUE=29") -CompilerArguments @("/O2") | Out-Null
+    $x64Stats = Get-SccacheStats
+    if ((Get-CountTotal $x64Stats.cache_misses) -ne 1) {
+        throw "The architecture baseline did not produce exactly one cache miss."
+    }
+
+    Stop-SccacheServer
+    Reset-SccacheStats
+    $x86ObjectPath = Join-Path $probeRoot "cache_probe_x86.obj"
+    Invoke-ProbeCompile -ObjectPath $x86ObjectPath -CompilerPath $x86CompilerPath `
+        -Definitions @("/DCOPPERFIN_FLAG_VALUE=29") -CompilerArguments @("/O2") | Out-Null
+    $architectureStats = Get-SccacheStats
+    $results.architecture_change = [ordered]@{
+        hits = Get-CountTotal $architectureStats.cache_hits
+        misses = Get-CountTotal $architectureStats.cache_misses
+        x64_compiler_sha256 = (Get-FileHash -LiteralPath $x64CompilerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        x86_compiler_sha256 = (Get-FileHash -LiteralPath $x86CompilerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    if ($results.architecture_change.misses -ne 1) {
+        throw "An MSVC target-architecture change did not invalidate the focused compiler-cache entry."
+    }
+
+    Stop-SccacheServer
+    Reset-SccacheStats
+    Invoke-ProbeCompile -ObjectPath $objectPath -CompilerPath $x64CompilerPath `
+        -Definitions @("/DCOPPERFIN_FLAG_VALUE=31") -CompilerArguments @("/O2") | Out-Null
+    $compilerBaselineStats = Get-SccacheStats
+    if ((Get-CountTotal $compilerBaselineStats.cache_misses) -ne 1) {
+        throw "The compiler-identity baseline did not produce exactly one cache miss."
+    }
+
+    Stop-SccacheServer
+    Reset-SccacheStats
+    $clangObjectPath = Join-Path $probeRoot "cache_probe_clang.obj"
+    Invoke-ProbeCompile -ObjectPath $clangObjectPath -CompilerPath $clangCompilerPath `
+        -Definitions @("/DCOPPERFIN_FLAG_VALUE=31") -CompilerArguments @("/O2") | Out-Null
+    $compilerStats = Get-SccacheStats
+    $results.compiler_change = [ordered]@{
+        hits = Get-CountTotal $compilerStats.cache_hits
+        misses = Get-CountTotal $compilerStats.cache_misses
+        msvc_sha256 = (Get-FileHash -LiteralPath $x64CompilerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        clang_cl_sha256 = (Get-FileHash -LiteralPath $clangCompilerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+    if ($results.compiler_change.misses -ne 1) {
+        throw "A compiler-identity change did not invalidate the focused compiler-cache entry."
     }
 
     Stop-SccacheServer

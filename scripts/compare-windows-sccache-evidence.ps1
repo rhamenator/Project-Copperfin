@@ -9,7 +9,13 @@ param(
     [string]$MetricsDirectory,
 
     [ValidateRange(1.0, 100.0)]
-    [double]$MinimumImprovementPercent = 25.0
+    [double]$MinimumImprovementPercent = 25.0,
+
+    [ValidateRange(1.0, 100.0)]
+    [double]$MinimumColdMissPercent = 90.0,
+
+    [ValidateRange(1.0, 100.0)]
+    [double]$MinimumWarmHitPercent = 90.0
 )
 
 Set-StrictMode -Version Latest
@@ -39,9 +45,18 @@ if ($coldSeconds -le 0.0 -or $warmSeconds -le 0.0) {
 }
 
 $improvementPercent = 100.0 * ($coldSeconds - $warmSeconds) / $coldSeconds
+$coldRequests = [long]$coldStats.compile_requests
+$coldMisses = [long]$coldStats.cache_misses
+$coldCacheableRequests = [long]$coldStats.cache_hits + $coldMisses
+$coldMissPercent = if ($coldCacheableRequests -gt 0) {
+    100.0 * $coldMisses / $coldCacheableRequests
+} else { 0.0 }
 $warmRequests = [long]$warmStats.compile_requests
 $warmHits = [long]$warmStats.cache_hits
-$warmHitPercent = if ($warmRequests -gt 0) { 100.0 * $warmHits / $warmRequests } else { 0.0 }
+$warmCacheableRequests = $warmHits + [long]$warmStats.cache_misses
+$warmHitPercent = if ($warmCacheableRequests -gt 0) {
+    100.0 * $warmHits / $warmCacheableRequests
+} else { 0.0 }
 
 $evidence = [ordered]@{
     schema_version = 1
@@ -49,13 +64,21 @@ $evidence = [ordered]@{
     cold_compile_seconds = [Math]::Round($coldSeconds, 3)
     warm_compile_seconds = [Math]::Round($warmSeconds, 3)
     compile_improvement_percent = [Math]::Round($improvementPercent, 2)
-    cold_cache_misses = [long]$coldStats.cache_misses
+    cold_compile_requests = $coldRequests
+    cold_cacheable_requests = $coldCacheableRequests
+    cold_cache_misses = $coldMisses
+    cold_miss_percent = [Math]::Round($coldMissPercent, 2)
     warm_compile_requests = $warmRequests
+    warm_cacheable_requests = $warmCacheableRequests
     warm_cache_hits = $warmHits
     warm_cache_misses = [long]$warmStats.cache_misses
     warm_hit_percent = [Math]::Round($warmHitPercent, 2)
     minimum_improvement_percent = $MinimumImprovementPercent
-    materially_faster = $improvementPercent -ge $MinimumImprovementPercent
+    minimum_cold_miss_percent = $MinimumColdMissPercent
+    minimum_warm_hit_percent = $MinimumWarmHitPercent
+    materially_faster = $improvementPercent -ge $MinimumImprovementPercent -and
+        $coldMissPercent -ge $MinimumColdMissPercent -and
+        $warmHitPercent -ge $MinimumWarmHitPercent
 }
 $outputPath = Join-Path $metricsRoot "sccache-evaluation.json"
 $evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $outputPath -Encoding utf8
@@ -72,8 +95,13 @@ if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_STEP_SUMMARY)) {
     ) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Encoding utf8
 }
 
-if ($warmHits -le 0) {
-    throw "The warm full build did not record a compiler-cache hit."
+if ($coldMissPercent -lt $MinimumColdMissPercent) {
+    throw ("The cold build miss ratio was {0:N2}%; at least {1:N2}% was required." -f `
+        $coldMissPercent, $MinimumColdMissPercent)
+}
+if ($warmHitPercent -lt $MinimumWarmHitPercent) {
+    throw ("The warm build hit ratio was {0:N2}%; at least {1:N2}% was required." -f `
+        $warmHitPercent, $MinimumWarmHitPercent)
 }
 if ($improvementPercent -lt $MinimumImprovementPercent) {
     throw ("Warm compilation improved by {0:N2}%; at least {1:N2}% was required." -f `

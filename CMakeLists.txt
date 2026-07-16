@@ -27,6 +27,20 @@ if(MSVC)
 endif()
 
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
+option(COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING
+    "Apply MSVC exception flags per target for generators that cannot reconcile /EHsc with /clr"
+    OFF)
+
+if(MSVC AND COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING)
+    if(CMAKE_CXX_FLAGS MATCHES "(^|[ \\t])/EH")
+        message(FATAL_ERROR
+            "COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING requires CMAKE_CXX_FLAGS without a global /EH option")
+    endif()
+    add_compile_options(
+        "$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<BOOL:$<TARGET_PROPERTY:COPPERFIN_MANAGED_CPP>>>>:/EHsc>"
+    )
+endif()
+
 set(COPPERFIN_WINDOWS_STACK_RESERVE_BYTES 16777216)
 
 function(copperfin_apply_windows_stack_reserve TARGET_NAME)
@@ -353,7 +367,7 @@ endif()
 if(MSVC)
     # Embedded debug information can push the large interpreter translation
     # unit past the standard COFF section limit.
-    target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive- /bigobj)
+    target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive- /bigobj /we4530)
 else()
     target_compile_options(cf_xbase_runtime PRIVATE -Wall -Wextra -Wpedantic)
 endif()

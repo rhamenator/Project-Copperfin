@@ -4377,11 +4377,11 @@ if(WIN32)
             CXX_STANDARD 17
             CXX_STANDARD_REQUIRED ON
             COPPERFIN_DISABLE_CFG TRUE
+            COPPERFIN_MANAGED_CPP TRUE
         )
         target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE
             /guard:cf-
             /clr
-            /EHa
         )
         target_link_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /GUARD:NO)
     endif()
