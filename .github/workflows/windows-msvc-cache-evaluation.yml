@@ -185,6 +185,7 @@ jobs:
           -Name 'Warm full build'
           -OutputPath artifacts/windows-sccache-evaluation/sccache-warm.json
           -MinimumHits 1
+          -MaximumWriteErrors 1
 
       - name: Test compiler-cache invalidation and malformed entries
         shell: pwsh

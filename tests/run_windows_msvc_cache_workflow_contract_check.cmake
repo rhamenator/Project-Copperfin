@@ -121,8 +121,8 @@ require_text("${workflow}" "Reset cold-build cache statistics"
     "cold configure/build statistics boundary")
 require_text("${workflow}" "Reset warm-build cache statistics"
     "warm configure/build statistics boundary")
-require_text_count("${workflow}" "-MaximumWriteErrors 1" 1
-    "bounded cold-population write-error allowance")
+require_text_count("${workflow}" "-MaximumWriteErrors 1" 2
+    "bounded cold and warm write-availability allowances")
 require_text("${workflow}"
     "-CommandArguments @('--test-dir', 'build-sccache-warm', '--output-on-failure')"
     "full unfiltered warm CTest invocation")
