@@ -2,6 +2,8 @@
 # Licensed under the Project Copperfin Source-Available License or
 # Commercial License. See LICENSE.md in the repository root.
 
+cmake_minimum_required(VERSION 3.20)
+
 if(NOT DEFINED INVENTORY_PATH OR "${INVENTORY_PATH}" STREQUAL "")
     message(FATAL_ERROR "INVENTORY_PATH is required")
 endif()
