@@ -32,7 +32,10 @@ internal static partial class Program
         TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
         TestStudioTargetSelectionPrefersSelectedItemsForItemCommands();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
+        TestManagedHostResolutionUsesPlatformNativeCandidateRules();
+        TestManagedHostResolutionChecksRealPosixExecutePermission();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
+        TestStudioHostLaunchContainsStartupFailures();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
         TestProjectWorkflowThreadsExplicitLocaleToBuildHostOnPosix();
         TestProjectWorkflowUsesDistinctOutputDirectoriesForBackToBackBuildsOnPosix();
@@ -494,14 +497,111 @@ internal static partial class Program
         var configuredHostPath = Path.Combine(root, "configured", "copperfin_studio_host.cmd");
         Directory.CreateDirectory(Path.GetDirectoryName(configuredHostPath)!);
         File.WriteAllText(configuredHostPath, "@echo off");
+        var automaticRoot = Path.Combine(root, "managed", "bin");
+        Directory.CreateDirectory(automaticRoot);
+        var automaticHostPath = Path.Combine(
+            automaticRoot,
+            "copperfin_studio_host" + (OperatingSystem.IsWindows() ? ".exe" : string.Empty));
+        WriteAutomaticHostCandidate(automaticHostPath);
 
         var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         try
         {
             Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", configuredHostPath);
-            var resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(Path.Combine(root, "managed", "bin"));
+            var resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(automaticRoot);
             Expect(string.Equals(resolved, configuredHostPath, StringComparison.Ordinal),
-                "explicit COPPERFIN_STUDIO_HOST_PATH should win over probed host layouts");
+                "explicit COPPERFIN_STUDIO_HOST_PATH should remain exact and bypass automatic candidate policy");
+
+            var missingConfiguredPath = Path.Combine(root, "configured", "missing-copperfin-studio-host");
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", missingConfiguredPath);
+            resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(automaticRoot);
+            Expect(resolved is null,
+                "a missing explicit COPPERFIN_STUDIO_HOST_PATH should fail closed instead of silently selecting an automatic host");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestManagedHostResolutionUsesPlatformNativeCandidateRules()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_platform", Guid.NewGuid().ToString("N"));
+        var searchRoot = Path.Combine(root, "managed", "bin");
+        Directory.CreateDirectory(searchRoot);
+        var nativePath = Path.Combine(searchRoot, "copperfin_studio_host");
+        var windowsPath = nativePath + ".exe";
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", null);
+            bool Exists(string candidate) =>
+                string.Equals(candidate, nativePath, StringComparison.Ordinal) ||
+                string.Equals(candidate, windowsPath, StringComparison.Ordinal);
+
+            var posixResolved = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_STUDIO_HOST_PATH",
+                "copperfin_studio_host",
+                searchRoot,
+                fileExists: Exists,
+                fileIsExecutable: _ => true,
+                isWindowsOverride: false);
+            Expect(string.Equals(posixResolved, nativePath, StringComparison.Ordinal),
+                "POSIX automatic discovery should prefer the extensionless host even when an executable .exe sibling exists");
+
+            var rejectedPosix = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_STUDIO_HOST_PATH",
+                "copperfin_studio_host",
+                searchRoot,
+                fileExists: candidate => string.Equals(candidate, nativePath, StringComparison.Ordinal),
+                fileIsExecutable: _ => false,
+                isWindowsOverride: false);
+            Expect(rejectedPosix is null,
+                "POSIX automatic discovery should reject a host candidate without execute permission");
+
+            var windowsResolved = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_STUDIO_HOST_PATH",
+                "copperfin_studio_host",
+                searchRoot,
+                fileExists: Exists,
+                fileIsExecutable: _ => false,
+                isWindowsOverride: true);
+            Expect(string.Equals(windowsResolved, windowsPath, StringComparison.Ordinal),
+                "Windows automatic discovery should prefer the .exe host and should not apply POSIX execute-bit policy");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestManagedHostResolutionChecksRealPosixExecutePermission()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_execute", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var staleWindowsPath = Path.Combine(root, "copperfin_studio_host.exe");
+        var nativePath = Path.Combine(root, "copperfin_studio_host");
+        File.WriteAllText(staleWindowsPath, "stale");
+        WriteAutomaticHostCandidate(nativePath);
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", null);
+            var resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(root);
+            Expect(string.Equals(resolved, nativePath, StringComparison.Ordinal),
+                "real POSIX discovery should ignore a non-executable .exe and select the executable native host");
+
+            File.SetUnixFileMode(nativePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(root);
+            Expect(resolved is null,
+                "real POSIX discovery should reject all automatic candidates when none has execute permission");
         }
         finally
         {
@@ -516,15 +616,16 @@ internal static partial class Program
         var managedOutput = Path.Combine(root, "vsix", "Copperfin.Studio", "bin", "Release", "net472");
         Directory.CreateDirectory(managedOutput);
 
-        var siblingStudioHostPath = Path.Combine(managedOutput, "copperfin_studio_host.exe");
-        File.WriteAllText(siblingStudioHostPath, string.Empty);
+        var hostSuffix = OperatingSystem.IsWindows() ? ".exe" : string.Empty;
+        var siblingStudioHostPath = Path.Combine(managedOutput, "copperfin_studio_host" + hostSuffix);
+        WriteAutomaticHostCandidate(siblingStudioHostPath);
 
         var buildOutputDirectory = Path.Combine(root, "build", "Release");
         Directory.CreateDirectory(buildOutputDirectory);
-        var buildHostPath = Path.Combine(buildOutputDirectory, "copperfin_build_host.exe");
-        var runtimeHostPath = Path.Combine(buildOutputDirectory, "copperfin_runtime_host.exe");
-        File.WriteAllText(buildHostPath, string.Empty);
-        File.WriteAllText(runtimeHostPath, string.Empty);
+        var buildHostPath = Path.Combine(buildOutputDirectory, "copperfin_build_host" + hostSuffix);
+        var runtimeHostPath = Path.Combine(buildOutputDirectory, "copperfin_runtime_host" + hostSuffix);
+        WriteAutomaticHostCandidate(buildHostPath);
+        WriteAutomaticHostCandidate(runtimeHostPath);
 
         var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
@@ -559,6 +660,34 @@ internal static partial class Program
             Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
             TryDelete(root);
         }
+    }
+
+    private static void TestStudioHostLaunchContainsStartupFailures()
+    {
+        var missingHostPath = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-language-service-missing-host-" + Guid.NewGuid().ToString("N"));
+        var localization = new CopperfinLocalization("es-419");
+        try
+        {
+            var launched = CopperfinStudioHostBridge.Launch(
+                missingHostPath,
+                Path.Combine(Path.GetTempPath(), "invoice.frx"),
+                localization: localization);
+            Expect(!launched,
+                "Studio fire-and-forget launch should return failure when process startup throws");
+        }
+        catch (Exception ex)
+        {
+            Expect(false,
+                "Studio fire-and-forget launch should contain process-start exceptions: " + ex.GetType().Name);
+        }
+        Expect(
+            string.Equals(
+                localization.Text("AssetEditor.Dialog.StudioLaunchFailed"),
+                "Copperfin Studio no se inició correctamente.",
+                StringComparison.Ordinal),
+            "contained Studio launch failure should continue through the existing localized caller contract");
     }
 
     private static void TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths()
@@ -1772,6 +1901,19 @@ internal static partial class Program
             RedirectStandardError = true,
             CreateNoWindow = true
         };
+    }
+
+    private static void WriteAutomaticHostCandidate(string path)
+    {
+        File.WriteAllText(path, OperatingSystem.IsWindows() ? string.Empty : "#!/bin/sh\nexit 0\n");
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(
+                path,
+                UnixFileMode.UserRead |
+                UnixFileMode.UserWrite |
+                UnixFileMode.UserExecute);
+        }
     }
 
     private static string CreateTestExecutableScriptPath(

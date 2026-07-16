@@ -56,8 +56,9 @@ Why VS 2022 as the baseline:
 
 Build note:
 
-- the shared managed shells honor `COPPERFIN_STUDIO_HOST_PATH`, `COPPERFIN_BUILD_HOST_PATH`, and `COPPERFIN_RUNTIME_HOST_PATH` first
-- if those variables are unset, they probe for native hosts beside the managed shell and then under repo-style `build/Release`, `build/RelWithDebInfo`, and `build/Debug` output directories discovered from the shell location
+- the shared managed shells treat `COPPERFIN_STUDIO_HOST_PATH`, `COPPERFIN_BUILD_HOST_PATH`, and `COPPERFIN_RUNTIME_HOST_PATH` as authoritative exact paths; an existing configured file is preserved even when it is a wrapper, while a missing configured file fails closed instead of selecting a different host
+- if those variables are unset, the shells probe for native hosts beside the managed shell and then under repo-style `build/Release`, `build/RelWithDebInfo`, and `build/Debug` output directories discovered from the shell location
+- automatic discovery prefers extensionless host names on POSIX and `.exe` names on Windows; POSIX candidates must be executable by the current process
 
 Suggested first-use flow:
 

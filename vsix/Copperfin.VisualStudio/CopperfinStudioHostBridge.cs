@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using DiagnosticsProcess = System.Diagnostics.Process;
 using DiagnosticsStartInfo = System.Diagnostics.ProcessStartInfo;
 
@@ -13,6 +14,7 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioHostBridge
 {
+    private const int PosixExecutePermission = 1;
     private static readonly string[] HostBuildConfigurations = { "Release", "RelWithDebInfo", "Debug" };
 
     public static string? ResolveStudioHostPath(string? baseDirectory = null)
@@ -209,25 +211,36 @@ internal static class CopperfinStudioHostBridge
             BuildArguments(documentPath, readOnly),
             localization: localization);
 
-        return DiagnosticsProcess.Start(startInfo) is not null;
+        try
+        {
+            return DiagnosticsProcess.Start(startInfo) is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     internal static string? ResolveHostPath(
         string environmentVariableName,
         string executableStem,
         string? baseDirectory = null,
-        Func<string, bool>? fileExists = null)
+        Func<string, bool>? fileExists = null,
+        Func<string, bool>? fileIsExecutable = null,
+        bool? isWindowsOverride = null)
     {
+        fileExists ??= File.Exists;
         var configured = Environment.GetEnvironmentVariable(environmentVariableName);
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
+        if (!string.IsNullOrWhiteSpace(configured))
         {
-            return configured;
+            return fileExists(configured) ? configured : null;
         }
 
-        fileExists ??= File.Exists;
-        foreach (var candidate in EnumerateHostCandidatePaths(executableStem, baseDirectory))
+        var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
+        fileIsExecutable ??= IsPosixExecutableFile;
+        foreach (var candidate in EnumerateHostCandidatePaths(executableStem, baseDirectory, isWindows))
         {
-            if (fileExists(candidate))
+            if (fileExists(candidate) && (isWindows || fileIsExecutable(candidate)))
             {
                 return candidate;
             }
@@ -236,15 +249,19 @@ internal static class CopperfinStudioHostBridge
         return null;
     }
 
-    internal static IEnumerable<string> EnumerateHostCandidatePaths(string executableStem, string? baseDirectory = null)
+    internal static IEnumerable<string> EnumerateHostCandidatePaths(
+        string executableStem,
+        string? baseDirectory = null,
+        bool? isWindowsOverride = null)
     {
-        var seen = new HashSet<string>(Path.DirectorySeparatorChar == '\\'
+        var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
+        var seen = new HashSet<string>(isWindows
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal);
 
         foreach (var searchRoot in EnumerateHostSearchRoots(baseDirectory))
         {
-            foreach (var fileName in EnumerateHostFileNames(executableStem))
+            foreach (var fileName in EnumerateHostFileNames(executableStem, isWindows))
             {
                 if (TryAddCandidatePath(seen, Path.Combine(searchRoot, fileName), out var sameDirectoryCandidate))
                 {
@@ -282,7 +299,7 @@ internal static class CopperfinStudioHostBridge
         }
     }
 
-    private static IEnumerable<string> EnumerateHostFileNames(string executableStem)
+    private static IEnumerable<string> EnumerateHostFileNames(string executableStem, bool isWindows)
     {
         if (Path.HasExtension(executableStem))
         {
@@ -290,9 +307,36 @@ internal static class CopperfinStudioHostBridge
             yield break;
         }
 
-        yield return executableStem + ".exe";
-        yield return executableStem;
+        if (isWindows)
+        {
+            yield return executableStem + ".exe";
+            yield return executableStem;
+        }
+        else
+        {
+            yield return executableStem;
+            yield return executableStem + ".exe";
+        }
     }
+
+    private static bool IsPosixExecutableFile(string path)
+    {
+        try
+        {
+            return PosixAccess(path, PosixExecutePermission) == 0;
+        }
+        catch (DllNotFoundException)
+        {
+            return false;
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return false;
+        }
+    }
+
+    [DllImport("libc", EntryPoint = "access", CharSet = CharSet.Ansi, SetLastError = true)]
+    private static extern int PosixAccess(string path, int mode);
 
     private static bool TryAddCandidatePath(HashSet<string> seen, string candidate, out string normalizedPath)
     {
