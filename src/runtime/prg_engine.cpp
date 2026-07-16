@@ -788,6 +788,12 @@ namespace copperfin::runtime
             std::size_t ordinal = 0;
         };
 
+        struct NativeClassIdentity
+        {
+            std::string program_path;
+            std::string class_name;
+        };
+
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
         std::deque<Frame> stack;
@@ -832,6 +838,7 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        std::map<int, std::vector<NativeClassIdentity>> native_object_class_lineage_by_handle;
         std::map<int, std::map<std::string, std::string>> native_property_expression_text_by_handle;
         std::map<int, std::map<std::string, std::string>> native_default_property_expression_text_by_handle;
         std::map<std::string, std::string> native_method_source_text_by_key;
@@ -4512,14 +4519,14 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        Program &program = load_program(runtime_object.source);
         std::string native_method_name;
         std::string native_defining_class_name;
         const auto native_method =
-            find_native_class_method_lookup(
-                program,
-                runtime_object.prog_id,
+            find_native_object_class_method_lookup(
+                runtime_object,
                 identifier,
+                {},
+                {},
                 true,
                 native_method_name,
                 &native_defining_class_name);
@@ -5914,9 +5921,15 @@ namespace copperfin::runtime
             return false;
         }
 
-        Program &program = load_program(runtime_object.source);
         const auto starting_class_lookup =
-            find_native_class_lookup(program, runtime_object.prog_id);
+            [&]() -> std::optional<NativeClassLookup>
+            {
+                std::vector<NativeClassLookup> lineage =
+                    resolved_native_object_class_lineage(runtime_object);
+                return lineage.empty()
+                    ? std::nullopt
+                    : std::optional<NativeClassLookup>(lineage.back());
+            }();
         if (!starting_class_lookup.has_value() ||
             starting_class_lookup->class_definition == nullptr)
         {
@@ -5928,10 +5941,11 @@ namespace copperfin::runtime
                 normalized_method_name);
         std::string qualified_method_name;
         const auto inherited_method_lookup =
-            find_native_class_method_lookup(
-                program,
-                runtime_object.prog_id,
+            find_native_object_class_method_lookup(
+                runtime_object,
                 normalized_method_name,
+                {},
+                {},
                 true,
                 qualified_method_name);
         const bool create_on_starting_class =
@@ -6808,6 +6822,7 @@ namespace copperfin::runtime
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
+            native_object_class_lineage_by_handle.erase(handle);
             ole_objects.erase(handle);
         }
         if (representative_active_form_handle.has_value() &&
@@ -6972,6 +6987,7 @@ namespace copperfin::runtime
             native_property_expression_text_by_handle.erase(handle);
             native_default_property_expression_text_by_handle.erase(handle);
             native_object_arrays.erase(handle);
+            native_object_class_lineage_by_handle.erase(handle);
             ole_objects.erase(handle);
         }
 
@@ -7000,14 +7016,14 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        Program &program = load_program(source_frame.file_path);
         std::string base_method_name;
         std::string base_defining_class_name;
         const auto base_method =
-            find_native_class_method_lookup(
-                program,
-                source_frame.native_method_class_name,
+            find_native_object_class_method_lookup(
+                **runtime_object,
                 source_frame.native_method_name,
+                source_frame.file_path,
+                source_frame.native_method_class_name,
                 false,
                 base_method_name,
                 &base_defining_class_name);

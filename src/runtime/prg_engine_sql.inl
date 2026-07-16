@@ -1331,12 +1331,15 @@
             const std::string normalized_source = normalize_identifier(source);
             if (normalized_source == "createobject" || normalized_source == "newobject")
             {
-                Program &program = load_program(frame.file_path);
-                const bool native_class_found = find_native_class_lookup(program, prog_id).has_value();
+                const auto native_class = find_unqualified_native_class_lookup(frame.file_path, prog_id);
+                const bool native_class_found = native_class.has_value();
+                const std::string activation_program_path = native_class_found
+                    ? native_class->program->path
+                    : frame.file_path;
                 RuntimeOleObjectState *runtime_object = instantiate_native_class_object(
                     frame,
                     prog_id,
-                    frame.file_path,
+                    activation_program_path,
                     normalized_source,
                     constructor_arguments,
                     constructor_argument_references);

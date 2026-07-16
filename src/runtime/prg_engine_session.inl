@@ -229,6 +229,45 @@
             return find_loaded_procedure_routine_lookup(identifier, program.path);
         }
 
+        std::optional<NativeClassLookup> find_loaded_procedure_class_lookup(
+            const std::string &class_name,
+            const std::string &exclude_program_path = {})
+        {
+            const std::string normalized_class_name = normalize_identifier(class_name);
+            const std::string normalized_exclude_program_path = normalize_path(exclude_program_path);
+            for (const std::string &procedure_program_path : procedure_program_paths)
+            {
+                if (!normalized_exclude_program_path.empty() &&
+                    procedure_program_path == normalized_exclude_program_path)
+                {
+                    continue;
+                }
+
+                Program &program = load_program(procedure_program_path);
+                const auto found = program.classes.find(normalized_class_name);
+                if (found != program.classes.end())
+                {
+                    return NativeClassLookup{.program = &program, .class_definition = &found->second};
+                }
+            }
+
+            return std::nullopt;
+        }
+
+        std::optional<NativeClassLookup> find_unqualified_native_class_lookup(
+            const std::string &source_file_path,
+            const std::string &class_name)
+        {
+            Program &program = load_program(source_file_path);
+            if (const auto found = program.classes.find(normalize_identifier(class_name));
+                found != program.classes.end())
+            {
+                return NativeClassLookup{.program = &program, .class_definition = &found->second};
+            }
+
+            return find_loaded_procedure_class_lookup(class_name, program.path);
+        }
+
         std::string native_same_prg_base_class_name(const std::string &base_class_name) const
         {
             const std::string trimmed = trim_copy(base_class_name);
@@ -1126,6 +1165,7 @@
                     window_message_bindings.end());
                 native_property_expression_text_by_handle.erase(handle);
                 native_default_property_expression_text_by_handle.erase(handle);
+                native_object_class_lineage_by_handle.erase(handle);
                 ole_objects.erase(found);
             }
         }
@@ -2136,7 +2176,16 @@
 
             if (trim_copy(class_definition.base_class_source_path).empty())
             {
-                return find_native_class_lookup(program, base_class_name);
+                if (auto same_program = find_native_class_lookup(program, base_class_name);
+                    same_program.has_value())
+                {
+                    return same_program;
+                }
+                if (is_supported_native_base_class_name(base_class_name))
+                {
+                    return std::nullopt;
+                }
+                return find_loaded_procedure_class_lookup(base_class_name, program.path);
             }
 
             const std::string resolved_program_path =
@@ -2180,63 +2229,99 @@
                 reverse_lineage.rend());
         }
 
-        std::optional<NativeMethodLookup> find_native_class_method_lookup(
-            const Program &program,
-            const std::string &class_name,
+        std::vector<NativeClassLookup> resolved_native_object_class_lineage(
+            const RuntimeOleObjectState &runtime_object)
+        {
+            std::vector<NativeClassLookup> resolved;
+            if (const auto saved = native_object_class_lineage_by_handle.find(runtime_object.handle);
+                saved != native_object_class_lineage_by_handle.end())
+            {
+                resolved.reserve(saved->second.size());
+                for (const NativeClassIdentity &identity : saved->second)
+                {
+                    Program &program = load_program(identity.program_path);
+                    const auto class_found = program.classes.find(normalize_identifier(identity.class_name));
+                    if (class_found != program.classes.end())
+                    {
+                        resolved.push_back(
+                            {.program = &program, .class_definition = &class_found->second});
+                    }
+                }
+            }
+
+            if (!resolved.empty() || runtime_object.source.empty())
+            {
+                return resolved;
+            }
+
+            Program &program = load_program(runtime_object.source);
+            return collect_native_class_lineage(program, runtime_object.prog_id);
+        }
+
+        std::optional<NativeMethodLookup> find_native_object_class_method_lookup(
+            const RuntimeOleObjectState &runtime_object,
             const std::string &member_name,
+            const std::string &starting_program_path,
+            const std::string &starting_class_name,
             bool include_starting_class,
             std::string &qualified_routine_name,
             std::string *defining_class_name = nullptr)
         {
             const std::string normalized_member_name = normalize_identifier(member_name);
-            std::optional<NativeClassLookup> current_class =
-                find_native_class_lookup(program, class_name);
-            if (!current_class.has_value())
+            const std::string normalized_starting_path = normalize_path(starting_program_path);
+            const std::string normalized_starting_class = normalize_identifier(starting_class_name);
+            std::vector<NativeClassLookup> lineage =
+                resolved_native_object_class_lineage(runtime_object);
+            if (lineage.empty())
             {
                 return std::nullopt;
             }
-            if (!include_starting_class)
-            {
-                current_class = find_native_base_class_lookup(
-                    *current_class->program,
-                    *current_class->class_definition);
-            }
 
-            std::set<std::string> visited;
-            while (current_class.has_value())
+            std::size_t search_count = lineage.size();
+            if (!normalized_starting_class.empty())
             {
-                const std::string normalized_class_name =
-                    normalize_identifier(current_class->class_definition->name);
-                const std::string visit_key =
-                    normalize_path(current_class->program->path) + ":" + normalized_class_name;
-                if (!normalized_class_name.empty() &&
-                    !visited.insert(visit_key).second)
+                search_count = 0U;
+                for (std::size_t index = lineage.size(); index > 0U; --index)
                 {
+                    const NativeClassLookup &candidate = lineage[index - 1U];
+                    if (normalize_identifier(candidate.class_definition->name) != normalized_starting_class ||
+                        (!normalized_starting_path.empty() &&
+                         normalize_path(candidate.program->path) != normalized_starting_path))
+                    {
+                        continue;
+                    }
+                    search_count = include_starting_class ? index : index - 1U;
                     break;
                 }
+            }
+            else if (!include_starting_class)
+            {
+                --search_count;
+            }
 
+            while (search_count > 0U)
+            {
+                const NativeClassLookup &candidate = lineage[--search_count];
                 const auto method_found =
-                    current_class->class_definition->methods.find(normalized_member_name);
-                if (method_found != current_class->class_definition->methods.end())
+                    candidate.class_definition->methods.find(normalized_member_name);
+                if (method_found == candidate.class_definition->methods.end())
                 {
-                    const std::string resolved_class_name =
-                        current_class->class_definition->name.empty()
-                            ? class_name
-                            : current_class->class_definition->name;
-                    if (defining_class_name != nullptr)
-                    {
-                        *defining_class_name = resolved_class_name;
-                    }
-                    qualified_routine_name = resolved_class_name + "." + method_found->second.name;
-                    return NativeMethodLookup{
-                        .program = current_class->program,
-                        .class_definition = current_class->class_definition,
-                        .routine = &method_found->second};
+                    continue;
                 }
 
-                current_class = find_native_base_class_lookup(
-                    *current_class->program,
-                    *current_class->class_definition);
+                const std::string resolved_class_name =
+                    candidate.class_definition->name.empty()
+                        ? runtime_object.prog_id
+                        : candidate.class_definition->name;
+                if (defining_class_name != nullptr)
+                {
+                    *defining_class_name = resolved_class_name;
+                }
+                qualified_routine_name = resolved_class_name + "." + method_found->second.name;
+                return NativeMethodLookup{
+                    .program = candidate.program,
+                    .class_definition = candidate.class_definition,
+                    .routine = &method_found->second};
             }
 
             return std::nullopt;
@@ -2253,13 +2338,12 @@
                 return nullptr;
             }
 
-            Program &program = load_program(runtime_object.source);
-            program_path = program.path;
             const auto method_lookup =
-                find_native_class_method_lookup(
-                    program,
-                    runtime_object.prog_id,
+                find_native_object_class_method_lookup(
+                    runtime_object,
                     member_name,
+                    {},
+                    {},
                     true,
                     qualified_routine_name);
             if (!method_lookup.has_value())
@@ -2844,6 +2928,14 @@
 
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
             RuntimeOleObjectState *runtime_object = &object_it->second;
+            auto &saved_lineage = native_object_class_lineage_by_handle[handle];
+            saved_lineage.reserve(class_lineage.size());
+            for (const NativeClassLookup &lineage_class : class_lineage)
+            {
+                saved_lineage.push_back(
+                    {.program_path = lineage_class.program->path,
+                     .class_name = lineage_class.class_definition->name});
+            }
             const std::size_t construction_event_start = events.size();
             const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
             {

@@ -4602,6 +4602,11 @@ target_include_directories(test_prg_engine_runtime_surface_functions PRIVATE
     ${CMAKE_SOURCE_DIR}/src/runtime
 )
 
+copperfin_add_test(test_prg_engine_runtime_surface_procedure_classes cf_xbase_runtime
+    test_prg_engine_runtime_surface_procedure_classes.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_locale_code_page cf_xbase_runtime
     test_prg_engine_locale_code_page.cpp
     prg_engine_test_support.cpp

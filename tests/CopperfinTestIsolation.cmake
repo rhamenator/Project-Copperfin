@@ -705,6 +705,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_path_functions
             test_prg_engine_runtime_surface_functions
             test_prg_engine_runtime_surface_itemid_selectors
+            test_prg_engine_runtime_surface_procedure_classes
             test_prg_engine_runtime_surface_requery
             test_prg_engine_runtime_surface_value
             test_prg_engine_rushmore_optimization
