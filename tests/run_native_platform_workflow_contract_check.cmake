@@ -295,17 +295,17 @@ require_text(".github/workflows/windows-deep-validation.yml"
     "name: Windows Deep Validation"
     "Windows deep-validation workflow identity")
 require_text(".github/workflows/windows-deep-validation.yml" [=[      test_jobs:
-        description: Bounded native CTest concurrency for measured isolation trials.
+        description: Bounded native CTest concurrency.
         required: true
-        default: '1'
+        default: '2'
         type: choice
         options:
           - '1'
           - '2']=]
-    "bounded Windows CTest trial input")
+    "bounded Windows CTest input")
 require_text(".github/workflows/windows-deep-validation.yml"
     [=[-CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--parallel', '${{ inputs.test_jobs }}')]=]
-    "bounded Windows CTest trial command")
+    "bounded Windows CTest command")
 require_text(".github/workflows/windows-deep-validation.yml"
     [=[name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-build-${{ inputs.build_jobs }}-test-${{ inputs.test_jobs }}]=]
     "Windows deep-validation build/test job artifact identity")
@@ -379,11 +379,17 @@ require_text("${shared_action}"
     "-Name 'Run native test suite'"
     "measured Windows CTest phase")
 require_text("${shared_action}"
-    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure')"
-    "full Windows CTest command")
+    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--parallel', '2')"
+    "bounded full Windows CTest command")
 require_text("${shared_action}"
     "-Mode Finalize"
     "Windows metric finalization")
+require_text("scripts/validate-windows.ps1"
+    [=[[int]$TestJobs = 2]=]
+    "bounded local Windows CTest default")
+require_text("scripts/validate-windows.ps1"
+    [=["--parallel", "$TestJobs"]=]
+    "bounded local Windows CTest command")
 
 require_regex_count("${shared_action}" "\n[ \t]+run:[ \t]*cmake -S "
     1 "direct non-Windows configure command")

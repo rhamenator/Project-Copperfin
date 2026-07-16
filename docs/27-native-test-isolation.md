@@ -51,4 +51,6 @@ The current audit found no native test that owns a fixed TCP/UDP port. Adding on
 
 ## Bounded Trials
 
-Do not replace serial CTest with bare or unbounded parallel execution. The manual Windows Deep Validation workflow exposes `test_jobs`, defaults it to `1`, and permits `2` only for measured isolation trials. A trial must retain the complete test inventory and `--output-on-failure`, and archive phase timing. At least three hosted runs must pass without leaked processes, files, intermittent failures, or sample mutation before the ordinary policy changes. Linux and macOS require independent evidence.
+Do not replace serial CTest with bare or unbounded parallel execution. Windows validation uses an explicit two-job cap and retains the complete test inventory, `--output-on-failure`, and phase timing. The manual Windows Deep Validation workflow permits one or two test jobs and defaults to the adopted two-job policy.
+
+The adoption evidence consists of three successful hosted Windows Deep Validation runs at commit `84c8c2b3`. All passed 282/282 tests. Native CTest elapsed times were 342.27, 350.47, and 313.44 seconds versus the 449.70-second serial baseline, for a 335.39-second mean (25.42% reduction) and 342.27-second median (23.89% reduction). Minimum free memory remained above 12 GiB and peak tracked working set remained below 1 GiB. Linux and macOS remain serial until each platform has independent evidence.

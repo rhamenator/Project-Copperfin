@@ -4,7 +4,9 @@
 
 param(
     [ValidateRange(1, 256)]
-    [int]$BuildJobs = 2
+    [int]$BuildJobs = 2,
+    [ValidateRange(1, 2)]
+    [int]$TestJobs = 2
 )
 
 $ErrorActionPreference = "Stop"
@@ -78,7 +80,12 @@ Invoke-Step -Name "Build native binaries" -Action {
 }
 
 Invoke-Step -Name "Run native CTest suite" -Action {
-    Invoke-Checked -FilePath "ctest" -ArgumentList @("--test-dir", $buildDir, "-C", "Release", "--output-on-failure")
+    Invoke-Checked -FilePath "ctest" -ArgumentList @(
+        "--test-dir", $buildDir,
+        "-C", "Release",
+        "--output-on-failure",
+        "--parallel", "$TestJobs"
+    )
 }
 
 Invoke-Step -Name "Build Visual Studio extension" -Action {

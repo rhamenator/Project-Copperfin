@@ -25,9 +25,9 @@ on:
           - '2'
           - '3'
       test_jobs:
-        description: Bounded native CTest concurrency for measured isolation trials.
+        description: Bounded native CTest concurrency.
         required: true
-        default: '1'
+        default: '2'
         type: choice
         options:
           - '1'
