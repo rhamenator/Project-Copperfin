@@ -178,6 +178,7 @@ GitHub validation:
 - Release readiness requires successful `Linux GCC`, `macOS Clang`, and `Windows MSVC` checks. Manual `.github/workflows/native-release-readiness.yml` runs all three shared contracts and exposes a final dependent gate. Native validation does not publish or reuse CMake build trees between jobs or workflow runs.
 - `.github/workflows/build-installers.yml` remains focused on packaging standalone installer artifacts and intentionally builds with tests disabled.
 - `.github/workflows/windows-deep-validation.yml` is manual dispatch only and runs a deeper Windows hosted build across native tests, VSIX, standalone Studio, and designer smoke test binaries. `scripts/measure-windows-validation.ps1` records configure, native compile/test, and managed compile/test evidence under `artifacts/windows-deep-validation-metrics`; those JSON files are uploaded even when a measured phase fails.
+- Windows hosted measurements keep the ordinary native build at two jobs: three-job trials were memory-safe but did not materially reduce cold compile time. Macro-independent test-support sources are reusable object targets in `tests/CMakeLists.txt`; keep compile-definition-sensitive variants separate rather than folding them into shared objects.
 
 Current MVP scope:
 

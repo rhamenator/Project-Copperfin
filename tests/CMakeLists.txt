@@ -11,6 +11,46 @@ function(copperfin_add_test TARGET_NAME LINK_LIBS)
     add_test(NAME ${TARGET_NAME} COMMAND $<TARGET_FILE:${TARGET_NAME}>)
 endfunction()
 
+function(copperfin_add_test_support_object TARGET_NAME SOURCE_FILE LINK_LIBS)
+    add_library(${TARGET_NAME} OBJECT ${SOURCE_FILE})
+    target_link_libraries(${TARGET_NAME} PRIVATE ${LINK_LIBS})
+
+    if(MSVC)
+        target_compile_options(${TARGET_NAME} PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(${TARGET_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endfunction()
+
+function(copperfin_reuse_test_support_object SOURCE_FILE OBJECT_TARGET)
+    if(NOT TARGET ${OBJECT_TARGET})
+        message(FATAL_ERROR "Unknown reusable test-support object target: ${OBJECT_TARGET}")
+    endif()
+
+    set(copperfin_reuse_count 0)
+    get_property(copperfin_reuse_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(copperfin_reuse_target IN LISTS copperfin_reuse_targets)
+        get_target_property(copperfin_reuse_type ${copperfin_reuse_target} TYPE)
+        if(NOT copperfin_reuse_type STREQUAL "EXECUTABLE")
+            continue()
+        endif()
+
+        get_target_property(copperfin_reuse_sources ${copperfin_reuse_target} SOURCES)
+        if(NOT SOURCE_FILE IN_LIST copperfin_reuse_sources)
+            continue()
+        endif()
+
+        list(REMOVE_ITEM copperfin_reuse_sources ${SOURCE_FILE})
+        set_property(TARGET ${copperfin_reuse_target} PROPERTY SOURCES "${copperfin_reuse_sources}")
+        target_sources(${copperfin_reuse_target} PRIVATE $<TARGET_OBJECTS:${OBJECT_TARGET}>)
+        math(EXPR copperfin_reuse_count "${copperfin_reuse_count} + 1")
+    endforeach()
+
+    if(copperfin_reuse_count EQUAL 0)
+        message(FATAL_ERROR "Reusable test-support source is not used by an executable: ${SOURCE_FILE}")
+    endif()
+endfunction()
+
 add_library(cf_test_process_capture_support STATIC
     test_process_capture_support.cpp
 )
@@ -19,6 +59,44 @@ if(MSVC)
 else()
     target_compile_options(cf_test_process_capture_support PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+# These support translation units do not consume per-executable compile
+# definitions. Compile them once and reuse their objects across test binaries.
+copperfin_add_test_support_object(
+    cf_prg_engine_test_support
+    "${CMAKE_CURRENT_SOURCE_DIR}/prg_engine_test_support.cpp"
+    cf_xbase_runtime
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_shared_test_helpers
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_shared_test_helpers.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_report_shared_fixtures
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_shared_fixtures.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_objects_dhf_shared_fixtures
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_objects_dhf_shared_fixtures.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_sections_dhf_shared_fixtures
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_sections_dhf_shared_fixtures.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_report_settings_shared_fixtures
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_settings_shared_fixtures.cpp"
+    cf_vfp_assets
+)
+copperfin_add_test_support_object(
+    cf_studio_host_json_report_section_shared_fixtures
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_section_shared_fixtures.cpp"
+    cf_vfp_assets
+)
 
 find_program(DOTNET_EXECUTABLE NAMES dotnet)
 if(DOTNET_EXECUTABLE)
@@ -4507,3 +4585,32 @@ foreach(copperfin_test_target IN LISTS copperfin_test_directory_targets)
         endif()
     endif()
 endforeach()
+
+copperfin_reuse_test_support_object(
+    prg_engine_test_support.cpp
+    cf_prg_engine_test_support
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_shared_test_helpers.cpp
+    cf_studio_host_json_shared_test_helpers
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_report_shared_fixtures.cpp
+    cf_studio_host_json_report_shared_fixtures
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_objects_dhf_shared_fixtures.cpp
+    cf_studio_host_json_objects_dhf_shared_fixtures
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_sections_dhf_shared_fixtures.cpp
+    cf_studio_host_json_sections_dhf_shared_fixtures
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_report_settings_shared_fixtures.cpp
+    cf_studio_host_json_report_settings_shared_fixtures
+)
+copperfin_reuse_test_support_object(
+    test_studio_host_json_report_section_shared_fixtures.cpp
+    cf_studio_host_json_report_section_shared_fixtures
+)
