@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::test_support {
@@ -23,6 +24,9 @@ CapturedProcessResult run_process_capture(
     const std::filesystem::path& executable_path,
     const std::vector<std::string>& utf8_arguments,
     const std::filesystem::path& working_directory);
+
+std::string normalize_captured_line_endings(std::string_view text);
+CapturedProcessResult normalize_captured_process_line_endings(CapturedProcessResult result);
 
 }  // namespace copperfin::test_support
 

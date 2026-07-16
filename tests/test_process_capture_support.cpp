@@ -384,4 +384,26 @@ CapturedProcessResult run_process_capture(
     return result;
 }
 
+std::string normalize_captured_line_endings(const std::string_view text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0U; index < text.size(); ++index) {
+        if (text[index] != '\r') {
+            normalized.push_back(text[index]);
+            continue;
+        }
+        if (index + 1U < text.size() && text[index + 1U] == '\n') {
+            ++index;
+        }
+        normalized.push_back('\n');
+    }
+    return normalized;
+}
+
+CapturedProcessResult normalize_captured_process_line_endings(CapturedProcessResult result) {
+    result.stdout_text = normalize_captured_line_endings(result.stdout_text);
+    result.stderr_text = normalize_captured_line_endings(result.stderr_text);
+    return result;
+}
+
 }  // namespace copperfin::test_support

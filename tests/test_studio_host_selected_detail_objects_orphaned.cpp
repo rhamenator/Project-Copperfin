@@ -51,10 +51,11 @@ ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
-    return copperfin::test_support::run_process_capture(
-        copperfin::test_support::path_from_utf8_string(executable_path),
-        arguments,
-        working_directory);
+    return copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
+            copperfin::test_support::path_from_utf8_string(executable_path),
+            arguments,
+            working_directory));
 }
 
 bool dbf_record_deleted(const std::filesystem::path& table_path, std::size_t record_index) {

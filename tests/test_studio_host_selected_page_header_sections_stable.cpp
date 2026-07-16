@@ -60,10 +60,11 @@ ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
-    return copperfin::test_support::run_process_capture(
-        copperfin::test_support::path_from_utf8_string(executable_path),
-        arguments,
-        working_directory);
+    return copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
+            copperfin::test_support::path_from_utf8_string(executable_path),
+            arguments,
+            working_directory));
 }
 
 void write_synthetic_report_table_for_layout_json(const std::filesystem::path& report_path) {

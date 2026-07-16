@@ -108,19 +108,7 @@ std::string read_text(const std::filesystem::path& path) {
 }
 
 std::string normalize_captured_line_endings(const std::string_view text) {
-    std::string normalized;
-    normalized.reserve(text.size());
-    for (std::size_t index = 0U; index < text.size(); ++index) {
-        if (text[index] != '\r') {
-            normalized.push_back(text[index]);
-            continue;
-        }
-        if (index + 1U < text.size() && text[index + 1U] == '\n') {
-            ++index;
-        }
-        normalized.push_back('\n');
-    }
-    return normalized;
+    return copperfin::test_support::normalize_captured_line_endings(text);
 }
 
 void test_captured_process_output_line_endings_normalize(const std::string&) {
@@ -149,14 +137,15 @@ ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
-    const auto captured = copperfin::test_support::run_process_capture(
-        copperfin::test_support::path_from_utf8_string(executable_path),
-        arguments,
-        working_directory);
+    const auto captured = copperfin::test_support::normalize_captured_process_line_endings(
+        copperfin::test_support::run_process_capture(
+            copperfin::test_support::path_from_utf8_string(executable_path),
+            arguments,
+            working_directory));
     return {
         .exit_code = captured.exit_code,
-        .stdout_text = normalize_captured_line_endings(captured.stdout_text),
-        .stderr_text = normalize_captured_line_endings(captured.stderr_text)
+        .stdout_text = captured.stdout_text,
+        .stderr_text = captured.stderr_text
     };
 }
 

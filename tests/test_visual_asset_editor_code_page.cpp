@@ -180,14 +180,15 @@ void verify_marked_asset_round_trip(
     }
 
     if (!studio_host_path.empty()) {
-        const auto host_result = copperfin::test_support::run_process_capture(
-            copperfin::test_support::path_from_utf8_string(studio_host_path),
-            {
-                "--path",
-                copperfin::test_support::path_to_utf8_string(fixture.table_path),
-                "--json"
-            },
-            root);
+        const auto host_result = copperfin::test_support::normalize_captured_process_line_endings(
+            copperfin::test_support::run_process_capture(
+                copperfin::test_support::path_from_utf8_string(studio_host_path),
+                {
+                    "--path",
+                    copperfin::test_support::path_to_utf8_string(fixture.table_path),
+                    "--json"
+                },
+                root));
         expect(host_result.started && host_result.exit_code == 0,
                label + " Studio host JSON command should succeed");
         expect(host_result.stdout_text.find(replacement_utf8) != std::string::npos,

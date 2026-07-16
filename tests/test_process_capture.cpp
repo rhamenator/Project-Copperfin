@@ -121,6 +121,15 @@ int run_parent(const std::filesystem::path& source_executable) {
     expect(result.stderr_text == std::string("stderr\nline\0tail", 16U),
            "#4081: direct process probe should preserve stderr bytes");
 
+    const auto normalized =
+        copperfin::test_support::normalize_captured_process_line_endings(result);
+    expect(normalized.stdout_text == std::string("stdout\nline\n\0tail", 17U),
+           "#4080: Studio-host observation should normalize CRLF and lone CR bytes");
+    expect(normalized.stderr_text == result.stderr_text,
+           "#4080: Studio-host observation should preserve existing LF and binary bytes");
+    expect(result.stdout_text == std::string("stdout\r\nline\r\0tail", 18U),
+           "#4081: observation normalization should not mutate raw captured bytes");
+
     const auto missing = copperfin::test_support::run_process_capture(
         root / "missing-process",
         {},
