@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="CopperfinDocumentPathIdentity.cs" />
     <Compile Include="StudioMainForm.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.cs" Link="Shared\CopperfinAssetEditorControl.cs" />

@@ -5893,6 +5893,7 @@ internal static class Program
         runner.Run(nameof(SmokeLocalizedHostModeChromeCompaction), SmokeLocalizedHostModeChromeCompaction);
         runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
         runner.Run(nameof(SmokeManagedProjectProcessLaunchContracts), SmokeManagedProjectProcessLaunchContracts);
+        runner.Run(nameof(SmokeStandaloneStudioDocumentIdentity), SmokeStandaloneStudioDocumentIdentity);
         runner.Run(nameof(SmokeLocalizedProjectWorkspaceChrome), SmokeLocalizedProjectWorkspaceChrome);
         runner.Run(nameof(SmokeLocalizedProjectCommandDebuggerChrome), SmokeLocalizedProjectCommandDebuggerChrome);
         runner.Run(nameof(SmokeLocalizedProjectWorkspacePlaceholders), SmokeLocalizedProjectWorkspacePlaceholders);
@@ -35106,6 +35107,41 @@ internal static class Program
             $"project debug replay should surface runtime events for {path}");
     }
 
+    private static void SmokeStandaloneStudioDocumentIdentity()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-document-identity",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var firstPath = Path.Combine(root, "first.prg");
+        var secondPath = Path.Combine(root, "second.prg");
+        try
+        {
+            File.WriteAllText(firstPath, "RETURN");
+            File.WriteAllText(secondPath, "RETURN");
+            SmokeStandaloneStudioWithMultipleAssets(firstPath, secondPath);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeStandaloneStudioWithMultipleAssets(string? firstPath, string? secondPath)
     {
         if (string.IsNullOrWhiteSpace(firstPath) ||
@@ -35144,6 +35180,27 @@ internal static class Program
         Expect(tabControl is not null, "standalone Studio should surface a document tab control");
         if (tabControl is not null)
         {
+            foreach (var expectedPath in new[]
+            {
+                CopperfinDocumentPathIdentity.Normalize(firstPath!),
+                CopperfinDocumentPathIdentity.Normalize(secondPath!)
+            })
+            {
+                var matchingPage = tabControl.TabPages.Cast<TabPage>()
+                    .SingleOrDefault(page => string.Equals(page.ToolTipText, expectedPath, StringComparison.Ordinal));
+                Expect(matchingPage is not null,
+                    $"standalone Studio should retain an exact tab path binding for {expectedPath}");
+                var editor = matchingPage?.Controls.OfType<CopperfinAssetEditorControl>().SingleOrDefault();
+                Expect(editor is not null,
+                    $"standalone Studio should retain an asset editor for {expectedPath}");
+                if (editor is not null)
+                {
+                    Expect(
+                        string.Equals(ReadPrivateStringField(editor, "currentPath"), expectedPath, StringComparison.Ordinal),
+                        $"standalone Studio commands should remain bound to the exact selected document path {expectedPath}");
+                }
+            }
+
             var beforeDuplicateOpen = tabControl.TabPages.Count;
             form.OpenDocument(firstPath!);
             Application.DoEvents();

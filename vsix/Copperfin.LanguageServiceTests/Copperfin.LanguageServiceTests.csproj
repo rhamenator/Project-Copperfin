@@ -11,8 +11,10 @@
 
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="CopperfinDocumentPathIdentityTests.cs" />
     <Compile Include="CopperfinStudioTargetSelectionTests.cs" />
     <Compile Include="VsixCommandLocalizationTests.cs" />
+    <Compile Include="..\Copperfin.Studio\CopperfinDocumentPathIdentity.cs" Link="Shared\CopperfinDocumentPathIdentity.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProcessRunner.cs" Link="Shared\CopperfinProcessRunner.cs" />

@@ -16,7 +16,8 @@ internal sealed class StudioMainForm : Form
     private readonly TabControl documentTabs;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly CopperfinLocalization localization;
-    private readonly Dictionary<string, TabPage> openDocuments = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TabPage> openDocuments =
+        new(CopperfinDocumentPathIdentity.CreateComparer());
 
     public StudioMainForm(CopperfinLocalization? localization = null)
     {
@@ -81,7 +82,7 @@ internal sealed class StudioMainForm : Form
             return;
         }
 
-        var normalizedPath = Path.GetFullPath(path);
+        var normalizedPath = CopperfinDocumentPathIdentity.Normalize(path);
         if (openDocuments.TryGetValue(normalizedPath, out var existingPage))
         {
             documentTabs.SelectedTab = existingPage;

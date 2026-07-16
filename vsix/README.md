@@ -26,6 +26,7 @@ Current scope:
 - now uses a section-aware report/label shell with named bands, a modernized design surface, and a dedicated left-pane section explorer instead of treating reports and labels as flat record lists
 - reuses the same shared WinForms designer controls in the standalone Copperfin Studio shell
 - the standalone Copperfin Studio shell now opens multiple assets as tabs in one session instead of forcing one-document-at-a-time editing
+- standalone document tabs use filesystem-aware identity: Windows paths remain case-insensitive, real case-only files stay distinct on case-sensitive POSIX volumes, and aliases deduplicate on case-insensitive POSIX volumes
 - includes automated UI smoke tests that render the shared design surface and load real VFP sample assets
 - supports asset-aware property-grid editing for `MNX/MNT` menu items
 - now surfaces `PJX/PJT` as a grouped project workspace with item grouping, startup/build-plan summary, and project-entry editing

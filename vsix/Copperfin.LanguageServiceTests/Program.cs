@@ -36,6 +36,7 @@ internal static partial class Program
         TestManagedHostResolutionChecksRealPosixExecutePermission();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestStudioHostLaunchContainsStartupFailures();
+        TestDocumentPathIdentityUsesFilesystemSemantics();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
         TestProjectWorkflowThreadsExplicitLocaleToBuildHostOnPosix();
         TestProjectWorkflowUsesDistinctOutputDirectoriesForBackToBackBuildsOnPosix();
