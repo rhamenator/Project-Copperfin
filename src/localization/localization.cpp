@@ -251,6 +251,16 @@ bool path_has_non_whitespace(const std::filesystem::path& value) {
     });
 }
 
+bool can_supply_default_catalog(const std::filesystem::path& locale_root) {
+    const std::filesystem::path catalog_path =
+        locale_root / std::string(default_locale) / "strings.json";
+    std::error_code type_error;
+    if (!std::filesystem::is_regular_file(catalog_path, type_error)) {
+        return false;
+    }
+    return load_catalog_file(catalog_path).ok;
+}
+
 std::string pseudo_localize_segment(std::string_view segment) {
     std::string result;
     result.reserve(segment.size() * 2U);
@@ -540,6 +550,7 @@ LocalizedCatalog load_catalogs(const std::filesystem::path& locale_root, std::st
 std::filesystem::path resolve_catalog_root(const std::filesystem::path& executable_path) {
     const auto configured = platform::read_environment_path("COPPERFIN_LOCALE_DIR");
     if (configured.has_value() && path_has_non_whitespace(*configured)) {
+        // Explicit overrides are authoritative; catalog validation applies only to discovery.
         return *configured;
     }
 
@@ -552,21 +563,21 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
             executable_root / ".." / ".." / "resources" / "locales"
         };
         for (const auto& candidate : candidates) {
-            if (std::filesystem::exists(candidate)) {
+            if (can_supply_default_catalog(candidate)) {
                 return candidate;
             }
         }
     }
 
     const std::filesystem::path developer_tree = std::filesystem::current_path() / "resources" / "locales";
-    if (std::filesystem::exists(developer_tree)) {
+    if (can_supply_default_catalog(developer_tree)) {
         return developer_tree;
     }
 
     std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
     while (!ancestor.empty()) {
         const std::filesystem::path ancestor_developer_tree = ancestor / "resources" / "locales";
-        if (std::filesystem::exists(ancestor_developer_tree)) {
+        if (can_supply_default_catalog(ancestor_developer_tree)) {
             return ancestor_developer_tree;
         }
         const std::filesystem::path parent = ancestor.parent_path();

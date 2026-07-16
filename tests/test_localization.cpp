@@ -13,6 +13,7 @@
 #include "test_locale_catalog_environment_support.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -29,6 +30,90 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+class ScopedTempDirectory {
+public:
+    explicit ScopedTempDirectory(const std::string& name) {
+        static std::size_t sequence = 0U;
+        root_ = std::filesystem::temp_directory_path() /
+            (name + "_" +
+             std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "_" +
+             std::to_string(sequence++));
+        std::filesystem::create_directories(root_);
+    }
+
+    ~ScopedTempDirectory() {
+        std::error_code ignored;
+        std::filesystem::remove_all(root_, ignored);
+    }
+
+    const std::filesystem::path& path() const {
+        return root_;
+    }
+
+private:
+    std::filesystem::path root_;
+};
+
+class ScopedCurrentPath {
+public:
+    explicit ScopedCurrentPath(const std::filesystem::path& path)
+        : original_path_(std::filesystem::current_path()) {
+        std::filesystem::current_path(path);
+    }
+
+    ~ScopedCurrentPath() {
+        std::error_code ignored;
+        std::filesystem::current_path(original_path_, ignored);
+    }
+
+private:
+    std::filesystem::path original_path_;
+};
+
+#if !defined(_WIN32)
+class ScopedPathPermissions {
+public:
+    explicit ScopedPathPermissions(const std::filesystem::path& path)
+        : path_(path) {
+        std::error_code error;
+        original_permissions_ = std::filesystem::status(path_, error).permissions();
+        active_ = !error;
+    }
+
+    bool replace(std::filesystem::perms permissions) {
+        std::error_code error;
+        std::filesystem::permissions(
+            path_,
+            permissions,
+            std::filesystem::perm_options::replace,
+            error);
+        return !error;
+    }
+
+    void restore() {
+        if (!active_) {
+            return;
+        }
+        std::error_code ignored;
+        std::filesystem::permissions(
+            path_,
+            original_permissions_,
+            std::filesystem::perm_options::replace,
+            ignored);
+        active_ = false;
+    }
+
+    ~ScopedPathPermissions() {
+        restore();
+    }
+
+private:
+    std::filesystem::path path_;
+    std::filesystem::perms original_permissions_ = std::filesystem::perms::unknown;
+    bool active_ = false;
+};
+#endif
 
 void write_catalog(const std::filesystem::path& root, const std::string& locale, const std::string& json) {
     const std::filesystem::path locale_root = root / locale;
@@ -442,6 +527,177 @@ void test_product_locale_catalogs_have_key_parity() {
     }
 }
 
+void test_catalog_root_auto_discovery_skips_invalid_candidates() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp_directory("copperfin_localization_invalid_discovery_tests");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path executable_root = temp_directory.path() / "layout" / "bin";
+    const fs::path executable_path = executable_root / "copperfin_runtime_host";
+    fs::create_directories(executable_root);
+    write_text(executable_path, "");
+
+    const fs::path empty_candidate =
+        executable_root / ".." / "share" / "copperfin" / "locales";
+    fs::create_directories(empty_candidate);
+
+    const fs::path file_candidate =
+        executable_root / "share" / "copperfin" / "locales";
+    fs::create_directories(file_candidate.parent_path());
+    write_text(file_candidate, "not a locale directory\n");
+
+    const fs::path missing_default_candidate =
+        executable_root / ".." / "resources" / "locales";
+    write_catalog(missing_default_candidate, "es-419", "{}\n");
+
+    const fs::path directory_catalog_candidate =
+        executable_root / ".." / ".." / "resources" / "locales";
+    write_catalog(directory_catalog_candidate, "en-US", "{}\n");
+    const fs::path directory_catalog =
+        directory_catalog_candidate / "en-US" / "strings.json";
+    fs::remove(directory_catalog);
+    fs::create_directory(directory_catalog);
+
+    const fs::path working_directory = temp_directory.path() / "working";
+    const fs::path valid_root = working_directory / "resources" / "locales";
+    fs::create_directories(working_directory);
+    write_catalog(valid_root, "en-US", "{\"Discovery.Source\":\"working directory\"}\n");
+
+    fs::path resolved_root;
+    {
+        ScopedCurrentPath current_path(working_directory);
+        resolved_root = copperfin::localization::resolve_catalog_root(executable_path);
+    }
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+
+    expect(
+        fs::equivalent(resolved_root, valid_root) &&
+            catalog.translate("Discovery.Source") == "working directory",
+        "#4088: auto-discovery should skip empty, file-shaped, incomplete, and directory-shaped candidates");
+}
+
+void test_catalog_root_auto_discovery_skips_malformed_default_catalog() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp_directory("copperfin_localization_malformed_discovery_tests");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path executable_root = temp_directory.path() / "layout" / "bin";
+    const fs::path executable_path = executable_root / "copperfin_runtime_host";
+    fs::create_directories(executable_root);
+    write_text(executable_path, "");
+
+    const fs::path malformed_root =
+        executable_root / ".." / "share" / "copperfin" / "locales";
+    const fs::path later_valid_root =
+        executable_root / "share" / "copperfin" / "locales";
+    write_catalog(malformed_root, "en-US", "{not valid JSON}\n");
+    write_catalog(later_valid_root, "en-US", "{\"Discovery.Source\":\"later executable root\"}\n");
+
+    const fs::path resolved_root =
+        copperfin::localization::resolve_catalog_root(executable_path);
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+    expect(
+        fs::equivalent(resolved_root, later_valid_root) &&
+            catalog.translate("Discovery.Source") == "later executable root",
+        "#4088: discovery should skip a malformed default catalog and continue to a valid root");
+}
+
+#if !defined(_WIN32)
+void test_catalog_root_auto_discovery_skips_unreadable_default_catalog_when_enforced() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp_directory("copperfin_localization_unreadable_discovery_tests");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path executable_root = temp_directory.path() / "layout" / "bin";
+    const fs::path executable_path = executable_root / "copperfin_runtime_host";
+    fs::create_directories(executable_root);
+    write_text(executable_path, "");
+
+    const fs::path unreadable_root =
+        executable_root / ".." / "share" / "copperfin" / "locales";
+    const fs::path later_valid_root =
+        executable_root / "share" / "copperfin" / "locales";
+    write_catalog(unreadable_root, "en-US", "{}\n");
+    write_catalog(later_valid_root, "en-US", "{\"Discovery.Source\":\"later executable root\"}\n");
+
+    const fs::path unreadable_catalog = unreadable_root / "en-US" / "strings.json";
+    ScopedPathPermissions catalog_permissions(unreadable_catalog);
+    const bool permissions_changed = catalog_permissions.replace(fs::perms::none);
+    expect(
+        permissions_changed,
+        "#4088: POSIX unreadable-catalog fixture should remove file permissions");
+    if (permissions_changed) {
+        std::ifstream permission_probe(unreadable_catalog, std::ios::binary);
+        if (!permission_probe.good()) {
+            const fs::path resolved_root =
+                copperfin::localization::resolve_catalog_root(executable_path);
+            expect(
+                fs::equivalent(resolved_root, later_valid_root),
+                "#4088: discovery should skip an unreadable regular default catalog when the host enforces permissions");
+        }
+    }
+}
+#endif
+
+void test_catalog_root_auto_discovery_preserves_executable_candidate_precedence() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp_directory("copperfin_localization_discovery_precedence_tests");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path executable_root =
+        temp_directory.path() / path_from_utf8_string("app_\xD0\x96_\xE6\xBC\xA2") / "bin";
+    const fs::path executable_path = executable_root / "copperfin_inspect";
+    fs::create_directories(executable_root);
+    write_text(executable_path, "");
+
+    const fs::path installed_root =
+        executable_root / ".." / "share" / "copperfin" / "locales";
+    const fs::path bundled_root =
+        executable_root / "share" / "copperfin" / "locales";
+    write_catalog(installed_root, "en-US", "{\"Discovery.Source\":\"installed\"}\n");
+    write_catalog(bundled_root, "en-US", "{\"Discovery.Source\":\"bundled\"}\n");
+
+    const fs::path working_directory = temp_directory.path() / "working";
+    const fs::path developer_root = working_directory / "resources" / "locales";
+    fs::create_directories(working_directory);
+    write_catalog(developer_root, "en-US", "{\"Discovery.Source\":\"developer\"}\n");
+
+    fs::path resolved_root;
+    {
+        ScopedCurrentPath current_path(working_directory);
+        resolved_root = copperfin::localization::resolve_catalog_root(executable_path);
+    }
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+
+    expect(
+        fs::equivalent(resolved_root, installed_root) &&
+            catalog.translate("Discovery.Source") == "installed",
+        "#4088: a valid installed share root should retain executable-candidate precedence");
+}
+
+void test_catalog_root_explicit_override_remains_authoritative() {
+    namespace fs = std::filesystem;
+    ScopedTempDirectory temp_directory("copperfin_localization_explicit_override_tests");
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path explicit_override =
+        temp_directory.path() / path_from_utf8_string("override_\xD0\x96_\xE6\xBC\xA2");
+    write_text(explicit_override, "explicit overrides need not be catalog directories\n");
+    locale_dir.set(explicit_override);
+
+    const fs::path executable_root = temp_directory.path() / "app" / "bin";
+    const fs::path executable_path = executable_root / "copperfin_inspect";
+    const fs::path installed_root =
+        executable_root / ".." / "share" / "copperfin" / "locales";
+    fs::create_directories(executable_root);
+    write_text(executable_path, "");
+    write_catalog(installed_root, "en-US", "{}\n");
+
+    expect(
+        copperfin::localization::resolve_catalog_root(executable_path) == explicit_override,
+        "#4088: explicit COPPERFIN_LOCALE_DIR should remain authoritative without auto-discovery validation");
+}
+
 void test_catalog_root_resolution_searches_parent_directories() {
     namespace fs = std::filesystem;
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
@@ -518,14 +774,18 @@ void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launc
     const std::string executable_file_name = "copperfin_build_host";
     const std::string invocation_name = executable_file_name;
 #endif
+    const fs::path unicode_build_root =
+        temp_root / path_from_utf8_string("build_\xD0\x96_\xE6\xBC\xA2");
 #if defined(_WIN32)
-    const fs::path executable_directory = temp_root / L"build_\u0416_\u6F22" / "Release";
+    const fs::path executable_directory = unicode_build_root / "Release";
 #else
-    const fs::path executable_directory = temp_root / "build" / "Release ";
+    const fs::path executable_directory = unicode_build_root / "Release ";
 #endif
     const fs::path executable_path = executable_directory / executable_file_name;
     fs::create_directories(executable_path.parent_path());
     write_text(executable_path, "");
+    fs::create_directories(
+        executable_directory / ".." / "share" / "copperfin" / "locales");
 #if !defined(_WIN32)
     fs::permissions(
         executable_path,
@@ -3571,6 +3831,13 @@ int main(int argc, char** argv) {
     test_catalog_json_rejects_literal_string_control_characters();
     test_machine_contract_fields_remain_invariant();
     test_product_locale_catalogs_have_key_parity();
+    test_catalog_root_auto_discovery_skips_invalid_candidates();
+    test_catalog_root_auto_discovery_skips_malformed_default_catalog();
+#if !defined(_WIN32)
+    test_catalog_root_auto_discovery_skips_unreadable_default_catalog_when_enforced();
+#endif
+    test_catalog_root_auto_discovery_preserves_executable_candidate_precedence();
+    test_catalog_root_explicit_override_remains_authoritative();
     test_catalog_root_resolution_searches_parent_directories();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename();
