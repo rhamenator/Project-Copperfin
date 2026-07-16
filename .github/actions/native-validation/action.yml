@@ -25,9 +25,7 @@ runs:
         if ($buildJobs -notin @('2', '3')) {
           throw "Hosted Windows native validation build_jobs must be 2 or 3."
         }
-        & ./scripts/measure-windows-validation.ps1
-          -Mode Initialize
-          -MetricsDirectory '${{ inputs.metrics_directory }}'
+        & ./scripts/measure-windows-validation.ps1 -Mode Initialize -MetricsDirectory '${{ inputs.metrics_directory }}'
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0

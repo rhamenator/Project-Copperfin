@@ -132,7 +132,10 @@ if ($Mode -eq "Initialize") {
 if ($Mode -eq "Finalize") {
     $runPath = Join-Path $metricsRoot "run.json"
     if (-not (Test-Path $runPath)) {
-        throw "Windows validation run metadata was not found: $runPath"
+        Write-Warning "Windows validation run metadata was not found; metric finalization is skipped: $runPath"
+        Add-SummaryLine ""
+        Add-SummaryLine "Windows validation metric finalization was skipped because initialization did not emit run metadata."
+        return
     }
 
     $run = Get-Content -Raw -Path $runPath | ConvertFrom-Json
