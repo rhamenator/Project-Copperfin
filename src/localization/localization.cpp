@@ -12,6 +12,7 @@
 #include <iterator>
 #include <set>
 #include <sstream>
+#include <utility>
 
 namespace copperfin::localization {
 
@@ -30,9 +31,42 @@ std::string trim_copy(std::string_view value) {
 }
 
 std::string lowercase_ascii(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
+    std::transform(value.begin(), value.end(), value.begin(), [](char ch) {
+        if (ch >= 'A' && ch <= 'Z') {
+            return static_cast<char>(ch + ('a' - 'A'));
+        }
+        return ch;
     });
+    return value;
+}
+
+std::string uppercase_ascii(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(), [](char ch) {
+        if (ch >= 'a' && ch <= 'z') {
+            return static_cast<char>(ch - ('a' - 'A'));
+        }
+        return ch;
+    });
+    return value;
+}
+
+bool is_ascii_alpha(std::string_view value) {
+    return !value.empty() && std::all_of(value.begin(), value.end(), [](char ch) {
+        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+    });
+}
+
+bool is_ascii_digit(std::string_view value) {
+    return !value.empty() && std::all_of(value.begin(), value.end(), [](char ch) {
+        return ch >= '0' && ch <= '9';
+    });
+}
+
+std::string titlecase_ascii(std::string value) {
+    value = lowercase_ascii(std::move(value));
+    if (!value.empty() && value.front() >= 'a' && value.front() <= 'z') {
+        value.front() = static_cast<char>(value.front() - ('a' - 'A'));
+    }
     return value;
 }
 
@@ -308,15 +342,38 @@ std::string normalize_locale(std::string_view locale) {
         start = separator + 1U;
     }
 
+    bool script_seen = false;
+    bool region_seen = false;
+    bool suffix_started = false;
+    std::size_t extlang_count = 0U;
     for (std::size_t index = 0U; index < parts.size(); ++index) {
+        parts[index] = lowercase_ascii(std::move(parts[index]));
         if (index == 0U) {
-            parts[index] = lowercase_ascii(parts[index]);
-        } else if (parts[index].size() == 2U) {
-            std::transform(parts[index].begin(), parts[index].end(), parts[index].begin(), [](unsigned char ch) {
-                return static_cast<char>(std::toupper(ch));
-            });
+            continue;
+        }
+
+        const bool is_script = !suffix_started && !script_seen && !region_seen &&
+            parts[index].size() == 4U && is_ascii_alpha(parts[index]);
+        const bool is_region = !suffix_started && !region_seen &&
+            ((parts[index].size() == 2U && is_ascii_alpha(parts[index])) ||
+             (parts[index].size() == 3U && is_ascii_digit(parts[index])));
+        if (is_script) {
+            parts[index] = titlecase_ascii(std::move(parts[index]));
+            script_seen = true;
+            continue;
+        }
+        if (is_region) {
+            parts[index] = uppercase_ascii(std::move(parts[index]));
+            region_seen = true;
+            continue;
+        }
+
+        const bool is_extlang = !suffix_started && !script_seen && !region_seen &&
+            extlang_count < 3U && parts[index].size() == 3U && is_ascii_alpha(parts[index]);
+        if (is_extlang) {
+            ++extlang_count;
         } else {
-            parts[index] = lowercase_ascii(parts[index]);
+            suffix_started = true;
         }
     }
 
@@ -327,7 +384,11 @@ std::string normalize_locale(std::string_view locale) {
         }
         output << parts[index];
     }
-    return output.str();
+    std::string normalized = output.str();
+    if (lowercase_ascii(normalized) == pseudo_locale) {
+        normalized = std::string(pseudo_locale);
+    }
+    return normalized;
 }
 
 std::vector<std::string> locale_fallback_chain(std::string_view locale) {
@@ -336,12 +397,29 @@ std::vector<std::string> locale_fallback_chain(std::string_view locale) {
     std::vector<std::string> chain;
     append_unique(chain, normalized);
 
-    if (lowered.rfind("es-", 0U) == 0U && lowered != "es-419") {
-        append_unique(chain, "es-419");
-    }
-    const std::size_t separator = normalized.find('-');
-    if (separator != std::string::npos) {
-        append_unique(chain, normalized.substr(0U, separator));
+    const bool use_latin_american_spanish_fallback =
+        lowered.rfind("es-", 0U) == 0U && lowered != "es-419";
+    std::string parent = normalized;
+    while (true) {
+        const std::size_t separator = parent.rfind('-');
+        if (separator == std::string::npos) {
+            break;
+        }
+        parent.erase(separator);
+
+        const std::size_t parent_separator = parent.rfind('-');
+        const std::size_t final_subtag_start =
+            parent_separator == std::string::npos ? 0U : parent_separator + 1U;
+        if (parent.size() - final_subtag_start == 1U) {
+            parent.erase(parent_separator == std::string::npos ? 0U : parent_separator);
+        }
+        if (parent.empty()) {
+            break;
+        }
+        if (use_latin_american_spanish_fallback && parent == "es") {
+            append_unique(chain, "es-419");
+        }
+        append_unique(chain, parent);
     }
     append_unique(chain, std::string(default_locale));
     return chain;

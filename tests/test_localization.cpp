@@ -188,6 +188,98 @@ void test_catalog_file_accepts_one_leading_utf8_bom() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_bcp47_script_locale_normalization_and_catalog_fallback() {
+    namespace fs = std::filesystem;
+    using copperfin::localization::locale_fallback_chain;
+    using copperfin::localization::normalize_locale;
+
+    expect(
+        normalize_locale("ZH_hANT_tw") == "zh-Hant-TW" &&
+            normalize_locale("SR_lATN") == "sr-Latn" &&
+            normalize_locale("zh-cmn-hANS-cn") == "zh-cmn-Hans-CN",
+        "#3894: language, script, extlang, and region subtags should use canonical BCP 47 casing");
+    expect(
+        normalize_locale("sl-ROZAJ-BISKE") == "sl-rozaj-biske" &&
+            normalize_locale("en-latn-us-u-CA-GREGORY-x-PRIVATE") ==
+                "en-Latn-US-u-ca-gregory-x-private",
+        "#3894: variants, extensions, and private-use subtags should remain deterministically lowercase");
+    expect(
+        normalize_locale("qPs-pLoC") == "qps-ploc" &&
+            normalize_locale("ES_419") == "es-419" &&
+            normalize_locale("PT_br") == "pt-BR",
+        "#3894: canonicalization should preserve pseudo-locale and existing regional directory contracts");
+
+    const std::vector<std::string> script_chain = locale_fallback_chain("ZH_hANT_tw");
+    expect(
+        script_chain == std::vector<std::string>({"zh-Hant-TW", "zh-Hant", "zh", "en-US"}),
+        "#3894: a script-plus-region locale should retain its script parent before language fallback");
+    const std::vector<std::string> script_only_chain = locale_fallback_chain("SR_lATN");
+    expect(
+        script_only_chain == std::vector<std::string>({"sr-Latn", "sr", "en-US"}),
+        "#3894: a script-only locale should fall back through its language and the source locale");
+    const std::vector<std::string> spanish_script_chain = locale_fallback_chain("ES_lATN_mx");
+    expect(
+        spanish_script_chain ==
+            std::vector<std::string>({"es-Latn-MX", "es-Latn", "es-419", "es", "en-US"}),
+        "#3894: script-qualified Spanish should preserve the Latin American fallback contract");
+    const std::vector<std::string> pseudo_chain = locale_fallback_chain("qPs-pLoC");
+    expect(
+        pseudo_chain == std::vector<std::string>({"qps-ploc", "qps", "en-US"}),
+        "#3894: pseudo-locale fallback should preserve its established normalized identity");
+    const std::vector<std::string> extension_chain =
+        locale_fallback_chain("de-Latn-DE-u-co-phonebk");
+    expect(
+        extension_chain == std::vector<std::string>({
+            "de-Latn-DE-u-co-phonebk",
+            "de-Latn-DE-u-co",
+            "de-Latn-DE",
+            "de-Latn",
+            "de",
+            "en-US"}),
+        "#3894: extension fallback should truncate deterministically without retaining a lone singleton");
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_script_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    write_catalog(
+        temp_root,
+        "en-US",
+        "{\"Fallback.Message\":\"English fallback\"}\n");
+    write_catalog(
+        temp_root,
+        "zh-Hant",
+        "{\"Script.Message\":\"Traditional script parent\"}\n");
+    write_catalog(
+        temp_root,
+        "zh-Hant-TW",
+        "{\"Regional.Message\":\"Taiwan exact locale\"}\n");
+    write_catalog(
+        temp_root,
+        "sr-Latn",
+        "{\"Script.Message\":\"Serbian Latin exact locale\"}\n");
+
+    const auto traditional_taiwan =
+        copperfin::localization::load_catalogs(temp_root, "ZH_hANT_tw");
+    expect(
+        traditional_taiwan.requested_locale == "zh-Hant-TW" &&
+            traditional_taiwan.catalogs.contains("zh-Hant-TW") &&
+            traditional_taiwan.catalogs.contains("zh-Hant") &&
+            traditional_taiwan.translate("Regional.Message") == "Taiwan exact locale" &&
+            traditional_taiwan.translate("Script.Message") == "Traditional script parent" &&
+            traditional_taiwan.translate("Fallback.Message") == "English fallback",
+        "#3894: canonical script-plus-region directories should load with parent and source fallback");
+    const auto serbian_latin = copperfin::localization::load_catalogs(temp_root, "SR_lATN");
+    expect(
+        serbian_latin.requested_locale == "sr-Latn" &&
+            serbian_latin.catalogs.contains("sr-Latn") &&
+            serbian_latin.translate("Script.Message") == "Serbian Latin exact locale" &&
+            serbian_latin.translate("Fallback.Message") == "English fallback",
+        "#3894: canonical script-only directories should load on case-sensitive filesystems");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_posix_locale_suffixes_normalize_before_catalog_fallback() {
     expect(
         copperfin::localization::normalize_locale("pt-BR.UTF-8") == "pt-BR",
@@ -3472,6 +3564,7 @@ void test_inspect_error_prefix_routes_through_localization(const std::string& in
 int main(int argc, char** argv) {
     test_catalog_loading_and_fallback();
     test_catalog_file_accepts_one_leading_utf8_bom();
+    test_bcp47_script_locale_normalization_and_catalog_fallback();
     test_posix_locale_suffixes_normalize_before_catalog_fallback();
     test_placeholders_pseudo_locale_and_unicode();
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
