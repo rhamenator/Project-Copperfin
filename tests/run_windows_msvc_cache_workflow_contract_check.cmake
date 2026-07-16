@@ -187,6 +187,26 @@ endforeach()
 require_text("${probe_script}" "/Brepro" "deterministic malformed-object comparison")
 require_text("${probe_script}" "\$env:llvmX64"
     "Visual Studio-owned compiler-identity probe")
+require_text("${probe_script}"
+    "function Stop-SccacheServer {\n    param([switch]\$Cleanup)\n\n    \$output = (& \$env:SCCACHE_PATH --stop-server 2>&1 | Out-String).Trim()\n    if (\$LASTEXITCODE -ne 0)"
+    "stop-server-specific fail-closed shutdown check")
+require_text("${probe_script}" "sccache could not stop its server cleanly"
+    "actionable cache-server shutdown failure")
+require_text("${probe_script}" "Stop-SccacheServer -Cleanup"
+    "non-masking final cache-server cleanup")
+require_text("${probe_script}" "\$malformedHits -eq 0 -and \$malformedMisses -eq 1"
+    "malformed-entry cache-miss fallback requirement")
+require_text("${probe_script}" "\$actualObjectSha256 -eq \$expectedObjectSha256"
+    "malformed-entry deterministic output verification")
+foreach(malformed_evidence_key IN ITEMS
+        cache_hits
+        cache_misses
+        cache_read_errors
+        expected_object_sha256
+        actual_object_sha256)
+    require_text("${probe_script}" "${malformed_evidence_key} ="
+        "malformed-entry ${malformed_evidence_key} evidence")
+endforeach()
 require_text("${comparison_script}" "materially_faster"
     "durable material-improvement result")
 require_text("${comparison_script}" "MinimumWarmHitPercent"

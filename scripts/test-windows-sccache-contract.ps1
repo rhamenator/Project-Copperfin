@@ -25,7 +25,20 @@ function Get-CountTotal {
 }
 
 function Stop-SccacheServer {
-    & $env:SCCACHE_PATH --stop-server 2>&1 | Out-Null
+    param([switch]$Cleanup)
+
+    $output = (& $env:SCCACHE_PATH --stop-server 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        $message = "sccache could not stop its server cleanly."
+        if (-not [string]::IsNullOrWhiteSpace($output)) {
+            $message = "sccache could not stop its server cleanly: $output"
+        }
+        if ($Cleanup) {
+            Write-Warning $message
+            return
+        }
+        throw $message
+    }
 }
 
 function Reset-SccacheStats {
@@ -278,29 +291,42 @@ try {
         -Definitions @("/DCOPPERFIN_FLAG_VALUE=23") -AllowFailure
     $malformedStats = Get-SccacheStats
     $malformedReadErrors = [long]$malformedStats.cache_read_errors
+    $malformedHits = Get-CountTotal $malformedStats.cache_hits
+    $malformedMisses = Get-CountTotal $malformedStats.cache_misses
     $malformedRejected = $malformedExitCode -ne 0
     $recompiled = $false
+    $actualObjectSha256 = $null
     if (-not $malformedRejected -and (Test-Path -LiteralPath $objectPath -PathType Leaf)) {
         $actualObjectSha256 = (Get-FileHash -LiteralPath $objectPath -Algorithm SHA256).Hash.ToLowerInvariant()
-        $recompiled = $malformedReadErrors -gt 0 -and $actualObjectSha256 -eq $expectedObjectSha256
+        $recompiled = $malformedHits -eq 0 -and $malformedMisses -eq 1 -and `
+            $actualObjectSha256 -eq $expectedObjectSha256
     }
     if (-not $malformedRejected -and -not $recompiled) {
-        throw "A malformed cache object was neither rejected nor detectably recompiled from source."
+        throw "A malformed cache object was neither rejected nor recompiled as one clean cache miss " +
+            "(hits=$malformedHits, misses=$malformedMisses, read-errors=$malformedReadErrors, " +
+            "expected-sha256=$expectedObjectSha256, actual-sha256=$actualObjectSha256)."
     }
     $results.malformed_cache = [ordered]@{
         exit_code = $malformedExitCode
+        cache_hits = $malformedHits
+        cache_misses = $malformedMisses
         cache_read_errors = $malformedReadErrors
         build_rejected = $malformedRejected
         recompiled_from_source = $recompiled
+        expected_object_sha256 = $expectedObjectSha256
+        actual_object_sha256 = $actualObjectSha256
     }
 } finally {
-    Stop-SccacheServer
-    foreach ($name in $savedEnvironment.Keys) {
-        $value = $savedEnvironment[$name]
-        if ($null -eq $value) {
-            [Environment]::SetEnvironmentVariable($name, $null, "Process")
-        } else {
-            [Environment]::SetEnvironmentVariable($name, $value, "Process")
+    try {
+        Stop-SccacheServer -Cleanup
+    } finally {
+        foreach ($name in $savedEnvironment.Keys) {
+            $value = $savedEnvironment[$name]
+            if ($null -eq $value) {
+                [Environment]::SetEnvironmentVariable($name, $null, "Process")
+            } else {
+                [Environment]::SetEnvironmentVariable($name, $value, "Process")
+            }
         }
     }
 }
