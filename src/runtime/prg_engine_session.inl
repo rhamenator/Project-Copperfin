@@ -3225,7 +3225,7 @@
                 return nullptr;
             }
             const Frame &frame = stack.back();
-            if (frame.direct_routine_return_pending &&
+            if (frame.expression_routine_return_pending &&
                 frame.routine != nullptr &&
                 frame.pc > 0U &&
                 frame.pc <= frame.routine->statements.size())
@@ -5250,6 +5250,15 @@
             return false;
         }
 
+        void abandon_expression_continuations()
+        {
+            for (Frame &active_frame : stack)
+            {
+                active_frame.expression_routine_return_pending = false;
+                active_frame.expression_continuation.reset();
+            }
+        }
+
         void perform_quit(const SourceLocation &location)
         {
             waiting_for_events = false;
@@ -5262,6 +5271,7 @@
             shutdown_handler_return_depth.reset();
             quit_pending_after_shutdown = false;
             pending_quit_location = {};
+            abandon_expression_continuations();
 
             cleanup_runtime_resources_for_shutdown();
             events.push_back({.category = "runtime.quit",
@@ -5442,7 +5452,7 @@
                 else if (iterator->routine != nullptr)
                 {
                     const std::size_t statement_index =
-                        iterator->direct_routine_return_pending && iterator->pc > 0U
+                        iterator->expression_routine_return_pending && iterator->pc > 0U
                             ? iterator->pc - 1U
                             : iterator->pc;
                     if (statement_index < iterator->routine->statements.size())

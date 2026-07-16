@@ -147,7 +147,7 @@
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback,
-                ReturnExpressionContinuation *return_expression_continuation)
+                ExpressionContinuation *expression_continuation)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
                   resolve_work_area_callback_(std::move(resolve_work_area_callback)),
@@ -218,7 +218,7 @@
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
-                  return_expression_continuation_(return_expression_continuation),
+                  expression_continuation_(expression_continuation),
                   text_(text),
                   frame_(frame),
                   globals_(globals),
@@ -630,11 +630,11 @@
             {
                 skip_whitespace();
                 const std::size_t primary_start = position_;
-                if (!suppress_evaluation_ && return_expression_continuation_ != nullptr)
+                if (!suppress_evaluation_ && expression_continuation_ != nullptr)
                 {
                     const auto checkpoint =
-                        return_expression_continuation_->primary_checkpoints.find(primary_start);
-                    if (checkpoint != return_expression_continuation_->primary_checkpoints.end())
+                        expression_continuation_->primary_checkpoints.find(primary_start);
+                    if (checkpoint != expression_continuation_->primary_checkpoints.end())
                     {
                         position_ = checkpoint->second.end;
                         return checkpoint->second.value;
@@ -642,9 +642,9 @@
                 }
 
                 PrgValue value = parse_primary_uncached();
-                if (!suppress_evaluation_ && return_expression_continuation_ != nullptr)
+                if (!suppress_evaluation_ && expression_continuation_ != nullptr)
                 {
-                    return_expression_continuation_->primary_checkpoints[primary_start] =
+                    expression_continuation_->primary_checkpoints[primary_start] =
                         {.end = position_, .value = value};
                 }
                 return value;
@@ -3282,7 +3282,7 @@
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
-            ReturnExpressionContinuation *return_expression_continuation_ = nullptr;
+            ExpressionContinuation *expression_continuation_ = nullptr;
             const std::string &text_;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;

@@ -11,8 +11,8 @@
         }
 
         Frame &frame = stack.back();
-        const bool resuming_return_expression = frame.direct_routine_return_pending;
-        if (!resuming_return_expression &&
+        const bool resuming_expression = frame.expression_routine_return_pending;
+        if (!resuming_expression &&
             (frame.routine == nullptr || frame.pc >= frame.routine->statements.size()))
         {
             pop_frame();
@@ -20,14 +20,14 @@
         }
 
         const std::size_t statement_index =
-            resuming_return_expression && frame.pc > 0U ? frame.pc - 1U : frame.pc;
+            resuming_expression && frame.pc > 0U ? frame.pc - 1U : frame.pc;
         if (frame.routine == nullptr || statement_index >= frame.routine->statements.size())
         {
             pop_frame();
             return {};
         }
         const Statement statement = frame.routine->statements[statement_index];
-        if (!resuming_return_expression)
+        if (!resuming_expression)
         {
             ++frame.pc;
             ++executed_statement_count;
@@ -36,24 +36,26 @@
                               .detail = display_asset_paths_in_statement(statement.text),
                               .location = statement.location});
         }
-        const auto abandon_resumed_return = [&]()
+        const auto abandon_resumed_expression = [&]()
         {
-            if (resuming_return_expression)
+            if (resuming_expression)
             {
-                frame.direct_routine_return_pending = false;
-                frame.return_expression_continuation.reset();
+                frame.expression_routine_return_pending = false;
+                frame.expression_continuation.reset();
             }
         };
+        std::optional<PrgValue> resumed_assignment_value;
+        std::optional<Statement> resumed_assignment_statement;
 
         try
         {
-            if (resuming_return_expression)
+            if (resuming_expression)
             {
-                frame.direct_routine_return_pending = false;
-                if (frame.return_expression_continuation.has_value())
+                frame.expression_routine_return_pending = false;
+                if (frame.expression_continuation.has_value())
                 {
-                    ReturnExpressionContinuation &continuation =
-                        *frame.return_expression_continuation;
+                    ExpressionContinuation &continuation =
+                        *frame.expression_continuation;
                     if (continuation.awaiting_routine.has_value())
                     {
                         continuation.routine_results[*continuation.awaiting_routine] =
@@ -61,21 +63,32 @@
                         continuation.awaiting_routine.reset();
                     }
 
-                    const std::string continued_expression = continuation.expression;
-                    const auto return_value =
-                        evaluate_return_expression(frame, continued_expression);
-                    if (!return_value.has_value())
+                    const Statement continued_statement = continuation.statement;
+                    const auto expression_value =
+                        evaluate_resumable_expression(frame, continued_statement);
+                    if (!expression_value.has_value())
                     {
                         return {};
                     }
-                    last_return_value = *return_value;
+                    if (continued_statement.kind == StatementKind::assignment)
+                    {
+                        resumed_assignment_value = *expression_value;
+                        resumed_assignment_statement = continued_statement;
+                    }
+                    else
+                    {
+                        last_return_value = *expression_value;
+                    }
                 }
-                frame.return_pending = true;
-                if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                if (!resumed_assignment_value.has_value())
                 {
-                    return *outcome;
+                    frame.return_pending = true;
+                    if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                    {
+                        return *outcome;
+                    }
+                    return {};
                 }
-                return {};
             }
 
             auto format_stack_event_detail = [](std::size_t depth, const std::string &target, bool empty_pop)
@@ -738,6 +751,13 @@
                 }
                 return {};
             };
+            if (resumed_assignment_value.has_value() && resumed_assignment_statement.has_value())
+            {
+                return assign_runtime_target_value(
+                    resumed_assignment_statement->identifier,
+                    *resumed_assignment_value,
+                    trim_copy(resumed_assignment_statement->expression));
+            }
             auto resolve_command_array_name = [&](const std::string &raw_name, const std::string &command_name) -> std::optional<std::string>
             {
                 const std::string candidate = trim_copy(raw_name);
@@ -1110,10 +1130,14 @@
             {
             case StatementKind::assignment:
             {
-                const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
+                const auto assignment_value = evaluate_resumable_expression(frame, statement);
+                if (!assignment_value.has_value())
+                {
+                    return {};
+                }
                 return assign_runtime_target_value(
                     statement.identifier,
-                    assignment_value,
+                    *assignment_value,
                     trim_copy(statement.expression));
             }
             case StatementKind::expression:
@@ -1952,7 +1976,7 @@
                 }
                 else
                 {
-                    const auto return_value = evaluate_return_expression(frame, statement.expression);
+                    const auto return_value = evaluate_resumable_expression(frame, statement);
                     if (!return_value.has_value())
                     {
                         return {};
@@ -8748,6 +8772,7 @@
                                   .detail = "CANCEL",
                                   .location = statement.location});
                 cancel_all_async_tasks();
+                abandon_expression_continuations();
                 int &level = current_transaction_level();
                 if (level > 0)
                 {
@@ -8816,7 +8841,7 @@
         }
         catch (const PrgCompatibilityError &error)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             last_error_message = error.what();
             last_error_code = error.error_code();
             last_error_compatibility = {};
@@ -8830,7 +8855,7 @@
         }
         catch (const PrgPropagatedRuntimeError &error)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             if (last_error_message.empty())
             {
                 last_error_message = error.what();
@@ -8839,7 +8864,7 @@
         }
         catch (const std::bad_alloc &)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");
             last_fault_location = statement.location;
@@ -8851,7 +8876,7 @@
         }
         catch (const std::filesystem::filesystem_error &error)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
@@ -8867,7 +8892,7 @@
         }
         catch (const std::system_error &error)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceSystemError",
@@ -8883,7 +8908,7 @@
         }
         catch (const std::exception &error)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.RuntimeFault",
@@ -8899,7 +8924,7 @@
         }
         catch (...)
         {
-            abandon_resumed_return();
+            abandon_resumed_expression();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.UnknownRuntimeFault");
             last_fault_location = statement.location;
