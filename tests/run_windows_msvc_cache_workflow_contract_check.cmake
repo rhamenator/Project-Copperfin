@@ -128,6 +128,10 @@ require_text("${workflow}"
     "full unfiltered warm CTest invocation")
 require_text_order("${workflow}"
     "-Name 'Test compiler-cache invalidation and malformed entries'"
+    "-Name 'Build cold native targets'"
+    "early malformed-cache probe and cold-build ordering")
+require_text_order("${workflow}"
+    "-Name 'Test compiler-cache invalidation and malformed entries'"
     "-Name 'Run warm native test suite'"
     "malformed-cache probe and authoritative CTest ordering")
 require_text("${workflow}" "-Category other"

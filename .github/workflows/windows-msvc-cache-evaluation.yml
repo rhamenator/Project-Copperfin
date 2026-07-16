@@ -85,6 +85,17 @@ jobs:
           -Mode Initialize
           -MetricsDirectory artifacts/windows-sccache-evaluation
 
+      - name: Test compiler-cache invalidation and malformed entries
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Test compiler-cache invalidation and malformed entries'
+          -Category other
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/test-windows-sccache-contract.ps1', '-EvidencePath', 'artifacts/windows-sccache-evaluation/sccache-contract-probe.json')
+
       - name: Reset cold-cache statistics
         shell: pwsh
         run: |
@@ -186,17 +197,6 @@ jobs:
           -OutputPath artifacts/windows-sccache-evaluation/sccache-warm.json
           -MinimumHits 1
           -MaximumWriteErrors 1
-
-      - name: Test compiler-cache invalidation and malformed entries
-        shell: pwsh
-        run: >-
-          & ./scripts/measure-windows-validation.ps1
-          -Mode Run
-          -MetricsDirectory artifacts/windows-sccache-evaluation
-          -Name 'Test compiler-cache invalidation and malformed entries'
-          -Category other
-          -FilePath pwsh
-          -CommandArguments @('-NoProfile', '-File', './scripts/test-windows-sccache-contract.ps1', '-EvidencePath', 'artifacts/windows-sccache-evaluation/sccache-contract-probe.json')
 
       - name: Run full warm native test suite
         if: ${{ !cancelled() }}
