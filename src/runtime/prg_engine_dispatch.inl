@@ -46,6 +46,47 @@
         };
         std::optional<PrgValue> resumed_assignment_value;
         std::optional<Statement> resumed_assignment_statement;
+        bool resumed_conditional_expression = false;
+
+        const auto route_false_conditional = [&]()
+        {
+            if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true))
+            {
+                const Statement &destination_statement = frame.routine->statements[*destination];
+                if (destination_statement.kind == StatementKind::else_statement &&
+                    !trim_copy(destination_statement.expression).empty())
+                {
+                    frame.evaluate_conditional_else = true;
+                    frame.pc = *destination;
+                }
+                else
+                {
+                    frame.evaluate_conditional_else = false;
+                    frame.pc = *destination + 1U;
+                }
+            }
+        };
+        const auto apply_conditional_predicate = [&](StatementKind kind, bool predicate_value)
+        {
+            if (kind == StatementKind::if_statement)
+            {
+                if (!predicate_value)
+                {
+                    route_false_conditional();
+                }
+                else
+                {
+                    frame.evaluate_conditional_else = false;
+                }
+                return;
+            }
+
+            frame.evaluate_conditional_else = false;
+            if (!predicate_value)
+            {
+                route_false_conditional();
+            }
+        };
 
         try
         {
@@ -75,18 +116,30 @@
                         resumed_assignment_value = *expression_value;
                         resumed_assignment_statement = continued_statement;
                     }
+                    else if (continued_statement.kind == StatementKind::if_statement ||
+                             continued_statement.kind == StatementKind::else_statement)
+                    {
+                        apply_conditional_predicate(
+                            continued_statement.kind,
+                            value_as_bool(*expression_value));
+                        resumed_conditional_expression = true;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
-                if (!resumed_assignment_value.has_value())
+                if (!resumed_assignment_value.has_value() && !resumed_conditional_expression)
                 {
                     frame.return_pending = true;
                     if (const auto outcome = continue_pending_return(frame); outcome.has_value())
                     {
                         return *outcome;
                     }
+                    return {};
+                }
+                if (resumed_conditional_expression)
+                {
                     return {};
                 }
             }
@@ -2040,29 +2093,15 @@
                 frame.cases.back().matched = true;
                 return {};
             case StatementKind::if_statement:
-                if (!value_as_bool(evaluate_expression(statement.expression, frame)))
+            {
+                const auto predicate_value = evaluate_resumable_expression(frame, statement);
+                if (!predicate_value.has_value())
                 {
-                    if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true))
-                    {
-                        const Statement &destination_statement = frame.routine->statements[*destination];
-                        if (destination_statement.kind == StatementKind::else_statement &&
-                            !trim_copy(destination_statement.expression).empty())
-                        {
-                            frame.evaluate_conditional_else = true;
-                            frame.pc = *destination;
-                        }
-                        else
-                        {
-                            frame.evaluate_conditional_else = false;
-                            frame.pc = *destination + 1U;
-                        }
-                    }
+                    return {};
                 }
-                else
-                {
-                    frame.evaluate_conditional_else = false;
-                }
+                apply_conditional_predicate(statement.kind, value_as_bool(*predicate_value));
                 return {};
+            }
             case StatementKind::else_statement:
                 if (!trim_copy(statement.expression).empty())
                 {
@@ -2075,26 +2114,17 @@
                         return {};
                     }
 
-                    frame.evaluate_conditional_else = false;
-                    if (value_as_bool(evaluate_expression(statement.expression, frame)))
+                    const auto predicate_value = evaluate_resumable_expression(frame, statement);
+                    if (!predicate_value.has_value())
                     {
                         return {};
                     }
-                    if (const auto destination = find_matching_branch(frame, frame.pc - 1U, true))
+                    if (value_as_bool(*predicate_value))
                     {
-                        const Statement &destination_statement = frame.routine->statements[*destination];
-                        if (destination_statement.kind == StatementKind::else_statement &&
-                            !trim_copy(destination_statement.expression).empty())
-                        {
-                            frame.evaluate_conditional_else = true;
-                            frame.pc = *destination;
-                        }
-                        else
-                        {
-                            frame.evaluate_conditional_else = false;
-                            frame.pc = *destination + 1U;
-                        }
+                        frame.evaluate_conditional_else = false;
+                        return {};
                     }
+                    apply_conditional_predicate(statement.kind, false);
                     return {};
                 }
 
