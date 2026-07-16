@@ -93,6 +93,8 @@ require_text_count("${workflow}" "-DCMAKE_POLICY_DEFAULT_CMP0141=NEW" 2
     "MSVC debug-format policy arguments")
 require_text_count("${workflow}" "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded" 2
     "cache-compatible MSVC debug-format arguments")
+require_text_count("${workflow}" "-DCMAKE_CXX_FLAGS=/bigobj" 2
+    "cache-compatible large-object arguments")
 require_text("${workflow}" "build-sccache-cold" "separate cold build tree")
 require_text("${workflow}" "build-sccache-warm" "separate warm build tree")
 require_text("${workflow}"
