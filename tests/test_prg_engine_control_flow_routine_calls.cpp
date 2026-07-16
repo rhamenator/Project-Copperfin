@@ -700,6 +700,287 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_compound_return_uses_heap_backed_expression_checkpoints() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_compound_return";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "compound_depth_limit.prg";
+    write_text(
+        depth_path,
+        "result = recurse(1)\n"
+        "RETURN\n"
+        "FUNCTION recurse\n"
+        "LPARAMETERS depth\n"
+        "RETURN 1 + recurse(depth + 1)\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep compound recursive RETURN should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep compound recursive RETURN should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "compound_checkpoint_semantics.prg";
+    write_text(
+        semantics_path,
+        "SET UDFPARMS TO REFERENCE\n"
+        "value = 3\n"
+        "seed = 7\n"
+        "beforeCalls = 0\n"
+        "explicitCalls = 0\n"
+        "bareCalls = 0\n"
+        "outerCalls = 0\n"
+        "arrayCalls = 0\n"
+        "bumpCalls = 0\n"
+        "finallyCalls = 0\n"
+        "caughtCalls = 0\n"
+        "resumedCaughtCalls = 0\n"
+        "DIMENSION values[2]\n"
+        "values[1] = 10\n"
+        "values[2] = 20\n"
+        "result = combine(@value, @values)\n"
+        "snapshotResult = snapshotvalue()\n"
+        "caughtResult = catchcompoundfault()\n"
+        "resumedFaultResult = catchresumedfault()\n"
+        "valueAfter = value\n"
+        "arrayAfter = values[2]\n"
+        "seedAfter = seed\n"
+        "RETURN\n"
+        "FUNCTION combine\n"
+        "LPARAMETERS forwarded, forwardedValues\n"
+        "TRY\n"
+        "RETURN before() + outer(explicitref(@forwarded), bareref(forwarded), barearray(forwardedValues))\n"
+        "FINALLY\n"
+        "finallyCalls = finallyCalls + 1\n"
+        "ENDTRY\n"
+        "FUNCTION before\n"
+        "beforeCalls = beforeCalls + 1\n"
+        "RETURN 10\n"
+        "FUNCTION explicitref\n"
+        "LPARAMETERS target\n"
+        "explicitCalls = explicitCalls + 1\n"
+        "target = target + 1\n"
+        "RETURN target\n"
+        "FUNCTION bareref\n"
+        "LPARAMETERS target\n"
+        "bareCalls = bareCalls + 1\n"
+        "target = target + 2\n"
+        "RETURN target\n"
+        "FUNCTION barearray\n"
+        "LPARAMETERS target\n"
+        "arrayCalls = arrayCalls + 1\n"
+        "target[2] = target[2] + 3\n"
+        "RETURN target[2]\n"
+        "FUNCTION outer\n"
+        "LPARAMETERS firstValue, secondValue, thirdValue\n"
+        "outerCalls = outerCalls + 1\n"
+        "RETURN firstValue * 10 + secondValue + thirdValue\n"
+        "FUNCTION snapshotvalue\n"
+        "RETURN seed + bumpseed()\n"
+        "FUNCTION bumpseed\n"
+        "bumpCalls = bumpCalls + 1\n"
+        "seed = 100\n"
+        "RETURN 5\n"
+        "FUNCTION catchcompoundfault\n"
+        "TRY\n"
+        "RETURN 1 + throwfromchild()\n"
+        "CATCH\n"
+        "caughtCalls = caughtCalls + 1\n"
+        "ENDTRY\n"
+        "RETURN 42\n"
+        "FUNCTION throwfromchild\n"
+        "THROW 'compound child fault'\n"
+        "FUNCTION catchresumedfault\n"
+        "TRY\n"
+        "RETURN childvalue() + 1 / 0\n"
+        "CATCH\n"
+        "resumedCaughtCalls = resumedCaughtCalls + 1\n"
+        "ENDTRY\n"
+        "RETURN 84\n"
+        "FUNCTION childvalue\n"
+        "RETURN 5\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        semantics_state.completed,
+        "compound RETURN checkpoint semantics script should complete: " + semantics_state.message);
+
+    const auto expect_global = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = semantics_state.globals.find(name);
+        expect(found != semantics_state.globals.end(), name + " should remain visible");
+        if (found != semantics_state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    expect_global("result", "79", "compound nested calls should preserve left-to-right results");
+    const auto snapshot_found = semantics_state.globals.find("snapshotresult");
+    const std::string snapshot_actual = snapshot_found == semantics_state.globals.end()
+                                            ? std::string("<missing>")
+                                            : copperfin::runtime::format_value(snapshot_found->second);
+    expect_global(
+        "snapshotresult",
+        "12",
+        "a resumed expression should retain variable values read before suspension (actual " + snapshot_actual + ")");
+    expect_global("caughtresult", "42", "a caller CATCH should replace an aborted compound return");
+    expect_global("resumedfaultresult", "84", "a fault raised after resumption should enter the caller CATCH");
+    expect_global("valueafter", "6", "explicit and SET UDFPARMS references should reach caller storage once");
+    expect_global("arrayafter", "23", "a bare-array reference should retain ultimate caller storage");
+    expect_global("seedafter", "100", "the resumed child mutation should remain visible after RETURN completion");
+    expect_global("beforecalls", "1", "an earlier user-routine operand should not be replayed");
+    expect_global("explicitcalls", "1", "an explicit-reference argument routine should run once");
+    expect_global("barecalls", "1", "a SET UDFPARMS reference argument routine should run once");
+    expect_global("outercalls", "1", "the outer argument-nested routine should run once");
+    expect_global("arraycalls", "1", "a bare-array argument routine should run once");
+    expect_global("bumpcalls", "1", "a later side-effecting routine should run once");
+    expect_global("finallycalls", "1", "the suspended compound return should run FINALLY once");
+    expect_global("caughtcalls", "1", "a compound child fault should enter the caller CATCH once");
+    expect_global("resumedcaughtcalls", "1", "a resumed-expression fault should enter the caller CATCH once");
+
+    const fs::path on_error_path = temp_root / "compound_return_on_error.prg";
+    write_text(
+        on_error_path,
+        "handlerCount = 0\n"
+        "ON ERROR DO handleerr\n"
+        "result = resumedonerror()\n"
+        "afterError = 1\n"
+        "RETURN\n"
+        "FUNCTION resumedonerror\n"
+        "RETURN childvalue() + 1 / 0\n"
+        "FUNCTION childvalue\n"
+        "RETURN 5\n"
+        "PROCEDURE handleerr\n"
+        "handlerCount = handlerCount + 1\n"
+        "handlerMessage = MESSAGE()\n"
+        "handlerLine = LINENO()\n"
+        "handlerRows = AERROR(handlerError)\n"
+        "handlerAErrorMessage = handlerError[1,2]\n"
+        "handlerAErrorLine = handlerError[1,5]\n"
+        "handlerStatement = handlerError[1,7]\n"
+        "RETURN\n");
+
+    auto on_error_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(on_error_path.string(), temp_root.string(), false));
+    const auto on_error_state = on_error_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(on_error_state.completed,
+           "ON ERROR should handle a fault raised after compound RETURN resumption: " + on_error_state.message);
+    const auto expect_on_error_global = [&](const std::string &name, const std::string &expected) {
+        const auto found = on_error_state.globals.find(name);
+        expect(found != on_error_state.globals.end(), name + " should be captured by the resumed RETURN handler");
+        if (found != on_error_state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " should equal '" + expected + "'");
+        }
+    };
+    expect_on_error_global("handlercount", "1");
+    expect_on_error_global("handlerrows", "1");
+    expect_on_error_global("handlerline", "7");
+    expect_on_error_global("handleraerrorline", "7");
+    expect_on_error_global("handlermessage", "Runtime fault: Division by zero");
+    expect_on_error_global("handleraerrormessage", "Runtime fault: Division by zero");
+    expect_on_error_global("handlerstatement", "RETURN childvalue() + 1 / 0");
+    expect_on_error_global("aftererror", "1");
+
+    const fs::path debugger_path = temp_root / "compound_return_debugger.prg";
+    write_text(
+        debugger_path,
+        "RETURN child() + 1\n"
+        "FUNCTION child\n"
+        "RETURN 2\n");
+
+    auto exact_budget_options =
+        make_runtime_session_options(debugger_path.string(), temp_root.string(), false);
+    exact_budget_options.max_executed_statements = 2U;
+    auto exact_budget_session = copperfin::runtime::PrgRuntimeSession::create(exact_budget_options);
+    const auto exact_budget_state =
+        exact_budget_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(exact_budget_state.completed && exact_budget_state.executed_statement_count == 2U,
+           "compound RETURN resumption should not consume a third statement-budget slot");
+
+    auto exhausted_budget_options = exact_budget_options;
+    exhausted_budget_options.max_executed_statements = 1U;
+    auto exhausted_budget_session = copperfin::runtime::PrgRuntimeSession::create(exhausted_budget_options);
+    const auto exhausted_budget_state =
+        exhausted_budget_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(exhausted_budget_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               exhausted_budget_state.executed_statement_count == 1U &&
+               exhausted_budget_state.location.line == 3U,
+           "statement-budget exhaustion should stop before the child RETURN without double-counting its caller");
+
+    auto breakpoint_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(debugger_path.string(), temp_root.string(), false));
+    breakpoint_session.add_breakpoint({.file_path = debugger_path.string(), .line = 1U});
+    const auto breakpoint_state =
+        breakpoint_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(breakpoint_state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "a compound RETURN should honor its breakpoint before initial execution");
+    const auto breakpoint_completed_state =
+        breakpoint_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(breakpoint_completed_state.completed,
+           "a resumed compound RETURN should not hit its already-consumed breakpoint a second time");
+    const auto execute_count_for_line = [&](std::size_t line) {
+        return std::count_if(
+            breakpoint_completed_state.events.begin(),
+            breakpoint_completed_state.events.end(),
+            [&](const copperfin::runtime::RuntimeEvent &event) {
+                return event.category == "execute" && event.location.line == line;
+            });
+    };
+    expect(execute_count_for_line(1U) == 1 && execute_count_for_line(3U) == 1,
+           "compound RETURN debugger events should record each physical statement exactly once");
+
+    const auto make_debug_session = [&]() {
+        return copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(debugger_path.string(), temp_root.string(), true));
+    };
+
+    auto debug_session = make_debug_session();
+    const auto entry_state = debug_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(entry_state.reason == copperfin::runtime::DebugPauseReason::entry,
+           "compound RETURN debugger test should stop on entry");
+    const auto child_state = debug_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(child_state.reason == copperfin::runtime::DebugPauseReason::step && child_state.location.line == 3U,
+           "step-into should pause at the child RETURN before it completes");
+    const auto resumed_state = debug_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(resumed_state.reason == copperfin::runtime::DebugPauseReason::step,
+           "completing the child should leave the suspended caller available to the debugger");
+    expect(resumed_state.location.line == 1U && resumed_state.statement_text == "RETURN child() + 1",
+           "a suspended compound RETURN should retain its source location and statement text");
+    expect(!resumed_state.call_stack.empty() && resumed_state.call_stack.front().line == 1U,
+           "a suspended compound RETURN should report the same line in the top call-stack frame");
+    const auto completed_state = debug_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(completed_state.completed, "continuing a debugger-paused compound RETURN should complete");
+
+    auto cancel_session = make_debug_session();
+    const auto cancel_entry_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto cancel_child_state = cancel_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    const auto cancel_resumed_state = cancel_session.run(copperfin::runtime::DebugResumeAction::step_into);
+    expect(cancel_entry_state.reason == copperfin::runtime::DebugPauseReason::entry &&
+               cancel_child_state.location.line == 3U &&
+               cancel_resumed_state.location.line == 1U,
+           "cancellation setup should pause on the suspended caller RETURN");
+    cancel_session.request_cancel();
+    const auto cancelled_state = cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(cancelled_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "cancelling a suspended compound RETURN should stop with the existing error contract");
+    expect(cancelled_state.location.line == 1U && cancelled_state.statement_text == "RETURN child() + 1",
+           "cancellation should retain the suspended compound RETURN source metadata");
+    expect(!cancelled_state.call_stack.empty() && cancelled_state.call_stack.front().line == 1U,
+           "cancellation should retain the suspended RETURN line in the top call-stack frame");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_parameters_alias_caller_storage_across_nested_function_calls() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_array_byref";
@@ -906,8 +1187,9 @@ void test_expression_level_function_call_can_chain_nested_user_routines() {
     const auto result = state.globals.find("result");
     expect(result != state.globals.end(), "nested expression-level FUNCTION call should assign result");
     if (result != state.globals.end()) {
-        expect(copperfin::runtime::format_value(result->second) == "9",
-               "expression-level FUNCTION calls should chain through nested user-defined routines");
+        const std::string actual = copperfin::runtime::format_value(result->second);
+        expect(actual == "9",
+               "expression-level FUNCTION calls should chain through nested user-defined routines (actual " + actual + ")");
     }
 
     fs::remove_all(temp_root, ignored);

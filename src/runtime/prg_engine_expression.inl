@@ -145,8 +145,9 @@
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
-                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, bool)> user_routine_invoke_callback,
-                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback,
+                ReturnExpressionContinuation *return_expression_continuation)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
                   resolve_work_area_callback_(std::move(resolve_work_area_callback)),
@@ -217,6 +218,7 @@
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
+                  return_expression_continuation_(return_expression_continuation),
                   text_(text),
                   frame_(frame),
                   globals_(globals),
@@ -627,6 +629,30 @@
             PrgValue parse_primary()
             {
                 skip_whitespace();
+                const std::size_t primary_start = position_;
+                if (!suppress_evaluation_ && return_expression_continuation_ != nullptr)
+                {
+                    const auto checkpoint =
+                        return_expression_continuation_->primary_checkpoints.find(primary_start);
+                    if (checkpoint != return_expression_continuation_->primary_checkpoints.end())
+                    {
+                        position_ = checkpoint->second.end;
+                        return checkpoint->second.value;
+                    }
+                }
+
+                PrgValue value = parse_primary_uncached();
+                if (!suppress_evaluation_ && return_expression_continuation_ != nullptr)
+                {
+                    return_expression_continuation_->primary_checkpoints[primary_start] =
+                        {.end = position_, .value = value};
+                }
+                return value;
+            }
+
+            PrgValue parse_primary_uncached()
+            {
+                skip_whitespace();
                 if (match("("))
                 {
                     PrgValue value = parse_expression();
@@ -746,9 +772,6 @@
                     {
                         ++invocation_tail;
                     }
-                    const std::size_t expression_start = text_.find_first_not_of(" \t\r\n");
-                    const bool direct_root_invocation =
-                        primary_start == expression_start && invocation_tail == text_.size();
                     const bool prefer_function_call =
                         normalized_identifier == "aclass" ||
                         normalized_identifier == "acopy" ||
@@ -786,7 +809,8 @@
                             arguments,
                             raw_arguments,
                             argument_references,
-                            direct_root_invocation));
+                            primary_start,
+                            invocation_tail));
                 }
 
                 if (suppress_evaluation_)
@@ -802,7 +826,8 @@
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::string> &raw_arguments,
                 const std::vector<std::optional<std::string>> &argument_references,
-                bool direct_root_invocation)
+                std::size_t invocation_start,
+                std::size_t invocation_end)
             {
                 const std::string function = normalize_identifier(identifier);
                 const auto is_selector_style_native_member_name =
@@ -1702,7 +1727,8 @@
                             arguments,
                             raw_arguments,
                             argument_references,
-                            direct_root_invocation);
+                            invocation_start,
+                            invocation_end);
                     if (user_routine_result.has_value())
                     {
                         return *user_routine_result;
@@ -3254,8 +3280,9 @@
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
-            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, bool)> user_routine_invoke_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
+            ReturnExpressionContinuation *return_expression_continuation_ = nullptr;
             const std::string &text_;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;

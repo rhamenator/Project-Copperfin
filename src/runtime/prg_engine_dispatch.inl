@@ -11,32 +11,73 @@
         }
 
         Frame &frame = stack.back();
-        if (frame.direct_routine_return_pending)
-        {
-            frame.direct_routine_return_pending = false;
-            frame.return_pending = true;
-            if (const auto outcome = continue_pending_return(frame); outcome.has_value())
-            {
-                return *outcome;
-            }
-            return {};
-        }
-        if (frame.routine == nullptr || frame.pc >= frame.routine->statements.size())
+        const bool resuming_return_expression = frame.direct_routine_return_pending;
+        if (!resuming_return_expression &&
+            (frame.routine == nullptr || frame.pc >= frame.routine->statements.size()))
         {
             pop_frame();
             return {};
         }
 
-        const Statement statement = frame.routine->statements[frame.pc];
-        ++frame.pc;
-        ++executed_statement_count;
+        const std::size_t statement_index =
+            resuming_return_expression && frame.pc > 0U ? frame.pc - 1U : frame.pc;
+        if (frame.routine == nullptr || statement_index >= frame.routine->statements.size())
+        {
+            pop_frame();
+            return {};
+        }
+        const Statement statement = frame.routine->statements[statement_index];
+        if (!resuming_return_expression)
+        {
+            ++frame.pc;
+            ++executed_statement_count;
 
-        events.push_back({.category = "execute",
-                          .detail = display_asset_paths_in_statement(statement.text),
-                          .location = statement.location});
+            events.push_back({.category = "execute",
+                              .detail = display_asset_paths_in_statement(statement.text),
+                              .location = statement.location});
+        }
+        const auto abandon_resumed_return = [&]()
+        {
+            if (resuming_return_expression)
+            {
+                frame.direct_routine_return_pending = false;
+                frame.return_expression_continuation.reset();
+            }
+        };
 
         try
         {
+            if (resuming_return_expression)
+            {
+                frame.direct_routine_return_pending = false;
+                if (frame.return_expression_continuation.has_value())
+                {
+                    ReturnExpressionContinuation &continuation =
+                        *frame.return_expression_continuation;
+                    if (continuation.awaiting_routine.has_value())
+                    {
+                        continuation.routine_results[*continuation.awaiting_routine] =
+                            last_return_value.value_or(make_empty_value());
+                        continuation.awaiting_routine.reset();
+                    }
+
+                    const std::string continued_expression = continuation.expression;
+                    const auto return_value =
+                        evaluate_return_expression(frame, continued_expression);
+                    if (!return_value.has_value())
+                    {
+                        return {};
+                    }
+                    last_return_value = *return_value;
+                }
+                frame.return_pending = true;
+                if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                {
+                    return *outcome;
+                }
+                return {};
+            }
+
             auto format_stack_event_detail = [](std::size_t depth, const std::string &target, bool empty_pop)
             {
                 std::string detail = "depth=" + std::to_string(depth);
@@ -8775,6 +8816,7 @@
         }
         catch (const PrgCompatibilityError &error)
         {
+            abandon_resumed_return();
             last_error_message = error.what();
             last_error_code = error.error_code();
             last_error_compatibility = {};
@@ -8788,6 +8830,7 @@
         }
         catch (const PrgPropagatedRuntimeError &error)
         {
+            abandon_resumed_return();
             if (last_error_message.empty())
             {
                 last_error_message = error.what();
@@ -8796,6 +8839,7 @@
         }
         catch (const std::bad_alloc &)
         {
+            abandon_resumed_return();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");
             last_fault_location = statement.location;
@@ -8807,6 +8851,7 @@
         }
         catch (const std::filesystem::filesystem_error &error)
         {
+            abandon_resumed_return();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
@@ -8822,6 +8867,7 @@
         }
         catch (const std::system_error &error)
         {
+            abandon_resumed_return();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.ResourceSystemError",
@@ -8837,6 +8883,7 @@
         }
         catch (const std::exception &error)
         {
+            abandon_resumed_return();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.RuntimeFault",
@@ -8852,6 +8899,7 @@
         }
         catch (...)
         {
+            abandon_resumed_return();
             clear_caught_exception_identity(last_error_compatibility);
             last_error_message = runtime_text("Runtime.Prg.Core.Error.UnknownRuntimeFault");
             last_fault_location = statement.location;

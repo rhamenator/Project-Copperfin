@@ -3225,6 +3225,13 @@
                 return nullptr;
             }
             const Frame &frame = stack.back();
+            if (frame.direct_routine_return_pending &&
+                frame.routine != nullptr &&
+                frame.pc > 0U &&
+                frame.pc <= frame.routine->statements.size())
+            {
+                return &frame.routine->statements[frame.pc - 1U];
+            }
             if (frame.routine == nullptr || frame.pc >= frame.routine->statements.size())
             {
                 return nullptr;
@@ -5432,9 +5439,16 @@
                     frame.line = last_fault_location.line;
                     assigned_fault_frame_line = true;
                 }
-                else if (iterator->routine != nullptr && iterator->pc < iterator->routine->statements.size())
+                else if (iterator->routine != nullptr)
                 {
-                    frame.line = iterator->routine->statements[iterator->pc].location.line;
+                    const std::size_t statement_index =
+                        iterator->direct_routine_return_pending && iterator->pc > 0U
+                            ? iterator->pc - 1U
+                            : iterator->pc;
+                    if (statement_index < iterator->routine->statements.size())
+                    {
+                        frame.line = iterator->routine->statements[statement_index].location.line;
+                    }
                 }
                 frame.locals = iterator->locals;
                 state.call_stack.push_back(std::move(frame));

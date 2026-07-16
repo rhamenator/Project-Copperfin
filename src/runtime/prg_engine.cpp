@@ -474,6 +474,24 @@ namespace copperfin::runtime
             std::vector<PrgValue> values;
         };
 
+        struct ExpressionPrimaryCheckpoint
+        {
+            std::size_t end = 0U;
+            PrgValue value;
+        };
+
+        struct ReturnExpressionContinuation
+        {
+            std::string expression;
+            std::map<std::size_t, ExpressionPrimaryCheckpoint> primary_checkpoints;
+            std::map<std::pair<std::size_t, std::size_t>, PrgValue> routine_results;
+            std::optional<std::pair<std::size_t, std::size_t>> awaiting_routine;
+        };
+
+        struct ReturnExpressionSuspended
+        {
+        };
+
         struct Frame
         {
             std::string file_path;
@@ -500,6 +518,7 @@ namespace copperfin::runtime
             bool requested_nodefault = false;
             bool return_pending = false;
             bool direct_routine_return_pending = false;
+            std::optional<ReturnExpressionContinuation> return_expression_continuation;
             bool evaluate_conditional_else = false;
         };
 
@@ -821,8 +840,8 @@ namespace copperfin::runtime
         std::string udfparms_mode = "VALUE";
         std::size_t expression_evaluation_depth = 0U;
         bool direct_return_dispatch_active = false;
-        bool direct_return_dispatch_deferred = false;
         std::size_t direct_return_expression_depth = 0U;
+        ReturnExpressionContinuation *active_return_expression_continuation = nullptr;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
@@ -929,7 +948,8 @@ namespace copperfin::runtime
             const std::vector<PrgValue> &arguments,
             const std::vector<std::string> &raw_arguments,
             const std::vector<std::optional<std::string>> &argument_references,
-            bool direct_root_invocation);
+            std::size_t invocation_start,
+            std::size_t invocation_end);
         std::optional<PrgValue> evaluate_return_expression(Frame &source_frame, const std::string &expression);
         bool requery_native_list_control(
             RuntimeOleObjectState &runtime_object,
@@ -2326,7 +2346,8 @@ namespace copperfin::runtime
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::string> &raw_arguments,
                 const std::vector<std::optional<std::string>> &argument_references,
-                bool direct_root_invocation) -> std::optional<PrgValue>
+                std::size_t invocation_start,
+                std::size_t invocation_end) -> std::optional<PrgValue>
             {
                 return invoke_expression_user_routine(
                     frame,
@@ -2334,7 +2355,8 @@ namespace copperfin::runtime
                     arguments,
                     raw_arguments,
                     argument_references,
-                    direct_root_invocation);
+                    invocation_start,
+                    invocation_end);
             },
             [this](
                 const std::string &fn_key,
@@ -2343,7 +2365,11 @@ namespace copperfin::runtime
                 -> std::optional<PrgValue>
             {
                 return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
-            });
+            },
+            direct_return_dispatch_active &&
+                    expression_evaluation_depth == direct_return_expression_depth
+                ? active_return_expression_continuation
+                : nullptr);
         return parser.parse();
     }
 
@@ -3209,7 +3235,8 @@ namespace copperfin::runtime
         const std::vector<PrgValue> &arguments,
         const std::vector<std::string> &raw_arguments,
         const std::vector<std::optional<std::string>> &argument_references,
-        bool direct_root_invocation)
+        std::size_t invocation_start,
+        std::size_t invocation_end)
     {
         Program &program = load_program(source_frame.file_path);
         if (!source_frame.native_method_class_name.empty())
@@ -3238,6 +3265,19 @@ namespace copperfin::runtime
         if (!found.has_value())
         {
             return std::nullopt;
+        }
+
+        const auto invocation_key = std::make_pair(invocation_start, invocation_end);
+        if (direct_return_dispatch_active &&
+            expression_evaluation_depth == direct_return_expression_depth &&
+            active_return_expression_continuation != nullptr)
+        {
+            const auto completed =
+                active_return_expression_continuation->routine_results.find(invocation_key);
+            if (completed != active_return_expression_continuation->routine_results.end())
+            {
+                return completed->second;
+            }
         }
 
         if (!can_push_frame())
@@ -3269,11 +3309,11 @@ namespace copperfin::runtime
         const std::size_t return_depth = stack.size();
         push_routine_frame(found->program->path, *found->routine, arguments, resolved_references);
         if (direct_return_dispatch_active &&
-            direct_root_invocation &&
-            expression_evaluation_depth == direct_return_expression_depth)
+            expression_evaluation_depth == direct_return_expression_depth &&
+            active_return_expression_continuation != nullptr)
         {
-            direct_return_dispatch_deferred = true;
-            return make_empty_value();
+            active_return_expression_continuation->awaiting_routine = invocation_key;
+            throw ReturnExpressionSuspended{};
         }
         return run_expression_invoked_routine_until_return(return_depth);
     }
@@ -3282,31 +3322,47 @@ namespace copperfin::runtime
         Frame &source_frame,
         const std::string &expression)
     {
+        if (!source_frame.return_expression_continuation.has_value() ||
+            source_frame.return_expression_continuation->expression != expression)
+        {
+            source_frame.return_expression_continuation =
+                ReturnExpressionContinuation{
+                    .expression = expression,
+                    .primary_checkpoints = {},
+                    .routine_results = {},
+                    .awaiting_routine = std::nullopt};
+        }
+
         const bool previous_active = direct_return_dispatch_active;
-        const bool previous_deferred = direct_return_dispatch_deferred;
         const std::size_t previous_depth = direct_return_expression_depth;
+        ReturnExpressionContinuation *const previous_continuation =
+            active_return_expression_continuation;
         direct_return_dispatch_active = true;
-        direct_return_dispatch_deferred = false;
         direct_return_expression_depth = expression_evaluation_depth + 1U;
+        active_return_expression_continuation =
+            &*source_frame.return_expression_continuation;
         try
         {
             PrgValue result = evaluate_expression(expression, source_frame);
-            const bool deferred = direct_return_dispatch_deferred;
             direct_return_dispatch_active = previous_active;
-            direct_return_dispatch_deferred = previous_deferred;
             direct_return_expression_depth = previous_depth;
-            if (deferred)
-            {
-                source_frame.direct_routine_return_pending = true;
-                return std::nullopt;
-            }
+            active_return_expression_continuation = previous_continuation;
+            source_frame.return_expression_continuation.reset();
             return result;
+        }
+        catch (const ReturnExpressionSuspended &)
+        {
+            direct_return_dispatch_active = previous_active;
+            direct_return_expression_depth = previous_depth;
+            active_return_expression_continuation = previous_continuation;
+            source_frame.direct_routine_return_pending = true;
+            return std::nullopt;
         }
         catch (...)
         {
             direct_return_dispatch_active = previous_active;
-            direct_return_dispatch_deferred = previous_deferred;
             direct_return_expression_depth = previous_depth;
+            active_return_expression_continuation = previous_continuation;
             throw;
         }
     }
@@ -7128,7 +7184,8 @@ namespace copperfin::runtime
                 continue;
             }
 
-            if (executed_statement_count >= max_executed_statements)
+            if (!stack.back().direct_routine_return_pending &&
+                executed_statement_count >= max_executed_statements)
             {
                 last_error_message = step_budget_limit_message();
                 last_fault_location = next->location;
@@ -7177,6 +7234,7 @@ namespace copperfin::runtime
                             if (!stack.empty())
                             {
                                 stack.back().direct_routine_return_pending = false;
+                                stack.back().return_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
                             }
                             break;
@@ -7716,7 +7774,8 @@ namespace copperfin::runtime
                     continue;
                 }
 
-                if (executed_statement_count >= max_executed_statements)
+                if (!stack.back().direct_routine_return_pending &&
+                    executed_statement_count >= max_executed_statements)
                 {
                     last_error_message = step_budget_limit_message();
                     last_fault_location = next->location;
@@ -7727,7 +7786,9 @@ namespace copperfin::runtime
                     return finalize_pause_state(DebugPauseReason::error, last_error_message);
                 }
 
-                if (breakpoint_matches(next->location))
+                const bool resuming_return_expression =
+                    stack.back().direct_routine_return_pending;
+                if (!resuming_return_expression && breakpoint_matches(next->location))
                 {
                     if (resume_skip_breakpoint_location.has_value() &&
                         paths_equal_for_platform(resume_skip_breakpoint_location->file_path, next->location.file_path) &&
@@ -7779,6 +7840,7 @@ namespace copperfin::runtime
                                 if (!stack.empty())
                                 {
                                     stack.back().direct_routine_return_pending = false;
+                                    stack.back().return_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);
                                 }
                                 break;
