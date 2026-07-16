@@ -130,6 +130,12 @@ require_text_order("${workflow}"
     "-Name 'Test compiler-cache invalidation and malformed entries'"
     "-Name 'Run warm native test suite'"
     "malformed-cache probe and authoritative CTest ordering")
+require_text("${workflow}" "-Category other"
+    "supported invalidation-probe metric category")
+require_text("${workflow}" "if: \${{ !cancelled() }}"
+    "CTest execution after a failed invalidation probe")
+forbid_text("${workflow}" "-Category cache-validation"
+    "unsupported validation metric category")
 forbid_text("${workflow}" "'-R'" "CTest filtering")
 forbid_text("${workflow}" "--tests-regex" "CTest filtering")
 require_text("${workflow}" "-MinimumImprovementPercent 25"
