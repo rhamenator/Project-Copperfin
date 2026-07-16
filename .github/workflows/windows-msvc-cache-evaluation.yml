@@ -1,0 +1,212 @@
+name: Windows MSVC Compiler Cache Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      cache_epoch:
+        description: Isolated cache namespace epoch for a guaranteed cold first build.
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+      build_jobs:
+        description: Bounded native compile concurrency.
+        required: true
+        default: '2'
+        type: choice
+        options:
+          - '2'
+          - '3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-msvc-cache-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-msvc-cache-evaluation:
+    name: Windows MSVC Compiler Cache Evaluation
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      SCCACHE_GHA_ENABLED: 'on'
+      SCCACHE_GHA_RW_MODE: READ_WRITE
+      SCCACHE_GHA_VERSION: copperfin-sccache-v0.15.0-msvc-x64-release-${{ github.sha }}-epoch-${{ inputs.cache_epoch }}
+      SCCACHE_BASEDIRS: ${{ github.workspace }}
+      SCCACHE_CACHE_SIZE: 10G
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup pinned sccache
+        uses: mozilla-actions/sccache-action@9e7fa8a12102821edf02ca5dbea1acd0f89a2696 # v0.0.10
+        with:
+          version: v0.15.0
+          disable_annotations: true
+
+      - name: Verify sccache provenance
+        shell: pwsh
+        run: >-
+          & ./scripts/verify-windows-sccache.ps1
+          -EvidencePath artifacts/windows-sccache-evaluation/sccache-provenance.json
+
+      - name: Initialize x64 MSVC environment
+        shell: pwsh
+        run: >-
+          & ./scripts/initialize-windows-msvc-environment.ps1
+          -EvidencePath artifacts/windows-sccache-evaluation/msvc-identity.json
+
+      - name: Verify Ninja availability
+        shell: pwsh
+        run: |
+          $ninja = Get-Command ninja.exe -ErrorAction Stop
+          & $ninja.Source --version
+          if ($LASTEXITCODE -ne 0) {
+            throw "Ninja version detection failed."
+          }
+
+      - name: Initialize Windows validation metrics
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Initialize
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+
+      - name: Reset cold-cache statistics
+        shell: pwsh
+        run: |
+          & $env:SCCACHE_PATH --zero-stats
+          if ($LASTEXITCODE -ne 0) {
+            throw "sccache could not reset cold-build statistics."
+          }
+
+      - name: Configure cold native build
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Configure cold native build'
+          -Category configure
+          -FilePath cmake
+          -CommandArguments @('-S', '.', '-B', 'build-sccache-cold', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+
+      - name: Build cold native targets
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Build cold native targets'
+          -Category native-compile
+          -FilePath cmake
+          -CommandArguments @('--build', 'build-sccache-cold', '--parallel', '${{ inputs.build_jobs }}')
+          -BuildJobs ([int]'${{ inputs.build_jobs }}')
+          -SampleResources
+
+      - name: Capture cold-cache statistics
+        shell: pwsh
+        run: >-
+          & ./scripts/capture-windows-sccache-stats.ps1
+          -Name 'Cold full build'
+          -OutputPath artifacts/windows-sccache-evaluation/sccache-cold.json
+          -MinimumMisses 1
+
+      - name: Restart cache server for warm build
+        shell: pwsh
+        run: |
+          & $env:SCCACHE_PATH --stop-server
+          if ($LASTEXITCODE -ne 0) {
+            throw "sccache could not stop after the cold build."
+          }
+          & $env:SCCACHE_PATH --zero-stats
+          if ($LASTEXITCODE -ne 0) {
+            throw "sccache could not reset warm-build statistics."
+          }
+
+      - name: Configure warm native build
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Configure warm native build'
+          -Category configure
+          -FilePath cmake
+          -CommandArguments @('-S', '.', '-B', 'build-sccache-warm', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DCOPPERFIN_BUILD_TESTS=ON', "-DCMAKE_C_COMPILER_LAUNCHER=$env:SCCACHE_PATH", "-DCMAKE_CXX_COMPILER_LAUNCHER=$env:SCCACHE_PATH", '-DCMAKE_POLICY_DEFAULT_CMP0141=NEW', '-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded')
+
+      - name: Build warm native targets
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Build warm native targets'
+          -Category native-compile
+          -FilePath cmake
+          -CommandArguments @('--build', 'build-sccache-warm', '--parallel', '${{ inputs.build_jobs }}')
+          -BuildJobs ([int]'${{ inputs.build_jobs }}')
+          -SampleResources
+
+      - name: Capture warm-cache statistics
+        shell: pwsh
+        run: >-
+          & ./scripts/capture-windows-sccache-stats.ps1
+          -Name 'Warm full build'
+          -OutputPath artifacts/windows-sccache-evaluation/sccache-warm.json
+          -MinimumHits 1
+
+      - name: Run full warm native test suite
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -Name 'Run warm native test suite'
+          -Category native-test
+          -FilePath ctest
+          -CommandArguments @('--test-dir', 'build-sccache-warm', '--output-on-failure')
+          -SampleResources
+
+      - name: Test compiler-cache invalidation and malformed entries
+        shell: pwsh
+        run: >-
+          & ./scripts/test-windows-sccache-contract.ps1
+          -EvidencePath artifacts/windows-sccache-evaluation/sccache-contract-probe.json
+
+      - name: Compare cold and warm evidence
+        shell: pwsh
+        run: >-
+          & ./scripts/compare-windows-sccache-evidence.ps1
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+          -MinimumImprovementPercent 25
+
+      - name: Finalize Windows validation metrics
+        if: ${{ always() }}
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Finalize
+          -MetricsDirectory artifacts/windows-sccache-evaluation
+
+      - name: Upload compiler-cache evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-windows-msvc-cache-${{ github.sha }}-epoch-${{ inputs.cache_epoch }}
+          path: artifacts/windows-sccache-evaluation/*.json
+          if-no-files-found: error
+          retention-days: 0
