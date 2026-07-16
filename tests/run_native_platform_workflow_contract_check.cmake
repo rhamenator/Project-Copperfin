@@ -294,6 +294,21 @@ endforeach()
 require_text(".github/workflows/windows-deep-validation.yml"
     "name: Windows Deep Validation"
     "Windows deep-validation workflow identity")
+require_text(".github/workflows/windows-deep-validation.yml" [=[      test_jobs:
+        description: Bounded native CTest concurrency for measured isolation trials.
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2']=]
+    "bounded Windows CTest trial input")
+require_text(".github/workflows/windows-deep-validation.yml"
+    [=[-CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--parallel', '${{ inputs.test_jobs }}')]=]
+    "bounded Windows CTest trial command")
+require_text(".github/workflows/windows-deep-validation.yml"
+    [=[name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-build-${{ inputs.build_jobs }}-test-${{ inputs.test_jobs }}]=]
+    "Windows deep-validation build/test job artifact identity")
 foreach(deep_step IN ITEMS
         "Build Visual Studio extension"
         "Build standalone Studio shell"

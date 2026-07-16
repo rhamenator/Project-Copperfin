@@ -24,6 +24,14 @@ on:
         options:
           - '2'
           - '3'
+      test_jobs:
+        description: Bounded native CTest concurrency for measured isolation trials.
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
 
 permissions:
   contents: read
@@ -85,7 +93,7 @@ jobs:
           -Name 'Run native CTest suite'
           -Category native-test
           -FilePath ctest
-          -CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure')
+          -CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--parallel', '${{ inputs.test_jobs }}')
           -SampleResources
 
       - name: Build Visual Studio extension
@@ -184,7 +192,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-jobs-${{ inputs.build_jobs }}
+          name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-build-${{ inputs.build_jobs }}-test-${{ inputs.test_jobs }}
           path: |
             artifacts/windows-deep-validation-metrics/*.json
             build/${{ inputs.build_configuration }}/*.exe

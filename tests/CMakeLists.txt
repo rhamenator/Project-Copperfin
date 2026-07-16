@@ -253,6 +253,15 @@ add_test(
 )
 
 add_test(
+    NAME test_native_test_isolation_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DINVENTORY_PATH=${CMAKE_BINARY_DIR}/native-test-isolation.tsv
+        -DISOLATION_SOURCE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/CopperfinTestIsolation.cmake
+        -DTEST_REGISTRATION_SOURCE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_native_test_isolation_contract_check.cmake
+)
+
+add_test(
     NAME test_security_supply_chain_workflow_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
@@ -4810,3 +4819,6 @@ copperfin_reuse_test_support_object_for_targets(
     test_studio_host_report_direct_setting_fields
     test_studio_host_report_page_setup_fields
 )
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/CopperfinTestIsolation.cmake")
+cmake_language(DEFER CALL copperfin_configure_native_test_isolation)
