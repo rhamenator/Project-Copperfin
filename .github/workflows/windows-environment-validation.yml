@@ -11,6 +11,7 @@ on:
       - "apps/copperfin_build_host/**"
       - "apps/copperfin_inspect/**"
       - "apps/copperfin_runtime_host/**"
+      - "apps/copperfin_studio_host/**"
       - "include/**"
       - "resources/locales/**"
       - "src/**"
@@ -23,6 +24,7 @@ on:
       - "apps/copperfin_build_host/**"
       - "apps/copperfin_inspect/**"
       - "apps/copperfin_runtime_host/**"
+      - "apps/copperfin_studio_host/**"
       - "include/**"
       - "resources/locales/**"
       - "src/**"
@@ -35,6 +37,8 @@ jobs:
   windows-environment-paths:
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      COPPERFIN_OUT_OF_TREE_BUILD: ${{ runner.temp }}\copperfin-environment-build
 
     steps:
       - name: Check out source
@@ -44,10 +48,10 @@ jobs:
         run: cmake -P cmake/validate_focused_workflow_path_filters.cmake
 
       - name: Configure native build
-        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+        run: cmake -S . -B "$env:COPPERFIN_OUT_OF_TREE_BUILD" -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build environment and executable path regressions
-        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch
+        run: cmake --build "$env:COPPERFIN_OUT_OF_TREE_BUILD" --config Release --parallel 2 --target test_platform_environment test_localization test_licensing_status test_build_host_output test_runtime_host_implicit_path_launch test_tool_license_path_launch test_studio_host_report_section_selection_diagnostics
 
       - name: Run environment and executable path regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch)$"
+        run: ctest --test-dir "$env:COPPERFIN_OUT_OF_TREE_BUILD" -C Release --output-on-failure -R "^(test_platform_environment|test_localization|test_licensing_status|test_build_host_output|test_runtime_host_implicit_path_launch|test_tool_license_path_launch|test_studio_host_report_section_selection_diagnostics)$"

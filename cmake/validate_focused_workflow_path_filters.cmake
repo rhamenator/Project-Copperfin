@@ -60,6 +60,7 @@ set(environment_host_inputs
     "apps/copperfin_build_host/**"
     "apps/copperfin_inspect/**"
     "apps/copperfin_runtime_host/**"
+    "apps/copperfin_studio_host/**"
     ${common_focused_inputs})
 set(executable_path_inputs
     ".github/workflows/executable-path-validation.yml"

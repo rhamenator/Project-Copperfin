@@ -111,6 +111,10 @@ copperfin_add_test_support_object(
     "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_shared_test_helpers.cpp"
     cf_vfp_assets
 )
+target_compile_definitions(
+    cf_studio_host_json_shared_test_helpers
+    PRIVATE COPPERFIN_TEST_LOCALE_DIR="${PROJECT_SOURCE_DIR}/resources/locales"
+)
 copperfin_add_test_support_object(
     cf_studio_host_json_report_shared_fixtures
     "${CMAKE_CURRENT_SOURCE_DIR}/test_studio_host_json_report_shared_fixtures.cpp"
@@ -289,6 +293,10 @@ add_executable(test_localization
 )
 target_link_libraries(test_localization PRIVATE cf_localization cf_runtime_pipeline cf_xbase_runtime)
 add_dependencies(test_localization copperfin_inspect)
+target_compile_definitions(
+    test_localization
+    PRIVATE COPPERFIN_TEST_LOCALE_DIR="${PROJECT_SOURCE_DIR}/resources/locales"
+)
 
 if(MSVC)
     target_compile_options(test_localization PRIVATE /W4 /permissive-)
@@ -383,6 +391,10 @@ add_executable(test_build_host_output
 )
 target_link_libraries(test_build_host_output PRIVATE cf_vfp_assets)
 add_dependencies(test_build_host_output copperfin_build_host copperfin_runtime_host)
+target_compile_definitions(
+    test_build_host_output
+    PRIVATE COPPERFIN_TEST_LOCALE_DIR="${PROJECT_SOURCE_DIR}/resources/locales"
+)
 
 if(MSVC)
     target_compile_options(test_build_host_output PRIVATE /W4 /permissive-)
@@ -4307,7 +4319,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline_test
 )
 target_compile_definitions(test_runtime_pipeline PRIVATE
     COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS=1
-    COPPERFIN_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    COPPERFIN_TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
 )
 target_include_directories(test_runtime_pipeline PRIVATE ${CMAKE_SOURCE_DIR}/src/runtime)
 
@@ -4822,3 +4834,31 @@ copperfin_reuse_test_support_object_for_targets(
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/CopperfinTestIsolation.cmake")
 cmake_language(DEFER CALL copperfin_configure_native_test_isolation)
+
+function(copperfin_configure_native_test_resource_environment)
+    get_property(copperfin_native_tests DIRECTORY PROPERTY TESTS)
+    foreach(copperfin_native_test IN LISTS copperfin_native_tests)
+        get_property(
+            copperfin_native_test_environment
+            TEST ${copperfin_native_test}
+            PROPERTY ENVIRONMENT
+        )
+        set(copperfin_native_test_has_locale_dir FALSE)
+        foreach(copperfin_native_test_environment_entry IN LISTS copperfin_native_test_environment)
+            if(copperfin_native_test_environment_entry MATCHES "^COPPERFIN_LOCALE_DIR=")
+                set(copperfin_native_test_has_locale_dir TRUE)
+                break()
+            endif()
+        endforeach()
+        if(copperfin_native_test_has_locale_dir)
+            continue()
+        endif()
+        set_property(
+            TEST ${copperfin_native_test}
+            APPEND PROPERTY ENVIRONMENT
+                "COPPERFIN_LOCALE_DIR=${PROJECT_SOURCE_DIR}/resources/locales"
+        )
+    endforeach()
+endfunction()
+
+cmake_language(DEFER CALL copperfin_configure_native_test_resource_environment)

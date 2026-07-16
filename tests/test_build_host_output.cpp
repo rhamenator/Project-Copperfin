@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -25,6 +26,7 @@
 namespace {
 
 using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::ScopedTestLocaleCatalogDirectory;
 using copperfin::test_support::set_env_value;
 
 int failures = 0;
@@ -3279,7 +3281,7 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
 
     {
         ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
-        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedTestLocaleCatalogDirectory locale_dir;
         const auto process = run_process_capture(build_host_path, {}, temp_root);
         expect(process.exit_code == 2, "build host without a build command should fail usage validation");
         expect(process.stdout_text.find(
@@ -3318,7 +3320,7 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
 
     {
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
-        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedTestLocaleCatalogDirectory locale_dir;
         set_env_value("COPPERFIN_LOCALE", "es-419", true);
 
         const auto process = run_process_capture(build_host_path, {}, temp_root);
@@ -3336,7 +3338,7 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
 
     {
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
-        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedTestLocaleCatalogDirectory locale_dir;
         set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
 
         const auto process = run_process_capture(build_host_path, {"build", "--project"}, temp_root);
@@ -3353,7 +3355,7 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
 
     {
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
-        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedTestLocaleCatalogDirectory locale_dir;
         set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
 
         const auto process = run_process_capture(build_host_path, {}, temp_root);
@@ -3416,7 +3418,7 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
         write_synthetic_project(project_path, project_dir, output_dir / "WarningDemo.dll");
 
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
-        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedTestLocaleCatalogDirectory locale_dir;
         set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
 
         const auto process = run_process_capture(
@@ -3445,10 +3447,25 @@ void run_build_host_localized_usage_path_search_smoke(const std::string& build_h
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     const fs::path nested_working_directory = temp_root / "cwd" / "nested";
+    const fs::path deployed_executable_directory = temp_root / "bin";
+    const fs::path deployed_locale_root = temp_root / "share" / "copperfin" / "locales";
     fs::create_directories(nested_working_directory);
+    fs::create_directories(deployed_executable_directory);
+    fs::create_directories(deployed_locale_root.parent_path());
 
     const fs::path resolved_build_host_path = fs::absolute(build_host_path);
-    const std::string executable_name = resolved_build_host_path.filename().string();
+    const fs::path deployed_build_host_path =
+        deployed_executable_directory / resolved_build_host_path.filename();
+    fs::copy_file(
+        resolved_build_host_path,
+        deployed_build_host_path,
+        fs::copy_options::overwrite_existing);
+    fs::copy(
+        copperfin::test_support::configured_test_locale_catalog_dir(),
+        deployed_locale_root,
+        fs::copy_options::recursive | fs::copy_options::overwrite_existing);
+
+    const std::string executable_name = deployed_build_host_path.filename().string();
     const std::string original_path = copperfin::test_support::getenv_value("PATH");
 #if defined(_WIN32)
     const char path_separator = ';';
@@ -3456,7 +3473,7 @@ void run_build_host_localized_usage_path_search_smoke(const std::string& build_h
     const char path_separator = ':';
 #endif
     const std::string seeded_path =
-        resolved_build_host_path.parent_path().string() +
+        deployed_build_host_path.parent_path().string() +
         (original_path.empty() ? std::string() : std::string(1U, path_separator) + original_path);
 
     {

@@ -137,6 +137,8 @@ ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory) {
+    // Source-tree Studio tests own checkout catalogs; installed-layout probes use separate launchers.
+    copperfin::test_support::ScopedTestLocaleCatalogDirectory locale_catalog_directory;
     const auto captured = copperfin::test_support::normalize_captured_process_line_endings(
         copperfin::test_support::run_process_capture(
             copperfin::test_support::path_from_utf8_string(executable_path),

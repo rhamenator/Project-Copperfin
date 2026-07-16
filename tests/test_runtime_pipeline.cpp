@@ -17,7 +17,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     const ScopedRuntimePipelineFixtureNamespace fixture_namespace;
     const ScopedEnvironmentVariable locale_root(
         "COPPERFIN_LOCALE_DIR",
-        runtime_pipeline_locale_root().string());
+        copperfin::test_support::path_to_utf8_string(runtime_pipeline_locale_root()));
 
     test_runtime_pipeline_fixtures_are_process_isolated(executable_path);
     test_materialize_runtime_package();

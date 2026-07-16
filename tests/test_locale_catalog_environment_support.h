@@ -50,6 +50,25 @@ inline std::filesystem::path find_locale_catalog_dir_from_cwd() {
     }
 }
 
+inline std::filesystem::path configured_test_locale_catalog_dir() {
+#if defined(COPPERFIN_TEST_LOCALE_DIR)
+    return path_from_utf8_string(COPPERFIN_TEST_LOCALE_DIR).lexically_normal();
+#else
+    return find_locale_catalog_dir_from_cwd();
+#endif
+}
+
+struct ScopedTestLocaleCatalogDirectory {
+    ScopedEnvironmentPath locale_dir;
+
+    ScopedTestLocaleCatalogDirectory()
+        : locale_dir("COPPERFIN_LOCALE_DIR", false) {
+        if (!can_supply_default_locale_catalog(getenv_path("COPPERFIN_LOCALE_DIR"))) {
+            locale_dir.set(configured_test_locale_catalog_dir());
+        }
+    }
+};
+
 struct ScopedDefaultLocaleCatalogEnvironment {
     ScopedEnvironmentValue locale;
     ScopedEnvironmentPath locale_dir;
@@ -59,7 +78,7 @@ struct ScopedDefaultLocaleCatalogEnvironment {
           locale_dir("COPPERFIN_LOCALE_DIR", false) {
         locale.set("en-US");
         if (!can_supply_default_locale_catalog(getenv_path("COPPERFIN_LOCALE_DIR"))) {
-            locale_dir.set(find_locale_catalog_dir_from_cwd());
+            locale_dir.set(configured_test_locale_catalog_dir());
         }
     }
 };

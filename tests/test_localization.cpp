@@ -10,6 +10,7 @@
 #include "copperfin/studio/project_workspace.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -443,6 +444,7 @@ void test_product_locale_catalogs_have_key_parity() {
 
 void test_catalog_root_resolution_searches_parent_directories() {
     namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parent_catalog_tests";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
@@ -3460,9 +3462,8 @@ void test_runtime_package_warnings_pseudo_localize() {
     namespace fs = std::filesystem;
 
     ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
-    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    copperfin::test_support::ScopedTestLocaleCatalogDirectory locale_dir;
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
-    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
 
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_package_warning_localization";
     const fs::path project_dir = temp_root / "project";
@@ -3525,18 +3526,17 @@ void test_runtime_package_warnings_pseudo_localize() {
 
 void test_inspect_error_prefix_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    copperfin::test_support::ScopedTestLocaleCatalogDirectory locale_dir;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_error_prefix_tests";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
-    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
     const std::string missing_asset = (temp_root / "missing.dbf").string();
     const std::string output = run_command_capture(
         shell_quote(inspect_path) + " " + shell_quote(missing_asset) + " 2>&1");
-    set_env_value("COPPERFIN_LOCALE", "", false);
-    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
 
     const auto pseudo_catalog = copperfin::localization::load_catalogs(
         copperfin::localization::resolve_catalog_root(),
