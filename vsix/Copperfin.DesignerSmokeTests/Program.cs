@@ -7040,7 +7040,7 @@ internal static class Program
                 Groups = new List<CopperfinStudioProjectGroup>
                 {
                     new() { Id = "forms", Title = "Forms", ItemCount = 2, ExcludedCount = 0 },
-                    new() { Id = "programs", Title = "Programs", ItemCount = 1, ExcludedCount = 0 },
+                    new() { Id = "programs", Title = "Programs", ItemCount = 1, ExcludedCount = 0, RecordIndexes = new List<int> { 10 } },
                     new() { Id = "classes", Title = "Class Libraries", ItemCount = 3, ExcludedCount = 1 }
                 },
                 Entries = new List<CopperfinStudioProjectEntry>
@@ -7107,7 +7107,7 @@ internal static class Program
                 ProjectTitle = "sample.pjx",
                 Groups = new List<CopperfinStudioProjectGroup>
                 {
-                    new() { Id = "project_items", Title = "Project Items", ItemCount = 1, ExcludedCount = 1 },
+                    new() { Id = "project_items", Title = "Project Items", ItemCount = 1, ExcludedCount = 1, RecordIndexes = new List<int> { 10 } },
                     new() { Id = "other_records", Title = "Other Records", ItemCount = 1, ExcludedCount = 0 }
                 },
                 Entries = new List<CopperfinStudioProjectEntry>
@@ -19234,7 +19234,7 @@ internal static class Program
         {
             TypeDescriptor.GetProperties(deletedSelection)["TOP"]?.SetValue(deletedSelection, 9100);
             Expect(deletedSelection.TryGetUpdate("TOP", out var topTarget, out var topValue) &&
-                   string.Equals(topTarget, "TOP", StringComparison.Ordinal) &&
+                   string.Equals(topTarget, "VPOS", StringComparison.Ordinal) &&
                    string.Equals(topValue, "9100", StringComparison.Ordinal),
                 "Deleted report section explorer selection should serialize TOP edits through the shared update path");
 
@@ -36899,6 +36899,16 @@ internal static class Program
 
         currentSnapshotField.SetValue(control, snapshot);
         populateSectionListMethod.Invoke(control, new object?[] { null });
+        var projectGroupId = snapshot.ProjectWorkspace?.Entries.FirstOrDefault()?.GroupId;
+        if (!string.IsNullOrWhiteSpace(projectGroupId))
+        {
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioProjectGroup group &&
+                                string.Equals(group.Id, projectGroupId, StringComparison.Ordinal);
+            }
+        }
         populateObjectListMethod.Invoke(control, new object[] { true });
     }
 
