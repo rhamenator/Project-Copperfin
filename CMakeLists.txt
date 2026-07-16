@@ -351,7 +351,9 @@ if(WIN32)
 endif()
 
 if(MSVC)
-    target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive-)
+    # Embedded debug information can push the large interpreter translation
+    # unit past the standard COFF section limit.
+    target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive- /bigobj)
 else()
     target_compile_options(cf_xbase_runtime PRIVATE -Wall -Wextra -Wpedantic)
 endif()
