@@ -136,8 +136,8 @@ require_text_order("${workflow}"
     "malformed-cache probe and authoritative CTest ordering")
 require_text("${workflow}" "-Category other"
     "supported invalidation-probe metric category")
-require_text("${workflow}" "if: \${{ !cancelled() }}"
-    "CTest execution after a failed invalidation probe")
+forbid_text("${workflow}" "if: \${{ !cancelled() }}"
+    "CTest execution before a skipped warm build")
 forbid_text("${workflow}" "-Category cache-validation"
     "unsupported validation metric category")
 forbid_text("${workflow}" "'-R'" "CTest filtering")
@@ -196,6 +196,9 @@ require_text("${probe_script}"
     "stop-server-specific fail-closed shutdown check")
 require_text("${probe_script}" "sccache could not stop its server cleanly"
     "actionable cache-server shutdown failure")
+require_text("${probe_script}"
+    "(?m)^sccache: error: couldn't connect to server\\r?\$"
+    "exact already-stopped cache-server handling")
 require_text("${probe_script}" "Stop-SccacheServer -Cleanup"
     "non-masking final cache-server cleanup")
 require_text("${probe_script}" "\$malformedHits -eq 0 -and \$malformedMisses -eq 1"

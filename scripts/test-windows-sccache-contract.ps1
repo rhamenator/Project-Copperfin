@@ -29,6 +29,9 @@ function Stop-SccacheServer {
 
     $output = (& $env:SCCACHE_PATH --stop-server 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) {
+        if ($output -match "(?m)^sccache: error: couldn't connect to server\r?$") {
+            return
+        }
         $message = "sccache could not stop its server cleanly."
         if (-not [string]::IsNullOrWhiteSpace($output)) {
             $message = "sccache could not stop its server cleanly: $output"

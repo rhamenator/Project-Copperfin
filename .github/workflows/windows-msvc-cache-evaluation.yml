@@ -199,7 +199,6 @@ jobs:
           -MaximumWriteErrors 1
 
       - name: Run full warm native test suite
-        if: ${{ !cancelled() }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
