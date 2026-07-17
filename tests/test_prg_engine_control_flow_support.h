@@ -235,6 +235,7 @@ void test_do_with_by_reference_updates_caller_variable();
 void test_expression_level_function_call_assigns_return_value();
 void test_expression_level_procedure_call_assigns_return_value();
 void test_expression_level_function_call_supports_by_reference_arguments();
+void test_missing_argument_commas_raise_expression_errors();
 void test_set_udfparms_controls_expression_routine_parameter_aliasing();
 void test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions();
 void test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk();

@@ -315,6 +315,66 @@ void test_expression_level_function_call_supports_by_reference_arguments() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_missing_argument_commas_raise_expression_errors() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_missing_argument_commas";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const auto missing_regular_comma = run_error_script(
+        "missing_regular_comma",
+        "result = addvals(1 2)\n"
+        "RETURN\n"
+        "FUNCTION addvals\n"
+        "LPARAMETERS a, b\n"
+        "RETURN a + b\n");
+    expect(
+        missing_regular_comma.reason == copperfin::runtime::DebugPauseReason::error &&
+            missing_regular_comma.message.find("Expected function argument") != std::string::npos,
+        "a missing comma in an ordinary function call should raise the localized argument error");
+
+    const auto missing_reference_comma = run_error_script(
+        "missing_reference_comma",
+        "counter = 1\n"
+        "result = bump(@counter @counter)\n"
+        "RETURN\n"
+        "FUNCTION bump\n"
+        "LPARAMETERS value\n"
+        "RETURN value\n");
+    expect(
+        missing_reference_comma.reason == copperfin::runtime::DebugPauseReason::error &&
+            missing_reference_comma.message.find("Expected function argument") != std::string::npos,
+        "a missing comma between by-reference arguments should raise the localized argument error");
+
+    const auto missing_method_comma = run_error_script(
+        "missing_method_comma",
+        "oProbe = CREATEOBJECT('MissingCommaProbe')\n"
+        "result = oProbe.Inspect(1 2)\n"
+        "RETURN\n"
+        "DEFINE CLASS MissingCommaProbe AS Custom\n"
+        "    FUNCTION Inspect\n"
+        "        LPARAMETERS a, b\n"
+        "        RETURN a + b\n"
+        "    ENDFUNC\n"
+        "ENDDEFINE\n");
+    expect(
+        missing_method_comma.reason == copperfin::runtime::DebugPauseReason::error &&
+            missing_method_comma.message.find("Expected function argument") != std::string::npos,
+        "a missing comma in an object method call should raise the localized argument error");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_udfparms_controls_expression_routine_parameter_aliasing() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_udfparms";

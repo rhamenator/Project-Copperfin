@@ -2164,7 +2164,11 @@
                                 {
                                     break;
                                 }
-                                match(",");
+                                if (!match(","))
+                                {
+                                    throw std::runtime_error(
+                                        runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                                }
                                 continue;
                             }
                         }
@@ -2218,7 +2222,11 @@
                     {
                         break;
                     }
-                    match(",");
+                    if (!match(","))
+                    {
+                        throw std::runtime_error(
+                            runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                    }
                 }
 
                 return invocation;
