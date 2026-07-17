@@ -876,7 +876,7 @@
         {
             if (cursor.record_count == 0U)
             {
-                cursor.recno = 0U;
+                cursor.recno = 1U;
                 cursor.bof = true;
                 cursor.eof = true;
                 return;
@@ -884,7 +884,7 @@
 
             if (target_recno <= 0)
             {
-                cursor.recno = 0U;
+                cursor.recno = 1U;
                 cursor.bof = true;
                 cursor.eof = false;
                 return;

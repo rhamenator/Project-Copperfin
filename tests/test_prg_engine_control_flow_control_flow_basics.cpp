@@ -815,9 +815,11 @@ void test_go_top_bottom_on_empty_table_does_not_crash() {
         "GO TOP\n"
         "lBofAfterTop = BOF()\n"
         "lEofAfterTop = EOF()\n"
+        "nRecAfterTop = RECNO()\n"
         "GO BOTTOM\n"
         "lBofAfterBottom = BOF()\n"
         "lEofAfterBottom = EOF()\n"
+        "nRecAfterBottom = RECNO()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -830,11 +832,15 @@ void test_go_top_bottom_on_empty_table_does_not_crash() {
     const auto eof_after_top    = state.globals.find("leofaftertop");
     const auto bof_after_bottom = state.globals.find("lbofafterbottom");
     const auto eof_after_bottom = state.globals.find("leofafterbottom");
+    const auto rec_after_top = state.globals.find("nrecaftertop");
+    const auto rec_after_bottom = state.globals.find("nrecafterbottom");
 
     expect(bof_after_top    != state.globals.end(), "GO TOP on empty table should expose BOF()");
     expect(eof_after_top    != state.globals.end(), "GO TOP on empty table should expose EOF()");
     expect(bof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose BOF()");
     expect(eof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose EOF()");
+    expect(rec_after_top != state.globals.end(), "GO TOP on empty table should expose RECNO()");
+    expect(rec_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose RECNO()");
 
     if (bof_after_top != state.globals.end()) {
         expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
@@ -851,6 +857,14 @@ void test_go_top_bottom_on_empty_table_does_not_crash() {
     if (eof_after_bottom != state.globals.end()) {
         expect(copperfin::runtime::format_value(eof_after_bottom->second) == "true",
                "GO BOTTOM on empty table should leave EOF() true");
+    }
+    if (rec_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after_top->second) == "1",
+               "GO TOP on empty table should report RECNO() as the first record number");
+    }
+    if (rec_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after_bottom->second) == "1",
+               "GO BOTTOM on empty table should report RECNO() as the first record number");
     }
 
     fs::remove_all(temp_root, ignored);

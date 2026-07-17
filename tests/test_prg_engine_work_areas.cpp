@@ -1051,7 +1051,7 @@ void test_go_and_skip_cursor_navigation() {
         expect(copperfin::runtime::format_value(bof1->second) == "true", "SKIP -1 from the first record should move to BOF");
     }
     if (after_bof != state.globals.end()) {
-        expect(copperfin::runtime::format_value(after_bof->second) == "0", "RECNO() at BOF should be zero");
+        expect(copperfin::runtime::format_value(after_bof->second) == "1", "RECNO() at BOF should remain at the first record number");
     }
     if (middle != state.globals.end()) {
         expect(copperfin::runtime::format_value(middle->second) == "2", "GO 2 should move to the requested record number");

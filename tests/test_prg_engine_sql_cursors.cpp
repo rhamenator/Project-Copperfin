@@ -800,7 +800,7 @@ void test_sql_result_cursor_backward_navigation_in_target_parity() {
         expect(copperfin::runtime::format_value(cust_bof->second) == "true", "SKIP -1 IN from the first SQL row should move the targeted SQL cursor to BOF");
     }
     if (cust_rec_at_bof != state.globals.end()) {
-        expect(copperfin::runtime::format_value(cust_rec_at_bof->second) == "0", "RECNO() at targeted SQL BOF should be zero");
+        expect(copperfin::runtime::format_value(cust_rec_at_bof->second) == "1", "RECNO() at targeted SQL BOF should remain at the first record number");
     }
     if (cust_eof != state.globals.end()) {
         expect(copperfin::runtime::format_value(cust_eof->second) == "true", "SKIP past the end IN should move the targeted SQL cursor to EOF");
