@@ -177,6 +177,12 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile);
 
+// Aborts a deferred generated-launcher or native-library package transaction
+// after an external publication step fails, restoring the last complete
+// package when one exists.
+RuntimeBuildResult abort_runtime_package_transaction(
+    const RuntimePackagePlan& plan);
+
 RuntimeBuildResult build_runtime_package_primary_output(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,

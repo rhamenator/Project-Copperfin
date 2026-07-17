@@ -13,6 +13,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #if defined(_WIN32)
@@ -37,6 +38,7 @@ constexpr int kDebugManifestVersion = 3;
 constexpr std::string_view kPackageBackupSuffix = ".copperfin-previous";
 constexpr std::string_view kPackageTransactionMarker = ".copperfin-materializing";
 constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
+constexpr std::string_view kPackageTransactionDeferredPhase = "phase=awaiting_primary_output\n";
 
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
 std::atomic_bool force_package_backup_cleanup_warning{false};
@@ -447,11 +449,19 @@ private:
 
 class PackageRootTransaction {
 public:
-    explicit PackageRootTransaction(std::filesystem::path package_root)
+    enum class Mode {
+        begin_new,
+        resume_deferred,
+    };
+
+    explicit PackageRootTransaction(
+        std::filesystem::path package_root,
+        const Mode mode = Mode::begin_new)
         : package_root_(std::move(package_root)),
           backup_root_(package_root_.string() + std::string(kPackageBackupSuffix)),
           marker_path_(package_root_.string() + std::string(kPackageTransactionMarker)),
           backup_owner_path_(backup_root_.string() + std::string(kPackageTransactionOwnerSuffix)),
+          mode_(mode),
           transaction_identity_(
               "copperfin_package_transaction=1\npackage_root=" +
               runtime_pipeline_detail::canonical_casefolded_path_identity(package_root_) + "\n") {
@@ -581,6 +591,31 @@ public:
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", backup_root_.string()}});
             return false;
+        }
+
+        if (mode_ == Mode::resume_deferred) {
+            if (!transaction_marker_exists ||
+                read_text_file(pinned_path(marker_path_)) !=
+                    transaction_identity_ + std::string(kPackageTransactionDeferredPhase) ||
+                !package_exists ||
+                !is_direct_directory(pinned_path(package_root_), filesystem_error) ||
+                filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", package_root_.string()}});
+                return false;
+            }
+            if (interrupted_backup_exists &&
+                (!is_direct_directory(pinned_path(backup_root_), filesystem_error) ||
+                 filesystem_error)) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", backup_root_.string()}});
+                return false;
+            }
+            had_previous_package_ = interrupted_backup_exists;
+            active_ = true;
+            return true;
         }
 
         if (interrupted_backup_exists) {
@@ -933,8 +968,8 @@ public:
             return false;
         }
 
-        active_ = false;
         if (!had_previous_package_) {
+            active_ = false;
             return true;
         }
 
@@ -945,6 +980,7 @@ public:
         }
         std::filesystem::remove_all(pinned_path(backup_root_), filesystem_error);
         if (filesystem_error) {
+            active_ = false;
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
                 {{"path", backup_root_.string()}});
@@ -957,6 +993,7 @@ public:
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
                 {{"path", backup_owner_path_.string()}});
         }
+        active_ = false;
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
         if (force_package_backup_cleanup_warning.exchange(
                 false,
@@ -966,6 +1003,29 @@ public:
                 {{"path", backup_root_.string()}});
         }
 #endif
+        return true;
+    }
+
+    bool defer_until_primary_output(std::string& error) {
+        if (!active_) {
+            return false;
+        }
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            return false;
+        }
+        std::string marker_error;
+        if (!write_owned_transaction_file_atomically(
+                marker_path_,
+                marker_error,
+                transaction_identity_ + std::string(kPackageTransactionDeferredPhase))) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", marker_path_.string()}});
+            return false;
+        }
+        active_ = false;
         return true;
     }
 
@@ -991,7 +1051,8 @@ private:
 
     bool write_owned_transaction_file_atomically(
         const std::filesystem::path& path,
-        std::string& error) const {
+        std::string& error,
+        const std::string& contents = {}) const {
         if (!parent_identity_.still_same()) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -1014,7 +1075,10 @@ private:
         }
 
         std::string write_error;
-        if (!write_text_file(temporary_path, transaction_identity_, write_error)) {
+        if (!write_text_file(
+                temporary_path,
+                contents.empty() ? transaction_identity_ : contents,
+                write_error)) {
             std::filesystem::remove(temporary_path, filesystem_error);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -1063,7 +1127,8 @@ private:
             return false;
         }
         const std::string contents = read_text_file(path);
-        if (contents == transaction_identity_) {
+        if (contents == transaction_identity_ ||
+            contents == transaction_identity_ + std::string(kPackageTransactionDeferredPhase)) {
             return true;
         }
 #if defined(_WIN32)
@@ -1074,6 +1139,7 @@ private:
             contents.back() != '\n') {
             return false;
         }
+
         const std::string recorded_path = contents.substr(
             prefix.size(),
             contents.size() - prefix.size() - 1U);
@@ -1091,6 +1157,7 @@ private:
     std::filesystem::path backup_root_;
     std::filesystem::path marker_path_;
     std::filesystem::path backup_owner_path_;
+    Mode mode_ = Mode::begin_new;
     std::string transaction_identity_;
     PackageRootTransactionLock transaction_lock_;
     PackageParentIdentity parent_identity_;
@@ -2207,7 +2274,17 @@ RuntimeMaterializeResult materialize_runtime_package(
 
     std::string commit_error;
     std::string cleanup_warning;
-    if (!transaction.commit(commit_error, cleanup_warning)) {
+    const bool transaction_deferred =
+        plan.emit_dotnet_launcher || is_library_output_kind(plan.output_kind);
+    if (transaction_deferred) {
+        if (!transaction.defer_until_primary_output(commit_error)) {
+            std::string rollback_error;
+            if (!transaction.rollback(rollback_error)) {
+                commit_error = rollback_error + "\n" + commit_error;
+            }
+            return {.ok = false, .error = commit_error};
+        }
+    } else if (!transaction.commit(commit_error, cleanup_warning)) {
         std::string rollback_error;
         if (!transaction.rollback(rollback_error)) {
             commit_error = rollback_error + "\n" + commit_error;
@@ -2248,6 +2325,27 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputMissing")};
     }
 
+    std::optional<PackageRootTransaction> package_transaction;
+    if ((plan.emit_dotnet_launcher || is_library_output_kind(plan.output_kind)) &&
+        !plan.primary_output_materialized) {
+        package_transaction.emplace(
+            plan.package_root,
+            PackageRootTransaction::Mode::resume_deferred);
+        if (!package_transaction->begin(error)) {
+            return {.ok = false, .error = error};
+        }
+    }
+
+    const auto rollback_package_transaction = [&](std::string& operation_error) {
+        if (!package_transaction) {
+            return;
+        }
+        std::string rollback_error;
+        if (!package_transaction->rollback(rollback_error)) {
+            operation_error = rollback_error + "\n" + operation_error;
+        }
+    };
+
     RuntimePackagePlan finalized_plan = plan;
     if (plan.emit_dotnet_launcher) {
         std::erase_if(
@@ -2259,6 +2357,7 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
                 plan,
                 finalized_plan.launcher_artifacts,
                 error)) {
+            rollback_package_transaction(error);
             return {.ok = false, .error = error};
         }
     } else {
@@ -2272,19 +2371,75 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
                 finalized_plan.extension_payload_digests,
                 plan.launcher_output_path,
                 error)) {
+            rollback_package_transaction(error);
             return {.ok = false, .error = error};
         }
     }
     finalized_plan.primary_output_materialized = true;
     if (!write_runtime_manifest_pair_atomically(
-            plan,
+            finalized_plan,
             build_runtime_manifest_text(finalized_plan, security_profile, extensibility_profile),
             build_debug_manifest_text(finalized_plan, security_profile, extensibility_profile),
             error)) {
+        rollback_package_transaction(error);
         return {.ok = false, .error = error};
     }
 
+    if (package_transaction) {
+        std::string commit_warning;
+        if (!package_transaction->commit(error, commit_warning)) {
+            rollback_package_transaction(error);
+            return {.ok = false, .error = error};
+        }
+        if (!commit_warning.empty()) {
+            finalized_plan.warnings.push_back(commit_warning);
+            std::string warning_rewrite_error;
+            if (!write_runtime_manifest_pair_atomically(
+                    finalized_plan,
+                    build_runtime_manifest_text(
+                        finalized_plan,
+                        security_profile,
+                        extensibility_profile),
+                    build_debug_manifest_text(
+                        finalized_plan,
+                        security_profile,
+                        extensibility_profile),
+                    warning_rewrite_error)) {
+                finalized_plan.warnings.push_back(
+                    runtime_text(
+                        "Runtime.Package.Warning.ManifestPairRewriteFailed",
+                        {{"path", finalized_plan.package_root}}) +
+                    " " + warning_rewrite_error);
+            }
+        }
+    }
+
     return {.ok = true, .plan = std::move(finalized_plan), .error = {}};
+}
+
+RuntimeBuildResult abort_runtime_package_transaction(
+    const RuntimePackagePlan& plan) {
+    std::string error;
+    if (!validate_public_output_artifact_name(plan, error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!plan.ok) {
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
+    }
+    if (!plan.emit_dotnet_launcher && !is_library_output_kind(plan.output_kind)) {
+        return {.ok = true, .plan = plan, .error = {}};
+    }
+
+    PackageRootTransaction transaction(
+        plan.package_root,
+        PackageRootTransaction::Mode::resume_deferred);
+    if (!transaction.begin(error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!transaction.rollback(error)) {
+        return {.ok = false, .error = error};
+    }
+    return {.ok = true, .plan = plan, .error = {}};
 }
 
 RuntimeBuildResult build_runtime_package_primary_output(

@@ -207,6 +207,15 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
                        return digest.sha256 == "stale-compiler-digest";
                    }),
            "library rematerialization should rebuild primary output, runtime-host, compiler, and launcher-derived state");
+    if (library_rematerialization_result.ok) {
+        const auto library_build_result = copperfin::runtime::build_runtime_package_primary_output(
+            library_rematerialization_result.plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile());
+        expect(library_build_result.ok,
+               "library rematerialization should finalize its deferred native wrapper transaction: " +
+                   library_build_result.error);
+    }
     fs::remove(project_dir / "startup.sct", ignored);
     write_text(project_dir / "new_name.prg", "RETURN\n");
     workspace.entries = {

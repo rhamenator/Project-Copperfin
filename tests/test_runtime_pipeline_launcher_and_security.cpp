@@ -456,7 +456,7 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         true);
     expect(plan.ok, "dotnet-finalize plan should be created");
 
-    const auto result = copperfin::runtime::materialize_runtime_package(
+    auto result = copperfin::runtime::materialize_runtime_package(
         plan,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
@@ -484,7 +484,6 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         const fs::path launcher_output(result.plan.launcher_output_path);
         const fs::path launcher_dll = package_root / "Copperfin.GeneratedLauncher.dll";
         const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
-        const fs::path launcher_runtimeconfig = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
         const fs::path launcher_pdb = package_root / "Copperfin.GeneratedLauncher.pdb";
 
         expect(
@@ -493,7 +492,6 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                     "Copperfin.GeneratedLauncher."),
             "#4052: a valid public OUTFILE may give Copperfin-owned compiler artifacts the internal launcher prefix");
 
-        write_text(launcher_output, "published-launcher");
         const auto missing_sidecars = copperfin::runtime::finalize_runtime_package_primary_output(
             result.plan,
             copperfin::security::default_native_security_profile(),
@@ -501,15 +499,35 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         expect(!missing_sidecars.ok,
                "#4052: dotnet finalization should fail when required internal sidecars are missing");
 
-        write_text(launcher_dll, "launcher-dll");
-        write_text(launcher_deps, "launcher-deps");
-        write_text(launcher_runtimeconfig, "launcher-runtimeconfig");
+        const auto retry_materialized = copperfin::runtime::materialize_runtime_package(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            runtime_host.string());
+        expect(retry_materialized.ok,
+               "#4053: a failed first finalization should permit a clean package retry");
+        if (!retry_materialized.ok) {
+            return;
+        }
+        result.plan = retry_materialized.plan;
+        const fs::path retry_package_root(result.plan.package_root);
+        const fs::path retry_launcher_output(result.plan.launcher_output_path);
+        const fs::path retry_launcher_dll = retry_package_root / "Copperfin.GeneratedLauncher.dll";
+        const fs::path retry_launcher_deps = retry_package_root / "Copperfin.GeneratedLauncher.deps.json";
+        const fs::path retry_launcher_runtimeconfig =
+            retry_package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
+        write_text(retry_launcher_output, "published-launcher");
+
+        write_text(retry_launcher_dll, "launcher-dll");
+        write_text(retry_launcher_deps, "launcher-deps");
+        write_text(retry_launcher_runtimeconfig, "launcher-runtimeconfig");
         const auto finalize_result = copperfin::runtime::finalize_runtime_package_primary_output(
             result.plan,
             copperfin::security::default_native_security_profile(),
             copperfin::platform::default_extensibility_profile());
         expect(finalize_result.ok,
-               "#4052: dotnet finalization should succeed once the apphost and required sidecars exist");
+               "#4052: dotnet finalization should succeed once the apphost and required sidecars exist: " +
+                   finalize_result.error);
         if (finalize_result.ok) {
             expect(finalize_result.plan.primary_output_materialized,
                    "dotnet-finalize helper should mark the primary output as materialized");
@@ -710,6 +728,146 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                        "#4052: fresh pre-publish debug metadata should not retain stale launcher provenance");
             }
         }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_deferred_package_transaction_rolls_back_failed_second_build() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_deferred_transaction";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "deferred_transaction.pjx").string();
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DeferredTransaction";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path =
+        (output_dir / "DeferredTransaction.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U,
+         .name = "main.prg",
+         .relative_path = "main.prg",
+         .type_title = "Program"}
+    };
+
+    const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        security_profile,
+        extensibility_profile,
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+    expect(plan.ok, "#4053: deferred-transaction plan should be created");
+    if (!plan.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto materialize_and_publish = [&](const copperfin::runtime::RuntimePackagePlan& input,
+                                             const std::string& suffix) {
+        auto materialized = copperfin::runtime::materialize_runtime_package(
+            input,
+            security_profile,
+            extensibility_profile,
+            runtime_host.string());
+        expect(materialized.ok, "#4053: generated-launcher build should materialize");
+        if (!materialized.ok) {
+            return materialized;
+        }
+        const fs::path package_root(materialized.plan.package_root);
+        write_text(materialized.plan.launcher_output_path, "published-" + suffix);
+        write_text(package_root / "Copperfin.GeneratedLauncher.dll", "launcher-dll-" + suffix);
+        write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", "launcher-deps-" + suffix);
+        write_text(
+            package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json",
+            "launcher-runtimeconfig-" + suffix);
+        return materialized;
+    };
+
+    const auto first_materialized = materialize_and_publish(plan, "first");
+    if (!first_materialized.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const auto first_finalized = copperfin::runtime::finalize_runtime_package_primary_output(
+        first_materialized.plan,
+        security_profile,
+        extensibility_profile);
+    expect(first_finalized.ok, "#4053: initial generated-launcher build should finalize");
+    if (!first_finalized.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const std::string known_good_runtime = read_text(first_finalized.plan.manifest_path);
+    const std::string known_good_debug = read_text(first_finalized.plan.debug_manifest_path);
+
+    const auto second_materialized = copperfin::runtime::materialize_runtime_package(
+        plan,
+        security_profile,
+        extensibility_profile,
+        runtime_host.string());
+    expect(second_materialized.ok, "#4053: second generated-launcher build should materialize");
+    if (second_materialized.ok) {
+        const auto failed_finalize = copperfin::runtime::finalize_runtime_package_primary_output(
+            second_materialized.plan,
+            security_profile,
+            extensibility_profile);
+        expect(!failed_finalize.ok,
+               "#4053: second-build finalization should fail without published launcher artifacts");
+        expect(read_text(second_materialized.plan.manifest_path) == known_good_runtime &&
+                   read_text(second_materialized.plan.debug_manifest_path) == known_good_debug,
+               "#4053: failed finalization should restore the last known-good manifest pair");
+        expect(!fs::exists(second_materialized.plan.package_root + ".copperfin-previous") &&
+                   !fs::exists(second_materialized.plan.package_root + ".copperfin-materializing"),
+               "#4053: failed finalization should remove package transaction artifacts");
+    }
+
+    const auto third_materialized = copperfin::runtime::materialize_runtime_package(
+        plan,
+        security_profile,
+        extensibility_profile,
+        runtime_host.string());
+    expect(third_materialized.ok, "#4053: package should be replaceable after finalization rollback");
+    if (third_materialized.ok) {
+        const auto aborted = copperfin::runtime::abort_runtime_package_transaction(
+            third_materialized.plan);
+        expect(aborted.ok, "#4053: publish failure abort should restore the previous package");
+        expect(read_text(third_materialized.plan.manifest_path) == known_good_runtime &&
+                   read_text(third_materialized.plan.debug_manifest_path) == known_good_debug,
+               "#4053: publish abort should restore the last known-good manifest pair");
+        expect(!fs::exists(third_materialized.plan.package_root + ".copperfin-previous") &&
+                   !fs::exists(third_materialized.plan.package_root + ".copperfin-materializing"),
+               "#4053: publish abort should remove package transaction artifacts");
+    }
+
+    const auto final_materialized = materialize_and_publish(plan, "final");
+    if (final_materialized.ok) {
+        const auto final_result = copperfin::runtime::finalize_runtime_package_primary_output(
+            final_materialized.plan,
+            security_profile,
+            extensibility_profile);
+        expect(final_result.ok,
+               "#4053: package should finalize successfully after rollback and abort");
     }
 
     fs::remove_all(temp_root, ignored);

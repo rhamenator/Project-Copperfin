@@ -578,11 +578,16 @@ int main(int argc, char** argv) {
     auto final_plan = materialized.plan;
 
     if (is_library_output_kind(materialized.plan.output_kind)) {
-        const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+        auto build_result = copperfin::runtime::build_runtime_package_primary_output(
             materialized.plan,
             security_profile,
             extensibility_profile);
         if (!build_result.ok) {
+            const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(
+                materialized.plan);
+            if (!rollback_result.ok) {
+                build_result.error += "\n" + rollback_result.error;
+            }
             std::cout << "status: error\n";
             print_error_line(catalog, build_result.error);
             return 8;
@@ -600,6 +605,10 @@ int main(int argc, char** argv) {
     if (final_plan.emit_dotnet_launcher) {
         std::string publish_error;
         if (!run_dotnet_publish(final_plan, catalog, publish_error)) {
+            const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(final_plan);
+            if (!rollback_result.ok) {
+                publish_error += "\n" + rollback_result.error;
+            }
             if (enable_security && !final_plan.audit_log_path.empty()) {
                 (void)copperfin::security::append_immutable_audit_event(
                     final_plan.audit_log_path,

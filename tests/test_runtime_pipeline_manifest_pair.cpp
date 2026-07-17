@@ -67,7 +67,7 @@ ManifestPairFixture prepare_manifest_pair_fixture(const std::string& identity) {
         output_dir.string(),
         copperfin::runtime::BuildConfiguration::debug,
         false,
-        true);
+        false);
     expect(plan.ok, "#4056: manifest-pair fixture plan should be created");
     if (!plan.ok) {
         return fixture;
@@ -467,7 +467,8 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
 
     const auto recovered = finalize_manifest_pair(fixture.plan);
     expect(recovered.ok,
-           "#4056: finalization should recover and replace an owned stale transaction");
+           "#4056: finalization should recover and replace an owned stale transaction: " +
+               recovered.error);
     expect(!has_manifest_pair_transaction_artifacts(fixture.plan.package_root),
            "#4056: stale transaction recovery should remove every temporary artifact");
     if (recovered.ok) {
@@ -524,7 +525,7 @@ void test_materialize_cleanup_warning_rewrites_manifest_pair_atomically() {
                "#4056: cleanup warnings should be published to both manifest generations");
         expect(runtime_manifest.find("manifest_version=3") != std::string::npos &&
                    debug_manifest.find("debug_manifest_version=3") != std::string::npos &&
-                   debug_manifest.find("primary_output_materialized=false") != std::string::npos,
+                   debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                "#4056: cleanup-warning rewrites should preserve current schemas and status");
         expect(!has_manifest_pair_transaction_artifacts(rematerialized.plan.package_root),
                "#4056: cleanup-warning rewrites should remove manifest-pair artifacts");
