@@ -4,6 +4,14 @@
 
 #include "runtime_pipeline_support.h"
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
@@ -42,6 +50,49 @@ std::string lowercase_copy(std::string value) {
         return static_cast<char>(std::tolower(ch));
     });
     return value;
+}
+
+std::string canonical_casefolded_path_identity(const std::filesystem::path& path) {
+    std::filesystem::path identity_path = path.lexically_normal();
+#if defined(_WIN32)
+    std::error_code identity_path_error;
+    const std::filesystem::path absolute_identity_path =
+        std::filesystem::absolute(identity_path, identity_path_error).lexically_normal();
+    if (!identity_path_error) {
+        const std::filesystem::path weak_identity_path =
+            std::filesystem::weakly_canonical(absolute_identity_path, identity_path_error);
+        identity_path = identity_path_error ? absolute_identity_path : weak_identity_path;
+    }
+    std::wstring case_folded_path = identity_path.native();
+    if (!case_folded_path.empty()) {
+        const int mapped_length = ::LCMapStringOrdinal(
+            LCMAP_LOWERCASE,
+            case_folded_path.data(),
+            static_cast<int>(case_folded_path.size()),
+            nullptr,
+            0);
+        std::wstring invariant_lowercase_path(
+            static_cast<std::size_t>(std::max(mapped_length, 0)),
+            L'\0');
+        const bool mapped = mapped_length > 0 &&
+            ::LCMapStringOrdinal(
+                LCMAP_LOWERCASE,
+                case_folded_path.data(),
+                static_cast<int>(case_folded_path.size()),
+                invariant_lowercase_path.data(),
+                mapped_length) > 0;
+        if (mapped) {
+            case_folded_path = std::move(invariant_lowercase_path);
+        } else {
+            (void)::CharLowerBuffW(
+                case_folded_path.data(),
+                static_cast<DWORD>(case_folded_path.size()));
+        }
+    }
+    return std::filesystem::path(case_folded_path).generic_string();
+#else
+    return identity_path.generic_string();
+#endif
 }
 
 std::string quote_manifest_value(const std::string& value) {

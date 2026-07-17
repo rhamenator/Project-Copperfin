@@ -39,6 +39,7 @@ constexpr std::string_view kVfpLibraryCallableConvention = "vfp_declare_default"
 std::string sanitize_file_name(const std::string& value);
 std::string trim_copy(std::string value);
 std::string lowercase_copy(std::string value);
+std::string canonical_casefolded_path_identity(const std::filesystem::path& path);
 std::string quote_manifest_value(const std::string& value);
 std::vector<std::string> unique_non_empty_paths_preserve_order(std::initializer_list<std::string> values);
 std::string normalize_export_symbol(std::string value);

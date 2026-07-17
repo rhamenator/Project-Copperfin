@@ -359,6 +359,62 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
     expect(has_manifest_pair_transaction_artifacts(fixture.plan.package_root),
            "#4056: stale transaction fixture should leave owned artifacts");
 
+#if defined(_WIN32)
+    {
+        const fs::path package_root(fixture.plan.package_root);
+        std::string alias_leaf = package_root.filename().string();
+        for (char& character : alias_leaf) {
+            if (character >= 'A' && character <= 'Z') {
+                character = static_cast<char>(character - 'A' + 'a');
+            } else if (character >= 'a' && character <= 'z') {
+                character = static_cast<char>(character - 'a' + 'A');
+            }
+        }
+        const fs::path alias_root = package_root.parent_path() / alias_leaf;
+        auto alias_plan = fixture.plan;
+        alias_plan.package_root = alias_root.string();
+        alias_plan.manifest_path =
+            (alias_root / fs::path(fixture.plan.manifest_path).filename()).string();
+        alias_plan.debug_manifest_path =
+            (alias_root / fs::path(fixture.plan.debug_manifest_path).filename()).string();
+
+        const std::string canonical_root =
+            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                package_root);
+        const std::string canonical_alias_root =
+            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                alias_root);
+        expect(canonical_root == canonical_alias_root,
+               "#4098: Windows casing-only package aliases should share a canonical root identity");
+
+        const std::string identity_input =
+            canonical_root + '\0' +
+            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                package_root / fs::path(fixture.plan.manifest_path).filename()) + '\0' +
+            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                package_root / fs::path(fixture.plan.debug_manifest_path).filename());
+        const auto identity_hash = copperfin::security::sha256_hex_for_text(identity_input);
+        expect(identity_hash.ok,
+               "#4098: Windows manifest-pair alias fixture should derive its identity hash");
+        if (identity_hash.ok) {
+            {
+                copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory first_directory;
+                copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory alias_directory;
+                expect(first_directory.acquire(package_root, identity_hash.hex_digest),
+                       "#4098: Windows manifest-pair fixture should acquire the first alias lock");
+                expect(!alias_directory.acquire(alias_root, identity_hash.hex_digest),
+                       "#4098: Windows casing-only aliases should serialize concurrent manifest-pair finalization");
+            }
+        }
+
+        const auto recovered_alias = finalize_manifest_pair(alias_plan);
+        expect(recovered_alias.ok,
+               "#4098: Windows casing-only alias should recover the stale manifest-pair journal");
+        expect(!has_manifest_pair_transaction_artifacts(alias_root),
+               "#4098: Windows casing-only stale recovery should remove manifest-pair artifacts");
+    }
+#endif
+
     const auto recovered = finalize_manifest_pair(fixture.plan);
     expect(recovered.ok,
            "#4056: finalization should recover and replace an owned stale transaction");

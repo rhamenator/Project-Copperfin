@@ -282,9 +282,19 @@ private:
             }
         }
 
-        const std::string identity_input =
+        std::string identity_input;
+#if defined(_WIN32)
+        identity_input =
+            runtime_pipeline_detail::canonical_casefolded_path_identity(root_) + '\0' +
+            runtime_pipeline_detail::canonical_casefolded_path_identity(
+                root_ / destination_leaves_[0]) + '\0' +
+            runtime_pipeline_detail::canonical_casefolded_path_identity(
+                root_ / destination_leaves_[1]);
+#else
+        identity_input =
             root_.generic_string() + '\0' + destination_leaves_[0].generic_string() +
             '\0' + destination_leaves_[1].generic_string();
+#endif
         const auto identity_hash = text_hash(identity_input);
         if (!identity_hash.has_value()) {
             error = path_rejected(root_);
