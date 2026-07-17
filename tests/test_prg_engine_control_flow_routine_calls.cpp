@@ -839,6 +839,73 @@ void test_standalone_expression_uses_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_store_expression_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_store_expression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "store_depth_limit.prg";
+    write_text(
+        depth_path,
+        "STORE recurse(1) TO result\n"
+        "RETURN\n"
+        "FUNCTION recurse\n"
+        "LPARAMETERS depth\n"
+        "STORE recurse(depth + 1) TO result\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep STORE expression recursion should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep STORE expression recursion should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "store_expression_semantics.prg";
+    write_text(
+        semantics_path,
+        "calls = 0\n"
+        "STORE value() TO first, second\n"
+        "after = calls\n"
+        "RETURN\n"
+        "FUNCTION value\n"
+        "calls = calls + 1\n"
+        "RETURN 42\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(semantics_state.completed, "STORE expression semantics script should complete: " + semantics_state.message);
+
+    const auto after = semantics_state.globals.find("after");
+    expect(after != semantics_state.globals.end(), "STORE expression UDF calls should leave the post-call count visible");
+    if (after != semantics_state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(after->second) == "1",
+            "STORE should evaluate its expression exactly once before writing all targets");
+    }
+
+    for (const char *name : {"first", "second"})
+    {
+        const auto value = semantics_state.globals.find(name);
+        expect(value != semantics_state.globals.end(), std::string{"STORE should assign its multi-target "} + name + " binding");
+        if (value != semantics_state.globals.end()) {
+            expect(
+                copperfin::runtime::format_value(value->second) == "42",
+                "STORE should write the completed UDF value to every target");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_compound_return_uses_heap_backed_expression_checkpoints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_compound_return";

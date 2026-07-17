@@ -46,6 +46,8 @@
         };
         std::optional<PrgValue> resumed_assignment_value;
         std::optional<Statement> resumed_assignment_statement;
+        std::optional<PrgValue> resumed_store_value;
+        std::optional<Statement> resumed_store_statement;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -411,12 +413,18 @@
                         resumed_expression_value = *expression_value;
                         resumed_expression_statement = continued_statement;
                     }
+                    else if (continued_statement.kind == StatementKind::store_command)
+                    {
+                        resumed_store_value = *expression_value;
+                        resumed_store_statement = continued_statement;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
-                if (!resumed_assignment_value.has_value() && !resumed_expression_value.has_value() &&
+                if (!resumed_assignment_value.has_value() && !resumed_store_value.has_value() &&
+                    !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
                 {
@@ -1132,6 +1140,20 @@
                     resumed_assignment_statement->identifier,
                     *resumed_assignment_value,
                     trim_copy(resumed_assignment_statement->expression));
+            }
+            if (resumed_store_value.has_value() && resumed_store_statement.has_value())
+            {
+                for (const auto &name : resumed_store_statement->names)
+                {
+                    ExecutionOutcome outcome = assign_runtime_target_value(
+                        trim_copy(name),
+                        *resumed_store_value);
+                    if (!outcome.ok)
+                    {
+                        return outcome;
+                    }
+                }
+                return {};
             }
             auto resolve_command_array_name = [&](const std::string &raw_name, const std::string &command_name) -> std::optional<std::string>
             {
@@ -4969,10 +4991,14 @@
             }
             case StatementKind::store_command:
             {
-                const PrgValue result = evaluate_expression(statement.expression, frame);
+                const auto result = evaluate_resumable_expression(frame, statement);
+                if (!result.has_value())
+                {
+                    return {};
+                }
                 for (const auto &name : statement.names)
                 {
-                    ExecutionOutcome outcome = assign_runtime_target_value(trim_copy(name), result);
+                    ExecutionOutcome outcome = assign_runtime_target_value(trim_copy(name), *result);
                     if (!outcome.ok)
                     {
                         return outcome;
