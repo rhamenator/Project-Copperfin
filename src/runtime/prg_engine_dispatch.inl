@@ -48,6 +48,7 @@
         std::optional<Statement> resumed_assignment_statement;
         std::optional<PrgValue> resumed_store_value;
         std::optional<Statement> resumed_store_statement;
+        std::optional<PrgValue> resumed_sleep_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -418,12 +419,17 @@
                         resumed_store_value = *expression_value;
                         resumed_store_statement = continued_statement;
                     }
+                    else if (continued_statement.kind == StatementKind::sleep_command)
+                    {
+                        resumed_sleep_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
                 if (!resumed_assignment_value.has_value() && !resumed_store_value.has_value() &&
+                    !resumed_sleep_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -8995,7 +9001,14 @@
                 std::size_t sleep_duration_ms = scheduler_yield_sleep_ms;
                 if (!trim_copy(statement.expression).empty())
                 {
-                    const double evaluated_delay = value_as_number(evaluate_expression(statement.expression, frame));
+                    const auto delay_value = resumed_sleep_value.has_value()
+                                                 ? resumed_sleep_value
+                                                 : evaluate_resumable_expression(frame, statement);
+                    if (!delay_value.has_value())
+                    {
+                        return {};
+                    }
+                    const double evaluated_delay = value_as_number(*delay_value);
                     if (!std::isfinite(evaluated_delay) || evaluated_delay < 0.0)
                     {
                         last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SleepInvalidDuration");

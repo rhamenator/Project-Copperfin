@@ -117,6 +117,72 @@ void test_sleep_command_emits_runtime_sleep_event() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sleep_duration_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_sleep_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "sleep_depth_limit.prg";
+    write_text(
+        depth_path,
+        "SLEEP recurse(1)\n"
+        "RETURN\n"
+        "FUNCTION recurse\n"
+        "LPARAMETERS depth\n"
+        "SLEEP recurse(depth + 1)\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep SLEEP duration recursion should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep SLEEP duration recursion should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "sleep_expression_semantics.prg";
+    write_text(
+        semantics_path,
+        "calls = 0\n"
+        "SLEEP delay()\n"
+        "after = calls\n"
+        "RETURN\n"
+        "FUNCTION delay\n"
+        "calls = calls + 1\n"
+        "RETURN 0\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(semantics_state.completed, "SLEEP expression semantics script should complete: " + semantics_state.message);
+
+    const auto after = semantics_state.globals.find("after");
+    expect(after != semantics_state.globals.end(), "SLEEP duration UDF should leave the post-call count visible");
+    if (after != semantics_state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(after->second) == "1",
+            "SLEEP should evaluate its duration UDF exactly once");
+    }
+
+    const std::size_t sleep_event_count = static_cast<std::size_t>(std::count_if(
+        semantics_state.events.begin(),
+        semantics_state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "runtime.sleep" &&
+                   event.detail.find("duration=0ms") != std::string::npos &&
+                   event.detail.find("expression=delay()") != std::string::npos;
+        }));
+    expect(sleep_event_count == 1U, "resumed SLEEP should emit exactly one runtime.sleep event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_and_await_command_runs_task_to_completion() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_await_cmd";

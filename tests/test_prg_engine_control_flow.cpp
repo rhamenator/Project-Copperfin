@@ -158,6 +158,7 @@ int main() {
     test_doevents_pumps_event_queue();
     test_doevents_in_responsive_loop();
     test_sleep_command_emits_runtime_sleep_event();
+    test_sleep_duration_uses_heap_backed_frame_continuations();
     test_spawn_and_await_command_runs_task_to_completion();
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
