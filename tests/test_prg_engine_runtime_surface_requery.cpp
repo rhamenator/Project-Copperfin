@@ -2033,6 +2033,44 @@ void test_sql_statement_requery_applies_top_after_ordering() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_rejects_where_subquery_predicate() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_subquery";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "requery_sql_subquery.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS people IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT * FROM people WHERE age IN (SELECT age FROM people WHERE age >= 30)\"\n"
+        "oList.Requery()\n"
+        "nRows = oList.ListCount\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("subquery predicate Requery() script should complete: ") + state.message);
+    const auto rows = state.globals.find("nrows");
+    expect(rows != state.globals.end(), "subquery predicate row count should be captured");
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "0",
+               "unsupported SQL subquery predicate should fail closed without returning all rows");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -2064,6 +2102,7 @@ int main() {
     test_sql_statement_requery_select_star_includes_joined_fields();
     test_sql_statement_requery_rejects_three_table_join_chain();
     test_sql_statement_requery_applies_top_after_ordering();
+    test_sql_statement_requery_rejects_where_subquery_predicate();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

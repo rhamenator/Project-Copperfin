@@ -4061,6 +4061,33 @@ namespace copperfin::runtime
                 {
                     return false;
                 }
+
+                const std::string upper_where_expression = uppercase_copy(where_expression);
+                const std::size_t in_position =
+                    find_top_level_keyword(upper_where_expression, 0U, "IN");
+                if (in_position != std::string::npos)
+                {
+                    std::size_t subquery_start = in_position + 2U;
+                    while (subquery_start < where_expression.size() &&
+                           std::isspace(static_cast<unsigned char>(where_expression[subquery_start])) != 0)
+                    {
+                        ++subquery_start;
+                    }
+                    if (subquery_start < where_expression.size() &&
+                        where_expression[subquery_start] == '(')
+                    {
+                        ++subquery_start;
+                        while (subquery_start < where_expression.size() &&
+                               std::isspace(static_cast<unsigned char>(where_expression[subquery_start])) != 0)
+                        {
+                            ++subquery_start;
+                        }
+                        if (upper_where_expression.compare(subquery_start, 6U, "SELECT") == 0)
+                        {
+                            return false;
+                        }
+                    }
+                }
             }
 
             plan.source_designator = std::move(primary_source_designator);
