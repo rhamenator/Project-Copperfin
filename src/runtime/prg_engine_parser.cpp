@@ -1940,6 +1940,17 @@ Program parse_program_impl(
         } else if (upper == "SCAN" || starts_with_insensitive(line, "SCAN ")) {
             statement.kind = StatementKind::scan_statement;
             const std::string body = upper == "SCAN" ? std::string{} : trim_copy(line.substr(5U));
+            const std::size_t scope_end = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
+            const std::string scope_text = scope_end == std::string::npos
+                                               ? body
+                                               : trim_copy(body.substr(0U, scope_end));
+            std::string remaining_scope_text;
+            const AggregateScopeClause scope = parse_aggregate_scope_clause(scope_text, remaining_scope_text);
+            if (remaining_scope_text != trim_copy(scope_text)) {
+                if (scope.kind == AggregateScopeKind::rest_records) {
+                    statement.identifier = "rest";
+                }
+            }
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");

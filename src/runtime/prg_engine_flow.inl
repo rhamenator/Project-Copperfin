@@ -719,6 +719,85 @@
             return {};
         }
 
+        bool scan_expression_contains_user_routine(
+            const Frame &frame,
+            const std::string &expression)
+        {
+            bool in_single_quoted_string = false;
+            bool in_double_quoted_string = false;
+            for (std::size_t index = 0U; index < expression.size(); ++index)
+            {
+                const char current = expression[index];
+                if (current == '\'' && !in_double_quoted_string)
+                {
+                    if (in_single_quoted_string && index + 1U < expression.size() && expression[index + 1U] == '\'')
+                    {
+                        ++index;
+                        continue;
+                    }
+                    in_single_quoted_string = !in_single_quoted_string;
+                    continue;
+                }
+                if (current == '"' && !in_single_quoted_string)
+                {
+                    if (in_double_quoted_string && index + 1U < expression.size() && expression[index + 1U] == '"')
+                    {
+                        ++index;
+                        continue;
+                    }
+                    in_double_quoted_string = !in_double_quoted_string;
+                    continue;
+                }
+                if (in_single_quoted_string || in_double_quoted_string ||
+                    (std::isalpha(static_cast<unsigned char>(current)) == 0 && current != '_'))
+                {
+                    continue;
+                }
+
+                const std::size_t identifier_start = index;
+                ++index;
+                while (index < expression.size())
+                {
+                    const char character = expression[index];
+                    if (std::isalnum(static_cast<unsigned char>(character)) == 0 && character != '_')
+                    {
+                        break;
+                    }
+                    ++index;
+                }
+                const std::string identifier = expression.substr(identifier_start, index - identifier_start);
+                std::size_t lookahead = index;
+                while (lookahead < expression.size() &&
+                       std::isspace(static_cast<unsigned char>(expression[lookahead])) != 0)
+                {
+                    ++lookahead;
+                }
+                const bool is_member_call = identifier_start > 0U && expression[identifier_start - 1U] == '.';
+                if (lookahead < expression.size() && expression[lookahead] == '(' && !is_member_call &&
+                    find_unqualified_routine_lookup(frame.file_path, identifier).has_value())
+                {
+                    return true;
+                }
+                if (index == identifier_start)
+                {
+                    continue;
+                }
+                --index;
+            }
+            return false;
+        }
+
+        bool scan_expression_requires_continuation(
+            const Frame &frame,
+            const std::string &for_expression,
+            const std::string &while_expression,
+            const std::string &filter_expression)
+        {
+            return scan_expression_contains_user_routine(frame, for_expression) ||
+                   scan_expression_contains_user_routine(frame, while_expression) ||
+                   scan_expression_contains_user_routine(frame, filter_expression);
+        }
+
         ExecutionOutcome continue_scan_loop(Frame &frame, const Statement &statement, bool jump_after_completion)
         {
             if (frame.scans.empty())
@@ -747,9 +826,11 @@
                 return {};
             }
 
-            if (!scan.for_expression.empty() ||
-                !scan.while_expression.empty() ||
-                !cursor->filter_expression.empty())
+            if (scan_expression_requires_continuation(
+                    frame,
+                    scan.for_expression,
+                    scan.while_expression,
+                    cursor->filter_expression))
             {
                 const Statement scan_statement = frame.routine != nullptr &&
                         scan.scan_statement_index < frame.routine->statements.size()
@@ -821,6 +902,11 @@
             }
 
             cursor->found = found;
+            if (!found)
+            {
+                move_cursor_to(*cursor, static_cast<long long>(cursor->record_count + 1U));
+                cursor->found = false;
+            }
             frame.scan_expression_continuation.reset();
             if (continuation.kind == ScanSearchKind::enter_scan)
             {

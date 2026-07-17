@@ -247,6 +247,7 @@ void test_expression_level_function_call_works_in_if_predicates();
 void test_if_elseif_predicates_use_heap_backed_expression_checkpoints();
 void test_case_predicates_use_heap_backed_expression_checkpoints();
 void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints();
+void test_scan_predicate_preserves_rest_scope_and_exhaustion_state();
 void test_elseif_predicate_resumption_review_gaps();
 void test_expression_level_function_call_can_chain_nested_user_routines();
 void test_set_procedure_registers_external_function_for_expression_calls();

@@ -2865,9 +2865,11 @@
                 }
 
                 const std::size_t start_recno = cursor->recno == 0U ? 1U : cursor->recno;
-                if (!statement.expression.empty() ||
-                    !statement.tertiary_expression.empty() ||
-                    !cursor->filter_expression.empty())
+                if (scan_expression_requires_continuation(
+                        frame,
+                        statement.expression,
+                        statement.tertiary_expression,
+                        cursor->filter_expression))
                 {
                     return begin_scan_expression_search(
                         frame,
@@ -8236,8 +8238,17 @@
                             {
                                 const ScanExpressionContinuation &scan_continuation =
                                     *candidate.scan_expression_continuation;
+                                const int scan_work_area = scan_continuation.work_area;
                                 const std::size_t scan_resume_pc =
                                     scan_continuation.endscan_statement_index + 1U;
+                                if (CursorState *scan_cursor = find_cursor_by_area(scan_work_area);
+                                    scan_cursor != nullptr)
+                                {
+                                    move_cursor_to(
+                                        *scan_cursor,
+                                        static_cast<long long>(scan_cursor->record_count + 1U));
+                                    scan_cursor->found = false;
+                                }
                                 if (scan_continuation.kind == ScanSearchKind::continue_scan)
                                 {
                                     candidate.scans.erase(

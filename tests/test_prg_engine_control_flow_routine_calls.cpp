@@ -3267,4 +3267,56 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scan_predicate_preserves_rest_scope_and_exhaustion_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_rest_boundaries";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    const fs::path script_path = temp_root / "scan_rest_boundaries.prg";
+    write_text(
+        script_path,
+        "USE '" + table_path.string() + "' ALIAS ScanBoundary IN 0\n"
+        "GO 2 IN ScanBoundary\n"
+        "scanRestNames = ''\n"
+        "SCAN REST FOR scanBoundaryMatch() IN ScanBoundary\n"
+        "    scanRestNames = scanRestNames + NAME\n"
+        "ENDSCAN\n"
+        "scanRestEof = EOF()\n"
+        "scanRestRecno = RECNO()\n"
+        "GO TOP IN ScanBoundary\n"
+        "SCAN FOR scanBoundaryMiss() IN ScanBoundary\n"
+        "ENDSCAN\n"
+        "scanMissEof = EOF()\n"
+        "scanMissRecno = RECNO()\n"
+        "RETURN\n"
+        "FUNCTION scanBoundaryMatch\n"
+        "RETURN .T.\n"
+        "FUNCTION scanBoundaryMiss\n"
+        "RETURN .F.\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(script_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCAN REST boundary script should complete: " + state.message);
+    expect(state.globals.find("scanrestnames") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("scanrestnames")) == "BRAVOCHARLIE",
+           "SCAN REST should begin at the current record and preserve later records");
+    expect(state.globals.find("scanresteof") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("scanresteof")) == "true" &&
+               state.globals.find("scanrestrecno") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("scanrestrecno")) == "4",
+           "exhausted SCAN REST should leave the cursor at EOF");
+    expect(state.globals.find("scanmisseof") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("scanmisseof")) == "true" &&
+               state.globals.find("scanmissrecno") != state.globals.end() &&
+               copperfin::runtime::format_value(state.globals.at("scanmissrecno")) == "4",
+           "a resumable SCAN predicate with no match should leave the cursor at EOF");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow
