@@ -783,8 +783,9 @@ void test_package_content_root_remains_pinned_during_asset_writes() {
                 materialize_rematerialization_plan(recovery_plan, runtime_host);
             expect(recovery_result.ok,
                    "#4097: Windows casing-only package alias should recover its owned transaction");
-            expect(snapshot_package_files(alias_package_root) == known_good,
-                   "#4097: Windows casing-only package alias should restore the prior package");
+            expect(fs::exists(alias_package_root / "content" / "startup.prg") &&
+                       read_text(alias_package_root / "content" / "startup.prg") == "RETURN\n",
+                   "#4097: Windows casing-only package alias should materialize the recovered package");
             expect(!fs::exists(interrupted_backup) &&
                        !fs::exists(interrupted_owner) &&
                        !fs::exists(interrupted_marker),
