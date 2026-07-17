@@ -750,6 +750,49 @@ void test_package_content_root_remains_pinned_during_asset_writes() {
     expect(snapshot_package_files(plan.package_root) == known_good,
            "hard-link rejection should restore the last known-good package");
 
+#if defined(_WIN32)
+    {
+        const fs::path package_root(plan.package_root);
+        std::string alias_leaf = package_root.filename().string();
+        for (char& character : alias_leaf) {
+            if (character >= 'A' && character <= 'Z') {
+                character = static_cast<char>(character - 'A' + 'a');
+            } else if (character >= 'a' && character <= 'z') {
+                character = static_cast<char>(character - 'a' + 'A');
+            }
+        }
+        const fs::path alias_package_root = package_root.parent_path() / alias_leaf;
+        const fs::path interrupted_backup = alias_package_root.string() + ".copperfin-previous";
+        const fs::path interrupted_marker = alias_package_root.string() + ".copperfin-materializing";
+        const fs::path interrupted_owner = interrupted_backup.string() + ".owner";
+        std::string transaction_identity =
+            package_root.lexically_normal().generic_string();
+        transaction_identity =
+            "copperfin_package_transaction=1\npackage_root=" +
+            transaction_identity + "\n";
+
+        fs::rename(package_root, interrupted_backup, ignored);
+        expect(!ignored,
+               "#4097: Windows casing-alias fixture should create an interrupted backup");
+        if (!ignored) {
+            write_text(interrupted_owner, transaction_identity);
+            write_text(interrupted_marker, transaction_identity);
+            auto recovery_plan = plan;
+            recovery_plan.package_root = alias_package_root.string();
+            const auto recovery_result =
+                materialize_rematerialization_plan(recovery_plan, runtime_host);
+            expect(recovery_result.ok,
+                   "#4097: Windows casing-only package alias should recover its owned transaction");
+            expect(snapshot_package_files(alias_package_root) == known_good,
+                   "#4097: Windows casing-only package alias should restore the prior package");
+            expect(!fs::exists(interrupted_backup) &&
+                       !fs::exists(interrupted_owner) &&
+                       !fs::exists(interrupted_marker),
+                   "#4097: Windows casing-only recovery should consume transaction artifacts");
+        }
+    }
+#endif
+
     fs::remove_all(temp_root, ignored);
 }
 

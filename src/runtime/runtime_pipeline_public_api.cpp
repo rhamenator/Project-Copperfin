@@ -38,6 +38,29 @@ constexpr std::string_view kPackageBackupSuffix = ".copperfin-previous";
 constexpr std::string_view kPackageTransactionMarker = ".copperfin-materializing";
 constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
 
+std::string package_transaction_identity(const std::filesystem::path& package_root) {
+    std::filesystem::path identity_path = package_root.lexically_normal();
+#if defined(_WIN32)
+    std::error_code identity_path_error;
+    const std::filesystem::path absolute_identity_path =
+        std::filesystem::absolute(identity_path, identity_path_error).lexically_normal();
+    if (!identity_path_error) {
+        const std::filesystem::path weak_identity_path =
+            std::filesystem::weakly_canonical(absolute_identity_path, identity_path_error);
+        identity_path = identity_path_error ? absolute_identity_path : weak_identity_path;
+    }
+    std::wstring case_folded_path = identity_path.native();
+    if (!case_folded_path.empty()) {
+        (void)::CharLowerBuffW(
+            case_folded_path.data(),
+            static_cast<DWORD>(case_folded_path.size()));
+    }
+    return std::filesystem::path(case_folded_path).generic_string();
+#else
+    return identity_path.generic_string();
+#endif
+}
+
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
 std::atomic_bool force_package_backup_cleanup_warning{false};
 std::mutex package_materialization_pause_mutex;
@@ -454,7 +477,7 @@ public:
           backup_owner_path_(backup_root_.string() + std::string(kPackageTransactionOwnerSuffix)),
           transaction_identity_(
               "copperfin_package_transaction=1\npackage_root=" +
-              package_root_.lexically_normal().generic_string() + "\n") {
+              package_transaction_identity(package_root_) + "\n") {
     }
 
     PackageRootTransaction(const PackageRootTransaction&) = delete;
@@ -500,8 +523,12 @@ public:
                 lock_identity_path = absolute_identity_path;
             }
         }
-        const auto lock_identity = security::sha256_hex_for_text(
-            lock_identity_path.lexically_normal().generic_string());
+        std::string lock_identity_value =
+            lock_identity_path.lexically_normal().generic_string();
+#if defined(_WIN32)
+        lock_identity_value = package_transaction_identity(package_root_);
+#endif
+        const auto lock_identity = security::sha256_hex_for_text(lock_identity_value);
         if (!lock_identity.ok || !transaction_lock_.acquire(lock_identity_path, lock_identity.hex_digest)) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -1054,9 +1081,31 @@ private:
         std::error_code filesystem_error;
         const std::filesystem::file_status status =
             std::filesystem::symlink_status(path, filesystem_error);
-        return status.type() == std::filesystem::file_type::regular &&
-               !filesystem_error &&
-               read_text_file(path) == transaction_identity_;
+        if (status.type() != std::filesystem::file_type::regular || filesystem_error) {
+            return false;
+        }
+        const std::string contents = read_text_file(path);
+        if (contents == transaction_identity_) {
+            return true;
+        }
+#if defined(_WIN32)
+        const std::string prefix =
+            "copperfin_package_transaction=1\npackage_root=";
+        if (contents.rfind(prefix, 0U) != 0U ||
+            contents.size() <= prefix.size() ||
+            contents.back() != '\n') {
+            return false;
+        }
+        const std::string recorded_path = contents.substr(
+            prefix.size(),
+            contents.size() - prefix.size() - 1U);
+        return !recorded_path.empty() &&
+               recorded_path.find('\n') == std::string::npos &&
+               package_transaction_identity(std::filesystem::path(recorded_path)) ==
+                   package_transaction_identity(package_root_);
+#else
+        return false;
+#endif
     }
 
     std::filesystem::path package_root_;
