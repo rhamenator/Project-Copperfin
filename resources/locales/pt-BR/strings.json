@@ -306,6 +306,7 @@
   "Runtime.Prg.Transaction.Error.JournalInitializeFailed": "Nao foi possivel inicializar o diario da transacao",
   "Runtime.Prg.Transaction.Error.JournalReplayFailed": "Falha ao reproduzir o diario da transacao",
   "Runtime.Prg.Transaction.Error.JournalStatePersistFailed": "Nao foi possivel persistir o estado do diario da transacao",
+  "Runtime.Prg.Transaction.Error.NoActiveTransaction": "Nao ha uma transacao ativa.",
   "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit": "O comando de inicializacao do builder retornou um codigo de saida diferente de zero.",
   "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit": "O comando de inicializacao do builder do designer retornou um codigo de saida diferente de zero.",
   "StudioHost.DesignerExecution.Error.ChildExecutionsFailed": "Uma ou mais execucoes filhas do designer falharam.",

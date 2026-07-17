@@ -1769,6 +1769,40 @@ void test_transaction_processing_txnlevel_and_sessions() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_transaction_commands_without_active_transaction_fault() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "test_transactions_without_active_transaction";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_fault_case = [&](const std::string &command, const std::string &label) {
+        const fs::path prg_path = temp_root / (label + ".prg");
+        write_text(
+            prg_path,
+            std::string("nBefore = TXNLEVEL()\n")
+            + command + "\n"
+            "nAfter = 1\n");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(prg_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               label + " without an active transaction should pause with an error");
+        expect(state.location.line == 2U,
+               label + " without an active transaction should identify the command line");
+        expect(state.message == "No active transaction.",
+               label + " should use the localized no-active-transaction diagnostic");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, label + " fault should be recoverable");
+        expect(state.globals.contains("nafter"), label + " should continue after the trapped fault");
+    };
+
+    run_fault_case("ROLLBACK", "rollback_without_transaction");
+    run_fault_case("END TRANSACTION", "end_without_transaction");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 }  // namespace
 
@@ -1797,6 +1831,7 @@ int main() {
     test_set_state_variables_strictdate_enginebehavior_optimize();
     test_set_state_variables_talk_safety_escape();
     test_transaction_processing_txnlevel_and_sessions();
+    test_transaction_commands_without_active_transaction_fault();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

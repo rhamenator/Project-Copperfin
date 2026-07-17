@@ -2725,6 +2725,13 @@
             case StatementKind::end_transaction:
             {
                 int &level = current_transaction_level();
+                if (level <= 0)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Transaction.Error.NoActiveTransaction");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 if (level > 0)
                 {
                     --level;
@@ -2748,6 +2755,13 @@
             case StatementKind::rollback_transaction:
             {
                 int &level = current_transaction_level();
+                if (level <= 0)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Transaction.Error.NoActiveTransaction");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 if (level > 0 && !rollback_active_transaction_journal())
                 {
                     last_fault_location = statement.location;

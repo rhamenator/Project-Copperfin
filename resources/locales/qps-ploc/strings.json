@@ -306,6 +306,7 @@
   "Runtime.Prg.Transaction.Error.JournalInitializeFailed": "Unable to initialize transaction journal",
   "Runtime.Prg.Transaction.Error.JournalReplayFailed": "Failed to replay transaction journal",
   "Runtime.Prg.Transaction.Error.JournalStatePersistFailed": "Unable to persist transaction journal state",
+  "Runtime.Prg.Transaction.Error.NoActiveTransaction": "[!! Ñø åçţïṽë ţŕåñšåçţïøñ. !!]",
   "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit": "Builder launch command returned a non-zero exit code.",
   "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit": "Designer builder launch command returned a non-zero exit code.",
   "StudioHost.DesignerExecution.Error.ChildExecutionsFailed": "One or more designer child executions failed.",

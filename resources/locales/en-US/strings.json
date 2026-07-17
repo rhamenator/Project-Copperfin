@@ -1051,6 +1051,7 @@
   "Runtime.Prg.Transaction.Error.JournalInitializeFailed": "Unable to initialize transaction journal",
   "Runtime.Prg.Transaction.Error.JournalReplayFailed": "Failed to replay transaction journal",
   "Runtime.Prg.Transaction.Error.JournalStatePersistFailed": "Unable to persist transaction journal state",
+  "Runtime.Prg.Transaction.Error.NoActiveTransaction": "No active transaction.",
   "Runtime.Prg.Watch.Error.EmptyExpression": "Watch expression is empty.",
   "Runtime.Prg.Watch.Error.Failed": "Watch evaluation failed.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "Watch evaluation ran out of memory.",
