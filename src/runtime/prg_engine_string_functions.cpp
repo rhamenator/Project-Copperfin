@@ -508,6 +508,40 @@ std::string left_justified_trim(std::string value) {
 
 }  // namespace
 
+std::string format_value_for_display(
+    const PrgValue& value,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    if (value.kind != PrgValueKind::number || !std::isfinite(value.number_value)) {
+        return value_as_string(value);
+    }
+
+    int decimals = 2;
+    try {
+        decimals = std::clamp(std::stoi(trim_copy(set_callback("DECIMALS"))), 0, 18);
+    } catch (...) {
+    }
+
+    const std::string fixed_setting = normalize_identifier(trim_copy(set_callback("FIXED")));
+    const bool fixed = fixed_setting == "on" || fixed_setting == "true" || fixed_setting == "yes" || fixed_setting == "1";
+
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(decimals) << value.number_value;
+    std::string formatted = stream.str();
+    if (!fixed) {
+        const std::size_t decimal_pos = formatted.find('.');
+        if (decimal_pos != std::string::npos) {
+            while (!formatted.empty() && formatted.back() == '0') {
+                formatted.pop_back();
+            }
+            if (!formatted.empty() && formatted.back() == '.') {
+                formatted.pop_back();
+            }
+        }
+    }
+
+    return apply_numeric_picture_symbols(std::move(formatted), true, false, set_callback);
+}
+
 std::optional<PrgValue> evaluate_string_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
@@ -1021,7 +1055,7 @@ std::optional<PrgValue> evaluate_string_function(
         }
 
         if (transformed.empty() && !(picture_has_flag(picture, "@Z") && is_zeroish_transform_value(arguments[0]))) {
-            transformed = value_as_string(arguments[0]);
+            transformed = format_value_for_display(arguments[0], set_callback);
         }
         if (picture_has_flag(picture, "@B")) {
             transformed = left_justified_trim(std::move(transformed));

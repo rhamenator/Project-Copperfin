@@ -5018,7 +5018,31 @@
             {
                 // ? or ?? expression — evaluate and emit as output event
                 const PrgValue result = evaluate_expression(statement.expression, frame);
-                const std::string text_value = value_as_string(result);
+                const auto display_set_value = [this](const std::string& option_name)
+                {
+                    const std::string normalized_name = normalize_identifier(trim_copy(option_name));
+                    const auto found = current_set_state().find(normalized_name);
+                    if (found != current_set_state().end())
+                    {
+                        return found->second;
+                    }
+                    if (normalized_name == "decimals")
+                    {
+                        return std::string{"2"};
+                    }
+                    if (normalized_name == "point")
+                    {
+                        return std::string{"."};
+                    }
+                    if (normalized_name == "separator")
+                    {
+                        return std::string{","};
+                    }
+                    return std::string{"OFF"};
+                };
+                const std::string text_value = format_value_for_display(
+                    result,
+                    display_set_value);
                 events.push_back({.category = "runtime.print",
                                   .detail = text_value,
                                   .location = statement.location});

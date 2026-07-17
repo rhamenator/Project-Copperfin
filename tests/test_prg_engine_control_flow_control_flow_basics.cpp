@@ -1468,6 +1468,11 @@ void test_print_command_emits_event() {
         main_path,
         "? 'hello world'\n"
         "? 1 + 2\n"
+        "SET DECIMALS TO 4\n"
+        "SET POINT TO ','\n"
+        "SET SEPARATOR TO '.'\n"
+        "? 1 / 3\n"
+        "? 12345.6789\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1483,6 +1488,16 @@ void test_print_command_emits_event() {
         return ev.category == "runtime.print" && ev.detail == "3";
     });
     expect(has_three, "? 1 + 2 should emit a runtime.print event with detail '3'");
+
+    const bool has_fraction = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
+        return ev.category == "runtime.print" && ev.detail == "0,3333";
+    });
+    expect(has_fraction, "SET DECIMALS and SET POINT should format fractional print output");
+
+    const bool has_grouped = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
+        return ev.category == "runtime.print" && ev.detail == "12.345,6789";
+    });
+    expect(has_grouped, "SET SEPARATOR should format grouped print output");
 
     fs::remove_all(temp_root, ignored);
 }

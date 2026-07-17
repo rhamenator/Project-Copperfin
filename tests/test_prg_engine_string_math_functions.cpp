@@ -254,6 +254,14 @@ namespace
             "transform_literal_id = TRANSFORM('12-34-5678', '@R 99/99/9999')\n"
             "transform_group_integer = TRANSFORM(1234567, '999,999')\n"
             "transform_upper = TRANSFORM('hello', '@!')\n"
+            "SET DECIMALS TO 4\n"
+            "display_fraction = 1 / 3\n"
+            "display_transform = TRANSFORM(display_fraction)\n"
+            "display_concat = 'value=' + TRANSFORM(display_fraction)\n"
+            "display_group = TRANSFORM(12345.6789)\n"
+            "SET FIXED ON\n"
+            "fixed_after = SET('FIXED')\n"
+            "display_fixed = TRANSFORM(1.5)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -485,6 +493,11 @@ namespace
         check("transform_literal_id", "12/34/5678");
         check("transform_group_integer", "1.234.567");
         check("transform_upper", "HELLO");
+        check("display_transform", "0,3333");
+        check("display_concat", "value=0,3333");
+        check("display_group", "12.345,6789");
+        check("fixed_after", "ON");
+        check("display_fixed", "1,5000");
 
         for (const char *name : {"rand_seeded", "rand_next"})
         {

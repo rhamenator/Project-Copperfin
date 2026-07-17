@@ -14,6 +14,7 @@
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "prg_engine_date_time_functions.h"
+#include "prg_engine_string_functions.h"
 #include "win64_native_call.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"

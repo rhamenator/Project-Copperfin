@@ -19,6 +19,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Current State
 
+- Shipped numeric display-formatting slice `#3867`: `?`/`??` and bare `TRANSFORM()` now use the session-aware display formatter for ordinary numeric values. Preserve `SET DECIMALS` minimum precision with non-fixed trimming, `SET FIXED` exact padding, `SET POINT` decimal substitution, and `SET SEPARATOR` grouping; keep arithmetic, stored `PrgValue`s, explicit picture transforms, and machine-readable serialization independent of display settings. Focused GCC/Clang string/math and control-flow print coverage passes; no localization key or machine contract changed. Issue `#3867` is closed.
+
 - Shipped file-open mode slice `#3863`: numeric `FOPEN()` modes 10/11/12 map to their corresponding read-only, write-only, and read/write access modes. Numeric mode 2 and shared read/write mode 12 retry a missing path with `wb+` only after the initial `rb+` failure reports `ENOENT`, preserving existing file contents and unrelated failure behavior. Focused GCC/Clang file-I/O coverage passes; no visible text or machine contract changed. Issue `#3863` is closed.
 
 - Shipped `SET EXACT` comparison slice `#3885`: the shared `INLIST()` string comparator now compares exact operands without trimming trailing spaces or other significant characters. Preserve the existing prefix comparison when `SET EXACT` is off, and keep `LIKE()`'s separate literal-case wildcard behavior. Focused GCC/Clang string/math coverage passes; no visible text or machine contract changed. Issue `#3885` is closed.
