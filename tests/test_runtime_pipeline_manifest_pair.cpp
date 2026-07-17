@@ -381,6 +381,8 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
             (alias_root / fs::path(fixture.plan.manifest_path).filename()).string();
         alias_plan.debug_manifest_path =
             (alias_root / fs::path(fixture.plan.debug_manifest_path).filename()).string();
+        alias_plan.launcher_output_path =
+            (alias_root / fs::path(fixture.plan.launcher_output_path).filename()).string();
 
         const std::string canonical_root =
             copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
