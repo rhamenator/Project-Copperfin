@@ -464,6 +464,7 @@
                 return false;
             }
 
+            frame.loop_expression_continuation.reset();
             unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
             unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
             active_try.handling_error = true;
@@ -543,6 +544,7 @@
 
                     unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
                     unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
+                    frame.loop_expression_continuation.reset();
                     active_try.handling_error = true;
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;

@@ -493,6 +493,23 @@ namespace copperfin::runtime
         {
         };
 
+        enum class LoopExpressionStage
+        {
+            for_start,
+            for_end,
+            for_step,
+            do_while_predicate,
+            for_each_collection
+        };
+
+        struct LoopExpressionContinuation
+        {
+            Statement statement;
+            LoopExpressionStage stage = LoopExpressionStage::for_start;
+            double start_value = 0.0;
+            double end_value = 0.0;
+        };
+
         struct Frame
         {
             std::string file_path;
@@ -520,6 +537,7 @@ namespace copperfin::runtime
             bool return_pending = false;
             bool expression_routine_return_pending = false;
             std::optional<ExpressionContinuation> expression_continuation;
+            std::optional<LoopExpressionContinuation> loop_expression_continuation;
             bool evaluate_conditional_else = false;
         };
 
@@ -3328,7 +3346,8 @@ namespace copperfin::runtime
             source_frame.expression_continuation->statement.kind != statement.kind ||
             source_frame.expression_continuation->statement.location.file_path != statement.location.file_path ||
             source_frame.expression_continuation->statement.location.line != statement.location.line ||
-            source_frame.expression_continuation->statement.text != statement.text)
+            source_frame.expression_continuation->statement.text != statement.text ||
+            source_frame.expression_continuation->statement.expression != statement.expression)
         {
             source_frame.expression_continuation =
                 ExpressionContinuation{
@@ -7243,6 +7262,7 @@ namespace copperfin::runtime
                             {
                                 stack.back().expression_routine_return_pending = false;
                                 stack.back().expression_continuation.reset();
+                                stack.back().loop_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
                             }
                             break;
@@ -7861,6 +7881,7 @@ namespace copperfin::runtime
                                 {
                                     stack.back().expression_routine_return_pending = false;
                                     stack.back().expression_continuation.reset();
+                                    stack.back().loop_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);
                                 }
                                 break;

@@ -48,6 +48,7 @@
         std::optional<Statement> resumed_assignment_statement;
         bool resumed_conditional_expression = false;
         bool resumed_case_expression = false;
+        bool resumed_loop_expression = false;
 
         const auto route_false_conditional = [&]()
         {
@@ -116,6 +117,190 @@
             }
         };
 
+        const auto make_loop_stage_statement = [&](const Statement &original,
+                                                   const std::string &expression,
+                                                   LoopExpressionStage stage)
+        {
+            Statement staged = original;
+            staged.expression = expression;
+            staged.secondary_expression.clear();
+            staged.tertiary_expression.clear();
+            staged.text = original.text + " [loop-expression-stage=" +
+                          std::to_string(static_cast<int>(stage)) + "]";
+            return staged;
+        };
+
+        const auto initialize_for_loop = [&](Frame &target,
+                                             const Statement &loop_statement,
+                                             double start_value,
+                                             double end_value,
+                                             double step_value)
+        {
+            assign_variable(target, loop_statement.identifier, make_number_value(start_value));
+            const bool should_enter = step_value >= 0.0 ? start_value <= end_value : start_value >= end_value;
+            if (!should_enter)
+            {
+                if (const auto destination = find_matching_endfor(target, target.pc - 1U))
+                {
+                    target.pc = *destination + 1U;
+                }
+                return;
+            }
+            const auto existing = std::find_if(target.loops.rbegin(), target.loops.rend(), [&](const LoopState &loop)
+                                               { return loop.for_statement_index == (target.pc - 1U); });
+            if (existing != target.loops.rend())
+            {
+                return;
+            }
+            target.loops.push_back({.for_statement_index = target.pc - 1U,
+                                    .endfor_statement_index = find_matching_endfor(target, target.pc - 1U).value_or(target.pc - 1U),
+                                    .case_stack_depth_at_entry = target.cases.size(),
+                                    .with_stack_depth_at_entry = target.withs.size(),
+                                    .variable_name = normalize_identifier(loop_statement.identifier),
+                                    .end_value = end_value,
+                                    .step_value = step_value,
+                                    .iteration_count = 0});
+        };
+
+        const auto initialize_do_while = [&](Frame &target, const Statement &, bool should_continue)
+        {
+            const auto existing = std::find_if(target.whiles.rbegin(), target.whiles.rend(), [&](const WhileState &loop)
+                                                { return loop.do_while_statement_index == (target.pc - 1U); });
+            if (should_continue)
+            {
+                if (existing == target.whiles.rend())
+                {
+                    target.whiles.push_back({.do_while_statement_index = target.pc - 1U,
+                                             .enddo_statement_index = find_matching_enddo(target, target.pc - 1U).value_or(target.pc - 1U),
+                                             .case_stack_depth_at_entry = target.cases.size(),
+                                             .with_stack_depth_at_entry = target.withs.size(),
+                                             .iteration_count = 0});
+                }
+            }
+            else
+            {
+                if (existing != target.whiles.rend())
+                {
+                    target.whiles.erase(std::next(existing).base());
+                }
+                if (const auto destination = find_matching_enddo(target, target.pc - 1U))
+                {
+                    target.pc = *destination + 1U;
+                }
+            }
+        };
+
+        const auto initialize_for_each = [&](Frame &target, const Statement &loop_statement, PrgValue result)
+        {
+            const std::string var_name = normalize_memory_variable_identifier(loop_statement.identifier);
+            std::vector<PrgValue> elements;
+            if (const auto runtime_object = resolve_ole_object(result);
+                runtime_object.has_value() && is_native_collection_object(**runtime_object))
+            {
+                elements = (*runtime_object)->collection_items;
+            }
+            else
+            {
+                elements.push_back(std::move(result));
+            }
+
+            if (elements.empty())
+            {
+                if (const auto destination = find_matching_endfor(target, target.pc - 1U))
+                {
+                    target.pc = *destination + 1U;
+                }
+                return;
+            }
+
+            assign_variable(target, var_name, elements[0]);
+            target.loops.push_back({
+                .for_statement_index = target.pc - 1U,
+                .endfor_statement_index = find_matching_endfor(target, target.pc - 1U).value_or(target.pc - 1U),
+                .case_stack_depth_at_entry = target.cases.size(),
+                .with_stack_depth_at_entry = target.withs.size(),
+                .variable_name = var_name,
+                .is_for_each = true,
+                .each_values = std::move(elements),
+                .each_index = 0U});
+        };
+
+        const auto finish_loop_expression = [&](Frame &target, const Statement &, PrgValue value)
+        {
+            if (!target.loop_expression_continuation.has_value())
+            {
+                return true;
+            }
+
+            LoopExpressionContinuation &continuation = *target.loop_expression_continuation;
+            while (true)
+            {
+                switch (continuation.stage)
+                {
+                case LoopExpressionStage::do_while_predicate:
+                    initialize_do_while(target, continuation.statement, value_as_bool(value));
+                    target.loop_expression_continuation.reset();
+                    return true;
+                case LoopExpressionStage::for_each_collection:
+                    initialize_for_each(target, continuation.statement, std::move(value));
+                    target.loop_expression_continuation.reset();
+                    return true;
+                case LoopExpressionStage::for_start:
+                    continuation.start_value = value_as_number(value);
+                    continuation.stage = LoopExpressionStage::for_end;
+                    {
+                        const auto end_value = evaluate_resumable_expression(
+                            target,
+                            make_loop_stage_statement(
+                                continuation.statement,
+                                continuation.statement.secondary_expression,
+                                LoopExpressionStage::for_end));
+                        if (!end_value.has_value())
+                        {
+                            return false;
+                        }
+                        value = *end_value;
+                    }
+                    if (target.expression_routine_return_pending)
+                    {
+                        return false;
+                    }
+                    continue;
+                case LoopExpressionStage::for_end:
+                    continuation.end_value = value_as_number(value);
+                    continuation.stage = LoopExpressionStage::for_step;
+                    if (continuation.statement.tertiary_expression.empty())
+                    {
+                        value = make_number_value(1.0);
+                    }
+                    else
+                    {
+                        const auto step_value = evaluate_resumable_expression(
+                            target,
+                            make_loop_stage_statement(
+                                continuation.statement,
+                                continuation.statement.tertiary_expression,
+                                LoopExpressionStage::for_step));
+                        if (!step_value.has_value())
+                        {
+                            return false;
+                        }
+                        value = *step_value;
+                    }
+                    continue;
+                case LoopExpressionStage::for_step:
+                    initialize_for_loop(
+                        target,
+                        continuation.statement,
+                        continuation.start_value,
+                        continuation.end_value,
+                        value_as_number(value));
+                    target.loop_expression_continuation.reset();
+                    return true;
+                }
+            }
+        };
+
         try
         {
             if (resuming_expression)
@@ -157,13 +342,23 @@
                         apply_case_predicate(value_as_bool(*expression_value));
                         resumed_case_expression = true;
                     }
+                    else if (continued_statement.kind == StatementKind::for_statement ||
+                             continued_statement.kind == StatementKind::do_while_statement ||
+                             continued_statement.kind == StatementKind::for_each_statement)
+                    {
+                        resumed_loop_expression = true;
+                        if (!finish_loop_expression(frame, continued_statement, *expression_value))
+                        {
+                            return {};
+                        }
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
                 if (!resumed_assignment_value.has_value() && !resumed_conditional_expression &&
-                    !resumed_case_expression)
+                    !resumed_case_expression && !resumed_loop_expression)
                 {
                     frame.return_pending = true;
                     if (const auto outcome = continue_pending_return(frame); outcome.has_value())
@@ -177,6 +372,10 @@
                     return {};
                 }
                 if (resumed_case_expression)
+                {
+                    return {};
+                }
+                if (resumed_loop_expression)
                 {
                     return {};
                 }
@@ -2172,64 +2371,36 @@
                 return {};
             case StatementKind::for_statement:
             {
-                const double start_value = value_as_number(evaluate_expression(statement.expression, frame));
-                const double end_value = value_as_number(evaluate_expression(statement.secondary_expression, frame));
-                const double step_value = statement.tertiary_expression.empty()
-                                              ? 1.0
-                                              : value_as_number(evaluate_expression(statement.tertiary_expression, frame));
-                assign_variable(frame, statement.identifier, make_number_value(start_value));
-                const bool should_enter = step_value >= 0.0 ? start_value <= end_value : start_value >= end_value;
-                if (!should_enter)
-                {
-                    if (const auto destination = find_matching_endfor(frame, frame.pc - 1U))
-                    {
-                        frame.pc = *destination + 1U;
-                    }
-                    return {};
-                }
-                const auto existing = std::find_if(frame.loops.rbegin(), frame.loops.rend(), [&](const LoopState &loop)
-                                                   { return loop.for_statement_index == (frame.pc - 1U); });
-                if (existing != frame.loops.rend())
+                frame.loop_expression_continuation = LoopExpressionContinuation{
+                    .statement = statement,
+                    .stage = LoopExpressionStage::for_start};
+                const auto start_value = evaluate_resumable_expression(
+                    frame,
+                    make_loop_stage_statement(frame.loop_expression_continuation->statement,
+                                              statement.expression,
+                                              LoopExpressionStage::for_start));
+                if (!start_value.has_value())
                 {
                     return {};
                 }
-                frame.loops.push_back({.for_statement_index = frame.pc - 1U,
-                                       .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
-                                       .case_stack_depth_at_entry = frame.cases.size(),
-                                       .with_stack_depth_at_entry = frame.withs.size(),
-                                       .variable_name = normalize_identifier(statement.identifier),
-                                       .end_value = end_value,
-                                       .step_value = step_value,
-                                       .iteration_count = 0});
+                finish_loop_expression(frame, statement, *start_value);
                 return {};
             }
             case StatementKind::do_while_statement:
             {
-                const bool should_continue = value_as_bool(evaluate_expression(statement.expression, frame));
-                const auto existing = std::find_if(frame.whiles.rbegin(), frame.whiles.rend(), [&](const WhileState &loop)
-                                                   { return loop.do_while_statement_index == (frame.pc - 1U); });
-                if (should_continue)
+                frame.loop_expression_continuation = LoopExpressionContinuation{
+                    .statement = statement,
+                    .stage = LoopExpressionStage::do_while_predicate};
+                const auto predicate_value = evaluate_resumable_expression(
+                    frame,
+                    make_loop_stage_statement(frame.loop_expression_continuation->statement,
+                                              statement.expression,
+                                              LoopExpressionStage::do_while_predicate));
+                if (!predicate_value.has_value())
                 {
-                    if (existing == frame.whiles.rend())
-                    {
-                        frame.whiles.push_back({.do_while_statement_index = frame.pc - 1U,
-                                                .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U),
-                                                .case_stack_depth_at_entry = frame.cases.size(),
-                                                .with_stack_depth_at_entry = frame.withs.size(),
-                                                .iteration_count = 0});
-                    }
+                    return {};
                 }
-                else
-                {
-                    if (existing != frame.whiles.rend())
-                    {
-                        frame.whiles.erase(std::next(existing).base());
-                    }
-                    if (const auto destination = find_matching_enddo(frame, frame.pc - 1U))
-                    {
-                        frame.pc = *destination + 1U;
-                    }
-                }
+                finish_loop_expression(frame, statement, *predicate_value);
                 return {};
             }
             case StatementKind::endfor_statement:
@@ -8032,6 +8203,64 @@
                         for (std::size_t index = stack.size(); index > 0U; --index)
                         {
                             Frame &candidate = stack[index - 1U];
+                            if (candidate.loop_expression_continuation.has_value())
+                            {
+                                const Statement &loop_statement = candidate.loop_expression_continuation->statement;
+                                const std::size_t loop_statement_index = candidate.pc > 0U ? candidate.pc - 1U : 0U;
+                                std::size_t loop_resume_pc = candidate.pc;
+                                if (loop_statement.kind == StatementKind::do_while_statement)
+                                {
+                                    if (const auto destination = find_matching_enddo(candidate, loop_statement_index))
+                                    {
+                                        loop_resume_pc = *destination + 1U;
+                                    }
+                                    candidate.whiles.erase(
+                                        std::remove_if(
+                                            candidate.whiles.begin(),
+                                            candidate.whiles.end(),
+                                            [&](const WhileState &state)
+                                            {
+                                                return state.do_while_statement_index == loop_statement_index;
+                                            }),
+                                        candidate.whiles.end());
+                                }
+                                else if (loop_statement.kind == StatementKind::for_statement ||
+                                         loop_statement.kind == StatementKind::for_each_statement)
+                                {
+                                    if (const auto destination = find_matching_endfor(candidate, loop_statement_index))
+                                    {
+                                        loop_resume_pc = *destination + 1U;
+                                    }
+                                    candidate.loops.erase(
+                                        std::remove_if(
+                                            candidate.loops.begin(),
+                                            candidate.loops.end(),
+                                            [&](const LoopState &state)
+                                            {
+                                                return state.for_statement_index == loop_statement_index;
+                                            }),
+                                        candidate.loops.end());
+                                }
+                                candidate.loop_expression_continuation.reset();
+                                candidate.expression_routine_return_pending = false;
+                                candidate.expression_continuation.reset();
+                                if (index == stack.size())
+                                {
+                                    resume_pc = loop_resume_pc;
+                                }
+                                else
+                                {
+                                    candidate.pc = loop_resume_pc;
+                                }
+                                last_return_value = make_empty_value();
+                                for (std::size_t nested_index = index; nested_index < stack.size(); ++nested_index)
+                                {
+                                    stack[nested_index].expression_routine_return_pending = false;
+                                    stack[nested_index].expression_continuation.reset();
+                                    stack[nested_index].loop_expression_continuation.reset();
+                                }
+                                break;
+                            }
                             if (!candidate.expression_routine_return_pending ||
                                 !candidate.expression_continuation.has_value() ||
                                 candidate.expression_continuation->statement.kind != StatementKind::case_statement)
@@ -8051,6 +8280,7 @@
                             {
                                 stack[nested_index].expression_routine_return_pending = false;
                                 stack[nested_index].expression_continuation.reset();
+                                stack[nested_index].loop_expression_continuation.reset();
                             }
                             break;
                         }
@@ -8667,51 +8897,47 @@
                 }
 
                 // Snapshot collection elements
-                std::vector<PrgValue> elements;
                 const std::string coll_norm = normalize_memory_variable_identifier(collection_expr);
                 if (const RuntimeArray *arr = find_array(coll_norm); arr != nullptr)
                 {
-                    elements = arr->values;
+                    std::vector<PrgValue> elements = arr->values;
+                    if (elements.empty())
+                    {
+                        if (const auto dest = find_matching_endfor(frame, frame.pc - 1U))
+                        {
+                            frame.pc = *dest + 1U;
+                        }
+                        return {};
+                    }
+                    assign_variable(frame, var_name, elements[0]);
+                    frame.loops.push_back({
+                        .for_statement_index = frame.pc - 1U,
+                        .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                        .case_stack_depth_at_entry = frame.cases.size(),
+                        .with_stack_depth_at_entry = frame.withs.size(),
+                        .variable_name = var_name,
+                        .is_for_each = true,
+                        .each_values = std::move(elements),
+                        .each_index = 0U});
                 }
                 else
                 {
                     // Evaluate as expression; native Collection objects iterate
                     // their contained items, and everything else is a single element.
-                    const PrgValue result = evaluate_expression(collection_expr, frame);
-                    if (const auto runtime_object = resolve_ole_object(result);
-                        runtime_object.has_value() &&
-                        is_native_collection_object(**runtime_object))
+                    frame.loop_expression_continuation = LoopExpressionContinuation{
+                        .statement = statement,
+                        .stage = LoopExpressionStage::for_each_collection};
+                    const auto result = evaluate_resumable_expression(
+                        frame,
+                        make_loop_stage_statement(frame.loop_expression_continuation->statement,
+                                                  collection_expr,
+                                                  LoopExpressionStage::for_each_collection));
+                    if (!result.has_value())
                     {
-                        elements = (*runtime_object)->collection_items;
+                        return {};
                     }
-                    else
-                    {
-                        elements.push_back(result);
-                    }
+                    finish_loop_expression(frame, statement, *result);
                 }
-
-                if (elements.empty())
-                {
-                    // Skip the loop body entirely
-                    if (const auto dest = find_matching_endfor(frame, frame.pc - 1U))
-                    {
-                        frame.pc = *dest + 1U;
-                    }
-                    return {};
-                }
-
-                // Assign first element and enter loop
-                assign_variable(frame, var_name, elements[0]);
-                frame.loops.push_back({
-                    .for_statement_index = frame.pc - 1U,
-                    .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
-                    .case_stack_depth_at_entry = frame.cases.size(),
-                    .with_stack_depth_at_entry = frame.withs.size(),
-                    .variable_name = var_name,
-                    .is_for_each = true,
-                    .each_values = std::move(elements),
-                    .each_index = 0U
-                });
                 return {};
             }
             case StatementKind::release_command:
