@@ -72,6 +72,7 @@ int main() {
     test_set_udfparms_state_is_isolated_between_data_and_runtime_sessions();
     test_deep_scalar_reference_forwarding_uses_heap_backed_frame_walk();
     test_direct_recursive_return_uses_heap_backed_frame_continuations();
+    test_standalone_expression_uses_heap_backed_frame_continuations();
     test_compound_return_uses_heap_backed_expression_checkpoints();
     test_assignment_rhs_uses_heap_backed_expression_checkpoints();
     test_array_parameters_alias_caller_storage_across_nested_function_calls();

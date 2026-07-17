@@ -46,10 +46,48 @@
         };
         std::optional<PrgValue> resumed_assignment_value;
         std::optional<Statement> resumed_assignment_statement;
+        std::optional<PrgValue> resumed_expression_value;
+        std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
         bool resumed_case_expression = false;
         bool resumed_loop_expression = false;
         bool resumed_scan_expression = false;
+
+        const auto emit_print_event = [&](const PrgValue &value, const SourceLocation &location)
+        {
+            const auto display_set_value = [this](const std::string &option_name)
+            {
+                const std::string normalized_name = normalize_identifier(trim_copy(option_name));
+                const auto found = current_set_state().find(normalized_name);
+                if (found != current_set_state().end())
+                {
+                    return found->second;
+                }
+                if (normalized_name == "decimals")
+                {
+                    return std::string{"2"};
+                }
+                if (normalized_name == "point")
+                {
+                    return std::string{"."};
+                }
+                if (normalized_name == "separator")
+                {
+                    return std::string{","};
+                }
+                return std::string{"OFF"};
+            };
+            events.push_back({.category = "runtime.print",
+                              .detail = format_value_for_display(value, display_set_value),
+                              .location = location});
+        };
+
+        const auto emit_wait_window_event = [&](const PrgValue &value, const SourceLocation &location)
+        {
+            events.push_back({.category = "ui.wait_window",
+                              .detail = value_as_string(value),
+                              .location = location});
+        };
 
         const auto route_false_conditional = [&]()
         {
@@ -362,13 +400,25 @@
                             return scan_outcome;
                         }
                     }
+                    else if (continued_statement.kind == StatementKind::expression ||
+                             continued_statement.kind == StatementKind::print_command)
+                    {
+                        resumed_expression_value = *expression_value;
+                        resumed_expression_statement = continued_statement;
+                    }
+                    else if (continued_statement.kind == StatementKind::wait_command)
+                    {
+                        resumed_expression_value = *expression_value;
+                        resumed_expression_statement = continued_statement;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
-                if (!resumed_assignment_value.has_value() && !resumed_conditional_expression &&
-                    !resumed_case_expression && !resumed_loop_expression && !resumed_scan_expression)
+                if (!resumed_assignment_value.has_value() && !resumed_expression_value.has_value() &&
+                    !resumed_conditional_expression && !resumed_case_expression &&
+                    !resumed_loop_expression && !resumed_scan_expression)
                 {
                     frame.return_pending = true;
                     if (const auto outcome = continue_pending_return(frame); outcome.has_value())
@@ -376,6 +426,25 @@
                         return *outcome;
                     }
                     return {};
+                }
+                if (resumed_expression_value.has_value() && resumed_expression_statement.has_value())
+                {
+                    const Statement &continued_statement = *resumed_expression_statement;
+                    if (continued_statement.kind == StatementKind::print_command)
+                    {
+                        emit_print_event(*resumed_expression_value, continued_statement.location);
+                        return {};
+                    }
+                    if (continued_statement.kind == StatementKind::expression &&
+                        continued_statement.identifier == "wait_window")
+                    {
+                        emit_wait_window_event(*resumed_expression_value, continued_statement.location);
+                        return {};
+                    }
+                    if (continued_statement.kind != StatementKind::wait_command)
+                    {
+                        return {};
+                    }
                 }
                 if (resumed_conditional_expression)
                 {
@@ -1451,15 +1520,25 @@
                 {
                     if (starts_with_insensitive(statement.expression, "WAIT WINDOW "))
                     {
-                        events.push_back({.category = "ui.wait_window",
-                                          .detail = value_as_string(evaluate_expression(statement.expression.substr(12U), frame)),
-                                          .location = statement.location});
+                        Statement wait_window_statement = statement;
+                        wait_window_statement.identifier = "wait_window";
+                        wait_window_statement.expression = trim_copy(statement.expression.substr(12U));
+                        const auto value = evaluate_resumable_expression(frame, wait_window_statement);
+                        if (!value.has_value())
+                        {
+                            return {};
+                        }
+                        emit_wait_window_event(*value, statement.location);
                     }
                     else
                     {
                         if (!try_invoke_bare_native_member_expression(statement.expression))
                         {
-                            (void)evaluate_expression(statement.expression, frame);
+                            const auto value = evaluate_resumable_expression(frame, statement);
+                            if (!value.has_value())
+                            {
+                                return {};
+                            }
                         }
                     }
                 }
@@ -5029,35 +5108,12 @@
             case StatementKind::print_command:
             {
                 // ? or ?? expression — evaluate and emit as output event
-                const PrgValue result = evaluate_expression(statement.expression, frame);
-                const auto display_set_value = [this](const std::string& option_name)
+                const auto result = evaluate_resumable_expression(frame, statement);
+                if (!result.has_value())
                 {
-                    const std::string normalized_name = normalize_identifier(trim_copy(option_name));
-                    const auto found = current_set_state().find(normalized_name);
-                    if (found != current_set_state().end())
-                    {
-                        return found->second;
-                    }
-                    if (normalized_name == "decimals")
-                    {
-                        return std::string{"2"};
-                    }
-                    if (normalized_name == "point")
-                    {
-                        return std::string{"."};
-                    }
-                    if (normalized_name == "separator")
-                    {
-                        return std::string{","};
-                    }
-                    return std::string{"OFF"};
-                };
-                const std::string text_value = format_value_for_display(
-                    result,
-                    display_set_value);
-                events.push_back({.category = "runtime.print",
-                                  .detail = text_value,
-                                  .location = statement.location});
+                    return {};
+                }
+                emit_print_event(*result, statement.location);
                 return {};
             }
             case StatementKind::create_cursor_command:
@@ -8832,7 +8888,20 @@
                 if (!statement.expression.empty())
                 {
                     if (!detail.empty()) detail += " ";
-                    const std::string resolved_prompt = resolve_runtime_expression_text(statement.expression, frame);
+                    std::optional<PrgValue> prompt_value;
+                    if (resumed_expression_value.has_value())
+                    {
+                        prompt_value = *resumed_expression_value;
+                    }
+                    else
+                    {
+                        prompt_value = evaluate_resumable_expression(frame, statement);
+                        if (!prompt_value.has_value())
+                        {
+                            return {};
+                        }
+                    }
+                    const std::string resolved_prompt = value_as_string(*prompt_value);
                     detail += "prompt=" + resolved_prompt;
                     if (trim_copy(statement.expression) != resolved_prompt)
                     {

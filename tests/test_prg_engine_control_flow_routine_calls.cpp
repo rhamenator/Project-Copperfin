@@ -760,6 +760,85 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_standalone_expression_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_standalone_expression";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "expression_depth_limit.prg";
+    write_text(
+        depth_path,
+        "? recurse(1)\n"
+        "RETURN\n"
+        "FUNCTION recurse\n"
+        "LPARAMETERS depth\n"
+        "? recurse(depth + 1)\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep standalone print recursion should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep standalone print recursion should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "expression_semantics.prg";
+    write_text(
+        semantics_path,
+        "calls = 0\n"
+        "? report()\n"
+        "report()\n"
+        "after = calls\n"
+        "WAIT WINDOW prompt()\n"
+        "RETURN\n"
+        "FUNCTION report\n"
+        "calls = calls + 1\n"
+        "RETURN 42\n"
+        "FUNCTION prompt\n"
+        "calls = calls + 1\n"
+        "RETURN 'hello'\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(semantics_state.completed, "standalone expression semantics script should complete: " + semantics_state.message);
+
+    const auto after = semantics_state.globals.find("after");
+    expect(after != semantics_state.globals.end(), "standalone expression calls should leave the post-call count visible");
+    if (after != semantics_state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(after->second) == "2",
+            "a print command and a bare expression statement should each invoke their UDF once");
+    }
+
+    const std::size_t print_count = static_cast<std::size_t>(std::count_if(
+        semantics_state.events.begin(),
+        semantics_state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "runtime.print" && event.detail == "42";
+        }));
+    expect(print_count == 1U, "deferred print expression evaluation should emit exactly one runtime.print event");
+
+    const std::size_t wait_window_count = static_cast<std::size_t>(std::count_if(
+        semantics_state.events.begin(),
+        semantics_state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "runtime.wait" &&
+                   event.detail.find("mode=WINDOW") != std::string::npos &&
+                   event.detail.find("prompt=hello") != std::string::npos;
+        }));
+    expect(wait_window_count == 1U, "deferred WAIT WINDOW evaluation should emit exactly one runtime.wait event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_compound_return_uses_heap_backed_expression_checkpoints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_compound_return";
