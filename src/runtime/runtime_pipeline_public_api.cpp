@@ -45,6 +45,11 @@ std::condition_variable package_materialization_pause_condition;
 bool package_materialization_pause_requested = false;
 bool package_materialization_pause_entered = false;
 bool package_materialization_pause_released = false;
+std::mutex package_content_materialization_pause_mutex;
+std::condition_variable package_content_materialization_pause_condition;
+bool package_content_materialization_pause_requested = false;
+bool package_content_materialization_pause_entered = false;
+bool package_content_materialization_pause_released = false;
 #endif
 
 class PackageRootTransactionLock {
@@ -221,6 +226,8 @@ public:
                 &information) == 0 ||
             (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
             (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+            (void)::CloseHandle(static_cast<HANDLE>(directory_handle_));
+            directory_handle_ = nullptr;
             return false;
         }
         volume_id_ = information.dwVolumeSerialNumber;
@@ -234,6 +241,10 @@ public:
         struct stat information{};
         if (descriptor_ < 0 || ::fstat(descriptor_, &information) != 0 ||
             !S_ISDIR(information.st_mode)) {
+            if (descriptor_ >= 0) {
+                (void)::close(descriptor_);
+                descriptor_ = -1;
+            }
             return false;
         }
         device_id_ = information.st_dev;
@@ -1090,6 +1101,31 @@ void release_package_materialization_pause() {
     package_materialization_pause_condition.notify_all();
 }
 
+void arm_package_content_materialization_pause_before_first_asset() {
+    std::lock_guard<std::mutex> lock(package_content_materialization_pause_mutex);
+    package_content_materialization_pause_requested = true;
+    package_content_materialization_pause_entered = false;
+    package_content_materialization_pause_released = false;
+}
+
+bool wait_for_package_content_materialization_pause() {
+    std::unique_lock<std::mutex> lock(package_content_materialization_pause_mutex);
+    return package_content_materialization_pause_condition.wait_for(
+        lock,
+        std::chrono::seconds(10),
+        [] {
+            return package_content_materialization_pause_entered;
+        });
+}
+
+void release_package_content_materialization_pause() {
+    {
+        std::lock_guard<std::mutex> lock(package_content_materialization_pause_mutex);
+        package_content_materialization_pause_released = true;
+    }
+    package_content_materialization_pause_condition.notify_all();
+}
+
 }  // namespace test_hooks
 #endif
 
@@ -1548,7 +1584,7 @@ std::string build_debug_manifest_text(
 static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     const PackageRootTransaction& transaction,
     const RuntimePackagePlan& plan,
-    const RuntimePackagePlan& filesystem_plan,
+    RuntimePackagePlan filesystem_plan,
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
@@ -1570,6 +1606,32 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             error)) {
         return {.ok = false, .error = error};
     }
+    PackageParentIdentity content_identity;
+    if (!content_identity.acquire(filesystem_plan.content_root)) {
+        return {
+            .ok = false,
+            .error = runtime_text(
+                "Runtime.Package.Error.CreateContentRootFailed")};
+    }
+    filesystem_plan.content_root = content_identity.stable_parent_path().string();
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+    {
+        std::unique_lock<std::mutex> pause_lock(
+            package_content_materialization_pause_mutex);
+        if (package_content_materialization_pause_requested) {
+            package_content_materialization_pause_entered = true;
+            package_content_materialization_pause_condition.notify_all();
+            package_content_materialization_pause_condition.wait(
+                pause_lock,
+                [] {
+                    return package_content_materialization_pause_released;
+                });
+            package_content_materialization_pause_requested = false;
+            package_content_materialization_pause_entered = false;
+            package_content_materialization_pause_released = false;
+        }
+    }
+#endif
     if (plan.emit_dotnet_launcher) {
         if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
@@ -1601,6 +1663,21 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     materialized_plan.writable_data_payload_digests.clear();
     materialized_plan.startup_source_path.clear();
     const auto logical_package_path = [&](const std::filesystem::path& physical_path) {
+        const std::filesystem::path content_relative =
+            physical_path.lexically_relative(filesystem_plan.content_root);
+        if (!content_relative.empty() && !content_relative.is_absolute()) {
+            bool escapes_content = false;
+            for (const auto& component : content_relative) {
+                if (component == "..") {
+                    escapes_content = true;
+                    break;
+                }
+            }
+            if (!escapes_content) {
+                return (std::filesystem::path(plan.content_root) / content_relative)
+                    .lexically_normal();
+            }
+        }
         const std::filesystem::path relative =
             physical_path.lexically_relative(filesystem_plan.package_root);
         if (!relative.empty() && !relative.is_absolute()) {

@@ -27,6 +27,9 @@ void force_package_backup_cleanup_warning_once();
 void arm_package_materialization_pause_after_begin();
 bool wait_for_package_materialization_pause();
 void release_package_materialization_pause();
+void arm_package_content_materialization_pause_before_first_asset();
+bool wait_for_package_content_materialization_pause();
+void release_package_content_materialization_pause();
 
 bool seed_stale_manifest_pair_transaction(
     const RuntimePackagePlan& plan,

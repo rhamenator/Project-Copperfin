@@ -577,4 +577,147 @@ void test_package_transaction_rejects_rebound_output_parent() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_package_content_root_remains_pinned_during_asset_writes() {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_rebound_content";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path moved_content_dir = temp_root / "content-moved";
+    const fs::path external_content_dir = temp_root / "external-content";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+    fs::create_directories(external_content_dir);
+    write_text(project_dir / "startup.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "rebound-content.pjx").string();
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ReboundContent";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path =
+        (output_dir / "ReboundContent.app").string();
+    workspace.build_plan.output_kind = "app";
+    workspace.build_plan.startup_item = "startup.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U,
+         .name = "startup.prg",
+         .relative_path = "startup.prg",
+         .type_title = "Program"}
+    };
+    const auto plan = create_rematerialization_plan(document, workspace, output_dir);
+    const auto initial_result = materialize_rematerialization_plan(plan, runtime_host);
+    expect(initial_result.ok,
+           "the content-rebinding fixture should first create a known-good package");
+    if (!initial_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const PackageSnapshot known_good = snapshot_package_files(plan.package_root);
+
+    copperfin::runtime::test_hooks::
+        arm_package_content_materialization_pause_before_first_asset();
+    copperfin::runtime::RuntimeMaterializeResult result;
+    std::thread materialization([&] {
+        result = materialize_rematerialization_plan(plan, runtime_host);
+    });
+    const bool pause_entered =
+        copperfin::runtime::test_hooks::wait_for_package_content_materialization_pause();
+    expect(pause_entered,
+           "the content-rebinding transaction should reach its content-root barrier");
+    if (!pause_entered) {
+        copperfin::runtime::test_hooks::release_package_content_materialization_pause();
+        materialization.join();
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::error_code rebind_error;
+#if defined(_WIN32)
+    fs::rename(
+        fs::path(plan.content_root),
+        moved_content_dir,
+        rebind_error);
+    expect(static_cast<bool>(rebind_error),
+           "the Windows content-directory pin should prevent rebinding the admitted content root");
+#else
+    fs::rename(fs::path(plan.content_root), moved_content_dir, rebind_error);
+    expect(!rebind_error,
+           "the POSIX content-rebinding fixture should move the admitted content root");
+    if (!rebind_error) {
+        fs::create_directory_symlink(
+            external_content_dir,
+            fs::path(plan.content_root),
+            rebind_error);
+        expect(!rebind_error,
+               "the POSIX content-rebinding fixture should install an external content symlink");
+    }
+#endif
+
+    copperfin::runtime::test_hooks::release_package_content_materialization_pause();
+    materialization.join();
+
+#if defined(_WIN32)
+    expect(result.ok,
+           "the Windows transaction should continue after the blocked content rebind attempt");
+    expect(
+        result.ok && fs::exists(fs::path(result.plan.package_root) / "content" / "startup.prg"),
+        "the Windows content-rebind guard should preserve package materialization");
+#else
+    expect(result.ok,
+           "the POSIX transaction should write through the pinned content directory");
+    expect(!fs::exists(external_content_dir / "startup.prg"),
+           "a POSIX content rebind must not redirect staged bytes to the external directory");
+    fs::remove(fs::path(plan.content_root), ignored);
+    fs::rename(moved_content_dir, fs::path(plan.content_root), ignored);
+    expect(
+        result.ok && fs::exists(fs::path(result.plan.package_root) / "content" / "startup.prg"),
+        "restoring the original content name should expose the completed package");
+#endif
+
+    const fs::path external_leaf = temp_root / "external-leaf.prg";
+    write_text(external_leaf, "external-leaf-sentinel");
+    copperfin::runtime::test_hooks::
+        arm_package_content_materialization_pause_before_first_asset();
+    copperfin::runtime::RuntimeMaterializeResult leaf_result;
+    std::thread leaf_materialization([&] {
+        leaf_result = materialize_rematerialization_plan(plan, runtime_host);
+    });
+    const bool leaf_pause_entered =
+        copperfin::runtime::test_hooks::wait_for_package_content_materialization_pause();
+    expect(leaf_pause_entered,
+           "the hard-link leaf transaction should reach its content-root barrier");
+    if (leaf_pause_entered) {
+        std::error_code hard_link_error;
+        fs::create_hard_link(
+            external_leaf,
+            fs::path(plan.package_root) / "content" / "startup.prg",
+            hard_link_error);
+        expect(!hard_link_error,
+               "the hard-link leaf fixture should create its external alias");
+        copperfin::runtime::test_hooks::release_package_content_materialization_pause();
+    } else {
+        copperfin::runtime::test_hooks::release_package_content_materialization_pause();
+    }
+    leaf_materialization.join();
+    expect(!leaf_result.ok,
+           "a hard-link destination should be rejected before package bytes are replaced");
+    expect(read_text(external_leaf) == "external-leaf-sentinel",
+           "hard-link rejection should preserve the external destination bytes");
+    expect(snapshot_package_files(plan.package_root) == known_good,
+           "hard-link rejection should restore the last known-good package");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_runtime_pipeline

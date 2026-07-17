@@ -6,6 +6,13 @@
 
 #include "copperfin/security/physical_path_containment.h"
 
+#include <atomic>
+#include <array>
+#include <chrono>
+#include <fstream>
+#include <limits>
+#include <string_view>
+
 #if defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -13,7 +20,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <cerrno>
+#include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 namespace copperfin::runtime::runtime_pipeline_detail {
@@ -30,6 +40,40 @@ bool is_unc_path(const std::string& value) {
         ((value[0] == '\\' && value[1] == '\\') ||
          (value[0] == '/' && value[1] == '/'));
 }
+
+#if !defined(_WIN32)
+bool is_fd_backed_path(const std::filesystem::path& path) {
+    const std::string value = path.generic_string();
+    return value.rfind("/proc/self/fd/", 0U) == 0U ||
+        value.rfind("/dev/fd/", 0U) == 0U;
+}
+
+std::optional<int> fd_from_path(const std::filesystem::path& path) {
+    const std::string value = path.generic_string();
+    std::string_view suffix;
+    if (value.rfind("/proc/self/fd/", 0U) == 0U) {
+        suffix = std::string_view(value).substr(14U);
+    } else if (value.rfind("/dev/fd/", 0U) == 0U) {
+        suffix = std::string_view(value).substr(8U);
+    } else {
+        return std::nullopt;
+    }
+    if (suffix.empty() ||
+        std::any_of(suffix.begin(), suffix.end(), [](const char value) {
+            return value < '0' || value > '9';
+        })) {
+        return std::nullopt;
+    }
+    errno = 0;
+    char* end = nullptr;
+    const long descriptor = std::strtol(std::string(suffix).c_str(), &end, 10);
+    if (errno != 0 || end == nullptr || *end != '\0' || descriptor < 0 ||
+        descriptor > std::numeric_limits<int>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<int>(descriptor);
+}
+#endif
 
 bool is_windows_reserved_device_name(std::string component) {
     const std::size_t extension = component.find('.');
@@ -118,7 +162,10 @@ DirectDirectoryState inspect_direct_directory(const std::filesystem::path& path)
         : DirectDirectoryState::rejected;
 #else
     struct stat status{};
-    if (::lstat(path.c_str(), &status) != 0) {
+    const int result = is_fd_backed_path(path)
+        ? ::stat(path.c_str(), &status)
+        : ::lstat(path.c_str(), &status);
+    if (result != 0) {
         return DirectDirectoryState::unavailable;
     }
     return S_ISDIR(status.st_mode)
@@ -179,6 +226,215 @@ std::string copy_file_failed(const std::filesystem::path& path) {
         "Runtime.Package.Error.CopyFileFailed",
         {{"path", path.string()}});
 }
+
+std::string unique_temporary_name() {
+    static std::atomic<unsigned long long> sequence{0U};
+    const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+    return ".copperfin-asset-" + std::to_string(timestamp) + "-" +
+        std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
+}
+
+#if !defined(_WIN32)
+bool write_source_to_descriptor(
+    const std::filesystem::path& source,
+    const int destination_descriptor) {
+    std::ifstream input(source, std::ios::binary);
+    if (!input) {
+        return false;
+    }
+    std::array<char, 64U * 1024U> buffer{};
+    while (input) {
+        input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        const std::streamsize count = input.gcount();
+        std::streamsize offset = 0;
+        while (offset < count) {
+            const ssize_t written = ::write(
+                destination_descriptor,
+                buffer.data() + offset,
+                static_cast<std::size_t>(count - offset));
+            if (written < 0 && errno == EINTR) {
+                continue;
+            }
+            if (written <= 0) {
+                return false;
+            }
+            offset += written;
+        }
+    }
+    return input.eof();
+}
+
+bool copy_to_pinned_posix_parent(
+    const std::filesystem::path& source,
+    const std::filesystem::path& content_root,
+    const std::filesystem::path& relative_path,
+    std::filesystem::path& destination,
+    std::string& error) {
+    const auto root_descriptor = fd_from_path(content_root);
+    if (!root_descriptor.has_value()) {
+        return false;
+    }
+    destination = (content_root / relative_path).lexically_normal();
+    int parent_descriptor = ::dup(*root_descriptor);
+    if (parent_descriptor < 0) {
+        error = copy_file_failed(destination);
+        return false;
+    }
+    for (const auto& component : relative_path.parent_path()) {
+        if (component == ".") {
+            continue;
+        }
+        const std::string name = component.string();
+        int child_descriptor = ::openat(
+            parent_descriptor,
+            name.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (child_descriptor < 0 && errno == ENOENT &&
+            ::mkdirat(parent_descriptor, name.c_str(), 0777) == 0) {
+            child_descriptor = ::openat(
+                parent_descriptor,
+                name.c_str(),
+                O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        }
+        if (child_descriptor < 0) {
+            (void)::close(parent_descriptor);
+            error = copy_file_failed(destination);
+            return false;
+        }
+        (void)::close(parent_descriptor);
+        parent_descriptor = child_descriptor;
+    }
+
+    const std::string temporary_name = unique_temporary_name();
+    const int temporary_descriptor = ::openat(
+        parent_descriptor,
+        temporary_name.c_str(),
+        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+        0600);
+    if (temporary_descriptor < 0 ||
+        !write_source_to_descriptor(source, temporary_descriptor) ||
+        ::fsync(temporary_descriptor) != 0) {
+        if (temporary_descriptor >= 0) {
+            (void)::close(temporary_descriptor);
+        }
+        (void)::unlinkat(parent_descriptor, temporary_name.c_str(), 0);
+        (void)::close(parent_descriptor);
+        error = copy_file_failed(destination);
+        return false;
+    }
+    if (::close(temporary_descriptor) != 0 ||
+        ::renameat(
+            parent_descriptor,
+            temporary_name.c_str(),
+            parent_descriptor,
+            relative_path.filename().string().c_str()) != 0) {
+        (void)::unlinkat(parent_descriptor, temporary_name.c_str(), 0);
+        (void)::close(parent_descriptor);
+        error = copy_file_failed(destination);
+        return false;
+    }
+    (void)::fsync(parent_descriptor);
+    (void)::close(parent_descriptor);
+    return true;
+}
+#else
+bool write_source_to_handle(
+    const std::filesystem::path& source,
+    const HANDLE destination_handle) {
+    std::ifstream input(source, std::ios::binary);
+    if (!input) {
+        return false;
+    }
+    std::array<char, 64U * 1024U> buffer{};
+    while (input) {
+        input.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        const std::streamsize count = input.gcount();
+        DWORD offset = 0U;
+        while (offset < static_cast<DWORD>(count)) {
+            DWORD written = 0U;
+            if (::WriteFile(
+                    destination_handle,
+                    buffer.data() + offset,
+                    static_cast<DWORD>(count) - offset,
+                    &written,
+                    nullptr) == 0 ||
+                written == 0U) {
+                return false;
+            }
+            offset += written;
+        }
+    }
+    return input.eof();
+}
+
+bool copy_to_pinned_windows_parent(
+    const std::filesystem::path& source,
+    const std::filesystem::path& content_root,
+    const std::filesystem::path& relative_path,
+    std::filesystem::path& destination,
+    std::string& error) {
+    destination = (content_root / relative_path).lexically_normal();
+    const std::filesystem::path parent =
+        (content_root / relative_path.parent_path()).lexically_normal();
+    const HANDLE parent_handle = ::CreateFileW(
+        parent.c_str(),
+        FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (parent_handle == INVALID_HANDLE_VALUE) {
+        error = copy_file_failed(destination);
+        return false;
+    }
+    BY_HANDLE_FILE_INFORMATION parent_information{};
+    const bool direct_parent =
+        ::GetFileInformationByHandle(parent_handle, &parent_information) != 0 &&
+        (parent_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U &&
+        (parent_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U;
+    if (!direct_parent) {
+        (void)::CloseHandle(parent_handle);
+        error = copy_file_failed(destination);
+        return false;
+    }
+
+    const std::filesystem::path temporary = parent / unique_temporary_name();
+    const HANDLE temporary_handle = ::CreateFileW(
+        temporary.c_str(),
+        GENERIC_WRITE,
+        0U,
+        nullptr,
+        CREATE_NEW,
+        FILE_ATTRIBUTE_TEMPORARY,
+        nullptr);
+    if (temporary_handle == INVALID_HANDLE_VALUE ||
+        !write_source_to_handle(source, temporary_handle) ||
+        ::FlushFileBuffers(temporary_handle) == 0) {
+        if (temporary_handle != INVALID_HANDLE_VALUE) {
+            (void)::CloseHandle(temporary_handle);
+        }
+        (void)::DeleteFileW(temporary.c_str());
+        (void)::CloseHandle(parent_handle);
+        error = copy_file_failed(destination);
+        return false;
+    }
+    const bool closed = ::CloseHandle(temporary_handle) != 0;
+    const bool moved = closed &&
+        ::MoveFileExW(
+            temporary.c_str(),
+            destination.c_str(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+    if (!moved) {
+        (void)::DeleteFileW(temporary.c_str());
+        (void)::CloseHandle(parent_handle);
+        error = copy_file_failed(destination);
+        return false;
+    }
+    (void)::CloseHandle(parent_handle);
+    return true;
+}
+#endif
 
 bool prepare_direct_parent(
     const std::filesystem::path& content_root,
@@ -330,9 +586,16 @@ bool copy_file_to_package_content(
         error = rejected_destination(relative_path);
         return false;
     }
+#if defined(_WIN32)
     if (!prepare_package_content_root(package_root, content_root, error)) {
         return false;
     }
+#else
+    if (!is_fd_backed_path(content_root) &&
+        !prepare_package_content_root(package_root, content_root, error)) {
+        return false;
+    }
+#endif
 
     std::error_code filesystem_error;
     const std::filesystem::path absolute_root =
@@ -372,6 +635,46 @@ bool copy_file_to_package_content(
             error = rejected_destination(destination);
             return false;
         }
+    }
+
+#if defined(_WIN32)
+    const bool use_pinned_write = true;
+#else
+    const bool use_pinned_write = is_fd_backed_path(content_root);
+#endif
+    if (use_pinned_write) {
+#if defined(_WIN32)
+        if (!copy_to_pinned_windows_parent(
+                source,
+                content_root,
+                *admitted,
+                destination,
+                error)) {
+            return false;
+        }
+#else
+        if (!copy_to_pinned_posix_parent(
+                source,
+                content_root,
+                *admitted,
+                destination,
+                error)) {
+            return false;
+        }
+#endif
+        const auto copied =
+            security::inspect_physical_path_containment(write_destination, absolute_root);
+        if (!copied.allowed) {
+            error = is_containment_policy_rejection(copied.failure)
+                ? rejected_destination(destination)
+                : copy_file_failed(destination);
+            return false;
+        }
+        if (copied.identity.link_count != 1U) {
+            error = rejected_destination(destination);
+            return false;
+        }
+        return true;
     }
 
     if (!copy_file_if_exists(source, write_destination, error)) {
