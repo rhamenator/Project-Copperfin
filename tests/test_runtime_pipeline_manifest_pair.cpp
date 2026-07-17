@@ -377,12 +377,45 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
         const fs::path alias_root = package_root.parent_path() / alias_leaf;
         auto alias_plan = fixture.plan;
         alias_plan.package_root = alias_root.string();
-        alias_plan.manifest_path =
-            (alias_root / fs::path(fixture.plan.manifest_path).filename()).string();
-        alias_plan.debug_manifest_path =
-            (alias_root / fs::path(fixture.plan.debug_manifest_path).filename()).string();
-        alias_plan.launcher_output_path =
-            (alias_root / fs::path(fixture.plan.launcher_output_path).filename()).string();
+        const auto rebase_package_path = [&](std::string& value) {
+            if (value.empty()) {
+                return;
+            }
+            const fs::path path(value);
+            if (path == package_root) {
+                value = alias_root.string();
+                return;
+            }
+            const fs::path relative = path.lexically_relative(package_root);
+            if (relative.empty() || relative == "." || relative.is_absolute() ||
+                relative.begin()->string() == "..") {
+                return;
+            }
+            value = (alias_root / relative).string();
+        };
+        for (std::string* path : {
+                 &alias_plan.content_root,
+                 &alias_plan.manifest_path,
+                 &alias_plan.debug_manifest_path,
+                 &alias_plan.ast_manifest_path,
+                 &alias_plan.ir_manifest_path,
+                 &alias_plan.transpiled_csharp_path,
+                 &alias_plan.launcher_project_path,
+                 &alias_plan.launcher_source_path,
+                 &alias_plan.launcher_output_path,
+                 &alias_plan.module_definition_path,
+                 &alias_plan.native_wrapper_source_path,
+                 &alias_plan.native_wrapper_cmake_path,
+                 &alias_plan.native_wrapper_build_script_path,
+                 &alias_plan.native_wrapper_build_powershell_path,
+                 &alias_plan.library_api_manifest_path,
+                 &alias_plan.fll_api_manifest_path,
+                 &alias_plan.fxp_token_manifest_path,
+                 &alias_plan.app_archive_manifest_path,
+                 &alias_plan.runtime_host_destination_path,
+                 &alias_plan.audit_log_path}) {
+            rebase_package_path(*path);
+        }
 
         const std::string canonical_root =
             copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
