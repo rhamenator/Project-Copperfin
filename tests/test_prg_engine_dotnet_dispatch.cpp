@@ -333,6 +333,12 @@ namespace
                 fixture_path() + "' AS ManagedAdd INTEGER left, INTEGER right\n"
             "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.WidenInt64 IN '" +
                 fixture_path() + "' AS ManagedLong INTEGER value\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.ReturnInt64BeyondDouble IN '" +
+                fixture_path() + "' AS ManagedExactInt64\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.PreserveInt64 IN '" +
+                fixture_path() + "' AS ManagedPreserveInt64 INTEGER64 value\n"
+            "DECLARE INTEGER64 Copperfin.ManagedDeclareFixture.Methods.ReturnUInt64BeyondDouble IN '" +
+                fixture_path() + "' AS ManagedExactUInt64\n"
             "DECLARE DOUBLE Copperfin.ManagedDeclareFixture.Methods.WidenDouble IN '" +
                 fixture_path() + "' AS ManagedDouble INTEGER value\n"
             "DECLARE STRING Copperfin.ManagedDeclareFixture.Methods.Echo IN '" +
@@ -340,6 +346,9 @@ namespace
             "nResult = ManagedSuccess()\n"
             "nSum = ManagedAdd(19, 23)\n"
             "nLong = ManagedLong(41)\n"
+            "nExactInt64 = ManagedExactInt64()\n"
+            "nEchoInt64 = ManagedPreserveInt64(nExactInt64)\n"
+            "nExactUInt64 = ManagedExactUInt64()\n"
             "nDouble = ManagedDouble(42)\n"
             "cEcho = ManagedEcho('Copperfin')\n"
             "FOR nCall = 1 TO 128\n"
@@ -371,6 +380,21 @@ namespace
         expect(widened_long != state.globals.end() &&
                    copperfin::runtime::format_value(widened_long->second) == "42",
                "#3945: CLR binder should widen INTEGER arguments to System.Int64");
+        const auto exact_int64 = state.globals.find("nexactint64");
+        expect(exact_int64 != state.globals.end() &&
+                   exact_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(exact_int64->second) == "9007199254740993",
+               "#3934: managed VT_I8 returns should remain exact beyond binary64 precision");
+        const auto echo_int64 = state.globals.find("nechoint64");
+        expect(echo_int64 != state.globals.end() &&
+                   echo_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(echo_int64->second) == "9007199254740993",
+               "#3934: managed VT_I8 arguments should remain exact beyond binary64 precision");
+        const auto exact_uint64 = state.globals.find("nexactuint64");
+        expect(exact_uint64 != state.globals.end() &&
+                   exact_uint64->second.kind == copperfin::runtime::PrgValueKind::uint64 &&
+                   copperfin::runtime::format_value(exact_uint64->second) == "18014398509481985",
+               "#3934: managed VT_UI8 returns should retain unsigned width and precision");
         const auto widened_double = state.globals.find("ndouble");
         expect(widened_double != state.globals.end() &&
                    copperfin::runtime::format_value(widened_double->second) == "42.5",

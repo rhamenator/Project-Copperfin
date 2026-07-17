@@ -2647,6 +2647,9 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         "DECLARE DOUBLE CopperfinDeclaredDllFraction IN 'native/" + fixture_name.string() + "'\n"
         "DECLARE STRING CopperfinDeclaredDllText IN 'native/" + fixture_name.string() + "'\n"
         "DECLARE INTEGER64 CopperfinDeclaredDllInt64 IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllInt64BeyondDouble IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllInt64Echo IN 'native/" + fixture_name.string() + "' INTEGER64 value\n"
+        "DECLARE LONG CopperfinDeclaredDllInt64ByRef IN 'native/" + fixture_name.string() + "' INTEGER64 @ value\n"
         "DECLARE DOUBLE CopperfinDeclaredDllOneSlot IN 'native/" + fixture_name.string() + "' DOUBLE first\n"
         "DECLARE DOUBLE CopperfinDeclaredDllMultiply IN 'native/" + fixture_name.string() + "' DOUBLE left, DOUBLE right\n"
         "DECLARE DOUBLE CopperfinDeclaredDllAffine IN 'native/" + fixture_name.string() + "' DOUBLE left, DOUBLE right\n"
@@ -2664,6 +2667,10 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         "nConstant = CopperfinDeclaredDllFraction()\n"
         "cText = CopperfinDeclaredDllText()\n"
         "nInt64 = CopperfinDeclaredDllInt64()\n"
+        "nExactInt64 = CopperfinDeclaredDllInt64BeyondDouble()\n"
+        "nEchoInt64 = CopperfinDeclaredDllInt64Echo(nExactInt64)\n"
+        "nByRefInt64 = 0\n"
+        "nByRefResult = CopperfinDeclaredDllInt64ByRef(@nByRefInt64)\n"
         "nOneSlot = CopperfinDeclaredDllOneSlot(1.0)\n"
         "nProduct = CopperfinDeclaredDllMultiply(2.5, 4.0)\n"
         "nAffine = CopperfinDeclaredDllAffine(2.5, 4.0)\n"
@@ -2686,6 +2693,10 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     const auto constant = state.globals.find("nconstant");
     const auto text = state.globals.find("ctext");
     const auto int64_value = state.globals.find("nint64");
+    const auto exact_int64 = state.globals.find("nexactint64");
+    const auto echo_int64 = state.globals.find("nechoint64");
+    const auto byref_int64 = state.globals.find("nbyrefint64");
+    const auto byref_result = state.globals.find("nbyrefresult");
     const auto one_slot = state.globals.find("noneslot");
     const auto product = state.globals.find("nproduct");
     const auto affine = state.globals.find("naffine");
@@ -2703,6 +2714,10 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     expect(constant != state.globals.end(), "zero-argument DOUBLE fixture result should be captured");
     expect(text != state.globals.end(), "pointer-shaped STRING fixture result should be captured");
     expect(int64_value != state.globals.end(), "signed 64-bit fixture result should be captured");
+    expect(exact_int64 != state.globals.end(), "64-bit result beyond binary64 precision should be captured");
+    expect(echo_int64 != state.globals.end(), "64-bit argument beyond binary64 precision should be captured");
+    expect(byref_int64 != state.globals.end(), "64-bit by-reference output should be captured");
+    expect(byref_result != state.globals.end(), "64-bit by-reference return should be captured");
     expect(one_slot != state.globals.end(), "one-slot fixture result should be captured");
     expect(product != state.globals.end(), "two-DOUBLE fixture result should be captured");
     expect(affine != state.globals.end(), "ordered DOUBLE fixture result should be captured");
@@ -2728,6 +2743,25 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     if (int64_value != state.globals.end()) {
         const std::string actual = copperfin::runtime::format_value(int64_value->second);
         expect(actual == "-4294967297", "signed 64-bit native returns should retain their sign and width; actual=" + actual);
+    }
+    if (exact_int64 != state.globals.end()) {
+        expect(exact_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(exact_int64->second) == "9007199254740993",
+               "64-bit native returns should remain exact beyond binary64 precision");
+    }
+    if (echo_int64 != state.globals.end()) {
+        expect(echo_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(echo_int64->second) == "9007199254740993",
+               "64-bit native arguments should remain exact beyond binary64 precision");
+    }
+    if (byref_int64 != state.globals.end()) {
+        expect(byref_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+                   copperfin::runtime::format_value(byref_int64->second) == "9007199254740993",
+               "64-bit native by-reference writeback should remain exact beyond binary64 precision");
+    }
+    if (byref_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(byref_result->second) == "1",
+               "64-bit native by-reference fixture should return its success sentinel");
     }
     if (one_slot != state.globals.end()) {
         const std::string actual = copperfin::runtime::format_value(one_slot->second);
@@ -2926,6 +2960,9 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
         "DECLARE DOUBLE CopperfinDeclaredDllX86Mixed IN 'native/" + fixture_name.string() +
             "' AS X86MixedAlias LONG first, DOUBLE second, INTEGER64 third, INTEGER fourth\n"
         "DECLARE INTEGER64 CopperfinDeclaredDllX86Int64 IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllX86Int64BeyondDouble IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllX86Int64Echo IN 'native/" + fixture_name.string() + "' INTEGER64 value\n"
+        "DECLARE LONG CopperfinDeclaredDllX86Int64ByRef IN 'native/" + fixture_name.string() + "' INTEGER64 @ value\n"
         "DECLARE DOUBLE CopperfinDeclaredDllX86Split IN 'native/" + fixture_name.string() +
             "' DOUBLE value, DOUBLE @ whole\n"
         "DECLARE STRING CopperfinDeclaredDllX86Text IN 'native/" + fixture_name.string() + "'\n"
@@ -2938,6 +2975,10 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
         "nInteger64Out = 0\n"
         "nMixed = X86MixedAlias(1, 2.5, 4294967297, 4)\n"
         "nInt64 = CopperfinDeclaredDllX86Int64()\n"
+        "nExactInt64 = CopperfinDeclaredDllX86Int64BeyondDouble()\n"
+        "nEchoInt64 = CopperfinDeclaredDllX86Int64Echo(nExactInt64)\n"
+        "nByRefInt64 = 0\n"
+        "nByRefResult = CopperfinDeclaredDllX86Int64ByRef(@nByRefInt64)\n"
         "nFraction = CopperfinDeclaredDllX86Split(3.75, @nWhole)\n"
         "cText = CopperfinDeclaredDllX86Text()\n"
         "nEight = CopperfinDeclaredDllX86Eight(1, 2, 3, 4, 5, 6, 7, 8)\n"
@@ -2972,6 +3013,22 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
                    std::to_string(mixed->second.number_value));
     }
     expect_value("nint64", "-4294967297", "#3940: signed 64-bit return");
+    const auto exact_int64 = state.globals.find("nexactint64");
+    expect(exact_int64 != state.globals.end() &&
+               exact_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+               copperfin::runtime::format_value(exact_int64->second) == "9007199254740993",
+           "#3934: Win32 signed 64-bit return should remain exact beyond binary64 precision");
+    const auto echo_int64 = state.globals.find("nechoint64");
+    expect(echo_int64 != state.globals.end() &&
+               echo_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+               copperfin::runtime::format_value(echo_int64->second) == "9007199254740993",
+           "#3934: Win32 signed 64-bit argument should remain exact beyond binary64 precision");
+    const auto byref_int64 = state.globals.find("nbyrefint64");
+    expect(byref_int64 != state.globals.end() &&
+               byref_int64->second.kind == copperfin::runtime::PrgValueKind::int64 &&
+               copperfin::runtime::format_value(byref_int64->second) == "9007199254740993",
+           "#3934: Win32 signed 64-bit by-reference writeback should remain exact beyond binary64 precision");
+    expect_value("nbyrefresult", "1", "#3934: Win32 signed 64-bit by-reference return");
     expect_value("nfraction", "0.75", "#3940: DOUBLE return with by-reference input");
     expect_value("nwhole", "3", "#3940: DOUBLE @ writeback");
     expect_value("ctext", "copperfin-x86", "#3940: pointer-shaped STRING return");

@@ -51,6 +51,22 @@ COPPERFIN_TEST_EXPORT long long CopperfinDeclaredDllInt64() {
     return -4294967297LL;
 }
 
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64BeyondDouble() {
+    return 9007199254740993LL;
+}
+
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64Echo(std::int64_t value) {
+    return value;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllInt64ByRef(std::int64_t* value) {
+    if (value == nullptr) {
+        return 0L;
+    }
+    *value = 9007199254740993LL;
+    return 1L;
+}
+
 COPPERFIN_TEST_EXPORT std::int32_t CopperfinDeclaredDllLongWidth(
     double multiplier,
     std::int32_t input,

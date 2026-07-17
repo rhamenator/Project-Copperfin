@@ -167,6 +167,20 @@
             {
                 return i < declared_param_types.size() && declared_param_types[i].by_ref;
             };
+            // Declared 64-bit integer extensions must not pass through the
+            // binary64 representation used by ordinary VFP numeric values.
+            const auto exact_declared_integer_value = [](const PrgValue &value) -> std::int64_t
+            {
+                if (value.kind == PrgValueKind::int64)
+                {
+                    return value.int64_value;
+                }
+                if (value.kind == PrgValueKind::uint64)
+                {
+                    return static_cast<std::int64_t>(value.uint64_value);
+                }
+                return static_cast<std::int64_t>(value_as_number(value));
+            };
             // Helper: convert PrgValue → VARIANT
             auto to_variant = [&](const PrgValue &v, const std::string &ptype) -> VARIANT
             {
@@ -195,7 +209,7 @@
                 else if (declared_dll_type_uses_64_bit_integer(base))
                 {
                     var.vt = VT_I8;
-                    var.llVal = static_cast<LONGLONG>(value_as_number(v));
+                    var.llVal = static_cast<LONGLONG>(exact_declared_integer_value(v));
                 }
                 else
                 {
@@ -223,8 +237,10 @@
                     }
                     return make_string_value({});
                 }
-                if (var.vt == VT_I8 || var.vt == VT_UI8)
-                    return make_number_value(static_cast<double>(var.llVal));
+                if (var.vt == VT_I8)
+                    return make_int64_value(static_cast<std::int64_t>(var.llVal));
+                if (var.vt == VT_UI8)
+                    return make_uint64_value(static_cast<std::uint64_t>(var.ullVal));
                 if (var.vt == VT_R4)
                     return make_number_value(static_cast<double>(var.fltVal));
                 if (var.vt == VT_R8)
@@ -486,7 +502,10 @@
                     }
                     else
                     {
-                        a.i = static_cast<__int64>(value_as_number(args[idx]));
+                        a.i = static_cast<__int64>(
+                            binding.is_integer64
+                                ? exact_declared_integer_value(args[idx])
+                                : static_cast<std::int64_t>(value_as_number(args[idx])));
                         if (binding.by_ref)
                         {
                             if (binding.is_integer64)
@@ -542,10 +561,9 @@
                         }
                         else
                         {
-                            value = make_number_value(
-                                binding.is_integer64
-                                    ? static_cast<double>(binding.int64_value)
-                                    : static_cast<double>(binding.int32_value));
+                            value = binding.is_integer64
+                                        ? make_int64_value(binding.int64_value)
+                                        : make_number_value(static_cast<double>(binding.int32_value));
                         }
                         assign_variable(stack.back(), binding.reference_name.value(), value);
                     }
@@ -569,6 +587,10 @@
                     {
                         const char *p = reinterpret_cast<const char *>(result);
                         return make_string_value(p ? std::string(p) : std::string{});
+                    }
+                    if (declared_dll_type_uses_64_bit_integer(declfn.return_type))
+                    {
+                        return make_int64_value(static_cast<std::int64_t>(result));
                     }
                     return make_number_value(static_cast<double>(result));
                 };

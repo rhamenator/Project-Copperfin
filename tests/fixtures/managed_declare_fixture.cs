@@ -23,6 +23,21 @@ namespace Copperfin.ManagedDeclareFixture
             return value + 1L;
         }
 
+        public static long ReturnInt64BeyondDouble()
+        {
+            return 9007199254740993L;
+        }
+
+        public static long PreserveInt64(long value)
+        {
+            return value;
+        }
+
+        public static ulong ReturnUInt64BeyondDouble()
+        {
+            return 18014398509481985UL;
+        }
+
         public static double WidenDouble(double value)
         {
             return value + 0.5;
