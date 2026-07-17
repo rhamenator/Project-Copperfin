@@ -701,7 +701,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             const int month = static_cast<int>(std::llround(value_as_number(arguments[1])));
             const int day = static_cast<int>(std::llround(value_as_number(arguments[2])));
             if (!valid_runtime_date(year, month, day)) {
-                return make_string_value(std::string{});
+                return make_date_value(std::string{});
             }
             return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
         }
@@ -728,7 +728,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             const int second = arguments.size() >= 6U ? static_cast<int>(std::llround(value_as_number(arguments[5]))) : 0;
             if (!valid_runtime_date(year, month, day) ||
                 hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
-                return make_string_value(std::string{});
+                return make_datetime_value(std::string{});
             }
             return make_datetime_value(
                 format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback),
@@ -764,7 +764,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         const int day = static_cast<int>(std::llround(value_as_number(arguments[1])));
         const int year = static_cast<int>(std::llround(value_as_number(arguments[2])));
         if (!valid_runtime_date(year, month, day)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
         return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
@@ -817,7 +817,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = 0;
         int day = 0;
         if (!parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
         const long long delta = static_cast<long long>(std::llround(value_as_number(arguments[1])));
         long long month_index = static_cast<long long>(year) * 12LL + static_cast<long long>(month - 1) + delta;
@@ -931,7 +931,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = 0;
         int day = 0;
         if (!parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
 
         long long delta = 0;
@@ -974,14 +974,14 @@ std::optional<PrgValue> evaluate_date_time_function(
         const std::string source = trim_copy(value_as_string(arguments[0]));
         if (source.size() != 8U ||
             !std::all_of(source.begin(), source.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
 
         int year = 0;
         int month = 0;
         int day = 0;
         if (!parse_runtime_date_string(source, year, month, day)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
         return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
     }
@@ -992,7 +992,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         if (parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
             return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
         }
-        return make_string_value(std::string{});
+        return make_date_value(std::string{});
     }
     if (function == "dtoc" && !arguments.empty()) {
         int year = 0;
@@ -1050,7 +1050,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         const std::string value = value_as_string(arguments[0]);
         if (!parse_runtime_datetime_for_set(value, year, month, day, hour, minute, second, set_callback) &&
             !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
-            return make_string_value(std::string{});
+            return make_datetime_value(std::string{});
         }
         return make_datetime_value(
             format_runtime_datetime_for_set(year, month, day, hour, minute, second, set_callback),
@@ -1066,7 +1066,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = 0;
         int day = 0;
         if (!parse_date_value_for_set(arguments[0], year, month, day, set_callback)) {
-            return make_string_value(std::string{});
+            return make_datetime_value(std::string{});
         }
         return make_datetime_value(
             format_runtime_datetime_for_set(year, month, day, 0, 0, 0, set_callback),
@@ -1087,7 +1087,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         const std::string value = value_as_string(arguments[0]);
         if (!parse_datetime_value_for_set(arguments[0], year, month, day, hour, minute, second, set_callback) &&
             !parse_sortable_datetime(value, year, month, day, hour, minute, second)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
         return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
@@ -1162,7 +1162,17 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = 0;
         int day = 0;
         if (!julian_to_runtime_date(julian, year, month, day)) {
-            return make_string_value(std::string{});
+            return function == "jtot" ? make_datetime_value(std::string{}) : make_date_value(std::string{});
+        }
+        if (function == "jtot") {
+            return make_datetime_value(
+                format_runtime_datetime_for_set(year, month, day, 0, 0, 0, set_callback),
+                year,
+                month,
+                day,
+                0,
+                0,
+                0);
         }
         return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
     }
@@ -1171,7 +1181,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         int month = static_cast<int>(value_as_number(arguments[1]));
         int year = static_cast<int>(value_as_number(arguments[2]));
         if (!valid_runtime_date(year, month, day)) {
-            return make_string_value(std::string{});
+            return make_date_value(std::string{});
         }
         return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
     }

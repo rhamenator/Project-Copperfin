@@ -149,6 +149,25 @@ namespace
             "jtod_invalid = JTOD(0)\n"
             "dmy_value = DMY(18, 4, 2026)\n"
             "dmy_invalid = DMY(31, 2, 2026)\n"
+            "date_ctor_invalid_vartype = VARTYPE(DATE(2024, 2, 31))\n"
+            "datetime_ctor_invalid_vartype = VARTYPE(DATETIME(2024, 2, 31, 0, 0, 0))\n"
+            "stod_invalid_vartype = VARTYPE(STOD('2024-02-31'))\n"
+            "ctod_invalid_vartype = VARTYPE(CTOD(''))\n"
+            "ctot_invalid_vartype = VARTYPE(CTOT(''))\n"
+            "dtot_invalid_vartype = VARTYPE(DTOT(CTOD('')))\n"
+            "ttod_invalid_vartype = VARTYPE(TTOD('not-a-date'))\n"
+            "jtot_invalid_vartype = VARTYPE(JTOT(0))\n"
+            "jtod_invalid_vartype = VARTYPE(JTOD(0))\n"
+            "mdy_invalid_vartype = VARTYPE(MDY(2, 31, 2024))\n"
+            "dmy_invalid_vartype = VARTYPE(DMY(31, 2, 2024))\n"
+            "gomonth_invalid = GOMONTH('not-a-date', 1)\n"
+            "eomonth_invalid = EOMONTH('not-a-date')\n"
+            "gomonth_invalid_vartype = VARTYPE(gomonth_invalid)\n"
+            "eomonth_invalid_vartype = VARTYPE(eomonth_invalid)\n"
+            "date_ctor_invalid_type = TYPE('DATE(2024, 2, 31)')\n"
+            "datetime_ctor_invalid_type = TYPE('DATETIME(2024, 2, 31, 0, 0, 0)')\n"
+            "ctod_invalid_empty = EMPTY(CTOD(''))\n"
+            "ctot_invalid_empty = EMPTY(CTOT(''))\n"
             "isleap_2024 = ISLEAPYEAR(2024)\n"
             "isleap_2026 = ISLEAPYEAR(2026)\n"
             "SET DATE TO DMY\n"
@@ -372,7 +391,7 @@ namespace
         check("ttoj_value", "2460447");
         check("ttoj_datetime", "2460447");
         check("ttoj_invalid", "0");
-        check("jtot_value", "04/18/2026");
+        check("jtot_value", "04/18/2026 00:00:00");
         check("jtot_invalid", "");
         check("dtoj_value", "2460447");
         check("dtoj_invalid", "0");
@@ -381,6 +400,25 @@ namespace
         check("jtod_invalid", "");
         check("dmy_value", "04/18/2026");
         check("dmy_invalid", "");
+        check("date_ctor_invalid_vartype", "D");
+        check("datetime_ctor_invalid_vartype", "T");
+        check("stod_invalid_vartype", "D");
+        check("ctod_invalid_vartype", "D");
+        check("ctot_invalid_vartype", "T");
+        check("dtot_invalid_vartype", "T");
+        check("ttod_invalid_vartype", "D");
+        check("jtot_invalid_vartype", "T");
+        check("jtod_invalid_vartype", "D");
+        check("mdy_invalid_vartype", "D");
+        check("dmy_invalid_vartype", "D");
+        check("gomonth_invalid", "");
+        check("eomonth_invalid", "");
+        check("gomonth_invalid_vartype", "D");
+        check("eomonth_invalid_vartype", "D");
+        check("date_ctor_invalid_type", "D");
+        check("datetime_ctor_invalid_type", "T");
+        check("ctod_invalid_empty", "true");
+        check("ctot_invalid_empty", "true");
         check("isleap_2024", "true");
         check("isleap_2026", "false");
         check("date_set_dmy", "DMY");
