@@ -1073,6 +1073,74 @@ void test_go_and_skip_cursor_navigation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_skip_delta_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_skip_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+
+    const fs::path deep_path = temp_root / "skip_deep.prg";
+    write_text(
+        deep_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO TOP\n"
+        "SKIP skip_delta(2048)\n"
+        "RETURN\n"
+        "FUNCTION skip_delta\n"
+        "LPARAMETERS nDepth\n"
+        "IF nDepth <= 0\n"
+        "RETURN 1\n"
+        "ENDIF\n"
+        "RETURN skip_delta(nDepth - 1)\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession deep_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(deep_path.string(), temp_root.string()));
+    const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!deep_state.completed, "deep SKIP delta recursion should stop at the configured call-depth guard");
+    expect(
+        deep_state.message.find("maximum call depth") != std::string::npos,
+        "deep SKIP delta recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
+
+    const fs::path side_effect_path = temp_root / "skip_side_effect.prg";
+    write_text(
+        side_effect_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO TOP\n"
+        "nCalls = 0\n"
+        "SKIP skip_delta()\n"
+        "nRec = RECNO()\n"
+        "RETURN\n"
+        "FUNCTION skip_delta\n"
+        "nCalls = nCalls + 1\n"
+        "RETURN 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession side_effect_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(side_effect_path.string(), temp_root.string()));
+    const auto side_effect_state = side_effect_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(side_effect_state.completed, "SKIP delta UDF script should complete");
+
+    const auto calls = side_effect_state.globals.find("ncalls");
+    const auto record = side_effect_state.globals.find("nrec");
+    expect(calls != side_effect_state.globals.end(), "SKIP delta UDF call count should be captured");
+    expect(record != side_effect_state.globals.end(), "SKIP should still expose RECNO() after a resumed delta evaluation");
+    if (calls != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(calls->second) == "1", "SKIP delta UDF should run exactly once across suspension and resume");
+    }
+    if (record != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(record->second) == "2", "resumed SKIP should move by the UDF-provided delta");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cursor_identity_functions_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_local";
@@ -1521,6 +1589,7 @@ int main() {
     test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();
     test_go_and_skip_cursor_navigation();
+    test_skip_delta_uses_heap_backed_frame_continuations();
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();

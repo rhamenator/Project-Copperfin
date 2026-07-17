@@ -50,6 +50,7 @@
         std::optional<Statement> resumed_store_statement;
         std::optional<PrgValue> resumed_sleep_value;
         std::optional<PrgValue> resumed_seek_value;
+        std::optional<PrgValue> resumed_skip_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -428,6 +429,10 @@
                     {
                         resumed_seek_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::skip_command)
+                    {
+                        resumed_skip_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -436,6 +441,7 @@
                 if (!resumed_assignment_value.has_value() && !resumed_store_value.has_value() &&
                     !resumed_sleep_value.has_value() &&
                     !resumed_seek_value.has_value() &&
+                    !resumed_skip_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -3633,7 +3639,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const long long delta = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
+                const auto delta_value = resumed_skip_value.has_value()
+                                             ? resumed_skip_value
+                                             : evaluate_resumable_expression(frame, statement);
+                if (!delta_value.has_value())
+                {
+                    return {};
+                }
+                const long long delta = std::llround(value_as_number(*delta_value));
                 if (!move_by_visible_records(*cursor, frame, delta))
                 {
                     cursor->found = false;
