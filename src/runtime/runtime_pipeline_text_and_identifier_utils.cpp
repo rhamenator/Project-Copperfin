@@ -65,29 +65,9 @@ std::string canonical_casefolded_path_identity(const std::filesystem::path& path
     }
     std::wstring case_folded_path = identity_path.native();
     if (!case_folded_path.empty()) {
-        const int mapped_length = ::LCMapStringOrdinal(
-            LCMAP_LOWERCASE,
+        (void)::CharLowerBuffW(
             case_folded_path.data(),
-            static_cast<int>(case_folded_path.size()),
-            nullptr,
-            0);
-        std::wstring invariant_lowercase_path(
-            static_cast<std::size_t>(std::max(mapped_length, 0)),
-            L'\0');
-        const bool mapped = mapped_length > 0 &&
-            ::LCMapStringOrdinal(
-                LCMAP_LOWERCASE,
-                case_folded_path.data(),
-                static_cast<int>(case_folded_path.size()),
-                invariant_lowercase_path.data(),
-                mapped_length) > 0;
-        if (mapped) {
-            case_folded_path = std::move(invariant_lowercase_path);
-        } else {
-            (void)::CharLowerBuffW(
-                case_folded_path.data(),
-                static_cast<DWORD>(case_folded_path.size()));
-        }
+            static_cast<DWORD>(case_folded_path.size()));
     }
     return std::filesystem::path(case_folded_path).generic_string();
 #else
