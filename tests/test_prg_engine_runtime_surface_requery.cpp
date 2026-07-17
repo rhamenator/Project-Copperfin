@@ -1927,6 +1927,60 @@ void test_sql_statement_requery_select_star_includes_joined_fields() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_rejects_three_table_join_chain() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_three_way_join";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "ID", .type = 'N', .length = 3U},
+        {.name = "NAME", .type = 'C', .length = 16U}};
+    const auto create_table = [&](const fs::path &path, const std::string &name) {
+        const auto result = copperfin::vfp::create_dbf_table_file(
+            path.string(), fields, {{"1", name}});
+        expect(result.ok, "three-table JOIN fixture should create " + name + " DBF");
+        return result.ok;
+    };
+    const bool created =
+        create_table(temp_root / "first.dbf", "first") &&
+        create_table(temp_root / "second.dbf", "second") &&
+        create_table(temp_root / "third.dbf", "third");
+    if (!created) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_sql_three_way_join.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "first.dbf").string() + "' ALIAS first IN 0\n"
+        "USE '" + (temp_root / "second.dbf").string() + "' ALIAS second IN 0\n"
+        "USE '" + (temp_root / "third.dbf").string() + "' ALIAS third IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT * FROM first JOIN second ON first.id = second.id JOIN third ON second.id = third.id\"\n"
+        "oList.Requery()\n"
+        "nRows = oList.ListCount\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("three-table JOIN Requery() script should complete: ") + state.message);
+    const auto rows = state.globals.find("nrows");
+    expect(rows != state.globals.end(), "three-table JOIN row count should be captured");
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "0",
+               "unsupported three-table JOIN should fail closed without fabricating rows");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -1956,6 +2010,7 @@ int main() {
     test_sql_statement_requery_refreshes_right_join_query_rows_with_aliases();
     test_query_file_requery_refreshes_right_join_query_rows_with_aliases();
     test_sql_statement_requery_select_star_includes_joined_fields();
+    test_sql_statement_requery_rejects_three_table_join_chain();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

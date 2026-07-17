@@ -3889,6 +3889,13 @@ namespace copperfin::runtime
                     from_clause.substr(after_join, on_position - after_join));
                 join_on_expression =
                     trim_copy(from_clause.substr(on_position + 2U));
+                if (find_top_level_keyword(
+                        uppercase_copy(join_on_expression),
+                        0U,
+                        "JOIN") != std::string::npos)
+                {
+                    return false;
+                }
                 if (!parse_source_designator_and_alias(
                         primary_source_designator,
                         primary_source_designator,
