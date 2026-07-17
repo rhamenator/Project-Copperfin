@@ -43,6 +43,11 @@ namespace
             "max_datetime = TTOC(MAX(DATETIME(2021, 1, 1, 0, 0, 1), DATETIME(2021, 1, 1, 0, 0, 0)), 1)\n"
             "min_mixed_datetime = TTOC(MIN(DATE(2021, 1, 1), DATETIME(2021, 1, 1, 0, 0, 1)), 1)\n"
             "max_mixed_datetime = TTOC(MAX(DATE(2021, 1, 1), DATETIME(2021, 1, 1, 0, 0, 1)), 1)\n"
+            "SET EXACT OFF\n"
+            "lDateEqualsMidnightDateTime = DATE(2021, 1, 1) = DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lMidnightDateTimeEqualsDate = DATETIME(2021, 1, 1, 0, 0, 0) = DATE(2021, 1, 1)\n"
+            "lDateDiffersFromDateTime = DATE(2021, 1, 1) = DATETIME(2021, 1, 1, 0, 0, 1)\n"
+            "lDateTimeDiffersFromDate = DATETIME(2021, 1, 1, 0, 0, 1) = DATE(2021, 1, 1)\n"
             "date_plus_days = DATE(2024, 2, 28) + 1\n"
             "days_plus_date = 1 + DATE(2024, 2, 28)\n"
             "date_plus_fractional_days = DATE(2024, 3, 2) + (-1.5)\n"
@@ -279,6 +284,10 @@ namespace
         check("max_datetime", "20210101000001");
         check("min_mixed_datetime", "20210101000000");
         check("max_mixed_datetime", "20210101000001");
+        check("ldateequalsmidnightdatetime", "true");
+        check("lmidnightdatetimeequalsdate", "true");
+        check("ldatediffersfromdatetime", "false");
+        check("ldatetimediffersfromdate", "false");
         check("min_date_dmy", "20201201");
         check("max_date_dmy", "20210115");
         check("date_plus_days", "02/29/2024");

@@ -3287,6 +3287,15 @@
 
             bool values_equal(const PrgValue &left, const PrgValue &right) const
             {
+                if (left.string_flavor != PrgStringFlavor::none &&
+                    right.string_flavor != PrgStringFlavor::none)
+                {
+                    if (const auto comparison = compare_date_time_values(left, right, set_callback_);
+                        comparison.has_value())
+                    {
+                        return *comparison == 0;
+                    }
+                }
                 if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                 {
                     const std::string left_value = value_as_string(left);
