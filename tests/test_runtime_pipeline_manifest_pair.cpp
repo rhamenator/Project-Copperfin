@@ -4,6 +4,8 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include "../src/runtime/runtime_pipeline_support.h"
+
 #include "runtime_pipeline_test_hooks.h"
 #include "runtime_pipeline_manifest_pair_io.h"
 
