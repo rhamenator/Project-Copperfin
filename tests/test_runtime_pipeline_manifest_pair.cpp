@@ -423,7 +423,8 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
 
         const auto recovered_alias = finalize_manifest_pair(alias_plan);
         expect(recovered_alias.ok,
-               "#4098: Windows casing-only alias should recover the stale manifest-pair journal");
+               "#4098: Windows casing-only alias should recover the stale manifest-pair journal: " +
+                   recovered_alias.error);
         expect(!has_manifest_pair_transaction_artifacts(alias_root),
                "#4098: Windows casing-only stale recovery should remove manifest-pair artifacts");
     }
