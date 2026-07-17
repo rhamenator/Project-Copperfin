@@ -47,6 +47,7 @@
         std::optional<PrgValue> resumed_assignment_value;
         std::optional<Statement> resumed_assignment_statement;
         bool resumed_conditional_expression = false;
+        bool resumed_case_expression = false;
 
         const auto route_false_conditional = [&]()
         {
@@ -87,6 +88,33 @@
                 route_false_conditional();
             }
         };
+        const auto apply_case_predicate = [&](bool predicate_value)
+        {
+            if (frame.cases.empty())
+            {
+                return;
+            }
+
+            CaseState &active_case = frame.cases.back();
+            if (active_case.matched)
+            {
+                const std::size_t next_pc = active_case.endcase_statement_index + 1U;
+                frame.cases.pop_back();
+                frame.pc = next_pc;
+                return;
+            }
+
+            if (predicate_value)
+            {
+                active_case.matched = true;
+                return;
+            }
+
+            if (const auto destination = find_next_case_clause(frame, frame.pc - 1U))
+            {
+                frame.pc = *destination;
+            }
+        };
 
         try
         {
@@ -124,12 +152,18 @@
                             value_as_bool(*expression_value));
                         resumed_conditional_expression = true;
                     }
+                    else if (continued_statement.kind == StatementKind::case_statement)
+                    {
+                        apply_case_predicate(value_as_bool(*expression_value));
+                        resumed_case_expression = true;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
-                if (!resumed_assignment_value.has_value() && !resumed_conditional_expression)
+                if (!resumed_assignment_value.has_value() && !resumed_conditional_expression &&
+                    !resumed_case_expression)
                 {
                     frame.return_pending = true;
                     if (const auto outcome = continue_pending_return(frame); outcome.has_value())
@@ -139,6 +173,10 @@
                     return {};
                 }
                 if (resumed_conditional_expression)
+                {
+                    return {};
+                }
+                if (resumed_case_expression)
                 {
                     return {};
                 }
@@ -2057,25 +2095,20 @@
                     return {};
                 }
 
-                CaseState &active_case = frame.cases.back();
-                if (active_case.matched)
+                if (frame.cases.back().matched)
                 {
-                    const std::size_t next_pc = active_case.endcase_statement_index + 1U;
+                    const std::size_t next_pc = frame.cases.back().endcase_statement_index + 1U;
                     frame.cases.pop_back();
                     frame.pc = next_pc;
                     return {};
                 }
 
-                if (value_as_bool(evaluate_expression(statement.expression, frame)))
+                const auto predicate_value = evaluate_resumable_expression(frame, statement);
+                if (!predicate_value.has_value())
                 {
-                    active_case.matched = true;
                     return {};
                 }
-
-                if (const auto destination = find_next_case_clause(frame, frame.pc - 1U))
-                {
-                    frame.pc = *destination;
-                }
+                apply_case_predicate(value_as_bool(*predicate_value));
                 return {};
             }
             case StatementKind::otherwise_statement:
@@ -2362,6 +2395,7 @@
                 }
                 frame.tries.push_back({.try_statement_index = frame.pc - 1U,
                                        .with_stack_depth_at_try_entry = frame.withs.size(),
+                                       .case_stack_depth_at_try_entry = frame.cases.size(),
                                        .catch_statement_indices = targets.catch_statement_indices,
                                        .finally_statement_index = targets.finally_statement_index,
                                        .endtry_statement_index = *targets.endtry_statement_index,
@@ -7974,13 +8008,52 @@
                     error_metadata_stack.pop_back();
                 }
                 fault_pc_valid = false;
-                const std::size_t resume_pc = fault_statement_index + 1U;
                 while (!stack.empty())
                 {
                     if (stack.back().file_path == fault_frame_file_path &&
                         stack.back().routine_name == fault_frame_routine_name)
                     {
                         const Routine *r = stack.back().routine;
+                        std::size_t resume_pc = fault_statement_index + 1U;
+                        if (r != nullptr &&
+                            fault_statement_index < r->statements.size() &&
+                            r->statements[fault_statement_index].kind == StatementKind::case_statement &&
+                            !stack.back().cases.empty())
+                        {
+                            resume_pc = stack.back().cases.back().endcase_statement_index + 1U;
+                            stack.back().cases.pop_back();
+                        }
+
+                        // A predicate can suspend into one or more user-routine
+                        // frames before the fault reaches RESUME. Abandon the
+                        // caller's CASE continuation as one unit; otherwise the
+                        // faulting routine can return a stale value and the
+                        // caller may incorrectly execute the CASE branch.
+                        for (std::size_t index = stack.size(); index > 0U; --index)
+                        {
+                            Frame &candidate = stack[index - 1U];
+                            if (!candidate.expression_routine_return_pending ||
+                                !candidate.expression_continuation.has_value() ||
+                                candidate.expression_continuation->statement.kind != StatementKind::case_statement)
+                            {
+                                continue;
+                            }
+
+                            candidate.expression_routine_return_pending = false;
+                            candidate.expression_continuation.reset();
+                            if (!candidate.cases.empty())
+                            {
+                                candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
+                                candidate.cases.pop_back();
+                            }
+                            last_return_value = make_empty_value();
+                            for (std::size_t nested_index = index; nested_index < stack.size(); ++nested_index)
+                            {
+                                stack[nested_index].expression_routine_return_pending = false;
+                                stack[nested_index].expression_continuation.reset();
+                            }
+                            break;
+                        }
                         stack.back().pc = (r && resume_pc < r->statements.size()) ? resume_pc : (r ? r->statements.size() : 0U);
                         return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                     }

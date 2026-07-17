@@ -444,6 +444,7 @@ namespace copperfin::runtime
         {
             std::size_t try_statement_index = 0;
             std::size_t with_stack_depth_at_try_entry = 0;
+            std::size_t case_stack_depth_at_try_entry = 0;
             std::vector<std::size_t> catch_statement_indices;
             std::optional<std::size_t> finally_statement_index;
             std::size_t endtry_statement_index = 0;
@@ -7146,6 +7147,7 @@ namespace copperfin::runtime
 
     PrgValue PrgRuntimeSession::Impl::run_expression_invoked_routine_until_return(std::size_t return_depth)
     {
+        bool expression_error_was_handled = false;
         while (true)
         {
             while (stack.size() > return_depth &&
@@ -7159,6 +7161,7 @@ namespace copperfin::runtime
             {
                 error_handler_return_depth.reset();
                 handling_error = false;
+                expression_error_was_handled = true;
                 if (!error_metadata_stack.empty())
                 {
                     current_data_session = std::max(1, error_metadata_stack.back().data_session);
@@ -7179,7 +7182,7 @@ namespace copperfin::runtime
 
             if (stack.size() == return_depth)
             {
-                return last_return_value.value_or(make_empty_value());
+                return expression_error_was_handled ? make_empty_value() : last_return_value.value_or(make_empty_value());
             }
 
             const Statement *next = current_statement();
@@ -7745,6 +7748,18 @@ namespace copperfin::runtime
                 {
                     error_handler_return_depth.reset();
                     handling_error = false;
+                    if (std::any_of(
+                            stack.begin(),
+                            stack.end(),
+                            [](const Frame &frame)
+                            {
+                                return frame.expression_routine_return_pending;
+                            }))
+                    {
+                        // An ON ERROR handler's RETURN value is not the value of
+                        // the expression that raised the fault.
+                        last_return_value = make_empty_value();
+                    }
                     if (!error_metadata_stack.empty())
                     {
                         current_data_session = std::max(1, error_metadata_stack.back().data_session);

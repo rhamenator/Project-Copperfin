@@ -77,6 +77,7 @@ int main() {
     test_do_and_call_array_parameters_alias_caller_storage();
     test_expression_level_function_call_works_in_if_predicates();
     test_if_elseif_predicates_use_heap_backed_expression_checkpoints();
+    test_case_predicates_use_heap_backed_expression_checkpoints();
     test_elseif_predicate_resumption_review_gaps();
     test_expression_level_function_call_can_chain_nested_user_routines();
     test_set_procedure_registers_external_function_for_expression_calls();

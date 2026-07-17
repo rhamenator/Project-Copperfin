@@ -60,6 +60,7 @@
                 }
 
                 unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
+                unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
                 active_try.handling_error = false;
                 active_try.entered_catch = false;
                 active_try.entered_finally = true;
@@ -464,6 +465,7 @@
             }
 
             unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
+            unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
             active_try.handling_error = true;
             active_try.entered_catch = false;
             active_try.entered_finally = true;
@@ -540,6 +542,7 @@
                     }
 
                     unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
+                    unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
                     active_try.handling_error = true;
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;
