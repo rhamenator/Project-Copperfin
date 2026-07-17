@@ -42,10 +42,12 @@ Future surfaces should reuse an existing catalog where practical or add equivale
 
 Before a localized production release:
 
-- Run catalog tests proving English fallback, Spanish lookup, Portuguese lookup, catalog key parity, nonblank localized values, and missing-key fallback.
+- Run `test_localization` through CTest. Its catalog gate proves English fallback, Spanish lookup, Portuguese lookup, catalog key parity, nonblank localized values, exact placeholder parity with `en-US`, and pseudo-locale expansion with replacement values preserved.
 - Smoke the standalone Studio shell with `--locale es-419` and `--locale pt-BR`.
 - Smoke VSIX and installer packaging with localized resources included.
 - Review Spanish and Portuguese terminology for consistency across Studio, VSIX, CLI diagnostics, docs/help, and templates.
 - Verify screenshots or UI smoke captures for clipped text in Spanish and Portuguese.
 - Verify JSON and CLI machine-readable contracts are unchanged across locales.
 - Record translation source, reviewer, locale, and release version in the release checklist.
+
+The automated gate is necessary but not sufficient for a production language pack. `es-419` and `pt-BR` remain placeholder/review-pending catalogs until a qualified reviewer records accuracy, regional usage, formality, euphemism/directness, terminology consistency, and the absence of awkward or offensive wording. `qps-ploc` is test-only and must never be presented as a production language option.

@@ -13,6 +13,7 @@
 #include "test_locale_catalog_environment_support.h"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -492,6 +493,25 @@ void test_machine_contract_fields_remain_invariant() {
         "#1779: only diagnostic prose should be localized");
 }
 
+std::vector<std::string> placeholder_names(std::string_view pattern) {
+    std::vector<std::string> names;
+    std::size_t offset = 0U;
+    while (offset < pattern.size()) {
+        const std::size_t open = pattern.find('{', offset);
+        if (open == std::string_view::npos) {
+            break;
+        }
+        const std::size_t close = pattern.find('}', open + 1U);
+        if (close == std::string_view::npos) {
+            break;
+        }
+        names.emplace_back(pattern.substr(open + 1U, close - open - 1U));
+        offset = close + 1U;
+    }
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
 void test_product_locale_catalogs_have_key_parity() {
     namespace fs = std::filesystem;
     const fs::path catalog_root = copperfin::localization::resolve_catalog_root();
@@ -517,12 +537,43 @@ void test_product_locale_catalogs_have_key_parity() {
             expect(
                 localized.entries.contains(key),
                 "product " + locale + " catalog should contain en-US key " + key);
+            const auto localized_entry = localized.entries.find(key);
+            if (localized_entry != localized.entries.end()) {
+                expect(
+                    std::any_of(
+                        localized_entry->second.begin(),
+                        localized_entry->second.end(),
+                        [](const char value) {
+                            return std::isspace(static_cast<unsigned char>(value)) == 0;
+                        }),
+                    "product " + locale + " catalog value should not be blank for key " + key);
+                expect(
+                    placeholder_names(entry.second) == placeholder_names(localized_entry->second),
+                    "product " + locale + " catalog should preserve placeholders for key " + key);
+            }
         }
         for (const auto& entry : localized.entries) {
             const std::string& key = entry.first;
             expect(
                 english.entries.contains(key),
                 "product " + locale + " catalog should not add a key absent from en-US: " + key);
+        }
+    }
+
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    for (const auto& entry : english.entries) {
+        copperfin::localization::PlaceholderMap placeholders;
+        for (const std::string& name : placeholder_names(entry.second)) {
+            placeholders.emplace(name, "PLACEHOLDER_" + name);
+        }
+        const std::string localized = pseudo.translate(entry.first, placeholders);
+        expect(
+            localized.starts_with("[!! ") && localized.ends_with(" !!]"),
+            "qps-ploc should pseudo-localize catalog key " + entry.first);
+        for (const auto& placeholder : placeholders) {
+            expect(
+                localized.find(placeholder.second) != std::string::npos,
+                "qps-ploc should preserve placeholder value for key " + entry.first);
         }
     }
 }
