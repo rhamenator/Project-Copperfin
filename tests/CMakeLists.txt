@@ -250,6 +250,13 @@ add_test(
 )
 
 add_test(
+    NAME test_github_actions_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_github_actions_contract_check.cmake
+)
+
+add_test(
     NAME test_windows_msvc_cache_workflow_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

@@ -6,11 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   windows-installer:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install NSIS
         run: |
@@ -41,7 +44,7 @@ jobs:
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload Windows installer artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-windows-installers
           path: |
@@ -52,7 +55,7 @@ jobs:
   macos-installer:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
@@ -78,7 +81,7 @@ jobs:
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload macOS installer artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-macos-installers
           path: |
@@ -89,7 +92,7 @@ jobs:
   linux-deb-rpm-installers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install RPM tooling
         run: |
@@ -120,7 +123,7 @@ jobs:
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload Linux installer artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-linux-installers
           path: |

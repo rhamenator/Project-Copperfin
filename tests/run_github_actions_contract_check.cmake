@@ -1,0 +1,69 @@
+# Copyright © 2026 Richard M. Hamilton. All rights reserved.
+# Licensed under the Project Copperfin Source-Available License or
+# Commercial License. See LICENSE.md in the repository root.
+
+if(NOT DEFINED SOURCE_DIR OR "${SOURCE_DIR}" STREQUAL "")
+    message(FATAL_ERROR "SOURCE_DIR is required")
+endif()
+
+file(GLOB_RECURSE action_files
+    "${SOURCE_DIR}/.github/workflows/*.yml"
+    "${SOURCE_DIR}/.github/workflows/*.yaml"
+    "${SOURCE_DIR}/.github/actions/*/action.yml"
+    "${SOURCE_DIR}/.github/actions/*/action.yaml")
+if(NOT action_files)
+    message(FATAL_ERROR "No GitHub Actions workflow or local action files were found")
+endif()
+
+set(external_action_count 0)
+foreach(action_file IN LISTS action_files)
+    file(STRINGS "${action_file}" action_lines REGEX "^[ \t]*uses:[ \t]*")
+    foreach(action_line IN LISTS action_lines)
+        if(action_line MATCHES "^[ \t]*uses:[ \t]*\\./")
+            continue()
+        endif()
+
+        if(NOT action_line MATCHES "^[ \t]*uses:[ \t]*([^ \t]+)@([^ \t]+)")
+            message(FATAL_ERROR
+                "External GitHub Action reference is malformed in ${action_file}: ${action_line}")
+        endif()
+        set(action_name "${CMAKE_MATCH_1}")
+        set(action_ref "${CMAKE_MATCH_2}")
+        if(NOT action_name MATCHES "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+            message(FATAL_ERROR
+                "External GitHub Action must use owner/repository syntax in ${action_file}: ${action_line}")
+        endif()
+        string(LENGTH "${action_ref}" action_ref_length)
+        if(NOT action_ref_length EQUAL 40 OR
+                NOT action_ref MATCHES "^[0-9A-Fa-f]+$")
+            message(FATAL_ERROR
+                "External GitHub Action must use a full commit SHA in ${action_file}: ${action_line}")
+        endif()
+        if(NOT action_line MATCHES "#[ \t]*v[0-9]")
+            message(FATAL_ERROR
+                "Pinned external GitHub Action must retain its release tag comment in ${action_file}: ${action_line}")
+        endif()
+        math(EXPR external_action_count "${external_action_count} + 1")
+    endforeach()
+endforeach()
+
+if(external_action_count EQUAL 0)
+    message(FATAL_ERROR "No external GitHub Actions were found to audit")
+endif()
+
+file(GLOB workflow_files
+    "${SOURCE_DIR}/.github/workflows/*.yml"
+    "${SOURCE_DIR}/.github/workflows/*.yaml")
+foreach(workflow_file IN LISTS workflow_files)
+    file(READ "${workflow_file}" workflow)
+    string(REPLACE "\r\n" "\n" workflow "${workflow}")
+    if(NOT workflow MATCHES "(^|\n)[ \t]*permissions:[ \t]*\n")
+        message(FATAL_ERROR "Workflow lacks an explicit permissions block: ${workflow_file}")
+    endif()
+    if(workflow MATCHES "(^|\n)[ \t]+[A-Za-z0-9_-]+:[ \t]*write([ \t]*\n|$)")
+        message(FATAL_ERROR "Workflow grants an unsupported write permission: ${workflow_file}")
+    endif()
+endforeach()
+
+message(STATUS
+    "GitHub Actions contract passed: ${external_action_count} external actions are immutably pinned and workflows are read-only")

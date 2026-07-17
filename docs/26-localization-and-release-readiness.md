@@ -44,6 +44,10 @@ Each platform installer job creates a fresh `build/package` directory, runs CPac
 
 The package filenames are machine-readable release identifiers and remain invariant across locales: `copperfin-0.1.0-Windows.exe`, `copperfin-0.1.0-Windows.zip`, `copperfin-0.1.0-Darwin.pkg`, `copperfin-0.1.0-Darwin.tar.gz`, `copperfin-0.1.0-Linux.deb`, `copperfin-0.1.0-Linux.rpm`, and `copperfin-0.1.0-Linux.tar.gz`. The native workflow contract test must remain green whenever these paths or the package workflow changes.
 
+## GitHub Actions Dependency Procedure
+
+Treat every external action reference as executable supply-chain code. When updating one, resolve the intended release tag to its reviewed full 40-character commit SHA, retain the human-readable release tag in an inline comment, and review the upstream release notes and diff before merging. Run the repository-wide GitHub Actions contract test plus the affected workflow contract and hosted workflow. Keep local reusable actions on relative paths, keep workflow `GITHUB_TOKEN` permissions explicit and read-only unless a documented step demonstrably requires more, and update the pin and comment together when a dependency is intentionally advanced.
+
 ## Release Checklist
 
 Before a localized production release:
