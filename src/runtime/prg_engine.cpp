@@ -221,6 +221,8 @@ namespace copperfin::runtime
             case PrgValueKind::int64:
             case PrgValueKind::uint64:
                 return value_as_string(value);
+            case PrgValueKind::currency:
+                return "VAL(\"$" + value_as_string(value) + "\")";
             case PrgValueKind::string:
             {
                 std::string quoted = value.string_value;
@@ -4031,7 +4033,8 @@ namespace copperfin::runtime
             {
                 return value.kind == PrgValueKind::number ||
                        value.kind == PrgValueKind::int64 ||
-                       value.kind == PrgValueKind::uint64;
+                       value.kind == PrgValueKind::uint64 ||
+                       value.kind == PrgValueKind::currency;
             };
             const auto row_values_equal =
                 [&](const std::vector<PrgValue> &left, const std::vector<PrgValue> &right) -> bool
@@ -5357,6 +5360,8 @@ namespace copperfin::runtime
             {
             case PrgValueKind::number:
                 return std::abs(arguments[1].number_value) < 0.000001;
+            case PrgValueKind::currency:
+                return arguments[1].currency_value == 0;
             case PrgValueKind::int64:
                 return arguments[1].int64_value == 0;
             case PrgValueKind::uint64:
@@ -5423,6 +5428,8 @@ namespace copperfin::runtime
             {
             case PrgValueKind::number:
                 return std::abs(arguments[1].number_value - 1.0) < 0.000001;
+            case PrgValueKind::currency:
+                return arguments[1].currency_value == 10000;
             case PrgValueKind::int64:
                 return arguments[1].int64_value == 1;
             case PrgValueKind::uint64:
@@ -7576,6 +7583,8 @@ namespace copperfin::runtime
                 return value.boolean_value ? 1 : 0;
             case PrgValueKind::number:
                 return static_cast<std::intptr_t>(std::llround(value.number_value));
+            case PrgValueKind::currency:
+                return static_cast<std::intptr_t>(std::llround(value_as_number(value)));
             case PrgValueKind::string:
             {
                 const std::string trimmed = trim_copy(value.string_value);

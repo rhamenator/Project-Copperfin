@@ -12,6 +12,7 @@
 #include <functional>
 #include <iomanip>
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -70,7 +71,118 @@ bool expression_values_equal(const PrgValue& left, const PrgValue& right, bool e
                           ? left.uint64_value == right.uint64_value
                           : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value));
     }
+    if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency) {
+        return left.currency_value == right.currency_value;
+    }
     return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+}
+
+std::optional<std::int64_t> parse_currency_scaled_value(const std::string& text) {
+    std::size_t position = 0U;
+    bool negative = false;
+    if (position < text.size() && (text[position] == '+' || text[position] == '-')) {
+        negative = text[position] == '-';
+        ++position;
+    }
+
+    std::uint64_t coefficient = 0U;
+    std::size_t digit_count = 0U;
+    while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+        const auto digit = static_cast<std::uint64_t>(text[position] - '0');
+        if (coefficient > (std::numeric_limits<std::uint64_t>::max() - digit) / 10U) {
+            return std::nullopt;
+        }
+        coefficient = coefficient * 10U + digit;
+        ++position;
+        ++digit_count;
+    }
+
+    std::int64_t decimal_places = 0;
+    if (position < text.size() && text[position] == '.') {
+        ++position;
+        while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+            const auto digit = static_cast<std::uint64_t>(text[position] - '0');
+            if (coefficient > (std::numeric_limits<std::uint64_t>::max() - digit) / 10U) {
+                return std::nullopt;
+            }
+            coefficient = coefficient * 10U + digit;
+            ++position;
+            ++digit_count;
+            ++decimal_places;
+        }
+    }
+    if (digit_count == 0U) {
+        return std::nullopt;
+    }
+
+    std::int64_t exponent = 0;
+    if (position < text.size() && (text[position] == 'e' || text[position] == 'E')) {
+        ++position;
+        bool exponent_negative = false;
+        if (position < text.size() && (text[position] == '+' || text[position] == '-')) {
+            exponent_negative = text[position] == '-';
+            ++position;
+        }
+        const std::size_t exponent_start = position;
+        while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+            if (exponent < 10000) {
+                exponent = exponent * 10 + static_cast<std::int64_t>(text[position] - '0');
+            }
+            ++position;
+        }
+        if (position == exponent_start) {
+            return std::nullopt;
+        }
+        if (exponent_negative) {
+            exponent = -exponent;
+        }
+    }
+
+    const std::int64_t shift = 4 - (decimal_places - exponent);
+    std::uint64_t magnitude = coefficient;
+    if (shift >= 0) {
+        if (shift > 19) {
+            if (magnitude != 0U) {
+                return std::nullopt;
+            }
+        } else {
+            for (std::int64_t index = 0; index < shift; ++index) {
+                if (magnitude > std::numeric_limits<std::uint64_t>::max() / 10U) {
+                    return std::nullopt;
+                }
+                magnitude *= 10U;
+            }
+        }
+    } else {
+        const std::int64_t divisor_digits = -shift;
+        if (divisor_digits <= 19) {
+            std::uint64_t divisor = 1U;
+            for (std::int64_t index = 0; index < divisor_digits; ++index) {
+                divisor *= 10U;
+            }
+            const std::uint64_t remainder = magnitude % divisor;
+            magnitude /= divisor;
+            if (remainder >= (divisor + 1U) / 2U) {
+                ++magnitude;
+            }
+        } else {
+            magnitude = 0U;
+        }
+    }
+
+    const std::uint64_t maximum = negative
+                                      ? static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1U
+                                      : static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    if (magnitude > maximum) {
+        return std::nullopt;
+    }
+    if (!negative) {
+        return static_cast<std::int64_t>(magnitude);
+    }
+    if (magnitude == maximum) {
+        return std::numeric_limits<std::int64_t>::min();
+    }
+    return -static_cast<std::int64_t>(magnitude);
 }
 
 char soundex_digit(char ch) {
@@ -376,6 +488,8 @@ bool is_zeroish_transform_value(const PrgValue& value) {
             return value.int64_value == 0;
         case PrgValueKind::uint64:
             return value.uint64_value == 0U;
+        case PrgValueKind::currency:
+            return value.currency_value == 0;
         default:
             return false;
     }
@@ -498,8 +612,10 @@ std::optional<PrgValue> evaluate_string_function(
         if (src.empty()) {
             return make_number_value(0.0);
         }
-        std::size_t numeric_end = 0U;
-        if (src[numeric_end] == '+' || src[numeric_end] == '-') {
+        const bool currency = src.front() == '$';
+        const std::size_t numeric_start = currency ? 1U : 0U;
+        std::size_t numeric_end = numeric_start;
+        if (numeric_end < src.size() && (src[numeric_end] == '+' || src[numeric_end] == '-')) {
             ++numeric_end;
         }
         const std::size_t integer_start = numeric_end;
@@ -507,7 +623,7 @@ std::optional<PrgValue> evaluate_string_function(
             ++numeric_end;
         }
         if (numeric_end == integer_start) {
-            return make_number_value(0.0);
+            return currency ? make_currency_value(0) : make_number_value(0.0);
         }
         if (numeric_end < src.size() && src[numeric_end] == '.') {
             ++numeric_end;
@@ -531,7 +647,11 @@ std::optional<PrgValue> evaluate_string_function(
         }
         double result = 0.0;
         try {
-            result = std::stod(src.substr(0U, numeric_end));
+            const std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
+            if (currency) {
+                return make_currency_value(parse_currency_scaled_value(numeric_text).value_or(0));
+            }
+            result = std::stod(numeric_text);
         } catch (...) {
             result = 0.0;
         }

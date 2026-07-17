@@ -21,7 +21,8 @@ enum class PrgValueKind {
     number,
     string,
     int64,
-    uint64
+    uint64,
+    currency
 };
 
 enum class PrgStringFlavor {
@@ -39,6 +40,8 @@ struct PrgValue {
     PrgStringFlavor string_flavor = PrgStringFlavor::none;
     std::int64_t int64_value = 0;
     std::uint64_t uint64_value = 0;
+    // VFP Currency is a signed 64-bit integer scaled by 10,000.
+    std::int64_t currency_value = 0;
 };
 
 struct SourceLocation {

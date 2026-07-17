@@ -964,7 +964,7 @@
 
             const std::string normalized_name = normalize_identifier(property_name);
             const std::string property_value = value.kind == PrgValueKind::number
-                                                   ? std::to_string(static_cast<long long>(std::llround(value.number_value)))
+                                                   ? std::to_string(static_cast<long long>(std::llround(value_as_number(value))))
                                                    : value_as_string(value);
 
             if (normalized_name == "preparedcommand")

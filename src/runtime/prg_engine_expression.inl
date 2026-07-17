@@ -261,6 +261,54 @@
                 bool previous_;
             };
 
+            static PrgValue currency_arithmetic(
+                const PrgValue &left,
+                const PrgValue &right,
+                char operation)
+            {
+                if (left.kind == PrgValueKind::currency &&
+                    right.kind == PrgValueKind::currency &&
+                    (operation == '+' || operation == '-'))
+                {
+                    if (operation == '-' && right.currency_value == std::numeric_limits<std::int64_t>::min())
+                    {
+                        return make_number_value(value_as_number(left) - value_as_number(right));
+                    }
+                    const std::int64_t right_value = operation == '+'
+                                                         ? right.currency_value
+                                                         : -right.currency_value;
+                    if ((right_value > 0 && left.currency_value > std::numeric_limits<std::int64_t>::max() - right_value) ||
+                        (right_value < 0 && left.currency_value < std::numeric_limits<std::int64_t>::min() - right_value))
+                    {
+                        return make_number_value(value_as_number(left) +
+                                                 (operation == '+' ? value_as_number(right) : -value_as_number(right)));
+                    }
+                    return make_currency_value(left.currency_value + right_value);
+                }
+
+                const bool left_currency = left.kind == PrgValueKind::currency;
+                const bool right_currency = right.kind == PrgValueKind::currency;
+                if ((operation == '*' && left_currency != right_currency) ||
+                    (operation == '/' && left_currency && !right_currency))
+                {
+                    const long double result = operation == '*'
+                                                    ? static_cast<long double>(value_as_number(left)) * value_as_number(right)
+                                                    : static_cast<long double>(value_as_number(left)) / value_as_number(right);
+                    const long double scaled = std::round(result * 10000.0L);
+                    if (std::isfinite(scaled) &&
+                        scaled >= static_cast<long double>(std::numeric_limits<std::int64_t>::min()) &&
+                        scaled <= static_cast<long double>(std::numeric_limits<std::int64_t>::max()))
+                    {
+                        return make_currency_value(static_cast<std::int64_t>(scaled));
+                    }
+                }
+
+                return make_number_value(
+                    operation == '*'
+                        ? value_as_number(left) * value_as_number(right)
+                        : value_as_number(left) / value_as_number(right));
+            }
+
             PrgValue parse_expression()
             {
                 return parse_or();
@@ -458,6 +506,10 @@
                             throw std::runtime_error(
                                 runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
                         }
+                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        {
+                            left = currency_arithmetic(left, right, '+');
+                        }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                                  (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
@@ -508,6 +560,10 @@
                             throw std::runtime_error(
                                 runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
                         }
+                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        {
+                            left = currency_arithmetic(left, right, '-');
+                        }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
@@ -540,6 +596,10 @@
                         {
                             left = make_empty_value();
                         }
+                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        {
+                            left = currency_arithmetic(left, right, '*');
+                        }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
@@ -558,6 +618,15 @@
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
+                        }
+                        else if (left.kind == PrgValueKind::currency || right.kind == PrgValueKind::currency)
+                        {
+                            const double divisor = value_as_number(right);
+                            if (divisor == 0.0)
+                            {
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
+                            }
+                            left = currency_arithmetic(left, right, '/');
                         }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
@@ -604,6 +673,11 @@
                     if (operand.kind == PrgValueKind::int64)
                     {
                         return make_int64_value(-operand.int64_value);
+                    }
+                    if (operand.kind == PrgValueKind::currency &&
+                        operand.currency_value != std::numeric_limits<std::int64_t>::min())
+                    {
+                        return make_currency_value(-operand.currency_value);
                     }
                     return make_number_value(-value_as_number(operand));
                 }
@@ -1607,6 +1681,7 @@
                     }
                     // Not found — return typed default based on the fully-resolved return expr kind
                     if (pre.kind == PrgValueKind::number) return make_number_value(0.0);
+                    if (pre.kind == PrgValueKind::currency) return make_currency_value(0);
                     if (pre.kind == PrgValueKind::boolean) return make_boolean_value(false);
                     return make_boolean_value(false);
                 }
@@ -3176,6 +3251,12 @@
                     const std::int64_t right_value = static_cast<std::int64_t>(value_as_number(right));
                     return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
                 }
+                if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency)
+                {
+                    return left.currency_value < right.currency_value
+                               ? -1
+                               : (left.currency_value > right.currency_value ? 1 : 0);
+                }
                 const double left_value = value_as_number(left);
                 const double right_value = value_as_number(right);
                 return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
@@ -3208,6 +3289,10 @@
                                : (right.kind == PrgValueKind::uint64
                                       ? left.uint64_value == right.uint64_value
                                       : right.int64_value >= 0 && left.uint64_value == static_cast<std::uint64_t>(right.int64_value));
+                }
+                if (left.kind == PrgValueKind::currency && right.kind == PrgValueKind::currency)
+                {
+                    return left.currency_value == right.currency_value;
                 }
                 return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
             }

@@ -693,6 +693,8 @@
                 case PrgValueKind::int64:
                 case PrgValueKind::uint64:
                     return "N";
+                case PrgValueKind::currency:
+                    return "Y";
                 case PrgValueKind::string:
                     return "C";
                 case PrgValueKind::empty:
@@ -3875,7 +3877,8 @@
                         {
                             return value_as_bool(evaluated) ? "on" : "off";
                         }
-                        if (evaluated.kind == PrgValueKind::number || evaluated.kind == PrgValueKind::int64 || evaluated.kind == PrgValueKind::uint64)
+                        if (evaluated.kind == PrgValueKind::number || evaluated.kind == PrgValueKind::int64 ||
+                            evaluated.kind == PrgValueKind::uint64 || evaluated.kind == PrgValueKind::currency)
                         {
                             return std::abs(value_as_number(evaluated)) > 0.000001 ? "on" : "off";
                         }
@@ -5365,6 +5368,10 @@
                         serialized.first = 'N';
                         serialized.second = value_as_string(value);
                         break;
+                    case PrgValueKind::currency:
+                        serialized.first = 'Y';
+                        serialized.second = value_as_string(value);
+                        break;
                     case PrgValueKind::string:
                     {
                         int year = 0;
@@ -5735,6 +5742,18 @@
                             restored_value = (number_end != numeric_text.c_str() && number_end != nullptr && *number_end == '\0')
                                                  ? make_number_value(parsed)
                                                  : make_number_value(0.0);
+                        }
+                        else if (value_type_code == 'Y')
+                        {
+                            try
+                            {
+                                restored_value = make_currency_value(
+                                    static_cast<std::int64_t>(std::llround(std::stod(trim_copy(value_text)) * 10000.0)));
+                            }
+                            catch (...)
+                            {
+                                restored_value = make_currency_value(0);
+                            }
                         }
                         else if (value_type_code == 'D')
                         {

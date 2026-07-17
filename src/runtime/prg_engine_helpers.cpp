@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <functional>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -890,6 +891,13 @@ PrgValue make_uint64_value(std::uint64_t value) {
     return result;
 }
 
+PrgValue make_currency_value(std::int64_t scaled_value) {
+    PrgValue result;
+    result.kind = PrgValueKind::currency;
+    result.currency_value = scaled_value;
+    return result;
+}
+
 bool value_as_bool(const PrgValue& value) {
     switch (value.kind) {
         case PrgValueKind::boolean:
@@ -902,6 +910,8 @@ bool value_as_bool(const PrgValue& value) {
             return value.int64_value != 0;
         case PrgValueKind::uint64:
             return value.uint64_value != 0U;
+        case PrgValueKind::currency:
+            return value.currency_value != 0;
         case PrgValueKind::empty:
             return false;
     }
@@ -922,6 +932,8 @@ double value_as_number(const PrgValue& value) {
             return static_cast<double>(value.int64_value);
         case PrgValueKind::uint64:
             return static_cast<double>(value.uint64_value);
+        case PrgValueKind::currency:
+            return static_cast<double>(value.currency_value) / 10000.0;
         case PrgValueKind::empty:
             return 0.0;
     }
@@ -947,6 +959,20 @@ std::string value_as_string(const PrgValue& value) {
             return std::to_string(value.int64_value);
         case PrgValueKind::uint64:
             return std::to_string(value.uint64_value);
+        case PrgValueKind::currency: {
+            const bool negative = value.currency_value < 0;
+            const std::uint64_t magnitude = negative
+                                                ? static_cast<std::uint64_t>(-(value.currency_value + 1)) + 1U
+                                                : static_cast<std::uint64_t>(value.currency_value);
+            const std::uint64_t whole = magnitude / 10000U;
+            const std::uint64_t fraction = magnitude % 10000U;
+            std::ostringstream stream;
+            if (negative) {
+                stream << '-';
+            }
+            stream << whole << '.' << std::setw(4) << std::setfill('0') << fraction;
+            return stream.str();
+        }
         case PrgValueKind::empty:
             return {};
     }

@@ -535,7 +535,8 @@ std::optional<PrgValue> evaluate_date_time_additive(
     const std::function<std::string(const std::string&)>& set_callback) {
     const bool left_is_numeric = left.kind == PrgValueKind::number ||
                                  left.kind == PrgValueKind::int64 ||
-                                 left.kind == PrgValueKind::uint64;
+                                 left.kind == PrgValueKind::uint64 ||
+                                 left.kind == PrgValueKind::currency;
     if (!subtract && left.string_flavor == PrgStringFlavor::none &&
         right.string_flavor != PrgStringFlavor::none && left_is_numeric) {
         return evaluate_date_time_additive(right, left, false, set_callback);
@@ -547,7 +548,8 @@ std::optional<PrgValue> evaluate_date_time_additive(
     const bool right_is_datetime = right.string_flavor == PrgStringFlavor::datetime;
     const bool right_is_numeric = right.kind == PrgValueKind::number ||
                                   right.kind == PrgValueKind::int64 ||
-                                  right.kind == PrgValueKind::uint64;
+                                  right.kind == PrgValueKind::uint64 ||
+                                  right.kind == PrgValueKind::currency;
 
     if ((!left_is_date && !left_is_datetime) ||
         ((right_is_date || right_is_datetime) && (!subtract || left.string_flavor != right.string_flavor)) ||

@@ -774,7 +774,8 @@ bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_ob
 bool prg_value_kind_prefers_listindex(PrgValueKind kind) {
     return kind == PrgValueKind::number ||
            kind == PrgValueKind::int64 ||
-           kind == PrgValueKind::uint64;
+           kind == PrgValueKind::uint64 ||
+           kind == PrgValueKind::currency;
 }
 
 bool native_list_control_prefers_index_value(const RuntimeOleObjectState& runtime_object) {
@@ -804,6 +805,9 @@ PrgValue native_list_control_index_value_for_slot(const PrgValue& previous_value
     if (previous_value.kind == PrgValueKind::int64) {
         return make_int64_value(index);
     }
+    if (previous_value.kind == PrgValueKind::currency) {
+        return make_currency_value(index * 10000);
+    }
     return make_number_value(static_cast<double>(index));
 }
 
@@ -813,6 +817,9 @@ PrgValue native_list_control_empty_index_value(const PrgValue& previous_value) {
     }
     if (previous_value.kind == PrgValueKind::int64) {
         return make_int64_value(0LL);
+    }
+    if (previous_value.kind == PrgValueKind::currency) {
+        return make_currency_value(0);
     }
     return make_number_value(0.0);
 }
@@ -1533,6 +1540,13 @@ std::optional<std::size_t> resolve_native_collection_slot(
     switch (selector.kind) {
         case PrgValueKind::number: {
             const long long index = std::llround(selector.number_value);
+            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(index - 1LL);
+            }
+            return std::nullopt;
+        }
+        case PrgValueKind::currency: {
+            const long long index = std::llround(value_as_number(selector));
             if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
                 return static_cast<std::size_t>(index - 1LL);
             }
@@ -3979,6 +3993,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 return value.boolean_value ? 1 : 0;
             case PrgValueKind::number:
                 return static_cast<int>(std::llround(value.number_value));
+            case PrgValueKind::currency:
+                return static_cast<int>(std::llround(value_as_number(value)));
             case PrgValueKind::int64:
                 return static_cast<int>(value.int64_value);
             case PrgValueKind::uint64:
@@ -4004,6 +4020,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 return value.boolean_value ? static_cast<std::int64_t>(1) : static_cast<std::int64_t>(0);
             case PrgValueKind::number:
                 return static_cast<std::int64_t>(std::llround(value.number_value));
+            case PrgValueKind::currency:
+                return static_cast<std::int64_t>(std::llround(value_as_number(value)));
             case PrgValueKind::int64:
                 return value.int64_value;
             case PrgValueKind::uint64:
@@ -5052,7 +5070,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             std::string variant_text;
             if (variant.kind == PrgValueKind::number ||
                 variant.kind == PrgValueKind::int64 ||
-                variant.kind == PrgValueKind::uint64) {
+                variant.kind == PrgValueKind::uint64 ||
+                variant.kind == PrgValueKind::currency) {
                 variant_text = std::to_string(static_cast<long long>(std::llround(value_as_number(variant))));
             } else {
                 variant_text = trim_copy(value_as_string(variant));

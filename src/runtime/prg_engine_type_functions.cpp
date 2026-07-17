@@ -64,6 +64,9 @@ std::string vartype_code(const PrgValue& value) {
     if (value.kind == PrgValueKind::number) {
         return "N";
     }
+    if (value.kind == PrgValueKind::currency) {
+        return "Y";
+    }
     if (value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64) {
         return "I";
     }
@@ -100,6 +103,9 @@ std::optional<PrgValue> evaluate_type_function(
         }
         if (value.kind == PrgValueKind::number) {
             return make_boolean_value(value.number_value == 0.0);
+        }
+        if (value.kind == PrgValueKind::currency) {
+            return make_boolean_value(value.currency_value == 0);
         }
         if (value.kind == PrgValueKind::boolean) {
             return make_boolean_value(!value.boolean_value);
@@ -153,6 +159,8 @@ std::optional<PrgValue> evaluate_type_function(
             is_empty = trim_copy(value.string_value).empty();
         } else if (value.kind == PrgValueKind::number) {
             is_empty = value.number_value == 0.0;
+        } else if (value.kind == PrgValueKind::currency) {
+            is_empty = value.currency_value == 0;
         } else if (value.kind == PrgValueKind::boolean) {
             is_empty = !value.boolean_value;
         } else if (value.kind == PrgValueKind::int64) {

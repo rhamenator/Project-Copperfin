@@ -101,6 +101,15 @@ namespace
             "v = VAL('42')\n"
             "val_plus = VAL('+5')\n"
             "val_exponent = VAL('1.25E3')\n"
+            "currency_value = VAL('$12.34567')\n"
+            "currency_negative = VAL('$-0.00005')\n"
+            "currency_sum = currency_value + VAL('$0.0050')\n"
+            "currency_product = VAL('$2.0000') * 1.5\n"
+            "currency_division = VAL('$3.0000') / 2\n"
+            "currency_compare = currency_value == VAL('$12.3457')\n"
+            "currency_type = VARTYPE(currency_value)\n"
+            "currency_type_expression = TYPE('currency_value')\n"
+            "currency_empty = EMPTY(VAL('$0'))\n"
             "val_nan = VAL('nan')\n"
             "val_infinity = VAL('inf')\n"
             "val_hex = VAL('0x1A')\n"
@@ -327,6 +336,20 @@ namespace
         check("v", "42");
         check("val_plus", "5");
         check("val_exponent", "1250");
+        check("currency_value", "12.3457");
+        check("currency_negative", "-0.0001");
+        check("currency_sum", "12.3507");
+        check("currency_product", "3.0000");
+        check("currency_division", "1.5000");
+        check("currency_compare", "true");
+        check("currency_type", "Y");
+        check("currency_type_expression", "Y");
+        check("currency_empty", "true");
+        const auto currency_value = state.globals.find("currency_value");
+        expect(currency_value != state.globals.end() &&
+                   currency_value->second.kind == copperfin::runtime::PrgValueKind::currency &&
+                   currency_value->second.currency_value == 123457,
+               "VAL() with a leading dollar should preserve a fixed-point Currency value");
         check("val_nan", "0");
         check("val_infinity", "0");
         check("val_hex", "0");

@@ -527,7 +527,8 @@
                 {
                     return value.kind == PrgValueKind::number ||
                            value.kind == PrgValueKind::int64 ||
-                           value.kind == PrgValueKind::uint64;
+                           value.kind == PrgValueKind::uint64 ||
+                           value.kind == PrgValueKind::currency;
                 };
                 const auto sort_key = [&](const PrgValue &value)
                 {

@@ -73,6 +73,7 @@ PrgValue make_datetime_value(
     int second);
 PrgValue make_int64_value(std::int64_t value);
 PrgValue make_uint64_value(std::uint64_t value);
+PrgValue make_currency_value(std::int64_t scaled_value);
 bool value_as_bool(const PrgValue& value);
 double value_as_number(const PrgValue& value);
 std::string value_as_string(const PrgValue& value);
