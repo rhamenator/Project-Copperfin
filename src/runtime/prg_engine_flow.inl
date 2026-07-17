@@ -465,6 +465,7 @@
             }
 
             frame.loop_expression_continuation.reset();
+            frame.scan_expression_continuation.reset();
             unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
             unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
             active_try.handling_error = true;
@@ -545,6 +546,7 @@
                     unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
                     unwind_case_contexts(frame, active_try.case_stack_depth_at_try_entry);
                     frame.loop_expression_continuation.reset();
+                    frame.scan_expression_continuation.reset();
                     active_try.handling_error = true;
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;
@@ -745,6 +747,26 @@
                 return {};
             }
 
+            if (!scan.for_expression.empty() ||
+                !scan.while_expression.empty() ||
+                !cursor->filter_expression.empty())
+            {
+                const Statement scan_statement = frame.routine != nullptr &&
+                        scan.scan_statement_index < frame.routine->statements.size()
+                    ? frame.routine->statements[scan.scan_statement_index]
+                    : Statement{};
+                return begin_scan_expression_search(
+                    frame,
+                    scan_statement,
+                    ScanSearchKind::continue_scan,
+                    scan.work_area,
+                    cursor->recno + 1U,
+                    scan.scan_statement_index,
+                    scan.endscan_statement_index,
+                    scan.iteration_count,
+                    jump_after_completion);
+            }
+
             if (!locate_next_matching_record(*cursor, scan.for_expression, scan.while_expression, frame, cursor->recno + 1U))
             {
                 last_fault_location = statement.location;
@@ -765,6 +787,238 @@
                 }
             }
             return {};
+        }
+
+        Statement make_scan_expression_statement(
+            const Statement &original,
+            const std::string &expression,
+            ScanExpressionStage stage) const
+        {
+            Statement staged = original;
+            staged.expression = expression;
+            staged.secondary_expression.clear();
+            staged.tertiary_expression.clear();
+            staged.text = original.text + " [scan-expression-stage=" +
+                          std::to_string(static_cast<int>(stage)) + "]";
+            return staged;
+        }
+
+        ExecutionOutcome complete_scan_expression_search(Frame &frame, bool found)
+        {
+            if (!frame.scan_expression_continuation.has_value())
+            {
+                return {};
+            }
+
+            const ScanExpressionContinuation continuation = *frame.scan_expression_continuation;
+            CursorState *cursor = find_cursor_by_area(continuation.work_area);
+            if (cursor == nullptr)
+            {
+                frame.scan_expression_continuation.reset();
+                last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                  {{"command", "SCAN"}});
+                return {.ok = false, .message = last_error_message};
+            }
+
+            cursor->found = found;
+            frame.scan_expression_continuation.reset();
+            if (continuation.kind == ScanSearchKind::enter_scan)
+            {
+                if (!found)
+                {
+                    frame.pc = continuation.endscan_statement_index + 1U;
+                    return {};
+                }
+
+                frame.scans.push_back({.scan_statement_index = continuation.scan_statement_index,
+                                       .endscan_statement_index = continuation.endscan_statement_index,
+                                       .case_stack_depth_at_entry = frame.cases.size(),
+                                       .with_stack_depth_at_entry = frame.withs.size(),
+                                       .work_area = continuation.work_area,
+                                       .for_expression = continuation.statement.expression,
+                                       .while_expression = continuation.statement.tertiary_expression,
+                                       .iteration_count = 0});
+                events.push_back({.category = "runtime.scan",
+                                  .detail = continuation.statement.expression.empty()
+                                      ? "ALL"
+                                      : continuation.statement.expression,
+                                  .location = continuation.statement.location});
+                return {};
+            }
+
+            if (found)
+            {
+                frame.pc = continuation.scan_statement_index + 1U;
+                return {};
+            }
+
+            if (!frame.scans.empty())
+            {
+                frame.scans.pop_back();
+            }
+            if (continuation.jump_after_completion)
+            {
+                frame.pc = continuation.endscan_statement_index + 1U;
+            }
+            return {};
+        }
+
+        ExecutionOutcome continue_scan_expression_search(
+            Frame &frame,
+            std::optional<PrgValue> completed_value = std::nullopt)
+        {
+            while (frame.scan_expression_continuation.has_value())
+            {
+                ScanExpressionContinuation &continuation = *frame.scan_expression_continuation;
+                CursorState *cursor = find_cursor_by_area(continuation.work_area);
+                if (cursor == nullptr)
+                {
+                    return complete_scan_expression_search(frame, false);
+                }
+
+                if (completed_value.has_value())
+                {
+                    const bool predicate_value = value_as_bool(*completed_value);
+                    completed_value.reset();
+                    if (continuation.stage == ScanExpressionStage::while_predicate)
+                    {
+                        if (!predicate_value)
+                        {
+                            return complete_scan_expression_search(frame, false);
+                        }
+                        continuation.stage = ScanExpressionStage::cursor_filter;
+                    }
+                    else if (continuation.stage == ScanExpressionStage::cursor_filter)
+                    {
+                        if (!predicate_value)
+                        {
+                            ++continuation.candidate_recno;
+                            continuation.stage = ScanExpressionStage::while_predicate;
+                        }
+                        else
+                        {
+                            continuation.stage = ScanExpressionStage::for_predicate;
+                        }
+                    }
+                    else
+                    {
+                        if (!predicate_value)
+                        {
+                            ++continuation.candidate_recno;
+                            continuation.stage = ScanExpressionStage::while_predicate;
+                        }
+                        else
+                        {
+                            return complete_scan_expression_search(frame, true);
+                        }
+                    }
+                }
+
+                if (continuation.candidate_recno < 1U ||
+                    continuation.candidate_recno > cursor->record_count)
+                {
+                    return complete_scan_expression_search(frame, false);
+                }
+
+                move_cursor_to(*cursor, static_cast<long long>(continuation.candidate_recno));
+                const auto record = current_record(*cursor);
+                if (!record.has_value() || (is_set_enabled("deleted") && record->deleted))
+                {
+                    ++continuation.candidate_recno;
+                    continuation.stage = ScanExpressionStage::while_predicate;
+                    continue;
+                }
+
+                if (continuation.stage == ScanExpressionStage::while_predicate)
+                {
+                    if (continuation.statement.tertiary_expression.empty())
+                    {
+                        continuation.stage = ScanExpressionStage::cursor_filter;
+                        continue;
+                    }
+                    const auto value = evaluate_resumable_expression(
+                        frame,
+                        make_scan_expression_statement(
+                            continuation.statement,
+                            continuation.statement.tertiary_expression,
+                            ScanExpressionStage::while_predicate),
+                        cursor);
+                    if (!value.has_value())
+                    {
+                        return {};
+                    }
+                    completed_value = *value;
+                    continue;
+                }
+
+                if (continuation.stage == ScanExpressionStage::cursor_filter)
+                {
+                    if (cursor->filter_expression.empty())
+                    {
+                        continuation.stage = ScanExpressionStage::for_predicate;
+                        continue;
+                    }
+                    const auto value = evaluate_resumable_expression(
+                        frame,
+                        make_scan_expression_statement(
+                            continuation.statement,
+                            cursor->filter_expression,
+                            ScanExpressionStage::cursor_filter),
+                        cursor);
+                    if (!value.has_value())
+                    {
+                        return {};
+                    }
+                    completed_value = *value;
+                    continue;
+                }
+
+                if (continuation.statement.expression.empty())
+                {
+                    return complete_scan_expression_search(frame, true);
+                }
+                const auto value = evaluate_resumable_expression(
+                    frame,
+                    make_scan_expression_statement(
+                        continuation.statement,
+                        continuation.statement.expression,
+                        ScanExpressionStage::for_predicate),
+                    cursor);
+                if (!value.has_value())
+                {
+                    return {};
+                }
+                completed_value = *value;
+            }
+            return {};
+        }
+
+        ExecutionOutcome begin_scan_expression_search(
+            Frame &frame,
+            const Statement &statement,
+            ScanSearchKind kind,
+            int work_area,
+            std::size_t start_recno,
+            std::size_t scan_statement_index,
+            std::size_t endscan_statement_index,
+            std::size_t iteration_count,
+            bool jump_after_completion)
+        {
+            frame.scan_expression_continuation = ScanExpressionContinuation{
+                .statement = statement,
+                .stage = ScanExpressionStage::while_predicate,
+                .kind = kind,
+                .work_area = work_area,
+                .candidate_recno = start_recno,
+                .scan_statement_index = scan_statement_index,
+                .endscan_statement_index = endscan_statement_index,
+                .iteration_count = iteration_count,
+                .jump_after_completion = jump_after_completion};
+            events.push_back({.category = "runtime.rushmore",
+                              .detail = (statement.expression.empty() ? std::string{"ALL"} : statement.expression) +
+                                        " -> linear_scan (resumable scan filter)",
+                              .location = statement.location});
+            return continue_scan_expression_search(frame);
         }
 
         std::filesystem::path resolve_asset_path(const std::string &raw_path, const char *extension) const

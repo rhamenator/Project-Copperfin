@@ -510,6 +510,32 @@ namespace copperfin::runtime
             double end_value = 0.0;
         };
 
+        enum class ScanExpressionStage
+        {
+            while_predicate,
+            cursor_filter,
+            for_predicate
+        };
+
+        enum class ScanSearchKind
+        {
+            enter_scan,
+            continue_scan
+        };
+
+        struct ScanExpressionContinuation
+        {
+            Statement statement;
+            ScanExpressionStage stage = ScanExpressionStage::while_predicate;
+            ScanSearchKind kind = ScanSearchKind::enter_scan;
+            int work_area = 0;
+            std::size_t candidate_recno = 1U;
+            std::size_t scan_statement_index = 0U;
+            std::size_t endscan_statement_index = 0U;
+            std::size_t iteration_count = 0U;
+            bool jump_after_completion = false;
+        };
+
         struct Frame
         {
             std::string file_path;
@@ -538,6 +564,7 @@ namespace copperfin::runtime
             bool expression_routine_return_pending = false;
             std::optional<ExpressionContinuation> expression_continuation;
             std::optional<LoopExpressionContinuation> loop_expression_continuation;
+            std::optional<ScanExpressionContinuation> scan_expression_continuation;
             bool evaluate_conditional_else = false;
         };
 
@@ -969,7 +996,10 @@ namespace copperfin::runtime
             const std::vector<std::optional<std::string>> &argument_references,
             std::size_t invocation_start,
             std::size_t invocation_end);
-        std::optional<PrgValue> evaluate_resumable_expression(Frame &source_frame, const Statement &statement);
+        std::optional<PrgValue> evaluate_resumable_expression(
+            Frame &source_frame,
+            const Statement &statement,
+            const CursorState *preferred_cursor = nullptr);
         bool requery_native_list_control(
             RuntimeOleObjectState &runtime_object,
             const Frame &frame,
@@ -3339,7 +3369,8 @@ namespace copperfin::runtime
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::evaluate_resumable_expression(
         Frame &source_frame,
-        const Statement &statement)
+        const Statement &statement,
+        const CursorState *preferred_cursor)
     {
         const std::string &expression = statement.expression;
         if (!source_frame.expression_continuation.has_value() ||
@@ -3367,7 +3398,9 @@ namespace copperfin::runtime
             &*source_frame.expression_continuation;
         try
         {
-            PrgValue result = evaluate_expression(expression, source_frame);
+            PrgValue result = preferred_cursor == nullptr
+                ? evaluate_expression(expression, source_frame)
+                : evaluate_expression(expression, source_frame, preferred_cursor);
             resumable_expression_dispatch_active = previous_active;
             resumable_expression_depth = previous_depth;
             active_expression_continuation = previous_continuation;
@@ -7263,6 +7296,7 @@ namespace copperfin::runtime
                                 stack.back().expression_routine_return_pending = false;
                                 stack.back().expression_continuation.reset();
                                 stack.back().loop_expression_continuation.reset();
+                                stack.back().scan_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
                             }
                             break;
@@ -7882,6 +7916,7 @@ namespace copperfin::runtime
                                     stack.back().expression_routine_return_pending = false;
                                     stack.back().expression_continuation.reset();
                                     stack.back().loop_expression_continuation.reset();
+                                    stack.back().scan_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);
                                 }
                                 break;

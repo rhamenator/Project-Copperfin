@@ -5257,6 +5257,7 @@
                 active_frame.expression_routine_return_pending = false;
                 active_frame.expression_continuation.reset();
                 active_frame.loop_expression_continuation.reset();
+                active_frame.scan_expression_continuation.reset();
             }
         }
 

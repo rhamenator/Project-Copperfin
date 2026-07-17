@@ -3112,6 +3112,141 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints() {
     expect(try_state.globals.find("cleanupbranch") != try_state.globals.end(),
            "a loop after TRY should be able to start after loop predicate cleanup");
 
+    const fs::path scan_table_path = temp_root / "scan_people.dbf";
+    write_people_dbf(scan_table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+    const fs::path scan_path = temp_root / "scan_predicates.prg";
+    write_text(
+        scan_path,
+        "USE '" + scan_table_path.string() + "' ALIAS ScanPeople IN 0\n"
+        "SET FILTER TO scanCursorFilter()\n"
+        "GO TOP IN ScanPeople\n"
+        "scanFilterCalls = 0\n"
+        "scanForCalls = 0\n"
+        "scanWhileCalls = 0\n"
+        "scanHits = 0\n"
+        "scanNames = ''\n"
+        "SCAN FOR scanForPredicate() WHILE scanWhilePredicate() IN ScanPeople\n"
+        "    scanHits = scanHits + 1\n"
+        "    scanNames = scanNames + NAME\n"
+        "ENDSCAN\n"
+        "afterScan = 1\n"
+        "RETURN\n"
+        "FUNCTION scanCursorFilter\n"
+        "scanFilterCalls = scanFilterCalls + 1\n"
+        "RETURN AGE >= 20\n"
+        "FUNCTION scanForPredicate\n"
+        "scanForCalls = scanForCalls + 1\n"
+        "RETURN AGE >= 20\n"
+        "FUNCTION scanWhilePredicate\n"
+        "scanWhileCalls = scanWhileCalls + 1\n"
+        "RETURN .T.\n");
+    auto scan_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(scan_path.string(), temp_root.string(), false));
+    const auto scan_state = scan_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(scan_state.completed, "SCAN predicates should complete through resumable cursor search: " + scan_state.message);
+    expect(scan_state.globals.find("scanhits") != scan_state.globals.end() &&
+               copperfin::runtime::format_value(scan_state.globals.at("scanhits")) == "3",
+           "SCAN FOR should execute its body for each visible matching record");
+    expect(scan_state.globals.find("scannames") != scan_state.globals.end() &&
+               copperfin::runtime::format_value(scan_state.globals.at("scannames")) == "BRAVOCHARLIEDELTA",
+           "SCAN should preserve targeted cursor order across suspended filters");
+    expect(scan_state.globals.find("scanfiltercalls") != scan_state.globals.end() &&
+               copperfin::runtime::format_value(scan_state.globals.at("scanfiltercalls")) == "3" &&
+               scan_state.globals.find("scanforcalls") != scan_state.globals.end() &&
+               copperfin::runtime::format_value(scan_state.globals.at("scanforcalls")) == "3" &&
+               scan_state.globals.find("scanwhilecalls") != scan_state.globals.end() &&
+               copperfin::runtime::format_value(scan_state.globals.at("scanwhilecalls")) == "3",
+           "SCAN filter, FOR, and WHILE user routines should run once per examined record");
+    expect(scan_state.globals.find("afterscan") != scan_state.globals.end(),
+           "execution should continue after resumable SCAN completion");
+    expect(std::any_of(
+               scan_state.events.begin(),
+               scan_state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent &event) {
+                   return event.category == "runtime.rushmore" &&
+                          event.detail.find("resumable scan filter") != std::string::npos;
+               }),
+           "resumable SCAN search should record its explicit linear fallback");
+
+    const fs::path scan_control_path = temp_root / "scan_control.prg";
+    write_text(
+        scan_control_path,
+        "USE '" + scan_table_path.string() + "' ALIAS ScanControlPeople IN 0\n"
+        "scanControlHits = 0\n"
+        "SCAN FOR scanControlPredicate() IN ScanControlPeople\n"
+        "    IF NAME = 'BRAVO'\n"
+        "        LOOP\n"
+        "    ENDIF\n"
+        "    scanControlHits = scanControlHits + 1\n"
+        "    IF NAME = 'CHARLIE'\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "afterScanControl = 1\n"
+        "RETURN\n"
+        "FUNCTION scanControlPredicate\n"
+        "RETURN AGE >= 20\n");
+    auto scan_control_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(scan_control_path.string(), temp_root.string(), false));
+    const auto scan_control_state =
+        scan_control_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(scan_control_state.completed,
+           "LOOP and EXIT should complete from a predicate-bearing SCAN: " + scan_control_state.message);
+    expect(scan_control_state.globals.find("scancontrolhits") != scan_control_state.globals.end() &&
+               copperfin::runtime::format_value(scan_control_state.globals.at("scancontrolhits")) == "1" &&
+               scan_control_state.globals.find("afterscancontrol") != scan_control_state.globals.end(),
+           "predicate-bearing SCAN should preserve LOOP/EXIT control flow");
+
+    const fs::path scan_resume_path = temp_root / "scan_resume.prg";
+    write_text(
+        scan_resume_path,
+        "USE '" + scan_table_path.string() + "' ALIAS ScanResumePeople IN 0\n"
+        "GO TOP IN ScanResumePeople\n"
+        "scanResumeBody = 0\n"
+        "ON ERROR DO handleScanResume\n"
+        "SCAN FOR scanResumeChild() + 1 / 0 IN ScanResumePeople\n"
+        "    scanResumeBody = scanResumeBody + 1\n"
+        "ENDSCAN\n"
+        "afterScanResume = 1\n"
+        "RETURN\n"
+        "FUNCTION scanResumeChild\n"
+        "RETURN .T.\n"
+        "PROCEDURE handleScanResume\n"
+        "RESUME\n"
+        "RETURN\n");
+    auto scan_resume_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(scan_resume_path.string(), temp_root.string(), false));
+    const auto scan_resume_state =
+        scan_resume_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(scan_resume_state.completed,
+           "RESUME should abandon a faulting SCAN predicate: " + scan_resume_state.message);
+    expect(scan_resume_state.globals.find("scanresumebody") != scan_resume_state.globals.end() &&
+               copperfin::runtime::format_value(scan_resume_state.globals.at("scanresumebody")) == "0" &&
+               scan_resume_state.globals.find("afterscanresume") != scan_resume_state.globals.end(),
+           "RESUME should skip a SCAN body after a predicate fault");
+
+    const fs::path scan_depth_path = temp_root / "scan_depth.prg";
+    write_text(
+        scan_depth_path,
+        "USE '" + scan_table_path.string() + "' ALIAS ScanDepthPeople IN 0\n"
+        "SCAN FOR scanDepthPredicate() IN ScanDepthPeople\n"
+        "    scanDepthBody = 1\n"
+        "ENDSCAN\n"
+        "afterScanDepth = 1\n"
+        "RETURN\n"
+        "FUNCTION scanDepthPredicate\n"
+        "RETURN scanDepthPredicate()\n");
+    auto scan_depth_options = make_runtime_session_options(scan_depth_path.string(), temp_root.string(), false);
+    scan_depth_options.max_call_depth = 96U;
+    auto scan_depth_session = copperfin::runtime::PrgRuntimeSession::create(scan_depth_options);
+    const auto scan_depth_state =
+        scan_depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(scan_depth_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               scan_depth_state.message.find("maximum call depth") != std::string::npos &&
+               scan_depth_state.globals.find("scandepthbody") == scan_depth_state.globals.end() &&
+               scan_depth_state.globals.find("afterscandepth") == scan_depth_state.globals.end(),
+           "recursive SCAN predicates should stop at max_call_depth without entering the body");
+
     const fs::path depth_path = temp_root / "depth.prg";
     write_text(
         depth_path,

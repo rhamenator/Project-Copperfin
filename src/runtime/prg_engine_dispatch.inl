@@ -49,6 +49,7 @@
         bool resumed_conditional_expression = false;
         bool resumed_case_expression = false;
         bool resumed_loop_expression = false;
+        bool resumed_scan_expression = false;
 
         const auto route_false_conditional = [&]()
         {
@@ -352,13 +353,22 @@
                             return {};
                         }
                     }
+                    else if (continued_statement.kind == StatementKind::scan_statement)
+                    {
+                        resumed_scan_expression = true;
+                        const auto scan_outcome = continue_scan_expression_search(frame, *expression_value);
+                        if (!scan_outcome.ok)
+                        {
+                            return scan_outcome;
+                        }
+                    }
                     else
                     {
                         last_return_value = *expression_value;
                     }
                 }
                 if (!resumed_assignment_value.has_value() && !resumed_conditional_expression &&
-                    !resumed_case_expression && !resumed_loop_expression)
+                    !resumed_case_expression && !resumed_loop_expression && !resumed_scan_expression)
                 {
                     frame.return_pending = true;
                     if (const auto outcome = continue_pending_return(frame); outcome.has_value())
@@ -376,6 +386,10 @@
                     return {};
                 }
                 if (resumed_loop_expression)
+                {
+                    return {};
+                }
+                if (resumed_scan_expression)
                 {
                     return {};
                 }
@@ -2851,6 +2865,21 @@
                 }
 
                 const std::size_t start_recno = cursor->recno == 0U ? 1U : cursor->recno;
+                if (!statement.expression.empty() ||
+                    !statement.tertiary_expression.empty() ||
+                    !cursor->filter_expression.empty())
+                {
+                    return begin_scan_expression_search(
+                        frame,
+                        statement,
+                        ScanSearchKind::enter_scan,
+                        cursor->work_area,
+                        start_recno,
+                        frame.pc - 1U,
+                        find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                        0U,
+                        false);
+                }
                 if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, start_recno))
                 {
                     last_fault_location = statement.location;
@@ -8203,6 +8232,46 @@
                         for (std::size_t index = stack.size(); index > 0U; --index)
                         {
                             Frame &candidate = stack[index - 1U];
+                            if (candidate.scan_expression_continuation.has_value())
+                            {
+                                const ScanExpressionContinuation &scan_continuation =
+                                    *candidate.scan_expression_continuation;
+                                const std::size_t scan_resume_pc =
+                                    scan_continuation.endscan_statement_index + 1U;
+                                if (scan_continuation.kind == ScanSearchKind::continue_scan)
+                                {
+                                    candidate.scans.erase(
+                                        std::remove_if(
+                                            candidate.scans.begin(),
+                                            candidate.scans.end(),
+                                            [&](const ScanState &state)
+                                            {
+                                                return state.scan_statement_index ==
+                                                       scan_continuation.scan_statement_index;
+                                            }),
+                                        candidate.scans.end());
+                                }
+                                candidate.scan_expression_continuation.reset();
+                                candidate.expression_routine_return_pending = false;
+                                candidate.expression_continuation.reset();
+                                if (index == stack.size())
+                                {
+                                    resume_pc = scan_resume_pc;
+                                }
+                                else
+                                {
+                                    candidate.pc = scan_resume_pc;
+                                }
+                                last_return_value = make_empty_value();
+                                for (std::size_t nested_index = index; nested_index < stack.size(); ++nested_index)
+                                {
+                                    stack[nested_index].expression_routine_return_pending = false;
+                                    stack[nested_index].expression_continuation.reset();
+                                    stack[nested_index].loop_expression_continuation.reset();
+                                    stack[nested_index].scan_expression_continuation.reset();
+                                }
+                                break;
+                            }
                             if (candidate.loop_expression_continuation.has_value())
                             {
                                 const Statement &loop_statement = candidate.loop_expression_continuation->statement;
@@ -8258,6 +8327,7 @@
                                     stack[nested_index].expression_routine_return_pending = false;
                                     stack[nested_index].expression_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
+                                    stack[nested_index].scan_expression_continuation.reset();
                                 }
                                 break;
                             }
@@ -8281,6 +8351,7 @@
                                 stack[nested_index].expression_routine_return_pending = false;
                                 stack[nested_index].expression_continuation.reset();
                                 stack[nested_index].loop_expression_continuation.reset();
+                                stack[nested_index].scan_expression_continuation.reset();
                             }
                             break;
                         }
