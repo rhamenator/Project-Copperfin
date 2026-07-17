@@ -38,6 +38,12 @@ Future surfaces should reuse an existing catalog where practical or add equivale
 - Installer text: ship `en`, `es-419`, and `pt-BR` resources with packaging smoke tests.
 - Docs/help and generated templates: version translated text separately from generated file identifiers and code symbols.
 
+## Installer Artifact Contract
+
+Each platform installer job creates a fresh `build/package` directory, runs CPack with the platform's expected generator set, and removes CPack's internal `_CPack_Packages` staging tree before verification. `tests/run_cpack_artifact_contract_check.cmake` then requires the exact current package filenames for that platform, rejects directories, symlinks, empty files, unexpected files, and missing files, and only after that allows artifact upload. Upload steps use those exact paths with `if-no-files-found: error`; workspace-root globs and stale tracked files must never satisfy release publication.
+
+The package filenames are machine-readable release identifiers and remain invariant across locales: `copperfin-0.1.0-Windows.exe`, `copperfin-0.1.0-Windows.zip`, `copperfin-0.1.0-Darwin.pkg`, `copperfin-0.1.0-Darwin.tar.gz`, `copperfin-0.1.0-Linux.deb`, `copperfin-0.1.0-Linux.rpm`, and `copperfin-0.1.0-Linux.tar.gz`. The native workflow contract test must remain green whenever these paths or the package workflow changes.
+
 ## Release Checklist
 
 Before a localized production release:

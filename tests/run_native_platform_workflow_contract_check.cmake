@@ -87,7 +87,6 @@ function(validate_artifact_upload_paths relative_path)
     set(path_block_indent 0)
     set(allowed_build_artifact
         [=[build/${{ inputs.build_configuration }}/*.exe]=])
-
     foreach(line IN LISTS lines)
         set(candidate "")
         if(line MATCHES "^([ \t]*)path:[ \t]*(.*)$")
@@ -122,7 +121,8 @@ function(validate_artifact_upload_paths relative_path)
         endif()
         if(candidate STREQUAL "build" OR candidate STREQUAL "build/" OR
                 (candidate MATCHES "^build/" AND
-                 NOT candidate STREQUAL "${allowed_build_artifact}"))
+                 NOT candidate STREQUAL "${allowed_build_artifact}" AND
+                 NOT candidate MATCHES "^build/package/copperfin-[^/]+\\.(exe|zip|pkg|deb|rpm|tar\\.gz)$"))
             message(FATAL_ERROR
                 "${relative_path} publishes a reusable CMake build tree: ${candidate}")
         endif()
@@ -281,21 +281,44 @@ require_text(".github/workflows/build-installers.yml"
     "linux-deb-rpm-installers:"
     "Linux installer job")
 require_text(".github/workflows/build-installers.yml"
-    "cpack --config build/CPackConfig.cmake -C Release -G \"NSIS;ZIP\""
+    "cpack --config build/CPackConfig.cmake -B build/package -C Release -G \"NSIS;ZIP\""
     "Windows CPack generator inventory")
 require_text(".github/workflows/build-installers.yml"
-    "cpack --config build/CPackConfig.cmake -G \"productbuild;TGZ\""
+    "cpack --config build/CPackConfig.cmake -B build/package -G \"productbuild;TGZ\""
     "macOS CPack generator inventory")
-foreach(installer_pattern IN ITEMS
+foreach(installer_path IN ITEMS
+        "build/package/copperfin-0.1.0-Windows.exe"
+        "build/package/copperfin-0.1.0-Windows.zip"
+        "build/package/copperfin-0.1.0-Darwin.pkg"
+        "build/package/copperfin-0.1.0-Darwin.tar.gz"
+        "build/package/copperfin-0.1.0-Linux.deb"
+        "build/package/copperfin-0.1.0-Linux.rpm"
+        "build/package/copperfin-0.1.0-Linux.tar.gz")
+    require_text(".github/workflows/build-installers.yml"
+        "${installer_path}"
+        "exact installer artifact path '${installer_path}'")
+endforeach()
+require_text(".github/workflows/build-installers.yml"
+    "tests/run_cpack_artifact_contract_check.cmake"
+    "CPack artifact ownership verifier")
+require_text_count(".github/workflows/build-installers.yml"
+    "if-no-files-found: error"
+    3
+    "fail-closed artifact upload settings")
+require_text_count(".github/workflows/build-installers.yml"
+    "cmake -E remove_directory build/package/_CPack_Packages"
+    3
+    "CPack internal staging cleanup")
+foreach(stale_pattern IN ITEMS
         "copperfin-*.exe"
         "copperfin-*.zip"
         "copperfin-*.pkg"
         "copperfin-*.deb"
         "copperfin-*.rpm"
         "copperfin-*.tar.gz")
-    require_text(".github/workflows/build-installers.yml"
-        "${installer_pattern}"
-        "intended installer artifact pattern '${installer_pattern}'")
+    forbid_text(".github/workflows/build-installers.yml"
+        "${stale_pattern}"
+        "workspace-root installer glob '${stale_pattern}'")
 endforeach()
 require_text(".github/workflows/windows-deep-validation.yml"
     "name: Windows Deep Validation"
