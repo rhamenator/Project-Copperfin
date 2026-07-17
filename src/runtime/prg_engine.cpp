@@ -4234,6 +4234,17 @@ namespace copperfin::runtime
                             {
                                 query_row.values.push_back(record_value_to_prg_value(field_value));
                             }
+                            if (joined_cursor != nullptr)
+                            {
+                                const auto joined_record = current_record(*joined_cursor);
+                                if (joined_record.has_value())
+                                {
+                                    for (const auto &field_value : joined_record->values)
+                                    {
+                                        query_row.values.push_back(record_value_to_prg_value(field_value));
+                                    }
+                                }
+                            }
                             continue;
                         }
                         query_row.values.push_back(
