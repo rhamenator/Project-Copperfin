@@ -58,6 +58,7 @@ int main() {
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
     test_copy_structure_to_creates_empty_schema();
+    test_copy_structure_extended_emits_vfp_metadata_rows();
     test_copy_to_from_empty_table_produces_valid_empty_dbf();
     test_append_from_copies_records_into_current_table();
     test_append_from_honors_open_source_cursor_filter();

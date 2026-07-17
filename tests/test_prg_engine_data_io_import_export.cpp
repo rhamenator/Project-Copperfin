@@ -311,6 +311,82 @@ void test_copy_structure_to_creates_empty_schema() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_structure_extended_emits_vfp_metadata_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_struct_extended";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), source_fields, {{"Alice", "42", "T"}});
+    expect(source_create.ok, "COPY STRUCTURE EXTENDED source fixture should be created");
+
+    const fs::path all_fields_path = temp_root / "structure_extended.dbf";
+    const fs::path selected_fields_path = temp_root / "structure_extended_selected.dbf";
+    const fs::path main_path = temp_root / "copy_struct_extended.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY STRUCTURE EXTENDED TO '" + all_fields_path.string() + "'\n"
+        "COPY STRUCTURE EXTENDED TO '" + selected_fields_path.string() + "' FIELDS AGE, ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY STRUCTURE EXTENDED script should complete: " + state.message);
+    expect(fs::exists(all_fields_path), "COPY STRUCTURE EXTENDED should create the metadata DBF");
+    expect(fs::exists(selected_fields_path), "COPY STRUCTURE EXTENDED FIELDS should create the metadata DBF");
+
+    const auto all_fields = copperfin::vfp::parse_dbf_table_from_file(all_fields_path.string(), 100U);
+    expect(all_fields.ok, "COPY STRUCTURE EXTENDED output should be readable");
+    expect(all_fields.ok && all_fields.table.fields.size() == 16U,
+           "COPY STRUCTURE EXTENDED should emit the fixed 16-column VFP metadata schema");
+    expect(all_fields.ok && all_fields.table.records.size() == 3U,
+           "COPY STRUCTURE EXTENDED should emit one metadata row per source field");
+    if (all_fields.ok && all_fields.table.fields.size() == 16U && all_fields.table.records.size() == 3U) {
+        expect(all_fields.table.fields[0].name == "FIELD_NAME" && all_fields.table.fields[0].type == 'C' &&
+                   all_fields.table.fields[0].length == 128U,
+               "COPY STRUCTURE EXTENDED should preserve the VFP FIELD_NAME descriptor");
+        expect(all_fields.table.fields[6].name == "FIELD_DEFA" && all_fields.table.fields[6].type == 'M',
+               "COPY STRUCTURE EXTENDED should preserve memo metadata columns");
+        const auto value = [&](std::size_t row, const std::string& field_name) {
+            const auto& values = all_fields.table.records[row].values;
+            const auto found = std::find_if(values.begin(), values.end(), [&](const auto& candidate) {
+                return candidate.field_name == field_name;
+            });
+            return found == values.end() ? std::string{} : found->display_value;
+        };
+        expect(value(0U, "FIELD_NAME") == "NAME" && value(0U, "FIELD_TYPE") == "C" &&
+                   value(0U, "FIELD_LEN") == "12" && value(0U, "FIELD_DEC") == "0",
+               "COPY STRUCTURE EXTENDED should emit character field metadata");
+        expect(value(1U, "FIELD_NAME") == "AGE" && value(1U, "FIELD_TYPE") == "N" &&
+                   value(1U, "FIELD_LEN") == "3" && value(1U, "FIELD_DEC") == "0",
+               "COPY STRUCTURE EXTENDED should emit numeric field metadata");
+        expect(value(2U, "FIELD_NAME") == "ACTIVE" && value(2U, "FIELD_TYPE") == "L" &&
+                   value(2U, "FIELD_NULL") == "false" && value(2U, "FIELD_NOCP") == "false",
+               "COPY STRUCTURE EXTENDED should emit logical and unsupported-attribute defaults");
+    }
+
+    const auto selected_fields = copperfin::vfp::parse_dbf_table_from_file(selected_fields_path.string(), 100U);
+    expect(selected_fields.ok && selected_fields.table.records.size() == 2U,
+           "COPY STRUCTURE EXTENDED FIELDS should emit only selected metadata rows");
+    if (selected_fields.ok && selected_fields.table.records.size() == 2U) {
+        expect(selected_fields.table.records[0U].values[0U].display_value == "AGE" &&
+                   selected_fields.table.records[1U].values[0U].display_value == "ACTIVE",
+               "COPY STRUCTURE EXTENDED FIELDS should preserve source field order");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_from_empty_table_produces_valid_empty_dbf() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_copy_empty_table";

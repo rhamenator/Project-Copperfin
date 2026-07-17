@@ -6015,7 +6015,9 @@
 
                 // COPY TO <dest> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
                 // COPY STRUCTURE TO <dest> — copies schema only (no rows)
-                const bool is_structure = (statement.identifier == "structure");
+                // COPY STRUCTURE EXTENDED TO <dest> — emits VFP structure metadata rows
+                const bool is_structure_extended = (statement.identifier == "structure_extended");
+                const bool is_structure = (statement.identifier == "structure") || is_structure_extended;
                 const std::string dest_raw = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
                 const std::string copy_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
@@ -6098,6 +6100,66 @@
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
+                }
+
+                if (is_structure_extended)
+                {
+                    const std::vector<vfp::DbfFieldDescriptor> structure_fields{
+                        {.name = "FIELD_NAME", .type = 'C', .length = 128U},
+                        {.name = "FIELD_TYPE", .type = 'C', .length = 1U},
+                        {.name = "FIELD_LEN", .type = 'N', .length = 3U},
+                        {.name = "FIELD_DEC", .type = 'N', .length = 3U},
+                        {.name = "FIELD_NULL", .type = 'L', .length = 1U},
+                        {.name = "FIELD_NOCP", .type = 'L', .length = 1U},
+                        {.name = "FIELD_DEFA", .type = 'M', .length = 4U},
+                        {.name = "FIELD_RULE", .type = 'M', .length = 4U},
+                        {.name = "FIELD_ERR", .type = 'M', .length = 4U},
+                        {.name = "TABLE_RULE", .type = 'M', .length = 4U},
+                        {.name = "TABLE_ERR", .type = 'M', .length = 4U},
+                        {.name = "TABLE_NAME", .type = 'C', .length = 128U},
+                        {.name = "INS_TRIG", .type = 'M', .length = 4U},
+                        {.name = "UPD_TRIG", .type = 'M', .length = 4U},
+                        {.name = "DEL_TRIG", .type = 'M', .length = 4U},
+                        {.name = "TABLE_CMT", .type = 'M', .length = 4U}};
+                    std::vector<std::vector<std::string>> structure_rows;
+                    structure_rows.reserve(out_fields.size());
+                    for (const auto &field : out_fields)
+                    {
+                        structure_rows.push_back({
+                            field.name.substr(0U, std::min<std::size_t>(field.name.size(), 128U)),
+                            std::string(1U, field.type),
+                            std::to_string(field.length),
+                            std::to_string(field.decimal_count),
+                            "F",
+                            "F",
+                            {},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {},
+                            {}});
+                    }
+
+                    const auto write_result = vfp::create_dbf_table_file(
+                        copperfin::platform::path_to_utf8_string(dest_path), structure_fields, structure_rows);
+                    if (!write_result.ok)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToWriteFailed",
+                            {{"errorMessage", write_result.error}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    events.push_back({.category = "runtime.copy_to",
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
+                                      .location = statement.location});
+                    return {};
                 }
 
                 // Collect qualifying rows (skip for COPY STRUCTURE TO)

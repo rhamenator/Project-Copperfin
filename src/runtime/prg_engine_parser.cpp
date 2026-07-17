@@ -1217,6 +1217,15 @@ bool parse_table_transfer_statement(const std::string& line, Statement& statemen
         statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
         return true;
     }
+    if (starts_with_insensitive(line, "COPY STRUCTURE EXTENDED TO ")) {
+        statement.kind = StatementKind::copy_to_command;
+        statement.identifier = "structure_extended";
+        const std::string body = trim_copy(line.substr(27U));
+        const auto tail_start = find_first_keyword_top_level(body, {"FIELDS"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        statement.tertiary_expression = extract_fields_command_clause(body, {});
+        return true;
+    }
     if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
         statement.kind = StatementKind::copy_to_command;
         const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
