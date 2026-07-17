@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/vfp/cdx_header.h"
+#include "copperfin/platform/path.h"
 
 #include "copperfin/localization/localization.h"
 
@@ -768,7 +769,7 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
 }
 
 CdxParseResult parse_cdx_header_from_file(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.OpenFileFailed")};
     }

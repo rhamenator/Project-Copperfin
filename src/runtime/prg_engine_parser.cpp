@@ -4,6 +4,7 @@
 
 #include "prg_engine_internal.h"
 
+#include "copperfin/platform/path.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 
@@ -279,7 +280,7 @@ std::vector<LogicalLine> load_logical_lines(std::istream& input) {
     return lines;
 }
 
-std::vector<LogicalLine> load_logical_lines(const std::string& path) {
+std::vector<LogicalLine> load_logical_lines(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return input ? load_logical_lines(input) : std::vector<LogicalLine>{};
 }
@@ -807,7 +808,9 @@ fs::path resolve_include_path(const fs::path& owning_path, const std::string& in
             ch = '/';
         }
     }
-    return (owning_path.parent_path() / fs::path(normalized)).lexically_normal();
+    return (
+        owning_path.parent_path() /
+        copperfin::platform::path_from_utf8_string(normalized)).lexically_normal();
 }
 
 const std::string* find_source_text_override(
@@ -840,7 +843,7 @@ void append_preprocessed_logical_lines(
     const std::map<std::string, std::string>* source_text_overrides = nullptr,
     const bool require_source_text_overrides = false) {
     const std::vector<LogicalLine> source_lines = source_override == nullptr
-        ? load_logical_lines(path.string())
+        ? load_logical_lines(path)
         : load_logical_lines_from_text(*source_override);
     for (const auto& logical_line : source_lines) {
         const std::string trimmed = trim_copy(logical_line.text);
@@ -887,7 +890,8 @@ void append_preprocessed_logical_lines(
         std::string include_path_text;
         if (try_parse_include_directive(trimmed, include_path_text)) {
             const fs::path include_path = resolve_include_path(path, include_path_text);
-            const std::string include_key = normalize_path(include_path.string());
+            const std::string include_key = normalize_path(
+                copperfin::platform::path_to_utf8_string(include_path));
             const std::string* include_source =
                 find_source_text_override(source_text_overrides, include_key);
             std::error_code exists_error;
@@ -930,7 +934,8 @@ void append_preprocessed_logical_lines(
 std::vector<LogicalLine> load_preprocessed_logical_lines(const std::string& path) {
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
-    append_preprocessed_logical_lines(fs::path(path), state, true, output_lines);
+    append_preprocessed_logical_lines(
+        copperfin::platform::path_from_utf8_string(path), state, true, output_lines);
     return output_lines;
 }
 
@@ -942,7 +947,7 @@ std::vector<LogicalLine> load_preprocessed_logical_lines_from_text(
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
     append_preprocessed_logical_lines(
-        fs::path(path),
+        copperfin::platform::path_from_utf8_string(path),
         state,
         true,
         output_lines,

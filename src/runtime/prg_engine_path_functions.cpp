@@ -4,6 +4,7 @@
 
 #include "prg_engine_path_functions.h"
 
+#include "copperfin/platform/path.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -34,7 +35,8 @@ bool is_posix_absolute_path(const std::string& value) {
 
 std::string normalize_posix_absolute_path(std::string value) {
     std::replace(value.begin(), value.end(), '\\', '/');
-    return std::filesystem::path(value).lexically_normal().generic_string();
+    return copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(value).lexically_normal());
 }
 
 std::vector<std::string> split_windows_path_components(const std::string& value, std::size_t start) {
@@ -138,11 +140,13 @@ std::string portable_full_path(const std::string& raw_path, const std::string& d
         return normalize_posix_absolute_path(raw_path);
     }
 
-    std::filesystem::path path(normalize_relative_path_separators(raw_path));
+    std::filesystem::path path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(raw_path));
     if (path.is_relative()) {
-        path = std::filesystem::path(default_directory) / path;
+        path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
-    return std::filesystem::absolute(path).lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(
+        std::filesystem::absolute(path).lexically_normal());
 }
 
 }  // namespace

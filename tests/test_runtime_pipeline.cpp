@@ -33,6 +33,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_relative_home_directory_resolves_from_project_directory();
     test_missing_startup_primary_fails_for_all_mvp_families();
     test_missing_required_startup_sidecar_fails_for_all_xasset_families();
+    test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts();
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
     test_uppercase_xasset_companion_assets_are_staged();

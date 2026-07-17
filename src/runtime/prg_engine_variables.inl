@@ -631,13 +631,20 @@
             }
 
             namespace fs = std::filesystem;
-            fs::path pattern_path = skeleton.empty() ? fs::path("*.*") : fs::path(skeleton);
+            fs::path pattern_path = skeleton.empty()
+                ? fs::path("*.*")
+                : copperfin::platform::path_from_utf8_string(skeleton);
             if (pattern_path.is_relative())
             {
-                pattern_path = fs::path(current_default_directory()) / pattern_path;
+                pattern_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                    pattern_path;
             }
-            const fs::path directory = pattern_path.has_parent_path() ? pattern_path.parent_path() : fs::path(current_default_directory());
-            const std::string pattern = pattern_path.filename().string().empty() ? "*.*" : pattern_path.filename().string();
+            const fs::path directory = pattern_path.has_parent_path()
+                ? pattern_path.parent_path()
+                : copperfin::platform::path_from_utf8_string(current_default_directory());
+            const std::string pattern = copperfin::platform::path_to_utf8_string(pattern_path.filename()).empty()
+                ? "*.*"
+                : copperfin::platform::path_to_utf8_string(pattern_path.filename());
             const bool include_directories = normalize_identifier(attribute_filter).find('d') != std::string::npos;
 
             std::vector<fs::directory_entry> entries;
@@ -651,7 +658,8 @@
                     {
                         continue;
                     }
-                    if (!wildcard_match_insensitive(pattern, entry.path().filename().string()))
+                    if (!wildcard_match_insensitive(
+                            pattern, copperfin::platform::path_to_utf8_string(entry.path().filename())))
                     {
                         continue;
                     }
@@ -659,7 +667,8 @@
                 }
             }
             std::sort(entries.begin(), entries.end(), [](const fs::directory_entry &left, const fs::directory_entry &right)
-                      { return lowercase_copy(left.path().filename().string()) < lowercase_copy(right.path().filename().string()); });
+                      { return lowercase_copy(copperfin::platform::path_to_utf8_string(left.path().filename())) <
+                               lowercase_copy(copperfin::platform::path_to_utf8_string(right.path().filename())); });
 
             std::vector<PrgValue> values;
             values.reserve(entries.size() * 5U);
@@ -667,7 +676,8 @@
             {
                 const auto last_write = entry.last_write_time(ignored);
                 const bool is_directory = entry.is_directory(ignored);
-                values.push_back(make_string_value(entry.path().filename().string()));
+                values.push_back(make_string_value(
+                    copperfin::platform::path_to_utf8_string(entry.path().filename())));
                 values.push_back(make_number_value(is_directory ? 0.0 : static_cast<double>(entry.file_size(ignored))));
                 values.push_back(make_string_value(format_file_time_part(last_write, true)));
                 values.push_back(make_string_value(format_file_time_part(last_write, false)));
@@ -819,7 +829,8 @@
             };
 
             const auto looks_like_font_extension = [](const std::filesystem::path &path) {
-                const std::string extension = lowercase_copy(path.extension().string());
+                const std::string extension = lowercase_copy(
+                    copperfin::platform::path_to_utf8_string(path.extension()));
                 return extension == ".ttf" ||
                        extension == ".ttc" ||
                        extension == ".otf" ||
@@ -888,7 +899,8 @@
                             continue;
                         }
 
-                        const std::string display_name = trim_font_display_name(entry.path().stem().string());
+                        const std::string display_name = trim_font_display_name(
+                            copperfin::platform::path_to_utf8_string(entry.path().stem()));
                         if (display_name.empty())
                         {
                             continue;
@@ -1258,7 +1270,7 @@
         FileVersionArrayMetadata default_file_version_metadata(const std::filesystem::path &path)
         {
             FileVersionArrayMetadata metadata;
-            metadata.file_description = path.filename().string();
+            metadata.file_description = copperfin::platform::path_to_utf8_string(path.filename());
             return metadata;
         }
 
@@ -1302,7 +1314,7 @@
         FileVersionArrayMetadata extract_file_version_metadata(const std::filesystem::path &path)
         {
             FileVersionArrayMetadata metadata = default_file_version_metadata(path);
-            const std::wstring wide_path = utf16_widen(path.string());
+            const std::wstring wide_path = path.native();
             if (wide_path.empty())
             {
                 return metadata;

@@ -5,6 +5,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "prg_engine_file_io_functions.h"
 
+#include "copperfin/platform/path.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -65,18 +66,32 @@ std::string normalize_relative_path_separators(std::string value) {
 std::filesystem::path resolve_file_path(const std::string& raw_path, const std::string& default_directory) {
     const std::string unquoted = unquote_string(raw_path);
     if (unquoted.empty()) {
-        return std::filesystem::path(default_directory).lexically_normal();
+        return copperfin::platform::path_from_utf8_string(default_directory).lexically_normal();
     }
 
     if (is_windows_drive_absolute_path(unquoted) || is_unc_path(unquoted)) {
-        return std::filesystem::path(unquoted);
+        return copperfin::platform::path_from_utf8_string(unquoted);
     }
 
-    std::filesystem::path path(normalize_relative_path_separators(unquoted));
+    std::filesystem::path path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(unquoted));
     if (path.is_relative()) {
-        path = std::filesystem::path(default_directory) / path;
+        path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
     return path.lexically_normal();
+}
+
+std::FILE* open_file_utf8(const std::filesystem::path& path, const std::string& mode) {
+#if defined(_WIN32)
+    std::wstring wide_mode;
+    wide_mode.reserve(mode.size());
+    for (const unsigned char ch : mode) {
+        wide_mode.push_back(static_cast<wchar_t>(ch));
+    }
+    return ::_wfopen(path.c_str(), wide_mode.c_str());
+#else
+    return std::fopen(path.c_str(), mode.c_str());
+#endif
 }
 
 OpenFileHandle* resolve_open_handle(int handle) {
@@ -137,13 +152,13 @@ std::optional<PrgValue> evaluate_file_io_function(
         const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
         const std::string mode = arguments.size() >= 2U ? fopen_mode_from_value(arguments[1]) : std::string{"rb"};
 
-        std::FILE* opened = std::fopen(path.string().c_str(), mode.c_str());
+        std::FILE* opened = open_file_utf8(path, mode);
         if (opened == nullptr &&
             fopen_numeric_read_write_mode(arguments.size() >= 2U ? arguments[1] : make_number_value(0.0)) &&
             errno == ENOENT) {
             // rb+ preserves existing contents; only create a missing file after
             // that first open proves the path does not exist.
-            opened = std::fopen(path.string().c_str(), "wb+");
+            opened = open_file_utf8(path, "wb+");
         }
         if (opened == nullptr) {
             return make_number_value(-1.0);

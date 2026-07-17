@@ -1297,7 +1297,8 @@
                     const bool explicit_server = !trim_copy(server).empty();
                     const bool explicit_native_prg_library =
                         !explicit_server &&
-                        lowercase_copy(std::filesystem::path(trim_copy(library)).extension().string()) == ".prg";
+                        lowercase_copy(copperfin::platform::path_to_utf8_string(
+                            copperfin::platform::path_from_utf8_string(trim_copy(library)).extension())) == ".prg";
                     const bool library_looks_explicit = looks_like_library_target(library);
                     const bool bare_native_candidate = !explicit_server && (!trim_copy(library).empty() ? !library_looks_explicit : true);
 

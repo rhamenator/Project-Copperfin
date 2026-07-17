@@ -5,6 +5,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/path.h"
 #include "localized_text.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
@@ -2182,13 +2183,15 @@ namespace copperfin::runtime
                     }
                 }
 
-                const auto create_result = vfp::create_dbf_table_file(table_path.string(), descriptors, rows);
+                const auto create_result = vfp::create_dbf_table_file(
+                    copperfin::platform::path_to_utf8_string(table_path), descriptors, rows);
                 if (!create_result.ok)
                 {
                     return std::nullopt;
                 }
 
-                if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U))
+                if (!open_table_cursor(
+                        copperfin::platform::path_to_utf8_string(table_path), alias, {}, true, false, 0, {}, 0U))
                 {
                     return std::nullopt;
                 }
@@ -2486,7 +2489,8 @@ namespace copperfin::runtime
             const std::string child_library =
                 arguments.size() >= 3U ? trim_copy(value_as_string(arguments[2])) : std::string{};
             const bool explicit_native_prg_library =
-                lowercase_copy(std::filesystem::path(child_library).extension().string()) == ".prg";
+                lowercase_copy(copperfin::platform::path_to_utf8_string(
+                    copperfin::platform::path_from_utf8_string(child_library).extension())) == ".prg";
             const std::string implicit_child_program_path =
                 frame.native_method_class_name.empty()
                     ? target_object->source
@@ -5090,7 +5094,8 @@ namespace copperfin::runtime
             {
                 query_path.replace_extension(".qpr");
                 resolved_query_path =
-                    resolve_native_prg_program_path(query_path.string(), fallback_path);
+                    resolve_native_prg_program_path(
+                        copperfin::platform::path_to_utf8_string(query_path), fallback_path);
             }
 
             std::ifstream input(resolved_query_path, std::ios::binary);
@@ -6843,7 +6848,7 @@ namespace copperfin::runtime
             }
         }
 
-        Program parsed_program = parse_program(temp_path.string());
+        Program parsed_program = parse_program(copperfin::platform::path_to_utf8_string(temp_path));
         std::filesystem::remove(temp_path, ignored);
 
         const auto parsed_method =
@@ -8169,10 +8174,10 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        const std::filesystem::path asset_file(asset_path);
+        const std::filesystem::path asset_file = copperfin::platform::path_from_utf8_string(asset_path);
         const std::filesystem::path bootstrap_path =
             runtime_temp_directory /
-            (asset_file.stem().string() + "_copperfin_bootstrap.prg");
+            (copperfin::platform::path_to_utf8_string(asset_file.stem()) + "_copperfin_bootstrap.prg");
 
         const std::string bootstrap_source =
             build_xasset_bootstrap_source(model, include_read_events);
@@ -8187,9 +8192,10 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        options.source_text_overrides[normalize_path(bootstrap_path.string())] = bootstrap_source;
+        options.source_text_overrides[copperfin::runtime::normalize_path(
+            copperfin::platform::path_to_utf8_string(bootstrap_path))] = bootstrap_source;
 
-        return bootstrap_path.string();
+        return copperfin::platform::path_to_utf8_string(bootstrap_path);
     }
 
 #include "prg_engine_dispatch.inl"
@@ -8848,12 +8854,13 @@ namespace copperfin::runtime
         RuntimeSessionOptions effective = options;
         effective.startup_path = normalize_path(effective.startup_path);
         effective.working_directory = effective.working_directory.empty()
-                                          ? std::filesystem::path(effective.startup_path).parent_path().string()
+                                          ? copperfin::platform::path_to_utf8_string(
+                                                copperfin::platform::path_from_utf8_string(effective.startup_path).parent_path())
                                           : normalize_path(effective.working_directory);
 
         if (const auto config = load_runtime_config_near(
-                std::filesystem::path(effective.startup_path),
-                std::filesystem::path(effective.working_directory)))
+                copperfin::platform::path_from_utf8_string(effective.startup_path),
+                copperfin::platform::path_from_utf8_string(effective.working_directory)))
         {
             apply_runtime_config_defaults(effective, *config);
         }
@@ -8863,7 +8870,7 @@ namespace copperfin::runtime
         impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
         impl->data_sessions.try_emplace(1);
         impl->events.push_back({.category = "runtime.config",
-                                .detail = "temp=" + impl->runtime_temp_directory.string() +
+                                .detail = "temp=" + copperfin::platform::path_to_utf8_string(impl->runtime_temp_directory) +
                                           ";max_call_depth=" + std::to_string(impl->max_call_depth) +
                                           ";max_executed_statements=" + std::to_string(impl->max_executed_statements) +
                                           ";max_loop_iterations=" + std::to_string(impl->max_loop_iterations),

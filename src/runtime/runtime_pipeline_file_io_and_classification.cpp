@@ -28,8 +28,8 @@ std::string normalize_vfp_separators(std::string value) {
 
 std::vector<std::string> split_normalized_path_segments(const std::string& value) {
     std::vector<std::string> segments;
-    for (const auto& part : std::filesystem::path(value)) {
-        const std::string segment = part.generic_string();
+    for (const auto& part : copperfin::platform::path_from_utf8_string(value)) {
+        const std::string segment = copperfin::platform::path_to_utf8_string(part);
         if (segment.empty() || segment == "." || segment == "/") {
             continue;
         }
@@ -63,7 +63,7 @@ bool is_unc_path(const std::string& value) {
 bool is_vfp_absolute_path(const std::string& value) {
     return is_windows_drive_absolute_path(value) ||
         is_unc_path(value) ||
-        std::filesystem::path(value).is_absolute();
+        copperfin::platform::path_from_utf8_string(value).is_absolute();
 }
 
 #if defined(_WIN32)
@@ -100,7 +100,7 @@ std::filesystem::path resolve_vfp_path_from_base(
     }
 
     const std::string normalized = normalize_vfp_separators(value);
-    const std::filesystem::path candidate(normalized);
+    const std::filesystem::path candidate = copperfin::platform::path_from_utf8_string(normalized);
     if (is_windows_drive_relative_path(normalized)) {
         return candidate.lexically_normal();
     }
@@ -118,7 +118,8 @@ std::string sanitize_package_relative_path(const std::string& value) {
 
     std::string normalized = normalize_vfp_separators(value);
     if (is_vfp_absolute_path(normalized)) {
-        normalized = std::filesystem::path(normalized).filename().generic_string();
+        normalized = copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(normalized).filename());
     } else if (is_windows_drive_relative_path(normalized)) {
         normalized.erase(0U, 2U);
         while (!normalized.empty() && normalized.front() == '/') {
@@ -139,7 +140,8 @@ std::string sanitize_package_relative_path(const std::string& value) {
     }
 
     if (segments.empty()) {
-        const std::string file_name = std::filesystem::path(normalized).filename().generic_string();
+        const std::string file_name = copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(normalized).filename());
         if (!file_name.empty() && file_name != "." && file_name != "..") {
             return file_name;
         }
@@ -178,7 +180,7 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(
     }
 
     for (const auto& part : candidate.relative_path()) {
-        const std::string component = part.string();
+        const std::string component = copperfin::platform::path_to_utf8_string(part);
         if (component.empty() || component == ".") {
             continue;
         }
@@ -201,7 +203,7 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(
             }
 
             const std::filesystem::path entry_path = it->path();
-            const std::string entry_name = entry_path.filename().string();
+            const std::string entry_name = copperfin::platform::path_to_utf8_string(entry_path.filename());
             if (entry_name == component) {
                 exact_match = entry_path;
                 break;
@@ -374,13 +376,13 @@ std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier) 
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error) {
     std::ofstream output(path, std::ios::binary);
     if (!output) {
-        error = runtime_text("Runtime.Package.Error.CreateFileFailed", {{"path", path.string()}});
+        error = runtime_text("Runtime.Package.Error.CreateFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return false;
     }
 
     output << contents;
     if (!output.good()) {
-        error = runtime_text("Runtime.Package.Error.WriteFileFailed", {{"path", path.string()}});
+        error = runtime_text("Runtime.Package.Error.WriteFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return false;
     }
 
@@ -397,7 +399,7 @@ std::string read_text_file(const std::filesystem::path& path) {
 std::string read_binary_file(const std::filesystem::path& path, std::string& error) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        error = runtime_text("Runtime.Package.Error.OpenFileFailed", {{"path", path.string()}});
+        error = runtime_text("Runtime.Package.Error.OpenFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return {};
     }
 
@@ -466,7 +468,7 @@ std::string runtime_host_file_name() {
 
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
     const std::filesystem::path configured_output(workspace.build_plan.output_path);
-    const std::string file_name = configured_output.filename().string();
+    const std::string file_name = copperfin::platform::path_to_utf8_string(configured_output.filename());
     if (!trim_copy(file_name).empty()) {
         return file_name;
     }
@@ -474,7 +476,9 @@ std::string resolve_output_file_name(const studio::StudioProjectWorkspace& works
 }
 
 BuildOutputKind infer_build_output_kind_from_output_path(const std::string& output_path) {
-    const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(output_path).extension().string()));
+    const std::string extension = lowercase_copy(trim_copy(
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(output_path).extension())));
     if (extension == ".dll") {
         return BuildOutputKind::dll;
     }
@@ -501,21 +505,21 @@ bool copy_file_if_exists(
     const std::filesystem::path& destination,
     std::string& error) {
     if (!std::filesystem::exists(source)) {
-        error = runtime_text("Runtime.Package.Error.SourceFileMissing", {{"path", source.string()}});
+        error = runtime_text("Runtime.Package.Error.SourceFileMissing", {{"path", copperfin::platform::path_to_utf8_string(source)}});
         return false;
     }
 
     std::error_code directory_error;
     std::filesystem::create_directories(destination.parent_path(), directory_error);
     if (directory_error) {
-        error = runtime_text("Runtime.Package.Error.CreateDirectoryFailed", {{"path", destination.parent_path().string()}});
+        error = runtime_text("Runtime.Package.Error.CreateDirectoryFailed", {{"path", copperfin::platform::path_to_utf8_string(destination.parent_path())}});
         return false;
     }
 
     std::error_code copy_error;
     std::filesystem::copy_file(source, destination, std::filesystem::copy_options::overwrite_existing, copy_error);
     if (copy_error) {
-        error = runtime_text("Runtime.Package.Error.CopyFileFailed", {{"path", destination.string()}});
+        error = runtime_text("Runtime.Package.Error.CopyFileFailed", {{"path", copperfin::platform::path_to_utf8_string(destination)}});
         return false;
     }
 
@@ -551,7 +555,7 @@ bool validate_runtime_host_source_path(
 
     if (plan.security_enabled) {
         const std::string expected_file_name = runtime_host_file_name();
-        if (lowercase_copy(source.filename().string()) != expected_file_name) {
+        if (lowercase_copy(copperfin::platform::path_to_utf8_string(source.filename())) != expected_file_name) {
             error = runtime_text("Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName");
             return false;
         }
@@ -566,7 +570,7 @@ std::string resolve_project_item_source(
     bool require_unique_casefold,
     std::string& error) {
     error.clear();
-    const std::filesystem::path base_dir = std::filesystem::path(document.path).parent_path();
+    const std::filesystem::path base_dir = copperfin::platform::path_from_utf8_string(document.path).parent_path();
 
     const auto resolve_candidate = [&](const std::filesystem::path& candidate)
         -> std::optional<std::filesystem::path> {
@@ -575,7 +579,7 @@ std::string resolve_project_item_source(
         if (ambiguous) {
             error = runtime_text(
                 "Runtime.Package.Error.AmbiguousProjectAssetPath",
-                {{"path", candidate.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(candidate)}});
         }
         return resolved;
     };
@@ -610,16 +614,16 @@ std::string resolve_project_item_source(
         if (drive_relative && error.empty() && lookup_path.is_absolute()) {
             std::error_code exists_error;
             if (std::filesystem::exists(lookup_path, exists_error) && !exists_error) {
-                return lookup_path.lexically_normal().string();
+                return copperfin::platform::path_to_utf8_string(lookup_path.lexically_normal());
             }
         }
 #endif
         if (!error.empty()) {
-            return from_relative.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(from_relative.lexically_normal());
         }
         if (is_vfp_absolute_path(normalized_relative_path) ||
             is_windows_drive_relative_path(normalized_relative_path)) {
-            return from_relative.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(from_relative.lexically_normal());
         }
         if (has_parent_traversal_segment(entry.relative_path)) {
             bool fallback_ambiguous = false;
@@ -633,12 +637,12 @@ std::string resolve_project_item_source(
             if (fallback_ambiguous) {
                 error = runtime_text(
                     "Runtime.Package.Error.AmbiguousProjectAssetPath",
-                    {{"path", from_relative.string()}});
-                return from_relative.lexically_normal().string();
+                    {{"path", copperfin::platform::path_to_utf8_string(from_relative)}});
+                return copperfin::platform::path_to_utf8_string(from_relative.lexically_normal());
             }
         }
         if (entry.name.empty()) {
-            return from_relative.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(from_relative.lexically_normal());
         }
     }
 
@@ -650,7 +654,7 @@ std::string resolve_project_item_source(
     if (const auto resolved = resolve_candidate(from_name); resolved.has_value()) {
         return resolved->string();
     }
-    return from_name.lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(from_name.lexically_normal());
 }
 
 bool source_path_exists_on_host(const std::string& value) {
@@ -672,7 +676,7 @@ bool source_path_exists_on_host(const std::string& value) {
 #endif
 
     std::error_code error;
-    return std::filesystem::exists(std::filesystem::path(normalized), error) && !error;
+        return std::filesystem::exists(copperfin::platform::path_from_utf8_string(normalized), error) && !error;
 }
 
 std::string relative_asset_path(
@@ -681,9 +685,9 @@ std::string relative_asset_path(
     const std::string& resolved_source_path,
     bool preserve_resolved_spelling) {
     if (preserve_resolved_spelling && !resolved_source_path.empty()) {
-        const std::filesystem::path base_dir = std::filesystem::path(document.path).parent_path();
+        const std::filesystem::path base_dir = copperfin::platform::path_from_utf8_string(document.path).parent_path();
         const std::filesystem::path resolved_relative =
-            std::filesystem::path(resolved_source_path).lexically_relative(base_dir);
+            copperfin::platform::path_from_utf8_string(resolved_source_path).lexically_relative(base_dir);
         if (!resolved_relative.empty() && !resolved_relative.is_absolute()) {
             const std::string sanitized = sanitize_package_relative_path(resolved_relative.generic_string());
             if (!sanitized.empty()) {
@@ -705,7 +709,7 @@ std::string relative_asset_path(
 std::string resolve_working_directory(
     const studio::StudioDocumentModel& document,
     const studio::StudioProjectWorkspace& workspace) {
-    const std::filesystem::path document_dir = std::filesystem::path(document.path).parent_path();
+    const std::filesystem::path document_dir = copperfin::platform::path_from_utf8_string(document.path).parent_path();
     if (!workspace.home_directory.empty()) {
         const std::string normalized_home_directory =
             normalize_vfp_separators(workspace.home_directory);
@@ -717,13 +721,13 @@ std::string resolve_working_directory(
             normalized_home_path.is_relative();
         const std::filesystem::path home_directory = is_project_relative
             ? resolve_vfp_path_from_base(document_dir, workspace.home_directory)
-            : std::filesystem::path(workspace.home_directory);
+            : copperfin::platform::path_from_utf8_string(workspace.home_directory);
         std::error_code directory_error;
         if (std::filesystem::is_directory(home_directory, directory_error) && !directory_error) {
-            return home_directory.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(home_directory.lexically_normal());
         }
     }
-    return document_dir.lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(document_dir.lexically_normal());
 }
 
 std::string resolve_security_role(bool security_enabled) {
@@ -741,7 +745,8 @@ std::string resolve_security_role(bool security_enabled) {
 }
 
 bool is_extension_payload_path(const std::filesystem::path& path) {
-    const std::string extension = lowercase_copy(trim_copy(path.extension().string()));
+    const std::string extension = lowercase_copy(trim_copy(
+        copperfin::platform::path_to_utf8_string(path.extension())));
     return extension == ".dll" || extension == ".exe" || extension == ".vsix";
 }
 
@@ -754,11 +759,15 @@ bool is_recognized_security_role(
 }
 
 bool is_prg_path(const std::string& value) {
-    return lowercase_copy(trim_copy(std::filesystem::path(value).extension().string())) == ".prg";
+        return lowercase_copy(trim_copy(
+            copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(value).extension()))) == ".prg";
 }
 
 bool is_xasset_path(const std::string& value) {
-    const std::string extension = trim_copy(lowercase_copy(std::filesystem::path(value).extension().string()));
+    const std::string extension = trim_copy(lowercase_copy(
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(value).extension())));
     return extension == ".scx" ||
         extension == ".vcx" ||
         extension == ".frx" ||
@@ -767,7 +776,9 @@ bool is_xasset_path(const std::string& value) {
 }
 
 bool is_writable_package_data_path(const std::string& value) {
-    const std::string extension = trim_copy(lowercase_copy(std::filesystem::path(value).extension().string()));
+    const std::string extension = trim_copy(lowercase_copy(
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(value).extension())));
     return extension == ".dbf";
 }
 
@@ -777,7 +788,8 @@ bool should_stage_asset(const RuntimePackageAsset& asset) {
 
 std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source) {
     std::vector<std::filesystem::path> companions;
-    const std::string extension = trim_copy(lowercase_copy(source.extension().string()));
+    const std::string extension = trim_copy(lowercase_copy(
+        copperfin::platform::path_to_utf8_string(source.extension())));
     const auto same_stem = [&](const char* companion_extension) {
         auto path = source;
         path.replace_extension(companion_extension);
@@ -825,7 +837,7 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
             result.ok = false;
             result.error = runtime_text(
                 "Runtime.Package.Error.AmbiguousCompanionPath",
-                {{"path", companion_source.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(companion_source)}});
             return result;
         }
         if (!resolved_companion_source.has_value()) {
@@ -833,7 +845,7 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
                 result.ok = false;
                 result.error = runtime_text(
                     "Runtime.Package.Error.SourceFileMissing",
-                    {{"path", companion_source.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(companion_source)}});
                 return result;
             }
             continue;

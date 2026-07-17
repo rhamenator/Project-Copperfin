@@ -261,8 +261,8 @@ copperfin::runtime::RuntimeSessionOptions make_runtime_session_options(
     const std::filesystem::path& working_directory,
     bool stop_on_entry) {
     copperfin::runtime::RuntimeSessionOptions options;
-    options.startup_path = startup_path.string();
-    options.working_directory = working_directory.string();
+    options.startup_path = copperfin::platform::path_to_utf8_string(startup_path);
+    options.working_directory = copperfin::platform::path_to_utf8_string(working_directory);
     options.stop_on_entry = stop_on_entry;
     std::filesystem::path temp_owner = working_directory;
     if (temp_owner.empty()) {
@@ -271,7 +271,7 @@ copperfin::runtime::RuntimeSessionOptions make_runtime_session_options(
             ? startup_parent
             : std::filesystem::absolute(std::filesystem::temp_directory_path()) / "copperfin-prg-engine-tests";
     }
-    options.temp_directory = (temp_owner / "runtime-temp").string();
+    options.temp_directory = copperfin::platform::path_to_utf8_string(temp_owner / "runtime-temp");
     return options;
 }
 

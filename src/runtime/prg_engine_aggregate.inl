@@ -1061,13 +1061,17 @@
             {
                 const std::string normalized_target_path = normalize_path(unquote_string(index_file_name));
                 const std::string normalized_target_name =
-                    collapse_identifier(std::filesystem::path(normalized_target_path.empty() ? index_file_name : normalized_target_path).filename().string());
+                    collapse_identifier(copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(
+                            normalized_target_path.empty() ? index_file_name : normalized_target_path).filename()));
                 std::vector<const CursorState::OrderState *> matching_orders;
                 for (const CursorState::OrderState &order : cursor->orders)
                 {
                     const std::string normalized_order_path = normalize_path(order.index_path);
                     if ((!normalized_target_path.empty() && normalized_order_path == normalized_target_path) ||
-                        collapse_identifier(std::filesystem::path(normalized_order_path).filename().string()) == normalized_target_name)
+                        collapse_identifier(copperfin::platform::path_to_utf8_string(
+                            copperfin::platform::path_from_utf8_string(normalized_order_path).filename())) ==
+                            normalized_target_name)
                     {
                         matching_orders.push_back(&order);
                     }

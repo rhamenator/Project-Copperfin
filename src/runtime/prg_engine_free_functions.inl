@@ -331,7 +331,7 @@
             {
                 attributes += "D";
             }
-            const auto name = entry.path().filename().string();
+            const auto name = copperfin::platform::path_to_utf8_string(entry.path().filename());
             if (!name.empty() && name.front() == '.')
             {
                 attributes += "H";

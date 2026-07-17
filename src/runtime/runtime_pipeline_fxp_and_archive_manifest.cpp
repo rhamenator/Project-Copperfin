@@ -57,11 +57,11 @@ std::map<std::string, StagedContentFile> collect_staged_content_files(const Runt
 
         auto [found, inserted] = files.emplace(relative_path, StagedContentFile{
             .relative_path = relative_path,
-            .absolute_path = it->path().string(),
+            .absolute_path = copperfin::platform::path_to_utf8_string(it->path()),
             .declared_asset = false
         });
         if (!inserted) {
-            found->second.absolute_path = it->path().string();
+            found->second.absolute_path = copperfin::platform::path_to_utf8_string(it->path());
         }
     }
 
@@ -87,11 +87,13 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
     stream << "manifest_version=1\n";
     stream << "output_kind=fxp\n";
     stream << "token_contract=logical_statements\n";
-    stream << "primary_output=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "primary_output=" << quote_manifest_value(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename())) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     for (const auto& asset : plan.assets) {
         if (!should_stage_asset(asset) ||
-            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            lowercase_copy(trim_copy(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);
@@ -124,7 +126,8 @@ std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
     stream << "manifest_version=1\n";
     stream << "output_kind=app\n";
     stream << "archive_contract=staged_content_manifest\n";
-    stream << "primary_output=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "primary_output=" << quote_manifest_value(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename())) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
     for (const auto& asset : plan.assets) {

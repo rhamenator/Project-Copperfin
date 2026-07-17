@@ -4,6 +4,7 @@
 
 #include "prg_engine_runtime_config.h"
 
+#include "copperfin/platform/path.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -53,7 +54,7 @@ std::optional<RuntimeConfigFile> try_load_runtime_config_file(const std::filesys
     }
 
     RuntimeConfigFile config;
-    config.source_path = path.lexically_normal().string();
+    config.source_path = copperfin::platform::path_to_utf8_string(path.lexically_normal());
     std::string line;
     while (std::getline(input, line)) {
         std::string trimmed = trim_copy(strip_inline_config_comment(line));
@@ -157,9 +158,10 @@ void apply_runtime_config_defaults(RuntimeSessionOptions& options, const Runtime
 std::filesystem::path choose_runtime_temp_directory(const RuntimeSessionOptions& options) {
     if (!trim_copy(options.temp_directory).empty()) {
         std::error_code ignored;
-        std::filesystem::path explicit_path = std::filesystem::path(trim_copy(options.temp_directory));
+        std::filesystem::path explicit_path = copperfin::platform::path_from_utf8_string(
+            trim_copy(options.temp_directory));
         if (explicit_path.is_relative()) {
-            explicit_path = std::filesystem::path(options.working_directory) / explicit_path;
+            explicit_path = copperfin::platform::path_from_utf8_string(options.working_directory) / explicit_path;
         }
         std::filesystem::create_directories(explicit_path, ignored);
         if (std::filesystem::exists(explicit_path)) {
@@ -173,7 +175,7 @@ std::filesystem::path choose_runtime_temp_directory(const RuntimeSessionOptions&
         return os_temp.lexically_normal();
     }
     if (!options.working_directory.empty()) {
-        return std::filesystem::path(options.working_directory).lexically_normal();
+        return copperfin::platform::path_from_utf8_string(options.working_directory).lexically_normal();
     }
     return std::filesystem::current_path(ignored).lexically_normal();
 }

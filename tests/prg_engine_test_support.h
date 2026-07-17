@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "copperfin/platform/path.h"
 #include "copperfin/runtime/prg_engine.h"
 
 #include <cstdint>

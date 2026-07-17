@@ -45,8 +45,8 @@ bool file_names_equal_case_insensitive(
                -1,
                TRUE) == CSTR_EQUAL;
 #else
-    return lowercase_copy(left.filename().string()) ==
-        lowercase_copy(right.filename().string());
+    return lowercase_copy(copperfin::platform::path_to_utf8_string(left.filename())) ==
+        lowercase_copy(copperfin::platform::path_to_utf8_string(right.filename()));
 #endif
 }
 
@@ -250,7 +250,7 @@ bool inventory_generated_launcher_artifacts(
     const std::filesystem::path package_root(plan.package_root);
     const std::vector<LauncherArtifactSpec> specs{
         {
-            .path = std::filesystem::path(plan.launcher_output_path),
+            .path = copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
             .role = RuntimeLauncherArtifactRole::public_apphost,
             .required = true
         },
@@ -340,8 +340,8 @@ bool is_launcher_owned_digest(
     }
     return launcher_file_names_equal_case_insensitive(
                path.filename(),
-               std::filesystem::path(plan.launcher_output_path).filename()) ||
-        is_internal_generated_launcher_name(path.filename().string());
+               copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename()) ||
+        is_internal_generated_launcher_name(copperfin::platform::path_to_utf8_string(path.filename()));
 }
 
 }  // namespace copperfin::runtime::runtime_pipeline_detail

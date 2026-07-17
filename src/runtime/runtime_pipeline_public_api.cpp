@@ -95,10 +95,11 @@ public:
         mutex_owned_ = true;
         return true;
 #else
-        const std::filesystem::path lock_path = lock_identity_path.string() + ".copperfin-lock";
+        const std::filesystem::path lock_path = copperfin::platform::path_from_utf8_string(
+            copperfin::platform::path_to_utf8_string(lock_identity_path) + ".copperfin-lock");
         const std::string expected_contents =
             "copperfin_package_lock=1\nidentity=" + identity + "\n";
-        std::string temporary_path = lock_path.string() + ".tmp-XXXXXX";
+        std::string temporary_path = copperfin::platform::path_to_utf8_string(lock_path) + ".tmp-XXXXXX";
         std::vector<char> temporary_path_buffer(
             temporary_path.begin(), temporary_path.end());
         temporary_path_buffer.push_back('\0');
@@ -458,9 +459,12 @@ public:
         std::filesystem::path package_root,
         const Mode mode = Mode::begin_new)
         : package_root_(std::move(package_root)),
-          backup_root_(package_root_.string() + std::string(kPackageBackupSuffix)),
-          marker_path_(package_root_.string() + std::string(kPackageTransactionMarker)),
-          backup_owner_path_(backup_root_.string() + std::string(kPackageTransactionOwnerSuffix)),
+          backup_root_(copperfin::platform::path_from_utf8_string(
+              copperfin::platform::path_to_utf8_string(package_root_) + std::string(kPackageBackupSuffix))),
+          marker_path_(copperfin::platform::path_from_utf8_string(
+              copperfin::platform::path_to_utf8_string(package_root_) + std::string(kPackageTransactionMarker))),
+          backup_owner_path_(copperfin::platform::path_from_utf8_string(
+              copperfin::platform::path_to_utf8_string(backup_root_) + std::string(kPackageTransactionOwnerSuffix))),
           mode_(mode),
           transaction_identity_(
               "copperfin_package_transaction=1\npackage_root=" +
@@ -485,14 +489,14 @@ public:
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", package_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                 return false;
             }
         }
         if (!parent_identity_.acquire(parent)) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
 
@@ -520,13 +524,13 @@ public:
         if (!lock_identity.ok || !transaction_lock_.acquire(lock_identity_path, lock_identity.hex_digest)) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
         if (!parent_identity_.still_same()) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", parent.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(parent)}});
             return false;
         }
 
@@ -535,40 +539,40 @@ public:
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", backup_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
             return false;
         }
         bool package_exists = directory_entry_exists(pinned_path(package_root_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
         bool transaction_marker_exists = directory_entry_exists(pinned_path(marker_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", marker_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
             return false;
         }
         if (transaction_marker_exists && !is_owned_transaction_file(pinned_path(marker_path_))) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", marker_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
             return false;
         }
         bool backup_owner_exists = directory_entry_exists(pinned_path(backup_owner_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", backup_owner_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
             return false;
         }
         if (backup_owner_exists && !is_owned_transaction_file(pinned_path(backup_owner_path_))) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", backup_owner_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
             return false;
         }
         if (!interrupted_backup_exists && backup_owner_exists) {
@@ -581,7 +585,7 @@ public:
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", backup_owner_path_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
                 return false;
             }
             backup_owner_exists = false;
@@ -589,7 +593,7 @@ public:
         if (interrupted_backup_exists && !backup_owner_exists) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", backup_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
             return false;
         }
 
@@ -602,7 +606,7 @@ public:
                 filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", package_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                 return false;
             }
             if (interrupted_backup_exists &&
@@ -610,7 +614,7 @@ public:
                  filesystem_error)) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", backup_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
                 return false;
             }
             had_previous_package_ = interrupted_backup_exists;
@@ -622,7 +626,7 @@ public:
             if (!is_direct_directory(pinned_path(backup_root_), filesystem_error) || filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", backup_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
                 return false;
             }
             bool partial_package = false;
@@ -632,7 +636,7 @@ public:
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
-                        {{"path", package_root_.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                     return false;
                 }
                 if (!package_is_directory) {
@@ -652,7 +656,7 @@ public:
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
-                        {{"path", package_root_.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                     return false;
                 }
                 package_exists = false;
@@ -667,14 +671,14 @@ public:
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
-                        {{"path", backup_root_.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
                     return false;
                 }
                 std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
-                        {{"path", backup_owner_path_.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
                     return false;
                 }
                 interrupted_backup_exists = false;
@@ -694,7 +698,7 @@ public:
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
-                        {{"path", package_root_.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                     return false;
                 }
                 package_exists = false;
@@ -708,7 +712,7 @@ public:
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", marker_path_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
                 return false;
             }
             transaction_marker_exists = false;
@@ -718,14 +722,14 @@ public:
             if (filesystem_error || !std::filesystem::is_directory(pinned_path(package_root_), filesystem_error)) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", package_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                 return false;
             }
             std::string owner_error;
             if (!write_owned_transaction_file_atomically(backup_owner_path_, owner_error)) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", package_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                 return false;
             }
             if (!ensure_parent_identity(
@@ -744,7 +748,7 @@ public:
                 std::filesystem::remove(pinned_path(backup_owner_path_), ignored);
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", package_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
                 return false;
             }
             had_previous_package_ = true;
@@ -765,7 +769,7 @@ public:
                 (void)rollback(ignored);
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", marker_path_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
                 return false;
             }
         }
@@ -782,7 +786,7 @@ public:
             (void)rollback(ignored);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
         return true;
@@ -798,18 +802,19 @@ public:
         const RuntimePackagePlan& logical_plan) const {
         RuntimePackagePlan filesystem_plan = logical_plan;
 #if !defined(_WIN32)
-        const std::filesystem::path logical_root(logical_plan.package_root);
+        const std::filesystem::path logical_root =
+            copperfin::platform::path_from_utf8_string(logical_plan.package_root);
         const std::filesystem::path pinned_root =
             parent_identity_.stable_parent_path() / logical_root.filename();
         const auto pin_path = [&](std::string& value) {
             if (value.empty()) {
                 return;
             }
-            const std::filesystem::path candidate(value);
+            const std::filesystem::path candidate = copperfin::platform::path_from_utf8_string(value);
             const std::filesystem::path relative =
                 candidate.lexically_relative(logical_root);
             if (candidate == logical_root) {
-                value = pinned_root.string();
+                value = copperfin::platform::path_to_utf8_string(pinned_root);
             } else if (!relative.empty() && !relative.is_absolute()) {
                 bool escapes = false;
                 for (const auto& component : relative) {
@@ -819,7 +824,8 @@ public:
                     }
                 }
                 if (!escapes) {
-                    value = (pinned_root / relative).lexically_normal().string();
+                    value = copperfin::platform::path_to_utf8_string(
+                        (pinned_root / relative).lexically_normal());
                 }
             }
         };
@@ -867,10 +873,10 @@ public:
                 "Runtime.Package.Error.PackageRollbackFailed")) {
 #if !defined(_WIN32)
             if (parent_identity_.rollback_at_pinned_parent(
-                    package_root_.filename().string(),
-                    backup_root_.filename().string(),
-                    marker_path_.filename().string(),
-                    backup_owner_path_.filename().string(),
+                    copperfin::platform::path_to_utf8_string(package_root_.filename()),
+                    copperfin::platform::path_to_utf8_string(backup_root_.filename()),
+                    copperfin::platform::path_to_utf8_string(marker_path_.filename()),
+                    copperfin::platform::path_to_utf8_string(backup_owner_path_.filename()),
                     had_previous_package_)) {
                 active_ = false;
                 return true;
@@ -886,7 +892,7 @@ public:
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageRollbackFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
         if (package_exists) {
@@ -900,7 +906,7 @@ public:
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageRollbackFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
 
@@ -913,7 +919,7 @@ public:
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageRollbackFailed",
-                {{"path", marker_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
             return false;
         }
 
@@ -930,7 +936,7 @@ public:
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageRollbackFailed",
-                    {{"path", backup_root_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
                 return false;
             }
             active_ = false;
@@ -938,7 +944,7 @@ public:
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageRollbackFailed",
-                    {{"path", backup_owner_path_.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
                 return false;
             }
             return true;
@@ -964,7 +970,7 @@ public:
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", package_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
 
@@ -983,7 +989,7 @@ public:
             active_ = false;
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
-                {{"path", backup_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
             return true;
         }
 
@@ -991,7 +997,7 @@ public:
         if (filesystem_error) {
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
-                {{"path", backup_owner_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
         }
         active_ = false;
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
@@ -1000,7 +1006,7 @@ public:
                 std::memory_order_relaxed)) {
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
-                {{"path", backup_root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
         }
 #endif
         return true;
@@ -1022,7 +1028,7 @@ public:
                 transaction_identity_ + std::string(kPackageTransactionDeferredPhase))) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", marker_path_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
             return false;
         }
         active_ = false;
@@ -1045,7 +1051,7 @@ private:
         if (parent_identity_.still_same()) {
             return true;
         }
-        error = runtime_text(error_key, {{"path", package_root_.string()}});
+        error = runtime_text(error_key, {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
         return false;
     }
 
@@ -1056,21 +1062,22 @@ private:
         if (!parent_identity_.still_same()) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
             return false;
         }
         static std::atomic<unsigned long long> sequence{0U};
         const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
         const std::filesystem::path pinned_target = pinned_path(path);
         const std::filesystem::path temporary_path =
-            pinned_target.string() + ".tmp." + std::to_string(timestamp) + "." +
+            copperfin::platform::path_to_utf8_string(pinned_target) + ".tmp." +
+            std::to_string(timestamp) + "." +
             std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
 
         std::error_code filesystem_error;
         if (directory_entry_exists(temporary_path, filesystem_error) || filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", temporary_path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(temporary_path)}});
             return false;
         }
 
@@ -1082,7 +1089,7 @@ private:
             std::filesystem::remove(temporary_path, filesystem_error);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
             return false;
         }
 
@@ -1095,7 +1102,7 @@ private:
         std::filesystem::remove(temporary_path, ignored);
         error = runtime_text(
             "Runtime.Package.Error.PackageTransactionStartFailed",
-            {{"path", path.string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return false;
     }
 
@@ -1146,7 +1153,7 @@ private:
         return !recorded_path.empty() &&
                recorded_path.find('\n') == std::string::npos &&
                runtime_pipeline_detail::canonical_casefolded_path_identity(
-                   std::filesystem::path(recorded_path)) ==
+                   copperfin::platform::path_from_utf8_string(recorded_path)) ==
                    runtime_pipeline_detail::canonical_casefolded_path_identity(package_root_);
 #else
         return false;
@@ -1272,7 +1279,8 @@ RuntimePackagePlan create_runtime_package_plan(
     RuntimePackagePlan plan;
     plan.project_path = document.path;
     plan.project_title = workspace.project_title.empty()
-        ? std::filesystem::path(document.path).stem().string()
+        ? copperfin::platform::path_to_utf8_string(
+              copperfin::platform::path_from_utf8_string(document.path).stem())
         : workspace.project_title;
     plan.configuration = configuration;
     plan.security_enabled = enable_security;
@@ -1307,58 +1315,58 @@ RuntimePackagePlan create_runtime_package_plan(
         return plan;
     }
 
-    const std::filesystem::path root(output_root);
+    const std::filesystem::path root = copperfin::platform::path_from_utf8_string(output_root);
     const std::filesystem::path package_root = root / sanitize_file_name(plan.project_title);
     const std::filesystem::path content_root = package_root / "content";
-    plan.package_root = package_root.string();
-    plan.content_root = content_root.string();
-    plan.manifest_path = (package_root / "app.cfmanifest").string();
-    plan.debug_manifest_path = (package_root / "app.cfdebug").string();
-    plan.launcher_project_path = (package_root / "launcher" / "Copperfin.GeneratedLauncher.csproj").string();
-    plan.launcher_source_path = (package_root / "launcher" / "Program.cs").string();
+    plan.package_root = copperfin::platform::path_to_utf8_string(package_root);
+    plan.content_root = copperfin::platform::path_to_utf8_string(content_root);
+    plan.manifest_path = copperfin::platform::path_to_utf8_string(package_root / "app.cfmanifest");
+    plan.debug_manifest_path = copperfin::platform::path_to_utf8_string(package_root / "app.cfdebug");
+    plan.launcher_project_path = copperfin::platform::path_to_utf8_string(package_root / "launcher" / "Copperfin.GeneratedLauncher.csproj");
+    plan.launcher_source_path = copperfin::platform::path_to_utf8_string(package_root / "launcher" / "Program.cs");
     const std::filesystem::path output_file_name(resolve_output_file_name(workspace, plan.project_title));
-    plan.ast_manifest_path = (package_root / (output_file_name.string() + ".ast.json")).string();
-    plan.ir_manifest_path = (package_root / (output_file_name.string() + ".ir.json")).string();
-    plan.transpiled_csharp_path = (package_root / (output_file_name.string() + ".transpiled.cs")).string();
+    plan.ast_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ast.json"));
+    plan.ir_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ir.json"));
+    plan.transpiled_csharp_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".transpiled.cs"));
     std::filesystem::path module_definition_file_name = output_file_name;
     module_definition_file_name.replace_extension(".def");
-    plan.launcher_output_path = (package_root / output_file_name).string();
-    plan.module_definition_path = (package_root / module_definition_file_name).string();
+    plan.launcher_output_path = copperfin::platform::path_to_utf8_string(package_root / output_file_name);
+    plan.module_definition_path = copperfin::platform::path_to_utf8_string(package_root / module_definition_file_name);
     if (is_library_output_kind(plan.output_kind)) {
         const std::filesystem::path wrapper_root = package_root / "wrapper";
-        const std::string output_stem = output_file_name.stem().string();
-        plan.native_wrapper_source_path = (wrapper_root / (output_stem + "_wrapper.cpp")).string();
-        plan.native_wrapper_cmake_path = (wrapper_root / "CMakeLists.txt").string();
-        plan.native_wrapper_build_script_path = (wrapper_root / "build_wrapper.sh").string();
-        plan.native_wrapper_build_powershell_path = (wrapper_root / "build_wrapper.ps1").string();
+        const std::string output_stem = copperfin::platform::path_to_utf8_string(output_file_name.stem());
+        plan.native_wrapper_source_path = copperfin::platform::path_to_utf8_string(wrapper_root / (output_stem + "_wrapper.cpp"));
+        plan.native_wrapper_cmake_path = copperfin::platform::path_to_utf8_string(wrapper_root / "CMakeLists.txt");
+        plan.native_wrapper_build_script_path = copperfin::platform::path_to_utf8_string(wrapper_root / "build_wrapper.sh");
+        plan.native_wrapper_build_powershell_path = copperfin::platform::path_to_utf8_string(wrapper_root / "build_wrapper.ps1");
     }
     if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
         std::filesystem::path library_api_manifest_file_name = output_file_name;
         library_api_manifest_file_name += ".api";
-        plan.library_api_manifest_path = (package_root / library_api_manifest_file_name).string();
+        plan.library_api_manifest_path = copperfin::platform::path_to_utf8_string(package_root / library_api_manifest_file_name);
     }
     if (plan.output_kind == BuildOutputKind::fll) {
         std::filesystem::path fll_api_manifest_file_name = output_file_name;
         fll_api_manifest_file_name += ".api";
-        plan.fll_api_manifest_path = (package_root / fll_api_manifest_file_name).string();
+        plan.fll_api_manifest_path = copperfin::platform::path_to_utf8_string(package_root / fll_api_manifest_file_name);
     }
     if (plan.output_kind == BuildOutputKind::fxp) {
         std::filesystem::path fxp_token_manifest_file_name = output_file_name;
         fxp_token_manifest_file_name += ".tokens";
-        plan.fxp_token_manifest_path = (package_root / fxp_token_manifest_file_name).string();
+        plan.fxp_token_manifest_path = copperfin::platform::path_to_utf8_string(package_root / fxp_token_manifest_file_name);
     }
     if (plan.output_kind == BuildOutputKind::app) {
         std::filesystem::path app_archive_manifest_file_name = output_file_name;
         app_archive_manifest_file_name += ".contents";
-        plan.app_archive_manifest_path = (package_root / app_archive_manifest_file_name).string();
+        plan.app_archive_manifest_path = copperfin::platform::path_to_utf8_string(package_root / app_archive_manifest_file_name);
     }
-    plan.runtime_host_destination_path = (package_root / runtime_host_file_name()).string();
+    plan.runtime_host_destination_path = copperfin::platform::path_to_utf8_string(package_root / runtime_host_file_name());
     std::string output_name_error;
     if (!validate_public_output_artifact_name(plan, output_name_error)) {
         plan.warnings.push_back(std::move(output_name_error));
         return plan;
     }
-    plan.working_directory = content_root.lexically_normal().string();
+    plan.working_directory = copperfin::platform::path_to_utf8_string(content_root.lexically_normal());
     plan.startup_item = workspace.build_plan.startup_item;
     plan.security_role = resolve_security_role(enable_security);
     if (enable_security && !is_recognized_security_role(security_profile, plan.security_role)) {
@@ -1373,7 +1381,7 @@ RuntimePackagePlan create_runtime_package_plan(
                 }));
         }
     }
-    plan.audit_log_path = (package_root / "security_audit.log").string();
+    plan.audit_log_path = copperfin::platform::path_to_utf8_string(package_root / "security_audit.log");
     const std::string source_working_directory = resolve_working_directory(document, workspace);
 
     for (const auto& entry : workspace.entries) {
@@ -1395,7 +1403,8 @@ RuntimePackagePlan create_runtime_package_plan(
             entry,
             asset.source_path,
             asset.required_for_runtime && asset.exists);
-        asset.staged_path = (content_root / asset.relative_path).lexically_normal().string();
+        asset.staged_path = copperfin::platform::path_to_utf8_string(
+            (content_root / copperfin::platform::path_from_utf8_string(asset.relative_path)).lexically_normal());
         asset.type_title = entry.type_title;
         asset.excluded = entry.excluded;
         if (asset.required_for_runtime) {
@@ -1710,7 +1719,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             .error = runtime_text(
                 "Runtime.Package.Error.CreateContentRootFailed")};
     }
-    filesystem_plan.content_root = content_identity.stable_parent_path().string();
+    filesystem_plan.content_root = copperfin::platform::path_to_utf8_string(
+        content_identity.stable_parent_path());
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
     {
         std::unique_lock<std::mutex> pause_lock(
@@ -1734,7 +1744,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             return {.ok = false, .error = error};
         }
         std::filesystem::create_directories(
-            std::filesystem::path(filesystem_plan.launcher_project_path).parent_path(),
+            copperfin::platform::path_from_utf8_string(filesystem_plan.launcher_project_path).parent_path(),
             directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
@@ -1771,7 +1781,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                 }
             }
             if (!escapes_content) {
-                return (std::filesystem::path(plan.content_root) / content_relative)
+                return (copperfin::platform::path_from_utf8_string(plan.content_root) / content_relative)
                     .lexically_normal();
             }
         }
@@ -1786,7 +1796,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                 }
             }
             if (!escapes) {
-                return (std::filesystem::path(plan.package_root) / relative)
+                return (copperfin::platform::path_from_utf8_string(plan.package_root) / relative)
                     .lexically_normal();
             }
         }
@@ -1799,12 +1809,14 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             if (physical_path.empty() || !std::filesystem::exists(physical_path)) {
                 return true;
             }
-            const auto digest = security::sha256_hex_for_file(physical_path.string());
+            const auto digest = security::sha256_hex_for_file(
+                copperfin::platform::path_to_utf8_string(physical_path));
             if (!digest.ok) {
                 digest_error = digest.error;
                 return false;
             }
-            const std::string logical_path = logical_package_path(physical_path).string();
+            const std::string logical_path = copperfin::platform::path_to_utf8_string(
+                logical_package_path(physical_path));
             const auto existing = std::find_if(
                 digests.begin(),
                 digests.end(),
@@ -1860,12 +1872,14 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                     "record_" + std::to_string(asset.record_index) + ".asset";
                 asset.staged_path.clear();
             } else {
-                asset.staged_path = logical_package_path(destination).string();
+                asset.staged_path = copperfin::platform::path_to_utf8_string(
+                    logical_package_path(destination));
             }
             materialized_plan.warnings.push_back(error);
             continue;
         }
-        asset.staged_path = logical_package_path(destination).string();
+        asset.staged_path = copperfin::platform::path_to_utf8_string(
+            logical_package_path(destination));
         if (asset.required_for_runtime) {
             materialized_plan.startup_source_path = asset.staged_path;
         }
@@ -1894,7 +1908,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         asset.copied = true;
 
-        const auto digest = security::sha256_hex_for_file(destination.string());
+        const auto digest = security::sha256_hex_for_file(
+            copperfin::platform::path_to_utf8_string(destination));
         if (!digest.ok) {
             return {.ok = false, .error = digest.error};
         }
@@ -1902,7 +1917,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
 
         if (is_extension_payload_path(destination)) {
             materialized_plan.extension_payload_digests.push_back({
-                .path = logical_package_path(destination).string(),
+                .path = copperfin::platform::path_to_utf8_string(
+                    logical_package_path(destination)),
                 .sha256 = digest.hex_digest
             });
         }
@@ -1935,7 +1951,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             return {.ok = false, .error = error};
         }
         std::filesystem::create_directories(
-            std::filesystem::path(filesystem_plan.native_wrapper_source_path).parent_path(),
+            copperfin::platform::path_from_utf8_string(filesystem_plan.native_wrapper_source_path).parent_path(),
             directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
@@ -2082,8 +2098,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         for (auto& asset : filesystem_materialized_plan.assets) {
             if (!asset.staged_path.empty()) {
                 asset.staged_path = (
-                    std::filesystem::path(filesystem_plan.content_root) /
-                    std::filesystem::path(asset.relative_path)).string();
+                    copperfin::platform::path_from_utf8_string(filesystem_plan.content_root) /
+                    copperfin::platform::path_from_utf8_string(asset.relative_path)).lexically_normal();
             }
         }
         if (!write_app_archive_primary_output(
@@ -2117,7 +2133,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
         materialized_plan.extension_payload_digests.push_back({
-            .path = logical_package_path(filesystem_plan.runtime_host_destination_path).string(),
+            .path = copperfin::platform::path_to_utf8_string(
+                logical_package_path(filesystem_plan.runtime_host_destination_path)),
             .sha256 = runtime_host_digest.hex_digest
         });
 
@@ -2135,7 +2152,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                 return {.ok = false, .error = native_entrypoint_digest.error};
             }
             materialized_plan.extension_payload_digests.push_back({
-                .path = logical_package_path(filesystem_plan.launcher_output_path).string(),
+            .path = copperfin::platform::path_to_utf8_string(
+                logical_package_path(filesystem_plan.launcher_output_path)),
                 .sha256 = native_entrypoint_digest.hex_digest
             });
             materialized_plan.primary_output_materialized = true;
@@ -2463,7 +2481,8 @@ RuntimeBuildResult build_runtime_package_primary_output(
     }
 
     RuntimePackagePlan built_plan = plan;
-    const std::filesystem::path source_root = std::filesystem::path(plan.native_wrapper_cmake_path).parent_path();
+    const std::filesystem::path source_root =
+        copperfin::platform::path_from_utf8_string(plan.native_wrapper_cmake_path).parent_path();
     const std::filesystem::path build_root = source_root / "cmake_pipeline_build";
     const std::filesystem::path configure_log_path = build_root / "cmake-configure.log";
     const std::filesystem::path build_log_path = build_root / "cmake-build.log";
@@ -2476,8 +2495,9 @@ RuntimeBuildResult build_runtime_package_primary_output(
     }
 
     const std::string configure_command =
-        "cmake -S \"" + source_root.string() + "\" -B \"" + build_root.string() + "\" > \"" +
-        configure_log_path.string() + "\" 2>&1";
+        "cmake -S \"" + copperfin::platform::path_to_utf8_string(source_root) + "\" -B \"" +
+        copperfin::platform::path_to_utf8_string(build_root) + "\" > \"" +
+        copperfin::platform::path_to_utf8_string(configure_log_path) + "\" 2>&1";
     if (std::system(configure_command.c_str()) != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed");
         if (std::filesystem::exists(configure_log_path)) {
@@ -2487,7 +2507,8 @@ RuntimeBuildResult build_runtime_package_primary_output(
     }
 
     const std::string build_command =
-        "cmake --build \"" + build_root.string() + "\" > \"" + build_log_path.string() + "\" 2>&1";
+        "cmake --build \"" + copperfin::platform::path_to_utf8_string(build_root) + "\" > \"" +
+        copperfin::platform::path_to_utf8_string(build_log_path) + "\" 2>&1";
     if (std::system(build_command.c_str()) != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed");
         if (std::filesystem::exists(build_log_path)) {

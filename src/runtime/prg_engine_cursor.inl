@@ -185,7 +185,8 @@
 
                 if (!index_asset.probe.key_expression_hint.empty())
                 {
-                    const std::string fallback_name = std::filesystem::path(index_asset.path).stem().string();
+                    const std::string fallback_name = copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(index_asset.path).stem());
                     orders.push_back({.name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
                                       .expression = index_asset.probe.key_expression_hint,
                                       .for_expression = index_asset.probe.for_expression_hint,

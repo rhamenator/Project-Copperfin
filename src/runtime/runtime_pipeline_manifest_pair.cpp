@@ -260,10 +260,12 @@ private:
 
         marker_leaf_ = kManifestPairMarker;
         for (std::size_t index = 0U; index < destination_leaves_.size(); ++index) {
-            stage_leaves_[index] =
-                destination_leaves_[index].string() + std::string(kManifestPairNextSuffix);
-            backup_leaves_[index] =
-                destination_leaves_[index].string() + std::string(kManifestPairPreviousSuffix);
+            stage_leaves_[index] = copperfin::platform::path_from_utf8_string(
+                copperfin::platform::path_to_utf8_string(destination_leaves_[index]) +
+                std::string(kManifestPairNextSuffix));
+            backup_leaves_[index] = copperfin::platform::path_from_utf8_string(
+                copperfin::platform::path_to_utf8_string(destination_leaves_[index]) +
+                std::string(kManifestPairPreviousSuffix));
         }
         const std::array<std::filesystem::path, 7U> reserved{
             marker_leaf_,
@@ -306,7 +308,7 @@ private:
                 directory_.acquire_failure() == ManifestPairDirectoryAcquireFailure::busy
                 ? "Runtime.Package.Error.ManifestPairTransactionCollision"
                 : "Runtime.Package.Error.ManifestPairPathRejected";
-            error = runtime_text(key, {{"path", root_.string()}});
+            error = runtime_text(key, {{"path", copperfin::platform::path_to_utf8_string(root_)}});
             return false;
         }
         return true;
@@ -315,7 +317,7 @@ private:
     std::string path_rejected(const std::filesystem::path& path) const {
         return runtime_text(
             "Runtime.Package.Error.ManifestPairPathRejected",
-            {{"path", path.string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(path)}});
     }
 
     std::filesystem::path display_path(const std::filesystem::path& leaf) const {
@@ -364,7 +366,7 @@ private:
             if (directory_.entry_kind(leaf) != ManifestPairEntryKind::missing) {
                 error = runtime_text(
                     "Runtime.Package.Error.ManifestPairTransactionCollision",
-                    {{"path", display_path(leaf).string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(display_path(leaf))}});
                 return false;
             }
         }
@@ -501,7 +503,7 @@ private:
         if (!runtime_hash.has_value() || !debug_hash.has_value()) {
             error = runtime_text(
                 "Runtime.Package.Error.ManifestPairStageFailed",
-                {{"path", root_.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(root_)}});
             return false;
         }
         journal_ = ManifestPairJournal{
@@ -515,7 +517,7 @@ private:
                 build_journal_text(*journal_))) {
             error = runtime_text(
                 "Runtime.Package.Error.ManifestPairStageFailed",
-                {{"path", display_path(marker_leaf_).string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(display_path(marker_leaf_))}});
             return false;
         }
         if (!directory_.create_direct_file_and_flush(stage_leaves_[0], runtime_contents)) {
@@ -553,7 +555,7 @@ private:
         std::string& error) {
         const std::string operation_error = runtime_text(
             error_key,
-            {{"path", display_path(leaf).string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(display_path(leaf))}});
         std::string recovery_error;
         if (!recover_existing_transaction(recovery_error)) {
             error = recovery_error + "\n" + operation_error;
@@ -566,13 +568,13 @@ private:
     std::string transaction_collision(const std::filesystem::path& leaf) const {
         return runtime_text(
             "Runtime.Package.Error.ManifestPairTransactionCollision",
-            {{"path", display_path(leaf).string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(display_path(leaf))}});
     }
 
     std::string rollback_failed(const std::filesystem::path& leaf) const {
         return runtime_text(
             "Runtime.Package.Error.ManifestPairRollbackFailed",
-            {{"path", display_path(leaf).string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(display_path(leaf))}});
     }
 
     static bool promotion_fault_triggered(const bool first) {

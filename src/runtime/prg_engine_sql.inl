@@ -508,7 +508,7 @@
 
         std::string use_target_resolve_message(const std::filesystem::path &path) const
         {
-            return runtime_text("Runtime.Prg.Cursor.Error.UseTargetResolveFailed", {{"path", path.string()}});
+            return runtime_text("Runtime.Prg.Cursor.Error.UseTargetResolveFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         }
 
         bool open_table_cursor(
@@ -533,14 +533,16 @@
 
             if (!remote)
             {
-                std::filesystem::path table_path(unquote_string(trim_copy(raw_path)));
+                std::filesystem::path table_path = copperfin::platform::path_from_utf8_string(
+                    unquote_string(trim_copy(raw_path)));
                 if (table_path.extension().empty())
                 {
                     table_path += ".dbf";
                 }
                 if (table_path.is_relative())
                 {
-                    table_path = std::filesystem::path(current_default_directory()) / table_path;
+                    table_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        table_path;
                 }
                 table_path = table_path.lexically_normal();
                 if (!std::filesystem::exists(table_path))
@@ -549,14 +551,15 @@
                     return false;
                 }
 
-                const auto table_result = vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+                const auto table_result = vfp::parse_dbf_table_from_file(
+                    copperfin::platform::path_to_utf8_string(table_path), 1U);
                 if (!table_result.ok)
                 {
                     last_error_message = table_result.error;
                     return false;
                 }
 
-                resolved_path = table_path.string();
+                resolved_path = copperfin::platform::path_to_utf8_string(table_path);
                 dbf_identity = resolved_path;
                 field_count = table_result.table.fields.size();
                 record_count = table_result.table.header.record_count;
@@ -564,7 +567,7 @@
                 std::vector<CursorState::OrderState> orders = load_cursor_orders(resolved_path);
                 if (alias.empty())
                 {
-                    alias = table_path.stem().string();
+                    alias = copperfin::platform::path_to_utf8_string(table_path.stem());
                 }
 
                 const std::optional<int> requested_target_area = resolve_use_target_work_area(in_expression, stack.back());
@@ -1352,25 +1355,30 @@
                     return 0;
                 }
             }
-            else if (lowercase_copy(std::filesystem::path(trim_copy(source)).extension().string()) == ".prg")
+            else if (lowercase_copy(copperfin::platform::path_to_utf8_string(
+                         copperfin::platform::path_from_utf8_string(trim_copy(source)).extension())) == ".prg")
             {
-                std::filesystem::path program_path = std::filesystem::path(trim_copy(source));
+                std::filesystem::path program_path = copperfin::platform::path_from_utf8_string(
+                    trim_copy(source));
                 if (program_path.is_relative())
                 {
-                    program_path = std::filesystem::path(current_default_directory()) / program_path;
+                    program_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        program_path;
                 }
                 program_path = program_path.lexically_normal();
 
                 std::error_code ignored;
                 if (std::filesystem::exists(program_path, ignored))
                 {
-                    Program &program = load_program(program_path.string());
+                    const std::string program_path_text =
+                        copperfin::platform::path_to_utf8_string(program_path);
+                    Program &program = load_program(program_path_text);
                     const bool native_class_found = find_native_class_lookup(program, prog_id).has_value();
                     RuntimeOleObjectState *runtime_object = instantiate_native_class_object(
                         frame,
                         prog_id,
-                        program_path.string(),
-                        normalize_identifier(program_path.string()),
+                        program_path_text,
+                        normalize_identifier(program_path_text),
                         constructor_arguments,
                         constructor_argument_references);
                     if (runtime_object != nullptr)

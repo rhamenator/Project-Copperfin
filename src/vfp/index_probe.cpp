@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/vfp/index_probe.h"
+#include "copperfin/platform/path.h"
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/cdx_header.h"
@@ -598,7 +599,8 @@ bool IndexProbe::looks_like_index() const {
 }
 
 IndexKind index_kind_from_path(const std::string& path) {
-    std::string extension = std::filesystem::path(path).extension().string();
+    std::string extension = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).extension());
     std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
@@ -665,7 +667,7 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
         return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.PathExtensionUnknown")};
     }
 
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
     }

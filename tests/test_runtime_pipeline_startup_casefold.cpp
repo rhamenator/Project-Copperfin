@@ -40,11 +40,12 @@ copperfin::studio::StudioProjectWorkspace startup_workspace(
     copperfin::studio::StudioProjectWorkspace workspace;
     workspace.available = true;
     workspace.project_title = project_title;
-    workspace.home_directory = project_dir.string();
+    workspace.home_directory = copperfin::platform::path_to_utf8_string(project_dir);
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = project_title;
-    workspace.build_plan.output_path = (output_dir / (project_title + ".exe")).string();
+    workspace.build_plan.output_path = copperfin::platform::path_to_utf8_string(
+        output_dir / (project_title + ".exe"));
     workspace.build_plan.startup_item = startup_path;
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {{
@@ -64,7 +65,7 @@ copperfin::runtime::RuntimePackagePlan create_startup_plan(
         workspace,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
-        output_dir.string(),
+        copperfin::platform::path_to_utf8_string(output_dir),
         copperfin::runtime::BuildConfiguration::debug,
         false,
         false);
@@ -77,7 +78,7 @@ copperfin::runtime::RuntimeMaterializeResult materialize_startup_plan(
         plan,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
-        runtime_host.string());
+        copperfin::platform::path_to_utf8_string(runtime_host));
 }
 
 bool has_exact_directory_entry(
@@ -90,7 +91,7 @@ bool has_exact_directory_entry(
         if (error) {
             return false;
         }
-        if (iterator->path().filename().string() == file_name) {
+        if (copperfin::platform::path_to_utf8_string(iterator->path().filename()) == file_name) {
             return true;
         }
     }
@@ -700,6 +701,75 @@ void test_missing_required_startup_sidecar_fails_for_all_xasset_families() {
         fs::remove_all(temp_root, ignored);
         ++index;
     }
+}
+
+void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts() {
+    namespace fs = std::filesystem;
+    std::string unicode_directory = "copperfin_runtime_pipeline_";
+    unicode_directory += "\xE9\xA0\xB9\xE7\x9B\xAE";
+    std::string unicode_source_name = "caf";
+    unicode_source_name += "\xC3\xA9.prg";
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / copperfin::platform::path_from_utf8_string(unicode_directory);
+    const fs::path project_dir = temp_root / "project";
+    const fs::path source_dir = project_dir / "Sources";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    const fs::path source_path = source_dir / copperfin::platform::path_from_utf8_string(unicode_source_name);
+    const std::string startup_relative =
+        "Sources/" + copperfin::platform::path_to_utf8_string(source_path.filename());
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_dir);
+    write_text(source_path, "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = copperfin::platform::path_to_utf8_string(project_dir / "Unicode.pjx");
+    const auto workspace = startup_workspace(
+        project_dir,
+        output_dir,
+        "Unicode",
+        startup_relative,
+        "Program");
+    const auto plan = create_startup_plan(document, workspace, output_dir);
+
+    expect(plan.ok, "#3873: Unicode runtime package plan should be created");
+    expect(plan.assets.size() == 1U, "#3873: Unicode runtime package should retain its source asset");
+    if (plan.assets.size() == 1U) {
+        expect(plan.assets.front().source_path == copperfin::platform::path_to_utf8_string(source_path),
+               "#3873: Unicode runtime source path should preserve UTF-8 spelling");
+        const auto source_digest = copperfin::security::sha256_hex_for_file(
+            copperfin::platform::path_to_utf8_string(source_path));
+        expect(source_digest.ok,
+               "#3873: Unicode runtime source should be readable by the security hash boundary "
+                   "(error=" + source_digest.error + ")");
+    }
+
+    const auto result = materialize_startup_plan(plan, runtime_host);
+    expect(result.ok, "#3873: Unicode runtime package should materialize");
+    if (result.ok) {
+        const auto source_digest = copperfin::security::sha256_hex_for_file(
+            copperfin::platform::path_to_utf8_string(source_path));
+        expect(result.plan.assets.size() == 1U && source_digest.ok &&
+                   result.plan.assets.front().sha256 == source_digest.hex_digest,
+               "#3873: materialized Unicode runtime source should retain its security digest");
+        const std::string runtime_manifest = read_text(
+            copperfin::platform::path_from_utf8_string(result.plan.manifest_path));
+        const std::string debug_manifest = read_text(
+            copperfin::platform::path_from_utf8_string(result.plan.debug_manifest_path));
+        expect(runtime_manifest.find(copperfin::platform::path_to_utf8_string(source_path.filename())) !=
+                   std::string::npos,
+               "#3873: runtime manifest should retain the Unicode source name");
+        expect(debug_manifest.find(copperfin::platform::path_to_utf8_string(source_path)) !=
+                   std::string::npos,
+               "#3873: debug manifest should retain the Unicode source path");
+        expect(fs::exists(copperfin::platform::path_from_utf8_string(result.plan.startup_source_path)),
+               "#3873: Unicode startup source should be staged at the manifest path");
+    }
+
+    fs::remove_all(temp_root, ignored);
 }
 
 }  // namespace cf_test_runtime_pipeline

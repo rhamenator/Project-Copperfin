@@ -4,6 +4,8 @@
 
 #include "prg_engine_helpers.h"
 
+#include "copperfin/platform/path.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -80,8 +82,8 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
 
 bool paths_equal_insensitive(const std::string& left, const std::string& right) {
 #if defined(_WIN32)
-    const auto left_path = std::filesystem::path(left).lexically_normal().native();
-    const auto right_path = std::filesystem::path(right).lexically_normal().native();
+    const auto left_path = copperfin::platform::path_from_utf8_string(left).lexically_normal().native();
+    const auto right_path = copperfin::platform::path_from_utf8_string(right).lexically_normal().native();
     return ::CompareStringOrdinal(
                left_path.data(),
                static_cast<int>(left_path.size()),
@@ -89,8 +91,10 @@ bool paths_equal_insensitive(const std::string& left, const std::string& right) 
                static_cast<int>(right_path.size()),
                TRUE) == CSTR_EQUAL;
 #else
-    return lowercase_copy(std::filesystem::path(left).lexically_normal().string()) ==
-           lowercase_copy(std::filesystem::path(right).lexically_normal().string());
+    return lowercase_copy(copperfin::platform::path_to_utf8_string(
+               copperfin::platform::path_from_utf8_string(left).lexically_normal())) ==
+           lowercase_copy(copperfin::platform::path_to_utf8_string(
+               copperfin::platform::path_from_utf8_string(right).lexically_normal()));
 #endif
 }
 
@@ -185,7 +189,8 @@ std::string normalize_path(const std::string& value) {
     if (value.empty()) {
         return {};
     }
-    return std::filesystem::path(value).lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(value).lexically_normal());
 }
 
 bool paths_equal_for_platform(const std::string& left, const std::string& right) {
@@ -197,7 +202,8 @@ bool paths_equal_for_platform(const std::string& left, const std::string& right)
 }
 
 bool is_index_file_path(const std::string& value) {
-    const std::string extension = lowercase_copy(std::filesystem::path(trim_copy(value)).extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(trim_copy(value)).extension()));
     return extension == ".cdx" || extension == ".dcx" || extension == ".idx" ||
            extension == ".ndx" || extension == ".mdx";
 }

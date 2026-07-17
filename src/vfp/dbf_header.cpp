@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/vfp/dbf_header.h"
+#include "copperfin/platform/path.h"
 
 #include "copperfin/localization/localization.h"
 
@@ -137,7 +138,7 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
 }
 
 DbfParseResult parse_dbf_header_from_file(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.OpenFileFailed")};
     }

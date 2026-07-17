@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/platform/path.h"
 #include "localized_text.h"
 
 #include <algorithm>
@@ -78,7 +79,8 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
 }
 
 std::string normalize_path(const std::string& path) {
-    return std::filesystem::path(path).lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).lexically_normal());
 }
 
 std::string strip_comment(const std::string& line) {
@@ -103,7 +105,7 @@ bool is_literal_true_expression(const std::string& expression) {
 
 std::vector<StaticLine> read_static_lines(const std::string& path) {
     std::vector<StaticLine> lines;
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     std::string raw;
     std::size_t line_number = 0U;
     while (std::getline(input, raw)) {

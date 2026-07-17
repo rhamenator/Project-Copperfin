@@ -5,6 +5,7 @@
 #include "prg_engine_runtime_surface_functions.h"
 
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/path.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_locale_code_page.h"
@@ -98,15 +99,16 @@ std::string normalize_relative_path_separators(std::string value) {
 
 std::filesystem::path filesystem_probe_path(const std::string& raw_path, const std::string& default_directory) {
     if (raw_path.empty()) {
-        return std::filesystem::path(default_directory).lexically_normal();
+        return copperfin::platform::path_from_utf8_string(default_directory).lexically_normal();
     }
     if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
-        return std::filesystem::path(raw_path);
+        return copperfin::platform::path_from_utf8_string(raw_path);
     }
 
-    std::filesystem::path path(normalize_relative_path_separators(raw_path));
+    std::filesystem::path path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(raw_path));
     if (path.is_relative()) {
-        path = std::filesystem::path(default_directory) / path;
+        path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
     return path.lexically_normal();
 }
@@ -370,9 +372,9 @@ std::vector<std::filesystem::path> parse_set_path_entries(const std::string& set
             if (!is_windows_drive_absolute_path(token) && !is_unc_path(token)) {
                 token = normalize_relative_path_separators(std::move(token));
             }
-            std::filesystem::path entry(token);
+            std::filesystem::path entry = copperfin::platform::path_from_utf8_string(token);
             if (entry.is_relative()) {
-                entry = std::filesystem::path(default_directory) / entry;
+                entry = copperfin::platform::path_from_utf8_string(default_directory) / entry;
             }
             entries.push_back(entry.lexically_normal());
         }
@@ -399,19 +401,20 @@ std::filesystem::path resolve_runtime_file_probe_path(
                (!reject_directories || !std::filesystem::is_directory(status));
     };
     if (raw_path.empty()) {
-        return std::filesystem::path(default_directory).lexically_normal();
+        return copperfin::platform::path_from_utf8_string(default_directory).lexically_normal();
     }
     if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
-        return std::filesystem::path(raw_path);
+        return copperfin::platform::path_from_utf8_string(raw_path);
     }
 
-    std::filesystem::path path(normalize_relative_path_separators(raw_path));
+    std::filesystem::path path = copperfin::platform::path_from_utf8_string(
+        normalize_relative_path_separators(raw_path));
     if (!path.is_relative()) {
         return path.lexically_normal();
     }
 
     const std::filesystem::path default_candidate =
-        (std::filesystem::path(default_directory) / path).lexically_normal();
+        (copperfin::platform::path_from_utf8_string(default_directory) / path).lexically_normal();
     if (candidate_matches(default_candidate)) {
         return default_candidate;
     }
@@ -4820,7 +4823,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             }
             if (sys_code == 2023) {
                 std::error_code ignored;
-                return make_string_value(std::filesystem::temp_directory_path(ignored).string());
+                return make_string_value(copperfin::platform::path_to_utf8_string(
+                    std::filesystem::temp_directory_path(ignored)));
             }
             if (sys_code == 2326 && arguments.size() >= 2U && whandle_from_hwnd_callback) {
                 const std::int64_t hwnd = safe_int64_argument(1U, 0);

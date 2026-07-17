@@ -1523,14 +1523,15 @@
                     return {};
                 }
 
-                std::filesystem::path target_path(target);
+                std::filesystem::path target_path = copperfin::platform::path_from_utf8_string(target);
                 if (target_path.extension().empty())
                 {
                     target_path += ".prg";
                 }
                 if (target_path.is_relative())
                 {
-                    target_path = std::filesystem::path(current_default_directory()) / target_path;
+                    target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        target_path;
                 }
                 if (!std::filesystem::exists(target_path))
                 {
@@ -1554,7 +1555,7 @@
                 }
 
                 push_main_frame(
-                    target_path.string(),
+                    copperfin::platform::path_to_utf8_string(target_path),
                     std::move(call_arguments),
                     std::move(call_argument_references));
                 return {};
@@ -1708,14 +1709,15 @@
                 }
                 else
                 {
-                    std::filesystem::path target_path(target);
+                    std::filesystem::path target_path = copperfin::platform::path_from_utf8_string(target);
                     if (target_path.extension().empty())
                     {
                         target_path += ".prg";
                     }
                     if (target_path.is_relative())
                     {
-                        target_path = std::filesystem::path(current_default_directory()) / target_path;
+                        target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                            target_path;
                     }
                     if (!std::filesystem::exists(target_path))
                     {
@@ -1729,9 +1731,9 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    task_source_path = target_path.string();
+                    task_source_path = copperfin::platform::path_to_utf8_string(target_path);
                     child->push_main_frame(
-                        target_path.string(),
+                        copperfin::platform::path_to_utf8_string(target_path),
                         std::move(call_arguments),
                         std::move(call_argument_references));
                 }
@@ -1896,14 +1898,15 @@
                         return {};
                     }
 
-                    std::filesystem::path target_path(target);
+                    std::filesystem::path target_path = copperfin::platform::path_from_utf8_string(target);
                     if (target_path.extension().empty())
                     {
                         target_path += ".prg";
                     }
                     if (target_path.is_relative())
                     {
-                        target_path = std::filesystem::path(current_default_directory()) / target_path;
+                        target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                            target_path;
                     }
                     if (std::filesystem::exists(target_path))
                     {
@@ -1915,7 +1918,7 @@
                             return {.ok = false, .message = last_error_message};
                         }
                         push_main_frame(
-                            target_path.string(),
+                            copperfin::platform::path_to_utf8_string(target_path),
                             std::move(call_arguments),
                             std::move(call_argument_references));
                         return {};
@@ -1935,11 +1938,12 @@
             {
                 const std::filesystem::path form_path = resolve_asset_path(statement.identifier, ".scx");
                 events.push_back({.category = "form.open",
-                                  .detail = form_path.lexically_normal().string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(form_path.lexically_normal()),
                                   .location = statement.location});
                 if (std::filesystem::exists(form_path))
                 {
-                    if (const auto bootstrap_path = materialize_xasset_bootstrap(form_path.string(), true))
+                    if (const auto bootstrap_path = materialize_xasset_bootstrap(
+                            copperfin::platform::path_to_utf8_string(form_path), true))
                     {
                         if (!can_push_frame())
                         {
@@ -3652,7 +3656,9 @@
 
                 const std::string target = value_as_string(evaluate_expression(statement.expression, frame));
                 std::string alias = statement.identifier.empty()
-                                        ? std::filesystem::path(unquote_string(target)).stem().string()
+                                        ? copperfin::platform::path_to_utf8_string(
+                                              copperfin::platform::path_from_utf8_string(
+                                                  unquote_string(target)).stem())
                                         : value_as_string(evaluate_expression(statement.identifier, frame));
                 if (alias.empty() && !statement.identifier.empty())
                 {
@@ -4292,10 +4298,11 @@
                 std::filesystem::path dll_fspath;
                 if (!is_win32api_designator)
                 {
-                    dll_fspath = std::filesystem::path(dll_path_raw);
+                    dll_fspath = copperfin::platform::path_from_utf8_string(dll_path_raw);
                     if (dll_fspath.is_relative() && dll_fspath.has_parent_path())
                     {
-                        dll_fspath = std::filesystem::path(current_default_directory()) / dll_fspath;
+                        dll_fspath = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                            dll_fspath;
                     }
                     dll_fspath.make_preferred();
                 }
@@ -4304,7 +4311,9 @@
                 DeclaredDllFunction declfn;
                 declfn.alias = alias;
                 declfn.function_name = fn_name;
-                declfn.dll_path = is_win32api_designator ? dll_path_raw : dll_fspath.string();
+                declfn.dll_path = is_win32api_designator
+                    ? dll_path_raw
+                    : copperfin::platform::path_to_utf8_string(dll_fspath);
                 declfn.return_type = ret_type;
                 declfn.param_types = param_types_str;
                 declfn.resolved_function_name = fn_name;
@@ -4903,10 +4912,10 @@
                 // ERASE <file> / DELETE FILE <file>
                 const std::string raw_path = unquote_string(trim_copy(
                     value_as_string(evaluate_expression(statement.expression, frame))));
-                std::filesystem::path fpath(raw_path);
+                std::filesystem::path fpath = copperfin::platform::path_from_utf8_string(raw_path);
                 if (fpath.is_relative())
                 {
-                    fpath = std::filesystem::path(current_default_directory()) / fpath;
+                    fpath = copperfin::platform::path_from_utf8_string(current_default_directory()) / fpath;
                 }
                 std::error_code ec;
                 std::filesystem::remove(fpath, ec);
@@ -4914,13 +4923,14 @@
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.EraseFailed",
-                        {{"errorMessage", ec.message()}, {"path", fpath.string()}});
+                        {{"errorMessage", ec.message()},
+                         {"path", copperfin::platform::path_to_utf8_string(fpath)}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.erase",
-                                  .detail = fpath.string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(fpath),
                                   .location = statement.location});
                 return {};
             }
@@ -4933,10 +4943,10 @@
                     value_as_string(evaluate_expression(statement.secondary_expression, frame))));
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p(raw);
+                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
                     if (p.is_relative())
                     {
-                        p = std::filesystem::path(current_default_directory()) / p;
+                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
                     }
                     return p;
                 };
@@ -4954,7 +4964,8 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.copy_file",
-                                  .detail = src.string() + " -> " + dst.string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(src) + " -> " +
+                                      copperfin::platform::path_to_utf8_string(dst),
                                   .location = statement.location});
                 return {};
             }
@@ -4967,10 +4978,10 @@
                     value_as_string(evaluate_expression(statement.secondary_expression, frame))));
                 auto make_abs = [&](const std::string &raw)
                 {
-                    std::filesystem::path p(raw);
+                    std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
                     if (p.is_relative())
                     {
-                        p = std::filesystem::path(current_default_directory()) / p;
+                        p = copperfin::platform::path_from_utf8_string(current_default_directory()) / p;
                     }
                     return p;
                 };
@@ -4983,7 +4994,7 @@
                     {
                         last_error_message = runtime_text(
                             "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
-                            {{"path", new_path.string()}});
+                            {{"path", copperfin::platform::path_to_utf8_string(new_path)}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5010,7 +5021,8 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.rename",
-                                  .detail = old_path.string() + " -> " + new_path.string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(old_path) + " -> " +
+                                      copperfin::platform::path_to_utf8_string(new_path),
                                   .location = statement.location});
                 return {};
             }
@@ -5091,14 +5103,15 @@
                     }
                 }
 
-                if (!ensure_transaction_backup_for_table(table_path.string()))
+                if (!ensure_transaction_backup_for_table(copperfin::platform::path_to_utf8_string(table_path)))
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
+                const auto create_result = vfp::create_dbf_table_file(
+                    copperfin::platform::path_to_utf8_string(table_path), fields, {});
                 if (!create_result.ok)
                 {
                     last_error_message = create_result.error;
@@ -5108,7 +5121,7 @@
                 }
 
                 const auto field_rules = field_rules_from_declarations(declarations);
-                if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules))
+                if (!open_table_cursor(copperfin::platform::path_to_utf8_string(table_path), alias, {}, true, false, 0, {}, 0U, field_rules))
                 {
                     std::filesystem::remove(table_path, ignored);
                     std::filesystem::remove(table_path.replace_extension(".fpt"), ignored);
@@ -5117,7 +5130,7 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 events.push_back({.category = "runtime.create_cursor",
-                                  .detail = alias + " -> " + table_path.string(),
+                                  .detail = alias + " -> " + copperfin::platform::path_to_utf8_string(table_path),
                                   .location = statement.location});
                 return {};
             }
@@ -5141,14 +5154,15 @@
                     target = unquote_string(target);
                 }
 
-                std::filesystem::path table_path(target);
+                std::filesystem::path table_path = copperfin::platform::path_from_utf8_string(target);
                 if (table_path.extension().empty())
                 {
                     table_path += ".dbf";
                 }
                 if (table_path.is_relative())
                 {
-                    table_path = std::filesystem::path(current_default_directory()) / table_path;
+                    table_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        table_path;
                 }
                 table_path = table_path.lexically_normal();
 
@@ -5163,23 +5177,25 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                if (!execute_with_command_undo(table_path.string(), "CREATE TABLE", [&]
+                if (!execute_with_command_undo(copperfin::platform::path_to_utf8_string(table_path), "CREATE TABLE", [&]
                     {
-                        if (!ensure_transaction_backup_for_table(table_path.string()))
+                        if (!ensure_transaction_backup_for_table(copperfin::platform::path_to_utf8_string(table_path)))
                         {
                             return false;
                         }
 
-                        const auto create_result = vfp::create_dbf_table_file(table_path.string(), fields, {});
+                        const auto create_result = vfp::create_dbf_table_file(
+                            copperfin::platform::path_to_utf8_string(table_path), fields, {});
                         if (!create_result.ok)
                         {
                             last_error_message = create_result.error;
                             return false;
                         }
 
-                        const std::string alias = normalize_identifier(table_path.stem().string());
+                        const std::string alias = normalize_identifier(
+                            copperfin::platform::path_to_utf8_string(table_path.stem()));
                         const auto field_rules = field_rules_from_declarations(declarations);
-                        if (!open_table_cursor(table_path.string(), alias, {}, true, false, 0, {}, 0U, field_rules))
+                        if (!open_table_cursor(copperfin::platform::path_to_utf8_string(table_path), alias, {}, true, false, 0, {}, 0U, field_rules))
                         {
                             return false;
                         }
@@ -5192,7 +5208,7 @@
                 }
 
                 events.push_back({.category = "runtime.create_table",
-                                  .detail = table_path.string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(table_path),
                                   .location = statement.location});
                 return {};
             }
@@ -5226,21 +5242,22 @@
                     target = unquote_string(target);
                 }
 
-                std::filesystem::path table_path(target);
+                std::filesystem::path table_path = copperfin::platform::path_from_utf8_string(target);
                 if (table_path.extension().empty())
                 {
                     table_path += ".dbf";
                 }
                 if (table_path.is_relative())
                 {
-                    table_path = std::filesystem::path(current_default_directory()) / table_path;
+                    table_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        table_path;
                 }
                 table_path = table_path.lexically_normal();
                 std::string affected_field = trim_copy(statement.expression);
 
-                if (!execute_with_command_undo(table_path.string(), "ALTER TABLE", [&]
+                if (!execute_with_command_undo(copperfin::platform::path_to_utf8_string(table_path), "ALTER TABLE", [&]
                 {
-                    if (!ensure_transaction_backup_for_table(table_path.string()))
+                    if (!ensure_transaction_backup_for_table(copperfin::platform::path_to_utf8_string(table_path)))
                     {
                         return false;
                     }
@@ -5261,13 +5278,14 @@
                         }
                         affected_field = declaration->descriptor.name;
                         add_result = action == "add"
-                                         ? vfp::add_dbf_table_field(table_path.string(), declaration->descriptor)
-                                         : vfp::alter_dbf_table_field(table_path.string(), declaration->descriptor);
+                                         ? vfp::add_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), declaration->descriptor)
+                                         : vfp::alter_dbf_table_field(copperfin::platform::path_to_utf8_string(table_path), declaration->descriptor);
                     }
                     else
                     {
                         affected_field = unquote_identifier(affected_field);
-                        add_result = vfp::drop_dbf_table_field(table_path.string(), affected_field);
+                        add_result = vfp::drop_dbf_table_field(
+                            copperfin::platform::path_to_utf8_string(table_path), affected_field);
                     }
                     if (!add_result.ok)
                     {
@@ -5286,7 +5304,7 @@
                         {
                             const PrgValue default_value = evaluate_expression(declaration->default_expression, frame);
                             const auto replace_result = vfp::replace_record_field_value(
-                                table_path.string(),
+                                copperfin::platform::path_to_utf8_string(table_path),
                                 record_index,
                                 declaration->descriptor.name,
                                 serialize_prg_value_for_record_field(synthetic_field, default_value));
@@ -5298,7 +5316,8 @@
                         }
                     }
 
-                    const auto schema_result = vfp::parse_dbf_table_from_file(table_path.string(), 0U);
+                    const auto schema_result = vfp::parse_dbf_table_from_file(
+                        copperfin::platform::path_to_utf8_string(table_path), 0U);
                     if (!schema_result.ok)
                     {
                         last_error_message = schema_result.error;
@@ -5307,7 +5326,8 @@
 
                     for (auto &[_, cursor] : current_session_state().cursors)
                     {
-                        if (!cursor.remote && normalize_path(cursor.source_path) == normalize_path(table_path.string()))
+                        if (!cursor.remote && normalize_path(cursor.source_path) ==
+                            normalize_path(copperfin::platform::path_to_utf8_string(table_path)))
                         {
                             cursor.field_count = schema_result.table.fields.size();
                             cursor.record_length = schema_result.table.header.record_length;
@@ -5344,7 +5364,8 @@
                 }
 
                 events.push_back({.category = "runtime.alter_table",
-                                  .detail = table_path.string() + " " + uppercase_copy(action) + " " + affected_field,
+                                  .detail = copperfin::platform::path_to_utf8_string(table_path) + " " +
+                                      uppercase_copy(action) + " " + affected_field,
                                   .location = statement.location});
                 return {};
             }
@@ -5572,7 +5593,8 @@
                 }
 
                 events.push_back({.category = "runtime.save_memory",
-                                  .detail = destination_path.string() + " (" + std::to_string(saved_count) + " variables)",
+                                  .detail = copperfin::platform::path_to_utf8_string(destination_path) +
+                                      " (" + std::to_string(saved_count) + " variables)",
                                   .location = statement.location});
                 return {};
             }
@@ -5855,7 +5877,8 @@
                 }
 
                 events.push_back({.category = "runtime.restore_memory",
-                                  .detail = source_path.string() + " (" + std::to_string(restored_count) + " variables)",
+                                  .detail = copperfin::platform::path_to_utf8_string(source_path) +
+                                      " (" + std::to_string(restored_count) + " variables)",
                                   .location = statement.location});
                 return {};
             }
@@ -6088,7 +6111,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6122,7 +6145,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6156,7 +6179,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6190,7 +6213,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6224,7 +6247,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6285,7 +6308,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     events.push_back({.category = "runtime.copy_to",
-                                      .detail = dest_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                       .location = statement.location});
                     return {};
                 }
@@ -6325,7 +6348,7 @@
                 }
 
                 const auto write_result = vfp::create_dbf_table_file(
-                    dest_path.string(), physical_out_fields, out_rows);
+                    copperfin::platform::path_to_utf8_string(dest_path), physical_out_fields, out_rows);
                 if (!write_result.ok)
                 {
                     last_error_message = runtime_text(
@@ -6337,7 +6360,7 @@
                 }
 
                 events.push_back({.category = "runtime.copy_to",
-                                  .detail = dest_path.string(),
+                                  .detail = copperfin::platform::path_to_utf8_string(dest_path),
                                   .location = statement.location});
                 return {};
             }
@@ -6773,7 +6796,8 @@
                         return {};
                     }
 
-                    const auto source_result = vfp::parse_dbf_table_from_file(src_path.string(), 1000000U);
+                    const auto source_result = vfp::parse_dbf_table_from_file(
+                        copperfin::platform::path_to_utf8_string(src_path), 1000000U);
                     if (!source_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -7629,7 +7653,8 @@
 
                 // Parse all records from the source file
                 const auto src_result = vfp::parse_dbf_table_from_file(
-                    src_path.string(), std::numeric_limits<std::size_t>::max());
+                    copperfin::platform::path_to_utf8_string(src_path),
+                    std::numeric_limits<std::size_t>::max());
                 if (!src_result.ok)
                 {
                     last_error_message = runtime_text(
@@ -7643,7 +7668,8 @@
                 }
 
                 CursorState *open_source_cursor = nullptr;
-                const std::string normalized_source_path = normalize_path(src_path.string());
+                const std::string normalized_source_path = normalize_path(
+                    copperfin::platform::path_to_utf8_string(src_path));
                 for (auto &[_, candidate] : current_session_state().cursors)
                 {
                     if (&candidate != cursor && !candidate.remote &&

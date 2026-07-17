@@ -181,13 +181,14 @@
                 return {};
             }
 
-            std::filesystem::path program_path(resolved_target);
+            std::filesystem::path program_path = copperfin::platform::path_from_utf8_string(resolved_target);
             if (program_path.extension().empty())
             {
                 program_path += ".prg";
             }
 
-            return resolve_native_prg_program_path(program_path.string(), fallback_path);
+            return resolve_native_prg_program_path(
+                copperfin::platform::path_to_utf8_string(program_path), fallback_path);
         }
 
         std::optional<RoutineLookup> find_loaded_procedure_routine_lookup(
@@ -2116,32 +2117,33 @@
                 return normalize_path(fallback_path);
             }
 
-            std::filesystem::path program_path(trimmed_source_path);
+            std::filesystem::path program_path = copperfin::platform::path_from_utf8_string(trimmed_source_path);
             if (program_path.is_absolute())
             {
-                return program_path.lexically_normal().string();
+                return copperfin::platform::path_to_utf8_string(program_path.lexically_normal());
             }
 
             const std::filesystem::path default_directory_candidate =
-                (std::filesystem::path(current_default_directory()) / program_path).lexically_normal();
+                (copperfin::platform::path_from_utf8_string(current_default_directory()) / program_path).lexically_normal();
             std::error_code ignored;
             if (std::filesystem::exists(default_directory_candidate, ignored))
             {
-                return default_directory_candidate.string();
+                return copperfin::platform::path_to_utf8_string(default_directory_candidate);
             }
 
             const std::string normalized_fallback_path = normalize_path(fallback_path);
             if (!normalized_fallback_path.empty())
             {
                 const std::filesystem::path fallback_directory_candidate =
-                    (std::filesystem::path(normalized_fallback_path).parent_path() / program_path).lexically_normal();
+                    (copperfin::platform::path_from_utf8_string(normalized_fallback_path).parent_path() /
+                     program_path).lexically_normal();
                 if (std::filesystem::exists(fallback_directory_candidate, ignored))
                 {
-                    return fallback_directory_candidate.string();
+                    return copperfin::platform::path_to_utf8_string(fallback_directory_candidate);
                 }
             }
 
-            return program_path.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(program_path.lexically_normal());
         }
 
         const PrgClassDefinition *find_native_same_prg_class(
@@ -3485,9 +3487,9 @@
                     : std::nullopt;
             }
 
-            const std::string requested_name = candidate.filename().string();
+            const std::string requested_name = copperfin::platform::path_to_utf8_string(candidate.filename());
             const std::string expected_name = lowercase_copy(requested_name);
-            const std::string expected_stem = candidate.stem().string();
+            const std::string expected_stem = copperfin::platform::path_to_utf8_string(candidate.stem());
             std::optional<std::filesystem::path> exact_stem_match;
             std::optional<std::filesystem::path> folded_match;
             bool folded_match_ambiguous = false;
@@ -3496,7 +3498,7 @@
             for (; iterator != end && !ignored; iterator.increment(ignored))
             {
                 const std::filesystem::path entry_path = iterator->path();
-                const std::string entry_name = entry_path.filename().string();
+                const std::string entry_name = copperfin::platform::path_to_utf8_string(entry_path.filename());
                 if (lowercase_copy(entry_name) != expected_name)
                 {
                     continue;
@@ -3510,7 +3512,7 @@
                 {
                     return entry_path.lexically_normal();
                 }
-                if (entry_path.stem().string() == expected_stem)
+                if (copperfin::platform::path_to_utf8_string(entry_path.stem()) == expected_stem)
                 {
                     if (exact_stem_match.has_value())
                     {
@@ -3538,7 +3540,7 @@
         std::vector<std::filesystem::path> database_search_directories() const
         {
             std::vector<std::filesystem::path> directories{
-                std::filesystem::path(current_default_directory())};
+                copperfin::platform::path_from_utf8_string(current_default_directory())};
             const auto found_path = current_set_state().find("path");
             if (found_path == current_set_state().end())
             {
@@ -3555,10 +3557,11 @@
                 entry = portable_database_path_text(unquote_string(entry));
                 if (!entry.empty())
                 {
-                    std::filesystem::path directory(entry);
+                    std::filesystem::path directory = copperfin::platform::path_from_utf8_string(entry);
                     if (directory.is_relative())
                     {
-                        directory = std::filesystem::path(current_default_directory()) / directory;
+                        directory = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                            directory;
                     }
                     directories.push_back(directory.lexically_normal());
                 }
@@ -3603,7 +3606,7 @@
         std::map<std::string, std::string>::const_iterator find_verified_file_byte_override(
             const std::filesystem::path &path) const
         {
-            const std::string normalized = path.lexically_normal().string();
+            const std::string normalized = copperfin::platform::path_to_utf8_string(path.lexically_normal());
             if (const auto exact = options.verified_file_byte_overrides.find(normalized);
                 exact != options.verified_file_byte_overrides.end())
             {
@@ -3627,8 +3630,8 @@
 #if defined(_WIN32)
             return paths_equal_insensitive(left, right);
 #else
-            return std::filesystem::path(left).lexically_normal() ==
-                std::filesystem::path(right).lexically_normal();
+            return copperfin::platform::path_from_utf8_string(left).lexically_normal() ==
+                copperfin::platform::path_from_utf8_string(right).lexically_normal();
 #endif
         }
 
@@ -3672,7 +3675,7 @@
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Database.Error.ComponentMalformed",
-                        {{"path", path.string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(path)}});
                     return false;
                 }
                 return true;
@@ -3681,7 +3684,7 @@
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                    {{"path", path.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(path)}});
                 return false;
             }
 
@@ -3690,7 +3693,7 @@
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.ComponentReadFailed",
-                    {{"path", path.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(path)}});
                 return false;
             }
             std::ostringstream stream;
@@ -3700,7 +3703,7 @@
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.ComponentMalformed",
-                    {{"path", path.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(path)}});
                 return false;
             }
             return true;
@@ -3845,7 +3848,8 @@
 
             DataSessionState &session = current_session_state();
             if (RuntimeDatabaseState *existing =
-                    find_open_database_by_path(session, database_path->string()))
+                    find_open_database_by_path(
+                        session, copperfin::platform::path_to_utf8_string(*database_path)))
             {
                 return set_current_database(existing->path);
             }
@@ -3859,28 +3863,31 @@
                     continue;
                 }
                 const RuntimeDatabaseState *existing =
-                    find_open_database_by_path(candidate_session, database_path->string());
+                    find_open_database_by_path(
+                        candidate_session, copperfin::platform::path_to_utf8_string(*database_path));
                 if (existing != nullptr && (existing->exclusive || exclusive))
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Database.Error.ExclusiveConflict",
-                        {{"path", database_path->string()}});
+                        {{"path", copperfin::platform::path_to_utf8_string(*database_path)}});
                     return false;
                 }
             }
 
-            const auto dct_path =
-                resolve_existing_database_component(std::filesystem::path(*database_path).replace_extension(".dct"));
-            const auto dcx_path =
-                resolve_existing_database_component(std::filesystem::path(*database_path).replace_extension(".dcx"));
+            std::filesystem::path dct_candidate = *database_path;
+            dct_candidate.replace_extension(".dct");
+            std::filesystem::path dcx_candidate = *database_path;
+            dcx_candidate.replace_extension(".dcx");
+            const auto dct_path = resolve_existing_database_component(dct_candidate);
+            const auto dcx_path = resolve_existing_database_component(dcx_candidate);
             if (!dct_path.has_value() || !dcx_path.has_value())
             {
                 const std::filesystem::path missing_path = !dct_path.has_value()
-                    ? std::filesystem::path(*database_path).replace_extension(".dct")
-                    : std::filesystem::path(*database_path).replace_extension(".dcx");
+                    ? dct_candidate
+                    : dcx_candidate;
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.CompanionMissing",
-                    {{"path", missing_path.string()}});
+                    {{"path", copperfin::platform::path_to_utf8_string(missing_path)}});
                 return false;
             }
 
@@ -3897,9 +3904,12 @@
             const auto header = vfp::parse_dbf_header(dbc_binary);
             if (!header.ok)
             {
+                const std::string database_display_path =
+                    copperfin::platform::path_to_utf8_string(*database_path);
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.ContainerMalformed",
-                    {{"path", database_path->string()}, {"errorMessage", header.error}});
+                    {{"path", database_display_path},
+                     {"errorMessage", header.error}});
                 return false;
             }
             const auto read_be_u16 = [](const std::string &bytes, std::size_t offset)
@@ -3910,9 +3920,10 @@
             };
             if (dct_bytes.size() < 512U || read_be_u16(dct_bytes, 6U) == 0U)
             {
+                const std::string dct_display_path = copperfin::platform::path_to_utf8_string(*dct_path);
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.ComponentMalformed",
-                    {{"path", dct_path->string()}});
+                    {{"path", dct_display_path}});
                 return false;
             }
             const std::vector<std::uint8_t> dcx_binary(dcx_bytes.begin(), dcx_bytes.end());
@@ -3922,15 +3933,16 @@
                 vfp::IndexKind::dcx);
             if (!index_probe.ok)
             {
+                const std::string dcx_display_path = copperfin::platform::path_to_utf8_string(*dcx_path);
                 last_error_message = runtime_text(
                     "Runtime.Prg.Database.Error.ComponentMalformed",
-                    {{"path", dcx_path->string()}});
+                    {{"path", dcx_display_path}});
                 return false;
             }
 
             RuntimeDatabaseState database{
-                .path = database_path->lexically_normal().string(),
-                .name = database_path->stem().string(),
+                .path = copperfin::platform::path_to_utf8_string(database_path->lexically_normal()),
+                .name = copperfin::platform::path_to_utf8_string(database_path->stem()),
                 .exclusive = exclusive,
                 .read_only = read_only,
                 .current = true};
@@ -4306,7 +4318,7 @@
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
-                const std::string key = normalize_path(path.string());
+                const std::string key = normalize_path(copperfin::platform::path_to_utf8_string(path));
                 if (journal.tracked_files.contains(key))
                 {
                     continue;
@@ -4319,7 +4331,7 @@
                 {
                     const std::filesystem::path backup_path = journal.root_path /
                                                               ("backup_" + std::to_string(journal.tracked_files.size()) +
-                                                               path.extension().string());
+                                                               copperfin::platform::path_to_utf8_string(path.extension()));
                     std::error_code copy_error;
                     std::filesystem::create_directories(backup_path.parent_path(), copy_error);
                     copy_error.clear();
@@ -4329,7 +4341,7 @@
                         last_error_message = command_undo_backup_message(key);
                         return false;
                     }
-                    entry.backup_path = backup_path.string();
+                    entry.backup_path = copperfin::platform::path_to_utf8_string(backup_path);
                 }
 
                 journal.tracked_files.emplace(key, std::move(entry));
@@ -4681,7 +4693,8 @@
         std::vector<std::filesystem::path> transaction_companion_paths(const std::string &table_path) const
         {
             std::vector<std::filesystem::path> paths;
-            const std::filesystem::path source = std::filesystem::path(normalize_path(table_path)).lexically_normal();
+            const std::filesystem::path source = copperfin::platform::path_from_utf8_string(
+                normalize_path(table_path)).lexically_normal();
             if (source.empty())
             {
                 return paths;
@@ -4698,8 +4711,9 @@
                 }
             };
 
-            push_if_unique(source.parent_path() / (source.stem().string() + ".fpt"));
-            push_if_unique(source.parent_path() / (source.stem().string() + ".cdx"));
+            const std::string source_stem = copperfin::platform::path_to_utf8_string(source.stem());
+            push_if_unique(source.parent_path() / (source_stem + ".fpt"));
+            push_if_unique(source.parent_path() / (source_stem + ".cdx"));
             return paths;
         }
 
@@ -4838,7 +4852,7 @@
                 if (replay_transaction_journal_state(state))
                 {
                     events.push_back({.category = "runtime.transaction.replay",
-                                      .detail = journal_path.string(),
+                                      .detail = copperfin::platform::path_to_utf8_string(journal_path),
                                       .location = {}});
                 }
             }
@@ -4952,7 +4966,7 @@
             std::error_code ignored;
             for (const auto &path : transaction_companion_paths(table_path))
             {
-                const std::string key = normalize_path(path.string());
+                const std::string key = normalize_path(copperfin::platform::path_to_utf8_string(path));
                 if (journal.tracked_files.contains(key))
                 {
                     continue;
@@ -4965,7 +4979,7 @@
                 {
                     const std::filesystem::path backup_path = journal.root_path /
                                                               ("backup_" + std::to_string(journal.tracked_files.size()) +
-                                                               path.extension().string());
+                                                               copperfin::platform::path_to_utf8_string(path.extension()));
                     std::error_code copy_error;
                     std::filesystem::create_directories(backup_path.parent_path(), copy_error);
                     copy_error.clear();
@@ -4975,7 +4989,7 @@
                         last_error_message = transaction_backup_message(key);
                         return false;
                     }
-                    entry.backup_path = backup_path.string();
+                    entry.backup_path = copperfin::platform::path_to_utf8_string(backup_path);
                 }
 
                 journal.tracked_files.emplace(key, std::move(entry));

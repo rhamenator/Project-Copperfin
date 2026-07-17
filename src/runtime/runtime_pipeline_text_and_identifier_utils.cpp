@@ -102,7 +102,8 @@ std::vector<std::string> unique_non_empty_paths_preserve_order(std::initializer_
         if (value.empty()) {
             continue;
         }
-        const std::string normalized = std::filesystem::path(value).lexically_normal().string();
+        const std::string normalized = copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(value).lexically_normal());
         if (normalized.empty() || !seen.insert(normalized).second) {
             continue;
         }

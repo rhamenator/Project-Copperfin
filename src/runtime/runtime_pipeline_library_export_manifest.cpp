@@ -17,7 +17,8 @@ std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePl
             continue;
         }
 
-        if (lowercase_copy(std::filesystem::path(asset.source_path).extension().string()) != ".prg") {
+        if (lowercase_copy(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension())) != ".prg") {
             continue;
         }
 
@@ -47,7 +48,8 @@ std::map<std::string, std::size_t> collect_library_export_parameter_counts(const
             continue;
         }
 
-        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(asset.source_path).extension()));
         if (extension != ".prg") {
             continue;
         }
@@ -102,7 +104,8 @@ std::map<std::string, std::vector<std::string>> collect_library_export_parameter
             continue;
         }
 
-        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(asset.source_path).extension()));
         if (extension != ".prg") {
             continue;
         }
@@ -150,7 +153,8 @@ std::map<std::string, std::string> collect_library_export_parameter_declaration_
             continue;
         }
 
-        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(asset.source_path).extension()));
         if (extension != ".prg") {
             continue;
         }
@@ -194,7 +198,8 @@ std::map<std::string, std::string> collect_library_export_routine_kinds(const Ru
             continue;
         }
 
-        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(asset.source_path).extension()));
         if (extension != ".prg") {
             continue;
         }
@@ -226,7 +231,8 @@ std::map<std::string, SourceLocation> collect_library_export_routine_locations(c
             continue;
         }
 
-        const std::string extension = lowercase_copy(std::filesystem::path(asset.source_path).extension().string());
+        const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(asset.source_path).extension()));
         if (extension != ".prg") {
             continue;
         }
@@ -281,7 +287,8 @@ std::string build_manifest_source_location(const SourceLocation& location) {
 std::string build_module_definition_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const std::string output_stem =
-        std::filesystem::path(plan.launcher_output_path).stem().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.launcher_output_path).stem());
     stream << "LIBRARY " << output_stem << "\n";
     stream << "EXPORTS\n";
     for (const auto& symbol : plan.exported_symbols) {
@@ -2652,14 +2659,18 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
 std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const std::string output_stem =
-        std::filesystem::path(plan.launcher_output_path).stem().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.launcher_output_path).stem());
     const std::string output_extension =
-        std::filesystem::path(plan.launcher_output_path).extension().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.launcher_output_path).extension());
     const std::string output_directory = "..";
     const std::string wrapper_file_name =
-        std::filesystem::path(plan.native_wrapper_source_path).filename().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.native_wrapper_source_path).filename());
     const std::string module_definition_file_name =
-        std::filesystem::path(plan.module_definition_path).filename().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.module_definition_path).filename());
 
     stream << "cmake_minimum_required(VERSION 3.20)\n";
     stream << "project(" << output_stem << "Wrapper LANGUAGES CXX)\n\n";
@@ -2723,7 +2734,8 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     stream << "manifest_version=1\n";
     stream << "manifest_value_encoding=backslash-v1\n";
     stream << "output_kind=fll\n";
-    stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "library_file=" << quote_manifest_value(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename())) << "\n";
     stream << "registration_model=FoxInfo/FoxTable\n";
     stream << "registration_command=SET LIBRARY TO\n";
     stream << "release_command=RELEASE LIBRARY\n";
@@ -2780,7 +2792,8 @@ std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     stream << "manifest_version=1\n";
     stream << "manifest_value_encoding=backslash-v1\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
-    stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
+    stream << "library_file=" << quote_manifest_value(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename())) << "\n";
     stream << "callable_convention=" << kVfpLibraryCallableConvention << "\n";
     for (const auto& symbol : plan.exported_symbols) {
         const auto found = parameter_counts.find(symbol);

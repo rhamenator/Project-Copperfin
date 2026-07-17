@@ -138,11 +138,72 @@ void test_file_io_runtime_functions()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_unicode_paths_survive_prg_file_io_and_includes()
+{
+    namespace fs = std::filesystem;
+    std::string unicode_root_name = "copperfin_prg_engine_unicode_";
+    unicode_root_name += "\xC3\xA9";
+    std::string unicode_file_name = "caf";
+    unicode_file_name += "\xC3\xA9.inc";
+    std::string unicode_data_name = "r";
+    unicode_data_name += "\xC3\xA9sum\xC3\xA9.txt";
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / copperfin::platform::path_from_utf8_string(unicode_root_name);
+    const fs::path main_path = temp_root / "main.prg";
+    const fs::path include_path =
+        temp_root / "includes" / copperfin::platform::path_from_utf8_string(unicode_file_name);
+    const fs::path data_path = temp_root / copperfin::platform::path_from_utf8_string(unicode_data_name);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(include_path.parent_path());
+
+    write_text(include_path, "#DEFINE IncludedValue 42\n");
+    std::string source = "#INCLUDE \"includes\\";
+    source += unicode_file_name;
+    source += "\"\n";
+    source += "nIncluded = IncludedValue\n";
+    source += "nWrite = STRTOFILE('payload', '";
+    source += unicode_data_name;
+    source += "')\n";
+    source += "cRead = FILETOSTR('";
+    source += unicode_data_name;
+    source += "')\n";
+    source += "hRead = FOPEN('";
+    source += unicode_data_name;
+    source += "', 0)\n";
+    source += "cChunk = FREAD(hRead, 7)\n";
+    source += "nClose = FCLOSE(hRead)\nRETURN\n";
+    write_text(main_path, source);
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Unicode-path PRG script should complete: " + state.message);
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present for Unicode-path PRG test");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " should equal '" + expected + "' for Unicode-path PRG test");
+        }
+    };
+    check("nincluded", "42");
+    check("nwrite", "7");
+    check("cread", "payload");
+    check("cchunk", "payload");
+    check("nclose", "0");
+    expect(fs::exists(data_path), "Unicode-path STRTOFILE should create the expected file");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace
 
 int main()
 {
     test_file_io_runtime_functions();
+    test_unicode_paths_survive_prg_file_io_and_includes();
 
     if (test_failures() != 0)
     {

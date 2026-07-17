@@ -375,7 +375,8 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
 
     for (const auto& asset : plan.assets) {
         if (!should_stage_asset(asset) ||
-            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            lowercase_copy(trim_copy(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);
@@ -410,7 +411,9 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
         if (!should_stage_asset(asset)) {
             continue;
         }
-        const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string()));
+        const std::string extension = lowercase_copy(trim_copy(
+            copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension())));
         if (extension != ".scx" && extension != ".vcx") {
             continue;
         }
@@ -432,7 +435,8 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
 
 std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
-    const std::string runtime_host_name = std::filesystem::path(plan.runtime_host_destination_path).filename().string();
+    const std::string runtime_host_name = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(plan.runtime_host_destination_path).filename());
     stream << "using System;\n";
     stream << "using System.Collections.Generic;\n";
     stream << "using System.Diagnostics;\n";
@@ -522,7 +526,8 @@ std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
 std::string build_launcher_project_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
     const std::string assembly_name =
-        std::filesystem::path(plan.launcher_project_path).stem().string();
+        copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(plan.launcher_project_path).stem());
     stream << "<Project Sdk=\"Microsoft.NET.Sdk\">\n";
     stream << "  <PropertyGroup>\n";
     stream << "    <OutputType>Exe</OutputType>\n";

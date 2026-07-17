@@ -1109,14 +1109,15 @@
 
         std::filesystem::path resolve_asset_path(const std::string &raw_path, const char *extension) const
         {
-            std::filesystem::path asset_path(unquote_string(take_first_token(raw_path)));
+            std::filesystem::path asset_path = copperfin::platform::path_from_utf8_string(
+                unquote_string(take_first_token(raw_path)));
             if (asset_path.extension().empty())
             {
                 asset_path += extension;
             }
             if (asset_path.is_relative())
             {
-                asset_path = std::filesystem::path(current_default_directory()) / asset_path;
+                asset_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / asset_path;
             }
             return asset_path.lexically_normal();
         }
@@ -1142,16 +1143,17 @@
             std::filesystem::path output_path;
             if (target.size() >= 2U && target.front() == '\'' && target.back() == '\'')
             {
-                output_path = std::filesystem::path(unquote_string(target));
+                output_path = copperfin::platform::path_from_utf8_string(unquote_string(target));
             }
             else
             {
-                output_path = std::filesystem::path(value_as_string(evaluate_expression(target, frame)));
+                output_path = copperfin::platform::path_from_utf8_string(
+                    value_as_string(evaluate_expression(target, frame)));
             }
 
             if (output_path.is_relative())
             {
-                output_path = std::filesystem::path(current_default_directory()) / output_path;
+                output_path = copperfin::platform::path_from_utf8_string(current_default_directory()) / output_path;
             }
             return output_path.lexically_normal();
         }
@@ -1163,17 +1165,17 @@
 
         std::string report_output_open_message(const std::filesystem::path &path) const
         {
-            return runtime_text("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", path.string()}});
+            return runtime_text("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         }
 
         std::string report_output_write_message(const std::filesystem::path &path) const
         {
-            return runtime_text("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", path.string()}});
+            return runtime_text("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         }
 
         std::string report_asset_resolve_message(const std::filesystem::path &path) const
         {
-            return runtime_text("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", path.string()}});
+            return runtime_text("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         }
 
         std::vector<std::string> render_report_output_rows(
@@ -1224,10 +1226,10 @@
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
-            const std::string normalized_asset_path = asset_path.lexically_normal().string();
+            const std::string normalized_asset_path = copperfin::platform::path_to_utf8_string(asset_path.lexically_normal());
             const auto display_alias = options.source_path_display_aliases.find(normalized_asset_path);
             const std::string display_asset_path = display_alias == options.source_path_display_aliases.end()
-                ? asset_path.string()
+                ? copperfin::platform::path_to_utf8_string(asset_path)
                 : display_alias->second;
             if (!std::filesystem::exists(asset_path))
             {
@@ -1238,7 +1240,7 @@
             }
 
             studio::StudioOpenRequest request;
-            request.path = asset_path.string();
+            request.path = copperfin::platform::path_to_utf8_string(asset_path);
             request.read_only = true;
             request.load_full_table = true;
             const auto open_result = studio::open_document(request);
@@ -1294,7 +1296,7 @@
             }
 
             output << "Copperfin " << category_prefix << " render\n";
-            output << "source=" << asset_path.string() << "\n";
+            output << "source=" << copperfin::platform::path_to_utf8_string(asset_path) << "\n";
             if (layout.available)
             {
                 output << "sections=" << layout.sections.size() << "\n";
@@ -1364,7 +1366,8 @@
             }
 
             events.push_back({.category = std::string(category_prefix) + ".render",
-                              .detail = output_path.string() + " rows=" + std::to_string(rendered_row_count),
+                              .detail = copperfin::platform::path_to_utf8_string(output_path) +
+                                  " rows=" + std::to_string(rendered_row_count),
                               .location = statement.location});
             return {};
         }

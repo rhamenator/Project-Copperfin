@@ -305,7 +305,8 @@ std::string build_ast_manifest_source(const RuntimePackagePlan& plan) {
     bool first_file = true;
     for (const auto& asset : plan.assets) {
         if (!asset.copied ||
-            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            lowercase_copy(trim_copy(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);
@@ -370,7 +371,8 @@ std::string build_ir_manifest_source(const RuntimePackagePlan& plan) {
     bool first_file = true;
     for (const auto& asset : plan.assets) {
         if (!asset.copied ||
-            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+            lowercase_copy(trim_copy(copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(asset.source_path).extension()))) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);

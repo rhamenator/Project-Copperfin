@@ -9,6 +9,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
@@ -175,7 +176,7 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     if (!std::filesystem::is_regular_file(path, ignored)) {
         return {};
     }
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {};
     }
@@ -201,9 +202,11 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
         return path.find(*marker) != std::string::npos;
     };
 
-    const std::filesystem::path target_path(path);
-    const std::filesystem::path temp_path = target_path.string() + ".cptmp";
-    const std::filesystem::path backup_path = target_path.string() + ".cpbak";
+    const std::filesystem::path target_path = platform::path_from_utf8_string(path);
+    const std::filesystem::path temp_path = platform::path_from_utf8_string(
+        platform::path_to_utf8_string(target_path) + ".cptmp");
+    const std::filesystem::path backup_path = platform::path_from_utf8_string(
+        platform::path_to_utf8_string(target_path) + ".cpbak");
 
     std::error_code ec;
     std::filesystem::remove(temp_path, ec);
@@ -269,18 +272,18 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
 }
 
 std::string selected_sidecar_path(const SidecarPathResolution& resolution) {
-    return resolution.path.value_or(resolution.requested_path).string();
+    return platform::path_to_utf8_string(resolution.path.value_or(resolution.requested_path));
 }
 
 std::string ambiguous_sidecar_error(const SidecarPathResolution& resolution) {
     return dbf_table_text(
         "Vfp.Sidecar.Error.AmbiguousPath",
-        {{"path", resolution.requested_path.string()}});
+        {{"path", platform::path_to_utf8_string(resolution.requested_path)}});
 }
 
 bool primary_always_requires_memo_sidecar(const std::string& path) {
     const std::string extension = ascii_lowercase_copy(
-        std::filesystem::path(path).extension().string());
+        platform::path_to_utf8_string(platform::path_from_utf8_string(path).extension()));
     return extension == ".pjx" || extension == ".scx" || extension == ".vcx" ||
            extension == ".frx" || extension == ".lbx" || extension == ".mnx" ||
            extension == ".dbc";
@@ -954,7 +957,7 @@ public:
             return;
         }
 
-        std::ifstream input(path, std::ios::binary);
+        std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
         if (!input) {
             return;
         }
@@ -1214,7 +1217,7 @@ std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, s
         return {};
     }
 
-    std::ifstream input(sidecar_path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(sidecar_path), std::ios::binary);
     if (!input) {
         return {};
     }
@@ -1263,7 +1266,7 @@ DbfTableParseResult parse_dbf_table_from_file(
         resolved_memo_sidecar_path = selected_sidecar_path(memo_resolution);
     }
 
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
@@ -2422,7 +2425,7 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
@@ -2466,7 +2469,7 @@ static DbfWriteResult replace_record_field_value_impl(
         }
     }
 
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
@@ -2620,7 +2623,7 @@ DbfWriteResult set_record_deleted_flag(
     if (const auto error = ambiguous_required_sidecar_error_for_path(path); error.has_value()) {
         return {.ok = false, .error = *error};
     }
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }

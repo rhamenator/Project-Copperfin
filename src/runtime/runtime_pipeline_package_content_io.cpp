@@ -202,13 +202,13 @@ bool is_containment_policy_rejection(
 std::string rejected_destination(const std::filesystem::path& path) {
     return runtime_text(
         "Runtime.Package.Error.ContentDestinationRejected",
-        {{"path", path.string()}});
+        {{"path", copperfin::platform::path_to_utf8_string(path)}});
 }
 
 std::string rejected_content_root(const std::filesystem::path& path) {
     return runtime_text(
         "Runtime.Package.Error.ContentRootRejected",
-        {{"path", path.string()}});
+        {{"path", copperfin::platform::path_to_utf8_string(path)}});
 }
 
 std::string content_root_creation_failed() {
@@ -218,13 +218,13 @@ std::string content_root_creation_failed() {
 std::string directory_creation_failed(const std::filesystem::path& path) {
     return runtime_text(
         "Runtime.Package.Error.CreateDirectoryFailed",
-        {{"path", path.string()}});
+        {{"path", copperfin::platform::path_to_utf8_string(path)}});
 }
 
 std::string copy_file_failed(const std::filesystem::path& path) {
     return runtime_text(
         "Runtime.Package.Error.CopyFileFailed",
-        {{"path", path.string()}});
+        {{"path", copperfin::platform::path_to_utf8_string(path)}});
 }
 
 std::string unique_temporary_name() {
@@ -284,7 +284,7 @@ bool copy_to_pinned_posix_parent(
         if (component == ".") {
             continue;
         }
-        const std::string name = component.string();
+        const std::string name = copperfin::platform::path_to_utf8_string(component);
         int child_descriptor = ::openat(
             parent_descriptor,
             name.c_str(),
@@ -327,7 +327,7 @@ bool copy_to_pinned_posix_parent(
             parent_descriptor,
             temporary_name.c_str(),
             parent_descriptor,
-            relative_path.filename().string().c_str()) != 0) {
+            copperfin::platform::path_to_utf8_string(relative_path.filename()).c_str()) != 0) {
         (void)::unlinkat(parent_descriptor, temporary_name.c_str(), 0);
         (void)::close(parent_descriptor);
         error = copy_file_failed(destination);

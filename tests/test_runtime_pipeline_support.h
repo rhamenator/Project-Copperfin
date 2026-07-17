@@ -7,8 +7,10 @@
 
 #include "test_environment_support.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/security/sha256.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
 #include "copperfin/vfp/dbf_table.h"
@@ -172,6 +174,7 @@ void test_ambiguous_casefold_startup_path_fails_closed();
 void test_startup_resolution_preserves_parent_tail_and_name_fallbacks();
 void test_missing_startup_primary_fails_for_all_mvp_families();
 void test_missing_required_startup_sidecar_fails_for_all_xasset_families();
+void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts();
 void test_materialize_excluded_xasset_startup_package();
 void test_uppercase_xasset_companion_assets_are_staged();
 void test_ambiguous_casefold_xasset_companions_fail_closed();

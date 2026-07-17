@@ -4,6 +4,7 @@
 
 #include "copperfin/security/sha256.h"
 
+#include "copperfin/platform/path.h"
 #include "localized_text.h"
 
 #ifdef _WIN32
@@ -200,7 +201,9 @@ Sha256Result sha256_hex_for_text(const std::string& text) {
 }
 
 Sha256Result sha256_hex_for_file(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(
+        copperfin::platform::path_from_utf8_string(path),
+        std::ios::binary);
     if (!input) {
         return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.OpenFileFailed", {{"path", path}})};
     }
