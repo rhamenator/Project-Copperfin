@@ -9,6 +9,8 @@
 #include "runtime_pipeline_test_hooks.h"
 #include "runtime_pipeline_manifest_pair_io.h"
 
+#include <thread>
+
 namespace cf_test_runtime_pipeline {
 namespace {
 
@@ -389,22 +391,32 @@ void test_manifest_pair_finalization_recovers_stale_transactions() {
         expect(canonical_root == canonical_alias_root,
                "#4098: Windows casing-only package aliases should share a canonical root identity");
 
-        const std::string identity_input =
-            canonical_root + '\0' +
-            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
-                package_root / fs::path(fixture.plan.manifest_path).filename()) + '\0' +
-            copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
-                package_root / fs::path(fixture.plan.debug_manifest_path).filename());
+        const auto identity_input_for = [&](const fs::path& root) {
+            return copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                       root) + '\0' +
+                copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                    root / fs::path(fixture.plan.manifest_path).filename()) + '\0' +
+                copperfin::runtime::runtime_pipeline_detail::canonical_casefolded_path_identity(
+                    root / fs::path(fixture.plan.debug_manifest_path).filename());
+        };
+        const std::string identity_input = identity_input_for(package_root);
+        expect(identity_input == identity_input_for(alias_root),
+               "#4098: Windows casing-only aliases should share the full manifest-pair identity input");
         const auto identity_hash = copperfin::security::sha256_hex_for_text(identity_input);
         expect(identity_hash.ok,
                "#4098: Windows manifest-pair alias fixture should derive its identity hash");
         if (identity_hash.ok) {
             {
                 copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory first_directory;
-                copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory alias_directory;
                 expect(first_directory.acquire(package_root, identity_hash.hex_digest),
                        "#4098: Windows manifest-pair fixture should acquire the first alias lock");
-                expect(!alias_directory.acquire(alias_root, identity_hash.hex_digest),
+                bool alias_acquired = false;
+                std::thread alias_attempt([&] {
+                    copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory alias_directory;
+                    alias_acquired = alias_directory.acquire(alias_root, identity_hash.hex_digest);
+                });
+                alias_attempt.join();
+                expect(!alias_acquired,
                        "#4098: Windows casing-only aliases should serialize concurrent manifest-pair finalization");
             }
         }
