@@ -2097,9 +2097,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             filesystem_plan.launcher_output_path;
         for (auto& asset : filesystem_materialized_plan.assets) {
             if (!asset.staged_path.empty()) {
-                asset.staged_path = (
+                asset.staged_path = copperfin::platform::path_to_utf8_string((
                     copperfin::platform::path_from_utf8_string(filesystem_plan.content_root) /
-                    copperfin::platform::path_from_utf8_string(asset.relative_path)).lexically_normal();
+                    copperfin::platform::path_from_utf8_string(asset.relative_path)).lexically_normal());
             }
         }
         if (!write_app_archive_primary_output(
