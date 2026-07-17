@@ -565,13 +565,19 @@ std::optional<PrgValue> evaluate_string_function(
         const std::size_t occurrence_limit = arguments.size() >= 5U
                                                  ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[4])))
                                                  : std::numeric_limits<std::size_t>::max();
+        const std::size_t flags = arguments.size() >= 6U
+                                      ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[5])))
+                                      : 0U;
+        const bool case_insensitive = (flags & 1U) != 0U;
         if (!find.empty()) {
             std::string result;
+            const std::string search_source = case_insensitive ? uppercase_copy(src) : src;
+            const std::string search_find = case_insensitive ? uppercase_copy(find) : find;
             std::size_t pos = 0U;
             std::size_t match_index = 0U;
             std::size_t replaced_count = 0U;
             while (pos < src.size()) {
-                const std::size_t found = src.find(find, pos);
+                const std::size_t found = search_source.find(search_find, pos);
                 if (found == std::string::npos) {
                     result += src.substr(pos);
                     break;
@@ -582,7 +588,7 @@ std::optional<PrgValue> evaluate_string_function(
                     result += repl;
                     ++replaced_count;
                 } else {
-                    result += find;
+                    result += src.substr(found, find.size());
                 }
                 pos = found + find.size();
             }
