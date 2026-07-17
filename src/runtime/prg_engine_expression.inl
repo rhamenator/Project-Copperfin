@@ -989,7 +989,22 @@
                     {
                         const PrgValue &candidate = arguments[index];
                         bool candidate_wins = false;
-                        if (result.kind == PrgValueKind::string || candidate.kind == PrgValueKind::string)
+                        if (result.string_flavor != PrgStringFlavor::none &&
+                            candidate.string_flavor != PrgStringFlavor::none)
+                        {
+                            if (const auto comparison = compare_date_time_values(result, candidate, set_callback_);
+                                comparison.has_value())
+                            {
+                                candidate_wins = function == "min" ? *comparison > 0 : *comparison < 0;
+                            }
+                            else
+                            {
+                                candidate_wins = function == "min"
+                                                     ? value_as_string(candidate) < value_as_string(result)
+                                                     : value_as_string(candidate) > value_as_string(result);
+                            }
+                        }
+                        else if (result.kind == PrgValueKind::string || candidate.kind == PrgValueKind::string)
                         {
                             candidate_wins = function == "min"
                                                  ? value_as_string(candidate) < value_as_string(result)
