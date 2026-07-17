@@ -4088,6 +4088,63 @@ namespace copperfin::runtime
                 std::vector<PrgValue> order_keys;
             };
 
+            struct QueryAggregateProjection
+            {
+                std::string function;
+                std::vector<std::string> arguments;
+            };
+
+            const auto parse_query_aggregate_projection =
+                [](const std::string &expression) -> std::optional<QueryAggregateProjection>
+            {
+                const std::string trimmed = trim_copy(expression);
+                const std::size_t open_parenthesis = trimmed.find('(');
+                if (open_parenthesis == std::string::npos || trimmed.empty() || trimmed.back() != ')')
+                {
+                    return std::nullopt;
+                }
+
+                const std::string function = lowercase_copy(trim_copy(trimmed.substr(0U, open_parenthesis)));
+                if (function != "count" && function != "sum" && function != "avg" &&
+                    function != "average" && function != "min" && function != "max")
+                {
+                    return std::nullopt;
+                }
+
+                const std::string argument_text = trim_copy(
+                    trimmed.substr(open_parenthesis + 1U, trimmed.size() - open_parenthesis - 2U));
+                QueryAggregateProjection projection{.function = function, .arguments = {}};
+                if (!argument_text.empty())
+                {
+                    projection.arguments = split_csv_like(argument_text);
+                    if (std::any_of(
+                            projection.arguments.begin(),
+                            projection.arguments.end(),
+                            [](const std::string &argument) { return trim_copy(argument).empty(); }))
+                    {
+                        return std::nullopt;
+                    }
+                }
+                return projection;
+            };
+
+            std::vector<std::optional<QueryAggregateProjection>> aggregate_projections;
+            aggregate_projections.reserve(plan.projection_expressions.size());
+            for (const std::string &projection_expression : plan.projection_expressions)
+            {
+                aggregate_projections.push_back(
+                    parse_query_aggregate_projection(projection_expression));
+            }
+            const bool aggregate_query =
+                joined_cursor == nullptr && !aggregate_projections.empty() &&
+                std::all_of(
+                    aggregate_projections.begin(),
+                    aggregate_projections.end(),
+                    [](const std::optional<QueryAggregateProjection> &projection)
+                    {
+                        return projection.has_value();
+                    });
+
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             const std::optional<CursorPositionSnapshot> joined_original =
                 joined_cursor == nullptr
@@ -4118,6 +4175,7 @@ namespace copperfin::runtime
             }
             std::vector<MaterializedQueryRow> materialized_rows;
             materialized_rows.reserve(cursor.record_count);
+            bool aggregate_materialized = false;
 
             for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
             {
@@ -4128,22 +4186,48 @@ namespace copperfin::runtime
                 }
 
                 const auto record = current_record(cursor);
-                if (!record.has_value())
+                if (!record.has_value() && !aggregate_query)
                 {
                     continue;
                 }
 
                 const auto materialize_current_row = [&]()
                 {
-                    if (!plan.where_expression.empty() &&
+                    if (!aggregate_query && !plan.where_expression.empty() &&
                         !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor)))
                     {
                         return;
                     }
 
                     MaterializedQueryRow query_row;
-                    for (const std::string &projection_expression : plan.projection_expressions)
+                    for (std::size_t projection_index = 0U;
+                         projection_index < plan.projection_expressions.size();
+                         ++projection_index)
                     {
+                        const std::string &projection_expression =
+                            plan.projection_expressions[projection_index];
+                        if (aggregate_query)
+                        {
+                            QueryAggregateProjection aggregate =
+                                *aggregate_projections[projection_index];
+                            if (aggregate.function == "count" &&
+                                (aggregate.arguments.empty() ||
+                                 (aggregate.arguments.size() == 1U &&
+                                  trim_copy(aggregate.arguments.front()) == "*")))
+                            {
+                                aggregate.arguments.clear();
+                            }
+                            if (!plan.where_expression.empty())
+                            {
+                                aggregate.arguments.push_back(plan.where_expression);
+                            }
+                            query_row.values.push_back(
+                                aggregate_function_value(
+                                    aggregate.function,
+                                    aggregate.arguments,
+                                    frame));
+                            continue;
+                        }
                         if (projection_expression == "*")
                         {
                             for (const auto &field_value : record->values)
@@ -4172,7 +4256,14 @@ namespace copperfin::runtime
                     }
 
                     materialized_rows.push_back(std::move(query_row));
+                    aggregate_materialized = aggregate_query;
                 };
+
+                if (aggregate_query)
+                {
+                    materialize_current_row();
+                    break;
+                }
 
                 if (joined_cursor == nullptr)
                 {
@@ -4254,6 +4345,29 @@ namespace copperfin::runtime
                     joined_cursor->bof = previous_bof;
                     joined_cursor->eof = previous_eof;
                 }
+            }
+
+            if (aggregate_query && !aggregate_materialized)
+            {
+                MaterializedQueryRow query_row;
+                for (const std::optional<QueryAggregateProjection> &aggregate_projection : aggregate_projections)
+                {
+                    QueryAggregateProjection aggregate = *aggregate_projection;
+                    if (aggregate.function == "count" &&
+                        (aggregate.arguments.empty() ||
+                         (aggregate.arguments.size() == 1U &&
+                          trim_copy(aggregate.arguments.front()) == "*")))
+                    {
+                        aggregate.arguments.clear();
+                    }
+                    if (!plan.where_expression.empty())
+                    {
+                        aggregate.arguments.push_back(plan.where_expression);
+                    }
+                    query_row.values.push_back(
+                        aggregate_function_value(aggregate.function, aggregate.arguments, frame));
+                }
+                materialized_rows.push_back(std::move(query_row));
             }
 
             if (plan.distinct)

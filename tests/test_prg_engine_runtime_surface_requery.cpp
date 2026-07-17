@@ -763,6 +763,69 @@ void run_distinct_order_ordinal_requery_test(int row_source_type) {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_collapses_aggregate_query_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_aggregates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "requery_sql_aggregates.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS people IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 5\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT COUNT(*), SUM(age), AVG(age), MIN(age), MAX(age) FROM people WHERE age >= 20\"\n"
+        "oList.Requery()\n"
+        "nRows = oList.ListCount\n"
+        "nCount = oList.List(1, 1)\n"
+        "nSum = oList.List(1, 2)\n"
+        "nAverage = oList.List(1, 3)\n"
+        "nMinimum = oList.List(1, 4)\n"
+        "nMaximum = oList.List(1, 5)\n"
+        "oList.RowSource = \"SELECT COUNT(*), SUM(age) FROM people WHERE age > 100\"\n"
+        "oList.ColumnCount = 2\n"
+        "oList.Requery()\n"
+        "nEmptyRows = oList.ListCount\n"
+        "nEmptyCount = oList.List(1, 1)\n"
+        "nEmptySum = oList.List(1, 2)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("aggregate SQL Requery() script should complete: ") + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nrows", "1");
+    check("ncount", "3");
+    check("nsum", "90");
+    check("naverage", "30");
+    check("nminimum", "20");
+    check("nmaximum", "40");
+    check("nemptyrows", "1");
+    check("nemptycount", "0");
+    check("nemptysum", "0");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_statement_requery_refreshes_distinct_ordered_single_cursor_query_rows() {
     run_distinct_order_ordinal_requery_test(3);
 }
@@ -1794,6 +1857,7 @@ int main() {
     test_fields_requery_refreshes_alias_qualified_field_list();
     test_sql_statement_requery_refreshes_single_cursor_query_rows();
     test_query_file_requery_refreshes_single_cursor_query_rows();
+    test_sql_statement_requery_collapses_aggregate_query_rows();
     test_sql_statement_requery_refreshes_distinct_ordered_single_cursor_query_rows();
     test_query_file_requery_refreshes_distinct_ordered_single_cursor_query_rows();
     test_sql_statement_requery_refreshes_single_cursor_query_rows_with_aliases();
