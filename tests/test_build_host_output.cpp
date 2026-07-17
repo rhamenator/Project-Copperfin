@@ -354,6 +354,8 @@ std::string quote_manifest_value(const std::string& value) {
             escaped += "\\n";
         } else if (ch == '\r') {
             escaped += "\\r";
+        } else if (ch == '|') {
+            escaped += "\\|";
         } else {
             escaped.push_back(ch);
         }
@@ -376,6 +378,8 @@ std::string unquote_manifest_value(const std::string& value) {
             unescaped.push_back('\n');
         } else if (escaped == 'r') {
             unescaped.push_back('\r');
+        } else if (escaped == '|') {
+            unescaped.push_back('|');
         } else {
             unescaped.push_back('\\');
             unescaped.push_back(escaped);

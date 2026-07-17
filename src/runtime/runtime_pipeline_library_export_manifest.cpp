@@ -2721,6 +2721,7 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     const auto routine_kinds = collect_library_export_routine_kinds(plan);
     const auto routine_locations = collect_library_export_routine_locations(plan);
     stream << "manifest_version=1\n";
+    stream << "manifest_value_encoding=backslash-v1\n";
     stream << "output_kind=fll\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
     stream << "registration_model=FoxInfo/FoxTable\n";
@@ -2777,6 +2778,7 @@ std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     const auto routine_kinds = collect_library_export_routine_kinds(plan);
     const auto routine_locations = collect_library_export_routine_locations(plan);
     stream << "manifest_version=1\n";
+    stream << "manifest_value_encoding=backslash-v1\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "library_file=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
     stream << "callable_convention=" << kVfpLibraryCallableConvention << "\n";

@@ -228,6 +228,8 @@ std::string quote_manifest_value(const std::string& value) {
             escaped += "\\n";
         } else if (ch == '\r') {
             escaped += "\\r";
+        } else if (ch == '|') {
+            escaped += "\\|";
         } else {
             escaped.push_back(ch);
         }

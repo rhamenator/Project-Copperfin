@@ -1475,6 +1475,7 @@ std::string build_runtime_manifest_text(
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
     stream << "manifest_version=" << kRuntimeManifestVersion << "\n";
+    stream << "manifest_value_encoding=backslash-v1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
@@ -1529,6 +1530,7 @@ std::string build_debug_manifest_text(
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
     stream << "debug_manifest_version=" << kDebugManifestVersion << "\n";
+    stream << "manifest_value_encoding=backslash-v1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
     stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";

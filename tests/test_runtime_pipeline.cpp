@@ -60,6 +60,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_package_content_copy_rejects_indirect_parent();
     test_package_content_copy_rejects_hard_link_destination();
     test_relative_output_root_preserves_plan_path_contract();
+    test_library_manifest_source_location_escaping();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_library_output_warning_lines_are_mirrored_into_debug_manifest();

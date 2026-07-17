@@ -3,9 +3,35 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_runtime_pipeline_support.h"
+#include "runtime_pipeline_support.h"
 
 namespace cf_test_runtime_pipeline {
 namespace {
+
+std::string decode_manifest_value(const std::string& value) {
+    std::string decoded;
+    decoded.reserve(value.size());
+    for (std::size_t index = 0U; index < value.size(); ++index) {
+        if (value[index] != '\\' || index + 1U >= value.size()) {
+            decoded.push_back(value[index]);
+            continue;
+        }
+        const char escaped = value[++index];
+        if (escaped == '\\') {
+            decoded.push_back('\\');
+        } else if (escaped == 'n') {
+            decoded.push_back('\n');
+        } else if (escaped == 'r') {
+            decoded.push_back('\r');
+        } else if (escaped == '|') {
+            decoded.push_back('|');
+        } else {
+            decoded.push_back('\\');
+            decoded.push_back(escaped);
+        }
+    }
+    return decoded;
+}
 
 void expect_manifest_omits_keys(
     const std::string& manifest_text,
@@ -18,6 +44,31 @@ void expect_manifest_omits_keys(
 }
 
 }  // namespace
+
+void test_library_manifest_source_location_escaping() {
+    const std::string source_path =
+        "/tmp/copperfin|source\\library\npart-" + std::string("\xC3\xA9") + ".prg";
+    const copperfin::runtime::SourceLocation location{source_path, 37U};
+    const std::string encoded = copperfin::runtime::runtime_pipeline_detail::build_manifest_source_location(location);
+    const std::size_t separator = encoded.rfind('|');
+
+    expect(separator != std::string::npos,
+           "library source-location encoding should retain its final line separator");
+    if (separator == std::string::npos) {
+        return;
+    }
+
+    expect(encoded.substr(0U, separator).find("\\|") != std::string::npos,
+           "library source-location encoding should escape embedded pipe delimiters");
+    expect(encoded.substr(0U, separator).find("\\\\") != std::string::npos,
+           "library source-location encoding should escape backslashes");
+    expect(encoded.substr(0U, separator).find("\\n") != std::string::npos,
+           "library source-location encoding should escape newlines");
+    expect(decode_manifest_value(encoded.substr(0U, separator)) == source_path,
+           "library source-location encoding should round-trip path bytes");
+    expect(encoded.substr(separator + 1U) == "37",
+           "library source-location encoding should preserve the source line");
+}
 
 void test_library_output_package_emits_module_definition_from_prg_routines() {
     namespace fs = std::filesystem;
@@ -1135,7 +1186,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should consume multiple DLL arguments through bridge call bindings.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "library-output wrapper source should build a bridge descriptor for AddNumbers");
-        expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"parameters\", \"tnLeft\\|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
                "library-output wrapper source should preserve AddNumbers bridge metadata");
         const std::string wrapper_cmake = read_text(result.plan.native_wrapper_cmake_path);
         expect(wrapper_cmake.find("add_library(LibraryDemo SHARED LibraryDemo_wrapper.cpp)") != std::string::npos,
@@ -2768,7 +2819,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record the typed native success integer value.");
         expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"AddNumbers\"") != std::string::npos,
                "fll-output wrapper source should build a bridge descriptor for AddNumbers");
-        expect(wrapper_source.find("\"parameters\", \"tnLeft|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
+        expect(wrapper_source.find("\"parameters\", \"tnLeft\\|tnRight\", 2U, reinterpret_cast<void*>(&AddNumbers), stub_emission_wrapper);") != std::string::npos,
                "fll-output wrapper source should preserve AddNumbers bridge metadata");
         expect(wrapper_source.find("copperfin_build_runtime_bridge_placeholder_return_statement(placeholder_return_binding)") != std::string::npos,
                "fll-output wrapper source should route stub returns through the shared placeholder return-statement helper");
