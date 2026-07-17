@@ -1725,6 +1725,10 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         asset.staged_path.clear();
         asset.copied = false;
         asset.sha256.clear();
+        asset.exists =
+            asset.source_resolution_error.empty() &&
+            !asset.source_path.empty() &&
+            source_path_exists_on_host(asset.source_path);
         if (asset.required_for_runtime && !asset.source_resolution_error.empty()) {
             return {.ok = false, .error = asset.source_resolution_error};
         }

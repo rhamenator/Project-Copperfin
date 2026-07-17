@@ -252,6 +252,39 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
                archive_output.find("new_name.prg") != std::string::npos,
            "repeated APP materialization should archive the current renamed asset");
 
+    fs::remove(project_dir / "startup.scx", ignored);
+    const auto missing_required_plan = create_rematerialization_plan(document, workspace, output_dir);
+    const auto missing_required_asset = std::find_if(
+        missing_required_plan.assets.begin(),
+        missing_required_plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.required_for_runtime;
+        });
+    expect(
+        missing_required_asset != missing_required_plan.assets.end() &&
+            !missing_required_asset->exists,
+        "#4099: the freshness fixture should plan the required startup source as absent");
+    write_text(project_dir / "startup.scx", "form-restored-without-replan");
+    const auto restored_required_result =
+        materialize_rematerialization_plan(missing_required_plan, runtime_host);
+    expect(
+        restored_required_result.ok,
+        "#4099: restoring a required startup source should allow the same plan to materialize");
+    const auto restored_required_asset = std::find_if(
+        restored_required_result.plan.assets.begin(),
+        restored_required_result.plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.required_for_runtime;
+        });
+    expect(
+        restored_required_asset != restored_required_result.plan.assets.end() &&
+            restored_required_asset->exists && restored_required_asset->copied,
+        "#4099: same-plan required-source restoration should refresh existence before copying");
+    expect(
+        read_text(fs::path(restored_required_result.plan.content_root) / "startup.scx") ==
+            "form-restored-without-replan",
+        "#4099: same-plan required-source restoration should stage the restored bytes");
+
     const PackageSnapshot last_known_good = snapshot_package_files(package_root);
     write_text(project_dir / "startup.scx", "form-v3");
     write_text(project_dir / "new_name.prg", "? 'changed'\nRETURN\n");
