@@ -3544,6 +3544,7 @@ namespace copperfin::runtime
             std::string where_expression;
             std::vector<QueryOrderExpression> order_expressions;
             bool distinct = false;
+            std::optional<std::size_t> top_count;
         };
 
         const auto normalize_query_text = [](std::string text) -> std::string
@@ -3771,10 +3772,55 @@ namespace copperfin::runtime
 
             std::size_t projection_start = 6U;
             bool distinct = false;
-            if (upper_query.compare(projection_start, 9U, " DISTINCT") == 0)
+            std::optional<std::size_t> top_count;
+            for (;;)
             {
-                projection_start += 9U;
-                distinct = true;
+                if (!distinct && upper_query.compare(projection_start, 9U, " DISTINCT") == 0)
+                {
+                    projection_start += 9U;
+                    distinct = true;
+                    continue;
+                }
+
+                if (!top_count.has_value() &&
+                    upper_query.compare(projection_start, 5U, " TOP ") == 0)
+                {
+                    const std::size_t count_start = projection_start + 5U;
+                    std::size_t count_end = count_start;
+                    while (count_end < query_text.size() &&
+                           std::isdigit(static_cast<unsigned char>(query_text[count_end])) != 0)
+                    {
+                        ++count_end;
+                    }
+                    if (count_end == count_start)
+                    {
+                        return false;
+                    }
+                    if (count_end < query_text.size() &&
+                        std::isspace(static_cast<unsigned char>(query_text[count_end])) == 0)
+                    {
+                        return false;
+                    }
+
+                    try
+                    {
+                        const unsigned long long parsed_count = std::stoull(
+                            query_text.substr(count_start, count_end - count_start));
+                        if (parsed_count > std::numeric_limits<std::size_t>::max())
+                        {
+                            return false;
+                        }
+                        top_count = static_cast<std::size_t>(parsed_count);
+                    }
+                    catch (const std::exception &)
+                    {
+                        return false;
+                    }
+                    projection_start = count_end;
+                    continue;
+                }
+
+                break;
             }
             const std::size_t from_position =
                 find_top_level_keyword(upper_query, projection_start, "FROM");
@@ -4027,6 +4073,7 @@ namespace copperfin::runtime
             plan.where_expression = std::move(where_expression);
             plan.order_expressions = std::move(order_expressions);
             plan.distinct = distinct;
+            plan.top_count = top_count;
             return true;
         };
 
@@ -4472,6 +4519,12 @@ namespace copperfin::runtime
                     }
                     return false;
                 });
+
+            if (plan.top_count.has_value() &&
+                materialized_rows.size() > *plan.top_count)
+            {
+                materialized_rows.resize(*plan.top_count);
+            }
 
             rows.clear();
             rows.reserve(materialized_rows.size());
