@@ -945,6 +945,88 @@ void test_pack_memo_rollback_restores_original_sidecar_and_readability() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_create_table_from_array_uses_vfp_metadata_columns() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_prg_engine_create_table_from_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "from_array.dbf";
+    const fs::path minimal_table_path = temp_root / "from_array_minimal.dbf";
+    const fs::path main_path = temp_root / "create_from_array.prg";
+    write_text(
+        main_path,
+        "DIM aFields[2, 16]\n"
+        "aFields[1, 1] = 'NAME'\n"
+        "aFields[1, 2] = 'C'\n"
+        "aFields[1, 3] = 12\n"
+        "aFields[1, 4] = 0\n"
+        "aFields[2, 1] = 'AMOUNT'\n"
+        "aFields[2, 2] = 'N'\n"
+        "aFields[2, 3] = 10\n"
+        "aFields[2, 4] = 2\n"
+        "CREATE TABLE '" + table_path.string() + "' FROM ARRAY aFields\n"
+        "nFieldCount = FCOUNT()\n"
+        "cField1 = FIELD(1)\n"
+        "cField2 = FIELD(2)\n"
+        "nAmountSize = FSIZE('AMOUNT')\n"
+        "DIM aMinimal[1, 4]\n"
+        "aMinimal[1, 1] = 'CODE'\n"
+        "aMinimal[1, 2] = 'C'\n"
+        "aMinimal[1, 3] = 6\n"
+        "aMinimal[1, 4] = 0\n"
+        "CREATE TABLE '" + minimal_table_path.string() + "' FROM ARRAY aMinimal\n"
+        "nMinimalFieldCount = FCOUNT()\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CREATE TABLE FROM ARRAY should complete: " + state.message);
+    expect(fs::exists(table_path), "CREATE TABLE FROM ARRAY should create the DBF");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured by CREATE TABLE FROM ARRAY");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " should equal '" + expected + "' for CREATE TABLE FROM ARRAY");
+        }
+    };
+    check("nfieldcount", "2");
+    check("cfield1", "NAME");
+    check("cfield2", "AMOUNT");
+    check("namountsize", "10");
+    check("nminimalfieldcount", "1");
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(parsed.ok, "CREATE TABLE FROM ARRAY output should be readable");
+    expect(parsed.ok && parsed.table.fields.size() == 2U,
+           "CREATE TABLE FROM ARRAY should emit one DBF field per metadata row");
+    if (parsed.ok && parsed.table.fields.size() == 2U) {
+        expect(parsed.table.fields[0].name == "NAME" && parsed.table.fields[0].type == 'C' &&
+                   parsed.table.fields[0].length == 12U,
+               "CREATE TABLE FROM ARRAY should preserve character metadata");
+        expect(parsed.table.fields[1].name == "AMOUNT" && parsed.table.fields[1].type == 'N' &&
+                   parsed.table.fields[1].length == 10U && parsed.table.fields[1].decimal_count == 2U,
+               "CREATE TABLE FROM ARRAY should preserve numeric metadata");
+    }
+    const auto minimal_parsed = copperfin::vfp::parse_dbf_table_from_file(
+        minimal_table_path.string(), 10U);
+    expect(minimal_parsed.ok && minimal_parsed.table.fields.size() == 1U,
+           "CREATE TABLE FROM ARRAY should accept the minimal four-column metadata form");
+    if (minimal_parsed.ok && minimal_parsed.table.fields.size() == 1U) {
+        expect(minimal_parsed.table.fields[0].name == "CODE" &&
+                   minimal_parsed.table.fields[0].type == 'C' &&
+                   minimal_parsed.table.fields[0].length == 6U,
+               "CREATE TABLE FROM ARRAY should preserve minimal-form field metadata");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -962,6 +1044,7 @@ int main() {
     test_table_structure_runtime_errors_localize();
     test_pack_memo_rewrites_memo_sidecar();
     test_pack_memo_rollback_restores_original_sidecar_and_readability();
+    test_create_table_from_array_uses_vfp_metadata_columns();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

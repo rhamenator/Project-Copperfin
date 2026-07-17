@@ -5166,7 +5166,67 @@
                 }
                 table_path = table_path.lexically_normal();
 
-                const auto declarations = parse_table_field_declarations(statement.expression);
+                std::vector<TableFieldDeclaration> declarations;
+                if (statement.tertiary_expression == "array")
+                {
+                    const auto resolved_array_name = resolve_command_array_name(
+                        statement.secondary_expression, "CREATE TABLE FROM ARRAY");
+                    const RuntimeArray *metadata_array = resolved_array_name.has_value()
+                        ? find_array(*resolved_array_name)
+                        : nullptr;
+                    if (metadata_array == nullptr || metadata_array->columns < 4U || metadata_array->rows == 0U)
+                    {
+                        if (resolved_array_name.has_value())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration");
+                        }
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const auto read_dimension = [&](const PrgValue &value, std::uint8_t &result) {
+                        const double number = value_as_number(value);
+                        if (!std::isfinite(number) || number < 0.0 || number > 255.0 ||
+                            std::llround(number) != number)
+                        {
+                            return false;
+                        }
+                        result = static_cast<std::uint8_t>(std::llround(number));
+                        return true;
+                    };
+                    for (std::size_t row = 1U; row <= metadata_array->rows; ++row)
+                    {
+                        const std::string name = trim_copy(value_as_string(
+                            array_value(*resolved_array_name, row, 1U)));
+                        const std::string type = uppercase_copy(trim_copy(value_as_string(
+                            array_value(*resolved_array_name, row, 2U))));
+                        std::uint8_t length = 0U;
+                        std::uint8_t decimals = 0U;
+                        if (name.empty() || type.empty() ||
+                            !read_dimension(array_value(*resolved_array_name, row, 3U), length) ||
+                            !read_dimension(array_value(*resolved_array_name, row, 4U), decimals))
+                        {
+                            declarations.clear();
+                            break;
+                        }
+
+                        const std::string declaration_text = name + " " + type + "(" +
+                            std::to_string(length) + "," + std::to_string(decimals) + ")";
+                        const auto declaration = parse_table_field_declaration(declaration_text);
+                        if (!declaration.has_value())
+                        {
+                            declarations.clear();
+                            break;
+                        }
+                        declarations.push_back(*declaration);
+                    }
+                }
+                else
+                {
+                    declarations = parse_table_field_declarations(statement.expression);
+                }
                 const std::vector<vfp::DbfFieldDescriptor> fields = table_field_descriptors(declarations);
                 if (fields.empty())
                 {

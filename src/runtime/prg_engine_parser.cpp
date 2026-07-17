@@ -1130,6 +1130,19 @@ bool parse_table_definition_statement(const std::string& line, Statement& statem
     if (starts_with_insensitive(line, "CREATE TABLE ")) {
         statement.kind = StatementKind::create_table_command;
         const std::string body = trim_copy(line.substr(13U));
+        const std::size_t from_position = find_keyword_top_level(body, "FROM");
+        if (from_position != std::string::npos) {
+            const std::string target = trim_copy(body.substr(0U, from_position));
+            const std::string source_clause = trim_copy(body.substr(from_position + 4U));
+            if (starts_with_insensitive(source_clause, "ARRAY") &&
+                (source_clause.size() == 5U ||
+                 std::isspace(static_cast<unsigned char>(source_clause[5U])) != 0)) {
+                statement.identifier = target;
+                statement.secondary_expression = trim_copy(source_clause.substr(5U));
+                statement.tertiary_expression = "array";
+                return true;
+            }
+        }
         const auto paren_open = body.find('(');
         if (paren_open != std::string::npos && body.back() == ')') {
             statement.identifier = trim_copy(body.substr(0U, paren_open));
