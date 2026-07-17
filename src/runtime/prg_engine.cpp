@@ -13,6 +13,7 @@
 #include "prg_engine_runtime_config.h"
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
+#include "prg_engine_date_time_functions.h"
 #include "win64_native_call.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
@@ -4192,6 +4193,12 @@ namespace copperfin::runtime
                        value.kind == PrgValueKind::uint64 ||
                        value.kind == PrgValueKind::currency;
             };
+            const auto date_time_set_callback = [this](const std::string &option_name)
+            {
+                const auto &set_state = current_set_state();
+                const auto found = set_state.find(normalize_identifier(option_name));
+                return found == set_state.end() ? std::string{} : found->second;
+            };
             const auto row_values_equal =
                 [&](const std::vector<PrgValue> &left, const std::vector<PrgValue> &right) -> bool
             {
@@ -5025,6 +5032,23 @@ namespace copperfin::runtime
                                 continue;
                             }
                             return descending ? right_number < left_number : left_number < right_number;
+                        }
+
+                        if (left_key.string_flavor != PrgStringFlavor::none &&
+                            right_key.string_flavor != PrgStringFlavor::none)
+                        {
+                            const auto comparison = compare_date_time_values(
+                                left_key,
+                                right_key,
+                                date_time_set_callback);
+                            if (comparison.has_value())
+                            {
+                                if (*comparison == 0)
+                                {
+                                    continue;
+                                }
+                                return descending ? *comparison > 0 : *comparison < 0;
+                            }
                         }
 
                         const std::string left_text = value_as_string(left_key);

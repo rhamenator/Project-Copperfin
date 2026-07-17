@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -2151,6 +2152,93 @@ void test_sql_statement_requery_groups_and_filters_aggregate_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_orders_date_and_datetime_values_chronologically() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_date_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto timestamp = [](int year, int month, int day, int hour, int minute, int second) {
+        const long long millis =
+            ((static_cast<long long>(hour) * 60LL * 60LL) +
+             (static_cast<long long>(minute) * 60LL) +
+             static_cast<long long>(second)) * 1000LL;
+        return std::string("julian:") +
+               std::to_string(copperfin::runtime::date_to_julian(year, month, day)) +
+               " millis:" + std::to_string(millis);
+    };
+
+    const fs::path table_path = temp_root / "events.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "EVENT_ID", .type = 'C', .length = 12U},
+        {.name = "EDATE", .type = 'D', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U}};
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"early", "20201201", timestamp(2020, 12, 31, 23, 59, 59)},
+         {"late", "20210115", timestamp(2021, 1, 1, 0, 0, 0)},
+         {"tie", "20210115", timestamp(2021, 1, 1, 0, 0, 0)}});
+    expect(create_result.ok,
+           "DATE/DATETIME ORDER BY fixture should create the events DBF: " + create_result.error);
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_sql_date_order.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS events IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 1\n"
+        "oList.RowSourceType = 3\n"
+        "SET DATE TO DMY\n"
+        "SET MARK TO '.'\n"
+        "oList.RowSource = \"SELECT event_id FROM events ORDER BY edate\"\n"
+        "oList.Requery()\n"
+        "cDateFirst = oList.List(1, 1)\n"
+        "cDateSecond = oList.List(2, 1)\n"
+        "cDateThird = oList.List(3, 1)\n"
+        "SET DATE TO YMD\n"
+        "SET MARK TO '-'\n"
+        "SET HOURS TO 12\n"
+        "SET SECONDS OFF\n"
+        "oList.RowSource = \"SELECT event_id FROM events ORDER BY stamp DESC\"\n"
+        "oList.Requery()\n"
+        "cDateTimeFirst = oList.List(1, 1)\n"
+        "cDateTimeSecond = oList.List(2, 1)\n"
+        "cDateTimeThird = oList.List(3, 1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("DATE/DATETIME ORDER BY Requery() script should complete: ") + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("cdatefirst", "early");
+    check("cdatesecond", "late");
+    check("cdatethird", "tie");
+    check("cdatetimefirst", "late");
+    check("cdatetimesecond", "tie");
+    check("cdatetimethird", "early");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -2182,6 +2270,7 @@ int main() {
     test_sql_statement_requery_select_star_includes_joined_fields();
     test_sql_statement_requery_rejects_three_table_join_chain();
     test_sql_statement_requery_applies_top_after_ordering();
+    test_sql_statement_requery_orders_date_and_datetime_values_chronologically();
     test_sql_statement_requery_rejects_where_subquery_predicate();
     test_sql_statement_requery_groups_and_filters_aggregate_rows();
     if (const int failures = test_failures(); failures != 0) {
