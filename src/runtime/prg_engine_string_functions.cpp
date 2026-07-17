@@ -562,9 +562,12 @@ std::optional<PrgValue> evaluate_string_function(
         const std::size_t start_occurrence = arguments.size() >= 4U
                                                  ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
                                                  : 1U;
-        const std::size_t occurrence_limit = arguments.size() >= 5U
-                                                 ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[4])))
-                                                 : std::numeric_limits<std::size_t>::max();
+        const double raw_occurrence_limit = arguments.size() >= 5U
+                                                 ? value_as_number(arguments[4])
+                                                 : -1.0;
+        const std::size_t occurrence_limit = raw_occurrence_limit < 0.0
+                                                 ? std::numeric_limits<std::size_t>::max()
+                                                 : static_cast<std::size_t>(raw_occurrence_limit);
         const std::size_t flags = arguments.size() >= 6U
                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[5])))
                                       : 0U;

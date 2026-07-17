@@ -133,6 +133,8 @@ namespace
             "strtran_flags_sensitive = STRTRAN('Hello World', 'WORLD', 'There', 1, 1, 0)\n"
             "strtran_flags_insensitive = STRTRAN('Hello World', 'WORLD', 'There', 1, 1, 1)\n"
             "strtran_flags_start_count = STRTRAN('aBc ABC abc', 'abc', 'X', 2, 1, 1)\n"
+            "strtran_negative_count = STRTRAN('abcabcabc', 'abc', 'X', 1, -1)\n"
+            "strtran_negative_count_flags = STRTRAN('aBc ABC abc', 'abc', 'X', 1, -1, 1)\n"
             "proper_value = PROPER('legacy fox-pro APP')\n"
             "strconv_lower = STRCONV('MiXeD', 7)\n"
             "strconv_upper = STRCONV('MiXeD', 8)\n"
@@ -375,6 +377,8 @@ namespace
         check("strtran_flags_sensitive", "Hello World");
         check("strtran_flags_insensitive", "Hello There");
         check("strtran_flags_start_count", "aBc X abc");
+        check("strtran_negative_count", "XXX");
+        check("strtran_negative_count_flags", "X X X");
         check("proper_value", "Legacy Fox-Pro App");
         check("strconv_lower", "mixed");
         check("strconv_upper", "MIXED");
