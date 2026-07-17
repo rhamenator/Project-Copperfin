@@ -875,7 +875,8 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
         "Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName",
         "Runtime.Package.Error.SourceFileMissing",
-        "Runtime.Package.Error.WriteFileFailed"};
+        "Runtime.Package.Error.WriteFileFailed",
+        "Runtime.Package.Warning.ManifestPairRewriteFailed"};
 
     expect(
         english_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") ==
@@ -1019,6 +1020,21 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
                     "A reserved manifest-transaction path is not owned by Copperfin: {path}"),
                 {{"path", "reserved-entry"}}),
         "#4056: manifest-pair collision diagnostics should route through pseudo-localization");
+    expect(
+        english_catalog.translate(
+            "Runtime.Package.Warning.ManifestPairRewriteFailed",
+            {{"path", "package-root"}}) ==
+            "The new package is live, but its runtime and debug manifests could not be refreshed: package-root",
+        "#4096: post-commit manifest rewrite warnings should preserve their explicit warning contract");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Warning.ManifestPairRewriteFailed",
+            {{"path", "package-root"}}) ==
+            copperfin::localization::format_named_placeholders(
+                copperfin::localization::pseudo_localize(
+                    "The new package is live, but its runtime and debug manifests could not be refreshed: {path}"),
+                {{"path", "package-root"}}),
+        "#4096: post-commit manifest rewrite warnings should route through pseudo-localization");
     expect(
         english_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
             "Source file does not exist: missing.prg",

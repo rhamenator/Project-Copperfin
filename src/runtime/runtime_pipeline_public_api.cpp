@@ -2189,7 +2189,12 @@ RuntimeMaterializeResult materialize_runtime_package(
             build_runtime_manifest_text(result.plan, security_profile, extensibility_profile),
             build_debug_manifest_text(result.plan, security_profile, extensibility_profile),
             error)) {
-            return {.ok = false, .plan = std::move(result.plan), .error = error};
+            result.plan.warnings.push_back(
+                runtime_text(
+                    "Runtime.Package.Warning.ManifestPairRewriteFailed",
+                    {{"path", result.plan.package_root}}) +
+                " " + error);
+            return {.ok = true, .plan = std::move(result.plan), .error = {}};
         }
     }
 

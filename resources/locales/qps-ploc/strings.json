@@ -41,6 +41,7 @@
   "Runtime.Package.Warning.StartupSourceUnresolved": "No startup source asset could be resolved.",
   "Runtime.Package.Warning.UnknownSecurityRoleRequested": "Unknown security role requested: {requestedRole}; defaulting to {defaultRole}.",
   "Runtime.Package.Warning.PackageBackupCleanupFailed": "The new package was materialized, but the previous package backup could not be removed: {path}",
+  "Runtime.Package.Warning.ManifestPairRewriteFailed": "The new package is live, but its runtime and debug manifests could not be refreshed: {path}",
   "Runtime.Package.Launcher.Error.ManifestMissing": "Copperfin manifest was not found beside the launcher.",
   "Runtime.Package.Launcher.Error.RuntimeHostMissing": "Copperfin runtime host was not found beside the launcher.",
   "Runtime.Package.Launcher.Error.RuntimeHostStartFailed": "Copperfin runtime host could not be started.",

@@ -424,6 +424,35 @@ void test_materialize_cleanup_warning_rewrites_manifest_pair_atomically() {
                "#4056: cleanup-warning rewrites should remove manifest-pair artifacts");
     }
 
+    copperfin::runtime::test_hooks::force_package_backup_cleanup_warning_once();
+    copperfin::runtime::test_hooks::set_manifest_pair_promotion_fault(
+        copperfin::runtime::test_hooks::ManifestPairPromotionFault::before_first_promotion);
+    const auto live_package_with_stale_manifests =
+        copperfin::runtime::materialize_runtime_package(
+            fixture.plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            fixture.runtime_host.string());
+    copperfin::runtime::test_hooks::set_manifest_pair_promotion_fault(
+        copperfin::runtime::test_hooks::ManifestPairPromotionFault::none);
+    expect(live_package_with_stale_manifests.ok,
+           "#4096: a post-commit manifest rewrite failure should remain warning-only");
+    expect(live_package_with_stale_manifests.error.empty(),
+           "#4096: warning-only manifest rewrite failure should not expose a materialization error");
+    expect(
+        live_package_with_stale_manifests.ok &&
+            fs::exists(fs::path(live_package_with_stale_manifests.plan.package_root) /
+                       "content" / "main.prg"),
+        "#4096: warning-only manifest rewrite failure should leave the new package live");
+    expect(
+        !live_package_with_stale_manifests.plan.warnings.empty() &&
+            live_package_with_stale_manifests.plan.warnings.back().find(
+                "manifest") != std::string::npos,
+        "#4096: warning-only manifest rewrite failure should identify the stale manifest pair");
+    expect(!has_manifest_pair_transaction_artifacts(
+               live_package_with_stale_manifests.plan.package_root),
+           "#4096: failed manifest rewrite recovery should leave no transaction artifacts");
+
     remove_fixture(fixture);
 }
 

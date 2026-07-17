@@ -41,6 +41,7 @@
   "Runtime.Package.Warning.StartupSourceUnresolved": "Nao foi possivel resolver nenhum asset de origem de inicializacao.",
   "Runtime.Package.Warning.UnknownSecurityRoleRequested": "Foi solicitado um papel de seguranca desconhecido: {requestedRole}; usando {defaultRole}.",
   "Runtime.Package.Warning.PackageBackupCleanupFailed": "O novo pacote foi materializado, mas o backup do pacote anterior nao pode ser removido: {path}",
+  "Runtime.Package.Warning.ManifestPairRewriteFailed": "O novo pacote esta ativo, mas nao foi possivel atualizar seus manifestos de runtime e depuracao: {path}",
   "Runtime.Package.Launcher.Error.ManifestMissing": "O manifesto do Copperfin nao foi encontrado ao lado do iniciador.",
   "Runtime.Package.Launcher.Error.RuntimeHostMissing": "O host de runtime do Copperfin nao foi encontrado ao lado do iniciador.",
   "Runtime.Package.Launcher.Error.RuntimeHostStartFailed": "Nao foi possivel iniciar o host de runtime do Copperfin.",
