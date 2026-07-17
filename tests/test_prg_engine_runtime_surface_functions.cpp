@@ -1235,6 +1235,8 @@ namespace
             "xgetmissing = GETPEM(oa, 'nosuchprop')\n"
             "lsetprop = SETPEM(oa, 'comparemode', 1)\n"
             "ngetpropafterset = GETPEM(oa, 'comparemode')\n"
+            "lputprop = PUTPEM(oa, 'comparemode', 2)\n"
+            "ngetpropafterput = GETPEM(oa, 'comparemode')\n"
             "lsetreadonly = SETPEM(oa, 'count', 99)\n"
             "lsetunknown = SETPEM(oa, 'nosuchprop', 42)\n"
             "lsetmethod = SETPEM(oa, 'add', 'MyAddProc')\n"
@@ -1293,6 +1295,8 @@ namespace
         // SETPEM
         check("lsetprop", "true");           // setting comparemode succeeds
         check("ngetpropafterset", "1");      // comparemode now 1
+        check("lputprop", "true");           // documented PUTPEM spelling succeeds
+        check("ngetpropafterput", "2");      // comparemode now 2
         check("lsetreadonly", "false");      // count is read-only → .F.
         check("lsetunknown", "false");       // unknown property → .F.
         check("lsetmethod", "true");         // setting method ref succeeds

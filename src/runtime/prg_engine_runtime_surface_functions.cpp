@@ -4507,11 +4507,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return make_empty_value();
     }
     
-    if (function == "setpem" && arguments.size() >= 3U) {
+    if ((function == "putpem" || function == "setpem") && arguments.size() >= 3U) {
+        const std::string function_display_name = function == "putpem" ? "PUTPEM()" : "SETPEM()";
         if (!resolve_object_callback) {
             record_runtime_warning(runtime_text(
                 "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
-                {{"function", "SETPEM()"}}));
+                {{"function", function_display_name}}));
             return make_boolean_value(false);
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
