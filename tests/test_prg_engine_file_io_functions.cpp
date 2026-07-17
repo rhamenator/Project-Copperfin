@@ -61,6 +61,21 @@ void test_file_io_runtime_functions()
         "nResize = FCHSIZE(hResize, 2)\n"
         "nCloseResize = FCLOSE(hResize)\n"
         "cWriteAfterResize = FILETOSTR('write.txt')\n"
+        "hCreate = FOPEN('created-read-write.txt', 2)\n"
+        "nCreateWrite = FWRITE(hCreate, 'created')\n"
+        "nCloseCreate = FCLOSE(hCreate)\n"
+        "cCreated = FILETOSTR('created-read-write.txt')\n"
+        "hSharedRead = FOPEN('write.txt', 10)\n"
+        "cSharedRead = FREAD(hSharedRead, 2)\n"
+        "nCloseSharedRead = FCLOSE(hSharedRead)\n"
+        "hSharedWrite = FOPEN('shared-write.txt', 11)\n"
+        "nSharedWrite = FWRITE(hSharedWrite, 'shared')\n"
+        "nCloseSharedWrite = FCLOSE(hSharedWrite)\n"
+        "cSharedWrite = FILETOSTR('shared-write.txt')\n"
+        "hSharedReadWrite = FOPEN('shared-read-write.txt', 12)\n"
+        "nSharedReadWrite = FWRITE(hSharedReadWrite, 'both')\n"
+        "nCloseSharedReadWrite = FCLOSE(hSharedReadWrite)\n"
+        "cSharedReadWrite = FILETOSTR('shared-read-write.txt')\n"
         "hMissing = FOPEN('missing/does-not-exist.txt', 0)\n"
         "RETURN\n");
 
@@ -107,6 +122,17 @@ void test_file_io_runtime_functions()
     check("nresize", "0");
     check("ncloseresize", "0");
     check("cwriteafterresize", "ab");
+    check("ncreatewrite", "7");
+    check("nclosecreate", "0");
+    check("ccreated", "created");
+    check("csharedread", "ab");
+    check("nclosesharedread", "0");
+    check("nsharedwrite", "6");
+    check("nclosesharedwrite", "0");
+    check("csharedwrite", "shared");
+    check("nsharedreadwrite", "4");
+    check("nclosesharedreadwrite", "0");
+    check("csharedreadwrite", "both");
     check("hmissing", "-1");
 
     fs::remove_all(temp_root, ignored);

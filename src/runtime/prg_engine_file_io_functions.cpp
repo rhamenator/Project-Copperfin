@@ -8,6 +8,7 @@
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -99,7 +100,24 @@ std::string fopen_mode_from_value(const PrgValue& mode_value) {
     if (mode == 2) {
         return "rb+";
     }
+    if (mode == 10) {
+        return "rb";
+    }
+    if (mode == 11) {
+        return "wb";
+    }
+    if (mode == 12) {
+        return "rb+";
+    }
     return "rb";
+}
+
+bool fopen_numeric_read_write_mode(const PrgValue& mode_value) {
+    if (mode_value.kind == PrgValueKind::string) {
+        return false;
+    }
+    const int mode = static_cast<int>(std::llround(value_as_number(mode_value)));
+    return mode == 2 || mode == 12;
 }
 
 std::string trim_newline(std::string value) {
@@ -120,6 +138,13 @@ std::optional<PrgValue> evaluate_file_io_function(
         const std::string mode = arguments.size() >= 2U ? fopen_mode_from_value(arguments[1]) : std::string{"rb"};
 
         std::FILE* opened = std::fopen(path.string().c_str(), mode.c_str());
+        if (opened == nullptr &&
+            fopen_numeric_read_write_mode(arguments.size() >= 2U ? arguments[1] : make_number_value(0.0)) &&
+            errno == ENOENT) {
+            // rb+ preserves existing contents; only create a missing file after
+            // that first open proves the path does not exist.
+            opened = std::fopen(path.string().c_str(), "wb+");
+        }
         if (opened == nullptr) {
             return make_number_value(-1.0);
         }
