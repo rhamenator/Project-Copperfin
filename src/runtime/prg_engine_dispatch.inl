@@ -49,6 +49,7 @@
         std::optional<PrgValue> resumed_store_value;
         std::optional<Statement> resumed_store_statement;
         std::optional<PrgValue> resumed_sleep_value;
+        std::optional<PrgValue> resumed_seek_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -423,6 +424,10 @@
                     {
                         resumed_sleep_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::seek_command)
+                    {
+                        resumed_seek_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -430,6 +435,7 @@
                 }
                 if (!resumed_assignment_value.has_value() && !resumed_store_value.has_value() &&
                     !resumed_sleep_value.has_value() &&
+                    !resumed_seek_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -2922,7 +2928,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const std::string search_key = value_as_string(evaluate_expression(statement.expression, frame));
+                const auto search_key_value = resumed_seek_value.has_value()
+                                                  ? resumed_seek_value
+                                                  : evaluate_resumable_expression(frame, statement);
+                if (!search_key_value.has_value())
+                {
+                    return {};
+                }
+                const std::string search_key = value_as_string(*search_key_value);
                 std::string used_order_name;
                 std::string used_order_normalization_hint;
                 std::string used_order_collation_hint;

@@ -134,6 +134,76 @@ void test_set_order_and_seek_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_seek_search_key_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+    write_synthetic_cdx(cdx_path, "NAME", "NAME");
+
+    const fs::path deep_path = temp_root / "seek_deep.prg";
+    write_text(
+        deep_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SEEK seek_key(2048)\n"
+        "RETURN\n"
+        "FUNCTION seek_key\n"
+        "LPARAMETERS nDepth\n"
+        "IF nDepth <= 0\n"
+        "RETURN 'BRAVO'\n"
+        "ENDIF\n"
+        "RETURN seek_key(nDepth - 1)\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession deep_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(deep_path.string(), temp_root.string()));
+    const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!deep_state.completed, "deep SEEK key recursion should stop at the configured call-depth guard");
+    expect(
+        deep_state.message.find("maximum call depth") != std::string::npos,
+        "deep SEEK key recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
+
+    const fs::path side_effect_path = temp_root / "seek_side_effect.prg";
+    write_text(
+        side_effect_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "nCalls = 0\n"
+        "SEEK seek_key()\n"
+        "nFound = FOUND()\n"
+        "RETURN\n"
+        "FUNCTION seek_key\n"
+        "nCalls = nCalls + 1\n"
+        "RETURN 'BRAVO'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession side_effect_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(side_effect_path.string(), temp_root.string()));
+    const auto side_effect_state = side_effect_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(side_effect_state.completed, "SEEK key UDF script should complete");
+
+    const auto calls = side_effect_state.globals.find("ncalls");
+    const auto found = side_effect_state.globals.find("nfound");
+    expect(calls != side_effect_state.globals.end(), "SEEK key UDF call count should be captured");
+    expect(found != side_effect_state.globals.end(), "SEEK should still expose FOUND() after a resumed key evaluation");
+    if (calls != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(calls->second) == "1", "SEEK key UDF should run exactly once across suspension and resume");
+    }
+    if (found != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(found->second) == "true", "resumed SEEK should find the UDF-provided key");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_collate_guides_plain_string_seek_comparisons() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek_collate";
@@ -4818,6 +4888,7 @@ void test_set_filter_in_targets_nonselected_alias() {
 
 int main() {
     test_set_order_and_seek_for_local_tables();
+    test_seek_search_key_uses_heap_backed_frame_continuations();
     test_set_collate_guides_plain_string_seek_comparisons();
     test_seek_uses_grounded_order_normalization_hints();
     test_seek_supports_composite_tag_expressions();
