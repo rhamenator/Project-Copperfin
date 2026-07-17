@@ -3541,7 +3541,10 @@ namespace copperfin::runtime
             std::string join_on_expression;
             JoinKind join_kind = JoinKind::none;
             std::vector<std::string> projection_expressions;
+            std::vector<std::string> projection_aliases;
             std::string where_expression;
+            std::vector<std::string> group_expressions;
+            std::string having_expression;
             std::vector<QueryOrderExpression> order_expressions;
             bool distinct = false;
             std::optional<std::size_t> top_count;
@@ -3834,13 +3837,22 @@ namespace copperfin::runtime
                 find_top_level_keyword(upper_query, after_from, "WHERE");
             const std::size_t order_position =
                 find_top_level_keyword(upper_query, after_from, "ORDER BY");
+            const std::size_t group_position =
+                find_top_level_keyword(upper_query, after_from, "GROUP BY");
+            const std::size_t having_position =
+                find_top_level_keyword(upper_query, after_from, "HAVING");
             const std::size_t into_position =
                 find_top_level_keyword(upper_query, after_from, "INTO CURSOR");
 
             const auto clause_end = [&](std::size_t start) -> std::size_t
             {
                 std::size_t end = query_text.size();
-                for (const std::size_t candidate : {where_position, order_position, into_position})
+                for (const std::size_t candidate : {
+                         where_position,
+                         order_position,
+                         group_position,
+                         having_position,
+                         into_position})
                 {
                     if (candidate != std::string::npos && candidate > start)
                     {
@@ -3973,16 +3985,76 @@ namespace copperfin::runtime
             }
 
             std::vector<std::string> projection_expressions;
+            std::vector<std::string> projection_aliases;
             for (std::string projection : split_csv_like(projection_clause))
             {
-                projection = strip_projection_alias(std::move(projection));
+                projection = trim_copy(std::move(projection));
+                std::string projection_alias;
+                const std::size_t as_position =
+                    find_top_level_keyword(uppercase_copy(projection), 0U, "AS");
+                if (as_position != std::string::npos)
+                {
+                    projection_alias = trim_copy(projection.substr(as_position + 2U));
+                    projection = trim_copy(projection.substr(0U, as_position));
+                    if (projection_alias.empty())
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    projection = strip_projection_alias(std::move(projection));
+                }
                 if (projection.empty())
                 {
                     return false;
                 }
                 projection_expressions.push_back(std::move(projection));
+                projection_aliases.push_back(std::move(projection_alias));
             }
             if (projection_expressions.empty())
+            {
+                return false;
+            }
+
+            std::vector<std::string> group_expressions;
+            if (group_position != std::string::npos)
+            {
+                const std::size_t group_clause_start = group_position + 8U;
+                const std::string group_clause = trim_copy(
+                    query_text.substr(
+                        group_clause_start,
+                        clause_end(group_clause_start) - group_clause_start));
+                if (group_clause.empty())
+                {
+                    return false;
+                }
+                for (std::string group_expression : split_csv_like(group_clause))
+                {
+                    group_expression = trim_copy(std::move(group_expression));
+                    if (group_expression.empty())
+                    {
+                        return false;
+                    }
+                    group_expressions.push_back(std::move(group_expression));
+                }
+            }
+
+            std::string having_expression;
+            if (having_position != std::string::npos)
+            {
+                const std::size_t having_clause_start = having_position + 6U;
+                having_expression = trim_copy(
+                    query_text.substr(
+                        having_clause_start,
+                        clause_end(having_clause_start) - having_clause_start));
+                if (having_expression.empty())
+                {
+                    return false;
+                }
+            }
+            if (!joined_source_designator.empty() &&
+                (!group_expressions.empty() || !having_expression.empty()))
             {
                 return false;
             }
@@ -4097,7 +4169,10 @@ namespace copperfin::runtime
             plan.join_on_expression = std::move(join_on_expression);
             plan.join_kind = join_kind;
             plan.projection_expressions = std::move(projection_expressions);
+            plan.projection_aliases = std::move(projection_aliases);
             plan.where_expression = std::move(where_expression);
+            plan.group_expressions = std::move(group_expressions);
+            plan.having_expression = std::move(having_expression);
             plan.order_expressions = std::move(order_expressions);
             plan.distinct = distinct;
             plan.top_count = top_count;
@@ -4217,7 +4292,8 @@ namespace copperfin::runtime
                     parse_query_aggregate_projection(projection_expression));
             }
             const bool aggregate_query =
-                joined_cursor == nullptr && !aggregate_projections.empty() &&
+                joined_cursor == nullptr && plan.group_expressions.empty() &&
+                plan.having_expression.empty() && !aggregate_projections.empty() &&
                 std::all_of(
                     aggregate_projections.begin(),
                     aggregate_projections.end(),
@@ -4225,6 +4301,9 @@ namespace copperfin::runtime
                     {
                         return projection.has_value();
                     });
+            const bool grouped_query =
+                joined_cursor == nullptr &&
+                (!plan.group_expressions.empty() || !plan.having_expression.empty());
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             const std::optional<CursorPositionSnapshot> joined_original =
@@ -4258,6 +4337,417 @@ namespace copperfin::runtime
             materialized_rows.reserve(cursor.record_count);
             bool aggregate_materialized = false;
 
+            struct QueryGroup
+            {
+                std::vector<std::size_t> record_numbers;
+                std::vector<PrgValue> key_values;
+            };
+
+            const auto query_value_literal = [](const PrgValue &value) -> std::string
+            {
+                if (value.is_null)
+                {
+                    return ".NULL.";
+                }
+                if (value.kind == PrgValueKind::string)
+                {
+                    std::string escaped = value.string_value;
+                    std::string::size_type position = 0U;
+                    while ((position = escaped.find('\'', position)) != std::string::npos)
+                    {
+                        escaped.insert(position, 1U, '\'');
+                        position += 2U;
+                    }
+                    return "'" + escaped + "'";
+                }
+                if (value.kind == PrgValueKind::boolean)
+                {
+                    return value.boolean_value ? ".T." : ".F.";
+                }
+                return format_value(value);
+            };
+
+            const auto substitute_query_projection_aliases =
+                [&](const std::string &expression,
+                    const std::vector<PrgValue> &values) -> std::string
+            {
+                const auto is_word_char = [](char value)
+                {
+                    return std::isalnum(static_cast<unsigned char>(value)) != 0 || value == '_';
+                };
+                std::string substituted;
+                substituted.reserve(expression.size());
+                for (std::size_t index = 0U; index < expression.size();)
+                {
+                    if (expression[index] == '\'' || expression[index] == '"')
+                    {
+                        const char quote = expression[index];
+                        substituted.push_back(expression[index++]);
+                        while (index < expression.size())
+                        {
+                            substituted.push_back(expression[index]);
+                            if (expression[index] == quote)
+                            {
+                                if (index + 1U < expression.size() && expression[index + 1U] == quote)
+                                {
+                                    substituted.push_back(expression[++index]);
+                                }
+                                else
+                                {
+                                    ++index;
+                                    break;
+                                }
+                            }
+                            ++index;
+                        }
+                        continue;
+                    }
+
+                    if (!is_word_char(expression[index]))
+                    {
+                        substituted.push_back(expression[index++]);
+                        continue;
+                    }
+
+                    const std::size_t word_start = index;
+                    while (index < expression.size() && is_word_char(expression[index]))
+                    {
+                        ++index;
+                    }
+                    const std::string word = expression.substr(word_start, index - word_start);
+                    bool replaced = false;
+                    for (std::size_t alias_index = 0U;
+                         alias_index < plan.projection_aliases.size() &&
+                         alias_index < values.size();
+                         ++alias_index)
+                    {
+                        if (!plan.projection_aliases[alias_index].empty() &&
+                            uppercase_copy(plan.projection_aliases[alias_index]) == uppercase_copy(word))
+                        {
+                            substituted += query_value_literal(values[alias_index]);
+                            replaced = true;
+                            break;
+                        }
+                    }
+                    if (!replaced)
+                    {
+                        substituted += word;
+                    }
+                }
+                return substituted;
+            };
+
+            const auto evaluate_group_aggregate =
+                [&](const QueryAggregateProjection &aggregate,
+                    const std::vector<std::size_t> &record_numbers) -> PrgValue
+            {
+                const CursorPositionSnapshot group_original = capture_cursor_snapshot(cursor);
+                const std::string value_expression =
+                    aggregate.arguments.empty() ? std::string{} : aggregate.arguments.front();
+                std::size_t matched_count = 0U;
+                double sum = 0.0;
+                double min_value = 0.0;
+                double max_value = 0.0;
+                for (const std::size_t recno : record_numbers)
+                {
+                    move_cursor_to(cursor, static_cast<long long>(recno));
+                    if (aggregate.function == "count")
+                    {
+                        if (value_expression.empty() || trim_copy(value_expression) == "*")
+                        {
+                            ++matched_count;
+                            continue;
+                        }
+                        const PrgValue value = evaluate_expression(value_expression, frame, &cursor);
+                        if (!value.is_null && value.kind != PrgValueKind::empty &&
+                            !(value.kind == PrgValueKind::string && trim_copy(value.string_value).empty()))
+                        {
+                            ++matched_count;
+                        }
+                        continue;
+                    }
+
+                    if (value_expression.empty())
+                    {
+                        continue;
+                    }
+                    const auto numeric_value = try_parse_aggregate_numeric_value(
+                        evaluate_expression(value_expression, frame, &cursor));
+                    if (!numeric_value.has_value())
+                    {
+                        continue;
+                    }
+                    if (matched_count == 0U)
+                    {
+                        min_value = *numeric_value;
+                        max_value = *numeric_value;
+                    }
+                    else
+                    {
+                        min_value = std::min(min_value, *numeric_value);
+                        max_value = std::max(max_value, *numeric_value);
+                    }
+                    sum += *numeric_value;
+                    ++matched_count;
+                }
+                restore_cursor_snapshot(cursor, group_original);
+
+                if (aggregate.function == "count")
+                {
+                    return make_number_value(static_cast<double>(matched_count));
+                }
+                if (matched_count == 0U)
+                {
+                    return make_number_value(0.0);
+                }
+                if (aggregate.function == "sum")
+                {
+                    return make_number_value(sum);
+                }
+                if (aggregate.function == "avg" || aggregate.function == "average")
+                {
+                    return make_number_value(sum / static_cast<double>(matched_count));
+                }
+                if (aggregate.function == "min")
+                {
+                    return make_number_value(min_value);
+                }
+                if (aggregate.function == "max")
+                {
+                    return make_number_value(max_value);
+                }
+                return make_number_value(0.0);
+            };
+
+            const auto substitute_query_aggregate_expressions =
+                [&](const std::string &expression,
+                    const std::vector<std::size_t> &record_numbers) -> std::string
+            {
+                std::string substituted;
+                substituted.reserve(expression.size());
+                for (std::size_t index = 0U; index < expression.size();)
+                {
+                    if (expression[index] == '\'' || expression[index] == '"')
+                    {
+                        const char quote = expression[index];
+                        substituted.push_back(expression[index++]);
+                        while (index < expression.size())
+                        {
+                            substituted.push_back(expression[index]);
+                            if (expression[index] == quote)
+                            {
+                                if (index + 1U < expression.size() && expression[index + 1U] == quote)
+                                {
+                                    substituted.push_back(expression[++index]);
+                                }
+                                else
+                                {
+                                    ++index;
+                                    break;
+                                }
+                            }
+                            ++index;
+                        }
+                        continue;
+                    }
+
+                    const bool is_word_char =
+                        std::isalnum(static_cast<unsigned char>(expression[index])) != 0 ||
+                        expression[index] == '_';
+                    if (!is_word_char)
+                    {
+                        substituted.push_back(expression[index++]);
+                        continue;
+                    }
+
+                    const std::size_t word_start = index;
+                    while (index < expression.size() &&
+                           (std::isalnum(static_cast<unsigned char>(expression[index])) != 0 ||
+                            expression[index] == '_'))
+                    {
+                        ++index;
+                    }
+                    std::size_t call_start = index;
+                    while (call_start < expression.size() &&
+                           std::isspace(static_cast<unsigned char>(expression[call_start])) != 0)
+                    {
+                        ++call_start;
+                    }
+                    if (call_start >= expression.size() || expression[call_start] != '(')
+                    {
+                        substituted.append(expression, word_start, index - word_start);
+                        continue;
+                    }
+
+                    int parentheses_depth = 0;
+                    bool in_single_quote = false;
+                    bool in_double_quote = false;
+                    std::size_t close_parenthesis = std::string::npos;
+                    for (std::size_t scan = call_start; scan < expression.size(); ++scan)
+                    {
+                        const char current = expression[scan];
+                        if (in_single_quote)
+                        {
+                            if (current == '\'' && scan + 1U < expression.size() &&
+                                expression[scan + 1U] == '\'')
+                            {
+                                ++scan;
+                            }
+                            else if (current == '\'')
+                            {
+                                in_single_quote = false;
+                            }
+                            continue;
+                        }
+                        if (in_double_quote)
+                        {
+                            if (current == '"')
+                            {
+                                in_double_quote = false;
+                            }
+                            continue;
+                        }
+                        if (current == '\'')
+                        {
+                            in_single_quote = true;
+                        }
+                        else if (current == '"')
+                        {
+                            in_double_quote = true;
+                        }
+                        else if (current == '(')
+                        {
+                            ++parentheses_depth;
+                        }
+                        else if (current == ')' && --parentheses_depth == 0)
+                        {
+                            close_parenthesis = scan;
+                            break;
+                        }
+                    }
+
+                    if (close_parenthesis == std::string::npos)
+                    {
+                        substituted.append(expression, word_start, index - word_start);
+                        continue;
+                    }
+
+                    const auto aggregate = parse_query_aggregate_projection(
+                        expression.substr(word_start, close_parenthesis - word_start + 1U));
+                    if (!aggregate.has_value())
+                    {
+                        substituted.append(expression, word_start, index - word_start);
+                        continue;
+                    }
+
+                    substituted += query_value_literal(
+                        evaluate_group_aggregate(*aggregate, record_numbers));
+                    index = close_parenthesis + 1U;
+                }
+                return substituted;
+            };
+
+            if (grouped_query)
+            {
+                std::vector<QueryGroup> groups;
+                for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+                {
+                    move_cursor_to(cursor, static_cast<long long>(recno));
+                    if (!current_record_matches_visibility(cursor, frame, {}) ||
+                        (!plan.where_expression.empty() &&
+                         !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor))))
+                    {
+                        continue;
+                    }
+
+                    std::vector<PrgValue> key_values;
+                    key_values.reserve(plan.group_expressions.size());
+                    for (const std::string &group_expression : plan.group_expressions)
+                    {
+                        key_values.push_back(evaluate_expression(group_expression, frame, &cursor));
+                    }
+                    auto group = std::find_if(
+                        groups.begin(),
+                        groups.end(),
+                        [&](const QueryGroup &candidate)
+                        {
+                            return row_values_equal(candidate.key_values, key_values);
+                        });
+                    if (group == groups.end())
+                    {
+                        groups.push_back(QueryGroup{.record_numbers = {recno}, .key_values = std::move(key_values)});
+                    }
+                    else
+                    {
+                        group->record_numbers.push_back(recno);
+                    }
+                }
+
+                for (const QueryGroup &group : groups)
+                {
+                    if (group.record_numbers.empty())
+                    {
+                        continue;
+                    }
+                    move_cursor_to(cursor, static_cast<long long>(group.record_numbers.front()));
+                    MaterializedQueryRow query_row;
+                    for (std::size_t projection_index = 0U;
+                         projection_index < plan.projection_expressions.size();
+                         ++projection_index)
+                    {
+                        const std::string &projection_expression =
+                            plan.projection_expressions[projection_index];
+                        if (aggregate_projections[projection_index].has_value())
+                        {
+                            query_row.values.push_back(
+                                evaluate_group_aggregate(
+                                    *aggregate_projections[projection_index],
+                                    group.record_numbers));
+                        }
+                        else
+                        {
+                            query_row.values.push_back(
+                                evaluate_expression(projection_expression, frame, &cursor));
+                        }
+                    }
+
+                    if (!plan.having_expression.empty())
+                    {
+                        const std::string having_expression = substitute_query_projection_aliases(
+                            substitute_query_aggregate_expressions(
+                                plan.having_expression,
+                                group.record_numbers),
+                            query_row.values);
+                        if (!value_as_bool(evaluate_expression(having_expression, frame, &cursor)))
+                        {
+                            continue;
+                        }
+                    }
+
+                    for (const QueryOrderExpression &order_expression : plan.order_expressions)
+                    {
+                        if (order_expression.projection_ordinal.has_value() &&
+                            *order_expression.projection_ordinal <= query_row.values.size())
+                        {
+                            query_row.order_keys.push_back(
+                                query_row.values[*order_expression.projection_ordinal - 1U]);
+                        }
+                        else
+                        {
+                            query_row.order_keys.push_back(
+                                evaluate_expression(
+                                    substitute_query_projection_aliases(
+                                        order_expression.expression,
+                                        query_row.values),
+                                    frame,
+                                    &cursor));
+                        }
+                    }
+                    materialized_rows.push_back(std::move(query_row));
+                }
+            }
+            else
+            {
             for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
@@ -4437,6 +4927,7 @@ namespace copperfin::runtime
                     joined_cursor->bof = previous_bof;
                     joined_cursor->eof = previous_eof;
                 }
+            }
             }
 
             if (aggregate_query && !aggregate_materialized)

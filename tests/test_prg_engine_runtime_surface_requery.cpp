@@ -2071,6 +2071,86 @@ void test_sql_statement_requery_rejects_where_subquery_predicate() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_groups_and_filters_aggregate_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_group_by";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CATEGORY", .type = 'C', .length = 12U},
+        {.name = "REGION", .type = 'C', .length = 12U},
+        {.name = "AMOUNT", .type = 'N', .length = 8U}};
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"A", "X", "10"}, {"A", "X", "20"}, {"A", "Y", "30"}, {"B", "X", "5"}, {"B", "X", "15"}});
+    expect(create_result.ok, "GROUP BY fixture should create the sales DBF");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_sql_group_by.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS sales IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 3\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT category, COUNT(*) AS cnt, SUM(amount) AS total FROM sales WHERE amount >= 10 GROUP BY category HAVING cnt > 1 AND COUNT(*) > 2 ORDER BY category\"\n"
+        "oList.Requery()\n"
+        "nHavingRows = oList.ListCount\n"
+        "cHavingCategory = oList.List(1, 1)\n"
+        "nHavingCount = oList.List(1, 2)\n"
+        "nHavingTotal = oList.List(1, 3)\n"
+        "oList.RowSource = \"SELECT category, region, COUNT(*) AS cnt FROM sales GROUP BY category, region ORDER BY category, region\"\n"
+        "oList.Requery()\n"
+        "nCompositeRows = oList.ListCount\n"
+        "cCompositeFirstCategory = oList.List(1, 1)\n"
+        "cCompositeFirstRegion = oList.List(1, 2)\n"
+        "nCompositeFirstCount = oList.List(1, 3)\n"
+        "cCompositeSecondRegion = oList.List(2, 2)\n"
+        "nCompositeSecondCount = oList.List(2, 3)\n"
+        "cCompositeThirdCategory = oList.List(3, 1)\n"
+        "nCompositeThirdCount = oList.List(3, 3)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("GROUP BY Requery() script should complete: ") + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nhavingrows", "1");
+    check("chavingcategory", "A");
+    check("nhavingcount", "3");
+    check("nhavingtotal", "60");
+    check("ncompositerows", "3");
+    check("ccompositefirstcategory", "A");
+    check("ccompositefirstregion", "X");
+    check("ncompositefirstcount", "2");
+    check("ccompositesecondregion", "Y");
+    check("ncompositesecondcount", "1");
+    check("ccompositethirdcategory", "B");
+    check("ncompositethirdcount", "2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -2103,6 +2183,7 @@ int main() {
     test_sql_statement_requery_rejects_three_table_join_chain();
     test_sql_statement_requery_applies_top_after_ordering();
     test_sql_statement_requery_rejects_where_subquery_predicate();
+    test_sql_statement_requery_groups_and_filters_aggregate_rows();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
