@@ -9,7 +9,23 @@
 #endif
 
 #include <atomic>
+#include <cerrno>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <vector>
+
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
+#endif
 
 namespace copperfin::runtime {
 namespace {
@@ -22,7 +38,142 @@ constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
 
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
 std::atomic_bool force_package_backup_cleanup_warning{false};
+std::mutex package_materialization_pause_mutex;
+std::condition_variable package_materialization_pause_condition;
+bool package_materialization_pause_requested = false;
+bool package_materialization_pause_entered = false;
+bool package_materialization_pause_released = false;
 #endif
+
+class PackageRootTransactionLock {
+public:
+    PackageRootTransactionLock() = default;
+    PackageRootTransactionLock(const PackageRootTransactionLock&) = delete;
+    PackageRootTransactionLock& operator=(const PackageRootTransactionLock&) = delete;
+
+    ~PackageRootTransactionLock() {
+#if defined(_WIN32)
+        if (mutex_owned_ && mutex_handle_ != nullptr) {
+            (void)::ReleaseMutex(static_cast<HANDLE>(mutex_handle_));
+        }
+        if (mutex_handle_ != nullptr) {
+            (void)::CloseHandle(static_cast<HANDLE>(mutex_handle_));
+        }
+#else
+        if (descriptor_ >= 0) {
+            (void)::flock(descriptor_, LOCK_UN);
+            (void)::close(descriptor_);
+        }
+#endif
+    }
+
+    bool acquire(
+        const std::filesystem::path& lock_identity_path,
+        const std::string& identity) {
+#if defined(_WIN32)
+        const std::wstring mutex_name = L"Local\\CopperfinPackageRoot-" +
+            std::wstring(identity.begin(), identity.end());
+        mutex_handle_ = static_cast<void*>(::CreateMutexW(nullptr, FALSE, mutex_name.c_str()));
+        if (mutex_handle_ == nullptr) {
+            return false;
+        }
+        const DWORD wait_result = ::WaitForSingleObject(
+            static_cast<HANDLE>(mutex_handle_),
+            0U);
+        if (wait_result != WAIT_OBJECT_0 && wait_result != WAIT_ABANDONED) {
+            return false;
+        }
+        mutex_owned_ = true;
+        return true;
+#else
+        const std::filesystem::path lock_path = lock_identity_path.string() + ".copperfin-lock";
+        const std::string expected_contents =
+            "copperfin_package_lock=1\nidentity=" + identity + "\n";
+        std::string temporary_path = lock_path.string() + ".tmp-XXXXXX";
+        std::vector<char> temporary_path_buffer(
+            temporary_path.begin(), temporary_path.end());
+        temporary_path_buffer.push_back('\0');
+        const int temporary_descriptor = ::mkstemp(temporary_path_buffer.data());
+        if (temporary_descriptor < 0) {
+            return false;
+        }
+        if (::fcntl(temporary_descriptor, F_SETFD, FD_CLOEXEC) != 0) {
+            (void)::close(temporary_descriptor);
+            (void)::unlink(temporary_path_buffer.data());
+            return false;
+        }
+        const std::filesystem::path private_lock_path(temporary_path_buffer.data());
+        bool temporary_ready = false;
+        bool published = false;
+        std::size_t offset = 0U;
+        while (offset < expected_contents.size()) {
+            const ssize_t written = ::write(
+                temporary_descriptor,
+                expected_contents.data() + offset,
+                expected_contents.size() - offset);
+            if (written < 0 && errno == EINTR) {
+                continue;
+            }
+            if (written <= 0) {
+                break;
+            }
+            offset += static_cast<std::size_t>(written);
+        }
+        if (offset == expected_contents.size() && ::fsync(temporary_descriptor) == 0) {
+            temporary_ready = true;
+        }
+        if (!temporary_ready) {
+            (void)::close(temporary_descriptor);
+            (void)::unlink(private_lock_path.c_str());
+            return false;
+        }
+
+        if (::link(private_lock_path.c_str(), lock_path.c_str()) == 0) {
+            (void)::unlink(private_lock_path.c_str());
+            descriptor_ = temporary_descriptor;
+            published = true;
+        } else if (errno == EEXIST) {
+            (void)::close(temporary_descriptor);
+            (void)::unlink(private_lock_path.c_str());
+            descriptor_ = ::open(
+                lock_path.c_str(),
+                O_RDWR | O_CLOEXEC | O_NOFOLLOW);
+        } else {
+            (void)::close(temporary_descriptor);
+            (void)::unlink(private_lock_path.c_str());
+            return false;
+        }
+        if (descriptor_ < 0) {
+            return false;
+        }
+
+        if (!published) {
+            char contents[256]{};
+            const ssize_t read_count = ::read(descriptor_, contents, sizeof(contents));
+            if (read_count != static_cast<ssize_t>(expected_contents.size()) ||
+                std::string(contents, static_cast<std::size_t>(read_count)) != expected_contents) {
+                (void)::close(descriptor_);
+                descriptor_ = -1;
+                return false;
+            }
+        }
+        if (::flock(descriptor_, LOCK_EX | LOCK_NB) != 0) {
+            (void)::close(descriptor_);
+            descriptor_ = -1;
+            return false;
+        }
+        return true;
+#endif
+    }
+
+private:
+#if defined(_WIN32)
+    void* mutex_handle_ = nullptr;
+    bool mutex_owned_ = false;
+#else
+    int descriptor_ = -1;
+#endif
+};
 
 class PackageRootTransaction {
 public:
@@ -57,6 +208,29 @@ public:
                     {{"path", package_root_.string()}});
                 return false;
             }
+        }
+
+        std::filesystem::path lock_identity_path = package_root_;
+        std::error_code identity_path_error;
+        const std::filesystem::path absolute_identity_path =
+            std::filesystem::absolute(package_root_, identity_path_error).lexically_normal();
+        if (!identity_path_error) {
+            const std::filesystem::path weak_identity_path =
+                std::filesystem::weakly_canonical(absolute_identity_path, identity_path_error);
+            if (!identity_path_error) {
+                lock_identity_path = weak_identity_path;
+            } else {
+                identity_path_error.clear();
+                lock_identity_path = absolute_identity_path;
+            }
+        }
+        const auto lock_identity = security::sha256_hex_for_text(
+            lock_identity_path.lexically_normal().generic_string());
+        if (!lock_identity.ok || !transaction_lock_.acquire(lock_identity_path, lock_identity.hex_digest)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", package_root_.string()}});
+            return false;
         }
 
         bool interrupted_backup_exists =
@@ -220,6 +394,23 @@ public:
         }
 
         active_ = true;
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+        {
+            std::unique_lock<std::mutex> pause_lock(package_materialization_pause_mutex);
+            if (package_materialization_pause_requested) {
+                package_materialization_pause_entered = true;
+                package_materialization_pause_condition.notify_all();
+                package_materialization_pause_condition.wait(
+                    pause_lock,
+                    [] {
+                        return package_materialization_pause_released;
+                    });
+                package_materialization_pause_requested = false;
+                package_materialization_pause_entered = false;
+                package_materialization_pause_released = false;
+            }
+        }
+#endif
         if (!transaction_marker_exists) {
             std::string marker_error;
             if (!write_owned_transaction_file_atomically(marker_path_, marker_error)) {
@@ -416,6 +607,7 @@ private:
     std::filesystem::path marker_path_;
     std::filesystem::path backup_owner_path_;
     std::string transaction_identity_;
+    PackageRootTransactionLock transaction_lock_;
     bool had_previous_package_ = false;
     bool active_ = false;
 };
@@ -427,6 +619,28 @@ namespace test_hooks {
 
 void force_package_backup_cleanup_warning_once() {
     force_package_backup_cleanup_warning.store(true, std::memory_order_relaxed);
+}
+
+void arm_package_materialization_pause_after_begin() {
+    std::lock_guard<std::mutex> lock(package_materialization_pause_mutex);
+    package_materialization_pause_requested = true;
+    package_materialization_pause_entered = false;
+    package_materialization_pause_released = false;
+}
+
+bool wait_for_package_materialization_pause() {
+    std::unique_lock<std::mutex> lock(package_materialization_pause_mutex);
+    return package_materialization_pause_condition.wait_for(lock, std::chrono::seconds(10), [] {
+        return package_materialization_pause_entered;
+    });
+}
+
+void release_package_materialization_pause() {
+    {
+        std::lock_guard<std::mutex> lock(package_materialization_pause_mutex);
+        package_materialization_pause_released = true;
+    }
+    package_materialization_pause_condition.notify_all();
 }
 
 }  // namespace test_hooks

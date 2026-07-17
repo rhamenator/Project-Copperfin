@@ -24,6 +24,10 @@ void set_manifest_pair_promotion_fault(ManifestPairPromotionFault fault);
 
 void force_package_backup_cleanup_warning_once();
 
+void arm_package_materialization_pause_after_begin();
+bool wait_for_package_materialization_pause();
+void release_package_materialization_pause();
+
 bool seed_stale_manifest_pair_transaction(
     const RuntimePackagePlan& plan,
     const std::string& staged_runtime_manifest,

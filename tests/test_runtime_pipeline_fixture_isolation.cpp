@@ -4,6 +4,8 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include "../src/runtime/runtime_pipeline_test_hooks.h"
+
 #include <atomic>
 #include <chrono>
 #include <stdexcept>
@@ -181,6 +183,63 @@ int run_runtime_pipeline_fixture_isolation_probe(
     const std::filesystem::path& ready_path,
     const std::filesystem::path& go_path,
     const std::filesystem::path& result_path) {
+    if (probe_id == "materialization-lock") {
+        const std::string configuration = read_text(ready_path.string() + ".config");
+        std::istringstream lines(configuration);
+        std::string project_text;
+        std::string output_text;
+        std::string runtime_host_text;
+        if (!std::getline(lines, project_text) ||
+            !std::getline(lines, output_text) ||
+            !std::getline(lines, runtime_host_text)) {
+            return 1;
+        }
+
+        const std::filesystem::path project_dir =
+            copperfin::test_support::path_from_utf8_string(project_text);
+        const std::filesystem::path output_dir =
+            copperfin::test_support::path_from_utf8_string(output_text);
+        const std::filesystem::path runtime_host =
+            copperfin::test_support::path_from_utf8_string(runtime_host_text);
+        write_text(ready_path, "ready\n");
+        if (!wait_for_path(go_path)) {
+            return 1;
+        }
+
+        copperfin::studio::StudioDocumentModel document;
+        document.path = (project_dir / "concurrent-child.pjx").string();
+        copperfin::studio::StudioProjectWorkspace workspace;
+        workspace.available = true;
+        workspace.project_title = "ConcurrentMaterialization";
+        workspace.home_directory = project_dir.string();
+        workspace.build_plan.available = true;
+        workspace.build_plan.can_build = true;
+        workspace.build_plan.project_title = workspace.project_title;
+        workspace.build_plan.output_path = (output_dir / "ConcurrentMaterialization.app").string();
+        workspace.build_plan.output_kind = "app";
+        workspace.build_plan.startup_item = "startup.prg";
+        workspace.build_plan.startup_record_index = 1U;
+        workspace.entries = {
+            {.record_index = 1U, .name = "startup.prg", .relative_path = "startup.prg", .type_title = "Program"}
+        };
+        const auto plan = copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            false,
+            false);
+        const auto result = copperfin::runtime::materialize_runtime_package(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            runtime_host.string());
+        write_text(result_path, result.ok ? "ok\n" : "busy\n");
+        return 0;
+    }
+
     const ScopedRuntimePipelineFixtureNamespace fixture_namespace;
     const std::filesystem::path probe_root =
         std::filesystem::temp_directory_path() / "fixture-isolation-probe";
@@ -254,6 +313,26 @@ void test_runtime_pipeline_fixtures_are_process_isolated(
            "#4067: each probe should clean up only its own temporary namespace");
 
     fs::remove_all(coordination_root, error);
+}
+
+int run_materialization_lock_probe_process(
+    const std::filesystem::path& executable_path,
+    const std::filesystem::path& config_path,
+    const std::filesystem::path& ready_path,
+    const std::filesystem::path& go_path,
+    const std::filesystem::path& result_path) {
+    write_text(ready_path.string() + ".config", read_text(config_path));
+    ProbeProcess process = start_probe_process(
+        executable_path,
+        "materialization-lock",
+        ready_path,
+        go_path,
+        result_path);
+    if (!wait_for_path(ready_path)) {
+        return -1;
+    }
+    write_text(go_path, "go\n");
+    return wait_for_probe_process(process);
 }
 
 }  // namespace cf_test_runtime_pipeline

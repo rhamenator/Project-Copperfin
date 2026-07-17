@@ -4,7 +4,10 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include "../src/runtime/runtime_pipeline_test_hooks.h"
+
 #include <map>
+#include <thread>
 
 namespace cf_test_runtime_pipeline {
 namespace {
@@ -347,6 +350,127 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
+}
+
+void test_concurrent_materialization_is_serialized_per_package_root(
+    const std::filesystem::path& executable_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_concurrent_materialization";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+    write_text(project_dir / "startup.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "concurrent.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ConcurrentMaterialization";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = (output_dir / "ConcurrentMaterialization.app").string();
+    workspace.build_plan.output_kind = "app";
+    workspace.build_plan.startup_item = "startup.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.prg", .relative_path = "startup.prg", .type_title = "Program"}
+    };
+
+    const auto plan = create_rematerialization_plan(document, workspace, output_dir);
+#if !defined(_WIN32)
+    const fs::path lock_path = fs::path(plan.package_root).string() + ".copperfin-lock";
+    write_text(lock_path, "caller-owned-lock\n");
+    const auto caller_owned_lock_result = materialize_rematerialization_plan(plan, runtime_host);
+    expect(!caller_owned_lock_result.ok,
+           "a caller-owned package lock collision should fail before package mutation");
+    expect(read_text(lock_path) == "caller-owned-lock\n",
+           "a caller-owned package lock collision should preserve its bytes");
+    fs::remove(lock_path, ignored);
+#endif
+    copperfin::runtime::test_hooks::arm_package_materialization_pause_after_begin();
+
+    copperfin::runtime::RuntimeMaterializeResult first_result;
+    std::thread first([&] {
+        first_result = materialize_rematerialization_plan(plan, runtime_host);
+    });
+    const bool pause_entered =
+        copperfin::runtime::test_hooks::wait_for_package_materialization_pause();
+    expect(pause_entered,
+           "the first materialization should reach the deterministic transaction overlap barrier");
+    if (!pause_entered) {
+        copperfin::runtime::test_hooks::release_package_materialization_pause();
+        first.join();
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto second_result = materialize_rematerialization_plan(plan, runtime_host);
+    expect(!second_result.ok,
+           "a concurrent materialization of one package root should fail without entering the active transaction");
+
+    const fs::path coordination_root = temp_root / "coordination";
+    const fs::path config_path = coordination_root / "config.txt";
+    const fs::path ready_path = coordination_root / "child.ready";
+    const fs::path go_path = coordination_root / "child.go";
+    const fs::path result_path = coordination_root / "child.result";
+    fs::create_directories(coordination_root);
+    write_text(
+        config_path,
+        copperfin::test_support::path_to_utf8_string(project_dir) + "\n" +
+            copperfin::test_support::path_to_utf8_string(output_dir) + "\n" +
+            copperfin::test_support::path_to_utf8_string(runtime_host) + "\n");
+    const int child_exit = run_materialization_lock_probe_process(
+        executable_path,
+        config_path,
+        ready_path,
+        go_path,
+        result_path);
+    expect(child_exit == 0,
+           "the cross-process materialization probe should exit cleanly");
+    expect(read_text(result_path) == "busy\n",
+           "a separate process should fail at the package-root lock before mutating the active transaction");
+
+    copperfin::runtime::test_hooks::release_package_materialization_pause();
+    first.join();
+    expect(first_result.ok,
+           "the transaction that acquired the package-root lock should complete normally");
+
+    const fs::path package_root(first_result.plan.package_root);
+    expect(fs::exists(package_root / "content" / "startup.prg"),
+           "the winning materialization should retain its complete package content");
+    expect(!fs::exists(package_root.string() + ".copperfin-previous") &&
+               !fs::exists(package_root.string() + ".copperfin-materializing"),
+           "concurrent materialization rejection should leave no transaction recovery artifacts");
+#if !defined(_WIN32)
+    const std::string lock_contents = read_text(package_root.string() + ".copperfin-lock");
+    expect(lock_contents.rfind("copperfin_package_lock=1\nidentity=", 0U) == 0U &&
+               lock_contents.back() == '\n',
+           "the POSIX package lock should retain only Copperfin ownership bytes");
+#endif
+
+    const fs::path recovery_ready_path = coordination_root / "recovery.ready";
+    const fs::path recovery_go_path = coordination_root / "recovery.go";
+    const fs::path recovery_result_path = coordination_root / "recovery.result";
+    const int recovery_exit = run_materialization_lock_probe_process(
+        executable_path,
+        config_path,
+        recovery_ready_path,
+        recovery_go_path,
+        recovery_result_path);
+    expect(recovery_exit == 0 && read_text(recovery_result_path) == "ok\n",
+           "a later process should reacquire a valid package lock after the original owner exits");
+
+    fs::remove_all(temp_root, ignored);
 }
 
 }  // namespace cf_test_runtime_pipeline
