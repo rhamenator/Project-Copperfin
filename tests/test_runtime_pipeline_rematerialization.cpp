@@ -473,4 +473,108 @@ void test_concurrent_materialization_is_serialized_per_package_root(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_package_transaction_rejects_rebound_output_parent() {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_rebound_parent";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path moved_output_dir = temp_root / "output-moved";
+    const fs::path external_output_dir = temp_root / "external-output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+    fs::create_directories(external_output_dir);
+    write_text(project_dir / "startup.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "rebound.pjx").string();
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ReboundParent";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path =
+        (output_dir / "ReboundParent.app").string();
+    workspace.build_plan.output_kind = "app";
+    workspace.build_plan.startup_item = "startup.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U,
+         .name = "startup.prg",
+         .relative_path = "startup.prg",
+         .type_title = "Program"}
+    };
+    const auto plan = create_rematerialization_plan(document, workspace, output_dir);
+    const auto initial_result = materialize_rematerialization_plan(plan, runtime_host);
+    expect(initial_result.ok,
+           "the parent-rebinding fixture should first create a known-good package");
+    if (!initial_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const PackageSnapshot known_good = snapshot_package_files(plan.package_root);
+
+    copperfin::runtime::test_hooks::arm_package_materialization_pause_after_begin();
+    copperfin::runtime::RuntimeMaterializeResult result;
+    std::thread materialization([&] {
+        result = materialize_rematerialization_plan(plan, runtime_host);
+    });
+    const bool pause_entered =
+        copperfin::runtime::test_hooks::wait_for_package_materialization_pause();
+    expect(pause_entered,
+           "the parent-rebinding transaction should reach its deterministic barrier");
+    if (!pause_entered) {
+        copperfin::runtime::test_hooks::release_package_materialization_pause();
+        materialization.join();
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::error_code rebind_error;
+#if defined(_WIN32)
+    fs::rename(output_dir, moved_output_dir, rebind_error);
+    expect(static_cast<bool>(rebind_error),
+           "the Windows parent directory pin should prevent rebinding the admitted output root");
+    rebind_error.clear();
+#else
+    fs::rename(output_dir, moved_output_dir, rebind_error);
+    expect(!rebind_error,
+           "the POSIX parent-rebinding fixture should move the admitted output root");
+    if (!rebind_error) {
+        fs::create_directory_symlink(external_output_dir, output_dir, rebind_error);
+        expect(!rebind_error,
+               "the POSIX parent-rebinding fixture should install an external output symlink");
+    }
+#endif
+
+    copperfin::runtime::test_hooks::release_package_materialization_pause();
+    materialization.join();
+
+#if defined(_WIN32)
+    expect(result.ok,
+           "the Windows transaction should continue after the blocked parent-rebind attempt");
+    expect(result.ok && fs::exists(fs::path(result.plan.package_root) / "content" / "startup.prg"),
+           "the Windows parent-rebind guard should preserve package materialization");
+#else
+    expect(!result.ok,
+           "the POSIX transaction should reject a rebound output parent before mutation");
+    expect(!fs::exists(external_output_dir / "ReboundParent") &&
+               !fs::exists(external_output_dir / "ReboundParent.copperfin-materializing"),
+           "a rejected POSIX parent rebind must not modify the external output tree");
+    fs::remove(output_dir, ignored);
+    fs::rename(moved_output_dir, output_dir, ignored);
+    expect(snapshot_package_files(plan.package_root) == known_good,
+           "a rejected POSIX parent rebind must restore the last known-good package");
+#endif
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_runtime_pipeline

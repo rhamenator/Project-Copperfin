@@ -165,9 +165,13 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan);
 bool write_fxp_primary_output_contract(
     const RuntimePackagePlan& plan,
     const std::string& token_manifest_text,
+    const std::string& output_path,
     std::string& error);
 std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan);
-bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::string& error);
+bool write_app_archive_primary_output(
+    const RuntimePackagePlan& plan,
+    const RuntimePackagePlan& filesystem_plan,
+    std::string& error);
 void append_library_function_manifest_lines(
     std::ostringstream& stream,
     const RuntimePackagePlan& plan,

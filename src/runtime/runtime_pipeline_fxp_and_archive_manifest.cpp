@@ -107,6 +107,7 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
 bool write_fxp_primary_output_contract(
     const RuntimePackagePlan& plan,
     const std::string& token_manifest_text,
+    const std::string& output_path,
     std::string& error) {
     std::ostringstream stream;
     stream << "copperfin_fxp_contract_version=1\n";
@@ -115,7 +116,7 @@ bool write_fxp_primary_output_contract(
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "token_manifest=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << token_manifest_text;
-    return write_text_file(plan.launcher_output_path, stream.str(), error);
+    return write_text_file(output_path, stream.str(), error);
 }
 
 std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
@@ -141,7 +142,10 @@ std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
-bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::string& error) {
+bool write_app_archive_primary_output(
+    const RuntimePackagePlan& plan,
+    const RuntimePackagePlan& filesystem_plan,
+    std::string& error) {
     std::ostringstream stream;
     stream << "copperfin_app_archive_version=1\n";
     stream << "archive_contract=copperfin_content_archive_v1\n";
@@ -149,7 +153,7 @@ bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::strin
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "content_manifest=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
 
-    for (const auto& [relative_path, file] : collect_staged_content_files(plan)) {
+    for (const auto& [relative_path, file] : collect_staged_content_files(filesystem_plan)) {
         error.clear();
         const std::string bytes = read_binary_file(file.absolute_path, error);
         if (!error.empty()) {
@@ -173,7 +177,7 @@ bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::strin
                << hex_encode_bytes(bytes) << "\n";
     }
 
-    return write_text_file(plan.launcher_output_path, stream.str(), error);
+    return write_text_file(filesystem_plan.launcher_output_path, stream.str(), error);
 }
 
 void append_library_function_manifest_lines(

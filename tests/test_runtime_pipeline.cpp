@@ -22,6 +22,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_runtime_pipeline_fixtures_are_process_isolated(executable_path);
     test_materialize_runtime_package();
     test_concurrent_materialization_is_serialized_per_package_root(executable_path);
+    test_package_transaction_rejects_rebound_output_parent();
     test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families();
     test_exact_startup_path_wins_over_casefold_siblings();
     test_ambiguous_casefold_startup_path_fails_closed();

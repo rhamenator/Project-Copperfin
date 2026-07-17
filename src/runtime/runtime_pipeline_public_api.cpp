@@ -22,8 +22,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #else
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/file.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -175,6 +177,263 @@ private:
 #endif
 };
 
+class PackageParentIdentity {
+public:
+    PackageParentIdentity() = default;
+    PackageParentIdentity(const PackageParentIdentity&) = delete;
+    PackageParentIdentity& operator=(const PackageParentIdentity&) = delete;
+
+    ~PackageParentIdentity() {
+#if defined(_WIN32)
+        if (directory_handle_ != nullptr) {
+            (void)::CloseHandle(static_cast<HANDLE>(directory_handle_));
+        }
+#else
+        if (descriptor_ >= 0) {
+            (void)::close(descriptor_);
+        }
+#endif
+    }
+
+    bool acquire(const std::filesystem::path& parent) {
+        std::error_code absolute_error;
+        parent_path_ = std::filesystem::absolute(parent, absolute_error).lexically_normal();
+        if (absolute_error) {
+            parent_path_ = parent.lexically_normal();
+        }
+#if defined(_WIN32)
+        directory_handle_ = static_cast<void*>(::CreateFileW(
+            parent_path_.c_str(),
+            FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            nullptr));
+        if (directory_handle_ == nullptr ||
+            directory_handle_ == INVALID_HANDLE_VALUE) {
+            directory_handle_ = nullptr;
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION information{};
+        if (::GetFileInformationByHandle(
+                static_cast<HANDLE>(directory_handle_),
+                &information) == 0 ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+            (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
+            return false;
+        }
+        volume_id_ = information.dwVolumeSerialNumber;
+        file_id_ = (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+            information.nFileIndexLow;
+        return true;
+#else
+        descriptor_ = ::open(
+            parent_path_.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        struct stat information{};
+        if (descriptor_ < 0 || ::fstat(descriptor_, &information) != 0 ||
+            !S_ISDIR(information.st_mode)) {
+            return false;
+        }
+        device_id_ = information.st_dev;
+        inode_id_ = information.st_ino;
+        return true;
+#endif
+    }
+
+    [[nodiscard]] bool still_same() const {
+#if defined(_WIN32)
+        if (directory_handle_ == nullptr) {
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION pinned{};
+        if (::GetFileInformationByHandle(
+                static_cast<HANDLE>(directory_handle_),
+                &pinned) == 0) {
+            return false;
+        }
+        HANDLE current_handle = ::CreateFileW(
+            parent_path_.c_str(),
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            nullptr);
+        if (current_handle == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION current{};
+        const bool same =
+            ::GetFileInformationByHandle(current_handle, &current) != 0 &&
+            (current.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U &&
+            (current.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U &&
+            current.dwVolumeSerialNumber == volume_id_ &&
+            ((static_cast<std::uint64_t>(current.nFileIndexHigh) << 32U) |
+             current.nFileIndexLow) == file_id_;
+        (void)::CloseHandle(current_handle);
+        return same;
+#else
+        if (descriptor_ < 0) {
+            return false;
+        }
+        struct stat current{};
+        return ::lstat(parent_path_.c_str(), &current) == 0 &&
+            S_ISDIR(current.st_mode) &&
+            current.st_dev == device_id_ &&
+            current.st_ino == inode_id_;
+#endif
+    }
+
+    [[nodiscard]] std::filesystem::path stable_parent_path() const {
+#if defined(_WIN32)
+        return parent_path_;
+#else
+        if (descriptor_ < 0) {
+            return parent_path_;
+        }
+        const std::filesystem::path proc_path =
+            std::filesystem::path("/proc/self/fd") / std::to_string(descriptor_);
+        std::error_code proc_error;
+        if (std::filesystem::exists(proc_path, proc_error) && !proc_error) {
+            return proc_path;
+        }
+        return std::filesystem::path("/dev/fd") / std::to_string(descriptor_);
+#endif
+    }
+
+#if !defined(_WIN32)
+    bool rollback_at_pinned_parent(
+        const std::string& package_leaf,
+        const std::string& backup_leaf,
+        const std::string& marker_leaf,
+        const std::string& owner_leaf,
+        const bool restore_previous) const {
+        if (descriptor_ < 0 ||
+            !remove_tree_at(descriptor_, package_leaf) ||
+            !remove_leaf_at(descriptor_, marker_leaf)) {
+            return false;
+        }
+        if (restore_previous &&
+            (::renameat(
+                 descriptor_,
+                 backup_leaf.c_str(),
+                 descriptor_,
+                 package_leaf.c_str()) != 0 ||
+             !remove_leaf_at(descriptor_, owner_leaf))) {
+            return false;
+        }
+        return true;
+    }
+#endif
+
+private:
+#if !defined(_WIN32)
+    static bool remove_leaf_at(const int parent_descriptor, const std::string& leaf) {
+        return ::unlinkat(parent_descriptor, leaf.c_str(), 0) == 0 || errno == ENOENT;
+    }
+
+    static bool remove_directory_contents(const int directory_descriptor) {
+        const int duplicate = ::dup(directory_descriptor);
+        if (duplicate < 0) {
+            return false;
+        }
+        DIR* directory = ::fdopendir(duplicate);
+        if (directory == nullptr) {
+            (void)::close(duplicate);
+            return false;
+        }
+        bool ok = true;
+        errno = 0;
+        while (const dirent* entry = ::readdir(directory)) {
+            const std::string name(entry->d_name);
+            if (name == "." || name == "..") {
+                continue;
+            }
+            struct stat information{};
+            if (::fstatat(
+                    directory_descriptor,
+                    name.c_str(),
+                    &information,
+                    AT_SYMLINK_NOFOLLOW) != 0) {
+                ok = false;
+                break;
+            }
+            if (S_ISDIR(information.st_mode)) {
+                const int child = ::openat(
+                    directory_descriptor,
+                    name.c_str(),
+                    O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+                if (child < 0 || !remove_directory_contents(child)) {
+                    if (child >= 0) {
+                        (void)::close(child);
+                    }
+                    ok = false;
+                    break;
+                }
+                if (::close(child) != 0 ||
+                    ::unlinkat(directory_descriptor, name.c_str(), AT_REMOVEDIR) != 0) {
+                    ok = false;
+                    break;
+                }
+            } else if (!remove_leaf_at(directory_descriptor, name)) {
+                ok = false;
+                break;
+            }
+            errno = 0;
+        }
+        if (errno != 0) {
+            ok = false;
+        }
+        if (::closedir(directory) != 0) {
+            ok = false;
+        }
+        return ok;
+    }
+
+    static bool remove_tree_at(const int parent_descriptor, const std::string& leaf) {
+        struct stat information{};
+        if (::fstatat(
+                parent_descriptor,
+                leaf.c_str(),
+                &information,
+                AT_SYMLINK_NOFOLLOW) != 0) {
+            return errno == ENOENT;
+        }
+        if (!S_ISDIR(information.st_mode)) {
+            return remove_leaf_at(parent_descriptor, leaf);
+        }
+        const int directory = ::openat(
+            parent_descriptor,
+            leaf.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (directory < 0 || !remove_directory_contents(directory)) {
+            if (directory >= 0) {
+                (void)::close(directory);
+            }
+            return false;
+        }
+        if (::close(directory) != 0) {
+            return false;
+        }
+        return ::unlinkat(parent_descriptor, leaf.c_str(), AT_REMOVEDIR) == 0 ||
+            errno == ENOENT;
+    }
+#endif
+
+    std::filesystem::path parent_path_;
+#if defined(_WIN32)
+    void* directory_handle_ = nullptr;
+    std::uint64_t volume_id_ = 0U;
+    std::uint64_t file_id_ = 0U;
+#else
+    int descriptor_ = -1;
+    dev_t device_id_ = 0;
+    ino_t inode_id_ = 0;
+#endif
+};
+
 class PackageRootTransaction {
 public:
     explicit PackageRootTransaction(std::filesystem::path package_root)
@@ -209,6 +468,12 @@ public:
                 return false;
             }
         }
+        if (!parent_identity_.acquire(parent)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
 
         std::filesystem::path lock_identity_path = package_root_;
         std::error_code identity_path_error;
@@ -232,50 +497,61 @@ public:
                 {{"path", package_root_.string()}});
             return false;
         }
+        if (!parent_identity_.still_same()) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", parent.string()}});
+            return false;
+        }
 
         bool interrupted_backup_exists =
-            directory_entry_exists(backup_root_, filesystem_error);
+            directory_entry_exists(pinned_path(backup_root_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", backup_root_.string()}});
             return false;
         }
-        bool package_exists = directory_entry_exists(package_root_, filesystem_error);
+        bool package_exists = directory_entry_exists(pinned_path(package_root_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", package_root_.string()}});
             return false;
         }
-        bool transaction_marker_exists = directory_entry_exists(marker_path_, filesystem_error);
+        bool transaction_marker_exists = directory_entry_exists(pinned_path(marker_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", marker_path_.string()}});
             return false;
         }
-        if (transaction_marker_exists && !is_owned_transaction_file(marker_path_)) {
+        if (transaction_marker_exists && !is_owned_transaction_file(pinned_path(marker_path_))) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", marker_path_.string()}});
             return false;
         }
-        bool backup_owner_exists = directory_entry_exists(backup_owner_path_, filesystem_error);
+        bool backup_owner_exists = directory_entry_exists(pinned_path(backup_owner_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", backup_owner_path_.string()}});
             return false;
         }
-        if (backup_owner_exists && !is_owned_transaction_file(backup_owner_path_)) {
+        if (backup_owner_exists && !is_owned_transaction_file(pinned_path(backup_owner_path_))) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", backup_owner_path_.string()}});
             return false;
         }
         if (!interrupted_backup_exists && backup_owner_exists) {
-            std::filesystem::remove(backup_owner_path_, filesystem_error);
+            if (!ensure_parent_identity(
+                    error,
+                    "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                return false;
+            }
+            std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -292,7 +568,7 @@ public:
         }
 
         if (interrupted_backup_exists) {
-            if (!is_direct_directory(backup_root_, filesystem_error) || filesystem_error) {
+            if (!is_direct_directory(pinned_path(backup_root_), filesystem_error) || filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", backup_root_.string()}});
@@ -301,7 +577,7 @@ public:
             bool partial_package = false;
             if (package_exists) {
                 const bool package_is_directory =
-                    std::filesystem::is_directory(package_root_, filesystem_error);
+                    std::filesystem::is_directory(pinned_path(package_root_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -316,7 +592,12 @@ public:
             }
 
             if (partial_package) {
-                std::filesystem::remove_all(package_root_, filesystem_error);
+                if (!ensure_parent_identity(
+                        error,
+                        "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                    return false;
+                }
+                std::filesystem::remove_all(pinned_path(package_root_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -326,14 +607,19 @@ public:
                 package_exists = false;
                 had_previous_package_ = true;
             } else if (package_exists) {
-                std::filesystem::remove_all(backup_root_, filesystem_error);
+                if (!ensure_parent_identity(
+                        error,
+                        "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                    return false;
+                }
+                std::filesystem::remove_all(pinned_path(backup_root_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
                         {{"path", backup_root_.string()}});
                     return false;
                 }
-                std::filesystem::remove(backup_owner_path_, filesystem_error);
+                std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -348,7 +634,12 @@ public:
 
         if (!interrupted_backup_exists && transaction_marker_exists) {
             if (package_exists) {
-                std::filesystem::remove_all(package_root_, filesystem_error);
+                if (!ensure_parent_identity(
+                        error,
+                        "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                    return false;
+                }
+                std::filesystem::remove_all(pinned_path(package_root_), filesystem_error);
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -357,7 +648,12 @@ public:
                 }
                 package_exists = false;
             }
-            std::filesystem::remove(marker_path_, filesystem_error);
+            if (!ensure_parent_identity(
+                    error,
+                    "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                return false;
+            }
+            std::filesystem::remove(pinned_path(marker_path_), filesystem_error);
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -368,7 +664,7 @@ public:
         }
 
         if (!interrupted_backup_exists && package_exists) {
-            if (filesystem_error || !std::filesystem::is_directory(package_root_, filesystem_error)) {
+            if (filesystem_error || !std::filesystem::is_directory(pinned_path(package_root_), filesystem_error)) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", package_root_.string()}});
@@ -381,10 +677,20 @@ public:
                     {{"path", package_root_.string()}});
                 return false;
             }
-            std::filesystem::rename(package_root_, backup_root_, filesystem_error);
+            if (!ensure_parent_identity(
+                    error,
+                    "Runtime.Package.Error.PackageTransactionStartFailed")) {
+                std::error_code ignored;
+                std::filesystem::remove(pinned_path(backup_owner_path_), ignored);
+                return false;
+            }
+            std::filesystem::rename(
+                pinned_path(package_root_),
+                pinned_path(backup_root_),
+                filesystem_error);
             if (filesystem_error) {
                 std::error_code ignored;
-                std::filesystem::remove(backup_owner_path_, ignored);
+                std::filesystem::remove(pinned_path(backup_owner_path_), ignored);
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", package_root_.string()}});
@@ -394,23 +700,13 @@ public:
         }
 
         active_ = true;
-#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
-        {
-            std::unique_lock<std::mutex> pause_lock(package_materialization_pause_mutex);
-            if (package_materialization_pause_requested) {
-                package_materialization_pause_entered = true;
-                package_materialization_pause_condition.notify_all();
-                package_materialization_pause_condition.wait(
-                    pause_lock,
-                    [] {
-                        return package_materialization_pause_released;
-                    });
-                package_materialization_pause_requested = false;
-                package_materialization_pause_entered = false;
-                package_materialization_pause_released = false;
-            }
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            std::string ignored;
+            (void)rollback(ignored);
+            return false;
         }
-#endif
         if (!transaction_marker_exists) {
             std::string marker_error;
             if (!write_owned_transaction_file_atomically(marker_path_, marker_error)) {
@@ -422,7 +718,14 @@ public:
                 return false;
             }
         }
-        std::filesystem::create_directories(package_root_, filesystem_error);
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            std::string ignored;
+            (void)rollback(ignored);
+            return false;
+        }
+        std::filesystem::create_directories(pinned_path(package_root_), filesystem_error);
         if (filesystem_error) {
             std::string ignored;
             (void)rollback(ignored);
@@ -434,13 +737,101 @@ public:
         return true;
     }
 
+    bool validate_parent_identity_for_materialization(std::string& error) const {
+        return ensure_parent_identity(
+            error,
+            "Runtime.Package.Error.PackageTransactionStartFailed");
+    }
+
+    [[nodiscard]] RuntimePackagePlan pinned_filesystem_plan(
+        const RuntimePackagePlan& logical_plan) const {
+        RuntimePackagePlan filesystem_plan = logical_plan;
+#if !defined(_WIN32)
+        const std::filesystem::path logical_root(logical_plan.package_root);
+        const std::filesystem::path pinned_root =
+            parent_identity_.stable_parent_path() / logical_root.filename();
+        const auto pin_path = [&](std::string& value) {
+            if (value.empty()) {
+                return;
+            }
+            const std::filesystem::path candidate(value);
+            const std::filesystem::path relative =
+                candidate.lexically_relative(logical_root);
+            if (candidate == logical_root) {
+                value = pinned_root.string();
+            } else if (!relative.empty() && !relative.is_absolute()) {
+                bool escapes = false;
+                for (const auto& component : relative) {
+                    if (component == "..") {
+                        escapes = true;
+                        break;
+                    }
+                }
+                if (!escapes) {
+                    value = (pinned_root / relative).lexically_normal().string();
+                }
+            }
+        };
+        for (std::string* value : {
+                 &filesystem_plan.package_root,
+                 &filesystem_plan.content_root,
+                 &filesystem_plan.manifest_path,
+                 &filesystem_plan.debug_manifest_path,
+                 &filesystem_plan.ast_manifest_path,
+                 &filesystem_plan.ir_manifest_path,
+                 &filesystem_plan.transpiled_csharp_path,
+                 &filesystem_plan.launcher_project_path,
+                 &filesystem_plan.launcher_source_path,
+                 &filesystem_plan.launcher_output_path,
+                 &filesystem_plan.module_definition_path,
+                 &filesystem_plan.native_wrapper_source_path,
+                 &filesystem_plan.native_wrapper_cmake_path,
+                 &filesystem_plan.native_wrapper_build_script_path,
+                 &filesystem_plan.native_wrapper_build_powershell_path,
+                 &filesystem_plan.library_api_manifest_path,
+                 &filesystem_plan.fll_api_manifest_path,
+                 &filesystem_plan.fxp_token_manifest_path,
+                 &filesystem_plan.app_archive_manifest_path,
+                 &filesystem_plan.runtime_host_destination_path,
+                 &filesystem_plan.working_directory,
+                 &filesystem_plan.audit_log_path,
+                 &filesystem_plan.debug_plan.manifest_path,
+                 &filesystem_plan.debug_plan.working_directory}) {
+            pin_path(*value);
+        }
+        for (std::string& source_root : filesystem_plan.debug_plan.source_roots) {
+            pin_path(source_root);
+        }
+#endif
+        return filesystem_plan;
+    }
+
     bool rollback(std::string& error) {
         if (!active_) {
             return true;
         }
 
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageRollbackFailed")) {
+#if !defined(_WIN32)
+            if (parent_identity_.rollback_at_pinned_parent(
+                    package_root_.filename().string(),
+                    backup_root_.filename().string(),
+                    marker_path_.filename().string(),
+                    backup_owner_path_.filename().string(),
+                    had_previous_package_)) {
+                active_ = false;
+                return true;
+            }
+#endif
+            return false;
+        }
+
         std::error_code filesystem_error;
-        const bool package_exists = std::filesystem::exists(package_root_, filesystem_error);
+        const bool package_exists = std::filesystem::exists(
+            pinned_path(package_root_),
+            filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageRollbackFailed",
@@ -448,7 +839,12 @@ public:
             return false;
         }
         if (package_exists) {
-            std::filesystem::remove_all(package_root_, filesystem_error);
+            if (!ensure_parent_identity(
+                    error,
+                    "Runtime.Package.Error.PackageRollbackFailed")) {
+                return false;
+            }
+            std::filesystem::remove_all(pinned_path(package_root_), filesystem_error);
         }
         if (filesystem_error) {
             error = runtime_text(
@@ -457,7 +853,12 @@ public:
             return false;
         }
 
-        std::filesystem::remove(marker_path_, filesystem_error);
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageRollbackFailed")) {
+            return false;
+        }
+        std::filesystem::remove(pinned_path(marker_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageRollbackFailed",
@@ -466,7 +867,15 @@ public:
         }
 
         if (had_previous_package_) {
-            std::filesystem::rename(backup_root_, package_root_, filesystem_error);
+            if (!ensure_parent_identity(
+                    error,
+                    "Runtime.Package.Error.PackageRollbackFailed")) {
+                return false;
+            }
+            std::filesystem::rename(
+                pinned_path(backup_root_),
+                pinned_path(package_root_),
+                filesystem_error);
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageRollbackFailed",
@@ -474,7 +883,7 @@ public:
                 return false;
             }
             active_ = false;
-            std::filesystem::remove(backup_owner_path_, filesystem_error);
+            std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageRollbackFailed",
@@ -493,8 +902,14 @@ public:
             return true;
         }
 
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            return false;
+        }
+
         std::error_code filesystem_error;
-        std::filesystem::remove(marker_path_, filesystem_error);
+        std::filesystem::remove(pinned_path(marker_path_), filesystem_error);
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -507,7 +922,12 @@ public:
             return true;
         }
 
-        std::filesystem::remove_all(backup_root_, filesystem_error);
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            return false;
+        }
+        std::filesystem::remove_all(pinned_path(backup_root_), filesystem_error);
         if (filesystem_error) {
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
@@ -515,7 +935,7 @@ public:
             return true;
         }
 
-        std::filesystem::remove(backup_owner_path_, filesystem_error);
+        std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
         if (filesystem_error) {
             warning = runtime_text(
                 "Runtime.Package.Warning.PackageBackupCleanupFailed",
@@ -534,13 +954,39 @@ public:
     }
 
 private:
+    [[nodiscard]] std::filesystem::path pinned_path(
+        const std::filesystem::path& logical_path) const {
+#if defined(_WIN32)
+        return logical_path;
+#else
+        return parent_identity_.stable_parent_path() / logical_path.filename();
+#endif
+    }
+
+    bool ensure_parent_identity(
+        std::string& error,
+        const std::string_view error_key) const {
+        if (parent_identity_.still_same()) {
+            return true;
+        }
+        error = runtime_text(error_key, {{"path", package_root_.string()}});
+        return false;
+    }
+
     bool write_owned_transaction_file_atomically(
         const std::filesystem::path& path,
         std::string& error) const {
+        if (!parent_identity_.still_same()) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", path.string()}});
+            return false;
+        }
         static std::atomic<unsigned long long> sequence{0U};
         const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+        const std::filesystem::path pinned_target = pinned_path(path);
         const std::filesystem::path temporary_path =
-            path.string() + ".tmp." + std::to_string(timestamp) + "." +
+            pinned_target.string() + ".tmp." + std::to_string(timestamp) + "." +
             std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
 
         std::error_code filesystem_error;
@@ -560,7 +1006,7 @@ private:
             return false;
         }
 
-        std::filesystem::rename(temporary_path, path, filesystem_error);
+        std::filesystem::rename(temporary_path, pinned_target, filesystem_error);
         if (!filesystem_error) {
             return true;
         }
@@ -608,6 +1054,7 @@ private:
     std::filesystem::path backup_owner_path_;
     std::string transaction_identity_;
     PackageRootTransactionLock transaction_lock_;
+    PackageParentIdentity parent_identity_;
     bool had_previous_package_ = false;
     bool active_ = false;
 };
@@ -1099,24 +1546,37 @@ std::string build_debug_manifest_text(
 }
 
 static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
+    const PackageRootTransaction& transaction,
     const RuntimePackagePlan& plan,
+    const RuntimePackagePlan& filesystem_plan,
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
+    std::string error;
+    if (!transaction.validate_parent_identity_for_materialization(error)) {
+        return {.ok = false, .error = error};
+    }
     std::error_code directory_error;
-    std::filesystem::create_directories(plan.package_root, directory_error);
+    std::filesystem::create_directories(filesystem_plan.package_root, directory_error);
     if (directory_error) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreatePackageRootFailed")};
     }
-    std::string error;
+    if (!transaction.validate_parent_identity_for_materialization(error)) {
+        return {.ok = false, .error = error};
+    }
     if (!prepare_package_content_root(
-            plan.package_root,
-            plan.content_root,
+            filesystem_plan.package_root,
+            filesystem_plan.content_root,
             error)) {
         return {.ok = false, .error = error};
     }
     if (plan.emit_dotnet_launcher) {
-        std::filesystem::create_directories(std::filesystem::path(plan.launcher_project_path).parent_path(), directory_error);
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
+        }
+        std::filesystem::create_directories(
+            std::filesystem::path(filesystem_plan.launcher_project_path).parent_path(),
+            directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
         }
@@ -1140,6 +1600,50 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     materialized_plan.extension_payload_digests.clear();
     materialized_plan.writable_data_payload_digests.clear();
     materialized_plan.startup_source_path.clear();
+    const auto logical_package_path = [&](const std::filesystem::path& physical_path) {
+        const std::filesystem::path relative =
+            physical_path.lexically_relative(filesystem_plan.package_root);
+        if (!relative.empty() && !relative.is_absolute()) {
+            bool escapes = false;
+            for (const auto& component : relative) {
+                if (component == "..") {
+                    escapes = true;
+                    break;
+                }
+            }
+            if (!escapes) {
+                return (std::filesystem::path(plan.package_root) / relative)
+                    .lexically_normal();
+            }
+        }
+        return physical_path;
+    };
+    const auto append_pinned_digest =
+        [&](std::vector<RuntimeArtifactDigest>& digests,
+            const std::filesystem::path& physical_path,
+            std::string& digest_error) {
+            if (physical_path.empty() || !std::filesystem::exists(physical_path)) {
+                return true;
+            }
+            const auto digest = security::sha256_hex_for_file(physical_path.string());
+            if (!digest.ok) {
+                digest_error = digest.error;
+                return false;
+            }
+            const std::string logical_path = logical_package_path(physical_path).string();
+            const auto existing = std::find_if(
+                digests.begin(),
+                digests.end(),
+                [&](const RuntimeArtifactDigest& entry) {
+                    return entry.path == logical_path;
+                });
+            if (existing != digests.end()) {
+                existing->sha256 = digest.hex_digest;
+            } else {
+                digests.push_back({.path = logical_path, .sha256 = digest.hex_digest});
+            }
+            return true;
+        };
     for (auto& asset : materialized_plan.assets) {
         asset.staged_path.clear();
         asset.copied = false;
@@ -1158,11 +1662,15 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             continue;
         }
 
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
+        }
+
         std::filesystem::path destination;
         if (!copy_file_to_package_content(
                 asset.source_path,
-                plan.package_root,
-                plan.content_root,
+                filesystem_plan.package_root,
+                filesystem_plan.content_root,
                 asset.relative_path,
                 destination,
                 error)) {
@@ -1174,20 +1682,23 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                     "record_" + std::to_string(asset.record_index) + ".asset";
                 asset.staged_path.clear();
             } else {
-                asset.staged_path = destination.string();
+                asset.staged_path = logical_package_path(destination).string();
             }
             materialized_plan.warnings.push_back(error);
             continue;
         }
-        asset.staged_path = destination.string();
+        asset.staged_path = logical_package_path(destination).string();
         if (asset.required_for_runtime) {
             materialized_plan.startup_source_path = asset.staged_path;
+        }
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
         }
         const auto companion_copy_result =
             copy_companion_files_if_present(
                 asset,
-                plan.package_root,
-                plan.content_root,
+                filesystem_plan.package_root,
+                filesystem_plan.content_root,
                 materialized_plan.warnings);
         if (!companion_copy_result.ok) {
             return {.ok = false, .error = companion_copy_result.error};
@@ -1196,9 +1707,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             auto& digest_surface = asset.package_writable
                 ? materialized_plan.writable_data_payload_digests
                 : materialized_plan.extension_payload_digests;
-            if (!append_runtime_artifact_digest(
+            if (!append_pinned_digest(
                     digest_surface,
-                    companion.string(),
+                    companion,
                     error)) {
                 return {.ok = false, .error = error};
             }
@@ -1213,130 +1724,240 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
 
         if (is_extension_payload_path(destination)) {
             materialized_plan.extension_payload_digests.push_back({
-                .path = destination.string(),
+                .path = logical_package_path(destination).string(),
                 .sha256 = digest.hex_digest
             });
         }
     }
 
     if (is_library_output_kind(plan.output_kind)) {
-        if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.runtime_host_destination_path, error)) {
+        if (!copy_file_if_exists(
+                runtime_host_source_path,
+                filesystem_plan.runtime_host_destination_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
+        if (!append_pinned_digest(
+                materialized_plan.extension_payload_digests,
+                filesystem_plan.runtime_host_destination_path,
+                error)) {
+            return {.ok = false, .error = error};
+        }
+        const auto runtime_host_digest = security::sha256_hex_for_file(
+            filesystem_plan.runtime_host_destination_path);
         if (!runtime_host_digest.ok) {
             return {.ok = false, .error = runtime_host_digest.error};
         }
         materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
 
-        std::filesystem::create_directories(std::filesystem::path(plan.native_wrapper_source_path).parent_path(), directory_error);
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
+        }
+        std::filesystem::create_directories(
+            std::filesystem::path(filesystem_plan.native_wrapper_source_path).parent_path(),
+            directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
         }
-        if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
+        if (!write_text_file(
+                filesystem_plan.module_definition_path,
+                build_module_definition_source(materialized_plan),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.module_definition_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.module_definition_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_text_file(plan.native_wrapper_source_path, build_native_wrapper_source(materialized_plan), error)) {
+        if (!write_text_file(
+                filesystem_plan.native_wrapper_source_path,
+                build_native_wrapper_source(materialized_plan),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_source_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.native_wrapper_source_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_text_file(plan.native_wrapper_cmake_path, build_native_wrapper_cmake_source(materialized_plan), error)) {
+        if (!write_text_file(
+                filesystem_plan.native_wrapper_cmake_path,
+                build_native_wrapper_cmake_source(materialized_plan),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_cmake_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.native_wrapper_cmake_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_text_file(plan.native_wrapper_build_script_path, build_native_wrapper_shell_script_source(), error)) {
+        if (!write_text_file(
+                filesystem_plan.native_wrapper_build_script_path,
+                build_native_wrapper_shell_script_source(),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_build_script_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.native_wrapper_build_script_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_text_file(plan.native_wrapper_build_powershell_path, build_native_wrapper_powershell_script_source(), error)) {
+        if (!write_text_file(
+                filesystem_plan.native_wrapper_build_powershell_path,
+                build_native_wrapper_powershell_script_source(),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.native_wrapper_build_powershell_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.native_wrapper_build_powershell_path,
+                error)) {
             return {.ok = false, .error = error};
         }
         if (plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx) {
-            if (!write_text_file(plan.library_api_manifest_path, build_library_api_manifest_source(materialized_plan), error)) {
+            if (!write_text_file(
+                    filesystem_plan.library_api_manifest_path,
+                    build_library_api_manifest_source(materialized_plan),
+                    error)) {
                 return {.ok = false, .error = error};
             }
-            if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.library_api_manifest_path, error)) {
+            if (!append_pinned_digest(
+                    materialized_plan.compiler_contract_digests,
+                    filesystem_plan.library_api_manifest_path,
+                    error)) {
                 return {.ok = false, .error = error};
             }
         }
         if (plan.output_kind == BuildOutputKind::fll) {
-            if (!write_text_file(plan.fll_api_manifest_path, build_fll_api_manifest_source(materialized_plan), error)) {
+            if (!write_text_file(
+                    filesystem_plan.fll_api_manifest_path,
+                    build_fll_api_manifest_source(materialized_plan),
+                    error)) {
                 return {.ok = false, .error = error};
             }
-            if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.fll_api_manifest_path, error)) {
+            if (!append_pinned_digest(
+                    materialized_plan.compiler_contract_digests,
+                    filesystem_plan.fll_api_manifest_path,
+                    error)) {
                 return {.ok = false, .error = error};
             }
         }
     } else if (plan.output_kind == BuildOutputKind::fxp) {
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
+        }
         const std::string fxp_token_manifest = build_fxp_token_manifest_source(materialized_plan);
-        if (!write_text_file(plan.fxp_token_manifest_path, fxp_token_manifest, error)) {
+        if (!write_text_file(filesystem_plan.fxp_token_manifest_path, fxp_token_manifest, error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.fxp_token_manifest_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.fxp_token_manifest_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_fxp_primary_output_contract(materialized_plan, fxp_token_manifest, error)) {
+        if (!write_fxp_primary_output_contract(
+                materialized_plan,
+                fxp_token_manifest,
+                filesystem_plan.launcher_output_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.extension_payload_digests,
+                filesystem_plan.launcher_output_path,
+                error)) {
             return {.ok = false, .error = error};
         }
         materialized_plan.primary_output_materialized = true;
     } else if (plan.output_kind == BuildOutputKind::app) {
-        if (!write_text_file(plan.app_archive_manifest_path, build_app_archive_manifest_source(materialized_plan), error)) {
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.app_archive_manifest_path, error)) {
+        if (!write_text_file(
+                filesystem_plan.app_archive_manifest_path,
+                build_app_archive_manifest_source(materialized_plan),
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_app_archive_primary_output(materialized_plan, error)) {
+        if (!append_pinned_digest(
+                materialized_plan.compiler_contract_digests,
+                filesystem_plan.app_archive_manifest_path,
+                error)) {
             return {.ok = false, .error = error};
         }
-        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+        RuntimePackagePlan filesystem_materialized_plan = materialized_plan;
+        filesystem_materialized_plan.package_root = filesystem_plan.package_root;
+        filesystem_materialized_plan.content_root = filesystem_plan.content_root;
+        filesystem_materialized_plan.app_archive_manifest_path =
+            filesystem_plan.app_archive_manifest_path;
+        filesystem_materialized_plan.launcher_output_path =
+            filesystem_plan.launcher_output_path;
+        for (auto& asset : filesystem_materialized_plan.assets) {
+            if (!asset.staged_path.empty()) {
+                asset.staged_path = (
+                    std::filesystem::path(filesystem_plan.content_root) /
+                    std::filesystem::path(asset.relative_path)).string();
+            }
+        }
+        if (!write_app_archive_primary_output(
+                materialized_plan,
+                filesystem_materialized_plan,
+                error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_pinned_digest(
+                materialized_plan.extension_payload_digests,
+                filesystem_plan.launcher_output_path,
+                error)) {
             return {.ok = false, .error = error};
         }
         materialized_plan.primary_output_materialized = true;
     } else {
-        if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!copy_file_if_exists(
+                runtime_host_source_path,
+                filesystem_plan.runtime_host_destination_path,
+                error)) {
             return {.ok = false, .error = error};
         }
 
-        const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
+        const auto runtime_host_digest = security::sha256_hex_for_file(
+            filesystem_plan.runtime_host_destination_path);
         if (!runtime_host_digest.ok) {
             return {.ok = false, .error = runtime_host_digest.error};
         }
         materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
         materialized_plan.extension_payload_digests.push_back({
-            .path = plan.runtime_host_destination_path,
+            .path = logical_package_path(filesystem_plan.runtime_host_destination_path).string(),
             .sha256 = runtime_host_digest.hex_digest
         });
 
         if (!plan.emit_dotnet_launcher) {
-            if (!copy_file_if_exists(plan.runtime_host_destination_path, plan.launcher_output_path, error)) {
+            if (!copy_file_if_exists(
+                    filesystem_plan.runtime_host_destination_path,
+                    filesystem_plan.launcher_output_path,
+                    error)) {
                 return {.ok = false, .error = error};
             }
 
-            const auto native_entrypoint_digest = security::sha256_hex_for_file(plan.launcher_output_path);
+            const auto native_entrypoint_digest = security::sha256_hex_for_file(
+                filesystem_plan.launcher_output_path);
             if (!native_entrypoint_digest.ok) {
                 return {.ok = false, .error = native_entrypoint_digest.error};
             }
             materialized_plan.extension_payload_digests.push_back({
-                .path = plan.launcher_output_path,
+                .path = logical_package_path(filesystem_plan.launcher_output_path).string(),
                 .sha256 = native_entrypoint_digest.hex_digest
             });
             materialized_plan.primary_output_materialized = true;
@@ -1344,38 +1965,76 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     }
 
     if (plan.emit_dotnet_launcher) {
-        if (!write_text_file(plan.launcher_project_path, build_launcher_project_source(plan), error)) {
+        if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
         }
-        if (!write_text_file(plan.launcher_source_path, build_launcher_program_source(plan), error)) {
+        if (!write_text_file(
+                filesystem_plan.launcher_project_path,
+                build_launcher_project_source(plan),
+                error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!write_text_file(
+                filesystem_plan.launcher_source_path,
+                build_launcher_program_source(plan),
+                error)) {
             return {.ok = false, .error = error};
         }
     }
 
-    if (!write_text_file(plan.ast_manifest_path, build_ast_manifest_source(materialized_plan), error)) {
+    if (!transaction.validate_parent_identity_for_materialization(error) ||
+        !write_text_file(
+            filesystem_plan.ast_manifest_path,
+            build_ast_manifest_source(materialized_plan),
+            error)) {
         return {.ok = false, .error = error};
     }
-    if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.ast_manifest_path, error)) {
+    if (!append_pinned_digest(
+            materialized_plan.compiler_contract_digests,
+            filesystem_plan.ast_manifest_path,
+            error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.ir_manifest_path, build_ir_manifest_source(materialized_plan), error)) {
+    if (!transaction.validate_parent_identity_for_materialization(error) ||
+        !write_text_file(
+            filesystem_plan.ir_manifest_path,
+            build_ir_manifest_source(materialized_plan),
+            error)) {
         return {.ok = false, .error = error};
     }
-    if (!append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.ir_manifest_path, error)) {
+    if (!append_pinned_digest(
+            materialized_plan.compiler_contract_digests,
+            filesystem_plan.ir_manifest_path,
+            error)) {
         return {.ok = false, .error = error};
     }
     if (plan.requested_dotnet_launcher &&
-        !write_text_file(plan.transpiled_csharp_path, build_csharp_transpilation_source(materialized_plan), error)) {
+        (!transaction.validate_parent_identity_for_materialization(error) ||
+         !write_text_file(
+             filesystem_plan.transpiled_csharp_path,
+             build_csharp_transpilation_source(materialized_plan),
+             error))) {
         return {.ok = false, .error = error};
     }
     if (plan.requested_dotnet_launcher &&
-        !append_runtime_artifact_digest(materialized_plan.compiler_contract_digests, plan.transpiled_csharp_path, error)) {
+        !append_pinned_digest(
+            materialized_plan.compiler_contract_digests,
+            filesystem_plan.transpiled_csharp_path,
+            error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
+    if (!transaction.validate_parent_identity_for_materialization(error) ||
+        !write_text_file(
+            filesystem_plan.manifest_path,
+            build_runtime_manifest_text(materialized_plan, security_profile, extensibility_profile),
+            error)) {
         return {.ok = false, .error = error};
     }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(materialized_plan, security_profile, extensibility_profile), error)) {
+    if (!transaction.validate_parent_identity_for_materialization(error) ||
+        !write_text_file(
+            filesystem_plan.debug_manifest_path,
+            build_debug_manifest_text(materialized_plan, security_profile, extensibility_profile),
+            error)) {
         return {.ok = false, .error = error};
     }
 
@@ -1404,8 +2063,28 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
 
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+    {
+        std::unique_lock<std::mutex> pause_lock(package_materialization_pause_mutex);
+        if (package_materialization_pause_requested) {
+            package_materialization_pause_entered = true;
+            package_materialization_pause_condition.notify_all();
+            package_materialization_pause_condition.wait(
+                pause_lock,
+                [] {
+                    return package_materialization_pause_released;
+                });
+            package_materialization_pause_requested = false;
+            package_materialization_pause_entered = false;
+            package_materialization_pause_released = false;
+        }
+    }
+#endif
+
     RuntimeMaterializeResult result = materialize_runtime_package_in_fresh_root(
+        transaction,
         plan,
+        transaction.pinned_filesystem_plan(plan),
         security_profile,
         extensibility_profile,
         runtime_host_source_path);
@@ -1429,7 +2108,7 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (!cleanup_warning.empty()) {
         result.plan.warnings.push_back(cleanup_warning);
         if (!write_runtime_manifest_pair_atomically(
-            result.plan,
+            transaction.pinned_filesystem_plan(result.plan),
             build_runtime_manifest_text(result.plan, security_profile, extensibility_profile),
             build_debug_manifest_text(result.plan, security_profile, extensibility_profile),
             error)) {

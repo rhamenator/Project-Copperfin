@@ -68,6 +68,7 @@ void test_runtime_pipeline_fixtures_are_process_isolated(
     const std::filesystem::path& executable_path);
 void test_concurrent_materialization_is_serialized_per_package_root(
     const std::filesystem::path& executable_path);
+void test_package_transaction_rejects_rebound_output_parent();
 int run_materialization_lock_probe_process(
     const std::filesystem::path& executable_path,
     const std::filesystem::path& config_path,
