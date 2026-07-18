@@ -1299,6 +1299,16 @@
                         !explicit_server &&
                         lowercase_copy(copperfin::platform::path_to_utf8_string(
                             copperfin::platform::path_from_utf8_string(trim_copy(library)).extension())) == ".prg";
+                    const bool explicit_local_vcx_library =
+                        !explicit_server &&
+                        lowercase_copy(copperfin::platform::path_to_utf8_string(
+                            copperfin::platform::path_from_utf8_string(trim_copy(library)).extension())) == ".vcx";
+                    if (explicit_local_vcx_library)
+                    {
+                        throw std::runtime_error(runtime_text(
+                            "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
+                            {{"classLibraryPath", trim_copy(library)}}));
+                    }
                     const bool library_looks_explicit = looks_like_library_target(library);
                     const bool bare_native_candidate = !explicit_server && (!trim_copy(library).empty() ? !library_looks_explicit : true);
 

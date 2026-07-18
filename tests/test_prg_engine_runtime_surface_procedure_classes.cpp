@@ -198,10 +198,44 @@ void test_set_procedure_classes_follow_vfp_activation_precedence() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_newobject_local_vcx_fails_closed_without_fabricated_ole_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_rejection";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "newobject_local_vcx_rejection.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MyWidget', 'myclasslib.vcx')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed,
+           "local VCX NEWOBJECT should fail instead of returning a fabricated object handle");
+    expect(state.message.find("Visual class library support is not implemented for NEWOBJECT: myclasslib.vcx") !=
+               std::string::npos,
+           "local VCX NEWOBJECT should report the catalog-routed unsupported-library diagnostic");
+    expect(state.ole_objects.empty(),
+           "local VCX NEWOBJECT should not register an OLE callback object");
+    expect(std::none_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const auto& event) { return event.category == "ole.newobject"; }),
+           "local VCX NEWOBJECT should not emit an ole.newobject event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
+    test_newobject_local_vcx_fails_closed_without_fabricated_ole_state();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

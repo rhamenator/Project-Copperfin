@@ -891,6 +891,7 @@
   "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded": "Runtime guardrail: maximum call depth ({limit}) exceeded.",
   "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded": "Runtime guardrail: maximum executed statements ({limit}) exceeded.",
   "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded": "Runtime guardrail: maximum loop iterations ({limit}) exceeded.",
+  "Runtime.Prg.Core.Error.NewObjectVcxUnsupported": "Visual class library support is not implemented for NEWOBJECT: {classLibraryPath}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation": "OLE member not found for method invocation: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead": "OLE member not found for property read: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation": "OLE object not found for method invocation: {targetIdentifier}",
