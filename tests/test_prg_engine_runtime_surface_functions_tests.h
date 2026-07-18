@@ -357,6 +357,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_move_override_wins_over_builtin_geometry_updates();
     void test_native_show_hide_builtin_fallback_updates_visible_state();
     void test_native_show_builtin_fallback_accepts_modal_argument();
+    void test_native_show_activate_nodefault_suppresses_active_form_transition();
     void test_native_show_override_wins_over_builtin_visible_toggle();
     void test_native_show_override_preserves_modal_argument_without_builtin_fallthrough();
     void test_native_setfocus_builtin_fallback_updates_owner_activecontrol();

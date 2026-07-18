@@ -311,6 +311,90 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_show_activate_nodefault_suppresses_active_form_transition()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_show_activate_nodefault";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_show_activate_nodefault.prg";
+        write_text(
+            main_path,
+            "oFirst = CREATEOBJECT('FirstForm')\n"
+            "oSecond = CREATEOBJECT('SecondForm')\n"
+            "oThird = CREATEOBJECT('ThirdForm')\n"
+            "oFirst.Show()\n"
+            "cActiveAfterFirst = _SCREEN.ActiveForm.cId\n"
+            "oSecond.Show()\n"
+            "cActiveAfterSuppressed = _SCREEN.ActiveForm.cId\n"
+            "nSecondActivate = oSecond.nActivate\n"
+            "lSecondVisible = oSecond.Visible\n"
+            "oSecond.Hide()\n"
+            "nSecondDeactivate = oSecond.nDeactivate\n"
+            "oThird.Show()\n"
+            "cActiveAfterThird = _SCREEN.ActiveForm.cId\n"
+            "RETURN\n"
+            "DEFINE CLASS FirstForm AS Form\n"
+            "    cId = 'first'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SecondForm AS Form\n"
+            "    cId = 'second'\n"
+            "    nActivate = 0\n"
+            "    nDeactivate = 0\n"
+            "    PROCEDURE Activate\n"
+            "        THIS.nActivate = THIS.nActivate + 1\n"
+            "        NODEFAULT\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Deactivate\n"
+            "        THIS.nDeactivate = THIS.nDeactivate + 1\n"
+            "        NODEFAULT\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ThirdForm AS Form\n"
+            "    cId = 'third'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Show Activate NODEFAULT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be exported by the script");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " should equal " + expected + " but was " +
+                           copperfin::runtime::format_value(found->second));
+            }
+        };
+        check("cactiveafterfirst", "first");
+        check("cactiveaftersuppressed", "first");
+        check("nsecondactivate", "1");
+        check("lsecondvisible", "true");
+        check("nseconddeactivate", "1");
+        check("cactiveafterthird", "third");
+
+        const std::size_t show_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.show";
+            }));
+        expect(show_event_count == 3U,
+               "Show with Activate NODEFAULT should preserve one show telemetry event per call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_show_override_wins_over_builtin_visible_toggle()
     {
         namespace fs = std::filesystem;

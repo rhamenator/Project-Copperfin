@@ -308,6 +308,7 @@ int main()
     test_native_move_override_wins_over_builtin_geometry_updates();
     test_native_show_hide_builtin_fallback_updates_visible_state();
     test_native_show_builtin_fallback_accepts_modal_argument();
+    test_native_show_activate_nodefault_suppresses_active_form_transition();
     test_native_show_override_wins_over_builtin_visible_toggle();
     test_native_show_override_preserves_modal_argument_without_builtin_fallthrough();
     test_native_form_showwindow_defaults_mutates_and_stays_builtin();

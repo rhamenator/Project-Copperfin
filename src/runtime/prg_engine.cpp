@@ -1149,13 +1149,15 @@ namespace copperfin::runtime
             const std::string &identifier,
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
-            const std::vector<std::optional<std::string>> &argument_references);
+            const std::vector<std::optional<std::string>> &argument_references,
+            bool *requested_nodefault = nullptr);
         std::optional<PrgValue> invoke_native_object_method_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
-            const std::vector<std::optional<std::string>> &argument_references);
+            const std::vector<std::optional<std::string>> &argument_references,
+            bool *requested_nodefault = nullptr);
         std::optional<PrgValue> invoke_native_event_delegate(
             const NativeEventBinding &binding,
             const CurrentNativeEventContext &event_context,
@@ -2931,21 +2933,26 @@ namespace copperfin::runtime
                 "visible",
                 make_boolean_value(visible),
                 frame);
-            if (visible)
-            {
-                note_representative_active_form(*target_object);
-            }
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
             events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            last_popped_frame_requested_nodefault = false;
+            bool handler_requested_nodefault = false;
             (void)invoke_native_object_method_if_present(
                 *target_object,
                 visible ? "activate" : "deactivate",
                 frame,
                 {},
-                {});
+                {},
+                &handler_requested_nodefault);
+            (void)consume_last_popped_frame_requested_nodefault();
+            const bool suppress_default_activation = visible && handler_requested_nodefault;
+            if (visible && !suppress_default_activation)
+            {
+                note_representative_active_form(*target_object);
+            }
             return make_empty_value();
         }
         if (leaf == "setfocus" &&
@@ -5608,7 +5615,8 @@ namespace copperfin::runtime
         const std::string &identifier,
         const Frame &source_frame,
         const std::vector<PrgValue> &arguments,
-        const std::vector<std::optional<std::string>> &argument_references)
+        const std::vector<std::optional<std::string>> &argument_references,
+        bool *requested_nodefault)
     {
         if (runtime_object.source.empty())
         {
@@ -5667,7 +5675,12 @@ namespace copperfin::runtime
                           std::vector<std::optional<std::string>>(
                               argument_references.begin(),
                               argument_references.end()));
-        return run_expression_invoked_routine_until_return(return_depth);
+        const PrgValue result = run_expression_invoked_routine_until_return(return_depth);
+        if (requested_nodefault != nullptr)
+        {
+            *requested_nodefault = consume_last_popped_frame_requested_nodefault();
+        }
+        return result;
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_event_delegate(
@@ -5833,7 +5846,8 @@ namespace copperfin::runtime
         const std::string &identifier,
         const Frame &source_frame,
         const std::vector<PrgValue> &arguments,
-        const std::vector<std::optional<std::string>> &argument_references)
+        const std::vector<std::optional<std::string>> &argument_references,
+        bool *requested_nodefault)
     {
         const std::string normalized_identifier = normalize_identifier(identifier);
         std::vector<NativeEventBinding> bindings;
@@ -5880,7 +5894,8 @@ namespace copperfin::runtime
                 normalized_identifier,
                 source_frame,
                 arguments,
-                argument_references);
+                argument_references,
+                requested_nodefault);
             invoke_delegates_for_phase(true);
             return result;
         }
@@ -5890,7 +5905,8 @@ namespace copperfin::runtime
             normalized_identifier,
             source_frame,
             arguments,
-            argument_references);
+            argument_references,
+            requested_nodefault);
     }
 
     PrgValue PrgRuntimeSession::Impl::bind_native_event(
