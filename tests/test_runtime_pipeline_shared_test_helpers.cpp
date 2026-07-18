@@ -29,6 +29,14 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+void expect_materialization(
+    const copperfin::runtime::RuntimeMaterializeResult& result,
+    const std::string& message) {
+    expect(
+        result.ok,
+        result.ok ? message : message + "; error: " + result.error);
+}
+
 void write_text(const std::filesystem::path& path, const std::string& contents) {
     std::ofstream output(path, std::ios::binary);
     output << contents;

@@ -41,6 +41,9 @@ namespace cf_test_runtime_pipeline {
 
 // ==== Shared test helpers and fixtures ====
 void expect(bool condition, const std::string& message);
+void expect_materialization(
+    const copperfin::runtime::RuntimeMaterializeResult& result,
+    const std::string& message);
 void write_text(const std::filesystem::path& path, const std::string& contents);
 std::filesystem::path runtime_host_fixture_path(const std::filesystem::path& root);
 std::string read_text(const std::filesystem::path& path);

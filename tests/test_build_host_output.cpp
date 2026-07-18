@@ -128,6 +128,26 @@ struct ProcessResult {
     std::string stderr_text;
 };
 
+std::string process_failure_detail(const ProcessResult& process) {
+    std::string detail;
+    if (!process.stdout_text.empty()) {
+        detail += " stdout=" + process.stdout_text;
+    }
+    if (!process.stderr_text.empty()) {
+        detail += " stderr=" + process.stderr_text;
+    }
+    return detail;
+}
+
+void expect_process_success(
+    const ProcessResult& process,
+    const std::string& message) {
+    expect(
+        process.exit_code == 0,
+        process.exit_code == 0 ? message : message + "; exit=" +
+            std::to_string(process.exit_code) + process_failure_detail(process));
+}
+
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
@@ -501,7 +521,7 @@ void run_library_build_host_smoke(
         {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
         temp_root);
 
-    expect(process.exit_code == 0, "build host should succeed for " + extension + " library outputs");
+    expect_process_success(process, "build host should succeed for " + extension + " library outputs");
     expect(process.stdout_text.find("status: ok") != std::string::npos,
            "build host should report success for " + extension + " outputs");
     expect(process.stdout_text.find("output.kind: " + extension) != std::string::npos,
@@ -2916,7 +2936,7 @@ void run_app_build_host_smoke(const std::string& build_host_path) {
         {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
         temp_root);
 
-    expect(process.exit_code == 0, "build host should succeed for APP outputs");
+    expect_process_success(process, "build host should succeed for APP outputs");
     expect(process.stdout_text.find("status: ok") != std::string::npos,
            "build host should report success for APP outputs");
     expect(process.stdout_text.find("output.kind: app") != std::string::npos,
@@ -2994,7 +3014,7 @@ void run_fxp_build_host_smoke(const std::string& build_host_path) {
         {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
         temp_root);
 
-    expect(process.exit_code == 0, "build host should succeed for FXP outputs");
+    expect_process_success(process, "build host should succeed for FXP outputs");
     expect(process.stdout_text.find("status: ok") != std::string::npos,
            "build host should report success for FXP outputs");
     expect(process.stdout_text.find("output.kind: fxp") != std::string::npos,

@@ -379,7 +379,7 @@ void test_materialize_runtime_package() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "runtime package should materialize");
+    expect_materialization(result, "runtime package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.manifest_path), "runtime package should emit a manifest");
         expect(fs::exists(result.plan.debug_manifest_path), "runtime package should emit a debug manifest");
