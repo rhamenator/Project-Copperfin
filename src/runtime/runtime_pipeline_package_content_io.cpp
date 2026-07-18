@@ -538,7 +538,7 @@ bool prepare_package_content_root(
         return false;
     }
 #if !defined(_WIN32)
-    if (const auto parent_descriptor = fd_from_path(absolute_package_root);
+    if (const auto parent_descriptor = fd_from_path(absolute_package_root.parent_path());
         parent_descriptor.has_value()) {
         if (!paths_equal_for_platform(
                 absolute_content_root,
