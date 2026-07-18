@@ -72,6 +72,8 @@
         std::optional<PrgValue> resumed_copy_destination_value;
         std::optional<PrgValue> resumed_copy_to_destination_value;
         std::optional<PrgValue> resumed_append_from_source_value;
+        std::optional<PrgValue> resumed_save_memvars_path_value;
+        std::optional<PrgValue> resumed_restore_memvars_path_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -521,6 +523,14 @@
                     {
                         resumed_append_from_source_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::save_memvars_command)
+                    {
+                        resumed_save_memvars_path_value = *expression_value;
+                    }
+                    else if (continued_statement.kind == StatementKind::restore_memvars_command)
+                    {
+                        resumed_restore_memvars_path_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -579,6 +589,8 @@
                     !resumed_copy_destination_value.has_value() &&
                     !resumed_copy_to_destination_value.has_value() &&
                     !resumed_append_from_source_value.has_value() &&
+                    !resumed_save_memvars_path_value.has_value() &&
+                    !resumed_restore_memvars_path_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -6135,8 +6147,16 @@
                     return serialized;
                 };
 
+                const auto destination_value = resumed_save_memvars_path_value.has_value()
+                                                   ? resumed_save_memvars_path_value
+                                                   : evaluate_resumable_expression(frame, statement);
+                if (!destination_value.has_value())
+                {
+                    return {};
+                }
                 std::string destination = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                    value_as_string(*destination_value)));
+                resumed_save_memvars_path_value.reset();
                 if (destination.empty())
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SaveToFilenameRequired");
@@ -6378,8 +6398,16 @@
                     return parts;
                 };
 
+                const auto source_value = resumed_restore_memvars_path_value.has_value()
+                                              ? resumed_restore_memvars_path_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!source_value.has_value())
+                {
+                    return {};
+                }
                 std::string source = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                    value_as_string(*source_value)));
+                resumed_restore_memvars_path_value.reset();
                 if (source.empty())
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired");

@@ -18,8 +18,14 @@ void test_save_to_writes_variables_to_file() {
         main_path,
         "x = 'hello'\n"
         "nVal = 42\n"
-        "SAVE TO '" + mem_path.string() + "'\n"
-        "RETURN\n");
+        "nSavePathCalls = 0\n"
+        "SAVE TO save_path('" + mem_path.string() + "')\n"
+        "RETURN\n"
+        "FUNCTION save_path\n"
+        "LPARAMETERS value\n"
+        "nSavePathCalls = nSavePathCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -27,6 +33,12 @@ void test_save_to_writes_variables_to_file() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "SAVE TO script should complete");
     expect(fs::exists(mem_path), "SAVE TO should create a .mem file");
+    const auto save_path_calls = state.globals.find("nsavepathcalls");
+    expect(save_path_calls != state.globals.end(), "SAVE TO should preserve the path resolver call counter");
+    if (save_path_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(save_path_calls->second) == "1",
+               "SAVE TO should evaluate the path UDF exactly once");
+    }
 
     if (fs::exists(mem_path)) {
         const std::string contents = read_text(mem_path);
@@ -66,16 +78,28 @@ void test_restore_from_loads_variables_from_file() {
     const fs::path restore_path = temp_root / "restore_target.prg";
     write_text(
         restore_path,
-        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "nRestorePathCalls = 0\n"
+        "RESTORE FROM restore_path('" + mem_path.string() + "') ADDITIVE\n"
         "restored_x = x\n"
         "restored_n = nVal\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION restore_path\n"
+        "LPARAMETERS value\n"
+        "nRestorePathCalls = nRestorePathCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession restore_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(restore_path.string(), temp_root.string(), false));
 
     const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(restore_state.completed, "RESTORE FROM script should complete");
+    const auto restore_path_calls = restore_state.globals.find("nrestorepathcalls");
+    expect(restore_path_calls != restore_state.globals.end(), "RESTORE FROM should preserve the path resolver call counter");
+    if (restore_path_calls != restore_state.globals.end()) {
+        expect(copperfin::runtime::format_value(restore_path_calls->second) == "1",
+               "RESTORE FROM should evaluate the path UDF exactly once");
+    }
 
     const auto restored_x = restore_state.globals.find("restored_x");
     const auto restored_n = restore_state.globals.find("restored_n");
