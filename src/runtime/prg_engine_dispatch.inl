@@ -80,6 +80,7 @@
         std::optional<PrgValue> resumed_set_library_value;
         std::optional<PrgValue> resumed_declare_dll_path_value;
         std::optional<PrgValue> resumed_gather_for_value;
+        std::optional<PrgValue> resumed_set_procedure_target_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -561,6 +562,12 @@
                     {
                         resumed_gather_for_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::set_procedure &&
+                             !trim_copy(continued_statement.expression).empty() &&
+                             trim_copy(continued_statement.expression).front() == '&')
+                    {
+                        resumed_set_procedure_target_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -627,6 +634,7 @@
                     !resumed_set_library_value.has_value() &&
                     !resumed_declare_dll_path_value.has_value() &&
                     !resumed_gather_for_value.has_value() &&
+                    !resumed_set_procedure_target_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -4796,7 +4804,15 @@
                 std::string target = trim_copy(statement.expression);
                 if (!target.empty() && target.front() == '&')
                 {
-                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                    const auto target_value = resumed_set_procedure_target_value.has_value()
+                                                  ? resumed_set_procedure_target_value
+                                                  : evaluate_resumable_expression(frame, statement);
+                    if (!target_value.has_value())
+                    {
+                        return {};
+                    }
+                    const std::string expanded_target = trim_copy(value_as_string(*target_value));
+                    resumed_set_procedure_target_value.reset();
                     if (!expanded_target.empty())
                     {
                         target = expanded_target;

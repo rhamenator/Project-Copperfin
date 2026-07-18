@@ -2993,7 +2993,8 @@ void test_set_procedure_registers_external_function_for_expression_calls() {
         "RETURN a + b\n");
     write_text(
         temp_root / "main.prg",
-        "SET PROCEDURE TO helpers\n"
+        "cHelperPath = 'helpers'\n"
+        "SET PROCEDURE TO &cHelperPath\n"
         "result = addvals(6, 7)\n"
         "RETURN\n");
 
