@@ -879,14 +879,25 @@
             return {left_delimiter, right_delimiter};
         }
 
-        void move_cursor_to(CursorState &cursor, long long target_recno)
+        bool move_cursor_to(CursorState &cursor, long long target_recno)
         {
+            if (cursor.buffering_mode == 3 &&
+                cursor.recno != 0U &&
+                !cursor.eof &&
+                cursor.buffered_records.contains(cursor.recno) &&
+                (target_recno <= 0 || static_cast<std::size_t>(target_recno) != cursor.recno))
+            {
+                if (!commit_buffered_record(cursor, cursor.recno))
+                {
+                    return false;
+                }
+            }
             if (cursor.record_count == 0U)
             {
                 cursor.recno = 1U;
                 cursor.bof = true;
                 cursor.eof = true;
-                return;
+                return true;
             }
 
             if (target_recno <= 0)
@@ -894,7 +905,7 @@
                 cursor.recno = 1U;
                 cursor.bof = true;
                 cursor.eof = false;
-                return;
+                return true;
             }
 
             const auto record_count = static_cast<long long>(cursor.record_count);
@@ -903,12 +914,13 @@
                 cursor.recno = static_cast<std::size_t>(record_count + 1);
                 cursor.bof = false;
                 cursor.eof = true;
-                return;
+                return true;
             }
 
             cursor.recno = static_cast<std::size_t>(target_recno);
             cursor.bof = false;
             cursor.eof = false;
+            return true;
         }
 
         bool activate_order(

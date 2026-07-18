@@ -264,4 +264,78 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_local_optimistic_row_buffering()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_row_buffering";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "row_buffering.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}, {"Other"}});
+        expect(create_result.ok, "row buffering fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "lSet = CURSORSETPROP('Buffering', 3, 'people')\n"
+            "nMode = CURSORGETPROP('Buffering', 'people')\n"
+            "REPLACE NAME WITH 'RowPending' IN people\n"
+            "cPending = people.NAME\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "cCommitted = people.NAME\n"
+            "REPLACE NAME WITH 'RowReverted' IN people\n"
+            "cBeforeRevert = people.NAME\n"
+            "TABLEREVERT(.T., 'people')\n"
+            "cReverted = people.NAME\n"
+            "REPLACE NAME WITH 'MoveCommitted' IN people\n"
+            "GO 2 IN people\n"
+            "cSecond = people.NAME\n"
+            "GO 1 IN people\n"
+            "cAfterMove = people.NAME\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 5U});
+        const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(paused.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "row buffering regression should pause with the first row change pending");
+
+        const auto before_update = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+        expect(before_update.ok && before_update.table.records.size() == 2U &&
+                   before_update.table.records[0].values[0].display_value == "Before",
+               "row buffering should leave disk unchanged before TABLEUPDATE");
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "row buffering regression should complete after resume");
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lset") == "true", "CURSORSETPROP Buffering 3 should succeed");
+        expect(value_for("nmode") == "3", "CURSORGETPROP Buffering should report mode 3");
+        expect(value_for("cpending") == "RowPending", "row buffering should expose pending field values");
+        expect(value_for("ccommitted") == "RowPending", "TABLEUPDATE should commit the current row");
+        expect(value_for("cbeforerevert") == "RowReverted", "row buffering should expose the second pending value");
+        expect(value_for("creverted") == "RowPending", "TABLEREVERT should discard the current row change");
+        expect(value_for("csecond") == "Other", "moving off a buffered row should select the target row");
+        expect(value_for("caftermove") == "MoveCommitted", "moving off a changed row should commit it");
+
+        const auto after_resume = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+        expect(after_resume.ok && after_resume.table.records.size() == 2U &&
+                   after_resume.table.records[0].values[0].display_value == "MoveCommitted" &&
+                   after_resume.table.records[1].values[0].display_value == "Other",
+               "row buffering should persist explicit and navigation commits only");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

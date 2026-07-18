@@ -1157,7 +1157,7 @@
                 return true;
             }
 
-            if (cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
             {
                 if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
                 {
@@ -1583,6 +1583,54 @@
             return value->display_value;
         }
 
+        bool commit_buffered_record(CursorState &cursor, std::size_t recno)
+        {
+            const auto buffered = cursor.buffered_records.find(recno);
+            if (buffered == cursor.buffered_records.end())
+            {
+                return true;
+            }
+            if (cursor.source_path.empty())
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+                    {{"command", "TABLEUPDATE"}});
+                return false;
+            }
+            if (!ensure_transaction_backup_for_table(cursor.source_path))
+            {
+                return false;
+            }
+
+            for (const auto &field : buffered->second.values)
+            {
+                const auto result = vfp::replace_record_field_value(
+                    cursor.source_path,
+                    recno - 1U,
+                    field.field_name,
+                    field.display_value);
+                if (!result.ok)
+                {
+                    last_error_message = result.error;
+                    return false;
+                }
+                cursor.record_count = result.record_count;
+            }
+
+            const auto deleted_result = vfp::set_record_deleted_flag(
+                cursor.source_path,
+                recno - 1U,
+                buffered->second.deleted);
+            if (!deleted_result.ok)
+            {
+                last_error_message = deleted_result.error;
+                return false;
+            }
+            cursor.record_count = deleted_result.record_count;
+            cursor.buffered_records.erase(buffered);
+            return true;
+        }
+
         std::optional<PrgValue> cursor_buffering_function(
             const std::string &function,
             const std::vector<PrgValue> &arguments)
@@ -1641,7 +1689,7 @@
                     return make_boolean_value(false);
                 }
                 const int requested_mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
-                if (requested_mode != 1 && requested_mode != 5)
+                if (requested_mode != 1 && requested_mode != 3 && requested_mode != 5)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode",
@@ -1666,7 +1714,7 @@
             {
                 return make_boolean_value(false);
             }
-            if (cursor->buffering_mode != 5)
+            if (cursor->buffering_mode != 3 && cursor->buffering_mode != 5)
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
@@ -1675,6 +1723,14 @@
             }
             if (revert)
             {
+                if (cursor->buffering_mode == 3)
+                {
+                    if (cursor->recno != 0U && !cursor->eof)
+                    {
+                        cursor->buffered_records.erase(cursor->recno);
+                    }
+                    return make_boolean_value(true);
+                }
                 const std::size_t appended_count = cursor->buffered_appended_records.size();
                 const std::size_t persisted_record_count =
                     cursor->record_count >= appended_count ? cursor->record_count - appended_count : 0U;
@@ -1685,6 +1741,13 @@
                     *cursor,
                     std::min<std::size_t>(cursor->recno, persisted_record_count));
                 return make_boolean_value(true);
+            }
+
+            if (cursor->buffering_mode == 3)
+            {
+                return make_boolean_value(
+                    cursor->recno == 0U || cursor->eof ||
+                    commit_buffered_record(*cursor, cursor->recno));
             }
 
             if (cursor->buffered_records.empty())
@@ -1920,7 +1983,7 @@
                 return false;
             }
 
-            if (cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
             {
                 const auto table_result = vfp::parse_dbf_table_from_file(
                     cursor.source_path,
