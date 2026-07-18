@@ -318,6 +318,77 @@ public:
     }
 
 #if !defined(_WIN32)
+    bool write_text_file_atomically(
+        const std::filesystem::path& path,
+        const std::string& contents,
+        std::string& error) const {
+        if (descriptor_ < 0) {
+            error = runtime_text(
+                "Runtime.Package.Error.CreateFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
+            return false;
+        }
+
+        const std::string target_name =
+            copperfin::platform::path_to_utf8_string(path.filename());
+        static std::atomic<unsigned long long> sequence{0U};
+        const std::string temporary_name =
+            target_name + ".tmp." +
+            std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
+            "." + std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
+        const int temporary_descriptor = ::openat(
+            descriptor_,
+            temporary_name.c_str(),
+            O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+            0600);
+        if (temporary_descriptor < 0) {
+            error = runtime_text(
+                "Runtime.Package.Error.CreateFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
+            return false;
+        }
+
+        bool written = true;
+        std::size_t offset = 0U;
+        while (offset < contents.size()) {
+            const ssize_t count = ::write(
+                temporary_descriptor,
+                contents.data() + offset,
+                contents.size() - offset);
+            if (count < 0 && errno == EINTR) {
+                continue;
+            }
+            if (count <= 0) {
+                written = false;
+                break;
+            }
+            offset += static_cast<std::size_t>(count);
+        }
+        if (!written || ::fsync(temporary_descriptor) != 0 ||
+            ::close(temporary_descriptor) != 0) {
+            (void)::close(temporary_descriptor);
+            (void)::unlinkat(descriptor_, temporary_name.c_str(), 0);
+            error = runtime_text(
+                "Runtime.Package.Error.WriteFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
+            return false;
+        }
+        if (::renameat(
+                descriptor_,
+                temporary_name.c_str(),
+                descriptor_,
+                target_name.c_str()) != 0) {
+            (void)::unlinkat(descriptor_, temporary_name.c_str(), 0);
+            error = runtime_text(
+                "Runtime.Package.Error.WriteFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(path)}});
+            return false;
+        }
+        return true;
+    }
+#endif
+
+#if !defined(_WIN32)
     bool rollback_at_pinned_parent(
         const std::string& package_leaf,
         const std::string& backup_leaf,
@@ -1065,6 +1136,12 @@ private:
                 {{"path", copperfin::platform::path_to_utf8_string(path)}});
             return false;
         }
+#if !defined(_WIN32)
+        return parent_identity_.write_text_file_atomically(
+            path,
+            contents.empty() ? transaction_identity_ : contents,
+            error);
+#else
         static std::atomic<unsigned long long> sequence{0U};
         const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
         const std::filesystem::path pinned_target = pinned_path(path);
@@ -1106,6 +1183,7 @@ private:
             "Runtime.Package.Error.PackageTransactionStartFailed",
             {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return false;
+#endif
     }
 
     static bool directory_entry_exists(
