@@ -447,6 +447,7 @@ void test_text_endtext_literal_blocks() {
     const fs::path main_path = temp_root / "text_blocks.prg";
     write_text(
         main_path,
+        "nTextMergeCalls = 0\n"
         "cName = 'Copperfin'\n"
         "nCount = 3\n"
         "TEXT TO cBody NOSHOW\n"
@@ -459,7 +460,7 @@ void test_text_endtext_literal_blocks() {
         "Bravo\n"
         "ENDTEXT\n"
         "TEXT TO cMerged TEXTMERGE NOSHOW\n"
-        "Name=<<cName>>; Count=<<nCount>>\n"
+        "Name=<<merge_probe(cName)>>; Count=<<merge_probe(nCount)>>\n"
         "ENDTEXT\n"
         "cNameExpr = 'LEFT(cName, 9)'\n"
         "cNameExprHolder = 'cNameExpr'\n"
@@ -479,7 +480,12 @@ void test_text_endtext_literal_blocks() {
         "TEXT TO cMergedRecursiveSecondHop TEXTMERGE NOSHOW\n"
         "Recursive=<<&cRecursiveExprDeepHolder>>\n"
         "ENDTEXT\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION merge_probe\n"
+        "LPARAMETERS value\n"
+        "nTextMergeCalls = nTextMergeCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -501,6 +507,14 @@ void test_text_endtext_literal_blocks() {
         expect(
             copperfin::runtime::format_value(merged->second) == "Name=Copperfin; Count=3\n",
             "TEXT TEXTMERGE should interpolate <<expression>> segments using runtime expression evaluation");
+    }
+
+    const auto text_merge_calls = state.globals.find("ntextmergecalls");
+    expect(text_merge_calls != state.globals.end(),
+           "TEXT TEXTMERGE should preserve the UDF interpolation call counter");
+    if (text_merge_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(text_merge_calls->second) == "2",
+               "TEXT TEXTMERGE should evaluate each UDF interpolation exactly once");
     }
 
     const auto merged_nested = state.globals.find("cmergednested");

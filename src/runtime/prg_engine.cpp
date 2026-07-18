@@ -508,6 +508,18 @@ namespace copperfin::runtime
             std::vector<std::optional<std::string>> references;
         };
 
+        struct TextMergeContinuation
+        {
+            Statement statement;
+            std::string source_text;
+            std::string left_delimiter;
+            std::string right_delimiter;
+            std::string merged_text;
+            std::size_t cursor = 0U;
+            std::size_t pending_expression_end = 0U;
+            bool pending_expression = false;
+        };
+
         enum class LoopExpressionStage
         {
             for_start,
@@ -579,6 +591,7 @@ namespace copperfin::runtime
             bool expression_routine_return_pending = false;
             std::optional<ExpressionContinuation> expression_continuation;
             std::optional<CommandArgumentContinuation> command_argument_continuation;
+            std::optional<TextMergeContinuation> text_merge_continuation;
             std::optional<LoopExpressionContinuation> loop_expression_continuation;
             std::optional<ScanExpressionContinuation> scan_expression_continuation;
             bool evaluate_conditional_else = false;
@@ -8047,6 +8060,7 @@ namespace copperfin::runtime
                                 stack.back().expression_routine_return_pending = false;
                                 stack.back().expression_continuation.reset();
                                 stack.back().command_argument_continuation.reset();
+                                stack.back().text_merge_continuation.reset();
                                 stack.back().loop_expression_continuation.reset();
                                 stack.back().scan_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
@@ -8671,6 +8685,7 @@ namespace copperfin::runtime
                                     stack.back().expression_routine_return_pending = false;
                                     stack.back().expression_continuation.reset();
                                     stack.back().command_argument_continuation.reset();
+                                    stack.back().text_merge_continuation.reset();
                                     stack.back().loop_expression_continuation.reset();
                                     stack.back().scan_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);

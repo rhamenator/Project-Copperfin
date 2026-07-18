@@ -43,6 +43,7 @@
                 frame.expression_routine_return_pending = false;
                 frame.expression_continuation.reset();
                 frame.command_argument_continuation.reset();
+                frame.text_merge_continuation.reset();
             }
         };
         std::optional<PrgValue> resumed_assignment_value;
@@ -57,6 +58,7 @@
         std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_throw_value;
+        std::optional<PrgValue> resumed_textmerge_value;
         std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_call_argument_value;
@@ -464,6 +466,11 @@
                     {
                         resumed_throw_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::text_command &&
+                             frame.text_merge_continuation.has_value())
+                    {
+                        resumed_textmerge_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
                     {
@@ -493,6 +500,7 @@
                     !resumed_use_target_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
                     !resumed_throw_value.has_value() &&
+                    !resumed_textmerge_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
                     !resumed_spawn_argument_value.has_value() &&
                     !resumed_call_argument_value.has_value() &&
@@ -1719,6 +1727,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.text_merge_continuation.reset();
                 Program &program = load_program(frame.file_path);
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
@@ -1905,6 +1914,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.text_merge_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                 std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);
@@ -2168,6 +2178,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.text_merge_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                     if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
@@ -2356,45 +2367,90 @@
                 if (normalize_identifier(statement.tertiary_expression) == "textmerge" || is_set_enabled("textmerge"))
                 {
                     const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
-                    const auto apply_textmerge =
-                        [&](const std::string& source_text) {
-                            std::string merged_text;
-                            merged_text.reserve(source_text.size());
+                    if (!frame.text_merge_continuation.has_value() ||
+                        frame.text_merge_continuation->statement.text != statement.text ||
+                        frame.text_merge_continuation->source_text != statement.expression ||
+                        frame.text_merge_continuation->left_delimiter != left_delimiter ||
+                        frame.text_merge_continuation->right_delimiter != right_delimiter)
+                    {
+                        frame.text_merge_continuation = TextMergeContinuation{
+                            .statement = statement,
+                            .source_text = statement.expression,
+                            .left_delimiter = left_delimiter,
+                            .right_delimiter = right_delimiter,
+                            .merged_text = {}};
+                    }
 
-                            std::size_t cursor = 0U;
-                            while (cursor < source_text.size())
+                    TextMergeContinuation &continuation = *frame.text_merge_continuation;
+                    continuation.merged_text.reserve(continuation.source_text.size());
+                    while (continuation.cursor < continuation.source_text.size())
+                    {
+                        if (continuation.pending_expression)
+                        {
+                            if (!resumed_textmerge_value.has_value())
                             {
-                                const std::size_t start = source_text.find(left_delimiter, cursor);
-                                if (start == std::string::npos)
-                                {
-                                    merged_text.append(source_text.substr(cursor));
-                                    break;
-                                }
-
-                                merged_text.append(source_text.substr(cursor, start - cursor));
-                                const std::size_t end = source_text.find(right_delimiter, start + left_delimiter.size());
-                                if (end == std::string::npos)
-                                {
-                                    merged_text.append(source_text.substr(start));
-                                    break;
-                                }
-
-                                const std::string merge_expression =
-                                    trim_copy(source_text.substr(
-                                        start + left_delimiter.size(),
-                                        end - start - left_delimiter.size()));
-                                if (!merge_expression.empty())
-                                {
-                                    merged_text.append(value_as_string(evaluate_expression(merge_expression, frame)));
-                                }
-
-                                cursor = end + right_delimiter.size();
+                                return {};
                             }
+                            continuation.merged_text.append(value_as_string(*resumed_textmerge_value));
+                            continuation.cursor = continuation.pending_expression_end;
+                            continuation.pending_expression = false;
+                            resumed_textmerge_value.reset();
+                            continue;
+                        }
 
-                            return merged_text;
-                        };
+                        const std::size_t start = continuation.source_text.find(
+                            continuation.left_delimiter,
+                            continuation.cursor);
+                        if (start == std::string::npos)
+                        {
+                            continuation.merged_text.append(continuation.source_text.substr(continuation.cursor));
+                            continuation.cursor = continuation.source_text.size();
+                            break;
+                        }
 
-                    text_value = apply_textmerge(text_value);
+                        continuation.merged_text.append(
+                            continuation.source_text.substr(continuation.cursor, start - continuation.cursor));
+                        const std::size_t end = continuation.source_text.find(
+                            continuation.right_delimiter,
+                            start + continuation.left_delimiter.size());
+                        if (end == std::string::npos)
+                        {
+                            continuation.merged_text.append(continuation.source_text.substr(start));
+                            continuation.cursor = continuation.source_text.size();
+                            break;
+                        }
+
+                        const std::string merge_expression = trim_copy(continuation.source_text.substr(
+                            start + continuation.left_delimiter.size(),
+                            end - start - continuation.left_delimiter.size()));
+                        continuation.pending_expression_end = end + continuation.right_delimiter.size();
+                        continuation.cursor = start;
+                        if (merge_expression.empty())
+                        {
+                            continuation.cursor = continuation.pending_expression_end;
+                            continue;
+                        }
+
+                        Statement merge_statement = continuation.statement;
+                        merge_statement.expression = merge_expression;
+                        merge_statement.text = continuation.statement.text + " [textmerge-expression]";
+                        continuation.pending_expression = true;
+                        const auto merged_value = evaluate_resumable_expression(frame, merge_statement);
+                        if (!merged_value.has_value())
+                        {
+                            return {};
+                        }
+                        continuation.merged_text.append(value_as_string(*merged_value));
+                        continuation.cursor = continuation.pending_expression_end;
+                        continuation.pending_expression = false;
+                    }
+
+                    text_value = std::move(continuation.merged_text);
+                    frame.text_merge_continuation.reset();
+                }
+                else
+                {
+                    frame.text_merge_continuation.reset();
                 }
 
                 if (normalize_identifier(statement.secondary_expression) == "additive")
@@ -8797,6 +8853,7 @@
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
                                 candidate.command_argument_continuation.reset();
+                                candidate.text_merge_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = scan_resume_pc;
@@ -8810,6 +8867,7 @@
                                 {
                                     stack[nested_index].expression_routine_return_pending = false;
                                     stack[nested_index].expression_continuation.reset();
+                                    stack[nested_index].text_merge_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -8857,6 +8915,7 @@
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
                                 candidate.command_argument_continuation.reset();
+                                candidate.text_merge_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = loop_resume_pc;
@@ -8870,6 +8929,7 @@
                                 {
                                     stack[nested_index].expression_routine_return_pending = false;
                                     stack[nested_index].expression_continuation.reset();
+                                    stack[nested_index].text_merge_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -8885,6 +8945,7 @@
                             candidate.expression_routine_return_pending = false;
                             candidate.expression_continuation.reset();
                             candidate.command_argument_continuation.reset();
+                            candidate.text_merge_continuation.reset();
                             if (!candidate.cases.empty())
                             {
                                 candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
@@ -8895,6 +8956,7 @@
                             {
                                 stack[nested_index].expression_routine_return_pending = false;
                                 stack[nested_index].expression_continuation.reset();
+                                stack[nested_index].text_merge_continuation.reset();
                                 stack[nested_index].loop_expression_continuation.reset();
                                 stack[nested_index].scan_expression_continuation.reset();
                             }
