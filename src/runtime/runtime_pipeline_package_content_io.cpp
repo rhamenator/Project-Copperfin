@@ -592,7 +592,13 @@ bool prepare_package_content_root(
         }
     }
     const DirectDirectoryState content_root_state =
+#if !defined(_WIN32)
+        content_root_ready
+        ? DirectDirectoryState::direct
+        : inspect_direct_directory(absolute_content_root);
+#else
         inspect_direct_directory(absolute_content_root);
+#endif
     if (content_root_state != DirectDirectoryState::direct) {
         error = content_root_state == DirectDirectoryState::rejected
             ? rejected_content_root(content_root)
