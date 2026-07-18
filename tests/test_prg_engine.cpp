@@ -711,6 +711,7 @@ void test_do_command_macro_target() {
     const fs::path main_path = temp_root / "do_macro_target.prg";
     write_text(
         main_path,
+        "PUBLIC nWorkerRan\n"
         "cProc = 'worker'\n"
         "cProcHolder = 'cProc'\n"
         "cProcDeepHolder = 'cProcHolder'\n"
@@ -926,6 +927,7 @@ void test_eval_macro_and_runtime_state_semantics() {
 
     write_text(
         temp_root / "macro_deep.prg",
+        "PUBLIC cParamResult\n"
         "cFieldExpr = 'cValue'\n"
         "cRowExpr = '1'\n"
         "cFieldExprHolder = 'cFieldExpr'\n"
