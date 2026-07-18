@@ -2441,14 +2441,20 @@ void test_foxtools_registration_and_call_bridge() {
     const fs::path main_path = temp_root / "foxtools.prg";
     write_text(
         main_path,
-        "SET LIBRARY TO 'Foxtools'\n"
+        "nLibraryPathCalls = 0\n"
+        "SET LIBRARY TO library_name('Foxtools')\n"
         "cFoxTools = FoxToolVer()\n"
         "nMain = MainHwnd()\n"
         "hPid = RegFn32('GetCurrentProcessId', '', 'I', 'kernel32.dll')\n"
         "nPid = CallFn(hPid)\n"
         "hLen = RegFn32('lstrlenA', 'C', 'I', 'kernel32.dll')\n"
         "nLen = CallFn(hLen, 'Copperfin')\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION library_name\n"
+        "LPARAMETERS value\n"
+        "nLibraryPathCalls = nLibraryPathCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -2462,6 +2468,7 @@ void test_foxtools_registration_and_call_bridge() {
     const auto pid = state.globals.find("npid");
     const auto hlen = state.globals.find("hlen");
     const auto length = state.globals.find("nlen");
+    const auto library_path_calls = state.globals.find("nlibrarypathcalls");
 
     expect(foxtools != state.globals.end(), "FoxToolVer() should be captured");
     expect(main != state.globals.end(), "MainHwnd() should be captured");
@@ -2469,6 +2476,11 @@ void test_foxtools_registration_and_call_bridge() {
     expect(pid != state.globals.end(), "CallFn(handle) should be captured");
     expect(hlen != state.globals.end(), "second RegFn32 handle should be captured");
     expect(length != state.globals.end(), "CallFn(string) should be captured");
+    expect(library_path_calls != state.globals.end(), "SET LIBRARY should preserve the designator resolver call counter");
+    if (library_path_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(library_path_calls->second) == "1",
+               "SET LIBRARY should evaluate the designator UDF exactly once");
+    }
 
     if (foxtools != state.globals.end()) {
         expect(!copperfin::runtime::format_value(foxtools->second).empty(), "FoxToolVer() should return a non-empty version string");

@@ -77,6 +77,7 @@
         std::optional<PrgValue> resumed_set_default_path_value;
         std::optional<PrgValue> resumed_set_datasession_value;
         std::optional<PrgValue> resumed_set_memowidth_value;
+        std::optional<PrgValue> resumed_set_library_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -546,6 +547,10 @@
                     {
                         resumed_set_memowidth_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::set_library)
+                    {
+                        resumed_set_library_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -609,6 +614,7 @@
                     !resumed_set_default_path_value.has_value() &&
                     !resumed_set_datasession_value.has_value() &&
                     !resumed_set_memowidth_value.has_value() &&
+                    !resumed_set_library_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -4755,7 +4761,15 @@
             }
             case StatementKind::set_library:
             {
-                const std::string library_name = normalize_identifier(value_as_string(evaluate_expression(statement.expression, frame)));
+                const auto library_value = resumed_set_library_value.has_value()
+                                                ? resumed_set_library_value
+                                                : evaluate_resumable_expression(frame, statement);
+                if (!library_value.has_value())
+                {
+                    return {};
+                }
+                const std::string library_name = normalize_identifier(value_as_string(*library_value));
+                resumed_set_library_value.reset();
                 if (!library_name.empty())
                 {
                     loaded_libraries.insert(library_name);
