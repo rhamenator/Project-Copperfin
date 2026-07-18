@@ -710,7 +710,9 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_runtime_surface_value
             test_prg_engine_rushmore_optimization
             test_prg_engine_seek_index
-            test_prg_engine_sql_cursors
+            test_prg_engine_sql_cursors_metadata
+            test_prg_engine_sql_cursors_mutation
+            test_prg_engine_sql_cursors_seek_and_order
             test_prg_engine_string_math_functions
             test_prg_engine_string_minus
             test_prg_engine_table_mutation
@@ -735,7 +737,9 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_database_lifecycle
             test_prg_engine_index_seek_optimization
             test_prg_engine_seek_index
-            test_prg_engine_sql_cursors
+            test_prg_engine_sql_cursors_metadata
+            test_prg_engine_sql_cursors_mutation
+            test_prg_engine_sql_cursors_seek_and_order
             test_prg_engine_string_minus
             test_prg_engine_table_structure)
         copperfin_set_test_isolation(${test_name}

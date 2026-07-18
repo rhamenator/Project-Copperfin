@@ -4682,8 +4682,18 @@ copperfin_add_test(test_prg_engine_date_time_functions cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
-copperfin_add_test(test_prg_engine_sql_cursors cf_xbase_runtime
-    test_prg_engine_sql_cursors.cpp
+copperfin_add_test(test_prg_engine_sql_cursors_metadata cf_xbase_runtime
+    test_prg_engine_sql_cursors_metadata.cpp
+    prg_engine_test_support.cpp
+)
+
+copperfin_add_test(test_prg_engine_sql_cursors_mutation cf_xbase_runtime
+    test_prg_engine_sql_cursors_mutation.cpp
+    prg_engine_test_support.cpp
+)
+
+copperfin_add_test(test_prg_engine_sql_cursors_seek_and_order cf_xbase_runtime
+    test_prg_engine_sql_cursors_seek_and_order.cpp
     prg_engine_test_support.cpp
 )
 
