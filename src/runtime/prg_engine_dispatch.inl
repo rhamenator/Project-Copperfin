@@ -56,6 +56,7 @@
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_with_target_value;
+        std::optional<PrgValue> resumed_throw_value;
         std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_call_argument_value;
@@ -459,6 +460,10 @@
                     {
                         resumed_with_target_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::throw_statement)
+                    {
+                        resumed_throw_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
                     {
@@ -487,6 +492,7 @@
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
+                    !resumed_throw_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
                     !resumed_spawn_argument_value.has_value() &&
                     !resumed_call_argument_value.has_value() &&
@@ -2962,7 +2968,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const PrgValue thrown_value = evaluate_expression(statement.expression, frame);
+                const auto thrown_value_result = resumed_throw_value.has_value()
+                                                     ? resumed_throw_value
+                                                     : evaluate_resumable_expression(frame, statement);
+                if (!thrown_value_result.has_value())
+                {
+                    return {};
+                }
+                const PrgValue thrown_value = *thrown_value_result;
                 last_error_message = runtime_text("Runtime.Prg.Core.Error.UserThrown");
                 last_error_code = 2071;
                 last_error_work_area = current_selected_work_area();

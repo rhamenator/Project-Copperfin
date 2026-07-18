@@ -1435,6 +1435,7 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
     const fs::path main_path = temp_root / "throw_exception_uservalue.prg";
     write_text(
         main_path,
+        "nThrowValueCalls = 0\n"
         "TRY\n"
         "  DO raiselegacy\n"
         "CATCH TO oErr\n"
@@ -1464,9 +1465,13 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
         "ENDTRY\n"
         "RETURN\n"
         "PROCEDURE raiselegacy\n"
-        "  THROW 42\n"
+        "  THROW make_throw_value()\n"
         "  RETURN\n"
-        "ENDPROC\n");
+        "ENDPROC\n"
+        "FUNCTION make_throw_value\n"
+        "  nThrowValueCalls = nThrowValueCalls + 1\n"
+        "  RETURN 42\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -1490,16 +1495,17 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
     check("ccatchmessage", "User Thrown Error.");
     check("ccatchdetails", "User Thrown Error.");
     check("ncatchuservalue", "42");
+    check("nthrowvaluecalls", "1");
     check("ccatchuservaluetype", "N");
     check("ccatchprocedure", "raiselegacy");
-    check("ccatchlinecontents", "THROW 42");
+    check("ccatchlinecontents", "THROW make_throw_value()");
     check("lcatchhasuservalue", "true");
     check("lcatchsameobject", "true");
     check("nerrrows", "1");
     check("cerrmsg", "User Thrown Error.");
     check("cerrparam", "42");
     check("cerrproc", "raiselegacy");
-    check("cerrstmt", "THROW 42");
+    check("cerrstmt", "THROW make_throw_value()");
     check("cfnmsg", "User Thrown Error.");
     check("cfnprog", "raiselegacy");
 
@@ -1516,15 +1522,15 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
     expect(fn_line != state.globals.end(), "LINENO() should expose thrown line");
 
     if (catch_line_no != state.globals.end()) {
-        expect(copperfin::runtime::format_value(catch_line_no->second) == "30",
+        expect(copperfin::runtime::format_value(catch_line_no->second) == "31",
                "caught THROW Exception LineNo should report the THROW statement line");
     }
     if (err_line != state.globals.end()) {
-        expect(copperfin::runtime::format_value(err_line->second) == "30",
+        expect(copperfin::runtime::format_value(err_line->second) == "31",
                "AERROR()[1,5] should report the THROW statement line");
     }
     if (fn_line != state.globals.end()) {
-        expect(copperfin::runtime::format_value(fn_line->second) == "30",
+        expect(copperfin::runtime::format_value(fn_line->second) == "31",
                "LINENO() should report the THROW statement line");
     }
     if (err_code != state.globals.end() && fn_code != state.globals.end()) {
