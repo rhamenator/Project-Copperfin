@@ -220,8 +220,14 @@ void test_copy_to_emits_event() {
     write_text(
         main_path,
         "USE '" + (temp_root / "source.dbf").string() + "'\n"
-        "COPY TO 'dest'\n"
-        "RETURN\n");
+        "nCopyToDestinationCalls = 0\n"
+        "COPY TO copy_to_destination('dest')\n"
+        "RETURN\n"
+        "FUNCTION copy_to_destination\n"
+        "LPARAMETERS value\n"
+        "nCopyToDestinationCalls = nCopyToDestinationCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -234,6 +240,12 @@ void test_copy_to_emits_event() {
             return ev.category == "runtime.copy_to";
         });
     expect(has_event, "COPY TO should emit a runtime.copy_to event");
+    const auto destination_calls = state.globals.find("ncopytodestinationcalls");
+    expect(destination_calls != state.globals.end(), "COPY TO should preserve the destination resolver call counter");
+    if (destination_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(destination_calls->second) == "1",
+               "COPY TO should evaluate the destination UDF exactly once");
+    }
 
     fs::remove_all(temp_root, ignored);
 }

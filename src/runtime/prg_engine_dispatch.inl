@@ -70,6 +70,7 @@
         std::optional<PrgValue> resumed_parameter_default_value;
         std::optional<PrgValue> resumed_copy_source_value;
         std::optional<PrgValue> resumed_copy_destination_value;
+        std::optional<PrgValue> resumed_copy_to_destination_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -509,6 +510,11 @@
                     {
                         resumed_rename_source_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::copy_to_command &&
+                             continued_statement.identifier != "array")
+                    {
+                        resumed_copy_to_destination_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -565,6 +571,7 @@
                     !resumed_parameter_default_value.has_value() &&
                     !resumed_copy_source_value.has_value() &&
                     !resumed_copy_destination_value.has_value() &&
+                    !resumed_copy_to_destination_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -6631,8 +6638,16 @@
                 // COPY STRUCTURE EXTENDED TO <dest> — emits VFP structure metadata rows
                 const bool is_structure_extended = (statement.identifier == "structure_extended");
                 const bool is_structure = (statement.identifier == "structure") || is_structure_extended;
+                const auto destination_value = resumed_copy_to_destination_value.has_value()
+                                                   ? resumed_copy_to_destination_value
+                                                   : evaluate_resumable_expression(frame, statement);
+                if (!destination_value.has_value())
+                {
+                    return {};
+                }
                 const std::string dest_raw = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                    value_as_string(*destination_value)));
+                resumed_copy_to_destination_value.reset();
                 const std::string copy_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
                 const bool copy_as_json = copy_type == "json";
                 const bool copy_as_sdf = copy_type == "sdf";
