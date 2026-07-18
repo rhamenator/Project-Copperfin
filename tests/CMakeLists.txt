@@ -4656,7 +4656,13 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow_error_handler_commands.cpp
     test_prg_engine_control_flow_error_handling_and_faults.cpp
     test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp
-    test_prg_engine_control_flow_routine_calls.cpp
+    test_prg_engine_control_flow_routine_calls_parameters.cpp
+    test_prg_engine_control_flow_routine_calls_continuations_01.cpp
+    test_prg_engine_control_flow_routine_calls_continuations_02.cpp
+    test_prg_engine_control_flow_routine_calls_array_parameters.cpp
+    test_prg_engine_control_flow_routine_calls_predicates_01.cpp
+    test_prg_engine_control_flow_routine_calls_predicates_02.cpp
+    test_prg_engine_control_flow_routine_calls_set_procedure.cpp
     prg_engine_test_support.cpp
 )
 
