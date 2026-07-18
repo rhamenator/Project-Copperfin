@@ -498,6 +498,16 @@ namespace copperfin::runtime
         {
         };
 
+        struct CommandArgumentContinuation
+        {
+            Statement statement;
+            std::string target;
+            std::vector<std::string> argument_expressions;
+            std::size_t next_argument_index = 0U;
+            std::vector<PrgValue> values;
+            std::vector<std::optional<std::string>> references;
+        };
+
         enum class LoopExpressionStage
         {
             for_start,
@@ -568,6 +578,7 @@ namespace copperfin::runtime
             bool return_pending = false;
             bool expression_routine_return_pending = false;
             std::optional<ExpressionContinuation> expression_continuation;
+            std::optional<CommandArgumentContinuation> command_argument_continuation;
             std::optional<LoopExpressionContinuation> loop_expression_continuation;
             std::optional<ScanExpressionContinuation> scan_expression_continuation;
             bool evaluate_conditional_else = false;
@@ -8035,6 +8046,7 @@ namespace copperfin::runtime
                             {
                                 stack.back().expression_routine_return_pending = false;
                                 stack.back().expression_continuation.reset();
+                                stack.back().command_argument_continuation.reset();
                                 stack.back().loop_expression_continuation.reset();
                                 stack.back().scan_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
@@ -8658,6 +8670,7 @@ namespace copperfin::runtime
                                 {
                                     stack.back().expression_routine_return_pending = false;
                                     stack.back().expression_continuation.reset();
+                                    stack.back().command_argument_continuation.reset();
                                     stack.back().loop_expression_continuation.reset();
                                     stack.back().scan_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);

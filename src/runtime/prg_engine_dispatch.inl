@@ -42,6 +42,7 @@
             {
                 frame.expression_routine_return_pending = false;
                 frame.expression_continuation.reset();
+                frame.command_argument_continuation.reset();
             }
         };
         std::optional<PrgValue> resumed_assignment_value;
@@ -54,6 +55,7 @@
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
+        std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -450,6 +452,11 @@
                     {
                         resumed_use_target_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::do_command &&
+                             frame.command_argument_continuation.has_value())
+                    {
+                        resumed_do_argument_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -462,6 +469,7 @@
                     !resumed_go_value.has_value() &&
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
+                    !resumed_do_argument_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -1605,45 +1613,84 @@
                 return {};
             case StatementKind::do_command:
             {
-                std::string target = trim_copy(statement.identifier);
-                if (!target.empty() && target.front() == '&')
+                if (!frame.command_argument_continuation.has_value())
                 {
-                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
-                    if (!expanded_target.empty())
+                    std::string target = trim_copy(statement.identifier);
+                    if (!target.empty() && target.front() == '&')
                     {
-                        target = expanded_target;
-                    }
-                }
-                std::vector<PrgValue> call_arguments;
-                std::vector<std::optional<std::string>> call_argument_references;
-                if (!trim_copy(statement.expression).empty())
-                {
-                    for (const std::string &raw_argument : split_csv_like(statement.expression))
-                    {
-                        const std::string argument_expression = trim_copy(raw_argument);
-                        if (!argument_expression.empty())
+                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                        if (!expanded_target.empty())
                         {
-                            if (argument_expression.front() == '@')
-                            {
-                                const std::string reference_name = trim_copy(argument_expression.substr(1U));
-                                if (is_memory_variable_reference_text(reference_name))
-                                {
-                                    call_arguments.push_back(lookup_variable(frame, reference_name));
-                                    call_argument_references.push_back(reference_name);
-                                    continue;
-                                }
-                            }
-                            if (is_memory_variable_reference_text(argument_expression))
-                            {
-                                call_arguments.push_back(lookup_variable(frame, argument_expression));
-                                call_argument_references.push_back(argument_expression);
-                                continue;
-                            }
-                            call_arguments.push_back(evaluate_expression(argument_expression, frame));
-                            call_argument_references.push_back(std::nullopt);
+                            target = expanded_target;
                         }
                     }
+                    frame.command_argument_continuation = CommandArgumentContinuation{
+                        .statement = statement,
+                        .target = std::move(target),
+                        .argument_expressions = split_csv_like(statement.expression),
+                        .next_argument_index = 0U,
+                        .values = {},
+                        .references = {}};
                 }
+
+                CommandArgumentContinuation &argument_continuation =
+                    *frame.command_argument_continuation;
+                while (argument_continuation.next_argument_index <
+                       argument_continuation.argument_expressions.size())
+                {
+                    const std::string argument_expression = trim_copy(
+                        argument_continuation.argument_expressions[argument_continuation.next_argument_index]);
+                    if (argument_expression.empty())
+                    {
+                        ++argument_continuation.next_argument_index;
+                        continue;
+                    }
+
+                    if (resumed_do_argument_value.has_value())
+                    {
+                        argument_continuation.values.push_back(*resumed_do_argument_value);
+                        argument_continuation.references.push_back(std::nullopt);
+                        resumed_do_argument_value.reset();
+                        ++argument_continuation.next_argument_index;
+                        continue;
+                    }
+
+                    if (argument_expression.front() == '@')
+                    {
+                        const std::string reference_name = trim_copy(argument_expression.substr(1U));
+                        if (is_memory_variable_reference_text(reference_name))
+                        {
+                            argument_continuation.values.push_back(lookup_variable(frame, reference_name));
+                            argument_continuation.references.push_back(reference_name);
+                            ++argument_continuation.next_argument_index;
+                            continue;
+                        }
+                    }
+                    if (is_memory_variable_reference_text(argument_expression))
+                    {
+                        argument_continuation.values.push_back(lookup_variable(frame, argument_expression));
+                        argument_continuation.references.push_back(argument_expression);
+                        ++argument_continuation.next_argument_index;
+                        continue;
+                    }
+
+                    Statement argument_statement = argument_continuation.statement;
+                    argument_statement.expression = argument_expression;
+                    const auto argument_value = evaluate_resumable_expression(frame, argument_statement);
+                    if (!argument_value.has_value())
+                    {
+                        return {};
+                    }
+                    argument_continuation.values.push_back(*argument_value);
+                    argument_continuation.references.push_back(std::nullopt);
+                    ++argument_continuation.next_argument_index;
+                }
+
+                std::string target = std::move(argument_continuation.target);
+                std::vector<PrgValue> call_arguments = std::move(argument_continuation.values);
+                std::vector<std::optional<std::string>> call_argument_references =
+                    std::move(argument_continuation.references);
+                frame.command_argument_continuation.reset();
                 Program &program = load_program(frame.file_path);
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
@@ -8632,6 +8679,7 @@
                                 candidate.scan_expression_continuation.reset();
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
+                                candidate.command_argument_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = scan_resume_pc;
@@ -8691,6 +8739,7 @@
                                 candidate.loop_expression_continuation.reset();
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
+                                candidate.command_argument_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = loop_resume_pc;
@@ -8718,6 +8767,7 @@
 
                             candidate.expression_routine_return_pending = false;
                             candidate.expression_continuation.reset();
+                            candidate.command_argument_continuation.reset();
                             if (!candidate.cases.empty())
                             {
                                 candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
