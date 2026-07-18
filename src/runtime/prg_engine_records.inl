@@ -62,7 +62,14 @@
 
             try
             {
-                const auto parse_in_subquery = [&]() -> std::optional<std::pair<std::string, std::string>>
+                struct InSubquery
+                {
+                    std::string left_expression;
+                    std::string subquery;
+                    bool negated = false;
+                };
+
+                const auto parse_in_subquery = [&]() -> std::optional<InSubquery>
                 {
                     const std::string upper_expression = uppercase_copy(trimmed_expression);
                     bool in_single_quote = false;
@@ -191,9 +198,19 @@
                                     (upper_subquery.size() == 6U ||
                                      !is_word_char(upper_subquery[6U])))
                                 {
-                                    return std::make_pair(
-                                        trim_copy(trimmed_expression.substr(0U, index)),
-                                        subquery);
+                                    std::string left_expression =
+                                        trim_copy(trimmed_expression.substr(0U, index));
+                                    bool negated = false;
+                                    const std::string upper_left_expression = uppercase_copy(left_expression);
+                                    if (upper_left_expression.size() >= 3U &&
+                                        upper_left_expression.compare(upper_left_expression.size() - 3U, 3U, "NOT") == 0 &&
+                                        (upper_left_expression.size() == 3U ||
+                                         !is_word_char(upper_left_expression[upper_left_expression.size() - 4U])))
+                                    {
+                                        left_expression = trim_copy(left_expression.substr(0U, left_expression.size() - 3U));
+                                        negated = true;
+                                    }
+                                    return InSubquery{std::move(left_expression), subquery, negated};
                                 }
                                 break;
                             }
@@ -204,7 +221,7 @@
 
                 if (const auto in_subquery = parse_in_subquery(); in_subquery.has_value())
                 {
-                    const PrgValue left_value = evaluate_expression(in_subquery->first, frame, cursor);
+                    const PrgValue left_value = evaluate_expression(in_subquery->left_expression, frame, cursor);
                     if (left_value.is_null)
                     {
                         restore_fields();
@@ -212,7 +229,7 @@
                     }
 
                     std::vector<std::vector<PrgValue>> rows;
-                    if (!materialize_select_query_rows(in_subquery->second, frame, rows))
+                    if (!materialize_select_query_rows(in_subquery->subquery, frame, rows))
                     {
                         throw std::runtime_error(last_error_message);
                     }
@@ -245,20 +262,26 @@
                         }
                         return value_as_string(left) == value_as_string(right);
                     };
+                    bool contains_null = false;
                     for (const auto &row : rows)
                     {
                         if (row.empty())
                         {
                             continue;
                         }
+                        if (row.front().is_null)
+                        {
+                            contains_null = true;
+                            continue;
+                        }
                         if (values_match(left_value, row.front()))
                         {
                             restore_fields();
-                            return true;
+                            return !in_subquery->negated;
                         }
                     }
                     restore_fields();
-                    return false;
+                    return in_subquery->negated && !contains_null;
                 }
 
                 const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);

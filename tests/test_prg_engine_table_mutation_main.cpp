@@ -41,6 +41,7 @@ int main()
     test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
     test_update_and_delete_accept_in_subquery_predicates();
+    test_update_and_delete_accept_not_in_subquery_predicates();
     test_sql_style_for_clauses_accept_macro_expressions();
     test_undo_reverts_latest_append_blank();
     test_undo_reverts_latest_delete_command();

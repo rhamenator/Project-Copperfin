@@ -563,6 +563,54 @@ void test_update_and_delete_accept_in_subquery_predicates() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_update_and_delete_accept_not_in_subquery_predicates() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_mutation_not_in_subquery";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path target_path = temp_root / "people.dbf";
+    const fs::path eligible_path = temp_root / "eligible.dbf";
+    write_people_dbf(target_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+    write_people_dbf(eligible_path, {{"THIRTY", 30}, {"FORTY", 40}});
+
+    const fs::path main_path = temp_root / "mutation_not_in_subquery.prg";
+    write_text(
+        main_path,
+        "USE '" + target_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + eligible_path.string() + "' ALIAS Eligible IN 0\n"
+        "UPDATE People SET NAME = 'OUTSIDE' WHERE AGE NOT IN (SELECT AGE FROM Eligible WHERE AGE >= 30)\n"
+        "UPDATE People SET NAME = 'NULLLEFT' WHERE .NULL. NOT IN (SELECT AGE FROM Eligible)\n"
+        "UPDATE People SET NAME = 'NULLRESULT' WHERE AGE NOT IN (SELECT .NULL. FROM Eligible)\n"
+        "DELETE FROM People WHERE AGE NOT IN (SELECT AGE FROM Eligible WHERE AGE >= 30)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, std::string("NOT IN mutation subquery script should complete: ") + state.message);
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 10U);
+    expect(parsed.ok, "NOT IN mutation fixture should remain readable");
+    if (parsed.ok && parsed.table.records.size() == 4U) {
+        expect(parsed.table.records[0].values[0].display_value == "OUTSIDE",
+               "UPDATE NOT IN should update a row absent from the subquery result");
+        expect(parsed.table.records[1].values[0].display_value == "OUTSIDE",
+               "UPDATE NOT IN should update every absent matching row");
+        expect(parsed.table.records[2].values[0].display_value == "CHARLIE",
+               "UPDATE NOT IN should preserve a row present in the subquery result");
+        expect(parsed.table.records[3].values[0].display_value == "DELTA",
+               "UPDATE NOT IN should preserve every row present in the subquery result");
+        expect(parsed.table.records[0].deleted && parsed.table.records[1].deleted,
+               "DELETE NOT IN should tombstone rows absent from the subquery result");
+        expect(!parsed.table.records[2].deleted && !parsed.table.records[3].deleted,
+               "DELETE NOT IN should preserve rows present in the subquery result");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_style_for_clauses_accept_macro_expressions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_style_for_macro";
