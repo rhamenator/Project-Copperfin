@@ -2001,6 +2001,84 @@ void test_update_command_sets_scoped_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_update_and_delete_accept_in_subquery_predicates() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_mutation_subquery";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path target_path = temp_root / "people.dbf";
+    const fs::path eligible_path = temp_root / "eligible.dbf";
+    write_people_dbf(target_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+    write_people_dbf(eligible_path, {{"THIRTY", 30}, {"FORTY", 40}});
+
+    const fs::path main_path = temp_root / "mutation_subquery.prg";
+    write_text(
+        main_path,
+        "USE '" + target_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + eligible_path.string() + "' ALIAS Eligible IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT AGE FROM Eligible WHERE AGE >= 30\"\n"
+        "oList.Requery()\n"
+        "nEligible = oList.ListCount\n"
+        "cEligibleFirst = oList.List(1, 1)\n"
+        "UPDATE People SET NAME = 'MATCH' WHERE AGE IN (SELECT AGE FROM Eligible WHERE AGE >= 30)\n"
+        "DELETE FROM People WHERE AGE IN (SELECT AGE FROM Eligible WHERE AGE = 40)\n"
+        "SELECT People\n"
+        "GO 3\n"
+        "cThirdName = NAME\n"
+        "GO 4\n"
+        "cFourthName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, std::string("mutation subquery script should complete: ") + state.message);
+
+    const auto third_name = state.globals.find("cthirdname");
+    const auto fourth_name = state.globals.find("cfourthname");
+    const auto eligible_count = state.globals.find("neligible");
+    expect(eligible_count != state.globals.end(), "mutation subquery should materialize the lookup query");
+    if (eligible_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eligible_count->second) == "2",
+               "mutation subquery lookup query should return eligible rows; got " +
+                   copperfin::runtime::format_value(eligible_count->second));
+    }
+    const auto eligible_first = state.globals.find("celigiblefirst");
+    expect(eligible_first != state.globals.end(), "mutation subquery should expose the first lookup value");
+    if (eligible_first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eligible_first->second) == "30",
+               "mutation subquery first lookup value should be 30; got " +
+                   copperfin::runtime::format_value(eligible_first->second));
+    }
+    expect(third_name != state.globals.end(), "UPDATE subquery should capture the third record");
+    expect(fourth_name != state.globals.end(), "DELETE subquery should capture the fourth record");
+    if (third_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(third_name->second) == "MATCH",
+               "UPDATE WHERE IN (SELECT ...) should update matching values; got " +
+                   copperfin::runtime::format_value(third_name->second));
+    }
+    if (fourth_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fourth_name->second) == "MATCH",
+               "DELETE FROM WHERE IN (SELECT ...) should run after UPDATE; got " +
+                   copperfin::runtime::format_value(fourth_name->second));
+    }
+
+    const auto parsed = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 10U);
+    expect(parsed.ok, "mutation subquery fixture should remain readable");
+    if (parsed.ok && parsed.table.records.size() == 4U) {
+        expect(parsed.table.records[2].values[0].display_value == "MATCH",
+               "UPDATE subquery should persist the third record change");
+        expect(parsed.table.records[3].deleted,
+               "DELETE FROM subquery should persist the fourth record tombstone");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_style_for_clauses_accept_macro_expressions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_style_for_macro";
@@ -3123,6 +3201,7 @@ int main() {
     test_append_blank_supports_opaque_field_layouts_at_runtime();
     test_cancel_rolls_back_active_transaction();
     test_update_command_sets_scoped_records();
+    test_update_and_delete_accept_in_subquery_predicates();
     test_sql_style_for_clauses_accept_macro_expressions();
     test_undo_reverts_latest_append_blank();
     test_undo_reverts_latest_delete_command();

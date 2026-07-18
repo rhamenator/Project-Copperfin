@@ -2034,17 +2034,13 @@ Program parse_program_impl(
                 }
                 statement.identifier = target;
                 const std::string update_tail = trim_copy(body.substr(set_position + 3U));
-                const std::size_t tail_start = find_first_keyword_top_level(update_tail, {"WHERE", "FOR", "WHILE", "IN"});
+                const std::size_t tail_start = find_first_keyword_top_level(update_tail, {"WHERE", "FOR", "WHILE"});
                 statement.expression = tail_start == std::string::npos ? update_tail : trim_copy(update_tail.substr(0U, tail_start));
-                statement.tertiary_expression = extract_command_clause(update_tail, "WHERE", {"FOR", "WHILE", "IN"});
+                statement.tertiary_expression = extract_command_clause(update_tail, "WHERE", {"FOR", "WHILE"});
                 if (statement.tertiary_expression.empty()) {
-                    statement.tertiary_expression = extract_command_clause(update_tail, "FOR", {"WHERE", "WHILE", "IN"});
+                    statement.tertiary_expression = extract_command_clause(update_tail, "FOR", {"WHERE", "WHILE"});
                 }
-                statement.quaternary_expression = extract_command_clause(update_tail, "WHILE", {"WHERE", "FOR", "IN"});
-                const std::string in_clause = extract_command_clause(update_tail, "IN", {"WHERE", "FOR", "WHILE"});
-                if (!in_clause.empty()) {
-                    statement.secondary_expression = in_clause;
-                }
+                statement.quaternary_expression = extract_command_clause(update_tail, "WHILE", {"WHERE", "FOR"});
             }
         } else if (starts_with_insensitive(line, "DELETE FROM ")) {
             statement.kind = StatementKind::delete_from_command;

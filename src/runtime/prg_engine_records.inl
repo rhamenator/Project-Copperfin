@@ -62,6 +62,205 @@
 
             try
             {
+                const auto parse_in_subquery = [&]() -> std::optional<std::pair<std::string, std::string>>
+                {
+                    const std::string upper_expression = uppercase_copy(trimmed_expression);
+                    bool in_single_quote = false;
+                    bool in_double_quote = false;
+                    int parentheses_depth = 0;
+                    const auto is_word_char = [](char current)
+                    {
+                        return std::isalnum(static_cast<unsigned char>(current)) != 0 || current == '_';
+                    };
+
+                    for (std::size_t index = 0U; index + 2U <= upper_expression.size(); ++index)
+                    {
+                        const char current = upper_expression[index];
+                        if (in_single_quote)
+                        {
+                            if (current == '\'' && index + 1U < upper_expression.size() &&
+                                upper_expression[index + 1U] == '\'')
+                            {
+                                ++index;
+                            }
+                            else if (current == '\'')
+                            {
+                                in_single_quote = false;
+                            }
+                            continue;
+                        }
+                        if (in_double_quote)
+                        {
+                            if (current == '"')
+                            {
+                                in_double_quote = false;
+                            }
+                            continue;
+                        }
+                        if (current == '\'')
+                        {
+                            in_single_quote = true;
+                            continue;
+                        }
+                        if (current == '"')
+                        {
+                            in_double_quote = true;
+                            continue;
+                        }
+                        if (current == '(')
+                        {
+                            ++parentheses_depth;
+                            continue;
+                        }
+                        if (current == ')')
+                        {
+                            if (parentheses_depth > 0)
+                            {
+                                --parentheses_depth;
+                            }
+                            continue;
+                        }
+                        if (parentheses_depth != 0 || upper_expression.compare(index, 2U, "IN") != 0 ||
+                            (index > 0U && is_word_char(upper_expression[index - 1U])) ||
+                            (index + 2U < upper_expression.size() && is_word_char(upper_expression[index + 2U])))
+                        {
+                            continue;
+                        }
+
+                        std::size_t subquery_start = index + 2U;
+                        while (subquery_start < trimmed_expression.size() &&
+                               std::isspace(static_cast<unsigned char>(trimmed_expression[subquery_start])) != 0)
+                        {
+                            ++subquery_start;
+                        }
+                        if (subquery_start >= trimmed_expression.size() ||
+                            trimmed_expression[subquery_start] != '(')
+                        {
+                            continue;
+                        }
+
+                        const std::size_t open_parenthesis = subquery_start++;
+                        int subquery_depth = 1;
+                        in_single_quote = false;
+                        in_double_quote = false;
+                        for (; subquery_start < trimmed_expression.size(); ++subquery_start)
+                        {
+                            const char subquery_character = trimmed_expression[subquery_start];
+                            if (in_single_quote)
+                            {
+                                if (subquery_character == '\'' && subquery_start + 1U < trimmed_expression.size() &&
+                                    trimmed_expression[subquery_start + 1U] == '\'')
+                                {
+                                    ++subquery_start;
+                                }
+                                else if (subquery_character == '\'')
+                                {
+                                    in_single_quote = false;
+                                }
+                                continue;
+                            }
+                            if (in_double_quote)
+                            {
+                                if (subquery_character == '"')
+                                {
+                                    in_double_quote = false;
+                                }
+                                continue;
+                            }
+                            if (subquery_character == '\'')
+                            {
+                                in_single_quote = true;
+                            }
+                            else if (subquery_character == '"')
+                            {
+                                in_double_quote = true;
+                            }
+                            else if (subquery_character == '(')
+                            {
+                                ++subquery_depth;
+                            }
+                            else if (subquery_character == ')' && --subquery_depth == 0)
+                            {
+                                const std::string trailing = trim_copy(
+                                    trimmed_expression.substr(subquery_start + 1U));
+                                const std::string subquery = trim_copy(
+                                    trimmed_expression.substr(open_parenthesis + 1U,
+                                                              subquery_start - open_parenthesis - 1U));
+                                const std::string upper_subquery = uppercase_copy(subquery);
+                                if (trailing.empty() && upper_subquery.rfind("SELECT", 0U) == 0U &&
+                                    (upper_subquery.size() == 6U ||
+                                     !is_word_char(upper_subquery[6U])))
+                                {
+                                    return std::make_pair(
+                                        trim_copy(trimmed_expression.substr(0U, index)),
+                                        subquery);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    return std::nullopt;
+                };
+
+                if (const auto in_subquery = parse_in_subquery(); in_subquery.has_value())
+                {
+                    const PrgValue left_value = evaluate_expression(in_subquery->first, frame, cursor);
+                    if (left_value.is_null)
+                    {
+                        restore_fields();
+                        return false;
+                    }
+
+                    std::vector<std::vector<PrgValue>> rows;
+                    if (!materialize_select_query_rows(in_subquery->second, frame, rows))
+                    {
+                        throw std::runtime_error(last_error_message);
+                    }
+                    const auto values_match = [&](const PrgValue &left, const PrgValue &right)
+                    {
+                        const auto is_numeric = [](PrgValueKind kind)
+                        {
+                            return kind == PrgValueKind::number || kind == PrgValueKind::int64 ||
+                                   kind == PrgValueKind::uint64 || kind == PrgValueKind::currency;
+                        };
+                        if (left.is_null || right.is_null)
+                        {
+                            return left.is_null && right.is_null;
+                        }
+                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            const std::string left_text = value_as_string(left);
+                            const std::string right_text = value_as_string(right);
+                            return is_set_enabled("exact")
+                                       ? rtrim_space_copy(left_text) == rtrim_space_copy(right_text)
+                                       : left_text.rfind(right_text, 0U) == 0U;
+                        }
+                        if (left.kind == PrgValueKind::boolean || right.kind == PrgValueKind::boolean)
+                        {
+                            return value_as_bool(left) == value_as_bool(right);
+                        }
+                        if (is_numeric(left.kind) && is_numeric(right.kind))
+                        {
+                            return std::abs(value_as_number(left) - value_as_number(right)) < 0.000001;
+                        }
+                        return value_as_string(left) == value_as_string(right);
+                    };
+                    for (const auto &row : rows)
+                    {
+                        if (row.empty())
+                        {
+                            continue;
+                        }
+                        if (values_match(left_value, row.front()))
+                        {
+                            restore_fields();
+                            return true;
+                        }
+                    }
+                    restore_fields();
+                    return false;
+                }
+
                 const PrgValue evaluated = evaluate_expression(trimmed_expression, frame, cursor);
                 if (evaluated.kind == PrgValueKind::string && trimmed_expression.front() == '&')
                 {
