@@ -983,6 +983,70 @@ void test_select_zero_and_use_in_zero_reuse_closed_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_select_zero_skips_occupied_watermark_areas() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_select_zero_occupied_watermark";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path first_path = temp_root / "first.dbf";
+    const fs::path second_path = temp_root / "second.dbf";
+    const fs::path third_path = temp_root / "third.dbf";
+    write_simple_dbf(first_path, {"FIRST"});
+    write_simple_dbf(second_path, {"SECOND"});
+    write_simple_dbf(third_path, {"THIRD"});
+
+    const fs::path main_path = temp_root / "select_zero_occupied_watermark.prg";
+    write_text(
+        main_path,
+        "USE '" + first_path.string() + "' ALIAS First IN 0\n"
+        "SELECT 0\n"
+        "USE '" + second_path.string() + "' ALIAS Second\n"
+        "SELECT 0\n"
+        "USE '" + third_path.string() + "' ALIAS Third\n"
+        "USE IN First\n"
+        "SELECT 0\n"
+        "nFirstSelected = SELECT()\n"
+        "SELECT 0\n"
+        "nSecondSelected = SELECT()\n"
+        "cSecondAlias = ALIAS('Second')\n"
+        "cThirdAlias = ALIAS('Third')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SELECT(0) occupied-watermark script should complete");
+
+    const auto first_selected = state.globals.find("nfirstselected");
+    const auto second_selected = state.globals.find("nsecondselected");
+    const auto second_alias = state.globals.find("csecondalias");
+    const auto third_alias = state.globals.find("cthirdalias");
+    expect(first_selected != state.globals.end(), "first SELECT 0 result should be captured");
+    expect(second_selected != state.globals.end(), "second SELECT 0 result should be captured");
+    expect(second_alias != state.globals.end(), "occupied second work-area alias should remain readable");
+    expect(third_alias != state.globals.end(), "occupied third work-area alias should remain readable");
+    if (first_selected != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_selected->second) == "1",
+               "SELECT 0 should first reuse the lowest freed work area");
+    }
+    if (second_selected != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_selected->second) == "4",
+               "SELECT 0 should skip occupied work areas after the allocation watermark");
+    }
+    if (second_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second_alias->second) == "Second",
+               "SELECT(0) should not replace the occupied second work area");
+    }
+    if (third_alias != state.globals.end()) {
+        expect(copperfin::runtime::format_value(third_alias->second) == "Third",
+               "SELECT(0) should not replace the occupied third work area");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_go_and_skip_cursor_navigation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_navigation";
@@ -1804,6 +1868,7 @@ int main() {
     test_select_and_use_in_designator_expressions();
     test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();
+    test_select_zero_skips_occupied_watermark_areas();
     test_go_and_skip_cursor_navigation();
     test_skip_delta_uses_heap_backed_frame_continuations();
     test_go_record_expression_uses_heap_backed_frame_continuations();

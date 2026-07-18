@@ -4,7 +4,13 @@
 
         int next_available_work_area() const
         {
-            return std::max(1, current_session_state().next_work_area);
+            const auto &session = current_session_state();
+            int candidate = std::max(1, session.next_work_area);
+            while (session.cursors.contains(candidate))
+            {
+                ++candidate;
+            }
+            return candidate;
         }
 
         int allocate_work_area()
