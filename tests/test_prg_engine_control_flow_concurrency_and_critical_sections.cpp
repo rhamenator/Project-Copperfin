@@ -193,13 +193,19 @@ void test_spawn_and_await_command_runs_task_to_completion() {
     const fs::path main_path = temp_root / "spawn_await_test.prg";
     write_text(
         main_path,
+        "nAwaitResolveCalls = 0\n"
         "PROCEDURE worker\n"
         "    SLEEP 1\n"
         "    RETURN\n"
         "ENDPROC\n"
         "SPAWN worker TO nTask\n"
-        "AWAIT nTask TO lDone\n"
-        "RETURN\n");
+        "AWAIT resolve_task_handle(nTask) TO lDone\n"
+        "RETURN\n"
+        "FUNCTION resolve_task_handle\n"
+        "LPARAMETERS value\n"
+        "nAwaitResolveCalls = nAwaitResolveCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -232,6 +238,12 @@ void test_spawn_and_await_command_runs_task_to_completion() {
     }
     if (done_it != state.globals.end()) {
         expect(done_it->second.boolean_value, "AWAIT should report a completed task");
+    }
+    const auto resolve_calls_it = state.globals.find("nawaitresolvecalls");
+    expect(resolve_calls_it != state.globals.end(), "AWAIT should preserve the handle resolver call counter");
+    if (resolve_calls_it != state.globals.end()) {
+        expect(copperfin::runtime::format_value(resolve_calls_it->second) == "1",
+               "AWAIT should evaluate the UDF-produced handle exactly once");
     }
 
     fs::remove_all(temp_root, ignored);

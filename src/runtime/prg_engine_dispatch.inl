@@ -58,6 +58,7 @@
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_open_database_target_value;
+        std::optional<PrgValue> resumed_await_handle_value;
         std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_throw_value;
         std::optional<PrgValue> resumed_textmerge_value;
@@ -465,6 +466,10 @@
                     {
                         resumed_open_database_target_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::await_command)
+                    {
+                        resumed_await_handle_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -512,6 +517,7 @@
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
                     !resumed_open_database_target_value.has_value() &&
+                    !resumed_await_handle_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
                     !resumed_throw_value.has_value() &&
                     !resumed_textmerge_value.has_value() &&
@@ -2067,7 +2073,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                const int handle = static_cast<int>(std::llround(value_as_number(evaluate_expression(handle_text, frame))));
+                const auto handle_value = resumed_await_handle_value.has_value()
+                                              ? resumed_await_handle_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!handle_value.has_value())
+                {
+                    return {};
+                }
+                const int handle = static_cast<int>(std::llround(value_as_number(*handle_value)));
                 const std::shared_ptr<AsyncTaskState> task = find_async_task(handle);
                 if (task == nullptr)
                 {
