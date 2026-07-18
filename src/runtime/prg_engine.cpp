@@ -23,6 +23,7 @@
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
+#include "copperfin/vfp/sidecar_path.h"
 
 #include <algorithm>
 #include <atomic>
@@ -1033,6 +1034,7 @@ namespace copperfin::runtime
         std::vector<std::pair<const CursorState *, const vfp::DbfRecord *>> record_evaluation_overrides;
 
 #include "prg_engine_session.inl"
+#include "prg_engine_xasset_security.inl"
 #include "prg_engine_cursor.inl"
 #include "prg_engine_records.inl"
 #include "prg_engine_index_seek.inl"
@@ -8419,11 +8421,25 @@ namespace copperfin::runtime
         const std::string &asset_path,
         bool include_read_events)
     {
+        std::filesystem::path snapshot_root;
+        const auto snapshot_path = materialize_verified_xasset_snapshot(
+            copperfin::platform::path_from_utf8_string(asset_path),
+            snapshot_root);
+        if (!snapshot_path.has_value())
+        {
+            return std::nullopt;
+        }
+
         studio::StudioOpenRequest request;
-        request.path = asset_path;
+        request.path = copperfin::platform::path_to_utf8_string(*snapshot_path);
         request.read_only = true;
         request.load_full_table = true;
         const auto open_result = studio::open_document(request);
+        std::error_code ignored;
+        if (!snapshot_root.empty())
+        {
+            std::filesystem::remove_all(snapshot_root, ignored);
+        }
         if (!open_result.ok)
         {
             last_error_message = open_result.error;

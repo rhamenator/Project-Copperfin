@@ -1205,6 +1205,15 @@ bool packaged_database_component_extension(const std::filesystem::path& path) {
     return extension == ".dbc" || extension == ".dct" || extension == ".dcx";
 }
 
+bool packaged_xasset_extension(const std::filesystem::path& path) {
+    const std::string extension = lowercase_copy(path.extension().string());
+    return extension == ".scx" || extension == ".sct" ||
+           extension == ".vcx" || extension == ".vct" ||
+           extension == ".frx" || extension == ".frt" ||
+           extension == ".lbx" || extension == ".lbt" ||
+           extension == ".mnx" || extension == ".mnt";
+}
+
 std::optional<std::filesystem::path> bind_packaged_path(
     const std::string& manifest_value,
     const std::string& recorded_package_root,
@@ -3237,9 +3246,10 @@ int main(int argc, char** argv) {
                 const auto& source_path = verified_path.containment.canonical_path;
                 const bool source_text = packaged_source_text_extension(source_path);
                 const bool database_component = packaged_database_component_extension(source_path);
-                if ((!source_text && !database_component) ||
+                const bool xasset = packaged_xasset_extension(source_path);
+                if ((!source_text && !database_component && !xasset) ||
                     (source_text && verified_source_texts.contains(source_path.string())) ||
-                    (database_component && verified_file_bytes.contains(source_path.string()))) {
+                    ((database_component || xasset) && verified_file_bytes.contains(source_path.string()))) {
                     continue;
                 }
                 const auto source_snapshot =
@@ -3271,6 +3281,15 @@ int main(int argc, char** argv) {
                         source_snapshot.bytes);
                 }
                 if (database_component) {
+                    add_verified_deployment_bytes(
+                        verified_file_bytes,
+                        source_path,
+                        manifest_directory,
+                        current_identity.canonical_path,
+                        startup_source,
+                        source_snapshot.bytes);
+                }
+                if (xasset) {
                     add_verified_deployment_bytes(
                         verified_file_bytes,
                         source_path,

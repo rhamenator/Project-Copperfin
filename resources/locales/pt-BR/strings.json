@@ -1403,6 +1403,7 @@
   "Runtime.Prg.Core.Error.RuntimeFault": "Falha de runtime: {detail}",
   "Runtime.Prg.Core.Error.UserThrown": "Erro gerado pelo usuario.",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Falha de runtime: excecao desconhecida",
+  "Runtime.Prg.Core.Error.VerifiedBytesUnavailable": "Os bytes verificados do pacote nao estao disponiveis para o xAsset: {path}",
   "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "Nao foi possivel materializar o bootstrap xAsset para: {path}",
   "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset": "Nenhum metodo de inicializacao executavel foi encontrado no asset: {path}",
   "Runtime.Prg.Session.Message.BreakpointHit": "Um breakpoint foi atingido.",

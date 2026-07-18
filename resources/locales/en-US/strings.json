@@ -903,6 +903,7 @@
   "Runtime.Prg.Core.Error.RuntimeFault": "Runtime fault: {detail}",
   "Runtime.Prg.Core.Error.UserThrown": "User Thrown Error.",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Runtime fault: unknown exception",
+  "Runtime.Prg.Core.Error.VerifiedBytesUnavailable": "Verified package bytes are unavailable for xAsset: {path}",
   "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "Unable to materialize xAsset bootstrap for: {path}",
   "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset": "No runnable startup methods were found in asset: {path}",
   "Runtime.Prg.Session.Message.BreakpointHit": "Breakpoint hit.",

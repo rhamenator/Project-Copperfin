@@ -1475,11 +1475,25 @@
                 return {.ok = false, .message = last_error_message};
             }
 
+            std::filesystem::path snapshot_root;
+            const auto snapshot_path = materialize_verified_xasset_snapshot(asset_path, snapshot_root);
+            if (!snapshot_path.has_value())
+            {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
+
             studio::StudioOpenRequest request;
-            request.path = copperfin::platform::path_to_utf8_string(asset_path);
+            request.path = copperfin::platform::path_to_utf8_string(*snapshot_path);
             request.read_only = true;
             request.load_full_table = true;
             const auto open_result = studio::open_document(request);
+            std::error_code ignored;
+            if (!snapshot_root.empty())
+            {
+                std::filesystem::remove_all(snapshot_root, ignored);
+            }
             if (!open_result.ok)
             {
                 last_error_message = open_result.error;

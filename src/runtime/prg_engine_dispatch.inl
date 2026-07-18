@@ -2487,6 +2487,12 @@
                         }
                         push_main_frame(*bootstrap_path);
                     }
+                    else if (!last_error_message.empty())
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                 }
                 return {};
             }
