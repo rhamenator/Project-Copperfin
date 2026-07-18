@@ -7402,7 +7402,7 @@
                         // Determine dest fields order (filtered by FIELDS clause)
                         const std::vector<std::string> field_filter =
                             parse_field_filter_clause(statement.tertiary_expression);
-                        const auto dest_result = vfp::parse_dbf_table_from_file(
+                        const auto dest_result = parse_table_path(
                             cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                         if (!dest_result.ok)
                         {

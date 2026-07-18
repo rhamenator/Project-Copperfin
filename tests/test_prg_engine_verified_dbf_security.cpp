@@ -265,6 +265,56 @@ void test_buffered_append_blank_reads_verified_dbf_rows()
     fs::remove_all(root, ignored);
 }
 
+void test_append_from_array_reads_verified_destination_schema()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_append_from_array";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    const auto verified_created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 12U}, {.name = "AGE", .type = 'N', .length = 3U}},
+        {{"Existing", "7"}});
+    expect(verified_created.ok, "verified APPEND FROM ARRAY destination fixture should be created");
+    const std::string verified_bytes = read_text(table_path);
+    const auto tampered_created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "AGE", .type = 'N', .length = 3U}, {.name = "NAME", .type = 'C', .length = 12U}},
+        {{"99", "Tampered"}});
+    expect(tampered_created.ok, "tampered APPEND FROM ARRAY destination fixture should remain valid");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_append_from_array.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "DIMENSION aRows[1,2]\n"
+        "aRows[1,1] = 'Grace'\n"
+        "aRows[1,2] = 42\n"
+        "APPEND FROM ARRAY aRows\n"
+        "nRows = RECCOUNT('customers')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict APPEND FROM ARRAY should use the verified destination schema: " + state.message);
+    expect(global_text(state, "nrows") == "2",
+           "strict APPEND FROM ARRAY should append one row to the verified destination count");
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok && persisted.table.records.size() == 2U,
+           "strict APPEND FROM ARRAY should persist the appended row");
+    if (persisted.ok && persisted.table.records.size() == 2U && persisted.table.records[1].values.size() == 2U)
+    {
+        expect(persisted.table.records[1].values[0].display_value == "42" &&
+                   persisted.table.records[1].values[1].display_value == "Grace",
+               "strict APPEND FROM ARRAY should map values using the verified field order");
+    }
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
@@ -275,5 +325,6 @@ int main()
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
     test_buffered_append_blank_reads_verified_dbf_rows();
+    test_append_from_array_reads_verified_destination_schema();
     return test_failures() == 0 ? 0 : 1;
 }
