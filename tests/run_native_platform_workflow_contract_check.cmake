@@ -329,6 +329,9 @@ require_text("CMakeLists.txt"
     "copperfin_studio_managed"
     "Windows managed Studio install target")
 require_text("CMakeLists.txt"
+    "MAP_IMPORTED_CONFIG_MINSIZEREL"
+    "Windows managed Studio MinSizeRel mapping")
+require_text("CMakeLists.txt"
     "CMAKE_SIZEOF_VOID_P must be 8"
     "Windows x64 pointer-size failure")
 require_text("CMakeLists.txt"

@@ -503,6 +503,8 @@ if(WIN32)
             "${CMAKE_SOURCE_DIR}/vsix/Copperfin.Studio/bin/RelWithDebInfo/net472/Copperfin.Studio.exe"
         IMPORTED_LOCATION_RELEASE
             "${CMAKE_SOURCE_DIR}/vsix/Copperfin.Studio/bin/Release/net472/Copperfin.Studio.exe"
+        MAP_IMPORTED_CONFIG_MINSIZEREL
+            Release
     )
     install(FILES
         "$<TARGET_FILE:copperfin_studio_managed>"
