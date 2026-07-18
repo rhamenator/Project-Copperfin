@@ -7,6 +7,24 @@
 namespace cf_test_visual_asset_editor {
 int failures = 0;
 
+const copperfin::vfp::VisualObjectPropertySnapshot* find_property_snapshot(
+    const std::vector<copperfin::vfp::VisualObjectPropertySnapshot>& properties,
+    const std::string& property_name) {
+    const auto value = std::find_if(properties.begin(), properties.end(), [&](const auto& candidate) {
+        return candidate.property_name == property_name;
+    });
+    return value == properties.end() ? nullptr : &(*value);
+}
+
+const copperfin::vfp::VisualObjectMethodSnapshot* find_method_snapshot(
+    const std::vector<copperfin::vfp::VisualObjectMethodSnapshot>& methods,
+    const std::string& method_name) {
+    const auto value = std::find_if(methods.begin(), methods.end(), [&](const auto& candidate) {
+        return candidate.method_name == method_name;
+    });
+    return value == methods.end() ? nullptr : &(*value);
+}
+
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";

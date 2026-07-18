@@ -4229,7 +4229,14 @@ copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor.cpp
     test_visual_asset_editor_shared_test_helpers.cpp
     test_visual_asset_editor_raw_preservation.cpp
-    test_visual_asset_editor_object_lifecycle.cpp
+    test_visual_asset_editor_object_lifecycle_properties_01.cpp
+    test_visual_asset_editor_object_lifecycle_properties_02.cpp
+    test_visual_asset_editor_object_lifecycle_create_duplicate.cpp
+    test_visual_asset_editor_object_lifecycle_hierarchy.cpp
+    test_visual_asset_editor_object_lifecycle_geometry_01.cpp
+    test_visual_asset_editor_object_lifecycle_geometry_02.cpp
+    test_visual_asset_editor_object_lifecycle_identity_01.cpp
+    test_visual_asset_editor_object_lifecycle_identity_02.cpp
     test_visual_asset_editor_methods.cpp
     test_visual_asset_editor_properties.cpp
     test_visual_asset_editor_hierarchy_and_listing.cpp
