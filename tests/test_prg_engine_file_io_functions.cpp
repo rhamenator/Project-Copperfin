@@ -77,6 +77,15 @@ void test_file_io_runtime_functions()
         "nCloseSharedReadWrite = FCLOSE(hSharedReadWrite)\n"
         "cSharedReadWrite = FILETOSTR('shared-read-write.txt')\n"
         "hMissing = FOPEN('missing/does-not-exist.txt', 0)\n"
+        "nMissingError = FERROR()\n"
+        "hErrorReset = FOPEN('rw.txt', 0)\n"
+        "nResetError = FERROR()\n"
+        "nInvalidRead = FREAD(-999, 1)\n"
+        "nInvalidHandleError = FERROR()\n"
+        "hSeekError = FOPEN('rw.txt', 0)\n"
+        "nBadSeek = FSEEK(hSeekError, -1, 0)\n"
+        "nSeekError = FERROR()\n"
+        "nCloseSeekError = FCLOSE(hSeekError)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -134,6 +143,10 @@ void test_file_io_runtime_functions()
     check("nclosesharedreadwrite", "0");
     check("csharedreadwrite", "both");
     check("hmissing", "-1");
+    check("nmissingerror", "2");
+    check("nreseterror", "0");
+    check("ninvalidhandleerror", "6");
+    check("nseekerror", "25");
 
     fs::remove_all(temp_root, ignored);
 }

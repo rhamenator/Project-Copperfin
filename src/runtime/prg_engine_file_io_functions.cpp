@@ -100,6 +100,43 @@ OpenFileHandle* resolve_open_handle(int handle) {
     return found == handles.end() ? nullptr : &found->second;
 }
 
+int& last_file_error_code() {
+    static int error_code = 0;
+    return error_code;
+}
+
+void clear_file_error() {
+    last_file_error_code() = 0;
+}
+
+void set_file_error_from_errno(int fallback_code = 31) {
+    switch (errno) {
+    case ENOENT:
+        last_file_error_code() = 2;
+        break;
+    case EMFILE:
+    case ENFILE:
+        last_file_error_code() = 4;
+        break;
+    case EACCES:
+    case EPERM:
+        last_file_error_code() = 5;
+        break;
+    case EBADF:
+        last_file_error_code() = 6;
+        break;
+    case ENOMEM:
+        last_file_error_code() = 8;
+        break;
+    case ENOSPC:
+        last_file_error_code() = 29;
+        break;
+    default:
+        last_file_error_code() = fallback_code;
+        break;
+    }
+}
+
 std::string fopen_mode_from_value(const PrgValue& mode_value) {
     if (mode_value.kind == PrgValueKind::string) {
         const std::string raw_mode = trim_copy(value_as_string(mode_value));
@@ -148,6 +185,10 @@ std::optional<PrgValue> evaluate_file_io_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::string& default_directory) {
+    if (function == "ferror" && arguments.empty()) {
+        return make_number_value(static_cast<double>(last_file_error_code()));
+    }
+
     if (function == "fopen" && !arguments.empty()) {
         const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
         const std::string mode = arguments.size() >= 2U ? fopen_mode_from_value(arguments[1]) : std::string{"rb"};
@@ -161,11 +202,13 @@ std::optional<PrgValue> evaluate_file_io_function(
             opened = open_file_utf8(path, "wb+");
         }
         if (opened == nullptr) {
+            set_file_error_from_errno();
             return make_number_value(-1.0);
         }
 
         const int handle = next_file_handle_id()++;
         open_file_handles()[handle] = OpenFileHandle{.file = opened, .path = path};
+        clear_file_error();
         return make_number_value(static_cast<double>(handle));
     }
 
@@ -173,11 +216,17 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
         const int result = std::fclose(opened->file);
         open_file_handles().erase(handle);
+        if (result == 0) {
+            clear_file_error();
+        } else {
+            set_file_error_from_errno();
+        }
         return make_number_value(result == 0 ? 0.0 : -1.0);
     }
 
@@ -185,17 +234,24 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_string_value(std::string{});
         }
 
         const std::size_t requested = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
         std::string buffer(requested, '\0');
         if (requested == 0U) {
+            clear_file_error();
             return make_string_value(std::string{});
         }
 
         const std::size_t read = std::fread(buffer.data(), 1U, requested, opened->file);
         buffer.resize(read);
+        if (std::ferror(opened->file) != 0) {
+            set_file_error_from_errno();
+        } else {
+            clear_file_error();
+        }
         return make_string_value(std::move(buffer));
     }
 
@@ -203,6 +259,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
@@ -215,6 +272,11 @@ std::optional<PrgValue> evaluate_file_io_function(
         }
 
         const std::size_t written = std::fwrite(text.data(), 1U, text.size(), opened->file);
+        if (written == text.size()) {
+            clear_file_error();
+        } else {
+            set_file_error_from_errno();
+        }
         return make_number_value(static_cast<double>(written));
     }
 
@@ -222,6 +284,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_string_value(std::string{});
         }
 
@@ -230,10 +293,16 @@ std::optional<PrgValue> evaluate_file_io_function(
                                            : 4096U;
         std::string buffer(max_length + 1U, '\0');
         if (std::fgets(buffer.data(), static_cast<int>(buffer.size()), opened->file) == nullptr) {
+            if (std::ferror(opened->file) != 0) {
+                set_file_error_from_errno();
+            } else {
+                clear_file_error();
+            }
             return make_string_value(std::string{});
         }
 
         buffer.resize(std::strlen(buffer.c_str()));
+        clear_file_error();
         return make_string_value(trim_newline(std::move(buffer)));
     }
 
@@ -241,6 +310,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
@@ -254,6 +324,11 @@ std::optional<PrgValue> evaluate_file_io_function(
         text.push_back('\n');
 
         const std::size_t written = std::fwrite(text.data(), 1U, text.size(), opened->file);
+        if (written == text.size()) {
+            clear_file_error();
+        } else {
+            set_file_error_from_errno();
+        }
         return make_number_value(static_cast<double>(written));
     }
 
@@ -261,6 +336,7 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
@@ -274,9 +350,15 @@ std::optional<PrgValue> evaluate_file_io_function(
         }
 
         if (std::fseek(opened->file, offset, origin) != 0) {
+            set_file_error_from_errno(25);
             return make_number_value(-1.0);
         }
         const long position = std::ftell(opened->file);
+        if (position < 0) {
+            set_file_error_from_errno();
+        } else {
+            clear_file_error();
+        }
         return make_number_value(position < 0 ? -1.0 : static_cast<double>(position));
     }
 
@@ -284,10 +366,16 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
         const long position = std::ftell(opened->file);
+        if (position < 0) {
+            set_file_error_from_errno();
+        } else {
+            clear_file_error();
+        }
         return make_number_value(position < 0 ? -1.0 : static_cast<double>(position));
     }
 
@@ -295,9 +383,11 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_boolean_value(true);
         }
 
+        clear_file_error();
         return make_boolean_value(std::feof(opened->file) != 0);
     }
 
@@ -305,16 +395,24 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
-        return make_number_value(std::fflush(opened->file) == 0 ? 0.0 : -1.0);
+        const int result = std::fflush(opened->file);
+        if (result == 0) {
+            clear_file_error();
+        } else {
+            set_file_error_from_errno();
+        }
+        return make_number_value(result == 0 ? 0.0 : -1.0);
     }
 
     if (function == "fchsize" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
         if (opened == nullptr || opened->file == nullptr) {
+            last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
 
@@ -327,16 +425,23 @@ std::optional<PrgValue> evaluate_file_io_function(
         const int fd = fileno(opened->file);
         const int result = fd >= 0 ? ftruncate(fd, static_cast<off_t>(requested_size)) : -1;
 #endif
+        if (result == 0) {
+            clear_file_error();
+        } else {
+            set_file_error_from_errno();
+        }
         return make_number_value(result == 0 ? 0.0 : -1.0);
     }
 
     if (function == "filetostr" && !arguments.empty()) {
         std::ifstream input(resolve_file_path(value_as_string(arguments[0]), default_directory), std::ios::binary);
         if (!input.good()) {
+            set_file_error_from_errno();
             return make_string_value(std::string{});
         }
 
         std::string content((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+        clear_file_error();
         return make_string_value(std::move(content));
     }
 
@@ -352,15 +457,18 @@ std::optional<PrgValue> evaluate_file_io_function(
             path,
             std::ios::binary | (additive ? std::ios::app : std::ios::trunc));
         if (!output.good()) {
+            set_file_error_from_errno();
             return make_number_value(-1.0);
         }
 
         const std::string text = value_as_string(arguments[0]);
         output.write(text.data(), static_cast<std::streamsize>(text.size()));
         if (!output.good()) {
+            set_file_error_from_errno();
             return make_number_value(-1.0);
         }
 
+        clear_file_error();
         return make_number_value(static_cast<double>(text.size()));
     }
 
@@ -376,6 +484,7 @@ void close_all_file_io_handles() {
         }
     }
     handles.clear();
+    clear_file_error();
 }
 
 }  // namespace copperfin::runtime
