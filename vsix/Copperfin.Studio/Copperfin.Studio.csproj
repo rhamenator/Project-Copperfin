@@ -14,12 +14,14 @@
 
   <ItemGroup>
     <Reference Include="System.Design" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="CopperfinDocumentPathIdentity.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinExternalLocaleCatalog.cs" Link="Shared\CopperfinExternalLocaleCatalog.cs" />
     <Compile Include="StudioMainForm.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.cs" Link="Shared\CopperfinAssetEditorControl.cs" />

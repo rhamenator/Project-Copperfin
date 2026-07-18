@@ -1,0 +1,55 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+using System;
+using System.IO;
+
+namespace Copperfin.VisualStudio;
+
+internal static partial class Program
+{
+    private static void TestLocalizationCatalogUsesInstalledSharedCatalogs()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "shared localization catalog test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var catalogRoot = Path.Combine(repositoryRoot, "resources", "locales");
+        var spanish = new CopperfinLocalization("es-419", catalogRoot);
+        Expect(spanish.Text("Studio.OpenDialogTitle") == "Abrir activo de Copperfin",
+            "standalone Studio should consume the installed Spanish shared catalog");
+
+        var temporaryRoot = Path.Combine(Path.GetTempPath(), "copperfin-managed-catalog-test-" + Guid.NewGuid().ToString("N"));
+        var temporaryLocale = Path.Combine(temporaryRoot, "es-419");
+        Directory.CreateDirectory(temporaryLocale);
+        var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        var previousDirectory = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(temporaryLocale, "strings.json"),
+                "{\"Studio.OpenDialogTitle\":\"Installed catalog override\"}");
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", "es-419");
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE_DIR", temporaryRoot);
+            var fromEnvironment = CopperfinLocalization.FromEnvironment();
+            Expect(fromEnvironment.Text("Studio.OpenDialogTitle") == "Installed catalog override",
+                "COPPERFIN_LOCALE should select managed localization when UI locale is unset");
+            Expect(fromEnvironment.Text("Studio.OpenMenu") == "&Abrir...",
+                "partial installed catalogs should retain the compiled localized fallback");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE_DIR", previousDirectory);
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
+}

@@ -24,7 +24,7 @@ Localized text must be separated from stable protocol values:
 
 The portable C++ catalog lives under `resources/locales/<locale>/strings.json` and installs to `share/copperfin/locales`. The first C++ surface routed through it is `copperfin_inspect` usage text; machine-readable inspection fields remain invariant.
 
-The existing .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings, catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, plus the embedded VSIX asset editor title/subtitle/guidance/Open/Reveal/Refresh chrome, host-mode subtitles, project workspace tab labels, Hide project records object-browser option, project command buttons, debugger controls, initial status/guidance strings, project workspace placeholder pane text, explorer list column headers, static asset-family guidance text, snapshot unavailable/loaded status text, undo labels and status text, undo-available suffixes, property update status text, and static launch/workflow dialog text. It is linked into:
+The .NET UI catalog is compiled into `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs` for fallback and synchronized into the shared `resources/locales/<locale>/strings.json` catalogs by `tools/Copperfin.LocalizationCatalogGenerator`. Standalone Studio loads the installed shared catalogs first and falls back to the compiled catalog when a file is unavailable or a key is absent. `COPPERFIN_UI_LOCALE` takes precedence over `COPPERFIN_LOCALE`; `--locale` takes precedence over both in standalone Studio; and `COPPERFIN_LOCALE_DIR` overrides catalog discovery. The managed catalog parity check runs from `tests/run_managed_compile_check.cmake` so new managed keys cannot silently bypass the shared resource set. The catalog covers the standalone Studio shell strings, catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, plus the embedded VSIX asset editor title/subtitle/guidance/Open/Reveal/Refresh chrome, host-mode subtitles, project workspace tab labels, Hide project records object-browser option, project command buttons, debugger controls, initial status/guidance strings, project workspace placeholder pane text, explorer list column headers, static asset-family guidance text, snapshot unavailable/loaded status text, undo labels and status text, undo-available suffixes, property update status text, and static launch/workflow dialog text. It is linked into:
 
 - `vsix/Copperfin.Studio`: standalone Studio shell.
 - `vsix/Copperfin.DesignerSmokeTests`: UI smoke test project.
@@ -35,7 +35,7 @@ Future surfaces should reuse an existing catalog where practical or add equivale
 - CLI/native diagnostics: keep command switches and JSON fields stable; localize human summaries behind locale-aware lookup.
 - Studio host JSON: keep JSON contracts stable; localize optional display text only when a consumer requests it.
 - VSIX UI: continue moving dialogs, deeper pane body text, and dynamic project/debugger detail text into shared resources while preserving VS command IDs.
-- Installer text: ship `en`, `es-419`, and `pt-BR` resources with packaging smoke tests.
+- Installer text: ship `en-US`, `es-419`, `pt-BR`, and `qps-ploc` resources with packaging smoke tests; Windows install validation must verify every catalog is present and non-empty.
 - Docs/help and generated templates: version translated text separately from generated file identifiers and code symbols.
 
 ## Installer Artifact Contract
@@ -53,7 +53,7 @@ Treat every external action reference as executable supply-chain code. When upda
 Before a localized production release:
 
 - Run `test_localization` through CTest. Its catalog gate proves English fallback, Spanish lookup, Portuguese lookup, catalog key parity, nonblank localized values, exact placeholder parity with `en-US`, and pseudo-locale expansion with replacement values preserved.
-- Smoke the standalone Studio shell with `--locale es-419` and `--locale pt-BR`.
+- Smoke the standalone Studio shell with `--locale es-419` and `--locale pt-BR`, plus an installed `COPPERFIN_LOCALE_DIR` override and pseudo-locale fallback.
 - Smoke VSIX and installer packaging with localized resources included.
 - Review Spanish and Portuguese terminology for consistency across Studio, VSIX, CLI diagnostics, docs/help, and templates.
 - Verify screenshots or UI smoke captures for clipped text in Spanish and Portuguese.

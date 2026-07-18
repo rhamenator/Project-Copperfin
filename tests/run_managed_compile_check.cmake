@@ -44,6 +44,19 @@ endfunction()
 
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
+run_managed_build("tools/Copperfin.LocalizationCatalogGenerator/Copperfin.LocalizationCatalogGenerator.csproj")
+execute_process(
+    COMMAND "${DOTNET_EXECUTABLE}" run
+        --project "${SOURCE_DIR}/tools/Copperfin.LocalizationCatalogGenerator/Copperfin.LocalizationCatalogGenerator.csproj"
+        --configuration "${test_configuration}"
+        --no-build -- "${SOURCE_DIR}" --check
+    WORKING_DIRECTORY "${SOURCE_DIR}"
+    COMMAND_ECHO STDOUT
+    RESULT_VARIABLE catalog_result
+)
+if(NOT catalog_result EQUAL 0)
+    message(FATAL_ERROR "Managed localization catalog parity check failed")
+endif()
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_build("vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj")

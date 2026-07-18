@@ -1955,16 +1955,40 @@ internal sealed class CopperfinLocalization
             }
         };
 
-    public CopperfinLocalization(string? requestedLocale = null)
+    public CopperfinLocalization(string? requestedLocale = null, string? catalogDirectory = null)
     {
         Locale = NormalizeLocale(requestedLocale);
+        externalCatalog = CopperfinExternalLocaleCatalog.Load(
+            Locale,
+            catalogDirectory ?? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR"));
     }
 
     public string Locale { get; }
 
+    private readonly IReadOnlyDictionary<string, string>? externalCatalog;
+
     public static CopperfinLocalization FromEnvironment()
     {
-        return new CopperfinLocalization(Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE"));
+        var requestedLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        if (string.IsNullOrWhiteSpace(requestedLocale))
+        {
+            requestedLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        }
+
+        return new CopperfinLocalization(requestedLocale);
+    }
+
+    internal static IReadOnlyDictionary<string, string> CatalogEntries(string? requestedLocale = null)
+    {
+        var locale = NormalizeLocale(requestedLocale);
+        if (string.Equals(locale, PseudoLocale, StringComparison.OrdinalIgnoreCase))
+        {
+            locale = DefaultLocale;
+        }
+
+        return Catalogs.TryGetValue(locale, out var catalog)
+            ? catalog
+            : Catalogs[DefaultLocale];
     }
 
     public static IReadOnlyCollection<string> CatalogKeys(string? requestedLocale = null)
@@ -2022,6 +2046,11 @@ internal sealed class CopperfinLocalization
             Catalogs[DefaultLocale].TryGetValue(key, out var pseudoSource))
         {
             return PseudoLocalize(pseudoSource);
+        }
+
+        if (externalCatalog is not null && externalCatalog.TryGetValue(key, out var externalLocalized))
+        {
+            return externalLocalized;
         }
 
         if (Catalogs.TryGetValue(Locale, out var catalog) && catalog.TryGetValue(key, out var localized))

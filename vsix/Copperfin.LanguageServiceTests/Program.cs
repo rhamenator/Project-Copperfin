@@ -24,6 +24,7 @@ internal static partial class Program
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
+        TestLocalizationCatalogUsesInstalledSharedCatalogs();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();

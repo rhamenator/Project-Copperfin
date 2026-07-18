@@ -42,7 +42,10 @@ internal static class Program
             }
         }
 
-        return Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var locale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        return string.IsNullOrWhiteSpace(locale)
+            ? Environment.GetEnvironmentVariable("COPPERFIN_LOCALE")
+            : locale;
     }
 
     private static IEnumerable<string> ReadAssetArguments(string[] args)
