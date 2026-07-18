@@ -71,6 +71,7 @@
         std::optional<PrgValue> resumed_copy_source_value;
         std::optional<PrgValue> resumed_copy_destination_value;
         std::optional<PrgValue> resumed_copy_to_destination_value;
+        std::optional<PrgValue> resumed_append_from_source_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -515,6 +516,11 @@
                     {
                         resumed_copy_to_destination_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::append_from_command &&
+                             continued_statement.identifier != "array")
+                    {
+                        resumed_append_from_source_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -572,6 +578,7 @@
                     !resumed_copy_source_value.has_value() &&
                     !resumed_copy_destination_value.has_value() &&
                     !resumed_copy_to_destination_value.has_value() &&
+                    !resumed_append_from_source_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -7232,8 +7239,16 @@
                 // APPEND FROM <src> [TYPE <type>] [FIELDS <list>] [FOR <expr>]
                 // First pass: copy non-deleted records from source DBF into current local cursor.
                 // Field matching is by name; extra fields in source that do not exist in destination are silently skipped.
+                const auto source_value = resumed_append_from_source_value.has_value()
+                                              ? resumed_append_from_source_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!source_value.has_value())
+                {
+                    return {};
+                }
                 const std::string src_raw = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                    value_as_string(*source_value)));
+                resumed_append_from_source_value.reset();
                 const std::string append_type = normalize_identifier(unquote_string(trim_copy(statement.secondary_expression)));
                 const bool append_from_json = append_type == "json";
                 const bool append_from_sdf = append_type == "sdf";

@@ -462,8 +462,14 @@ void test_append_from_copies_records_into_current_table() {
     write_text(
         main_path,
         "USE '" + (temp_root / "dest.dbf").string() + "'\n"
-        "APPEND FROM '" + (temp_root / "source.dbf").string() + "'\n"
-        "RETURN\n");
+        "nAppendFromSourceCalls = 0\n"
+        "APPEND FROM append_from_source('" + (temp_root / "source.dbf").string() + "')\n"
+        "RETURN\n"
+        "FUNCTION append_from_source\n"
+        "LPARAMETERS value\n"
+        "nAppendFromSourceCalls = nAppendFromSourceCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -476,6 +482,12 @@ void test_append_from_copies_records_into_current_table() {
             return ev.category == "runtime.append_from";
         });
     expect(has_event, "APPEND FROM should emit a runtime.append_from event");
+    const auto source_calls = state.globals.find("nappendfromsourcecalls");
+    expect(source_calls != state.globals.end(), "APPEND FROM should preserve the source resolver call counter");
+    if (source_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(source_calls->second) == "1",
+               "APPEND FROM should evaluate the source UDF exactly once");
+    }
 
     // Verify destination now has 3 records (1 original + 2 from source)
     const auto result = copperfin::vfp::parse_dbf_table_from_file(
