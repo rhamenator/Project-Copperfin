@@ -4315,6 +4315,10 @@ copperfin_add_test(test_designer_context cf_design_model
 
 copperfin_add_test(test_report_layout cf_design_model
     test_report_layout.cpp
+    test_report_layout_support.cpp
+    test_report_layout_sections.cpp
+    test_report_layout_grouping.cpp
+    test_report_layout_summary.cpp
 )
 
 copperfin_add_test(test_report_layout_sort_settings cf_design_model

@@ -29,6 +29,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 - Keep changes narrow, implementation-first, and validated. Update durable docs only when behavior or active guidance changes.
 - Structural localization-test slice `#4176` is implemented locally and tracked under `#2564`: `tests/test_localization.cpp` is replaced by seven sub-1k source shards plus a shared fixture header, preserving the target and ordered test execution. The focused target and CTest pass; hosted validation remains required for the current head.
 - Structural runtime-host test slice `#4177` is implemented locally and tracked under `#2564`: the remaining debug-output and audit-stream monoliths are replaced by topic-owned sub-1k shards plus ordered mains, preserving both executable targets, test order, shared failure accounting, and safety-relevant coverage. Both focused CTest entries and workflow path-filter validation pass; hosted validation remains required for the current head.
+- Structural E3/report-layout test slice `#4187` is implemented locally and tracked under `#2564`: the 2,344-line `tests/test_report_layout.cpp` monolith is replaced by a small ordered main, shared report-layout support, and three ownership shards (780, 837, and 672 lines). The existing 25-test order, report/label assertions, localization checks, and target name are preserved; the focused unit target and 39-test report/label host matrix pass. Hosted validation remains required for the current head.
 
 ## Current State
 
