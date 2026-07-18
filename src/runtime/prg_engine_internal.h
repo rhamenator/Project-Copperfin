@@ -162,9 +162,16 @@ enum class RoutineKind {
     function
 };
 
+enum class NativeMemberVisibility {
+    public_member,
+    protected_member,
+    hidden_member
+};
+
 struct Routine {
     std::string name;
     RoutineKind kind = RoutineKind::main;
+    NativeMemberVisibility visibility = NativeMemberVisibility::public_member;
     SourceLocation declaration_location{};
     std::size_t body_end_line_exclusive = 0;
     std::vector<Statement> statements;
@@ -185,6 +192,7 @@ struct PrgClassDefinition {
     std::string base_class_source_path;
     SourceLocation declaration_location{};
     std::vector<Statement> property_statements;
+    std::map<std::string, NativeMemberVisibility> member_visibility;
     std::vector<NativeChildObjectDeclaration> child_object_declarations;
     std::map<std::string, Routine> methods;
 };

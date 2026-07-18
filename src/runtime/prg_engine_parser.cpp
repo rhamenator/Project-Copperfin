@@ -1466,10 +1466,36 @@ Program parse_program_impl(
             current = &program.main;
             continue;
         }
-        if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
+        NativeMemberVisibility routine_visibility = NativeMemberVisibility::public_member;
+        std::string routine_line = line;
+        if (current_class != nullptr && current == &program.main) {
+            const bool protected_declaration = starts_with_insensitive(trimmed_line, "PROTECTED ");
+            const bool hidden_declaration = starts_with_insensitive(trimmed_line, "HIDDEN ");
+            if (protected_declaration || hidden_declaration) {
+                const std::size_t keyword_length = protected_declaration ? 9U : 7U;
+                const std::string remainder = trim_copy(trimmed_line.substr(keyword_length));
+                routine_visibility = protected_declaration
+                    ? NativeMemberVisibility::protected_member
+                    : NativeMemberVisibility::hidden_member;
+                if (starts_with_insensitive(remainder, "PROCEDURE ") ||
+                    starts_with_insensitive(remainder, "FUNCTION ")) {
+                    routine_line = remainder;
+                } else if (!remainder.empty()) {
+                    for (const std::string &raw_name : split_csv_like(remainder)) {
+                        const std::string member_name = normalize_identifier(trim_copy(raw_name));
+                        if (!member_name.empty()) {
+                            current_class->member_visibility[member_name] = routine_visibility;
+                        }
+                    }
+                    continue;
+                }
+            }
+        }
+        if (starts_with_insensitive(routine_line, "PROCEDURE ") ||
+            starts_with_insensitive(routine_line, "FUNCTION ")) {
             finalize_open_routine(line_number);
-            const auto separator = line.find(' ');
-            std::string routine_signature = trim_copy(line.substr(separator + 1U));
+            const auto separator = routine_line.find(' ');
+            std::string routine_signature = trim_copy(routine_line.substr(separator + 1U));
             std::string inline_parameter_clause;
             if (const std::size_t open_paren = routine_signature.find('(');
                 open_paren != std::string::npos)
@@ -1485,12 +1511,14 @@ Program parse_program_impl(
 
             Routine routine;
             routine.name = std::move(routine_signature);
-            routine.kind = starts_with_insensitive(line, "FUNCTION ")
+            routine.kind = starts_with_insensitive(routine_line, "FUNCTION ")
                 ? RoutineKind::function
                 : RoutineKind::procedure;
+            routine.visibility = routine_visibility;
             routine.declaration_location = {.file_path = normalize_path(path), .line = line_number};
             if (current_class != nullptr) {
                 current = &current_class->methods[normalize_identifier(routine.name)];
+                current_class->member_visibility[normalize_identifier(routine.name)] = routine_visibility;
             } else {
                 current = &program.routines[normalize_identifier(routine.name)];
             }

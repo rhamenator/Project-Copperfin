@@ -93,6 +93,76 @@ void test_parse_define_class_captures_metadata_and_methods() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_define_class_captures_protected_and_hidden_member_visibility() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_member_visibility";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "visibility.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DEFINE CLASS VisibilityDemo AS Custom\n"
+        "    PROTECTED ProtectedValue, ProtectedAlias\n"
+        "    HIDDEN HiddenValue\n"
+        "    ProtectedValue = 1\n"
+        "    ProtectedAlias = 2\n"
+        "    HiddenValue = 3\n"
+        "    PROTECTED PROCEDURE ProtectedMethod\n"
+        "        RETURN THIS.ProtectedValue\n"
+        "    ENDPROC\n"
+        "    HIDDEN FUNCTION HiddenMethod\n"
+        "        RETURN THIS.HiddenValue\n"
+        "    ENDFUNC\n"
+        "    PROCEDURE PublicMethod\n"
+        "        RETURN THIS.ProtectedAlias\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("visibilitydemo");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "visibility declarations should preserve the owning class");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        const auto protected_property = class_definition.member_visibility.find("protectedvalue");
+        const auto protected_alias = class_definition.member_visibility.find("protectedalias");
+        const auto hidden_property = class_definition.member_visibility.find("hiddenvalue");
+        copperfin::test_support::expect(
+            protected_property != class_definition.member_visibility.end() &&
+                protected_property->second == copperfin::runtime::NativeMemberVisibility::protected_member,
+            "PROTECTED property lists should record protected visibility");
+        copperfin::test_support::expect(
+            protected_alias != class_definition.member_visibility.end() &&
+                protected_alias->second == copperfin::runtime::NativeMemberVisibility::protected_member,
+            "comma-separated PROTECTED property lists should record every member");
+        copperfin::test_support::expect(
+            hidden_property != class_definition.member_visibility.end() &&
+                hidden_property->second == copperfin::runtime::NativeMemberVisibility::hidden_member,
+            "HIDDEN property declarations should record hidden visibility");
+
+        const auto protected_method = class_definition.methods.find("protectedmethod");
+        const auto hidden_method = class_definition.methods.find("hiddenmethod");
+        const auto public_method = class_definition.methods.find("publicmethod");
+        copperfin::test_support::expect(
+            protected_method != class_definition.methods.end() &&
+                protected_method->second.visibility == copperfin::runtime::NativeMemberVisibility::protected_member,
+            "PROTECTED method modifiers should preserve method visibility");
+        copperfin::test_support::expect(
+            hidden_method != class_definition.methods.end() &&
+                hidden_method->second.visibility == copperfin::runtime::NativeMemberVisibility::hidden_member,
+            "HIDDEN method modifiers should preserve method visibility");
+        copperfin::test_support::expect(
+            public_method != class_definition.methods.end() &&
+                public_method->second.visibility == copperfin::runtime::NativeMemberVisibility::public_member,
+            "unmodified methods should remain public by default");
+    }
+
+    copperfin::test_support::expect(program.main.statements.empty(),
+                                    "visibility declarations should not leak into top-level executable statements");
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parse_mixed_class_blocks_and_top_level_routines_stays_stable() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_mixed_class_and_routines";
     std::error_code ignored;
@@ -598,6 +668,7 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
 
 int main() {
     test_parse_define_class_captures_metadata_and_methods();
+    test_parse_define_class_captures_protected_and_hidden_member_visibility();
     test_parse_mixed_class_blocks_and_top_level_routines_stays_stable();
     test_parse_define_class_external_prg_base_sources();
     test_parse_class_body_add_object_declarations_distinct_from_property_assignments();
