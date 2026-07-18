@@ -4399,7 +4399,15 @@ copperfin_add_test(test_prg_engine_database_lifecycle cf_xbase_runtime
 )
 
 copperfin_add_test(test_prg_engine_seek_index cf_xbase_runtime
-    test_prg_engine_seek_index.cpp
+    test_prg_engine_seek_index_cursor_state_01.cpp
+    test_prg_engine_seek_index_cursor_state_02.cpp
+    test_prg_engine_seek_index_declared_dll_01.cpp
+    test_prg_engine_seek_index_declared_dll_02.cpp
+    test_prg_engine_seek_index_declared_dll_03.cpp
+    test_prg_engine_seek_index_main.cpp
+    test_prg_engine_seek_index_seek_01.cpp
+    test_prg_engine_seek_index_seek_02.cpp
+    test_prg_engine_seek_index_seek_03.cpp
     prg_engine_test_support.cpp
 )
 if(WIN32)
