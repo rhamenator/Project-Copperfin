@@ -490,7 +490,12 @@ add_executable(test_studio_host_json
     test_studio_host_json_dispatch_designer.cpp
     test_studio_host_json_dispatch_editor_action.cpp
     test_studio_host_json_object_lifecycle.cpp
-    test_studio_host_json_behavior_window_chrome.cpp
+    test_studio_host_json_behavior_window_chrome_01.cpp
+    test_studio_host_json_behavior_window_chrome_02.cpp
+    test_studio_host_json_behavior_window_chrome_03.cpp
+    test_studio_host_json_behavior_window_chrome_04.cpp
+    test_studio_host_json_behavior_window_chrome_05.cpp
+    test_studio_host_json_behavior_window_chrome_06.cpp
     test_studio_host_json_behavior_grid_and_selection.cpp
     test_studio_host_json_behavior_data_and_control.cpp
     test_studio_host_json_behavior_general_state.cpp
