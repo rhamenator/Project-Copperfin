@@ -62,7 +62,7 @@ void test_launch_parse_errors_resolve_through_localization_catalog() {
         "#2653: es-419 should localize no-asset-path launch-parse errors");
     expect(
         spanish_catalog.translate("StudioHost.LaunchParse.Error.RequestRequiresSelector") ==
-            "Una solicitud de {requestName} requiere al menos un selector.",
+            "Una solicitud de {requestName} requiere al menos un selector {selectorName}.",
         "#2653: es-419 should localize request-selector launch-parse errors");
     expect(
         portuguese_catalog.translate("StudioHost.LaunchParse.Error.SelectionContextValueRequired") ==
