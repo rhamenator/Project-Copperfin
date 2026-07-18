@@ -129,9 +129,10 @@ void test_open_select_modes_and_functions() {
     const auto state = run_program(
         root,
         "open.prg",
+        "nOpenTargetCalls = 0\n"
         "cFirst = '" + first.dbc.string() + "'\n"
         "cSecondPath = '" + second.dbc.string() + "'\n"
-        "OPEN DATABASE (cFirst) SHARED NOUPDATE\n"
+        "OPEN DATABASE (resolve_database(cFirst)) SHARED NOUPDATE\n"
         "cFirstPath = DBC()\n"
         "lFirstUsed = DBUSED('first')\n"
         "OPEN DATABASE (cSecondPath) EXCLUSIVE\n"
@@ -142,7 +143,12 @@ void test_open_select_modes_and_functions() {
         "SET DATABASE TO\n"
         "cClearedPath = DBC()\n"
         "SET DATABASE TO first\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION resolve_database\n"
+        "LPARAMETERS value\n"
+        "nOpenTargetCalls = nOpenTargetCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     expect(state.completed, "OPEN/SET DATABASE lifecycle script should complete: " + state.message);
     expect(state.databases.size() == 2U, "two open databases should be visible in the runtime snapshot");
@@ -161,6 +167,8 @@ void test_open_select_modes_and_functions() {
            "SET DATABASE TO should update DBC()");
     expect(global_text(state, "lfirstused") == "true",
            "DBUSED(name) should find an open database by stem");
+    expect(global_text(state, "nopentargetcalls") == "1",
+           "OPEN DATABASE should evaluate a UDF-produced target exactly once");
     expect(global_text(state, "cclearedpath").empty(),
            "empty SET DATABASE TO should clear the current database without closing it");
     expect(has_runtime_event(state.events, "runtime.database.open", first.dbc.string()),

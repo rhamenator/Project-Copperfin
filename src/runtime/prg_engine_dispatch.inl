@@ -57,6 +57,7 @@
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
+        std::optional<PrgValue> resumed_open_database_target_value;
         std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_throw_value;
         std::optional<PrgValue> resumed_textmerge_value;
@@ -460,6 +461,10 @@
                     {
                         resumed_use_target_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::open_database)
+                    {
+                        resumed_open_database_target_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -506,6 +511,7 @@
                     !resumed_go_value.has_value() &&
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
+                    !resumed_open_database_target_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
                     !resumed_throw_value.has_value() &&
                     !resumed_textmerge_value.has_value() &&
@@ -4114,7 +4120,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string target = value_as_string(evaluate_expression(statement.expression, frame));
+                const auto target_value = resumed_open_database_target_value.has_value()
+                                              ? resumed_open_database_target_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!target_value.has_value())
+                {
+                    return {};
+                }
+                std::string target = value_as_string(*target_value);
                 if (target.empty())
                 {
                     target = unquote_string(trim_copy(statement.expression));
