@@ -79,6 +79,7 @@
         std::optional<PrgValue> resumed_set_memowidth_value;
         std::optional<PrgValue> resumed_set_library_value;
         std::optional<PrgValue> resumed_declare_dll_path_value;
+        std::optional<PrgValue> resumed_gather_for_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -556,6 +557,10 @@
                     {
                         resumed_declare_dll_path_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::gather_command)
+                    {
+                        resumed_gather_for_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -621,6 +626,7 @@
                     !resumed_set_memowidth_value.has_value() &&
                     !resumed_set_library_value.has_value() &&
                     !resumed_declare_dll_path_value.has_value() &&
+                    !resumed_gather_for_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -8892,23 +8898,34 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!trim_copy(statement.quaternary_expression).empty() &&
-                    !value_as_bool(evaluate_expression(statement.quaternary_expression, frame, cursor)))
+                if (!trim_copy(statement.quaternary_expression).empty())
                 {
-                    std::string detail = "memvar skipped";
-                    if (use_name_object)
+                    Statement predicate_statement = statement;
+                    predicate_statement.expression = statement.quaternary_expression;
+                    const auto predicate_value = resumed_gather_for_value.has_value()
+                                                     ? resumed_gather_for_value
+                                                     : evaluate_resumable_expression(frame, predicate_statement, cursor);
+                    if (!predicate_value.has_value())
                     {
-                        detail = trim_copy(statement.expression) + " skipped";
+                        return {};
                     }
-                    else if (!use_memvar)
+                    if (!value_as_bool(*predicate_value))
                     {
-                        const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
-                        detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
+                        std::string detail = "memvar skipped";
+                        if (use_name_object)
+                        {
+                            detail = trim_copy(statement.expression) + " skipped";
+                        }
+                        else if (!use_memvar)
+                        {
+                            const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
+                            detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
+                        }
+                        events.push_back({.category = "runtime.gather",
+                                          .detail = detail,
+                                          .location = statement.location});
+                        return {};
                     }
-                    events.push_back({.category = "runtime.gather",
-                                      .detail = detail,
-                                      .location = statement.location});
-                    return {};
                 }
                 if (!cursor->remote && !ensure_transaction_backup_for_table(cursor->source_path))
                 {

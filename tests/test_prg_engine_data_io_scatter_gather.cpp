@@ -62,6 +62,9 @@ void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
     const fs::path main_path = temp_root / "scatter_gather_memvar_fields.prg";
     write_text(
         main_path,
+        "FUNCTION ShouldGather\n"
+        "RETURN .T.\n"
+        "ENDFUNC\n"
         "USE '" + table_path.string() + "'\n"
         "GO 1\n"
         "SCATTER FIELDS NAME, AGE MEMVAR\n"
@@ -74,7 +77,7 @@ void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
         "m.NAME = 'Skipped'\n"
         "GATHER MEMVAR FIELDS NAME FOR .F.\n"
         "m.NAME = 'Updated'\n"
-        "GATHER MEMVAR FIELDS NAME FOR .T.\n"
+        "GATHER MEMVAR FIELDS NAME FOR ShouldGather()\n"
         "cAfterGather = NAME\n"
         "RETURN\n");
 
