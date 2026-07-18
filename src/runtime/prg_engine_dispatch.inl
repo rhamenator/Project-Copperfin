@@ -47,6 +47,7 @@
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
                 frame.copy_file_continuation.reset();
+                frame.rename_file_continuation.reset();
             }
         };
         std::optional<PrgValue> resumed_assignment_value;
@@ -69,6 +70,8 @@
         std::optional<PrgValue> resumed_parameter_default_value;
         std::optional<PrgValue> resumed_copy_source_value;
         std::optional<PrgValue> resumed_copy_destination_value;
+        std::optional<PrgValue> resumed_rename_source_value;
+        std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_call_argument_value;
@@ -496,6 +499,16 @@
                     {
                         resumed_copy_source_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::rename_file_command &&
+                             frame.rename_file_continuation.has_value() &&
+                             frame.rename_file_continuation->pending_destination)
+                    {
+                        resumed_rename_destination_value = *expression_value;
+                    }
+                    else if (continued_statement.kind == StatementKind::rename_file_command)
+                    {
+                        resumed_rename_source_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -552,6 +565,8 @@
                     !resumed_parameter_default_value.has_value() &&
                     !resumed_copy_source_value.has_value() &&
                     !resumed_copy_destination_value.has_value() &&
+                    !resumed_rename_source_value.has_value() &&
+                    !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
                     !resumed_spawn_argument_value.has_value() &&
                     !resumed_call_argument_value.has_value() &&
@@ -1782,6 +1797,7 @@
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
                 frame.copy_file_continuation.reset();
+                frame.rename_file_continuation.reset();
                 Program &program = load_program(frame.file_path);
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
@@ -1972,6 +1988,7 @@
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
                 frame.copy_file_continuation.reset();
+                frame.rename_file_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                 std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);
@@ -2246,6 +2263,7 @@
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
                 frame.copy_file_continuation.reset();
+                frame.rename_file_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                     if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
@@ -5555,10 +5573,45 @@
             case StatementKind::rename_file_command:
             {
                 // RENAME <old> TO <new>
+                if (!frame.rename_file_continuation.has_value() ||
+                    frame.rename_file_continuation->statement.text != statement.text)
+                {
+                    frame.rename_file_continuation = RenameFileContinuation{
+                        .statement = statement,
+                        .source_value = std::nullopt,
+                        .pending_destination = false};
+                }
+                RenameFileContinuation &continuation = *frame.rename_file_continuation;
+                if (!continuation.source_value.has_value())
+                {
+                    const auto source_value = resumed_rename_source_value.has_value()
+                                                  ? resumed_rename_source_value
+                                                  : evaluate_resumable_expression(frame, statement);
+                    if (!source_value.has_value())
+                    {
+                        return {};
+                    }
+                    continuation.source_value = *source_value;
+                    resumed_rename_source_value.reset();
+                }
+
+                Statement destination_statement = continuation.statement;
+                destination_statement.expression = statement.secondary_expression;
+                destination_statement.text = statement.text + " [rename-destination]";
+                continuation.pending_destination = true;
+                const auto destination_value = resumed_rename_destination_value.has_value()
+                                                   ? resumed_rename_destination_value
+                                                   : evaluate_resumable_expression(frame, destination_statement);
+                if (!destination_value.has_value())
+                {
+                    return {};
+                }
                 const std::string old_raw = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                    value_as_string(*continuation.source_value)));
                 const std::string new_raw = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.secondary_expression, frame))));
+                    value_as_string(*destination_value)));
+                frame.rename_file_continuation.reset();
+                resumed_rename_destination_value.reset();
                 auto make_abs = [&](const std::string &raw)
                 {
                     std::filesystem::path p = copperfin::platform::path_from_utf8_string(raw);
@@ -9035,6 +9088,7 @@
                     candidate.parameter_default_continuation.reset();
                     candidate.use_command_continuation.reset();
                     candidate.copy_file_continuation.reset();
+                    candidate.rename_file_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = scan_resume_pc;
@@ -9052,6 +9106,7 @@
                     stack[nested_index].parameter_default_continuation.reset();
                     stack[nested_index].use_command_continuation.reset();
                     stack[nested_index].copy_file_continuation.reset();
+                    stack[nested_index].rename_file_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -9103,6 +9158,7 @@
                                 candidate.parameter_default_continuation.reset();
                                 candidate.use_command_continuation.reset();
                                 candidate.copy_file_continuation.reset();
+                                candidate.rename_file_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = loop_resume_pc;
@@ -9120,6 +9176,7 @@
                                     stack[nested_index].parameter_default_continuation.reset();
                                     stack[nested_index].use_command_continuation.reset();
                                     stack[nested_index].copy_file_continuation.reset();
+                                    stack[nested_index].rename_file_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -9139,6 +9196,7 @@
                             candidate.parameter_default_continuation.reset();
                             candidate.use_command_continuation.reset();
                             candidate.copy_file_continuation.reset();
+                            candidate.rename_file_continuation.reset();
                             if (!candidate.cases.empty())
                             {
                                 candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
@@ -9153,6 +9211,7 @@
                                 stack[nested_index].parameter_default_continuation.reset();
                                 stack[nested_index].use_command_continuation.reset();
                                 stack[nested_index].copy_file_continuation.reset();
+                                stack[nested_index].rename_file_continuation.reset();
                                 stack[nested_index].loop_expression_continuation.reset();
                                 stack[nested_index].scan_expression_continuation.reset();
                             }

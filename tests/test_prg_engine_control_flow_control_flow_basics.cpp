@@ -1589,9 +1589,11 @@ void test_erase_copy_rename_file_commands() {
         "nEraseCalls = 0\n"
         "nCopySourceCalls = 0\n"
         "nCopyDestinationCalls = 0\n"
+        "nRenameSourceCalls = 0\n"
+        "nRenameDestinationCalls = 0\n"
         "ERASE erase_target('to_erase.txt')\n"
         "COPY FILE copy_source('original.txt') TO copy_destination('copied.txt')\n"
-        "RENAME 'copied.txt' TO 'renamed.txt'\n"
+        "RENAME rename_source('copied.txt') TO rename_destination('renamed.txt')\n"
         "RETURN\n"
         "FUNCTION erase_target\n"
         "LPARAMETERS value\n"
@@ -1606,6 +1608,16 @@ void test_erase_copy_rename_file_commands() {
         "FUNCTION copy_destination\n"
         "LPARAMETERS value\n"
         "nCopyDestinationCalls = nCopyDestinationCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n"
+        "FUNCTION rename_source\n"
+        "LPARAMETERS value\n"
+        "nRenameSourceCalls = nRenameSourceCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n"
+        "FUNCTION rename_destination\n"
+        "LPARAMETERS value\n"
+        "nRenameDestinationCalls = nRenameDestinationCalls + 1\n"
         "RETURN value\n"
         "ENDFUNC\n");
 
@@ -1633,6 +1645,18 @@ void test_erase_copy_rename_file_commands() {
     if (copy_destination_calls != state.globals.end()) {
         expect(copperfin::runtime::format_value(copy_destination_calls->second) == "1",
                "COPY FILE should evaluate the destination UDF exactly once");
+    }
+    const auto rename_source_calls = state.globals.find("nrenamesourcecalls");
+    expect(rename_source_calls != state.globals.end(), "RENAME should preserve the source resolver call counter");
+    if (rename_source_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rename_source_calls->second) == "1",
+               "RENAME should evaluate the source UDF exactly once");
+    }
+    const auto rename_destination_calls = state.globals.find("nrenamedestinationcalls");
+    expect(rename_destination_calls != state.globals.end(), "RENAME should preserve the destination resolver call counter");
+    if (rename_destination_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rename_destination_calls->second) == "1",
+               "RENAME should evaluate the destination UDF exactly once");
     }
     expect(fs::exists(temp_root / "original.txt"), "COPY FILE should leave original.txt intact");
     expect(fs::exists(temp_root / "renamed.txt"), "RENAME should create renamed.txt");
