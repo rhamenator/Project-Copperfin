@@ -216,6 +216,8 @@ namespace
             "narrow_third = MLINE(narrow_wrap_text, 3)\n"
             "strextract_case_sensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>')\n"
             "strextract_case_insensitive = STREXTRACT('<Name>Beta</Name>', '<name>', '</name>', 1, 1)\n"
+            "strextract_empty_begin_first = STREXTRACT('hello world', '', 'o')\n"
+            "strextract_empty_begin_later = STREXTRACT('hello world', '', 'o', 2)\n"
             "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
             "strextract_missing_end_allowed = STREXTRACT('a=one;b=two', 'b=', ';', 1, 2)\n"
             "strextract_include_delims = STREXTRACT('<id>42</id>', '<id>', '</id>', 1, 4)\n"
@@ -468,6 +470,8 @@ namespace
         check("narrow_third", "mno");
         check("strextract_case_sensitive", "");
         check("strextract_case_insensitive", "Beta");
+        check("strextract_empty_begin_first", "hell");
+        check("strextract_empty_begin_later", "");
         check("strextract_missing_end_default", "");
         check("strextract_missing_end_allowed", "two");
         check("strextract_include_delims", "<id>42</id>");

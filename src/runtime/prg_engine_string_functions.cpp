@@ -1073,6 +1073,12 @@ std::optional<PrgValue> evaluate_string_function(
         const bool case_insensitive = (flags & 1) != 0;
         const bool end_delimiter_optional = (flags & 2) != 0;
         const bool include_delimiters = (flags & 4) != 0;
+        // An empty begin delimiter is defined as a search from the start of
+        // the expression to the first end delimiter. It has no later begin
+        // occurrences to select, so avoid retrying the same zero-width match.
+        if (begin_delim.empty() && occurrence > 1U) {
+            return make_string_value(std::string{});
+        }
         std::size_t search_pos = 0U;
         std::size_t found_count = 0U;
         while (search_pos <= src.size()) {
