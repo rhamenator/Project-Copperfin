@@ -43,13 +43,13 @@ bool is_unc_path(const std::string& value) {
 
 #if !defined(_WIN32)
 bool is_fd_backed_path(const std::filesystem::path& path) {
-    const std::string value = path.generic_string();
+    const std::string value = copperfin::platform::path_to_utf8_string(path);
     return value.rfind("/proc/self/fd/", 0U) == 0U ||
         value.rfind("/dev/fd/", 0U) == 0U;
 }
 
 std::optional<int> fd_from_path(const std::filesystem::path& path) {
-    const std::string value = path.generic_string();
+    const std::string value = copperfin::platform::path_to_utf8_string(path);
     std::string_view suffix;
     if (value.rfind("/proc/self/fd/", 0U) == 0U) {
         suffix = std::string_view(value).substr(14U);
@@ -114,7 +114,7 @@ bool is_windows_reserved_device_name(std::string component) {
 }
 
 bool is_portable_package_component(const std::filesystem::path& component) {
-    const std::string value = component.generic_string();
+    const std::string value = copperfin::platform::path_to_utf8_string(component);
     if (value.empty() || value == "." || value == ".." ||
         value.back() == '.' || value.back() == ' ' ||
         is_windows_reserved_device_name(value)) {
@@ -128,9 +128,9 @@ bool is_portable_package_component(const std::filesystem::path& component) {
 
 std::optional<std::filesystem::path> admitted_relative_path(
     const std::filesystem::path& path) {
-    std::string normalized = path.generic_string();
+    std::string normalized = copperfin::platform::path_to_utf8_string(path);
     std::replace(normalized.begin(), normalized.end(), '\\', '/');
-    const std::filesystem::path relative(normalized);
+    const std::filesystem::path relative = copperfin::platform::path_from_utf8_string(normalized);
     if (normalized.empty() || has_windows_drive_designator(normalized) ||
         is_unc_path(normalized) || relative.has_root_path() ||
         relative.is_absolute() || relative.filename().empty()) {

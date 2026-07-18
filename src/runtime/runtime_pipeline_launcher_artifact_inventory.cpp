@@ -61,7 +61,7 @@ std::vector<std::filesystem::path> casefold_package_entries(
     const std::filesystem::path& expected_file_name,
     std::string& error) {
     std::vector<std::filesystem::path> matches;
-    const std::string expected_name = expected_file_name.generic_string();
+    const std::string expected_name = copperfin::platform::path_to_utf8_string(expected_file_name);
     std::error_code iterator_error;
     for (std::filesystem::directory_iterator it(package_root, iterator_error), end;
          it != end;
@@ -92,7 +92,7 @@ bool admit_launcher_artifact(
     const std::filesystem::path& package_root,
     std::vector<RuntimeLauncherArtifact>& inventory,
     std::string& error) {
-    const std::string expected_name = spec.path.filename().generic_string();
+    const std::string expected_name = copperfin::platform::path_to_utf8_string(spec.path.filename());
     if (spec.path.parent_path().lexically_normal() != package_root.lexically_normal()) {
         error = runtime_text(
             "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
@@ -111,7 +111,7 @@ bool admit_launcher_artifact(
         return false;
     }
     const auto exact = std::find_if(matches.begin(), matches.end(), [&](const std::filesystem::path& match) {
-        return match.filename().generic_string() == expected_name;
+        return copperfin::platform::path_to_utf8_string(match.filename()) == expected_name;
     });
     if (exact == matches.end()) {
         if (!spec.required && matches.empty()) {
@@ -162,7 +162,7 @@ void append_plan_owned_direct_file_name(
     if (path.parent_path().lexically_normal() != package_root.lexically_normal()) {
         return;
     }
-    names.push_back(path.filename().generic_string());
+    names.push_back(copperfin::platform::path_to_utf8_string(path.filename()));
 }
 
 void append_plan_owned_direct_file_names(
@@ -234,8 +234,8 @@ bool validate_public_output_artifact_name(
             error = runtime_text(
                 "Runtime.Package.Error.OutputNameReserved",
                 {
-                    {"outputName", output_name.filename().generic_string()},
-                    {"reservedName", reserved_name.filename().generic_string()}
+                    {"outputName", copperfin::platform::path_to_utf8_string(output_name.filename())},
+                    {"reservedName", copperfin::platform::path_to_utf8_string(reserved_name.filename())}
                 });
             return false;
         }
@@ -287,7 +287,7 @@ bool inventory_generated_launcher_artifacts(
     std::vector<std::string> allowed_names;
     allowed_names.reserve(specs.size());
     for (const auto& spec : specs) {
-        allowed_names.push_back(spec.path.filename().generic_string());
+        allowed_names.push_back(copperfin::platform::path_to_utf8_string(spec.path.filename()));
     }
     append_plan_owned_direct_file_names(allowed_names, plan, package_root);
     std::error_code iterator_error;
@@ -297,7 +297,7 @@ bool inventory_generated_launcher_artifacts(
         if (iterator_error) {
             break;
         }
-        const std::string file_name = it->path().filename().generic_string();
+        const std::string file_name = copperfin::platform::path_to_utf8_string(it->path().filename());
         if (!is_internal_generated_launcher_name(file_name)) {
             continue;
         }
@@ -313,7 +313,7 @@ bool inventory_generated_launcher_artifacts(
     if (iterator_error) {
         error = runtime_text(
             "Runtime.Package.Error.LauncherArtifactNotDirectRegularFile",
-            {{"path", package_root.filename().generic_string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(package_root.filename())}});
         inventory.clear();
         return false;
     }

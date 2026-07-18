@@ -187,6 +187,12 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should use C exports");
         expect(wrapper_source.find("static std::filesystem::path copperfin_wrapper_module_path(void* symbol_address)") != std::string::npos,
                "library-output wrapper source should derive its loaded module path");
+        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_path_to_utf8_string(const std::filesystem::path& path)") != std::string::npos,
+               "library-output wrapper source should expose a lossless UTF-8 path boundary");
+        expect(wrapper_source.find("GetModuleFileNameW") != std::string::npos,
+               "library-output wrapper source should use the Windows wide module-path API");
+        expect(wrapper_source.find(".string()") == std::string::npos,
+               "library-output wrapper source should not use locale-dependent narrow path conversion");
         expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_manifest_path(void* symbol_address)") != std::string::npos,
                "library-output wrapper source should derive a sibling manifest path");
         expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,

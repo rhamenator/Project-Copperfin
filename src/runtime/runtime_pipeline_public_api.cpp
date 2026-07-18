@@ -515,7 +515,7 @@ public:
             }
         }
         std::string lock_identity_value =
-            lock_identity_path.lexically_normal().generic_string();
+            copperfin::platform::path_to_utf8_string(lock_identity_path.lexically_normal());
 #if defined(_WIN32)
         lock_identity_value =
             runtime_pipeline_detail::canonical_casefolded_path_identity(package_root_);

@@ -69,9 +69,9 @@ std::string canonical_casefolded_path_identity(const std::filesystem::path& path
             case_folded_path.data(),
             static_cast<DWORD>(case_folded_path.size()));
     }
-    return std::filesystem::path(case_folded_path).generic_string();
+    return copperfin::platform::path_to_utf8_string(std::filesystem::path(case_folded_path));
 #else
-    return identity_path.generic_string();
+    return copperfin::platform::path_to_utf8_string(identity_path);
 #endif
 }
 

@@ -278,7 +278,8 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
             continue;
         }
 
-        const auto candidate_segments = split_normalized_path_segments(candidate_relative.generic_string());
+        const auto candidate_segments = split_normalized_path_segments(
+            copperfin::platform::path_to_utf8_string(candidate_relative));
         if (candidate_segments.size() < tail_segments.size()) {
             continue;
         }
@@ -310,7 +311,8 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
         }
 
         const std::size_t extra_segments = candidate_segments.size() - tail_segments.size();
-        const std::string candidate_key = lowercase_copy(candidate_relative.generic_string());
+        const std::string candidate_key = lowercase_copy(
+            copperfin::platform::path_to_utf8_string(candidate_relative));
         if (!best_match ||
             extra_segments < best_extra_segments ||
             (extra_segments == best_extra_segments && candidate_key < best_key)) {
@@ -689,7 +691,8 @@ std::string relative_asset_path(
         const std::filesystem::path resolved_relative =
             copperfin::platform::path_from_utf8_string(resolved_source_path).lexically_relative(base_dir);
         if (!resolved_relative.empty() && !resolved_relative.is_absolute()) {
-            const std::string sanitized = sanitize_package_relative_path(resolved_relative.generic_string());
+            const std::string sanitized = sanitize_package_relative_path(
+                copperfin::platform::path_to_utf8_string(resolved_relative));
             if (!sanitized.empty()) {
                 return sanitized;
             }

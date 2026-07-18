@@ -19,7 +19,8 @@ struct StagedContentFile {
 std::string staged_content_relative_path(
     const std::filesystem::path& content_root,
     const std::filesystem::path& content_path) {
-    return content_path.lexically_relative(content_root).generic_string();
+    return copperfin::platform::path_to_utf8_string(
+        content_path.lexically_relative(content_root));
 }
 
 std::map<std::string, StagedContentFile> collect_staged_content_files(const RuntimePackagePlan& plan) {

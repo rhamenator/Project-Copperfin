@@ -294,8 +294,9 @@ private:
                 root_ / destination_leaves_[1]);
 #else
         identity_input =
-            root_.generic_string() + '\0' + destination_leaves_[0].generic_string() +
-            '\0' + destination_leaves_[1].generic_string();
+            copperfin::platform::path_to_utf8_string(root_) + '\0' +
+            copperfin::platform::path_to_utf8_string(destination_leaves_[0]) +
+            '\0' + copperfin::platform::path_to_utf8_string(destination_leaves_[1]);
 #endif
         const auto identity_hash = text_hash(identity_input);
         if (!identity_hash.has_value()) {
