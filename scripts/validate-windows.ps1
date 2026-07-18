@@ -70,7 +70,9 @@ function Resolve-MSBuild {
 $msbuild = Resolve-MSBuild
 
 Invoke-Step -Name "Configure native build" -Action {
-    Invoke-Checked -FilePath "cmake" -ArgumentList @("-S", $nativeProject, "-B", $buildDir)
+    Invoke-Checked -FilePath "cmake" -ArgumentList @(
+        "-S", $nativeProject, "-B", $buildDir, "-A", "x64"
+    )
 }
 
 Invoke-Step -Name "Build native binaries" -Action {

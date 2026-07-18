@@ -13,6 +13,33 @@ if(NOT WIN32)
     return()
 endif()
 
+if(NOT EXISTS "${BINARY_DIR}/CMakeCache.txt")
+    message(FATAL_ERROR "Windows architecture contract is missing CMakeCache.txt")
+endif()
+file(STRINGS "${BINARY_DIR}/CMakeCache.txt" pointer_size_lines
+    REGEX "^CMAKE_SIZEOF_VOID_P:INTERNAL=8$")
+if(NOT pointer_size_lines)
+    message(FATAL_ERROR "Windows installer native build is not configured for an x64 pointer size")
+endif()
+file(STRINGS "${BINARY_DIR}/CMakeCache.txt" generator_platform_lines
+    REGEX "^CMAKE_GENERATOR_PLATFORM:INTERNAL=x64$")
+if(NOT generator_platform_lines)
+    message(FATAL_ERROR "Windows installer generator platform is not pinned to x64")
+endif()
+
+foreach(managed_project IN ITEMS
+        "${CMAKE_CURRENT_LIST_DIR}/../vsix/Copperfin.Studio/Copperfin.Studio.csproj"
+        "${CMAKE_CURRENT_LIST_DIR}/../vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj")
+    if(NOT EXISTS "${managed_project}")
+        message(FATAL_ERROR "Managed x64 architecture contract is missing ${managed_project}")
+    endif()
+    file(STRINGS "${managed_project}" managed_platform_lines
+        REGEX "^[ \\t]*<PlatformTarget>x64</PlatformTarget>[ \\t]*$")
+    if(NOT managed_platform_lines)
+        message(FATAL_ERROR "Managed project is not pinned to x64: ${managed_project}")
+    endif()
+endforeach()
+
 set(required_files
     "bin/studio/Copperfin.Studio.exe"
     "bin/studio/Copperfin.Studio.exe.config"

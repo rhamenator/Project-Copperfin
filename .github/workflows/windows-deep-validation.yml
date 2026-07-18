@@ -64,7 +64,7 @@ jobs:
           -Name 'Configure native build'
           -Category configure
           -FilePath cmake
-          -CommandArguments @('-S', '.', '-B', 'build', '-DCOPPERFIN_BUILD_TESTS=ON')
+          -CommandArguments @('-S', '.', '-B', 'build', '-A', 'x64', '-DCOPPERFIN_BUILD_TESTS=ON')
 
       - name: Build native binaries and tests
         shell: pwsh

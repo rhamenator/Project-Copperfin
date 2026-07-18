@@ -29,7 +29,7 @@ jobs:
         uses: microsoft/setup-msbuild@30375c66a4eea26614e0d39710365f22f8b0af57 # v3
 
       - name: Configure
-        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=OFF
+        run: cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON
 
       - name: Verify package documents
         run: cmake --build build --config Release --target copperfin_package_document_check

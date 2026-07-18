@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Copperfin LANGUAGES CXX C)
 
+option(COPPERFIN_REQUIRE_X64
+    "Require an x64 Windows toolchain for managed-product packaging"
+    OFF)
+
+if(WIN32 AND COPPERFIN_REQUIRE_X64)
+    if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(FATAL_ERROR
+            "Copperfin Windows builds require an x64 toolchain (CMAKE_SIZEOF_VOID_P must be 8)")
+    endif()
+endif()
+
 include(CheckCXXCompilerFlag)
 find_package(Threads REQUIRED)
 

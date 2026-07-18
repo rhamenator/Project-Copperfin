@@ -313,11 +313,20 @@ require_text(".github/workflows/build-installers.yml"
     "Build standalone Studio shell"
     "Windows installer standalone Studio build")
 require_text(".github/workflows/build-installers.yml"
+    "cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON"
+    "Windows installer x64 configure")
+require_text(".github/workflows/build-installers.yml"
     "tests/run_studio_install_contract_check.cmake"
     "Windows standalone Studio install contract")
 require_text("CMakeLists.txt"
     "copperfin_studio_managed"
     "Windows managed Studio install target")
+require_text("CMakeLists.txt"
+    "CMAKE_SIZEOF_VOID_P must be 8"
+    "Windows x64 pointer-size failure")
+require_text("CMakeLists.txt"
+    "COPPERFIN_REQUIRE_X64"
+    "Opt-in Windows x64 packaging contract")
 foreach(stale_pattern IN ITEMS
         "copperfin-*.exe"
         "copperfin-*.zip"
@@ -425,8 +434,8 @@ require_text("${shared_action}"
     "-Name 'Configure native build'"
     "measured Windows configure phase")
 require_text("${shared_action}"
-    "-CommandArguments @('-S', '.', '-B', 'build', '-DCOPPERFIN_BUILD_TESTS=ON')"
-    "Windows configure command")
+    "-CommandArguments @('-S', '.', '-B', 'build', '-A', 'x64', '-DCOPPERFIN_BUILD_TESTS=ON')"
+    "Windows x64 configure command")
 require_text("${shared_action}"
     "-Name 'Build native targets'"
     "measured Windows native-build phase")
