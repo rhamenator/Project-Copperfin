@@ -112,11 +112,49 @@ void test_initial_use_fails_closed_without_verified_dbf_bytes()
     fs::remove_all(root, ignored);
 }
 
+void test_initial_use_reads_verified_index_metadata()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_index";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    const fs::path index_path = root / "customers.cdx";
+    write_simple_dbf(table_path, {"Ada", "Grace", "Linus"});
+    write_synthetic_cdx(index_path, "NAME", "UPPER(NAME)");
+    const std::string verified_table_bytes = read_text(table_path);
+    const std::string verified_index_bytes = read_text(index_path);
+    write_synthetic_cdx(index_path, "TAMPERED", "NAME");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
+    options.verified_file_byte_overrides.emplace(index_path.string(), verified_index_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_index.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "SET ORDER TO TAG NAME\n"
+        "cOrder = ORDER('customers')\n"
+        "cOrderPath = ORDER('customers', 1)\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict verified DBF USE should inspect verified index metadata: " + state.message);
+    expect(global_text(state, "corder") == "NAME",
+           "strict verified DBF USE should expose the verified tag name");
+    expect(global_text(state, "corderpath").find("CUSTOMERS.CDX") != std::string::npos,
+           "strict verified DBF ORDER path should preserve the logical index identity");
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
 {
     test_initial_use_reads_verified_dbf_bytes();
     test_initial_use_fails_closed_without_verified_dbf_bytes();
+    test_initial_use_reads_verified_index_metadata();
     return test_failures() == 0 ? 0 : 1;
 }

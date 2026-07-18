@@ -86,3 +86,56 @@
             }
             return snapshot_path;
         }
+
+        std::optional<std::filesystem::path> materialize_verified_table_snapshot(
+            const std::filesystem::path &table_path,
+            std::filesystem::path &snapshot_root)
+        {
+            const auto snapshot_path = materialize_verified_file_snapshot(
+                table_path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                false);
+            if (!snapshot_path.has_value() || !options.require_verified_file_byte_overrides)
+            {
+                return snapshot_path;
+            }
+
+            const std::string table_directory = lowercase_copy(
+                normalize_path(copperfin::platform::path_to_utf8_string(table_path.parent_path())));
+            const std::string table_stem = lowercase_copy(
+                copperfin::platform::path_to_utf8_string(table_path.stem()));
+            for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+            {
+                const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
+                const std::string extension = lowercase_copy(
+                    copperfin::platform::path_to_utf8_string(candidate_path.extension()));
+                if (extension != ".cdx" && extension != ".idx" &&
+                    extension != ".ndx" && extension != ".mdx")
+                {
+                    continue;
+                }
+                if (lowercase_copy(normalize_path(
+                        copperfin::platform::path_to_utf8_string(candidate_path.parent_path()))) != table_directory ||
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.stem())) != table_stem ||
+                    bytes.empty())
+                {
+                    continue;
+                }
+
+                std::ofstream output(snapshot_root / candidate_path.filename(), std::ios::binary | std::ios::trunc);
+                output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+                output.close();
+                if (!output.good())
+                {
+                    std::error_code filesystem_error;
+                    std::filesystem::remove_all(snapshot_root, filesystem_error);
+                    snapshot_root.clear();
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                        {{"path", copperfin::platform::path_to_utf8_string(candidate_path)}});
+                    return std::nullopt;
+                }
+            }
+            return snapshot_path;
+        }

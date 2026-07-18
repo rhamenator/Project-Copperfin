@@ -195,11 +195,43 @@
         std::vector<CursorState::OrderState> load_cursor_orders(const std::string &table_path) const
         {
             std::vector<CursorState::OrderState> orders;
-            const auto inspection = vfp::inspect_asset(table_path);
+            std::filesystem::path snapshot_root;
+            std::string inspection_path = table_path;
+            if (options.require_verified_file_byte_overrides)
+            {
+                auto *mutable_impl = const_cast<Impl *>(this);
+                const auto verified_table_path = mutable_impl->materialize_verified_table_snapshot(
+                    copperfin::platform::path_from_utf8_string(table_path),
+                    snapshot_root);
+                if (!verified_table_path.has_value())
+                {
+                    return orders;
+                }
+                inspection_path = copperfin::platform::path_to_utf8_string(*verified_table_path);
+            }
+
+            const auto inspection = vfp::inspect_asset(inspection_path);
             if (!inspection.ok)
             {
+                if (!snapshot_root.empty())
+                {
+                    std::error_code snapshot_error;
+                    std::filesystem::remove_all(snapshot_root, snapshot_error);
+                }
                 return orders;
             }
+
+            const auto logical_index_path = [&](const std::string &path)
+            {
+                if (snapshot_root.empty())
+                {
+                    return normalize_path(path);
+                }
+                const auto logical_table_path = copperfin::platform::path_from_utf8_string(table_path);
+                return normalize_path(copperfin::platform::path_to_utf8_string(
+                    logical_table_path.parent_path() /
+                    copperfin::platform::path_from_utf8_string(path).filename()));
+            };
 
             for (const auto &index_asset : inspection.indexes)
             {
@@ -214,7 +246,7 @@
                         orders.push_back({.name = tag.name_hint.empty() ? collapse_identifier(tag.key_expression_hint) : tag.name_hint,
                                           .expression = tag.key_expression_hint,
                                           .for_expression = tag.for_expression_hint,
-                                          .index_path = normalize_path(index_asset.path),
+                                          .index_path = logical_index_path(index_asset.path),
                                           .normalization_hint = tag.normalization_hint,
                                           .collation_hint = tag.collation_hint,
                                           .key_domain_hint = index_asset.probe.key_domain_hint,
@@ -230,12 +262,18 @@
                     orders.push_back({.name = fallback_name.empty() ? collapse_identifier(index_asset.probe.key_expression_hint) : fallback_name,
                                       .expression = index_asset.probe.key_expression_hint,
                                       .for_expression = index_asset.probe.for_expression_hint,
-                                      .index_path = normalize_path(index_asset.path),
+                                      .index_path = logical_index_path(index_asset.path),
                                       .normalization_hint = index_asset.probe.normalization_hint,
                                       .collation_hint = index_asset.probe.collation_hint,
                                       .key_domain_hint = index_asset.probe.key_domain_hint,
                                       .descending = false});
                 }
+            }
+
+            if (!snapshot_root.empty())
+            {
+                std::error_code snapshot_error;
+                std::filesystem::remove_all(snapshot_root, snapshot_error);
             }
 
             return orders;
