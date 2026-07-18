@@ -513,6 +513,11 @@ namespace copperfin::runtime
             Statement statement;
         };
 
+        struct CommandArrayNameContinuation
+        {
+            Statement statement;
+        };
+
         struct TextMergeContinuation
         {
             Statement statement;
@@ -624,6 +629,7 @@ namespace copperfin::runtime
             bool expression_routine_return_pending = false;
             std::optional<ExpressionContinuation> expression_continuation;
             std::optional<CommandTargetContinuation> command_target_continuation;
+            std::optional<CommandArrayNameContinuation> command_array_name_continuation;
             std::optional<CommandArgumentContinuation> command_argument_continuation;
             std::optional<TextMergeContinuation> text_merge_continuation;
             std::optional<ParameterDefaultContinuation> parameter_default_continuation;
@@ -3492,6 +3498,7 @@ namespace copperfin::runtime
             active_expression_continuation = previous_continuation;
             source_frame.expression_continuation.reset();
             source_frame.command_target_continuation.reset();
+            source_frame.command_array_name_continuation.reset();
             source_frame.parameter_default_continuation.reset();
             source_frame.use_command_continuation.reset();
             source_frame.copy_file_continuation.reset();
@@ -8103,6 +8110,7 @@ namespace copperfin::runtime
                                 stack.back().expression_routine_return_pending = false;
                                 stack.back().expression_continuation.reset();
                                 stack.back().command_target_continuation.reset();
+                                stack.back().command_array_name_continuation.reset();
                                 stack.back().command_argument_continuation.reset();
                                 stack.back().text_merge_continuation.reset();
                                 stack.back().parameter_default_continuation.reset();
@@ -8733,6 +8741,7 @@ namespace copperfin::runtime
                                     stack.back().expression_routine_return_pending = false;
                                     stack.back().expression_continuation.reset();
                                     stack.back().command_target_continuation.reset();
+                                    stack.back().command_array_name_continuation.reset();
                                     stack.back().command_argument_continuation.reset();
                                     stack.back().text_merge_continuation.reset();
                                     stack.back().parameter_default_continuation.reset();

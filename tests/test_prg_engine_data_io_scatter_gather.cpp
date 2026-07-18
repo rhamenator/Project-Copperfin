@@ -290,7 +290,7 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
         "cFirst = aRow[1]\n"
         "nSecondPlus = aRow(2) + 1\n"
         "REPLACE NAME WITH 'Changed', AGE WITH 7\n"
-        "GATHER FROM aRow FIELDS NAME, AGE\n"
+        "GATHER FROM resolve_array_name() FIELDS NAME, AGE\n"
         "cAfterName = NAME\n"
         "nAfterAge = AGE\n"
         "cMacroRowName = 'aMacroRow'\n"
@@ -313,7 +313,10 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
         "GATHER FROM &cMacroRowNameSecondDeepHolder FIELDS NAME, AGE\n"
         "cMacroAfterNameSecondHop = NAME\n"
         "nMacroAfterAgeSecondHop = AGE\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION resolve_array_name\n"
+        "RETURN 'aRow'\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));

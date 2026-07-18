@@ -43,6 +43,7 @@
                 frame.expression_routine_return_pending = false;
                 frame.expression_continuation.reset();
                 frame.command_target_continuation.reset();
+                frame.command_array_name_continuation.reset();
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
@@ -90,6 +91,7 @@
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         std::optional<PrgValue> resumed_command_target_value;
+        std::optional<PrgValue> resumed_command_array_name_value;
         bool resumed_conditional_expression = false;
         bool resumed_case_expression = false;
         bool resumed_loop_expression = false;
@@ -560,10 +562,6 @@
                     {
                         resumed_declare_dll_path_value = *expression_value;
                     }
-                    else if (continued_statement.kind == StatementKind::gather_command)
-                    {
-                        resumed_gather_for_value = *expression_value;
-                    }
                     else if (continued_statement.kind == StatementKind::set_procedure &&
                              !trim_copy(continued_statement.expression).empty() &&
                              trim_copy(continued_statement.expression).front() == '&')
@@ -595,6 +593,14 @@
                              frame.command_target_continuation.has_value())
                     {
                         resumed_command_target_value = *expression_value;
+                    }
+                    else if (frame.command_array_name_continuation.has_value())
+                    {
+                        resumed_command_array_name_value = *expression_value;
+                    }
+                    else if (continued_statement.kind == StatementKind::gather_command)
+                    {
+                        resumed_gather_for_value = *expression_value;
                     }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
@@ -645,6 +651,7 @@
                     !resumed_gather_for_value.has_value() &&
                     !resumed_set_procedure_target_value.has_value() &&
                     !resumed_command_target_value.has_value() &&
+                    !resumed_command_array_name_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -1396,8 +1403,25 @@
                     return candidate;
                 }
 
-                const PrgValue evaluated = evaluate_expression(candidate, frame);
-                const std::string evaluated_name = trim_copy(value_as_string(evaluated));
+                if (!frame.command_array_name_continuation.has_value())
+                {
+                    Statement array_name_statement = statement;
+                    array_name_statement.expression = candidate;
+                    frame.command_array_name_continuation = CommandArrayNameContinuation{
+                        .statement = std::move(array_name_statement)};
+                }
+                const auto evaluated = resumed_command_array_name_value.has_value()
+                                           ? resumed_command_array_name_value
+                                           : evaluate_resumable_expression(
+                                                 frame,
+                                                 frame.command_array_name_continuation->statement);
+                if (!evaluated.has_value())
+                {
+                    return std::nullopt;
+                }
+                const std::string evaluated_name = trim_copy(value_as_string(*evaluated));
+                resumed_command_array_name_value.reset();
+                frame.command_array_name_continuation.reset();
                 if (is_bare_identifier_text(evaluated_name))
                 {
                     return evaluated_name;
@@ -1908,6 +1932,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.command_target_continuation.reset();
+                frame.command_array_name_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -2097,6 +2122,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.command_target_continuation.reset();
+                frame.command_array_name_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -2370,6 +2396,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.command_target_continuation.reset();
+                frame.command_array_name_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -5941,6 +5968,10 @@
                 {
                     const auto resolved_array_name = resolve_command_array_name(
                         statement.secondary_expression, "CREATE TABLE FROM ARRAY");
+                    if (!resolved_array_name.has_value() && frame.command_array_name_continuation.has_value())
+                    {
+                        return {};
+                    }
                     const RuntimeArray *metadata_array = resolved_array_name.has_value()
                         ? find_array(*resolved_array_name)
                         : nullptr;
@@ -6736,6 +6767,10 @@
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "COPY TO ARRAY");
                     if (!resolved_array_name.has_value())
                     {
+                        if (frame.command_array_name_continuation.has_value())
+                        {
+                            return {};
+                        }
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -7288,6 +7323,10 @@
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "APPEND FROM ARRAY");
                     if (!resolved_array_name.has_value())
                     {
+                        if (frame.command_array_name_continuation.has_value())
+                        {
+                            return {};
+                        }
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -8864,6 +8903,10 @@
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "SCATTER TO");
                     if (!resolved_array_name.has_value())
                     {
+                        if (frame.command_array_name_continuation.has_value())
+                        {
+                            return {};
+                        }
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -8976,6 +9019,10 @@
                         else if (!use_memvar)
                         {
                             const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
+                            if (!resolved_array_name.has_value() && frame.command_array_name_continuation.has_value())
+                            {
+                                return {};
+                            }
                             detail = (resolved_array_name.has_value() ? *resolved_array_name : statement.expression) + " skipped";
                         }
                         events.push_back({.category = "runtime.gather",
@@ -9018,6 +9065,10 @@
                     const auto resolved_array_name = resolve_command_array_name(statement.expression, "GATHER FROM");
                     if (!resolved_array_name.has_value())
                     {
+                        if (frame.command_array_name_continuation.has_value())
+                        {
+                            return {};
+                        }
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -9284,6 +9335,7 @@
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
                                 candidate.command_target_continuation.reset();
+                                candidate.command_array_name_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                     candidate.text_merge_continuation.reset();
                     candidate.parameter_default_continuation.reset();
@@ -9355,6 +9407,7 @@
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
                                 candidate.command_target_continuation.reset();
+                                candidate.command_array_name_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
                                 candidate.parameter_default_continuation.reset();
@@ -9394,6 +9447,7 @@
                             candidate.expression_routine_return_pending = false;
                             candidate.expression_continuation.reset();
                             candidate.command_target_continuation.reset();
+                            candidate.command_array_name_continuation.reset();
                             candidate.command_argument_continuation.reset();
                             candidate.text_merge_continuation.reset();
                             candidate.parameter_default_continuation.reset();
