@@ -318,6 +318,27 @@ public:
     }
 
 #if !defined(_WIN32)
+    bool create_child_directory(const std::filesystem::path& path) const {
+        if (descriptor_ < 0) {
+            return false;
+        }
+        const std::string leaf =
+            copperfin::platform::path_to_utf8_string(path.filename());
+        if (::mkdirat(descriptor_, leaf.c_str(), 0700) == 0) {
+            return true;
+        }
+        if (errno != EEXIST) {
+            return false;
+        }
+        struct stat information{};
+        return ::fstatat(
+                   descriptor_,
+                   leaf.c_str(),
+                   &information,
+                   AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISDIR(information.st_mode);
+    }
+
     bool write_text_file_atomically(
         const std::filesystem::path& path,
         const std::string& contents,
@@ -853,7 +874,15 @@ public:
             (void)rollback(ignored);
             return false;
         }
+#if defined(_WIN32)
         std::filesystem::create_directories(pinned_path(package_root_), filesystem_error);
+#else
+        const bool package_root_ready =
+            parent_identity_.create_child_directory(package_root_);
+        if (!package_root_ready) {
+            filesystem_error = std::make_error_code(std::errc::io_error);
+        }
+#endif
         if (filesystem_error) {
             std::string ignored;
             (void)rollback(ignored);
