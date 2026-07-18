@@ -1207,6 +1207,12 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_real_sample_round_trip> $<TARGET_FILE:copperfin_studio_host>
 )
 
+copperfin_add_test(
+    test_studio_host_real_sample_discovery
+    cf_platform_support
+    test_studio_host_real_sample_discovery.cpp
+)
+
 add_executable(test_studio_host_real_sample_sort_settings_round_trip
     test_studio_host_real_sample_sort_settings_round_trip.cpp
 )

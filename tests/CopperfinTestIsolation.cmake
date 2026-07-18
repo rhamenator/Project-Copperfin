@@ -354,6 +354,7 @@ function(copperfin_configure_native_test_isolation)
             test_studio_host_real_sample_device_round_trip
             test_studio_host_real_sample_direct_margins_round_trip
             test_studio_host_real_sample_driver_round_trip
+            test_studio_host_real_sample_discovery
             test_studio_host_real_sample_grouping_deleted_preview_round_trip
             test_studio_host_real_sample_grouping_round_trip
             test_studio_host_real_sample_left_margin_round_trip
@@ -582,6 +583,7 @@ function(copperfin_configure_native_test_isolation)
             test_build_host_output
             test_localization
             test_studio_host_deleted_record_localization
+            test_studio_host_real_sample_discovery
             test_runtime_host_debug_output_formatting
             test_runtime_host_audit_stream
             test_runtime_host_audit_containment)

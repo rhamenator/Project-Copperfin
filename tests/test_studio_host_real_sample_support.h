@@ -52,12 +52,18 @@ inline std::filesystem::path find_vfp9_reports_root() {
         if (error) {
             continue;
         }
-        for (const auto& user_entry : entries) {
+        while (entries != fs::directory_iterator()) {
             const fs::path candidate =
-                user_entry.path() / "VFPPROD1" / "program files" / "microsoft visual foxpro 9" /
+                entries->path() / "VFPPROD1" / "program files" / "microsoft visual foxpro 9" /
                 "samples" / "solution" / "reports";
             if (contains_report_samples(candidate)) {
                 return candidate;
+            }
+
+            error.clear();
+            entries.increment(error);
+            if (error) {
+                break;
             }
         }
     }
