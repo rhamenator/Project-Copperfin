@@ -76,6 +76,7 @@
         std::optional<PrgValue> resumed_restore_memvars_path_value;
         std::optional<PrgValue> resumed_set_default_path_value;
         std::optional<PrgValue> resumed_set_datasession_value;
+        std::optional<PrgValue> resumed_set_memowidth_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -541,6 +542,10 @@
                     {
                         resumed_set_datasession_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::set_memowidth)
+                    {
+                        resumed_set_memowidth_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -603,6 +608,7 @@
                     !resumed_restore_memvars_path_value.has_value() &&
                     !resumed_set_default_path_value.has_value() &&
                     !resumed_set_datasession_value.has_value() &&
+                    !resumed_set_memowidth_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -5167,7 +5173,15 @@
             }
             case StatementKind::set_memowidth:
             {
-                const double width_value = value_as_number(evaluate_expression(statement.expression, frame));
+                const auto width_expression_value = resumed_set_memowidth_value.has_value()
+                                                        ? resumed_set_memowidth_value
+                                                        : evaluate_resumable_expression(frame, statement);
+                if (!width_expression_value.has_value())
+                {
+                    return {};
+                }
+                const double width_value = value_as_number(*width_expression_value);
+                resumed_set_memowidth_value.reset();
                 const std::size_t new_width = static_cast<std::size_t>(std::max(1.0, std::min(32767.0, width_value)));
                 memowidth_by_session[current_data_session] = new_width;
                 return {};

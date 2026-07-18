@@ -205,7 +205,8 @@ namespace
             "lf_second_default = MLINE(lf_text, 2, 0, 80, 4, 0)\n"
             "lf_second_break = MLINE(lf_text, 2, 0, 80, 4, 1)\n"
             "memo_width_set_default = SET('MEMOWIDTH')\n"
-            "SET MEMOWIDTH TO 10\n"
+            "nMemoWidthCalls = 0\n"
+            "SET MEMOWIDTH TO memo_width_resolver(10)\n"
             "memo_width_value = _MLINE\n"
             "memo_width_set_after = SET('MEMOWIDTH')\n"
             "narrow_wrap_text = 'abc def ghi jkl mno'\n"
@@ -262,7 +263,12 @@ namespace
             "SET FIXED ON\n"
             "fixed_after = SET('FIXED')\n"
             "display_fixed = TRANSFORM(1.5)\n"
-            "RETURN\n");
+            "RETURN\n"
+            "FUNCTION memo_width_resolver\n"
+            "LPARAMETERS value\n"
+            "nMemoWidthCalls = nMemoWidthCalls + 1\n"
+            "RETURN value\n"
+            "ENDFUNC\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -453,6 +459,7 @@ namespace
         check("memo_width_set_default", "50");
         check("memo_width_value", "10");
         check("memo_width_set_after", "10");
+        check("nmemowidthcalls", "1");
         check("memo_width_session2", "50");
         check("memo_width_restored", "10");
         check("narrow_count", "3");
