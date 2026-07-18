@@ -756,6 +756,7 @@
   "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed": "Unable to write bridge routine bootstrap.",
   "RuntimeHost.Debug.Error.DispatchXAssetActionFailed": "Unable to dispatch xAsset action: {command}",
   "RuntimeHost.Debug.Error.InvalidBreakpointCommand": "Invalid breakpoint command: {command}",
+  "RuntimeHost.Debug.Error.InvalidCommand": "Invalid debug command: {command}",
   "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed": "Unable to materialize xAsset bootstrap.",
   "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound": "No runnable startup methods were found in asset.",
   "RuntimeHost.Debug.Error.UnknownBreakpoint": "Unknown breakpoint: {path}:{line}",

@@ -1962,8 +1962,11 @@ std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std:
     };
 }
 
-copperfin::runtime::DebugResumeAction parse_resume_action(const std::string& value) {
+std::optional<copperfin::runtime::DebugResumeAction> parse_resume_action(const std::string& value) {
     const std::string normalized = lowercase_copy(value);
+    if (normalized == "continue") {
+        return copperfin::runtime::DebugResumeAction::continue_run;
+    }
     if (normalized == "step") {
         return copperfin::runtime::DebugResumeAction::step_into;
     }
@@ -1973,7 +1976,7 @@ copperfin::runtime::DebugResumeAction parse_resume_action(const std::string& val
     if (normalized == "out") {
         return copperfin::runtime::DebugResumeAction::step_out;
     }
-    return copperfin::runtime::DebugResumeAction::continue_run;
+    return std::nullopt;
 }
 
 const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
@@ -3720,7 +3723,18 @@ int main(int argc, char** argv) {
                 print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
                 continue;
             } else {
-                state = session.run(parse_resume_action(command));
+                const auto action = parse_resume_action(command);
+                if (!action.has_value()) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidCommand",
+                            {{"command", command}}));
+                    return 5;
+                }
+                state = session.run(*action);
             }
             std::cout << "debug.command[" << index << "]: " << command << "\n";
             const auto breakpoints = session.list_breakpoints();

@@ -28,6 +28,7 @@ void test_runtime_host_rejects_bridge_descriptor_identity_mismatch(const std::st
 void test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(const std::string& runtime_host_path);
 void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const std::string& runtime_host_path);
 void test_runtime_host_debug_errors_localize_without_changing_command_tokens(const std::string& runtime_host_path);
+void test_runtime_host_rejects_invalid_debug_command_without_execution(const std::string& runtime_host_path);
 void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(const std::string& runtime_host_path);
 void test_runtime_host_watch_errors_localize_without_changing_watch_fields(const std::string& runtime_host_path);
 void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(const std::string& runtime_host_path);
@@ -71,6 +72,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("bridge descriptor metadata", runtime_host_path, test_runtime_host_rejects_bridge_descriptor_metadata_mismatch);
     run_runtime_host_test("usage localization", runtime_host_path, test_runtime_host_usage_text_localizes_without_changing_cli_tokens);
     run_runtime_host_test("debug error localization", runtime_host_path, test_runtime_host_debug_errors_localize_without_changing_command_tokens);
+    run_runtime_host_test("invalid debug command rejection", runtime_host_path, test_runtime_host_rejects_invalid_debug_command_without_execution);
     run_runtime_host_test("pause localization", runtime_host_path, test_runtime_host_pause_messages_localize_without_changing_pause_reasons);
     run_runtime_host_test("watch localization", runtime_host_path, test_runtime_host_watch_errors_localize_without_changing_watch_fields);
     run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);

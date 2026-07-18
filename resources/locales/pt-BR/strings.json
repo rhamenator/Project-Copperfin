@@ -422,6 +422,7 @@
   "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed": "Nao foi possivel gravar o bootstrap da rotina bridge.",
   "RuntimeHost.Debug.Error.DispatchXAssetActionFailed": "Nao foi possivel despachar a acao xAsset: {command}",
   "RuntimeHost.Debug.Error.InvalidBreakpointCommand": "Comando de breakpoint invalido: {command}",
+  "RuntimeHost.Debug.Error.InvalidCommand": "Comando de depuracao invalido: {command}",
   "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed": "Nao foi possivel materializar o bootstrap xAsset.",
   "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound": "Nenhum metodo de inicializacao executavel foi encontrado no asset.",
   "RuntimeHost.Debug.Error.UnknownBreakpoint": "Breakpoint desconhecido: {path}:{line}",

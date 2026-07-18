@@ -455,6 +455,68 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_rejects_invalid_debug_command_without_execution(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_invalid_debug_command_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path marker_path = temp_root / "marker.txt";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(startup_path, "STRTOFILE('ran', 'marker.txt')\nRETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=InvalidDebugCommand\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string(), "--debug", "--debug-command", "contnue"},
+            temp_root);
+        expect(process.exit_code == 5,
+               "#4206: invalid debug commands should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#4206: invalid debug commands should preserve machine-readable error status");
+        expect(process.stdout_text.find("Invalid debug command: contnue") != std::string::npos,
+               "#4206: invalid debug commands should use the localized error catalog");
+        expect(!fs::exists(marker_path),
+               "#4206: invalid debug commands must not execute the startup PRG");
+    }
+
+    {
+        fs::remove(marker_path, ignored);
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string(), "--debug", "--debug-command", "contnue"},
+            temp_root);
+        expect(process.exit_code == 5,
+               "#4206: es-419 invalid debug commands should keep the debug error exit code");
+        expect(process.stdout_text.find("Comando de depuracion invalido: contnue") != std::string::npos,
+               "#4206: es-419 invalid debug commands should localize the error body");
+        expect(process.stdout_text.find("Invalid debug command: contnue") == std::string::npos,
+               "#4206: es-419 invalid debug commands should not fall back to English");
+        expect(!fs::exists(marker_path),
+               "#4206: es-419 invalid debug commands must not execute the startup PRG");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
