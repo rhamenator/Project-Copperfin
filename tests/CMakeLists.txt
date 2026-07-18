@@ -4834,7 +4834,13 @@ copperfin_add_test(test_prg_engine_sql_cursors_seek_and_order cf_xbase_runtime
 )
 
 copperfin_add_test(test_prg_engine_table_mutation cf_xbase_runtime
-    test_prg_engine_table_mutation.cpp
+    test_prg_engine_table_mutation_basic.cpp
+    test_prg_engine_table_mutation_maintenance.cpp
+    test_prg_engine_table_mutation_locks.cpp
+    test_prg_engine_table_mutation_data.cpp
+    test_prg_engine_table_mutation_undo.cpp
+    test_prg_engine_table_mutation_transactions.cpp
+    test_prg_engine_table_mutation_main.cpp
     prg_engine_test_support.cpp
 )
 

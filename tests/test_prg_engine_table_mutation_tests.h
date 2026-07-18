@@ -1,0 +1,57 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+#pragma once
+
+namespace copperfin::table_mutation_tests
+{
+    void test_local_table_mutation_and_scan_flow();
+    void test_delete_all_and_recall_all_affect_whole_local_table();
+    void test_replace_for_updates_all_matching_records();
+    void test_replace_scope_clauses_bound_physical_record_ranges();
+    void test_delete_and_recall_scope_clauses_bound_physical_record_ranges();
+    void test_replace_additive_appends_only_memo_assignments();
+    void test_replace_matches_local_field_names_case_insensitively();
+    void test_undo_restores_scoped_additive_replace_bytes();
+    void test_multi_field_replace_uses_original_values_for_later_expressions();
+    void test_pack_compacts_deleted_local_records();
+    void test_zap_truncates_local_table_records();
+    void test_pack_is_reverted_by_undo();
+    void test_zap_is_reverted_by_undo();
+    void test_replace_character_field_truncates_to_field_width();
+    void test_character_field_at_maximum_width_round_trips();
+    void test_memo_field_replace_with_empty_string();
+    void test_set_exclusive_controls_table_maintenance_guards();
+    void test_lock_functions_and_unlock_command_track_session_locks();
+    void test_replacing_a_used_work_area_releases_prior_table_locks();
+    void test_reprocess_contention_retries_and_mutation_lock_timeouts();
+    void test_lock_retry_blocking_is_rejected_inside_critical_section();
+    void test_rlock_retry_blocking_is_rejected_inside_critical_section();
+    void test_flock_retry_blocking_is_rejected_inside_critical_section();
+    void test_insert_into_and_delete_from_local_table();
+    void test_insert_into_select_materializes_filtered_ordered_rows();
+    void test_insert_into_select_rolls_back_the_whole_failed_batch();
+    void test_insert_into_rolls_back_failed_local_append();
+    void test_indexed_table_mutation_succeeds_for_structural_indexes();
+    void test_append_blank_supports_opaque_field_layouts_at_runtime();
+    void test_update_command_sets_scoped_records();
+    void test_update_and_delete_accept_in_subquery_predicates();
+    void test_sql_style_for_clauses_accept_macro_expressions();
+    void test_undo_reverts_latest_replacement_command();
+    void test_command_undo_query_reports_available_label_after_bulk_operation();
+    void test_undo_reverts_latest_append_blank();
+    void test_undo_reverts_latest_delete_command();
+    void test_undo_reverts_latest_update_command();
+    void test_undo_reverts_latest_insert_into_command();
+    void test_undo_reverts_latest_create_table_command();
+    void test_undo_reverts_latest_alter_table_command();
+    void test_append_from_array_rolls_back_failed_multi_row_write();
+    void test_undo_reverts_latest_append_from_array();
+    void test_undo_all_reverts_multiple_latest_commands();
+    void test_undo_without_history_fails_deterministically();
+    void test_rollback_transaction_replays_local_dbf_changes();
+    void test_cancel_rolls_back_active_transaction();
+    void test_rollback_transaction_replays_append_from_array();
+    void test_rollback_transaction_prunes_stale_alter_table_field_rules();
+    void test_rollback_transaction_removes_created_table_cursor();
+    void test_transaction_rollback_leaves_table_unchanged();
+    void test_startup_replays_pending_transaction_journal();
+}
