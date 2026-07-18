@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_malformed_report_setting_memo_lines(argv[1]);
     test_studio_host_json_parses_cr_only_report_setting_memo_lines(argv[1]);
     test_studio_host_json_parses_mixed_case_report_setting_memo_names(argv[1]);
+    test_studio_host_json_writes_case_insensitive_expr_fields(argv[1]);
 
     return failures == 0 ? 0 : 1;
 }

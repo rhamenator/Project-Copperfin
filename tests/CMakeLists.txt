@@ -1019,6 +1019,7 @@ add_executable(test_studio_host_report_settings_memo_parsing
     test_studio_host_report_settings_memo_parsing.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_settings_memo_parsing.cpp
+    test_studio_host_json_settings_expr_case.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_report_settings_memo_parsing PRIVATE cf_vfp_assets)
@@ -4269,6 +4270,7 @@ copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor_object_lifecycle_identity_02.cpp
     test_visual_asset_editor_methods.cpp
     test_visual_asset_editor_properties.cpp
+    test_visual_asset_editor_report_settings_case.cpp
     test_visual_asset_editor_hierarchy_and_listing.cpp
     test_visual_asset_editor_update_batch.cpp
     test_visual_asset_editor_setters_behavior.cpp

@@ -1125,6 +1125,8 @@ void test_studio_host_json_parses_cr_only_report_setting_memo_lines(
     const std::string& studio_host_path);
 void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
     const std::string& studio_host_path);
+void test_studio_host_json_writes_case_insensitive_expr_fields(
+    const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: direct-setting field validation ====
 void write_synthetic_report_table_for_blank_direct_setting_layout_json(

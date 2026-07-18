@@ -910,9 +910,9 @@ VisualAssetEditResult replace_memo_field_value(
     }
 
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(table_bytes);
-
+    const std::string normalized_field_name = normalize_visual_property_name(field_name);
     const auto field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
-        return field.name == field_name;
+        return normalize_visual_property_name(field.name) == normalized_field_name;
     });
     if (field_it == fields.end()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Field.TargetNotFound")};
