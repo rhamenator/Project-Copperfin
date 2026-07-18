@@ -524,6 +524,129 @@ void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::stri
     }
 }
 
+void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(
+            "copperfin_runtime_host_bridge_unicode_descriptor_tests-\xC3\xA9-\xF0\x9F\x9A\x80");
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path startup_path = temp_root / "content" / "startup.prg";
+    const fs::path source_name = copperfin::platform::path_from_utf8_string(
+        "exports-\xC3\xA9-\xF0\x9F\x9A\x80.prg");
+    const fs::path source_path = temp_root / "content" / source_name;
+    const fs::path request_path = temp_root / "GetAnswer.request.json";
+    const fs::path response_path = temp_root / "nested" / "GetAnswer.response.json";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(source_path.parent_path());
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=BridgeUnicodeDescriptor\n"
+        "startup_item=startup.prg\n"
+        "startup_source=") + copperfin::platform::path_to_utf8_string(startup_path) + "\n"
+        "security_enabled=false\n"
+        "dotnet_story=none\n");
+    write_text(startup_path, "RETURN 7\n");
+    write_text(
+        source_path,
+        "PROCEDURE GetAnswer\n"
+        "RETURN 42\n"
+        "ENDPROC\n");
+
+    const std::string source_path_utf8 = copperfin::platform::path_to_utf8_string(source_path);
+    std::string escaped_source_path = json_escape_string(source_path_utf8);
+    const std::string source_name_utf8 = copperfin::platform::path_to_utf8_string(source_name);
+    const auto source_name_offset = escaped_source_path.find(source_name_utf8);
+    expect(source_name_offset != std::string::npos,
+           "Unicode bridge fixture should find its UTF-8 source name in the escaped path");
+    if (source_name_offset == std::string::npos) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    const std::string escaped_source_name = "exports-\\u00E9-\\uD83D\\uDE80.prg";
+    escaped_source_path.replace(source_name_offset, source_name_utf8.size(), escaped_source_name);
+    const auto write_request = [&](const std::string& encoded_source_path) {
+        write_text(
+            request_path,
+            std::string("{\n"
+            "  \"payload_shape\": \"bridge_request_v1\",\n"
+            "  \"export_name\": \"GetAnswer\",\n"
+            "  \"routine_kind\": \"procedure\",\n"
+            "  \"source_path\": \"") + encoded_source_path + "\",\n"
+            "  \"source_line\": 1,\n"
+            "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+            "  \"parameter_names\": \"\",\n"
+            "  \"parameter_count\": 0,\n"
+            "  \"schema_version\": \"v1\",\n"
+            "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+            "  \"expected_response_media_type\": \"application/vnd.copperfin.runtime-bridge-response+json\",\n"
+            "  \"parameters\": []\n"
+            "}\n");
+    };
+    write_request(escaped_source_path);
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
+            "--library-export", "GetAnswer",
+            "--routine-kind", "procedure",
+            "--source-path", source_path_utf8,
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "",
+            "--parameter-count", "0",
+            "--request-path", copperfin::platform::path_to_utf8_string(request_path),
+            "--response-path", copperfin::platform::path_to_utf8_string(response_path),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "bridge-unicode-descriptor stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "bridge-unicode-descriptor stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+    expect(process.exit_code == 0,
+           "runtime host should decode Unicode bridge descriptor paths before validation");
+    expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
+           "runtime host should execute a bridge source path decoded from Unicode escapes");
+
+    write_request(json_escape_string(source_path_utf8).replace(
+        source_name_offset, source_name_utf8.size(), "exports-\\uD800.prg"));
+    const auto malformed_process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
+            "--library-export", "GetAnswer",
+            "--routine-kind", "procedure",
+            "--source-path", source_path_utf8,
+            "--source-line", "1",
+            "--parameter-declaration", "LPARAMETERS",
+            "--parameter-names", "",
+            "--parameter-count", "0",
+            "--request-path", copperfin::platform::path_to_utf8_string(request_path),
+            "--response-path", copperfin::platform::path_to_utf8_string(response_path),
+            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+            "--schema-version", "v1"
+        },
+        temp_root);
+    expect(malformed_process.exit_code == 6,
+           "runtime host should reject an unpaired Unicode bridge escape");
+    expect(malformed_process.stdout_text.find("error: Bridge request descriptor mismatch.") != std::string::npos,
+           "malformed Unicode bridge escapes should preserve descriptor mismatch diagnostics");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_passes_bridge_request_parameters_to_export(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 

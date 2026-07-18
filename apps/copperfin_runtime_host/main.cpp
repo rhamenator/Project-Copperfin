@@ -24,6 +24,7 @@
 #include <cctype>
 #include <chrono>
 #include <cwctype>
+#include <cstdint>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -173,6 +174,52 @@ std::optional<std::string> parse_json_string_at(
     std::size_t value_start,
     std::size_t& value_end);
 
+std::optional<std::uint16_t> parse_json_hex_quad(
+    const std::string& document,
+    std::size_t offset) {
+    if (offset + 4U > document.size()) {
+        return std::nullopt;
+    }
+    std::uint16_t value = 0U;
+    for (std::size_t index = offset; index < offset + 4U; ++index) {
+        const unsigned char ch = static_cast<unsigned char>(document[index]);
+        std::uint16_t digit = 0U;
+        if (ch >= '0' && ch <= '9') {
+            digit = static_cast<std::uint16_t>(ch - '0');
+        } else if (ch >= 'a' && ch <= 'f') {
+            digit = static_cast<std::uint16_t>(ch - 'a' + 10U);
+        } else if (ch >= 'A' && ch <= 'F') {
+            digit = static_cast<std::uint16_t>(ch - 'A' + 10U);
+        } else {
+            return std::nullopt;
+        }
+        value = static_cast<std::uint16_t>((value << 4U) | digit);
+    }
+    return value;
+}
+
+bool append_json_code_point(std::string& result, std::uint32_t code_point) {
+    if (code_point > 0x10FFFFU || (code_point >= 0xD800U && code_point <= 0xDFFFU)) {
+        return false;
+    }
+    if (code_point <= 0x7FU) {
+        result.push_back(static_cast<char>(code_point));
+    } else if (code_point <= 0x7FFU) {
+        result.push_back(static_cast<char>(0xC0U | (code_point >> 6U)));
+        result.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    } else if (code_point <= 0xFFFFU) {
+        result.push_back(static_cast<char>(0xE0U | (code_point >> 12U)));
+        result.push_back(static_cast<char>(0x80U | ((code_point >> 6U) & 0x3FU)));
+        result.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    } else {
+        result.push_back(static_cast<char>(0xF0U | (code_point >> 18U)));
+        result.push_back(static_cast<char>(0x80U | ((code_point >> 12U) & 0x3FU)));
+        result.push_back(static_cast<char>(0x80U | ((code_point >> 6U) & 0x3FU)));
+        result.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    }
+    return true;
+}
+
 bool find_json_field_value_start(
     const std::string& document,
     const std::string& field_name,
@@ -263,6 +310,17 @@ std::optional<std::string> parse_json_string_at(
         if (ch == '\\' && (index + 1U) < document.size()) {
             const char escaped = document[++index];
             switch (escaped) {
+                case '"':
+                case '\\':
+                case '/':
+                    result.push_back(escaped);
+                    break;
+                case 'b':
+                    result.push_back('\b');
+                    break;
+                case 'f':
+                    result.push_back('\f');
+                    break;
                 case 'n':
                     result.push_back('\n');
                     break;
@@ -272,15 +330,47 @@ std::optional<std::string> parse_json_string_at(
                 case 't':
                     result.push_back('\t');
                     break;
-                default:
-                    result.push_back(escaped);
+                case 'u': {
+                    const auto high_surrogate = parse_json_hex_quad(document, index + 1U);
+                    if (!high_surrogate.has_value()) {
+                        return std::nullopt;
+                    }
+                    index += 4U;
+                    if (*high_surrogate >= 0xD800U && *high_surrogate <= 0xDBFFU) {
+                        if (index + 2U >= document.size() || document[index + 1U] != '\\' ||
+                            document[index + 2U] != 'u') {
+                            return std::nullopt;
+                        }
+                        const auto low_surrogate = parse_json_hex_quad(document, index + 3U);
+                        if (!low_surrogate.has_value() ||
+                            *low_surrogate < 0xDC00U || *low_surrogate > 0xDFFFU) {
+                            return std::nullopt;
+                        }
+                        index += 6U;
+                        const std::uint32_t code_point =
+                            0x10000U + ((static_cast<std::uint32_t>(*high_surrogate) - 0xD800U) << 10U) +
+                            (static_cast<std::uint32_t>(*low_surrogate) - 0xDC00U);
+                        if (!append_json_code_point(result, code_point)) {
+                            return std::nullopt;
+                        }
+                    } else if (*high_surrogate >= 0xDC00U && *high_surrogate <= 0xDFFFU) {
+                        return std::nullopt;
+                    } else if (!append_json_code_point(result, *high_surrogate)) {
+                        return std::nullopt;
+                    }
                     break;
+                }
+                default:
+                    return std::nullopt;
             }
             continue;
         }
         if (ch == '"') {
             value_end = index + 1U;
             return result;
+        }
+        if (static_cast<unsigned char>(ch) < 0x20U) {
+            return std::nullopt;
         }
         result.push_back(ch);
     }

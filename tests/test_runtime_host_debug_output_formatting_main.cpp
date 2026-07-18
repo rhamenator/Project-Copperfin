@@ -17,6 +17,7 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(const std
 void test_runtime_host_invokes_zero_argument_bridge_export(const std::string& runtime_host_path);
 void test_runtime_host_removes_bridge_routine_bootstrap_after_execution(const std::string& runtime_host_path);
 void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::string& runtime_host_path);
+void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string& runtime_host_path);
 void test_runtime_host_passes_bridge_request_parameters_to_export(const std::string& runtime_host_path);
 void test_runtime_host_rejects_bridge_parameter_count_mismatch(const std::string& runtime_host_path);
 void test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity(const std::string& runtime_host_path);
@@ -61,6 +62,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("zero-argument bridge export", runtime_host_path, test_runtime_host_invokes_zero_argument_bridge_export);
     run_runtime_host_test("bridge bootstrap cleanup", runtime_host_path, test_runtime_host_removes_bridge_routine_bootstrap_after_execution);
     run_runtime_host_test("escaped bridge descriptor", runtime_host_path, test_runtime_host_unescapes_bridge_descriptor_string_fields);
+    run_runtime_host_test("Unicode bridge descriptor", runtime_host_path, test_runtime_host_decodes_unicode_bridge_descriptor_paths);
     run_runtime_host_test("bridge parameters", runtime_host_path, test_runtime_host_passes_bridge_request_parameters_to_export);
     run_runtime_host_test("bridge parameter count mismatch", runtime_host_path, test_runtime_host_rejects_bridge_parameter_count_mismatch);
     run_runtime_host_test("nested bridge parameter array", runtime_host_path, test_runtime_host_rejects_nested_bridge_parameter_array_for_nonzero_arity);
