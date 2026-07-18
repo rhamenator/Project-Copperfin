@@ -48,6 +48,9 @@ namespace
             "a = ABS(-7)\n"
             "b = INT(3.9)\n"
             "c = MOD(10, 3)\n"
+            "mod_negative_dividend = MOD(-7, 2)\n"
+            "mod_negative_divisor = MOD(7, -2)\n"
+            "mod_both_negative = MOD(-7, -2)\n"
             "d = ROUND(3.567, 2)\n"
             "e = SIGN(-5)\n"
             "log10_value = LOG10(1000)\n"
@@ -468,6 +471,9 @@ namespace
         check("narrow_first", "abc def");
         check("narrow_second", "ghi jkl");
         check("narrow_third", "mno");
+        check("mod_negative_dividend", "1");
+        check("mod_negative_divisor", "-1");
+        check("mod_both_negative", "-1");
         check("strextract_case_sensitive", "");
         check("strextract_case_insensitive", "Beta");
         check("strextract_empty_begin_first", "hell");

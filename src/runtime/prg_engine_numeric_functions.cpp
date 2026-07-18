@@ -59,7 +59,11 @@ std::optional<PrgValue> evaluate_numeric_function(
         if (std::abs(b) < 0.000001) {
             return make_number_value(0.0);
         }
-        return make_number_value(std::fmod(a, b));
+        double remainder = std::fmod(a, b);
+        if (remainder != 0.0 && std::signbit(remainder) != std::signbit(b)) {
+            remainder += b;
+        }
+        return make_number_value(remainder);
     }
     if (function == "sqrt" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
