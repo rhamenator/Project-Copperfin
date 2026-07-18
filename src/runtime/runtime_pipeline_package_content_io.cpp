@@ -511,43 +511,15 @@ bool prepare_package_content_root(
         error = content_root_creation_failed();
         return false;
     }
-    const DirectDirectoryState package_root_state =
-        inspect_direct_directory(absolute_package_root);
-    if (!paths_equal_for_platform(
-            absolute_content_root,
-            absolute_package_root / "content")) {
-        error = rejected_content_root(content_root);
-        return false;
-    }
-    if (package_root_state != DirectDirectoryState::direct) {
-        error = package_root_state == DirectDirectoryState::rejected
-            ? rejected_content_root(content_root)
-            : content_root_creation_failed();
-        return false;
-    }
-
-    const bool descriptor_backed_root =
-#if !defined(_WIN32)
-        is_fd_backed_path(absolute_package_root);
-#else
-        false;
-#endif
-    if (!descriptor_backed_root) {
-        const auto package_containment = security::inspect_physical_path_containment(
-            absolute_package_root,
-            absolute_package_root);
-        if (!package_containment.allowed) {
-            error = is_containment_policy_rejection(package_containment.failure)
-                ? rejected_content_root(content_root)
-                : content_root_creation_failed();
-            return false;
-        }
-    }
-
-    bool content_root_ready = false;
 #if !defined(_WIN32)
     if (const auto parent_descriptor = fd_from_path(absolute_package_root);
         parent_descriptor.has_value()) {
+        if (!paths_equal_for_platform(
+                absolute_content_root,
+                absolute_package_root / "content")) {
+            error = rejected_content_root(content_root);
+            return false;
+        }
         const std::string package_leaf =
             copperfin::platform::path_to_utf8_string(absolute_package_root.filename());
         const int package_descriptor = ::openat(
@@ -560,7 +532,7 @@ bool prepare_package_content_root(
         }
         const std::string content_leaf =
             copperfin::platform::path_to_utf8_string(absolute_content_root.filename());
-        bool created = ::mkdirat(package_descriptor, content_leaf.c_str(), 0700) == 0;
+        const bool created = ::mkdirat(package_descriptor, content_leaf.c_str(), 0700) == 0;
         if (!created && errno != EEXIST) {
             (void)::close(package_descriptor);
             error = content_root_creation_failed();
@@ -578,51 +550,66 @@ bool prepare_package_content_root(
             error = content_root_creation_failed();
             return false;
         }
-        content_root_ready = true;
+        return true;
     }
 #endif
-    if (!content_root_ready) {
-        const auto status =
-            std::filesystem::symlink_status(absolute_content_root, filesystem_error);
-        if (filesystem_error == std::errc::no_such_file_or_directory) {
-            filesystem_error.clear();
-        } else if (filesystem_error) {
-            error = content_root_creation_failed();
-            return false;
-        }
-        if (!std::filesystem::exists(status) &&
-            (!std::filesystem::create_directory(
-                 absolute_content_root,
-                 filesystem_error) ||
-             filesystem_error)) {
-            error = content_root_creation_failed();
-            return false;
-        }
+    const DirectDirectoryState package_root_state =
+        inspect_direct_directory(absolute_package_root);
+    if (!paths_equal_for_platform(
+            absolute_content_root,
+            absolute_package_root / "content")) {
+        error = rejected_content_root(content_root);
+        return false;
+    }
+    if (package_root_state != DirectDirectoryState::direct) {
+        error = package_root_state == DirectDirectoryState::rejected
+            ? rejected_content_root(content_root)
+            : content_root_creation_failed();
+        return false;
+    }
+
+    const auto package_containment = security::inspect_physical_path_containment(
+        absolute_package_root,
+        absolute_package_root);
+    if (!package_containment.allowed) {
+        error = is_containment_policy_rejection(package_containment.failure)
+            ? rejected_content_root(content_root)
+            : content_root_creation_failed();
+        return false;
+    }
+
+    const auto status =
+        std::filesystem::symlink_status(absolute_content_root, filesystem_error);
+    if (filesystem_error == std::errc::no_such_file_or_directory) {
+        filesystem_error.clear();
+    } else if (filesystem_error) {
+        error = content_root_creation_failed();
+        return false;
+    }
+    if (!std::filesystem::exists(status) &&
+        (!std::filesystem::create_directory(
+             absolute_content_root,
+             filesystem_error) ||
+         filesystem_error)) {
+        error = content_root_creation_failed();
+        return false;
     }
     const DirectDirectoryState content_root_state =
-#if !defined(_WIN32)
-        content_root_ready
-        ? DirectDirectoryState::direct
-        : inspect_direct_directory(absolute_content_root);
-#else
         inspect_direct_directory(absolute_content_root);
-#endif
     if (content_root_state != DirectDirectoryState::direct) {
         error = content_root_state == DirectDirectoryState::rejected
             ? rejected_content_root(content_root)
             : content_root_creation_failed();
         return false;
     }
-    if (!descriptor_backed_root) {
-        const auto content_containment = security::inspect_physical_path_containment(
-            absolute_content_root,
-            absolute_package_root);
-        if (!content_containment.allowed) {
-            error = is_containment_policy_rejection(content_containment.failure)
-                ? rejected_content_root(content_root)
-                : content_root_creation_failed();
-            return false;
-        }
+    const auto content_containment = security::inspect_physical_path_containment(
+        absolute_content_root,
+        absolute_package_root);
+    if (!content_containment.allowed) {
+        error = is_containment_policy_rejection(content_containment.failure)
+            ? rejected_content_root(content_root)
+            : content_root_creation_failed();
+        return false;
     }
     return true;
 }
