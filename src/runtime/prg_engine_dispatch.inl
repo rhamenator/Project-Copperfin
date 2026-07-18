@@ -51,6 +51,7 @@
         std::optional<PrgValue> resumed_sleep_value;
         std::optional<PrgValue> resumed_seek_value;
         std::optional<PrgValue> resumed_skip_value;
+        std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -433,6 +434,10 @@
                     {
                         resumed_skip_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::go_command)
+                    {
+                        resumed_go_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -442,6 +447,7 @@
                     !resumed_sleep_value.has_value() &&
                     !resumed_seek_value.has_value() &&
                     !resumed_skip_value.has_value() &&
+                    !resumed_go_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -3618,7 +3624,14 @@
                 }
                 else
                 {
-                    const long long requested = std::llround(value_as_number(evaluate_expression(statement.expression, frame)));
+                    const auto requested_value = resumed_go_value.has_value()
+                                                     ? resumed_go_value
+                                                     : evaluate_resumable_expression(frame, statement);
+                    if (!requested_value.has_value())
+                    {
+                        return {};
+                    }
+                    const long long requested = std::llround(value_as_number(*requested_value));
                     move_cursor_to(*cursor, requested);
                 }
 
