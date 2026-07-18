@@ -90,7 +90,8 @@ void test_use_and_data_session_isolation() {
         "lEof1 = EOF()\n"
         "lBof1 = BOF()\n"
         "SELECT People\n"
-        "SET DATASESSION TO 2\n"
+        "nDataSessionCalls = 0\n"
+        "SET DATASESSION TO data_session_id(2)\n"
         "cAlias2 = ALIAS()\n"
         "nCount2 = RECCOUNT()\n"
         "USE '" + table_path.string() + "' ALIAS SessionTwo IN 0\n"
@@ -99,7 +100,12 @@ void test_use_and_data_session_isolation() {
         "cAlias4 = ALIAS()\n"
         "USE IN People\n"
         "cAlias5 = ALIAS()\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION data_session_id\n"
+        "LPARAMETERS value\n"
+        "nDataSessionCalls = nDataSessionCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -108,6 +114,12 @@ void test_use_and_data_session_isolation() {
     expect(state.completed, "table/data-session script should complete");
     expect(state.work_area.data_session == 1, "runtime should finish back in data session 1");
     expect(state.work_area.aliases.empty(), "USE IN People should close the session-1 cursor");
+    const auto data_session_calls = state.globals.find("ndatasessioncalls");
+    expect(data_session_calls != state.globals.end(), "SET DATASESSION should preserve the resolver call counter");
+    if (data_session_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(data_session_calls->second) == "1",
+               "SET DATASESSION should evaluate the session UDF exactly once");
+    }
 
     const auto alias1 = state.globals.find("calias1");
     const auto count1 = state.globals.find("ncount1");
