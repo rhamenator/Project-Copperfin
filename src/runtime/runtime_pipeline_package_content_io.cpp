@@ -536,19 +536,57 @@ bool prepare_package_content_root(
         return false;
     }
 
-    const auto status =
-        std::filesystem::symlink_status(absolute_content_root, filesystem_error);
-    if (filesystem_error == std::errc::no_such_file_or_directory) {
-        filesystem_error.clear();
-    } else if (filesystem_error) {
-        error = content_root_creation_failed();
-        return false;
+    bool content_root_ready = false;
+#if !defined(_WIN32)
+    if (const auto parent_descriptor = fd_from_path(absolute_package_root);
+        parent_descriptor.has_value()) {
+        const std::string package_leaf =
+            copperfin::platform::path_to_utf8_string(absolute_package_root.filename());
+        const int package_descriptor = ::openat(
+            *parent_descriptor,
+            package_leaf.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (package_descriptor < 0) {
+            error = content_root_creation_failed();
+            return false;
+        }
+        const std::string content_leaf =
+            copperfin::platform::path_to_utf8_string(absolute_content_root.filename());
+        bool created = ::mkdirat(package_descriptor, content_leaf.c_str(), 0700) == 0;
+        if (!created && errno != EEXIST) {
+            (void)::close(package_descriptor);
+            error = content_root_creation_failed();
+            return false;
+        }
+        struct stat content_information{};
+        const bool is_directory = ::fstatat(
+            package_descriptor,
+            content_leaf.c_str(),
+            &content_information,
+            AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISDIR(content_information.st_mode);
+        (void)::close(package_descriptor);
+        if (!is_directory) {
+            error = content_root_creation_failed();
+            return false;
+        }
+        content_root_ready = true;
     }
-    if (!std::filesystem::exists(status)) {
-        if (!std::filesystem::create_directory(
-                absolute_content_root,
-                filesystem_error) ||
-            filesystem_error) {
+#endif
+    if (!content_root_ready) {
+        const auto status =
+            std::filesystem::symlink_status(absolute_content_root, filesystem_error);
+        if (filesystem_error == std::errc::no_such_file_or_directory) {
+            filesystem_error.clear();
+        } else if (filesystem_error) {
+            error = content_root_creation_failed();
+            return false;
+        }
+        if (!std::filesystem::exists(status) &&
+            (!std::filesystem::create_directory(
+                 absolute_content_root,
+                 filesystem_error) ||
+             filesystem_error)) {
             error = content_root_creation_failed();
             return false;
         }
