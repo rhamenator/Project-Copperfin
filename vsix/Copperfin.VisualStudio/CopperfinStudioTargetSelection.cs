@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -60,6 +61,16 @@ internal sealed class CopperfinStudioSelectedTarget
 
 internal static class CopperfinStudioTargetSelection
 {
+    private static readonly HashSet<string> SupportedExtensions = new(
+        new[] { ".pjx", ".prg", ".scx", ".vcx", ".frx", ".lbx", ".mnx" },
+        StringComparer.OrdinalIgnoreCase);
+
+    public static bool IsSupportedTargetPath(string? candidate)
+    {
+        return !string.IsNullOrWhiteSpace(candidate) &&
+               SupportedExtensions.Contains(Path.GetExtension(candidate));
+    }
+
     public static string? Resolve(
         string? activeDocumentPath,
         IEnumerable<CopperfinStudioSelectedTarget> selectedTargets,
@@ -97,7 +108,7 @@ internal static class CopperfinStudioTargetSelection
 
     private static string? ExistingPathOrNull(string? candidate)
     {
-        return !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate)
+        return IsSupportedTargetPath(candidate) && File.Exists(candidate)
             ? candidate
             : null;
     }

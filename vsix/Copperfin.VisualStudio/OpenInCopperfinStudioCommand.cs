@@ -66,7 +66,8 @@ internal sealed class OpenInCopperfinStudioCommand
         var documentPath = dte is null
             ? null
             : CopperfinStudioLauncher.ResolveTargetPath(dte, preference);
-        if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
+        if (!CopperfinStudioTargetSelection.IsSupportedTargetPath(documentPath) ||
+            !File.Exists(documentPath))
         {
             VsShellUtilities.ShowMessageBox(
                 package,

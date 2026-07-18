@@ -47,6 +47,38 @@ internal static partial class Program
                     $"Solution Explorer item commands should prefer the selected {extension} asset over the active document");
             }
 
+            foreach (var extension in new[] { ".txt", ".md", ".json" })
+            {
+                var unsupportedSelected = Path.Combine(root, "unsupported" + extension);
+                File.WriteAllText(unsupportedSelected, extension);
+                var resolved = CopperfinStudioTargetSelection.Resolve(
+                    Path.Combine(root, "missing-active.prg"),
+                    new[] { SelectedTarget(unsupportedSelected) },
+                    CopperfinStudioTargetPreference.SelectedItems);
+                Expect(resolved is null,
+                    $"unsupported selected {extension} files should be rejected before Studio launch");
+
+                var activeUnsupported = CopperfinStudioTargetSelection.Resolve(
+                    unsupportedSelected,
+                    Array.Empty<CopperfinStudioSelectedTarget>(),
+                    CopperfinStudioTargetPreference.ActiveDocument);
+                Expect(activeUnsupported is null,
+                    $"unsupported active {extension} documents should be rejected before Studio launch");
+            }
+
+            var supportedSelected = Path.Combine(root, "selected-after-unsupported.scx");
+            File.WriteAllText(supportedSelected, "form");
+            var supportedFallback = CopperfinStudioTargetSelection.Resolve(
+                Path.Combine(root, "unsupported.md"),
+                new[]
+                {
+                    SelectedTarget(Path.Combine(root, "unsupported.txt")),
+                    SelectedTarget(supportedSelected)
+                },
+                CopperfinStudioTargetPreference.ActiveDocument);
+            Expect(supportedFallback == supportedSelected,
+                "active-document commands should skip unsupported candidates and select the next supported asset");
+
             var missingSelectedAsset = Path.Combine(root, "missing.scx");
             var selectedFallback = CopperfinStudioTargetSelection.Resolve(
                 activeDocument,
@@ -127,6 +159,10 @@ internal static partial class Program
                            "AddCommand(commandService, registration.CommandId, registration.Preference)",
                            StringComparison.Ordinal),
                     "Open In Studio command registration should consume the verified command mapping");
+                Expect(commandSource.Contains(
+                           "CopperfinStudioTargetSelection.IsSupportedTargetPath(documentPath)",
+                           StringComparison.Ordinal),
+                    "Open In Studio should reject unsupported targets before resolving the Studio host");
 
                 var commandTablePath = Path.Combine(
                     repositoryRoot,

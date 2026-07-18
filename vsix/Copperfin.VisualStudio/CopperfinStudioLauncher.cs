@@ -20,7 +20,7 @@ internal static class CopperfinStudioLauncher
 
         var activeDocumentPath = dte.ActiveDocument?.FullName;
         if (preference == CopperfinStudioTargetPreference.ActiveDocument &&
-            !string.IsNullOrWhiteSpace(activeDocumentPath) &&
+            CopperfinStudioTargetSelection.IsSupportedTargetPath(activeDocumentPath) &&
             File.Exists(activeDocumentPath))
         {
             return activeDocumentPath;
