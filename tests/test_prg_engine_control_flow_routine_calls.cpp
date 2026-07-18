@@ -15,12 +15,16 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
     const fs::path main_path = temp_root / "do_with_parameters.prg";
     write_text(
         main_path,
-        "DO addvals WITH 4, 5\n"
+        "cTarget = resolve_target()\n"
+        "DO &cTarget WITH 4, 5\n"
         "RETURN\n"
         "PROCEDURE addvals\n"
         "LPARAMETERS a, b\n"
         "sum_result = a + b\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION resolve_target\n"
+        "RETURN 'addvals'\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -47,12 +51,16 @@ void test_call_with_parameters_binds_arguments_in_called_routine() {
     const fs::path main_path = temp_root / "call_with_parameters.prg";
     write_text(
         main_path,
-        "CALL addvals WITH 7, 8\n"
+        "cTarget = resolve_target()\n"
+        "CALL &cTarget WITH 7, 8\n"
         "RETURN\n"
         "PROCEDURE addvals\n"
         "LPARAMETERS a, b\n"
         "sum_result = a + b\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION resolve_target\n"
+        "RETURN 'addvals'\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));

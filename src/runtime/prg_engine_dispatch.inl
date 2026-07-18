@@ -42,6 +42,7 @@
             {
                 frame.expression_routine_return_pending = false;
                 frame.expression_continuation.reset();
+                frame.command_target_continuation.reset();
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
@@ -88,6 +89,7 @@
         std::optional<PrgValue> resumed_call_argument_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
+        std::optional<PrgValue> resumed_command_target_value;
         bool resumed_conditional_expression = false;
         bool resumed_case_expression = false;
         bool resumed_loop_expression = false;
@@ -587,6 +589,13 @@
                     {
                         resumed_parameter_default_value = *expression_value;
                     }
+                    else if ((continued_statement.kind == StatementKind::do_command ||
+                              continued_statement.kind == StatementKind::spawn_command ||
+                              continued_statement.kind == StatementKind::call_command) &&
+                             frame.command_target_continuation.has_value())
+                    {
+                        resumed_command_target_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
                     {
@@ -635,6 +644,7 @@
                     !resumed_declare_dll_path_value.has_value() &&
                     !resumed_gather_for_value.has_value() &&
                     !resumed_set_procedure_target_value.has_value() &&
+                    !resumed_command_target_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -1741,6 +1751,43 @@
                 return true;
             };
 
+            const auto evaluate_command_target = [&](const Statement &command_statement)
+                -> std::optional<std::string>
+            {
+                std::string target = trim_copy(command_statement.identifier);
+                if (target.empty() || target.front() != '&')
+                {
+                    return target;
+                }
+
+                if (!frame.command_target_continuation.has_value())
+                {
+                    Statement target_statement = command_statement;
+                    target_statement.expression = target;
+                    frame.command_target_continuation = CommandTargetContinuation{
+                        .statement = std::move(target_statement)};
+                }
+
+                const auto target_value = resumed_command_target_value.has_value()
+                                              ? resumed_command_target_value
+                                              : evaluate_resumable_expression(
+                                                    frame,
+                                                    frame.command_target_continuation->statement);
+                if (!target_value.has_value())
+                {
+                    return std::nullopt;
+                }
+
+                const std::string expanded_target = trim_copy(value_as_string(*target_value));
+                resumed_command_target_value.reset();
+                frame.command_target_continuation.reset();
+                if (!expanded_target.empty())
+                {
+                    target = expanded_target;
+                }
+                return target;
+            };
+
             switch (statement.kind)
             {
             case StatementKind::assignment:
@@ -1787,15 +1834,12 @@
             {
                 if (!frame.command_argument_continuation.has_value())
                 {
-                    std::string target = trim_copy(statement.identifier);
-                    if (!target.empty() && target.front() == '&')
+                    const auto target_value = evaluate_command_target(statement);
+                    if (!target_value.has_value())
                     {
-                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
-                        if (!expanded_target.empty())
-                        {
-                            target = expanded_target;
-                        }
+                        return {};
                     }
+                    std::string target = *target_value;
                     frame.command_argument_continuation = CommandArgumentContinuation{
                         .statement = statement,
                         .target = std::move(target),
@@ -1863,6 +1907,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.command_target_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -1976,15 +2021,12 @@
             {
                 if (!frame.command_argument_continuation.has_value())
                 {
-                    std::string target = trim_copy(statement.identifier);
-                    if (!target.empty() && target.front() == '&')
+                    const auto target_value = evaluate_command_target(statement);
+                    if (!target_value.has_value())
                     {
-                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
-                        if (!expanded_target.empty())
-                        {
-                            target = expanded_target;
-                        }
+                        return {};
                     }
+                    std::string target = *target_value;
                     if (target.empty())
                     {
                         last_error_message = runtime_text(
@@ -2054,6 +2096,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.command_target_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -2253,15 +2296,12 @@
             {
                 if (!frame.command_argument_continuation.has_value())
                 {
-                    std::string target = trim_copy(statement.identifier);
-                    if (!target.empty() && target.front() == '&')
+                    const auto target_value = evaluate_command_target(statement);
+                    if (!target_value.has_value())
                     {
-                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
-                        if (!expanded_target.empty())
-                        {
-                            target = expanded_target;
-                        }
+                        return {};
                     }
+                    std::string target = *target_value;
                     frame.command_argument_continuation = CommandArgumentContinuation{
                         .statement = statement,
                         .target = std::move(target),
@@ -2329,6 +2369,7 @@
                 std::vector<std::optional<std::string>> call_argument_references =
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
+                frame.command_target_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
                 frame.use_command_continuation.reset();
@@ -9242,6 +9283,7 @@
                                 candidate.scan_expression_continuation.reset();
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
+                                candidate.command_target_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                     candidate.text_merge_continuation.reset();
                     candidate.parameter_default_continuation.reset();
@@ -9312,6 +9354,7 @@
                                 candidate.loop_expression_continuation.reset();
                                 candidate.expression_routine_return_pending = false;
                                 candidate.expression_continuation.reset();
+                                candidate.command_target_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
                                 candidate.parameter_default_continuation.reset();
@@ -9350,6 +9393,7 @@
 
                             candidate.expression_routine_return_pending = false;
                             candidate.expression_continuation.reset();
+                            candidate.command_target_continuation.reset();
                             candidate.command_argument_continuation.reset();
                             candidate.text_merge_continuation.reset();
                             candidate.parameter_default_continuation.reset();
