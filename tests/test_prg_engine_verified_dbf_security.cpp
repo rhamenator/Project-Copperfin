@@ -183,6 +183,52 @@ void test_runtime_surface_reads_verified_code_page()
     fs::remove_all(root, ignored);
 }
 
+void test_append_from_reads_verified_source_rows()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_append_from";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path source_path = root / "source.dbf";
+    write_simple_dbf(destination_path, {"Existing"});
+    write_simple_dbf(source_path, {"Ada", "Grace"});
+    const std::string verified_destination_bytes = read_text(destination_path);
+    const std::string verified_source_bytes = read_text(source_path);
+    write_simple_dbf(source_path, {"Tampered"});
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(destination_path.string(), verified_destination_bytes);
+    options.verified_file_byte_overrides.emplace(source_path.string(), verified_source_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_append_from.prg",
+        "USE '" + destination_path.string() + "' ALIAS destination\n"
+        "APPEND FROM '" + source_path.string() + "'\n"
+        "nRows = RECCOUNT('destination')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict verified APPEND FROM should read the verified source table: " + state.message);
+    const std::string rows = global_text(state, "nrows");
+    expect(rows == "3",
+           "strict verified APPEND FROM should append every verified source row, got " + rows);
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(persisted.ok && persisted.table.records.size() == 3U,
+           "strict verified APPEND FROM should persist the expected destination row count");
+    if (persisted.ok && persisted.table.records.size() == 3U &&
+        !persisted.table.records[1].values.empty() &&
+        !persisted.table.records[2].values.empty())
+    {
+        expect(persisted.table.records[1].values.front().display_value == "Ada" &&
+                   persisted.table.records[2].values.front().display_value == "Grace",
+               "strict verified APPEND FROM should persist verified source rows instead of the replacement");
+    }
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
@@ -191,5 +237,6 @@ int main()
     test_initial_use_fails_closed_without_verified_dbf_bytes();
     test_initial_use_reads_verified_index_metadata();
     test_runtime_surface_reads_verified_code_page();
+    test_append_from_reads_verified_source_rows();
     return test_failures() == 0 ? 0 : 1;
 }

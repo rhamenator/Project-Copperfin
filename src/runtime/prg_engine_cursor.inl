@@ -158,27 +158,25 @@
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }
 
-        vfp::DbfTableParseResult parse_cursor_table(
-            const CursorState &cursor,
-            std::size_t max_records) const
+        vfp::DbfTableParseResult parse_table_path(
+            const std::string &table_path,
+            std::size_t max_records)
         {
-            if (!options.require_verified_file_byte_overrides || cursor.source_path.empty())
+            if (!options.require_verified_file_byte_overrides || table_path.empty())
             {
-                return vfp::parse_dbf_table_from_file(cursor.source_path, max_records);
+                return vfp::parse_dbf_table_from_file(table_path, max_records);
             }
 
-            const auto table_path = copperfin::platform::path_from_utf8_string(cursor.source_path);
+            const auto logical_table_path = copperfin::platform::path_from_utf8_string(table_path);
             std::filesystem::path snapshot_root;
-            // Const cursor readers still need the session-owned temporary snapshot and diagnostic state.
-            auto *mutable_impl = const_cast<Impl *>(this);
-            const auto verified_table_path = mutable_impl->materialize_verified_file_snapshot(
-                table_path,
+            const auto verified_table_path = materialize_verified_file_snapshot(
+                logical_table_path,
                 snapshot_root,
                 "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
                 false);
             if (!verified_table_path.has_value())
             {
-                return {.ok = false, .error = mutable_impl->last_error_message};
+                return {.ok = false, .error = last_error_message};
             }
 
             const auto result = vfp::parse_dbf_table_from_file(
@@ -190,6 +188,20 @@
                 std::filesystem::remove_all(snapshot_root, snapshot_error);
             }
             return result;
+        }
+
+        vfp::DbfTableParseResult parse_cursor_table(
+            const CursorState &cursor,
+            std::size_t max_records) const
+        {
+            if (cursor.source_path.empty())
+            {
+                return vfp::parse_dbf_table_from_file(cursor.source_path, max_records);
+            }
+
+            // Const cursor readers still need the session-owned snapshot and diagnostic state.
+            auto *mutable_impl = const_cast<Impl *>(this);
+            return mutable_impl->parse_table_path(cursor.source_path, max_records);
         }
 
         std::vector<CursorState::OrderState> load_cursor_orders(const std::string &table_path) const

@@ -7812,7 +7812,7 @@
                         return {};
                     }
 
-                    const auto source_result = vfp::parse_dbf_table_from_file(
+                    const auto source_result = parse_table_path(
                         copperfin::platform::path_to_utf8_string(src_path), 1000000U);
                     if (!source_result.ok)
                     {
@@ -8668,7 +8668,7 @@
                 }
 
                 // Parse all records from the source file
-                const auto src_result = vfp::parse_dbf_table_from_file(
+                const auto src_result = parse_table_path(
                     copperfin::platform::path_to_utf8_string(src_path),
                     std::numeric_limits<std::size_t>::max());
                 if (!src_result.ok)
