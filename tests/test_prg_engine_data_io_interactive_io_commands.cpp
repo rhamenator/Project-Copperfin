@@ -359,6 +359,7 @@ void test_input_accept_to_local_targets_stay_local_in_routine_scope() {
     const fs::path main_path = temp_root / "input_accept_local_scope.prg";
     write_text(
         main_path,
+        "PUBLIC input_local_type, accept_local_type, input_local_value, accept_local_value\n"
         "input_local_type = 'unset'\n"
         "accept_local_type = 'unset'\n"
         "DO run_dialogs\n"
