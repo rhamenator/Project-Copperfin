@@ -550,7 +550,8 @@ function(copperfin_configure_native_test_isolation)
     foreach(test_name IN ITEMS
             test_build_host_output
             test_localization
-            test_runtime_host_debug_output
+            test_runtime_host_debug_output_formatting
+            test_runtime_host_audit_stream
             test_runtime_host_audit_containment)
         copperfin_set_test_isolation(${test_name}
             PARALLEL_SAFE

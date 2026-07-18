@@ -316,23 +316,27 @@ add_test(
     COMMAND $<TARGET_FILE:test_localization> $<TARGET_FILE:copperfin_inspect>
 )
 
-add_executable(test_runtime_host_debug_output
-    test_runtime_host_debug_output.cpp
-)
-target_link_libraries(test_runtime_host_debug_output PRIVATE cf_design_model cf_xbase_runtime cf_vfp_assets)
-target_link_libraries(test_runtime_host_debug_output PRIVATE cf_security)
-add_dependencies(test_runtime_host_debug_output copperfin_runtime_host)
+foreach(runtime_host_test_target IN ITEMS
+        test_runtime_host_debug_output_formatting
+        test_runtime_host_audit_stream)
+    add_executable(${runtime_host_test_target}
+        ${runtime_host_test_target}.cpp
+    )
+    target_link_libraries(${runtime_host_test_target} PRIVATE cf_design_model cf_xbase_runtime cf_vfp_assets)
+    target_link_libraries(${runtime_host_test_target} PRIVATE cf_security)
+    add_dependencies(${runtime_host_test_target} copperfin_runtime_host)
 
-if(MSVC)
-    target_compile_options(test_runtime_host_debug_output PRIVATE /W4 /permissive-)
-else()
-    target_compile_options(test_runtime_host_debug_output PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+    if(MSVC)
+        target_compile_options(${runtime_host_test_target} PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(${runtime_host_test_target} PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
 
-add_test(
-    NAME test_runtime_host_debug_output
-    COMMAND $<TARGET_FILE:test_runtime_host_debug_output> $<TARGET_FILE:copperfin_runtime_host>
-)
+    add_test(
+        NAME ${runtime_host_test_target}
+        COMMAND $<TARGET_FILE:${runtime_host_test_target}> $<TARGET_FILE:copperfin_runtime_host>
+    )
+endforeach()
 
 add_executable(test_runtime_host_audit_containment
     test_runtime_host_audit_containment.cpp

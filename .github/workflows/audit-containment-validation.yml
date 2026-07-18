@@ -9,7 +9,9 @@ on:
       - include/copperfin/security/**
       - src/security/**
       - tests/test_runtime_host_audit_containment.cpp
-      - tests/test_runtime_host_debug_output.cpp
+      - tests/test_runtime_host_debug_output_support.h
+      - tests/test_runtime_host_debug_output_formatting.cpp
+      - tests/test_runtime_host_audit_stream.cpp
       - tests/run_runtime_host_binding_check.cmake
       - tests/test_security_controls.cpp
       - cmake/validate_focused_workflow_path_filters.cmake
@@ -23,7 +25,9 @@ on:
       - include/copperfin/security/**
       - src/security/**
       - tests/test_runtime_host_audit_containment.cpp
-      - tests/test_runtime_host_debug_output.cpp
+      - tests/test_runtime_host_debug_output_support.h
+      - tests/test_runtime_host_debug_output_formatting.cpp
+      - tests/test_runtime_host_audit_stream.cpp
       - tests/run_runtime_host_binding_check.cmake
       - tests/test_security_controls.cpp
       - cmake/validate_focused_workflow_path_filters.cmake
@@ -58,7 +62,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build audit containment targets
-        run: cmake --build build --config Release --target copperfin_runtime_host test_runtime_host_debug_output test_runtime_host_audit_containment test_security_controls --parallel 2
+        run: cmake --build build --config Release --target copperfin_runtime_host test_runtime_host_debug_output_formatting test_runtime_host_audit_stream test_runtime_host_audit_containment test_security_controls --parallel 2
 
       - name: Run audit containment tests
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_focused_workflow_path_filters|test_runtime_host_binding|test_runtime_host_debug_output|test_runtime_host_audit_containment|test_security_controls)$" -j 2
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_focused_workflow_path_filters|test_runtime_host_binding|test_runtime_host_debug_output_formatting|test_runtime_host_audit_stream|test_runtime_host_audit_containment|test_security_controls)$" -j 2
