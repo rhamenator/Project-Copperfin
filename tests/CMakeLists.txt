@@ -4570,6 +4570,7 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow_concurrency_and_critical_sections.cpp
     test_prg_engine_control_flow_error_handler_commands.cpp
     test_prg_engine_control_flow_error_handling_and_faults.cpp
+    test_prg_engine_control_flow_exception_identity.cpp
     test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp
     test_prg_engine_control_flow_routine_calls.cpp
     prg_engine_test_support.cpp

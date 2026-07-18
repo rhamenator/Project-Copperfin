@@ -3262,6 +3262,19 @@
                 last_error_compatibility = {};
                 last_error_compatibility.thrown_user_value = thrown_value;
                 last_error_compatibility.explicit_error_code = 2071;
+                if (const auto thrown_object = resolve_ole_object(thrown_value);
+                    thrown_object.has_value() && !(*thrown_object)->source.empty() &&
+                    std::any_of(
+                        (*thrown_object)->class_hierarchy.begin(),
+                        (*thrown_object)->class_hierarchy.end(),
+                        [&](const std::string &class_name)
+                        {
+                            return normalize_identifier(class_name) == "exception";
+                        }))
+                {
+                    last_error_compatibility.active_exception_reference = thrown_value;
+                    last_error_compatibility.preserve_fault_context = true;
+                }
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
