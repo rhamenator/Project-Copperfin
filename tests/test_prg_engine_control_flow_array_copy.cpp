@@ -16,6 +16,7 @@ void test_whole_array_assignment_copies_scoped_storage() {
     const fs::path main_path = temp_root / "whole_array_assignment.prg";
     write_text(
         main_path,
+        "PUBLIC private_copy_one, private_copy_two, private_copy_size\n"
         "DIMENSION aSource[3], aCopy[1]\n"
         "aSource[1] = 'global-one'\n"
         "aSource[2] = 'global-two'\n"

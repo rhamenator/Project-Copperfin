@@ -69,6 +69,17 @@
             }
             else
             {
+                const bool is_top_level_program_frame =
+                    stack.size() == 1U &&
+                    &stack.front() == &frame &&
+                    frame.routine_name == "main";
+                if (!is_top_level_program_frame &&
+                    !globals.contains(target.second) &&
+                    !public_names.contains(target.second) &&
+                    !frame.private_saved_values.contains(target.second))
+                {
+                    frame.private_saved_values.emplace(target.second, std::nullopt);
+                }
                 globals[target.second] = value;
             }
 

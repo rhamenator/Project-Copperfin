@@ -15,6 +15,7 @@ void test_private_declaration_masks_caller_variable() {
     const fs::path main_path = temp_root / "private_mask.prg";
     write_text(
         main_path,
+        "PUBLIC sub_x\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_x = x\n"
@@ -134,6 +135,7 @@ void test_scoped_array_declarations_follow_vfp_lifetime_rules() {
     const fs::path main_path = temp_root / "scoped_arrays.prg";
     write_text(
         main_path,
+        "PUBLIC observer_public, observer_private, observer_local_type, local_initial, local_release\n"
         "PUBLIC ARRAY aPublic[1]\n"
         "aPublic[1] = 'public'\n"
         "DIMENSION aPrivate[1]\n"
@@ -242,6 +244,7 @@ void test_local_and_private_array_by_reference_bindings() {
     const fs::path main_path = temp_root / "scoped_array_by_reference.prg";
     write_text(
         main_path,
+        "PUBLIC local_after_one, local_after_two, private_after_one, private_after_two\n"
         "DO use_local_array\n"
         "DO use_private_array\n"
         "RETURN\n"
@@ -305,6 +308,7 @@ void test_private_variable_visible_to_called_routines() {
     const fs::path main_path = temp_root / "private_visible.prg";
     write_text(
         main_path,
+        "PUBLIC inner_saw\n"
         "DO caller\n"
         "RETURN\n"
         "PROCEDURE caller\n"
@@ -341,6 +345,7 @@ void test_release_private_restores_saved_binding_immediately() {
     const fs::path main_path = temp_root / "release_private_restore.prg";
     write_text(
         main_path,
+        "PUBLIC sub_x_after_release\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_x = x\n"
@@ -386,6 +391,7 @@ void test_release_local_restores_visible_outer_global() {
     const fs::path main_path = temp_root / "release_local_restore.prg";
     write_text(
         main_path,
+        "PUBLIC sub_x_after_release\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_x = x\n"
@@ -431,6 +437,7 @@ void test_macro_assignment_target_updates_private_binding_and_release_restores_o
     const fs::path main_path = temp_root / "macro_assign_private_release.prg";
     write_text(
         main_path,
+        "PUBLIC sub_x_after_macro_assign, sub_x_after_release\n"
         "x = 42\n"
         "cTarget = 'x'\n"
         "DO subproc\n"
@@ -603,6 +610,7 @@ void test_release_all_clears_current_frame_locals_without_global_leak() {
     const fs::path prg = tmp / "test.prg";
     write_text(
         prg,
+        "PUBLIC after_release_type, after_reassign\n"
         "DO subproc\n"
         "outer_type = TYPE('x')\n"
         "RETURN\n"
@@ -610,6 +618,7 @@ void test_release_all_clears_current_frame_locals_without_global_leak() {
         "LOCAL x\n"
         "x = 5\n"
         "RELEASE ALL\n"
+        "PUBLIC after_release_type, after_reassign\n"
         "after_release_type = TYPE('x')\n"
         "x = 7\n"
         "after_reassign = x\n"
@@ -648,6 +657,7 @@ void test_release_all_local_shadow_preserves_outer_global() {
     const fs::path prg = tmp / "test.prg";
     write_text(
         prg,
+        "PUBLIC sub_x_after_release_all\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_x = x\n"
@@ -687,6 +697,7 @@ void test_release_all_private_shadow_restores_outer_global() {
     const fs::path prg = tmp / "test.prg";
     write_text(
         prg,
+        "PUBLIC sub_x_after_release_all\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_x = x\n"
@@ -891,6 +902,7 @@ void test_clear_memory_prevents_private_bindings_from_restoring() {
     const fs::path prg = tmp / "test.prg";
     write_text(
         prg,
+        "PUBLIC sub_type\n"
         "x = 42\n"
         "DO subproc\n"
         "caller_type = TYPE('x')\n"
@@ -899,6 +911,7 @@ void test_clear_memory_prevents_private_bindings_from_restoring() {
         "PRIVATE x\n"
         "x = 99\n"
         "CLEAR MEMORY\n"
+        "PUBLIC sub_type\n"
         "sub_type = TYPE('x')\n"
         "RETURN\n");
     copperfin::runtime::PrgRuntimeSession session =
@@ -929,6 +942,7 @@ void test_clear_memory_clears_current_frame_locals_without_global_leak() {
     const fs::path prg = tmp / "test.prg";
     write_text(
         prg,
+        "PUBLIC after_clear_type, after_reassign\n"
         "DO subproc\n"
         "outer_type = TYPE('x')\n"
         "RETURN\n"
@@ -936,6 +950,7 @@ void test_clear_memory_clears_current_frame_locals_without_global_leak() {
         "LOCAL x\n"
         "x = 5\n"
         "CLEAR MEMORY\n"
+        "PUBLIC after_clear_type, after_reassign\n"
         "after_clear_type = TYPE('x')\n"
         "x = 7\n"
         "after_reassign = x\n"

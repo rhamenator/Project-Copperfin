@@ -631,6 +631,7 @@ void test_on_shutdown_do_cleanup_can_call_quit_without_recursing() {
                "    QUIT\n"
                "ENDPROC\n"
                "PROCEDURE CleanupProcedure\n"
+               "    PUBLIC cleanup_marker\n"
                "    cleanup_marker = 1\n"
                "    CLEAR EVENTS\n"
                "    CLOSE DATABASES ALL\n"

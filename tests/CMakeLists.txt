@@ -4570,6 +4570,7 @@ copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow_shared_test_helpers.cpp
     test_prg_engine_control_flow_control_flow_basics.cpp
     test_prg_engine_control_flow_array_copy.cpp
+    test_prg_engine_control_flow_implicit_scope.cpp
     test_prg_engine_control_flow_variables_and_scope.cpp
     test_prg_engine_control_flow_aggregate_and_total_commands.cpp
     test_prg_engine_control_flow_concurrency_and_critical_sections.cpp

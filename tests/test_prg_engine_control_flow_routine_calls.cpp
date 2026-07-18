@@ -15,6 +15,7 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
     const fs::path main_path = temp_root / "do_with_parameters.prg";
     write_text(
         main_path,
+        "PUBLIC sum_result\n"
         "cTarget = resolve_target()\n"
         "DO &cTarget WITH 4, 5\n"
         "RETURN\n"
@@ -51,6 +52,7 @@ void test_call_with_parameters_binds_arguments_in_called_routine() {
     const fs::path main_path = temp_root / "call_with_parameters.prg";
     write_text(
         main_path,
+        "PUBLIC sum_result\n"
         "cTarget = resolve_target()\n"
         "CALL &cTarget WITH 7, 8\n"
         "RETURN\n"
@@ -87,6 +89,7 @@ void test_unsupplied_parameters_initialize_to_logical_false() {
     const fs::path main_path = temp_root / "unsupplied_parameters.prg";
     write_text(
         main_path,
+        "PUBLIC clocaltype, llocalvalue, nlocalpcount, nexplicitdefault\n"
         "DO inspectlocal WITH 'supplied'\n"
         "cPrivateType = inspectprivate('supplied')\n"
         "cInlineType = inspectinline('supplied')\n"
@@ -155,6 +158,7 @@ void test_parameter_defaults_use_heap_backed_expression_continuations() {
     const fs::path main_path = temp_root / "parameter_default_continuation.prg";
     write_text(
         main_path,
+        "PUBLIC nfirstdefault, nseconddefault\n"
         "nDefaultCalls = 0\n"
         "DO inspectdefaults WITH 5\n"
         "RETURN\n"
@@ -731,6 +735,7 @@ void test_direct_recursive_return_uses_heap_backed_frame_continuations() {
     const fs::path semantics_path = temp_root / "continuation_semantics.prg";
     write_text(
         semantics_path,
+        "PUBLIC capturedfirst, capturedsecond\n"
         "SET UDFPARMS TO REFERENCE\n"
         "scalarValue = 2\n"
         "argumentCalls = 0\n"
@@ -993,6 +998,7 @@ void test_do_with_arguments_use_heap_backed_frame_continuations() {
     const fs::path semantics_path = temp_root / "do_argument_semantics.prg";
     write_text(
         semantics_path,
+        "PUBLIC capturedfirst, capturedsecond\n"
         "SET UDFPARMS TO REFERENCE\n"
         "first = 2\n"
         "second = 3\n"
@@ -1075,6 +1081,7 @@ void test_call_with_arguments_use_heap_backed_frame_continuations() {
     const fs::path semantics_path = temp_root / "call_argument_semantics.prg";
     write_text(
         semantics_path,
+        "PUBLIC capturedfirst, capturedsecond\n"
         "SET UDFPARMS TO REFERENCE\n"
         "first = 2\n"
         "second = 3\n"
@@ -1283,6 +1290,7 @@ void test_compound_return_uses_heap_backed_expression_checkpoints() {
         "FUNCTION childvalue\n"
         "RETURN 5\n"
         "PROCEDURE handleerr\n"
+        "PUBLIC handlerCount, handlerMessage, handlerLine, handlerRows, handlerAErrorMessage, handlerAErrorLine, handlerStatement\n"
         "handlerCount = handlerCount + 1\n"
         "handlerMessage = MESSAGE()\n"
         "handlerLine = LINENO()\n"
@@ -1585,6 +1593,7 @@ void test_assignment_rhs_uses_heap_backed_expression_checkpoints() {
         "FUNCTION childvalue\n"
         "RETURN 5\n"
         "PROCEDURE handleerr\n"
+        "PUBLIC handlerCount, handlerLine, handlerRows, handlerStatement\n"
         "handlerCount = handlerCount + 1\n"
         "handlerLine = LINENO()\n"
         "handlerRows = AERROR(handlerError)\n"
@@ -2789,6 +2798,7 @@ void test_elseif_predicate_resumption_review_gaps() {
         "FUNCTION predicatechild\n"
         "RETURN 7\n"
         "PROCEDURE handleelseiferror\n"
+        "PUBLIC handlerCalls, handlerLine, handlerStatement\n"
         "handlerCalls = handlerCalls + 1\n"
         "handlerLine = LINENO()\n"
         "handlerStatement = MESSAGE()\n"
