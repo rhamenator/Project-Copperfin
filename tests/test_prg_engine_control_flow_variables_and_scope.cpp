@@ -188,74 +188,6 @@ void test_scoped_array_declarations_follow_vfp_lifetime_rules() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_whole_array_assignment_copies_scoped_storage() {
-    namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_whole_array_assignment";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const fs::path main_path = temp_root / "whole_array_assignment.prg";
-    write_text(
-        main_path,
-        "DIMENSION aSource[3], aCopy[1]\n"
-        "aSource[1] = 'global-one'\n"
-        "aSource[2] = 'global-two'\n"
-        "aSource[3] = 'global-three'\n"
-        "aCopy = aSource\n"
-        "aSource[1] = 'changed-after-copy'\n"
-        "global_copy_one = aCopy[1]\n"
-        "global_copy_three = aCopy[3]\n"
-        "global_copy_size = ALEN(aCopy)\n"
-        "local_copy_result = copy_local_array()\n"
-        "DO copy_private_array\n"
-        "RETURN\n"
-        "FUNCTION copy_local_array\n"
-        "LOCAL ARRAY aLocalSource[2], aLocalCopy[1]\n"
-        "aLocalSource[1] = 'local-one'\n"
-        "aLocalSource[2] = 'local-two'\n"
-        "aLocalCopy = aLocalSource\n"
-        "aLocalSource[1] = 'local-changed'\n"
-        "RETURN aLocalCopy[1] + '|' + aLocalCopy[2] + '|' + TRANSFORM(ALEN(aLocalCopy))\n"
-        "ENDFUNC\n"
-        "PROCEDURE copy_private_array\n"
-        "PRIVATE ARRAY aPrivateSource[2], aPrivateCopy[1]\n"
-        "aPrivateSource[1] = 'private-one'\n"
-        "aPrivateSource[2] = 'private-two'\n"
-        "aPrivateCopy = aPrivateSource\n"
-        "aPrivateSource[1] = 'private-changed'\n"
-        "private_copy_one = aPrivateCopy[1]\n"
-        "private_copy_two = aPrivateCopy[2]\n"
-        "private_copy_size = ALEN(aPrivateCopy)\n"
-        "RETURN\n");
-
-    const auto state = copperfin::runtime::PrgRuntimeSession::create(
-                           make_runtime_session_options(main_path.string(), temp_root.string(), false))
-                           .run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "whole-array assignment script should complete: " + state.message);
-
-    const auto check = [&](const std::string &name, const std::string &expected)
-    {
-        const auto value = state.globals.find(name);
-        expect(value != state.globals.end(), name + " should be captured");
-        if (value != state.globals.end())
-        {
-            expect(copperfin::runtime::format_value(value->second) == expected,
-                   name + " should preserve the independent array copy");
-        }
-    };
-
-    check("global_copy_one", "global-one");
-    check("global_copy_three", "global-three");
-    check("global_copy_size", "3");
-    check("local_copy_result", "local-one|local-two|2");
-    check("private_copy_one", "private-one");
-    check("private_copy_two", "private-two");
-    check("private_copy_size", "2");
-
-    fs::remove_all(temp_root, ignored);
-}
-
 void test_double_parentheses_force_array_value_copy() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_value_argument";
@@ -296,6 +228,69 @@ void test_double_parentheses_force_array_value_copy() {
         expect(copperfin::runtime::format_value(source_after->second) == "source-one",
                "mutating a forced array copy should not mutate the caller array");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_local_and_private_array_by_reference_bindings() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scoped_array_by_reference";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "scoped_array_by_reference.prg";
+    write_text(
+        main_path,
+        "DO use_local_array\n"
+        "DO use_private_array\n"
+        "RETURN\n"
+        "PROCEDURE use_local_array\n"
+        "LOCAL ARRAY aLocal[2]\n"
+        "aLocal[1] = 'local-one'\n"
+        "aLocal[2] = 'local-two'\n"
+        "DO mutate_array WITH aLocal\n"
+        "local_after_one = aLocal[1]\n"
+        "local_after_two = aLocal[2]\n"
+        "RETURN\n"
+        "PROCEDURE use_private_array\n"
+        "PRIVATE ARRAY aPrivate[2]\n"
+        "aPrivate[1] = 'private-one'\n"
+        "aPrivate[2] = 'private-two'\n"
+        "DO mutate_array WITH aPrivate\n"
+        "private_after_one = aPrivate[1]\n"
+        "private_after_two = aPrivate[2]\n"
+        "RETURN\n"
+        "PROCEDURE mutate_array\n"
+        "LPARAMETERS aItems\n"
+        "aItems[1] = 'mutated-one'\n"
+        "DO forward_array WITH aItems\n"
+        "RETURN\n"
+        "PROCEDURE forward_array\n"
+        "LPARAMETERS aForward\n"
+        "aForward[2] = 'mutated-two'\n"
+        "RETURN\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path.string(), temp_root.string(), false))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "scoped array by-reference script should complete: " + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), name + " should be captured");
+        if (value != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   name + " should reflect nested by-reference array mutation");
+        }
+    };
+
+    check("local_after_one", "mutated-one");
+    check("local_after_two", "mutated-two");
+    check("private_after_one", "mutated-one");
+    check("private_after_two", "mutated-two");
 
     fs::remove_all(temp_root, ignored);
 }

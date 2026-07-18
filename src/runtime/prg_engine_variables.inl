@@ -208,46 +208,23 @@
 
         RuntimeArray *find_array(const std::string &name)
         {
-            if (!stack.empty())
+            if (stack.empty())
             {
-                if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
-                {
-                    return &native_object_arrays[native_array->first][native_array->second];
-                }
-                const std::string normalized = normalize_memory_variable_identifier(name);
-                if (!stack.back().array_reference_bindings.contains(normalized))
-                {
-                    const auto local = stack.back().local_arrays.find(normalized);
-                    if (local != stack.back().local_arrays.end())
-                    {
-                        return &local->second;
-                    }
-                }
+                const auto found = arrays.find(normalize_memory_variable_identifier(name));
+                return found == arrays.end() ? nullptr : &found->second;
             }
-            const auto found = arrays.find(canonical_array_name(name));
-            return found == arrays.end() ? nullptr : &found->second;
+            return const_cast<RuntimeArray *>(
+                static_cast<const Impl *>(this)->find_array(name, stack.back()));
         }
 
         const RuntimeArray *find_array(const std::string &name) const
         {
-            if (!stack.empty())
+            if (stack.empty())
             {
-                if (const auto native_array = find_native_object_array_reference(name, stack.back()); native_array.has_value())
-                {
-                    return &native_object_arrays.at(native_array->first).at(native_array->second);
-                }
-                const std::string normalized = normalize_memory_variable_identifier(name);
-                if (!stack.back().array_reference_bindings.contains(normalized))
-                {
-                    const auto local = stack.back().local_arrays.find(normalized);
-                    if (local != stack.back().local_arrays.end())
-                    {
-                        return &local->second;
-                    }
-                }
+                const auto found = arrays.find(normalize_memory_variable_identifier(name));
+                return found == arrays.end() ? nullptr : &found->second;
             }
-            const auto found = arrays.find(canonical_array_name(name));
-            return found == arrays.end() ? nullptr : &found->second;
+            return find_array(name, stack.back());
         }
 
         const RuntimeArray *find_array(const std::string &name, const Frame &frame) const
@@ -257,7 +234,34 @@
                 return &native_object_arrays.at(native_array->first).at(native_array->second);
             }
             const std::string normalized = normalize_memory_variable_identifier(name);
-            if (!frame.array_reference_bindings.contains(normalized))
+            const auto binding = frame.array_reference_bindings.find(normalized);
+            if (binding != frame.array_reference_bindings.end())
+            {
+                std::size_t frame_index = stack.size();
+                for (std::size_t index = 0U; index < stack.size(); ++index)
+                {
+                    if (&stack[index] == &frame)
+                    {
+                        frame_index = index;
+                        break;
+                    }
+                }
+
+                const std::string source_name = binding->second;
+                while (frame_index > 0U)
+                {
+                    --frame_index;
+                    const auto source = stack[frame_index].local_arrays.find(source_name);
+                    if (source != stack[frame_index].local_arrays.end())
+                    {
+                        return &source->second;
+                    }
+                }
+
+                const auto global = arrays.find(source_name);
+                return global == arrays.end() ? nullptr : &global->second;
+            }
+            else
             {
                 const auto local = frame.local_arrays.find(normalized);
                 if (local != frame.local_arrays.end())
@@ -265,7 +269,7 @@
                     return &local->second;
                 }
             }
-            const auto found = arrays.find(canonical_array_name(name, frame));
+            const auto found = arrays.find(normalized);
             return found == arrays.end() ? nullptr : &found->second;
         }
 

@@ -87,6 +87,7 @@ void test_private_all_hides_matching_caller_variables_and_arrays();
 void test_scoped_array_declarations_follow_vfp_lifetime_rules();
 void test_whole_array_assignment_copies_scoped_storage();
 void test_double_parentheses_force_array_value_copy();
+void test_local_and_private_array_by_reference_bindings();
 void test_private_variable_visible_to_called_routines();
 void test_release_private_restores_saved_binding_immediately();
 void test_release_local_restores_visible_outer_global();

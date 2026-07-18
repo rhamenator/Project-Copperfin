@@ -46,6 +46,7 @@ int main() {
     test_scoped_array_declarations_follow_vfp_lifetime_rules();
     test_whole_array_assignment_copies_scoped_storage();
     test_double_parentheses_force_array_value_copy();
+    test_local_and_private_array_by_reference_bindings();
     test_private_variable_visible_to_called_routines();
     test_release_private_restores_saved_binding_immediately();
     test_release_local_restores_visible_outer_global();
