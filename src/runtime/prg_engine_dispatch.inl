@@ -5607,7 +5607,16 @@
                     {
                         const std::string &reference_name = *frame.call_argument_references[index];
                         Frame *caller = stack.size() >= 2U ? &stack[stack.size() - 2U] : nullptr;
-                        if (caller != nullptr && find_array(reference_name, *caller) != nullptr)
+                        if (caller != nullptr && is_array_copy_reference(reference_name))
+                        {
+                            const RuntimeArray *source_array = find_array(array_copy_source_name(reference_name), *caller);
+                            if (source_array != nullptr)
+                            {
+                                frame.locals.erase(normalized);
+                                frame.local_arrays[normalized] = *source_array;
+                            }
+                        }
+                        else if (caller != nullptr && find_array(reference_name, *caller) != nullptr)
                         {
                             frame.array_reference_bindings[normalized] = canonical_array_name(reference_name, *caller);
                         }

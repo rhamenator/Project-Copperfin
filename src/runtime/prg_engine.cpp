@@ -3473,6 +3473,20 @@ namespace copperfin::runtime
 
         std::vector<std::optional<std::string>> resolved_references = argument_references;
         resolved_references.resize(arguments.size());
+        const std::size_t raw_argument_count = std::min(arguments.size(), raw_arguments.size());
+        for (std::size_t index = 0U; index < raw_argument_count; ++index)
+        {
+            const std::string raw_argument = trim_copy(raw_arguments[index]);
+            if (raw_argument.size() < 3U || raw_argument.front() != '(' || raw_argument.back() != ')')
+            {
+                continue;
+            }
+            const std::string source_name = trim_copy(raw_argument.substr(1U, raw_argument.size() - 2U));
+            if (is_memory_variable_reference_text(source_name) && find_array(source_name, source_frame) != nullptr)
+            {
+                resolved_references[index] = make_array_copy_reference(source_name);
+            }
+        }
         if (udfparms_mode == "REFERENCE")
         {
             const std::size_t candidate_count = std::min(arguments.size(), raw_arguments.size());

@@ -123,6 +123,22 @@
                        : canonical_array_name(name, stack.back());
         }
 
+        std::string make_array_copy_reference(const std::string &source_name) const
+        {
+            return "__copperfin_array_copy__:" + source_name;
+        }
+
+        bool is_array_copy_reference(const std::string &reference) const
+        {
+            return reference.rfind("__copperfin_array_copy__:", 0U) == 0U;
+        }
+
+        std::string array_copy_source_name(const std::string &reference) const
+        {
+            constexpr std::size_t prefix_length = sizeof("__copperfin_array_copy__:") - 1U;
+            return reference.size() > prefix_length ? reference.substr(prefix_length) : std::string{};
+        }
+
         std::optional<std::pair<int, std::string>> find_native_object_array_reference(
             const std::string &name,
             const Frame &frame) const

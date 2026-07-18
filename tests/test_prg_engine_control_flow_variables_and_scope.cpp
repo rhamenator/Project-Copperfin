@@ -256,6 +256,50 @@ void test_whole_array_assignment_copies_scoped_storage() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_double_parentheses_force_array_value_copy() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_value_argument";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "array_value_argument.prg";
+    write_text(
+        main_path,
+        "DIMENSION aData[3]\n"
+        "aData[1] = 'source-one'\n"
+        "aData[2] = 'source-two'\n"
+        "aData[3] = 'source-three'\n"
+        "forced_result = read_and_change((aData))\n"
+        "source_after = aData[1]\n"
+        "RETURN\n"
+        "FUNCTION read_and_change\n"
+        "LPARAMETERS aItems\n"
+        "aItems[1] = 'copy-changed'\n"
+        "RETURN aItems[1] + '|' + aItems[2] + '|' + TRANSFORM(ALEN(aItems))\n"
+        "ENDFUNC\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                           make_runtime_session_options(main_path.string(), temp_root.string(), false))
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "double-parentheses array argument script should complete: " + state.message);
+
+    const auto forced_result = state.globals.find("forced_result");
+    const auto source_after = state.globals.find("source_after");
+    expect(forced_result != state.globals.end(), "forced array-copy result should be captured");
+    expect(source_after != state.globals.end(), "source array value after forced copy should be captured");
+    if (forced_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(forced_result->second) == "copy-changed|source-two|3",
+               "double parentheses should pass an independent full array copy");
+    }
+    if (source_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(source_after->second) == "source-one",
+               "mutating a forced array copy should not mutate the caller array");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_private_variable_visible_to_called_routines() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_private_visible";
