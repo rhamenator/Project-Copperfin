@@ -4652,6 +4652,11 @@ copperfin_add_test(test_prg_engine_native_lifecycle_events cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_transform_numeric_pictures cf_xbase_runtime
+    test_prg_engine_transform_numeric_pictures.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_aggregate_array_functions cf_xbase_runtime
     test_prg_engine_aggregate_array_functions.cpp
     prg_engine_test_support.cpp

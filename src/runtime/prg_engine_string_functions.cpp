@@ -434,6 +434,47 @@ bool picture_has_numeric_placeholders(const std::string& picture) {
     return picture.find_first_of("9#0") != std::string::npos;
 }
 
+bool picture_is_digit_only_numeric(const std::string& picture) {
+    return !picture.empty() &&
+        std::all_of(
+            picture.begin(),
+            picture.end(),
+            [](char ch) { return ch == '9' || ch == '#' || ch == '0'; });
+}
+
+std::string format_digit_only_numeric_picture(double value, const std::string& picture) {
+    const std::size_t width = picture.size();
+    if (width == 0U || !std::isfinite(value)) {
+        return std::string(width, '*');
+    }
+
+    const bool negative = value < 0.0;
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(0) << std::abs(value);
+    const std::string digits = stream.str();
+    if (digits.size() > width || (negative && digits.size() >= width)) {
+        return std::string(width, '*');
+    }
+
+    std::string transformed(width, ' ');
+    std::size_t digit_start = width - digits.size();
+    std::copy(digits.begin(), digits.end(), transformed.begin() + static_cast<std::ptrdiff_t>(digit_start));
+    for (std::size_t index = 0U; index < digit_start; ++index) {
+        if (picture[index] == '0') {
+            transformed[index] = '0';
+        }
+    }
+
+    if (negative) {
+        const bool leading_zero_picture =
+            std::all_of(picture.begin(), picture.begin() + static_cast<std::ptrdiff_t>(digit_start),
+                        [](char ch) { return ch == '0'; });
+        const std::size_t sign_position = leading_zero_picture ? 0U : digit_start - 1U;
+        transformed[sign_position] = '-';
+    }
+    return transformed;
+}
+
 bool picture_has_flag(const std::string& picture, const std::string& flag) {
     return picture.find(flag) != std::string::npos;
 }
@@ -1020,7 +1061,11 @@ std::optional<PrgValue> evaluate_string_function(
 
         std::string transformed;
         if (!picture.empty()) {
-            if (picture_has_flag(picture, "@!")) {
+            if (picture_is_digit_only_numeric(picture)) {
+                transformed = format_digit_only_numeric_picture(
+                    value_as_number(arguments[0]),
+                    picture);
+            } else if (picture_has_flag(picture, "@!")) {
                 transformed = uppercase_copy(value_as_string(arguments[0]));
             } else if (picture_has_flag(picture, "@L")) {
                 transformed = value_as_string(arguments[0]);
