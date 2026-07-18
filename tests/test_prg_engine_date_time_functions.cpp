@@ -69,6 +69,9 @@ namespace
             "fweek_default = SET('FWEEK')\n"
             "SET DATE TO DMY\n"
             "SET MARK TO '.'\n"
+            "stod_dmy = STOD('20260418')\n"
+            "jtod_dmy = JTOD(2460447)\n"
+            "dmy_dmy = DMY(18, 4, 2026)\n"
             "min_date_dmy = DTOC(MIN(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "max_date_dmy = DTOC(MAX(DATE(2020, 12, 1), DATE(2021, 1, 15)), 1)\n"
             "SET DATE TO MDY\n"
@@ -213,6 +216,9 @@ namespace
             "dtoc_century_off = DTOC('18/04/2026')\n"
             "SET DATE TO YMD\n"
             "date_set_ymd = SET('DATE')\n"
+            "stod_ymd_century_off = STOD('20260418')\n"
+            "jtod_ymd_century_off = JTOD(2460447)\n"
+            "dmy_ymd_century_off = DMY(18, 4, 2026)\n"
             "dtoc_ymd_century_off = DTOC('2026/04/18')\n"
             "ctot_ymd_century_off = CTOT('2026/04/18 13:45:56')\n"
             "SET CENTURY ON\n"
@@ -422,6 +428,9 @@ namespace
         check("isleap_2024", "true");
         check("isleap_2026", "false");
         check("date_set_dmy", "DMY");
+        check("stod_dmy", "18.04.2026");
+        check("jtod_dmy", "18.04.2026");
+        check("dmy_dmy", "18.04.2026");
         check("ctod_dmy", "18/04/2026");
         check("date_arithmetic_dmy", "02/05/2026");
         check("dtoc_dmy", "18/04/2026");
@@ -459,6 +468,9 @@ namespace
         check("century_off", "OFF");
         check("dtoc_century_off", "18/04/26");
         check("date_set_ymd", "YMD");
+        check("stod_ymd_century_off", "26/04/18");
+        check("jtod_ymd_century_off", "26/04/18");
+        check("dmy_ymd_century_off", "26/04/18");
         check("dtoc_ymd_century_off", "26/04/18");
         check("ctot_ymd_century_off", "26/04/18 13:45:56");
         check("century_on", "ON");

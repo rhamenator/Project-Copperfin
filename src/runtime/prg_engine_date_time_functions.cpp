@@ -983,7 +983,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         if (!parse_runtime_date_string(source, year, month, day)) {
             return make_date_value(std::string{});
         }
-        return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
+        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
     if (function == "ctod" && !arguments.empty()) {
         int year = 0;
@@ -1174,7 +1174,7 @@ std::optional<PrgValue> evaluate_date_time_function(
                 0,
                 0);
         }
-        return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
+        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
     if (function == "dmy" && arguments.size() >= 3U) {
         int day = static_cast<int>(value_as_number(arguments[0]));
@@ -1183,7 +1183,7 @@ std::optional<PrgValue> evaluate_date_time_function(
         if (!valid_runtime_date(year, month, day)) {
             return make_date_value(std::string{});
         }
-        return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
+        return make_date_value(format_runtime_date_for_set(year, month, day, set_callback), year, month, day);
     }
     if (function == "isleapyear" && !arguments.empty()) {
         int year = static_cast<int>(value_as_number(arguments[0]));
