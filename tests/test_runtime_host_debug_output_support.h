@@ -24,26 +24,26 @@
 #include <sys/wait.h>
 #endif
 
+inline int failures = 0;
+
 namespace {
 
 using copperfin::test_support::ScopedEnvironmentValue;
 using copperfin::test_support::ScopedEnvironmentPath;
 
-int failures = 0;
-
-void expect(bool condition, const std::string& message) {
+[[maybe_unused]] void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
 }
 
-void write_text(const std::filesystem::path& path, const std::string& text) {
+[[maybe_unused]] void write_text(const std::filesystem::path& path, const std::string& text) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     output << text;
 }
 
-std::string quote_manifest_value(const std::string& value) {
+[[maybe_unused]] std::string quote_manifest_value(const std::string& value) {
     std::string escaped;
     escaped.reserve(value.size());
     for (const char ch : value) {
@@ -89,7 +89,7 @@ std::string quote_manifest_value(const std::string& value) {
     write_text(path, std::string(bytes.begin(), bytes.end()));
 }
 
-std::filesystem::path deployed_runtime_host_path(
+[[maybe_unused]] std::filesystem::path deployed_runtime_host_path(
     const std::filesystem::path& deployed_root,
     const std::string& runtime_host_path) {
     const std::filesystem::path runtime_host_file_name =
@@ -104,7 +104,7 @@ std::filesystem::path deployed_runtime_host_path(
 #endif
 }
 
-void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
+[[maybe_unused]] void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
     const std::filesystem::path english_root = locale_root / "en-US";
     const std::filesystem::path spanish_root = locale_root / "es-419";
     const std::filesystem::path portuguese_root = locale_root / "pt-BR";
@@ -344,7 +344,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(pseudo_root / "strings.json", "{}\n");
 }
 
-std::string read_text(const std::filesystem::path& path) {
+[[maybe_unused]] std::string read_text(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return {
         std::istreambuf_iterator<char>(input),
@@ -379,7 +379,7 @@ std::string read_text(const std::filesystem::path& path) {
     return escaped;
 }
 
-void normalize_captured_newlines(std::string& text) {
+[[maybe_unused]] void normalize_captured_newlines(std::string& text) {
     std::size_t offset = 0U;
     while ((offset = text.find("\r\n", offset)) != std::string::npos) {
         text.erase(offset, 1U);
@@ -406,7 +406,7 @@ void normalize_captured_newlines(std::string& text) {
     return breakpoint_entry.substr(0, separator);
 }
 
-std::string quote_command_argument(const std::string& value) {
+[[maybe_unused]] std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
     for (const char ch : value) {
@@ -452,7 +452,7 @@ struct ProcessResult {
     std::string stderr_text;
 };
 
-ProcessResult run_process_capture(
+[[maybe_unused]] ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
     const std::filesystem::path& working_directory,
@@ -590,7 +590,7 @@ ProcessResult run_process_capture(
     return 0U;
 }
 
-void write_synthetic_form_asset(const std::filesystem::path& table_path) {
+[[maybe_unused]] void write_synthetic_form_asset(const std::filesystem::path& table_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "PLATFORM", .type = 'C', .length = 16U},
         {.name = "OBJNAME", .type = 'C', .length = 24U},

@@ -325,9 +325,24 @@ add_test(
 foreach(runtime_host_test_target IN ITEMS
         test_runtime_host_debug_output_formatting
         test_runtime_host_audit_stream)
-    add_executable(${runtime_host_test_target}
-        ${runtime_host_test_target}.cpp
-    )
+    if(runtime_host_test_target STREQUAL "test_runtime_host_debug_output_formatting")
+        set(runtime_host_test_sources
+            test_runtime_host_debug_output_formatting_xasset.cpp
+            test_runtime_host_debug_output_formatting_bridge.cpp
+            test_runtime_host_debug_output_formatting_contract.cpp
+            test_runtime_host_debug_output_localization.cpp
+            test_runtime_host_debug_output_formatting_main.cpp
+        )
+    else()
+        set(runtime_host_test_sources
+            test_runtime_host_audit_snapshots.cpp
+            test_runtime_host_audit_package.cpp
+            test_runtime_host_audit_containment.cpp
+            test_runtime_host_audit_contracts.cpp
+            test_runtime_host_audit_main.cpp
+        )
+    endif()
+    add_executable(${runtime_host_test_target} ${runtime_host_test_sources})
     target_link_libraries(${runtime_host_test_target} PRIVATE cf_design_model cf_xbase_runtime cf_vfp_assets)
     target_link_libraries(${runtime_host_test_target} PRIVATE cf_security)
     add_dependencies(${runtime_host_test_target} copperfin_runtime_host)
