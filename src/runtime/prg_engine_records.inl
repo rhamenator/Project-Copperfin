@@ -1724,6 +1724,16 @@
                     }
                     cursor->record_count = result.record_count;
                 }
+                const auto deleted_result = vfp::set_record_deleted_flag(
+                    cursor->source_path,
+                    persisted_recno - 1U,
+                    record.deleted);
+                if (!deleted_result.ok)
+                {
+                    last_error_message = deleted_result.error;
+                    return make_boolean_value(false);
+                }
+                cursor->record_count = deleted_result.record_count;
             }
             cursor->buffered_records.clear();
             cursor->buffered_appended_records.clear();
@@ -2018,6 +2028,52 @@
                 last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor");
                 return false;
             }
+
+            if (cursor.buffering_mode == 5)
+            {
+                std::vector<std::size_t> target_records;
+                if (!scope.has_value() && for_expression.empty() && while_expression.empty())
+                {
+                    if (cursor.recno == 0U || cursor.eof)
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresCurrentLocalRecord");
+                        return false;
+                    }
+                    target_records.push_back(cursor.recno);
+                }
+                else
+                {
+                    target_records = collect_aggregate_scope_records(
+                        cursor,
+                        frame,
+                        scope.value_or(AggregateScopeClause{}),
+                        for_expression,
+                        while_expression,
+                        deleted);
+                }
+
+                for (const std::size_t recno : target_records)
+                {
+                    auto buffered = cursor.buffered_records.find(recno);
+                    if (buffered == cursor.buffered_records.end())
+                    {
+                        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
+                        if (!table_result.ok || recno > table_result.table.records.size())
+                        {
+                            last_error_message = table_result.error.empty()
+                                ? runtime_text("Runtime.Prg.Records.Error.RequiresCurrentLocalRecord")
+                                : table_result.error;
+                            return false;
+                        }
+                        buffered = cursor.buffered_records.emplace(
+                            recno,
+                            table_result.table.records[recno - 1U]).first;
+                    }
+                    buffered->second.deleted = deleted;
+                }
+                return true;
+            }
+
             if (!ensure_transaction_backup_for_table(cursor.source_path))
             {
                 return false;

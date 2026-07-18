@@ -172,4 +172,96 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_local_optimistic_table_buffering_delete_recall()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_table_buffering_delete";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "buffering_delete.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {
+                {.name = "NAME", .type = 'C', .length = 24U},
+                {.name = "AMOUNT", .type = 'N', .length = 12U, .decimal_count = 2U}
+            },
+            {{"Alpha", "1.00"}, {"Bravo", "2.00"}, {"Charlie", "3.00"}});
+        expect(create_result.ok, "delete buffering fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "lSet = CURSORSETPROP('Buffering', 5, 'people')\n"
+            "SET DELETED ON\n"
+            "GO 1 IN people\n"
+            "DELETE IN people\n"
+            "lCurrentDeleted = DELETED()\n"
+            "RECALL IN people\n"
+            "lRecalled = DELETED()\n"
+            "DELETE FOR NAME = 'Alpha' IN people\n"
+            "DELETE FOR NAME = 'Bravo' IN people\n"
+            "GO TOP IN people\n"
+            "nTopAfterDeletes = RECNO('people')\n"
+            "lUpdate = TABLEUPDATE(.T., .T., 'people')\n"
+            "SET DELETED OFF\n"
+            "GO 1 IN people\n"
+            "lCommittedAlpha = DELETED()\n"
+            "GO 2 IN people\n"
+            "lCommittedBravo = DELETED()\n"
+            "SET DELETED ON\n"
+            "RECALL FOR NAME = 'Alpha' IN people\n"
+            "GO 1 IN people\n"
+            "lPendingRecall = DELETED()\n"
+            "DELETE FOR NAME = 'Charlie' IN people\n"
+            "TABLEREVERT(.T., 'people')\n"
+            "SET DELETED OFF\n"
+            "GO 1 IN people\n"
+            "lRevertedAlpha = DELETED()\n"
+            "GO 3 IN people\n"
+            "lRevertedCharlie = DELETED()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 12U});
+        const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(paused.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "delete buffering regression should pause before TABLEUPDATE");
+
+        const auto before_commit = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(before_commit.ok && before_commit.table.records.size() == 3U &&
+                   !before_commit.table.records[0].deleted && !before_commit.table.records[1].deleted,
+               "pending DELETE should leave the persisted tombstones unchanged");
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "delete buffering regression should complete after resume");
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lset") == "true", "delete buffering should enable mode 5");
+        expect(value_for("lcurrentdeleted") == "true", "current DELETE should be visible through DELETED()");
+        expect(value_for("lrecalled") == "false", "current RECALL should clear pending deletion");
+        expect(value_for("ntopafterdeletes") == "3", "SET DELETED should skip pending tombstones");
+        expect(value_for("lupdate") == "true", "TABLEUPDATE should commit pending tombstones");
+        expect(value_for("lcommittedalpha") == "true", "TABLEUPDATE should persist Alpha deletion");
+        expect(value_for("lcommittedbravo") == "true", "TABLEUPDATE should persist Bravo deletion");
+        expect(value_for("lpendingrecall") == "false", "RECALL should clear a pending committed deletion");
+        expect(value_for("lrevertedalpha") == "true", "TABLEREVERT should restore committed Alpha state");
+        expect(value_for("lrevertedcharlie") == "false", "TABLEREVERT should discard pending Charlie deletion");
+
+        const auto after_revert = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(after_revert.ok && after_revert.table.records.size() == 3U &&
+                   after_revert.table.records[0].deleted && after_revert.table.records[1].deleted &&
+                   !after_revert.table.records[2].deleted,
+               "TABLEUPDATE should persist committed tombstones while TABLEREVERT discards later changes");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

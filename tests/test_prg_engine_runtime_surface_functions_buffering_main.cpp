@@ -7,6 +7,7 @@ int main()
     using namespace copperfin::test_support;
     test_local_optimistic_table_buffering();
     test_local_optimistic_table_buffering_append_lifecycle();
+    test_local_optimistic_table_buffering_delete_recall();
 
     if (test_failures() != 0)
     {
