@@ -21,10 +21,8 @@ $vsixLocalizationTest = Join-Path $repoRoot "scripts\test-vsix-command-localizat
 $studioProject = Join-Path $vsixDir "Copperfin.Studio\Copperfin.Studio.csproj"
 $smokeProject = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj"
 $smokeExe = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe"
-$sampleProject = "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx"
-$runtimeSmokeRoot = Join-Path $repoRoot "artifacts\runtime-smoke-validation"
-$buildHostExe = Join-Path $buildDir "Release\copperfin_build_host.exe"
-$runtimeHostExe = Join-Path $buildDir "Release\copperfin_runtime_host.exe"
+$requiredDesignerSmokeScript = Join-Path $repoRoot "scripts\run-required-designer-smoke.ps1"
+$deepSmokeScript = Join-Path $repoRoot "scripts\run-windows-deep-smoke.ps1"
 
 function Invoke-Step {
     param(
@@ -129,169 +127,38 @@ Invoke-Step -Name "Build designer smoke tests" -Action {
 }
 
 Invoke-Step -Name "Run designer smoke tests" -Action {
-    Invoke-Checked -FilePath $smokeExe
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $requiredDesignerSmokeScript, "-ExecutablePath", $smokeExe
+    )
 }
 
 Invoke-Step -Name "Run runtime package smoke test" -Action {
-    Remove-Item -Recurse -Force $runtimeSmokeRoot -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force $runtimeSmokeRoot | Out-Null
-
-    Invoke-Checked -FilePath $buildHostExe -ArgumentList @(
-        "build",
-        "--project", $sampleProject,
-        "--output-dir", $runtimeSmokeRoot,
-        "--configuration", "debug",
-        "--enable-security",
-        "--emit-dotnet-launcher",
-        "--runtime-host", $runtimeHostExe
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $deepSmokeScript, "-Stage", "RuntimePackage"
     )
-
-    $packagedRoot = Join-Path $runtimeSmokeRoot "SOLUTION"
-    $launcherExe = Join-Path $packagedRoot "SOLUTION.exe"
-    $manifestPath = Join-Path $packagedRoot "app.cfmanifest"
-
-    if (-not (Test-Path $launcherExe)) {
-        throw "Expected generated launcher was not found: $launcherExe"
-    }
-    if (-not (Test-Path $manifestPath)) {
-        throw "Expected runtime manifest was not found: $manifestPath"
-    }
-
-    Invoke-Checked -FilePath $launcherExe -ArgumentList @("--debug")
 }
 
 Invoke-Step -Name "Run PRG debugger smoke test" -Action {
-    $prgSmokeRoot = Join-Path $repoRoot "artifacts\prg-debug-smoke"
-    Remove-Item -Recurse -Force $prgSmokeRoot -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force $prgSmokeRoot | Out-Null
-
-    $prgPath = Join-Path $prgSmokeRoot "main.prg"
-    @(
-        "x = 1",
-        "DO localproc",
-        "x = x + 1",
-        "RETURN",
-        "PROCEDURE localproc",
-        "x = x + 2",
-        "RETURN"
-    ) | Set-Content -Path $prgPath
-
-    $manifestPath = Join-Path $prgSmokeRoot "app.cfmanifest"
-    @(
-        "manifest_version=1",
-        "project_title=PRGDEBUG",
-        "project_path=E:\Project-Copperfin\smoke.pjx",
-        "package_root=$prgSmokeRoot",
-        "content_root=$prgSmokeRoot",
-        "working_directory=$prgSmokeRoot",
-        "startup_item=main.prg",
-        "startup_source=$prgPath",
-        "configuration=debug",
-        "security_enabled=false",
-        "security_mode=off",
-        "dotnet_enabled=false",
-        "dotnet_story="
-    ) | Set-Content -Path $manifestPath
-
-    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
-        "--manifest", $manifestPath,
-        "--debug",
-        "--breakpoint", "2",
-        "--debug-command", "continue",
-        "--debug-command", "step",
-        "--debug-command", "out",
-        "--debug-command", "continue"
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $deepSmokeScript, "-Stage", "PrgDebugger"
     )
 }
 
 Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
-    $xassetSmokeRoot = Join-Path $repoRoot "artifacts\xasset-debug-smoke"
-    Remove-Item -Recurse -Force $xassetSmokeRoot -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force $xassetSmokeRoot | Out-Null
-
-    $manifestPath = Join-Path $xassetSmokeRoot "app.cfmanifest"
-    @(
-        "manifest_version=1",
-        "project_title=XASSETDEBUG",
-        "project_path=E:\Project-Copperfin\xasset-smoke.pjx",
-        "package_root=$xassetSmokeRoot",
-        "content_root=$xassetSmokeRoot",
-        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms",
-        "startup_item=books.scx",
-        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx",
-        "configuration=debug",
-        "security_enabled=false",
-        "security_mode=off",
-        "dotnet_enabled=false",
-        "dotnet_story="
-    ) | Set-Content -Path $manifestPath
-
-    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
-        "--manifest", $manifestPath,
-        "--debug",
-        "--debug-command", "continue",
-        "--debug-command", "invoke:frmbooks.release"
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $deepSmokeScript, "-Stage", "XAsset"
     )
 }
 
 Invoke-Step -Name "Run report xAsset smoke test" -Action {
-    $reportSmokeRoot = Join-Path $repoRoot "artifacts\report-debug-smoke"
-    Remove-Item -Recurse -Force $reportSmokeRoot -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force $reportSmokeRoot | Out-Null
-
-    $manifestPath = Join-Path $reportSmokeRoot "app.cfmanifest"
-    @(
-        "manifest_version=1",
-        "project_title=REPORTDEBUG",
-        "project_path=E:\Project-Copperfin\report-smoke.pjx",
-        "package_root=$reportSmokeRoot",
-        "content_root=$reportSmokeRoot",
-        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports",
-        "startup_item=invoice.frx",
-        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
-        "configuration=debug",
-        "security_enabled=false",
-        "security_mode=off",
-        "dotnet_enabled=false",
-        "dotnet_story="
-    ) | Set-Content -Path $manifestPath
-
-    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
-        "--manifest", $manifestPath,
-        "--debug",
-        "--debug-command", "continue"
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $deepSmokeScript, "-Stage", "Report"
     )
 }
 
 Invoke-Step -Name "Run menu xAsset smoke test" -Action {
-    $menuSmokeRoot = Join-Path $repoRoot "artifacts\menu-debug-smoke"
-    Remove-Item -Recurse -Force $menuSmokeRoot -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Force $menuSmokeRoot | Out-Null
-
-    $manifestPath = Join-Path $menuSmokeRoot "app.cfmanifest"
-    @(
-        "manifest_version=1",
-        "project_title=MENUDEBUG",
-        "project_path=E:\Project-Copperfin\menu-smoke.pjx",
-        "package_root=$menuSmokeRoot",
-        "content_root=$menuSmokeRoot",
-        "working_directory=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Toledo",
-        "startup_item=systray_shortcut.mnx",
-        "startup_source=C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Toledo\systray_shortcut.mnx",
-        "configuration=debug",
-        "security_enabled=false",
-        "security_mode=off",
-        "dotnet_enabled=false",
-        "dotnet_story="
-    ) | Set-Content -Path $manifestPath
-
-    Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
-        "--manifest", $manifestPath,
-        "--debug",
-        "--debug-command", "continue",
-        "--debug-command", "select:shortcut.item1",
-        "--debug-command", "select:shortcut.item3",
-        "--debug-command", "select:thisitemha.item3"
+    Invoke-Checked -FilePath "pwsh" -ArgumentList @(
+        "-NoProfile", "-File", $deepSmokeScript, "-Stage", "Menu"
     )
 }
 

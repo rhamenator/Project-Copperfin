@@ -11,11 +11,6 @@ on:
         options:
           - Release
           - Debug
-      run_designer_smoke_tests:
-        description: Run designer smoke executable after building it. Requires hosted-accessible sample assets.
-        required: true
-        default: false
-        type: boolean
       build_jobs:
         description: Bounded native compile concurrency for measured Windows trials.
         required: true
@@ -170,7 +165,6 @@ jobs:
           -SampleResources
 
       - name: Run designer smoke tests
-        if: ${{ inputs.run_designer_smoke_tests }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
@@ -178,7 +172,69 @@ jobs:
           -MetricsDirectory artifacts/windows-deep-validation-metrics
           -Name 'Run designer smoke tests'
           -Category managed-test
-          -FilePath 'vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe'
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-required-designer-smoke.ps1', '-ExecutablePath', 'vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe')
+          -SampleResources
+
+      - name: Run runtime package smoke test
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run runtime package smoke test'
+          -Category native-test
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-windows-deep-smoke.ps1', '-Stage', 'RuntimePackage', '-BuildConfiguration', '${{ inputs.build_configuration }}')
+          -SampleResources
+
+      - name: Run PRG debugger smoke test
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run PRG debugger smoke test'
+          -Category native-test
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-windows-deep-smoke.ps1', '-Stage', 'PrgDebugger', '-BuildConfiguration', '${{ inputs.build_configuration }}')
+          -SampleResources
+
+      - name: Run xAsset bootstrap smoke test
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run xAsset bootstrap smoke test'
+          -Category native-test
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-windows-deep-smoke.ps1', '-Stage', 'XAsset', '-BuildConfiguration', '${{ inputs.build_configuration }}')
+          -SampleResources
+
+      - name: Run report xAsset smoke test
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run report xAsset smoke test'
+          -Category native-test
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-windows-deep-smoke.ps1', '-Stage', 'Report', '-BuildConfiguration', '${{ inputs.build_configuration }}')
+          -SampleResources
+
+      - name: Run menu xAsset smoke test
+        shell: pwsh
+        run: >-
+          & ./scripts/measure-windows-validation.ps1
+          -Mode Run
+          -MetricsDirectory artifacts/windows-deep-validation-metrics
+          -Name 'Run menu xAsset smoke test'
+          -Category native-test
+          -FilePath pwsh
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-windows-deep-smoke.ps1', '-Stage', 'Menu', '-BuildConfiguration', '${{ inputs.build_configuration }}')
+          -SampleResources
 
       - name: Finalize Windows validation metrics
         if: ${{ always() }}

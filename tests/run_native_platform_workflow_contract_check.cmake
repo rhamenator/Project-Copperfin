@@ -342,11 +342,31 @@ foreach(deep_step IN ITEMS
         "Build Visual Studio extension"
         "Build standalone Studio shell"
         "Build designer smoke tests"
+        "Run designer smoke tests"
+        "Run runtime package smoke test"
+        "Run PRG debugger smoke test"
+        "Run xAsset bootstrap smoke test"
+        "Run report xAsset smoke test"
+        "Run menu xAsset smoke test"
         "Run native CTest suite")
     require_text(".github/workflows/windows-deep-validation.yml"
         "${deep_step}"
         "Windows deep-validation step '${deep_step}'")
 endforeach()
+forbid_text(".github/workflows/windows-deep-validation.yml"
+    "run_designer_smoke_tests"
+    "conditionally disabled designer smoke input")
+foreach(deep_smoke_stage IN ITEMS RuntimePackage PrgDebugger XAsset Report Menu)
+    require_text(".github/workflows/windows-deep-validation.yml"
+        "-Stage', '${deep_smoke_stage}'"
+        "Windows deep-validation smoke stage '${deep_smoke_stage}'")
+endforeach()
+require_text("scripts/run-windows-deep-smoke.ps1"
+    "[ValidateSet(\"RuntimePackage\", \"PrgDebugger\", \"XAsset\", \"Report\", \"Menu\")]"
+    "shared Windows deep-smoke stage inventory")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "Designer smoke reported a skipped required test."
+    "fail-closed designer smoke launcher")
 require_text(".github/workflows/windows-x86-declare-validation.yml"
     "name: Windows DECLARE ABI Validation"
     "focused DECLARE workflow identity")
