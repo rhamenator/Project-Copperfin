@@ -641,6 +641,54 @@
             return table_result.table.records[cursor.recno - 1U];
         }
 
+        bool dbf_records_match(const vfp::DbfRecord &left, const vfp::DbfRecord &right) const
+        {
+            if (left.deleted != right.deleted || left.values.size() != right.values.size())
+            {
+                return false;
+            }
+            for (std::size_t index = 0U; index < left.values.size(); ++index)
+            {
+                const auto &left_value = left.values[index];
+                const auto &right_value = right.values[index];
+                if (left_value.field_name != right_value.field_name ||
+                    left_value.field_type != right_value.field_type ||
+                    left_value.is_null != right_value.is_null ||
+                    left_value.display_value != right_value.display_value ||
+                    left_value.memo_block_number != right_value.memo_block_number)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        bool optimistic_record_matches_disk(
+            CursorState &cursor,
+            std::size_t recno,
+            const std::string &command)
+        {
+            const auto original = cursor.buffered_original_records.find(recno);
+            if (original == cursor.buffered_original_records.end())
+            {
+                return true;
+            }
+            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
+            if (!table_result.ok || recno > table_result.table.records.size() ||
+                !dbf_records_match(original->second, table_result.table.records[recno - 1U]))
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.OptimisticBufferConflict",
+                    {
+                        {"alias", cursor.alias.empty() ? std::to_string(cursor.work_area) : cursor.alias},
+                        {"command", command},
+                        {"recno", std::to_string(recno)}
+                    });
+                return false;
+            }
+            return true;
+        }
+
         std::optional<PrgValue> resolve_field_value(const std::string &identifier, const CursorState *preferred_cursor)
         {
             const auto field_is_visible = [this](const std::string &field_name) -> bool
@@ -1202,6 +1250,7 @@
                     buffered = cursor.buffered_records.emplace(
                         cursor.recno,
                         table_result.table.records[cursor.recno - 1U]).first;
+                    cursor.buffered_original_records.emplace(cursor.recno, buffered->second);
                 }
 
                 std::vector<EvaluatedReplaceAssignment> evaluated_assignments;
@@ -1604,7 +1653,7 @@
             return value->display_value;
         }
 
-        bool commit_buffered_record(CursorState &cursor, std::size_t recno)
+        bool commit_buffered_record(CursorState &cursor, std::size_t recno, bool force_update = false)
         {
             const auto buffered = cursor.buffered_records.find(recno);
             if (buffered == cursor.buffered_records.end())
@@ -1616,6 +1665,11 @@
                 last_error_message = runtime_text(
                     "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
                     {{"command", "TABLEUPDATE"}});
+                return false;
+            }
+            if (cursor.buffering_mode == 3 && !force_update &&
+                !optimistic_record_matches_disk(cursor, recno, "TABLEUPDATE"))
+            {
                 return false;
             }
             if (!ensure_transaction_backup_for_table(cursor.source_path))
@@ -1649,6 +1703,7 @@
             }
             cursor.record_count = deleted_result.record_count;
             cursor.buffered_records.erase(buffered);
+            cursor.buffered_original_records.erase(recno);
             if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
                 cursor.buffered_record_locks.erase(recno) != 0U)
             {
@@ -1756,6 +1811,7 @@
                     if (cursor->recno != 0U && !cursor->eof)
                     {
                         cursor->buffered_records.erase(cursor->recno);
+                        cursor->buffered_original_records.erase(cursor->recno);
                         if (cursor->buffered_record_locks.erase(cursor->recno) != 0U)
                         {
                             unlock_cursor_record_lock(*cursor, cursor->recno);
@@ -1774,6 +1830,7 @@
                 const std::size_t persisted_record_count =
                     cursor->record_count >= appended_count ? cursor->record_count - appended_count : 0U;
                 cursor->buffered_records.clear();
+                cursor->buffered_original_records.clear();
                 cursor->buffered_appended_records.clear();
                 cursor->record_count = persisted_record_count;
                 move_cursor_to(
@@ -1782,11 +1839,12 @@
                 return make_boolean_value(true);
             }
 
+            const bool force_update = arguments.size() >= 2U && value_as_bool(arguments[1]);
             if (cursor->buffering_mode == 2 || cursor->buffering_mode == 3)
             {
                 return make_boolean_value(
                     cursor->recno == 0U || cursor->eof ||
-                    commit_buffered_record(*cursor, cursor->recno));
+                    commit_buffered_record(*cursor, cursor->recno, force_update));
             }
 
             if (cursor->buffered_records.empty())
@@ -1796,6 +1854,17 @@
             if (!ensure_transaction_backup_for_table(cursor->source_path))
             {
                 return make_boolean_value(false);
+            }
+            if (cursor->buffering_mode == 5 && !force_update)
+            {
+                for (const auto &[recno, _] : cursor->buffered_records)
+                {
+                    if (!cursor->buffered_appended_records.contains(recno) &&
+                        !optimistic_record_matches_disk(*cursor, recno, "TABLEUPDATE"))
+                    {
+                        return make_boolean_value(false);
+                    }
+                }
             }
             for (const auto &[recno, record] : cursor->buffered_records)
             {
@@ -1844,6 +1913,7 @@
                 }
             }
             cursor->buffered_records.clear();
+            cursor->buffered_original_records.clear();
             cursor->buffered_appended_records.clear();
             return make_boolean_value(true);
         }
@@ -2209,6 +2279,7 @@
                         buffered = cursor.buffered_records.emplace(
                             recno,
                             table_result.table.records[recno - 1U]).first;
+                        cursor.buffered_original_records.emplace(recno, buffered->second);
                     }
                     buffered->second.deleted = deleted;
                 }
@@ -2464,6 +2535,7 @@
                 for (auto &[_, held_cursor] : session.cursors)
                 {
                     release_shared_lock_ownership_for_cursor(held_cursor, session, current_data_session);
+                    held_cursor.buffered_original_records.clear();
                     held_cursor.buffered_record_locks.clear();
                 }
                 session.table_locks.clear();
@@ -2472,6 +2544,7 @@
             }
 
             release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
+            cursor->buffered_original_records.clear();
             cursor->buffered_record_locks.clear();
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);

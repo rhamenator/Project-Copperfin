@@ -7,6 +7,7 @@ namespace copperfin::runtime_surface_tests
     void test_local_optimistic_table_buffering_append_lifecycle();
     void test_local_optimistic_table_buffering_delete_recall();
     void test_local_pessimistic_table_buffering();
+    void test_local_optimistic_buffer_conflicts();
     void test_local_optimistic_row_buffering();
     void test_local_pessimistic_row_buffering();
     void test_filesize_expression_function();

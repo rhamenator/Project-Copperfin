@@ -1425,6 +1425,7 @@
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requires a current local record",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "[ͼAPPEND BLANK is not supported with row buffering mode {mode}ͽ]",
+  "Runtime.Prg.Records.Error.OptimisticBufferConflict": "[ͼBuffered record {recno} in {alias} changed before {command}ͽ]",
   "Runtime.Prg.Records.Error.CursorBufferingNotEnabled": "[ͼ{command} requires cursor bufferingͽ]",
   "Runtime.Prg.Records.Error.PendingCursorBufferChanges": "[ͼPending cursor buffer changes must be committed or reverted before {command}ͽ]",
   "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode": "[ͼUnsupported cursor buffering mode: {mode}ͽ]",

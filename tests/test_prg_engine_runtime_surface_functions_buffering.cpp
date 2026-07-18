@@ -413,6 +413,110 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_local_optimistic_buffer_conflicts()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_optimistic_buffer_conflicts";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "optimistic_buffer_conflicts.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Alpha"}, {"Bravo"}});
+        expect(create_result.ok, "optimistic conflict fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "SET REPROCESS TO 0\n"
+            "lSet5 = CURSORSETPROP('Buffering', 5, 'people')\n"
+            "REPLACE NAME WITH 'Mode5One' IN people\n"
+            "GO 2 IN people\n"
+            "REPLACE NAME WITH 'Mode5Two' IN people\n"
+            "SET DATASESSION TO 2\n"
+            "USE '" + table_path.string() + "' ALIAS other\n"
+            "GO 1 IN other\n"
+            "REPLACE NAME WITH 'ExternalFive' IN other\n"
+            "SET DATASESSION TO 1\n"
+            "lConflict5 = TABLEUPDATE(.T., .F., 'people')\n"
+            "GO 1 IN people\n"
+            "cPending5One = people.NAME\n"
+            "GO 2 IN people\n"
+            "cPending5Two = people.NAME\n"
+            "lForce5 = TABLEUPDATE(.T., .T., 'people')\n"
+            "GO 1 IN people\n"
+            "cForced5One = people.NAME\n"
+            "GO 2 IN people\n"
+            "cForced5Two = people.NAME\n"
+            "lSet3 = CURSORSETPROP('Buffering', 3, 'people')\n"
+            "GO 1 IN people\n"
+            "REPLACE NAME WITH 'Mode3Pending' IN people\n"
+            "SET DATASESSION TO 2\n"
+            "REPLACE NAME WITH 'ExternalThree' IN other\n"
+            "SET DATASESSION TO 1\n"
+            "lConflict3 = TABLEUPDATE(.T., .F., 'people')\n"
+            "cPending3 = people.NAME\n"
+            "lRevert3 = TABLEREVERT(.T., 'people')\n"
+            "cAfterRevert3 = people.NAME\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 11U});
+        session.add_breakpoint({.file_path = program_path.string(), .line = 27U});
+
+        const auto first_pause = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(first_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "optimistic mode-5 conflict regression should pause before TABLEUPDATE");
+        const auto before_force = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(before_force.ok && before_force.table.records.size() == 2U &&
+                   before_force.table.records[0].values[0].display_value == "ExternalFive" &&
+                   before_force.table.records[1].values[0].display_value == "Bravo",
+               "mode 5 conflict setup should change only the competing disk row");
+
+        const auto second_pause = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(second_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "optimistic mode-3 conflict regression should pause before TABLEUPDATE");
+        const auto before_revert = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(before_revert.ok && before_revert.table.records.size() == 2U &&
+                   before_revert.table.records[0].values[0].display_value == "ExternalThree" &&
+                   before_revert.table.records[1].values[0].display_value == "Mode5Two",
+               "forced mode-5 update should commit the full pending batch before mode-3 conflict");
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "optimistic conflict regression should complete after resume");
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lset5") == "true", "mode 5 should remain enabled for conflict testing");
+        expect(value_for("lconflict5") == "false", "mode 5 TABLEUPDATE should reject an external row change");
+        expect(value_for("cpending5one") == "Mode5One", "mode 5 should retain pending values after conflict");
+        expect(value_for("cpending5two") == "Mode5Two", "mode 5 should retain all pending rows after conflict");
+        expect(value_for("lforce5") == "true", "forced mode 5 TABLEUPDATE should bypass the conflict");
+        expect(value_for("cforced5one") == "Mode5One", "forced mode 5 update should write the conflicting row");
+        expect(value_for("cforced5two") == "Mode5Two", "forced mode 5 update should write the unaffected row");
+        expect(value_for("lset3") == "true", "mode 3 should remain enabled for conflict testing");
+        expect(value_for("lconflict3") == "false", "mode 3 TABLEUPDATE should reject an external row change");
+        expect(value_for("cpending3") == "Mode3Pending", "mode 3 should retain pending values after conflict");
+        expect(value_for("lrevert3") == "true", "TABLEREVERT should discard a conflicted mode-3 row");
+        expect(value_for("cafterrevert3") == "ExternalThree", "TABLEREVERT should expose the competing disk value");
+
+        const auto after_resume = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(after_resume.ok && after_resume.table.records.size() == 2U &&
+                   after_resume.table.records[0].values[0].display_value == "ExternalThree" &&
+                   after_resume.table.records[1].values[0].display_value == "Mode5Two",
+               "conflict rejection and revert should leave only committed disk values");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_local_optimistic_row_buffering()
     {
         namespace fs = std::filesystem;
