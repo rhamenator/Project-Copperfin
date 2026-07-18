@@ -126,6 +126,7 @@ void test_doevents_in_responsive_loop();
 void test_sleep_command_emits_runtime_sleep_event();
 void test_sleep_duration_uses_heap_backed_frame_continuations();
 void test_spawn_and_await_command_runs_task_to_completion();
+void test_spawn_arguments_use_heap_backed_frame_continuations();
 void test_spawn_cancellation_propagates_to_sibling_tasks();
 void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
 void test_spawn_critical_section_serializes_workers();

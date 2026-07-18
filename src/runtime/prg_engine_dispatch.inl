@@ -56,6 +56,7 @@
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_do_argument_value;
+        std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -457,6 +458,11 @@
                     {
                         resumed_do_argument_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::spawn_command &&
+                             frame.command_argument_continuation.has_value())
+                    {
+                        resumed_spawn_argument_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -470,6 +476,7 @@
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
+                    !resumed_spawn_argument_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -1797,49 +1804,86 @@
             }
             case StatementKind::spawn_command:
             {
-                std::string target = trim_copy(statement.identifier);
-                if (!target.empty() && target.front() == '&')
+                if (!frame.command_argument_continuation.has_value())
                 {
-                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
-                    if (!expanded_target.empty())
+                    std::string target = trim_copy(statement.identifier);
+                    if (!target.empty() && target.front() == '&')
                     {
-                        target = expanded_target;
-                    }
-                }
-                if (target.empty())
-                {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget",
-                        {{"command", "SPAWN"}});
-                    last_fault_location = statement.location;
-                    last_fault_statement = statement.text;
-                    return {.ok = false, .message = last_error_message};
-                }
-
-                std::vector<PrgValue> call_arguments;
-                std::vector<std::optional<std::string>> call_argument_references;
-                if (!trim_copy(statement.expression).empty())
-                {
-                    for (const std::string &raw_argument : split_csv_like(statement.expression))
-                    {
-                        const std::string argument_expression = trim_copy(raw_argument);
-                        if (!argument_expression.empty())
+                        const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                        if (!expanded_target.empty())
                         {
-                            if (argument_expression.front() == '@')
-                            {
-                                const std::string reference_name = trim_copy(argument_expression.substr(1U));
-                                if (is_memory_variable_reference_text(reference_name))
-                                {
-                                    call_arguments.push_back(lookup_variable(frame, reference_name));
-                                    call_argument_references.push_back(reference_name);
-                                    continue;
-                                }
-                            }
-                            call_arguments.push_back(evaluate_expression(argument_expression, frame));
-                            call_argument_references.push_back(std::nullopt);
+                            target = expanded_target;
                         }
                     }
+                    if (target.empty())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget",
+                            {{"command", "SPAWN"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    frame.command_argument_continuation = CommandArgumentContinuation{
+                        .statement = statement,
+                        .target = std::move(target),
+                        .argument_expressions = split_csv_like(statement.expression),
+                        .next_argument_index = 0U,
+                        .values = {},
+                        .references = {}};
                 }
+
+                CommandArgumentContinuation &argument_continuation =
+                    *frame.command_argument_continuation;
+                while (argument_continuation.next_argument_index <
+                       argument_continuation.argument_expressions.size())
+                {
+                    const std::string argument_expression = trim_copy(
+                        argument_continuation.argument_expressions[argument_continuation.next_argument_index]);
+                    if (argument_expression.empty())
+                    {
+                        ++argument_continuation.next_argument_index;
+                        continue;
+                    }
+
+                    if (resumed_spawn_argument_value.has_value())
+                    {
+                        argument_continuation.values.push_back(*resumed_spawn_argument_value);
+                        argument_continuation.references.push_back(std::nullopt);
+                        resumed_spawn_argument_value.reset();
+                        ++argument_continuation.next_argument_index;
+                        continue;
+                    }
+
+                    if (argument_expression.front() == '@')
+                    {
+                        const std::string reference_name = trim_copy(argument_expression.substr(1U));
+                        if (is_memory_variable_reference_text(reference_name))
+                        {
+                            argument_continuation.values.push_back(lookup_variable(frame, reference_name));
+                            argument_continuation.references.push_back(reference_name);
+                            ++argument_continuation.next_argument_index;
+                            continue;
+                        }
+                    }
+
+                    Statement argument_statement = argument_continuation.statement;
+                    argument_statement.expression = argument_expression;
+                    const auto argument_value = evaluate_resumable_expression(frame, argument_statement);
+                    if (!argument_value.has_value())
+                    {
+                        return {};
+                    }
+                    argument_continuation.values.push_back(*argument_value);
+                    argument_continuation.references.push_back(std::nullopt);
+                    ++argument_continuation.next_argument_index;
+                }
+
+                std::string target = std::move(argument_continuation.target);
+                std::vector<PrgValue> call_arguments = std::move(argument_continuation.values);
+                std::vector<std::optional<std::string>> call_argument_references =
+                    std::move(argument_continuation.references);
+                frame.command_argument_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                 std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);

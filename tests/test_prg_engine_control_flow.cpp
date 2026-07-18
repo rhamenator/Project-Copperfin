@@ -161,6 +161,7 @@ int main() {
     test_sleep_command_emits_runtime_sleep_event();
     test_sleep_duration_uses_heap_backed_frame_continuations();
     test_spawn_and_await_command_runs_task_to_completion();
+    test_spawn_arguments_use_heap_backed_frame_continuations();
     test_spawn_cancellation_propagates_to_sibling_tasks();
     test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
     test_spawn_critical_section_serializes_workers();

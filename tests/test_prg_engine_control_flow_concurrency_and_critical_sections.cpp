@@ -237,6 +237,101 @@ void test_spawn_and_await_command_runs_task_to_completion() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_arguments_use_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_argument_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "spawn_argument_depth_limit.prg";
+    write_text(
+        depth_path,
+        "SPAWN worker WITH recurse_argument(1) TO nTask\n"
+        "RETURN\n"
+        "FUNCTION recurse_argument\n"
+        "LPARAMETERS nDepth\n"
+        "RETURN recurse_argument(nDepth + 1)\n"
+        "PROCEDURE worker\n"
+        "LPARAMETERS value\n"
+        "RETURN\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep SPAWN argument recursion should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep SPAWN argument recursion should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "spawn_argument_semantics.prg";
+    write_text(
+        semantics_path,
+        "SET UDFPARMS TO REFERENCE\n"
+        "first = 2\n"
+        "counter = 2\n"
+        "second = 3\n"
+        "calls = 0\n"
+        "order = ''\n"
+        "SPAWN worker WITH record_call(first), @counter, record_call(second) TO nTask\n"
+        "AWAIT nTask TO lDone\n"
+        "afterCalls = calls\n"
+        "afterOrder = order\n"
+        "RETURN\n"
+        "FUNCTION record_call\n"
+        "LPARAMETERS value\n"
+        "calls = calls + 1\n"
+        "IF value = 2\n"
+        "order = order + 'A'\n"
+        "ELSE\n"
+        "order = order + 'B'\n"
+        "ENDIF\n"
+        "RETURN value + 10\n"
+        "PROCEDURE worker\n"
+        "LPARAMETERS firstValue, forwarded, secondValue\n"
+        "? firstValue + forwarded + secondValue\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(semantics_state.completed, "SPAWN argument continuation semantics script should complete: " + semantics_state.message);
+
+    const auto done = semantics_state.globals.find("ldone");
+    const auto calls = semantics_state.globals.find("aftercalls");
+    const auto order = semantics_state.globals.find("afterorder");
+    expect(done != semantics_state.globals.end(), "SPAWN/AWAIT should expose the completion flag");
+    expect(calls != semantics_state.globals.end(), "SPAWN argument UDF call count should be captured");
+    expect(order != semantics_state.globals.end(), "SPAWN argument evaluation order should be captured");
+    if (done != semantics_state.globals.end())
+    {
+        expect(done->second.boolean_value, "SPAWN/AWAIT should complete after resumed argument evaluation");
+    }
+    if (calls != semantics_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(calls->second) == "2", "SPAWN UDF arguments should each execute exactly once");
+    }
+    if (order != semantics_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(order->second) == "AB", "SPAWN UDF arguments should preserve left-to-right order");
+    }
+    expect(
+        std::any_of(
+            semantics_state.events.begin(),
+            semantics_state.events.end(),
+            [](const auto &event) {
+                return event.category == "runtime.print" && event.detail == "27";
+            }),
+        "SPAWN should forward resumed argument values into the child routine");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_cancellation_propagates_to_sibling_tasks() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_cancel_cmd";
