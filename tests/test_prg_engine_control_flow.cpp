@@ -75,6 +75,7 @@ int main() {
     test_standalone_expression_uses_heap_backed_frame_continuations();
     test_store_expression_uses_heap_backed_frame_continuations();
     test_do_with_arguments_use_heap_backed_frame_continuations();
+    test_call_with_arguments_use_heap_backed_frame_continuations();
     test_compound_return_uses_heap_backed_expression_checkpoints();
     test_assignment_rhs_uses_heap_backed_expression_checkpoints();
     test_array_parameters_alias_caller_storage_across_nested_function_calls();

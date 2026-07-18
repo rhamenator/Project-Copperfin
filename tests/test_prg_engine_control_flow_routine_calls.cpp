@@ -988,6 +988,88 @@ void test_do_with_arguments_use_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_call_with_arguments_use_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_argument_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path depth_path = temp_root / "call_argument_depth_limit.prg";
+    write_text(
+        depth_path,
+        "CALL capture WITH recurse_argument(1)\n"
+        "RETURN\n"
+        "FUNCTION recurse_argument\n"
+        "LPARAMETERS nDepth\n"
+        "RETURN recurse_argument(nDepth + 1)\n"
+        "PROCEDURE capture\n"
+        "LPARAMETERS value\n"
+        "RETURN\n");
+
+    auto depth_options = make_runtime_session_options(depth_path.string(), temp_root.string(), false);
+    depth_options.max_call_depth = 2048U;
+    copperfin::runtime::PrgRuntimeSession depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(depth_options);
+    const auto depth_state = depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(
+        depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+        "deep CALL argument recursion should stop at the runtime guardrail");
+    expect(
+        depth_state.message.find("maximum call depth") != std::string::npos,
+        "deep CALL argument recursion should report the configured call-depth diagnostic");
+
+    const fs::path semantics_path = temp_root / "call_argument_semantics.prg";
+    write_text(
+        semantics_path,
+        "SET UDFPARMS TO REFERENCE\n"
+        "first = 2\n"
+        "second = 3\n"
+        "calls = 0\n"
+        "order = ''\n"
+        "CALL capture WITH record_call(first), @first, record_call(second)\n"
+        "afterFirst = first\n"
+        "afterCalls = calls\n"
+        "afterOrder = order\n"
+        "RETURN\n"
+        "FUNCTION record_call\n"
+        "LPARAMETERS value\n"
+        "calls = calls + 1\n"
+        "IF value = 2\n"
+        "order = order + 'A'\n"
+        "ELSE\n"
+        "order = order + 'B'\n"
+        "ENDIF\n"
+        "RETURN value + 10\n"
+        "PROCEDURE capture\n"
+        "LPARAMETERS firstValue, forwarded, secondValue\n"
+        "capturedFirst = firstValue\n"
+        "forwarded = forwarded + 5\n"
+        "capturedSecond = secondValue\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession semantics_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(semantics_path.string(), temp_root.string(), false));
+    const auto semantics_state = semantics_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(semantics_state.completed, "CALL argument continuation semantics script should complete: " + semantics_state.message);
+
+    const auto expect_global = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = semantics_state.globals.find(name);
+        expect(found != semantics_state.globals.end(), name + " should remain visible");
+        if (found != semantics_state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    expect_global("afterfirst", "7", "CALL explicit @ reference should update the caller variable");
+    expect_global("aftercalls", "2", "CALL UDF arguments should each execute exactly once");
+    expect_global("afterorder", "AB", "CALL UDF arguments should preserve left-to-right order");
+    expect_global("capturedfirst", "12", "CALL should bind the first completed argument value");
+    expect_global("capturedsecond", "13", "CALL should bind the later completed argument value");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_compound_return_uses_heap_backed_expression_checkpoints() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_compound_return";
