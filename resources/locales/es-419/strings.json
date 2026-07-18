@@ -468,6 +468,7 @@
   "StudioHost.Usage.ObjectEntry": "{objectName} objeto: {usageTemplate}",
   "StudioHost.Usage.Primary": "Uso: {usageTemplate}",
   "StudioHost.Usage.SelectionContextTokens": "Tokens de contexto de seleccion: {selectionContextTokens}",
+  "StudioHost.TablePreview.RecordDeleted": "eliminado",
   "StudioHost.LaunchParse.ObjectAction.Alignment": "alineacion",
   "StudioHost.LaunchParse.ObjectAction.AlignmentTitle": "Alineacion",
   "StudioHost.LaunchParse.ObjectAction.Distribution": "distribucion",

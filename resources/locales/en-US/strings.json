@@ -66,6 +66,7 @@
   "StudioHost.Usage.ObjectEntry": "{objectName} object: {usageTemplate}",
   "StudioHost.Usage.Primary": "Usage: {usageTemplate}",
   "StudioHost.Usage.SelectionContextTokens": "Selection context tokens: {selectionContextTokens}",
+  "StudioHost.TablePreview.RecordDeleted": "deleted",
   "StudioHost.BuilderParse.Error.BooleanValueRequired": "The {option} value must be {trueValue} or {falseValue}.",
   "StudioHost.BuilderParse.Error.ContextConflict": "{requestName} requests cannot provide both {builderContextOption} and {selectionContextOption}.",
   "StudioHost.BuilderParse.RequestName.Dispatch": "Builder dispatch",

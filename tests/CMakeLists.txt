@@ -4278,6 +4278,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_visual_asset_editor_code_page> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_deleted_record_localization
+    test_studio_host_deleted_record_localization.cpp
+)
+target_link_libraries(test_studio_host_deleted_record_localization PRIVATE
+    cf_vfp_assets
+    cf_test_process_capture_support
+)
+target_compile_definitions(test_studio_host_deleted_record_localization PRIVATE
+    COPPERFIN_TEST_LOCALE_DIR="${PROJECT_SOURCE_DIR}/resources/locales"
+)
+add_test(
+    NAME test_studio_host_deleted_record_localization
+    COMMAND $<TARGET_FILE:test_studio_host_deleted_record_localization>
+        $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_test(
     NAME test_dbf_table_active_locale
     COMMAND $<TARGET_FILE:test_dbf_table> --active-locale-missing-field

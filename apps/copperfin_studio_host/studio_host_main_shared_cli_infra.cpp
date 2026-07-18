@@ -3617,7 +3617,9 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     for (const auto& record : document.table_preview.records) {
         std::cout << "record[" << record.record_index << "]";
         if (record.deleted) {
-            std::cout << " deleted";
+            std::cout << " " << localized_message_or_default(
+                "StudioHost.TablePreview.RecordDeleted",
+                "deleted");
         }
         std::cout << "\n";
 

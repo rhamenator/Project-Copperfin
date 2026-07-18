@@ -468,6 +468,7 @@
   "StudioHost.Usage.ObjectEntry": "[!! {objectName} øßĵëçţ: {usageTemplate} !!]",
   "StudioHost.Usage.Primary": "[!! Ŭšåĝë: {usageTemplate} !!]",
   "StudioHost.Usage.SelectionContextTokens": "[!! Šëļëçţïøñ çøñţëxţ ţøķëñš: {selectionContextTokens} !!]",
+  "StudioHost.TablePreview.RecordDeleted": "[!! ƒëłëţëð !!]",
   "StudioHost.LaunchParse.ObjectAction.Alignment": "alignment",
   "StudioHost.LaunchParse.ObjectAction.AlignmentTitle": "Alignment",
   "StudioHost.LaunchParse.ObjectAction.Distribution": "distribution",
