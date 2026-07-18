@@ -37,6 +37,10 @@ void test_native_show_hide_refresh_events()
         "oOverride.Refresh()\n"
         "cOverrideEvents = oOverride.cEvents\n"
         "lOverrideVisible = oOverride.Visible\n"
+        "oNodefault = CREATEOBJECT('NodefaultRefreshForm')\n"
+        "oNodefault.Refresh()\n"
+        "nNodefaultPaints = oNodefault.nPaint\n"
+        "cNodefaultEvents = oNodefault.cEvents\n"
         "RETURN\n"
         "DEFINE CLASS LifecycleForm AS Form\n"
         "    cEvents = ''\n"
@@ -48,6 +52,18 @@ void test_native_show_hide_refresh_events()
         "    ENDPROC\n"
         "    PROCEDURE Paint\n"
         "        THIS.cEvents = THIS.cEvents + 'paint;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS NodefaultRefreshForm AS Form\n"
+        "    cEvents = ''\n"
+        "    nPaint = 0\n"
+        "    PROCEDURE Paint\n"
+        "        THIS.nPaint = THIS.nPaint + 1\n"
+        "        THIS.cEvents = THIS.cEvents + 'paint;'\n"
+        "        IF THIS.nPaint = 1\n"
+        "            THIS.Refresh()\n"
+        "        ENDIF\n"
+        "        NODEFAULT\n"
         "    ENDPROC\n"
         "ENDDEFINE\n"
         "DEFINE CLASS OverrideForm AS Form\n"
@@ -84,6 +100,8 @@ void test_native_show_hide_refresh_events()
     check("llifecyclevisible", "false");
     check("coverrideevents", "show;hide;refresh;");
     check("loverridevisible", "true");
+    check("nnodefaultpaints", "2");
+    check("cnodefaultevents", "paint;paint;");
     expect(has_runtime_event(state.events, "prg.object.invoke", "LifecycleForm.Activate"),
            "Show should invoke Activate through the native method path");
     expect(has_runtime_event(state.events, "prg.object.invoke", "LifecycleForm.Deactivate"),

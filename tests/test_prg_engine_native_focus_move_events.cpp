@@ -33,6 +33,8 @@ void test_native_focus_and_move_events()
         "cActiveAfterSuppressed = oForm.ActiveControl.cId\n"
         "oForm.second.SetFocus()\n"
         "oForm.first.Move(30, 40, 50, 60)\n"
+        "oForm.nodefault.Move(11, 12)\n"
+        "oForm.nodefault.Move(21, 22)\n"
         "oForm.override.Move(1, 2, 3, 4)\n"
         "oForm.override.SetFocus()\n"
         "cEvents = oForm.cEvents\n"
@@ -40,6 +42,9 @@ void test_native_focus_and_move_events()
         "nFirstTop = oForm.first.Top\n"
         "nFirstWidth = oForm.first.Width\n"
         "nFirstHeight = oForm.first.Height\n"
+        "nNodefaultMoves = oForm.nodefault.nMoved\n"
+        "nNodefaultLeft = oForm.nodefault.Left\n"
+        "nNodefaultTop = oForm.nodefault.Top\n"
         "lOverrideMove = oForm.override.lMoveCalled\n"
         "lOverrideSetFocus = oForm.override.lSetFocusCalled\n"
         "nOverrideLeft = oForm.override.Left\n"
@@ -49,6 +54,7 @@ void test_native_focus_and_move_events()
         "    ADD OBJECT first AS FocusBox WITH cId = 'first'\n"
         "    ADD OBJECT second AS FocusBox WITH cId = 'second'\n"
         "    ADD OBJECT blocked AS SuppressingFocusBox WITH cId = 'blocked'\n"
+        "    ADD OBJECT nodefault AS NodefaultMoveBox\n"
         "    ADD OBJECT override AS OverrideBox\n"
         "ENDDEFINE\n"
         "DEFINE CLASS FocusBox AS TextBox\n"
@@ -75,6 +81,16 @@ void test_native_focus_and_move_events()
         "        IF THIS.nLost = 1\n"
         "            NODEFAULT\n"
         "        ENDIF\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS NodefaultMoveBox AS TextBox\n"
+        "    nMoved = 0\n"
+        "    PROCEDURE Moved\n"
+        "        THIS.nMoved = THIS.nMoved + 1\n"
+        "        IF THIS.nMoved = 1\n"
+        "            THISFORM.nodefault.Move(101, 102)\n"
+        "        ENDIF\n"
+        "        NODEFAULT\n"
         "    ENDPROC\n"
         "ENDDEFINE\n"
         "DEFINE CLASS OverrideBox AS TextBox\n"
@@ -112,6 +128,9 @@ void test_native_focus_and_move_events()
     check("nfirsttop", "40");
     check("nfirstwidth", "50");
     check("nfirstheight", "60");
+    check("nnodefaultmoves", "3");
+    check("nnodefaultleft", "21");
+    check("nnodefaulttop", "22");
     check("loverridemove", "true");
     check("loverridesetfocus", "true");
     check("noverrideleft", "0");

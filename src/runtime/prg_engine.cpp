@@ -2901,12 +2901,17 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.move",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            last_popped_frame_requested_nodefault = false;
+            bool moved_requested_nodefault = false;
             (void)invoke_native_object_method_if_present(
                 *target_object,
                 "moved",
                 frame,
                 {},
-                {});
+                {},
+                &moved_requested_nodefault);
+            (void)consume_last_popped_frame_requested_nodefault();
+            (void)moved_requested_nodefault;
             return make_empty_value();
         }
         if (leaf == "refresh" && !target_object->class_hierarchy.empty())
@@ -2916,12 +2921,17 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.refresh",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            last_popped_frame_requested_nodefault = false;
+            bool paint_requested_nodefault = false;
             (void)invoke_native_object_method_if_present(
                 *target_object,
                 "paint",
                 frame,
                 {},
-                {});
+                {},
+                &paint_requested_nodefault);
+            (void)consume_last_popped_frame_requested_nodefault();
+            (void)paint_requested_nodefault;
             return make_empty_value();
         }
         if ((leaf == "show" || leaf == "hide") &&
