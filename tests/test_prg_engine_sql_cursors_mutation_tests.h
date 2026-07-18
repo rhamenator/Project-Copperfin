@@ -1,0 +1,33 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#pragma once
+
+namespace copperfin::sql_cursor_mutation_tests
+{
+void test_sql_result_cursor_backward_navigation_in_target_parity();
+void test_cursor_identity_functions_for_sql_result_cursors();
+void test_copy_to_exports_selected_sql_result_cursor_rows();
+void test_copy_to_type_json_exports_selected_sql_result_cursor_and_preserves_selection();
+void test_append_from_dbf_mutates_selected_sql_result_cursor();
+void test_copy_structure_to_exports_sql_metadata_cursor_schema();
+void test_append_from_dbf_for_filters_selected_sql_result_cursor();
+void test_sql_result_cursor_mutation_commands();
+void test_delete_all_and_recall_all_affect_whole_selected_sql_result_cursor();
+void test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
+void test_sql_result_cursors_are_isolated_by_data_session();
+void test_sql_result_cursor_auto_allocation_tracks_session_selection_flow();
+void test_sql_result_cursors_and_ole_actions();
+void test_sql_result_cursor_mutation_parity();
+void test_sql_result_cursor_multi_field_replace_uses_original_values_for_later_expressions();
+void test_sql_result_cursor_sql_style_mutation_parity();
+void test_sql_result_cursor_mutation_in_target_parity();
+void test_append_from_json_mutates_selected_sql_result_cursor();
+void test_append_from_csv_mutates_selected_sql_result_cursor();
+void test_append_from_delimited_fields_clause_preserves_typed_order_for_selected_sql_result_cursor();
+void test_append_from_selected_sql_result_cursor_runtime_errors_localize();
+void test_sql_plain_temporary_order_in_target_honors_collate_and_preserves_selection();
+void test_append_from_json_for_filters_selected_sql_result_cursor();
+}  // namespace copperfin::sql_cursor_mutation_tests
+
