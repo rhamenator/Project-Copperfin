@@ -2108,7 +2108,7 @@
 
             if (cursor.buffering_mode == 3 || cursor.buffering_mode == 4 || cursor.buffering_mode == 5)
             {
-                const auto table_result = vfp::parse_dbf_table_from_file(
+                const auto table_result = parse_table_path(
                     cursor.source_path,
                     std::numeric_limits<std::size_t>::max());
                 if (!table_result.ok)

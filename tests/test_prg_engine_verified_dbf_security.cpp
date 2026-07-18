@@ -229,6 +229,42 @@ void test_append_from_reads_verified_source_rows()
     fs::remove_all(root, ignored);
 }
 
+void test_buffered_append_blank_reads_verified_dbf_rows()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_buffered_append";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    write_simple_dbf(table_path, {"Ada", "Grace"});
+    const std::string verified_bytes = read_text(table_path);
+    write_simple_dbf(table_path, {"Tampered"});
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_buffered_append.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "lSet = CURSORSETPROP('Buffering', 5, 'customers')\n"
+        "APPEND BLANK\n"
+        "nRows = RECCOUNT('customers')\n"
+        "nRecord = RECNO('customers')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict buffered APPEND BLANK should complete from the verified DBF snapshot: " + state.message);
+    expect(global_text(state, "lset") == "true",
+           "strict buffered APPEND BLANK should enable table buffering");
+    expect(global_text(state, "nrows") == "3",
+           "strict buffered APPEND BLANK should count the verified persisted rows plus the pending row");
+    expect(global_text(state, "nrecord") == "3",
+           "strict buffered APPEND BLANK should assign the pending row after the verified rows");
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
@@ -238,5 +274,6 @@ int main()
     test_initial_use_reads_verified_index_metadata();
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
+    test_buffered_append_blank_reads_verified_dbf_rows();
     return test_failures() == 0 ? 0 : 1;
 }
