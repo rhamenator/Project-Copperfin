@@ -526,14 +526,22 @@ bool prepare_package_content_root(
         return false;
     }
 
-    const auto package_containment = security::inspect_physical_path_containment(
-        absolute_package_root,
-        absolute_package_root);
-    if (!package_containment.allowed) {
-        error = is_containment_policy_rejection(package_containment.failure)
-            ? rejected_content_root(content_root)
-            : content_root_creation_failed();
-        return false;
+    const bool descriptor_backed_root =
+#if !defined(_WIN32)
+        is_fd_backed_path(absolute_package_root);
+#else
+        false;
+#endif
+    if (!descriptor_backed_root) {
+        const auto package_containment = security::inspect_physical_path_containment(
+            absolute_package_root,
+            absolute_package_root);
+        if (!package_containment.allowed) {
+            error = is_containment_policy_rejection(package_containment.failure)
+                ? rejected_content_root(content_root)
+                : content_root_creation_failed();
+            return false;
+        }
     }
 
     bool content_root_ready = false;
@@ -605,14 +613,16 @@ bool prepare_package_content_root(
             : content_root_creation_failed();
         return false;
     }
-    const auto content_containment = security::inspect_physical_path_containment(
-        absolute_content_root,
-        absolute_package_root);
-    if (!content_containment.allowed) {
-        error = is_containment_policy_rejection(content_containment.failure)
-            ? rejected_content_root(content_root)
-            : content_root_creation_failed();
-        return false;
+    if (!descriptor_backed_root) {
+        const auto content_containment = security::inspect_physical_path_containment(
+            absolute_content_root,
+            absolute_package_root);
+        if (!content_containment.allowed) {
+            error = is_containment_policy_rejection(content_containment.failure)
+                ? rejected_content_root(content_root)
+                : content_root_creation_failed();
+            return false;
+        }
     }
     return true;
 }
