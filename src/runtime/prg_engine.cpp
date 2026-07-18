@@ -2103,7 +2103,7 @@ namespace copperfin::runtime
                 }
 
                 const auto parse_result =
-                    vfp::parse_dbf_table_from_file(cursor->source_path, std::max<std::size_t>(cursor->record_count, 1U));
+                    parse_cursor_table(*cursor, std::max<std::size_t>(cursor->record_count, 1U));
                 if (!parse_result.ok)
                 {
                     return std::nullopt;

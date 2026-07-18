@@ -8834,7 +8834,7 @@
                     }
                     else if (!cursor->source_path.empty())
                     {
-                        const auto schema = vfp::parse_dbf_table_from_file(cursor->source_path, 0U);
+                        const auto schema = parse_cursor_table(*cursor, 0U);
                         if (schema.ok)
                         {
                             for (const auto &fd : schema.table.fields)

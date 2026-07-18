@@ -158,6 +158,40 @@
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
         }
 
+        vfp::DbfTableParseResult parse_cursor_table(
+            const CursorState &cursor,
+            std::size_t max_records) const
+        {
+            if (!options.require_verified_file_byte_overrides || cursor.source_path.empty())
+            {
+                return vfp::parse_dbf_table_from_file(cursor.source_path, max_records);
+            }
+
+            const auto table_path = copperfin::platform::path_from_utf8_string(cursor.source_path);
+            std::filesystem::path snapshot_root;
+            // Const cursor readers still need the session-owned temporary snapshot and diagnostic state.
+            auto *mutable_impl = const_cast<Impl *>(this);
+            const auto verified_table_path = mutable_impl->materialize_verified_file_snapshot(
+                table_path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                false);
+            if (!verified_table_path.has_value())
+            {
+                return {.ok = false, .error = mutable_impl->last_error_message};
+            }
+
+            const auto result = vfp::parse_dbf_table_from_file(
+                copperfin::platform::path_to_utf8_string(*verified_table_path),
+                max_records);
+            if (!snapshot_root.empty())
+            {
+                std::error_code snapshot_error;
+                std::filesystem::remove_all(snapshot_root, snapshot_error);
+            }
+            return result;
+        }
+
         std::vector<CursorState::OrderState> load_cursor_orders(const std::string &table_path) const
         {
             std::vector<CursorState::OrderState> orders;
@@ -703,7 +737,7 @@
             }
             else if (!cursor.source_path.empty())
             {
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                const auto table_result = parse_cursor_table(cursor, cursor.record_count);
                 if (table_result.ok)
                 {
                     descriptors = table_result.table.fields;
@@ -1068,7 +1102,7 @@
             }
             else
             {
-                auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                auto table_result = parse_cursor_table(cursor, cursor.record_count);
                 if (!table_result.ok)
                 {
                     last_error_message = table_result.error;

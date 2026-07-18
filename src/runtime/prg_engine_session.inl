@@ -5032,7 +5032,7 @@
                     continue;
                 }
 
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, std::max<std::size_t>(cursor.record_count, 1U));
+                const auto table_result = parse_cursor_table(cursor, std::max<std::size_t>(cursor.record_count, 1U));
                 if (!table_result.ok)
                 {
                     closed_areas.push_back(area);

@@ -368,7 +368,7 @@
             const std::vector<vfp::DbfRecord> *records = &cursor.remote_records;
             if (!cursor.remote)
             {
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                const auto table_result = parse_cursor_table(cursor, cursor.record_count);
                 if (!table_result.ok)
                 {
                     return std::nullopt;
@@ -632,7 +632,7 @@
                 return std::nullopt;
             }
 
-            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
+            const auto table_result = parse_cursor_table(cursor, cursor.recno);
             if (!table_result.ok || cursor.recno > table_result.table.records.size())
             {
                 return std::nullopt;
@@ -673,7 +673,7 @@
             {
                 return true;
             }
-            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
+            const auto table_result = parse_cursor_table(cursor, recno);
             if (!table_result.ok || recno > table_result.table.records.size() ||
                 !dbf_records_match(original->second, table_result.table.records[recno - 1U]))
             {
@@ -1234,7 +1234,7 @@
                 }
                 if (buffered == cursor.buffered_records.end())
                 {
-                    const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
+                    const auto table_result = parse_cursor_table(cursor, cursor.recno);
                     if (!table_result.ok || cursor.recno > table_result.table.records.size())
                     {
                         if (acquired_buffer_lock)
@@ -2263,7 +2263,7 @@
                     auto buffered = cursor.buffered_records.find(recno);
                     if (buffered == cursor.buffered_records.end())
                     {
-                        const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
+                        const auto table_result = parse_cursor_table(cursor, recno);
                         if (!table_result.ok || recno > table_result.table.records.size())
                         {
                             if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&

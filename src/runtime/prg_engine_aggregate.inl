@@ -441,7 +441,7 @@
                     return false;
                 }
 
-                const auto table_result = vfp::parse_dbf_table_from_file(cursor->source_path, cursor->record_count);
+                const auto table_result = parse_cursor_table(*cursor, cursor->record_count);
                 if (!table_result.ok)
                 {
                     error_message = table_result.error;

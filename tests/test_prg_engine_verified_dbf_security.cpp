@@ -53,7 +53,11 @@ void test_initial_use_reads_verified_dbf_bytes()
         {{"Ada"}, {"Grace"}});
     expect(created.ok, "verified DBF fixture should be created");
     const std::string verified_bytes = read_text(table_path);
-    write_text(table_path, "tampered after package verification");
+    const auto tampered = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 24U}},
+        {{"Tampered"}});
+    expect(tampered.ok, "tampered DBF fixture should remain structurally valid");
 
     copperfin::runtime::RuntimeSessionOptions options;
     options.verified_file_byte_overrides.emplace(table_path.string(), verified_bytes);
@@ -63,6 +67,9 @@ void test_initial_use_reads_verified_dbf_bytes()
         "verified.prg",
         "USE '" + table_path.string() + "' ALIAS customers\n"
         "nRows = RECCOUNT('customers')\n"
+        "cName = customers.NAME\n"
+        "GO TOP\n"
+        "cNameAfterGo = customers.NAME\n"
         "RETURN\n",
         options);
 
@@ -70,6 +77,10 @@ void test_initial_use_reads_verified_dbf_bytes()
            "strict verified DBF USE should complete from the immutable snapshot: " + state.message);
     expect(global_text(state, "nrows") == "2",
            "strict verified DBF USE should preserve the verified record count");
+    expect(global_text(state, "cname") == "Ada",
+           "strict verified DBF field reads should preserve the verified current record");
+    expect(global_text(state, "cnameaftergo") == "Ada",
+           "strict verified DBF navigation reads should preserve verified bytes after GO TOP");
     fs::remove_all(root, ignored);
 }
 
