@@ -1812,10 +1812,12 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         return {.ok = false, .error = error};
     }
     std::error_code directory_error;
+#if defined(_WIN32)
     std::filesystem::create_directories(filesystem_plan.package_root, directory_error);
     if (directory_error) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreatePackageRootFailed")};
     }
+#endif
     if (!transaction.validate_parent_identity_for_materialization(error)) {
         return {.ok = false, .error = error};
     }
