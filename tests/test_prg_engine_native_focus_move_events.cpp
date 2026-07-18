@@ -27,7 +27,10 @@ void test_native_focus_and_move_events()
         main_path,
         "oForm = CREATEOBJECT('MainForm')\n"
         "oForm.first.SetFocus()\n"
+        "oForm.blocked.SetFocus()\n"
+        "cActiveAfterBlocked = oForm.ActiveControl.cId\n"
         "oForm.second.SetFocus()\n"
+        "cActiveAfterSuppressed = oForm.ActiveControl.cId\n"
         "oForm.second.SetFocus()\n"
         "oForm.first.Move(30, 40, 50, 60)\n"
         "oForm.override.Move(1, 2, 3, 4)\n"
@@ -45,6 +48,7 @@ void test_native_focus_and_move_events()
         "    cEvents = ''\n"
         "    ADD OBJECT first AS FocusBox WITH cId = 'first'\n"
         "    ADD OBJECT second AS FocusBox WITH cId = 'second'\n"
+        "    ADD OBJECT blocked AS SuppressingFocusBox WITH cId = 'blocked'\n"
         "    ADD OBJECT override AS OverrideBox\n"
         "ENDDEFINE\n"
         "DEFINE CLASS FocusBox AS TextBox\n"
@@ -57,6 +61,20 @@ void test_native_focus_and_move_events()
         "    ENDPROC\n"
         "    PROCEDURE Moved\n"
         "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':moved;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SuppressingFocusBox AS TextBox\n"
+        "    cId = ''\n"
+        "    nLost = 0\n"
+        "    PROCEDURE GotFocus\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':got;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE LostFocus\n"
+        "        THIS.nLost = THIS.nLost + 1\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':lost;'\n"
+        "        IF THIS.nLost = 1\n"
+        "            NODEFAULT\n"
+        "        ENDIF\n"
         "    ENDPROC\n"
         "ENDDEFINE\n"
         "DEFINE CLASS OverrideBox AS TextBox\n"
@@ -87,7 +105,9 @@ void test_native_focus_and_move_events()
         }
     };
 
-    check("cevents", "first:got;first:lost;second:got;first:moved;");
+    check("cevents", "first:got;first:lost;blocked:got;blocked:lost;blocked:lost;second:got;first:moved;");
+    check("cactiveafterblocked", "blocked");
+    check("cactiveaftersuppressed", "blocked");
     check("nfirstleft", "30");
     check("nfirsttop", "40");
     check("nfirstwidth", "50");

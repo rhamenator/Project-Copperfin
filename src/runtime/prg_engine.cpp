@@ -2960,9 +2960,9 @@ namespace copperfin::runtime
         {
             const PrgValue runtime_object_reference =
                 make_string_value("object:" + target_object->prog_id + "#" + std::to_string(target_object->handle));
-            note_representative_active_form(*target_object);
             std::optional<PrgValue> previous_active_control;
             bool focus_changed = true;
+            bool suppress_focus_transition = false;
             if (const auto owner_form_reference = native_object_owner_form_reference(*target_object);
                 owner_form_reference.has_value())
             {
@@ -2983,23 +2983,32 @@ namespace copperfin::runtime
                             focus_changed = (*previous_control)->handle != target_object->handle;
                             if (focus_changed)
                             {
+                                last_popped_frame_requested_nodefault = false;
+                                bool lost_focus_requested_nodefault = false;
                                 (void)invoke_native_object_method_if_present(
                                     **previous_control,
                                     "lostfocus",
                                     frame,
                                     {},
-                                    {});
+                                    {},
+                                    &lost_focus_requested_nodefault);
+                                (void)consume_last_popped_frame_requested_nodefault();
+                                suppress_focus_transition = lost_focus_requested_nodefault;
                             }
                         }
                     }
-                    (void)write_native_property_if_present(
-                        **owner_form,
-                        "activecontrol",
-                        runtime_object_reference,
-                        frame);
+                    if (!suppress_focus_transition)
+                    {
+                        (void)write_native_property_if_present(
+                            **owner_form,
+                            "activecontrol",
+                            runtime_object_reference,
+                            frame);
+                    }
                 }
             }
-            else if (normalize_identifier(trim_copy(target_object->base_class_name)) == "form")
+            else if (!suppress_focus_transition &&
+                     normalize_identifier(trim_copy(target_object->base_class_name)) == "form")
             {
                 (void)write_native_property_if_present(
                     *target_object,
@@ -3007,14 +3016,22 @@ namespace copperfin::runtime
                     runtime_object_reference,
                     frame);
             }
-            if (focus_changed)
+            if (!suppress_focus_transition)
             {
-                (void)invoke_native_object_method_if_present(
-                    *target_object,
-                    "gotfocus",
-                    frame,
-                    {},
-                    {});
+                note_representative_active_form(*target_object);
+                if (focus_changed)
+                {
+                    last_popped_frame_requested_nodefault = false;
+                    bool got_focus_requested_nodefault = false;
+                    (void)invoke_native_object_method_if_present(
+                        *target_object,
+                        "gotfocus",
+                        frame,
+                        {},
+                        {},
+                        &got_focus_requested_nodefault);
+                    (void)consume_last_popped_frame_requested_nodefault();
+                }
             }
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
