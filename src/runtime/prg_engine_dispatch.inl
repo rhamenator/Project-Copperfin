@@ -78,6 +78,7 @@
         std::optional<PrgValue> resumed_set_datasession_value;
         std::optional<PrgValue> resumed_set_memowidth_value;
         std::optional<PrgValue> resumed_set_library_value;
+        std::optional<PrgValue> resumed_declare_dll_path_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -551,6 +552,10 @@
                     {
                         resumed_set_library_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::declare_dll)
+                    {
+                        resumed_declare_dll_path_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -615,6 +620,7 @@
                     !resumed_set_datasession_value.has_value() &&
                     !resumed_set_memowidth_value.has_value() &&
                     !resumed_set_library_value.has_value() &&
+                    !resumed_declare_dll_path_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -4847,12 +4853,18 @@
                 const std::string fn_name = trim_copy(statement.identifier);
                 const std::string library_expression = trim_copy(statement.expression);
                 const bool is_win32api_designator = normalize_identifier(library_expression) == "win32api";
+                const auto dll_path_value = is_win32api_designator
+                                                ? std::optional<PrgValue>{make_string_value("WIN32API")}
+                                                : (resumed_declare_dll_path_value.has_value()
+                                                       ? resumed_declare_dll_path_value
+                                                       : evaluate_resumable_expression(frame, statement));
+                if (!dll_path_value.has_value())
+                {
+                    return {};
+                }
                 const std::string dll_path_raw = is_win32api_designator
                                                      ? std::string("WIN32API")
-                                                     : unquote_string(trim_copy(
-                                                           value_as_string(evaluate_expression(
-                                                               statement.expression,
-                                                               frame))));
+                                                     : unquote_string(trim_copy(value_as_string(*dll_path_value)));
                 const std::string ret_type = uppercase_copy(trim_copy(statement.secondary_expression));
                 const std::string param_types_str = trim_copy(statement.tertiary_expression);
                 const std::string alias_raw = trim_copy(statement.quaternary_expression);

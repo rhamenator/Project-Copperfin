@@ -2605,7 +2605,10 @@ void test_declared_dll_string_byref_argument_writeback() {
     const fs::path main_path = temp_root / "declared_dll_byref.prg";
     write_text(
         main_path,
-        "DECLARE INTEGER lstrcpyA(STRING @, STRING) IN 'kernel32.dll'\n"
+        "FUNCTION GetDeclaredDllPath\n"
+        "RETURN 'kernel32.dll'\n"
+        "ENDFUNC\n"
+        "DECLARE INTEGER lstrcpyA(STRING @, STRING) IN GetDeclaredDllPath()\n"
         "cBuffer = SPACE(32)\n"
         "nResult = lstrcpyA(@cBuffer, 'Copperfin')\n"
         "cCopied = cBuffer\n"
