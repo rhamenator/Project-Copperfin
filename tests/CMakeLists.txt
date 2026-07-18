@@ -295,7 +295,13 @@ add_test(
 )
 
 add_executable(test_localization
-    test_localization.cpp
+    test_localization_catalog.cpp
+    test_localization_runtime_session.cpp
+    test_localization_runtime_dispatch.cpp
+    test_localization_runtime_io.cpp
+    test_localization_runtime_misc.cpp
+    test_localization_host_inspect.cpp
+    test_localization_main.cpp
     prg_engine_test_support.cpp
 )
 target_link_libraries(test_localization PRIVATE cf_localization cf_runtime_pipeline cf_xbase_runtime)

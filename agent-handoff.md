@@ -26,6 +26,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 - Phase A, D1/#19, E1/#22, and old numbered runtime/planning sequences are historical/closed unless live regression evidence reopens them.
 - Preserve deferred modernization and wishlist work as roadmap intent, not noise; do not close, ignore, or discard future-facing issues merely because they are not current blockers.
 - Keep changes narrow, implementation-first, and validated. Update durable docs only when behavior or active guidance changes.
+- Structural localization-test slice `#4176` is implemented locally and tracked under `#2564`: `tests/test_localization.cpp` is replaced by seven sub-1k source shards plus a shared fixture header, preserving the target and ordered test execution. The focused target and CTest pass; hosted validation remains required for the current head.
 
 ## Current State
 
