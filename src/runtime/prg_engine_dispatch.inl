@@ -45,6 +45,8 @@
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
+                frame.use_command_continuation.reset();
+                frame.use_command_continuation.reset();
             }
         };
         std::optional<PrgValue> resumed_assignment_value;
@@ -57,6 +59,7 @@
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
+        std::optional<PrgValue> resumed_use_alias_value;
         std::optional<PrgValue> resumed_open_database_target_value;
         std::optional<PrgValue> resumed_await_handle_value;
         std::optional<PrgValue> resumed_with_target_value;
@@ -458,6 +461,12 @@
                         resumed_unlock_record_value = *expression_value;
                     }
                     else if (continued_statement.kind == StatementKind::use_command &&
+                             frame.use_command_continuation.has_value() &&
+                             frame.use_command_continuation->pending_alias)
+                    {
+                        resumed_use_alias_value = *expression_value;
+                    }
+                    else if (continued_statement.kind == StatementKind::use_command &&
                              !continued_statement.expression.empty())
                     {
                         resumed_use_target_value = *expression_value;
@@ -516,6 +525,7 @@
                     !resumed_go_value.has_value() &&
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
+                    !resumed_use_alias_value.has_value() &&
                     !resumed_open_database_target_value.has_value() &&
                     !resumed_await_handle_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
@@ -1750,6 +1760,7 @@
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
+                frame.use_command_continuation.reset();
                 Program &program = load_program(frame.file_path);
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
@@ -1938,6 +1949,7 @@
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
+                frame.use_command_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                 std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);
@@ -2210,6 +2222,7 @@
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
                 frame.parameter_default_continuation.reset();
+                frame.use_command_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                     if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
@@ -4064,6 +4077,7 @@
             {
                 if (statement.expression.empty() && statement.secondary_expression.empty())
                 {
+                    frame.use_command_continuation.reset();
                     close_cursor(std::to_string(current_selected_work_area()));
                     events.push_back({.category = "runtime.use.close",
                                       .detail = "current work area",
@@ -4072,6 +4086,7 @@
                 }
                 if (statement.expression.empty())
                 {
+                    frame.use_command_continuation.reset();
                     close_cursor(evaluate_cursor_designator_expression(statement.secondary_expression, frame));
                     events.push_back({.category = "runtime.use.close",
                                       .detail = trim_copy(statement.secondary_expression),
@@ -4079,19 +4094,50 @@
                     return {};
                 }
 
-                const auto target_value = resumed_use_target_value.has_value()
-                                              ? resumed_use_target_value
-                                              : evaluate_resumable_expression(frame, statement);
-                if (!target_value.has_value())
+                if (!frame.use_command_continuation.has_value() ||
+                    frame.use_command_continuation->statement.text != statement.text)
                 {
-                    return {};
+                    frame.use_command_continuation = UseCommandContinuation{
+                        .statement = statement,
+                        .target_value = std::nullopt};
                 }
-                const std::string target = value_as_string(*target_value);
-                std::string alias = statement.identifier.empty()
-                                        ? copperfin::platform::path_to_utf8_string(
-                                              copperfin::platform::path_from_utf8_string(
-                                                  unquote_string(target)).stem())
-                                        : value_as_string(evaluate_expression(statement.identifier, frame));
+                UseCommandContinuation &continuation = *frame.use_command_continuation;
+                if (!continuation.target_value.has_value())
+                {
+                    const auto target_value = resumed_use_target_value.has_value()
+                                                  ? resumed_use_target_value
+                                                  : evaluate_resumable_expression(frame, statement);
+                    if (!target_value.has_value())
+                    {
+                        return {};
+                    }
+                    continuation.target_value = *target_value;
+                    resumed_use_target_value.reset();
+                }
+                const std::string target = value_as_string(*continuation.target_value);
+                std::string alias;
+                if (statement.identifier.empty())
+                {
+                    alias = copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(unquote_string(target)).stem());
+                }
+                else
+                {
+                    Statement alias_statement = continuation.statement;
+                    alias_statement.expression = statement.identifier;
+                    alias_statement.text = continuation.statement.text + " [use-alias]";
+                    continuation.pending_alias = true;
+                    const auto alias_value = resumed_use_alias_value.has_value()
+                                                 ? resumed_use_alias_value
+                                                 : evaluate_resumable_expression(frame, alias_statement);
+                    if (!alias_value.has_value())
+                    {
+                        return {};
+                    }
+                    alias = value_as_string(*alias_value);
+                    continuation.pending_alias = false;
+                    resumed_use_alias_value.reset();
+                }
                 if (alias.empty() && !statement.identifier.empty())
                 {
                     alias = unquote_string(statement.identifier);
@@ -4114,6 +4160,7 @@
                 }
                 if (!open_table_cursor(target, alias, in_target, allow_again, false, 0, {}, 0U, {}, exclusive_override))
                 {
+                    frame.use_command_continuation.reset();
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4121,6 +4168,7 @@
                 events.push_back({.category = "runtime.use.open",
                                   .detail = alias.empty() ? target : alias + " <- " + target,
                                   .location = statement.location});
+                frame.use_command_continuation.reset();
                 return {};
             }
             case StatementKind::open_database:
@@ -8921,6 +8969,7 @@
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
                                 candidate.parameter_default_continuation.reset();
+                                candidate.use_command_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = scan_resume_pc;
@@ -8936,6 +8985,7 @@
                                     stack[nested_index].expression_continuation.reset();
                                     stack[nested_index].text_merge_continuation.reset();
                                     stack[nested_index].parameter_default_continuation.reset();
+                                    stack[nested_index].use_command_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -8985,6 +9035,7 @@
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
                                 candidate.parameter_default_continuation.reset();
+                                candidate.use_command_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = loop_resume_pc;
@@ -9000,6 +9051,7 @@
                                     stack[nested_index].expression_continuation.reset();
                                     stack[nested_index].text_merge_continuation.reset();
                                     stack[nested_index].parameter_default_continuation.reset();
+                                    stack[nested_index].use_command_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -9017,6 +9069,7 @@
                             candidate.command_argument_continuation.reset();
                             candidate.text_merge_continuation.reset();
                             candidate.parameter_default_continuation.reset();
+                            candidate.use_command_continuation.reset();
                             if (!candidate.cases.empty())
                             {
                                 candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
@@ -9029,6 +9082,7 @@
                                 stack[nested_index].expression_continuation.reset();
                                 stack[nested_index].text_merge_continuation.reset();
                                 stack[nested_index].parameter_default_continuation.reset();
+                                stack[nested_index].use_command_continuation.reset();
                                 stack[nested_index].loop_expression_continuation.reset();
                                 stack[nested_index].scan_expression_continuation.reset();
                             }

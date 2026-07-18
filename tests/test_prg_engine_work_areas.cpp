@@ -1304,12 +1304,18 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
     write_text(
         side_effect_path,
         "nCalls = 0\n"
-        "USE use_target() ALIAS People IN 0\n"
+        "nAliasCalls = 0\n"
+        "USE use_target() ALIAS alias_target('People') IN 0\n"
         "cAlias = ALIAS()\n"
         "RETURN\n"
         "FUNCTION use_target\n"
         "nCalls = nCalls + 1\n"
         "RETURN '" + table_path.string() + "'\n"
+        "ENDFUNC\n"
+        "FUNCTION alias_target\n"
+        "LPARAMETERS value\n"
+        "nAliasCalls = nAliasCalls + 1\n"
+        "RETURN value\n"
         "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession side_effect_session = copperfin::runtime::PrgRuntimeSession::create(
@@ -1318,12 +1324,18 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
     expect(side_effect_state.completed, "USE target UDF script should complete");
 
     const auto calls = side_effect_state.globals.find("ncalls");
+    const auto alias_calls = side_effect_state.globals.find("naliascalls");
     const auto alias = side_effect_state.globals.find("calias");
     expect(calls != side_effect_state.globals.end(), "USE target UDF call count should be captured");
+    expect(alias_calls != side_effect_state.globals.end(), "USE alias UDF call count should be captured");
     expect(alias != side_effect_state.globals.end(), "USE should still expose the selected alias after a resumed target evaluation");
     if (calls != side_effect_state.globals.end())
     {
         expect(copperfin::runtime::format_value(calls->second) == "1", "USE target UDF should run exactly once across suspension and resume");
+    }
+    if (alias_calls != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(alias_calls->second) == "1", "USE alias UDF should run exactly once across suspension and resume");
     }
     if (alias != side_effect_state.globals.end())
     {
