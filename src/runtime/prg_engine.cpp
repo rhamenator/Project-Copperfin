@@ -2063,10 +2063,31 @@ namespace copperfin::runtime
                 snapshot.alias = cursor->alias;
                 if (!cursor->remote && !cursor->source_path.empty())
                 {
-                    const auto header_result = vfp::parse_dbf_header_from_file(cursor->source_path);
+                    std::filesystem::path snapshot_root;
+                    std::string header_path = cursor->source_path;
+                    if (options.require_verified_file_byte_overrides)
+                    {
+                        const auto verified_table_path = materialize_verified_file_snapshot(
+                            copperfin::platform::path_from_utf8_string(cursor->source_path),
+                            snapshot_root,
+                            "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                            false);
+                        if (!verified_table_path.has_value())
+                        {
+                            return std::nullopt;
+                        }
+                        header_path = copperfin::platform::path_to_utf8_string(*verified_table_path);
+                    }
+
+                    const auto header_result = vfp::parse_dbf_header_from_file(header_path);
                     if (header_result.ok)
                     {
                         snapshot.code_page = vfp::dbf_code_page_from_mark(header_result.header.code_page_mark);
+                    }
+                    if (!snapshot_root.empty())
+                    {
+                        std::error_code snapshot_error;
+                        std::filesystem::remove_all(snapshot_root, snapshot_error);
                     }
                 }
 

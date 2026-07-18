@@ -149,6 +149,40 @@ void test_initial_use_reads_verified_index_metadata()
     fs::remove_all(root, ignored);
 }
 
+void test_runtime_surface_reads_verified_code_page()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_code_page";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 24U}},
+        {{"Ada"}, {"Grace"}});
+    expect(created.ok, "verified code-page DBF fixture should be created");
+    std::string verified_bytes = read_text(table_path);
+    verified_bytes[29U] = static_cast<char>(0x03U);
+    write_simple_dbf(table_path, {"Tampered"});
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_code_page.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "nCodePage = CPDBF('customers')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict verified CPDBF should inspect the verified DBF header: " + state.message);
+    expect(global_text(state, "ncodepage") == "1252",
+           "strict verified CPDBF should preserve the verified code-page mark");
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
@@ -156,5 +190,6 @@ int main()
     test_initial_use_reads_verified_dbf_bytes();
     test_initial_use_fails_closed_without_verified_dbf_bytes();
     test_initial_use_reads_verified_index_metadata();
+    test_runtime_surface_reads_verified_code_page();
     return test_failures() == 0 ? 0 : 1;
 }
