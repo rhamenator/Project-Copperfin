@@ -6,6 +6,7 @@ int main()
     using namespace copperfin::runtime_surface_tests;
     using namespace copperfin::test_support;
     test_local_optimistic_table_buffering();
+    test_local_optimistic_table_buffering_append_lifecycle();
 
     if (test_failures() != 0)
     {

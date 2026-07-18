@@ -1675,7 +1675,15 @@
             }
             if (revert)
             {
+                const std::size_t appended_count = cursor->buffered_appended_records.size();
+                const std::size_t persisted_record_count =
+                    cursor->record_count >= appended_count ? cursor->record_count - appended_count : 0U;
                 cursor->buffered_records.clear();
+                cursor->buffered_appended_records.clear();
+                cursor->record_count = persisted_record_count;
+                move_cursor_to(
+                    *cursor,
+                    std::min<std::size_t>(cursor->recno, persisted_record_count));
                 return make_boolean_value(true);
             }
 
@@ -1689,11 +1697,24 @@
             }
             for (const auto &[recno, record] : cursor->buffered_records)
             {
+                std::size_t persisted_recno = recno;
+                if (cursor->buffered_appended_records.contains(recno))
+                {
+                    const int buffering_mode = cursor->buffering_mode;
+                    cursor->buffering_mode = 1;
+                    const bool appended = append_blank_record(*cursor);
+                    cursor->buffering_mode = buffering_mode;
+                    if (!appended)
+                    {
+                        return make_boolean_value(false);
+                    }
+                    persisted_recno = cursor->record_count;
+                }
                 for (const auto &field : record.values)
                 {
                     const auto result = vfp::replace_record_field_value(
                         cursor->source_path,
-                        recno - 1U,
+                        persisted_recno - 1U,
                         field.field_name,
                         field.display_value);
                     if (!result.ok)
@@ -1705,6 +1726,7 @@
                 }
             }
             cursor->buffered_records.clear();
+            cursor->buffered_appended_records.clear();
             return make_boolean_value(true);
         }
 
@@ -1887,6 +1909,38 @@
                     {{"command", "APPEND BLANK"}});
                 return false;
             }
+
+            if (cursor.buffering_mode == 5)
+            {
+                const auto table_result = vfp::parse_dbf_table_from_file(
+                    cursor.source_path,
+                    std::numeric_limits<std::size_t>::max());
+                if (!table_result.ok)
+                {
+                    last_error_message = table_result.error;
+                    return false;
+                }
+
+                const std::size_t recno =
+                    table_result.table.records.size() + cursor.buffered_appended_records.size() + 1U;
+                vfp::DbfRecord pending_record;
+                pending_record.record_index = recno - 1U;
+                pending_record.deleted = false;
+                for (const auto &field : cursor_field_descriptors(cursor))
+                {
+                    pending_record.values.push_back(vfp::DbfRecordValue{
+                        .field_name = field.name,
+                        .field_type = field.type,
+                        .display_value = ""});
+                }
+                cursor.buffered_records[recno] = std::move(pending_record);
+                cursor.buffered_appended_records.insert(recno);
+                cursor.record_count = table_result.table.records.size() + cursor.buffered_appended_records.size();
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                cursor.found = false;
+                return true;
+            }
+
             if (!ensure_transaction_backup_for_table(cursor.source_path))
             {
                 return false;
