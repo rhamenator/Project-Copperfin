@@ -161,6 +161,7 @@ struct RuntimeOleObjectState {
     std::vector<bool> list_selected{};
     std::vector<std::string> class_hierarchy{};
     std::map<std::string, NativeMemberVisibility> member_visibility{};
+    std::map<std::string, std::string> member_visibility_owner{};
     std::string base_class_name{};
     std::string class_library{};
     std::vector<std::string> methods{};

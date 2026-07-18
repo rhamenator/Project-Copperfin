@@ -443,6 +443,93 @@ void test_native_prg_member_visibility_flows_to_pemstatus_attribute_three() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_prg_member_visibility_enforces_access_context() {
+    namespace fs = std::filesystem;
+    const std::string class_source =
+        "DEFINE CLASS BaseVisibilityDemo AS Custom\n"
+        "    PROTECTED ProtectedValue\n"
+        "    HIDDEN HiddenValue\n"
+        "    ProtectedValue = 10\n"
+        "    HiddenValue = 20\n"
+        "    PROTECTED PROCEDURE ProtectedMethod\n"
+        "        RETURN THIS.ProtectedValue\n"
+        "    ENDPROC\n"
+        "    HIDDEN PROCEDURE HiddenMethod\n"
+        "        RETURN THIS.HiddenValue\n"
+        "    ENDPROC\n"
+        "    FUNCTION ReadProtected\n"
+        "        RETURN THIS.ProtectedValue\n"
+        "    ENDFUNC\n"
+        "    FUNCTION ReadHidden\n"
+        "        RETURN THIS.HiddenValue\n"
+        "    ENDFUNC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS ChildVisibilityDemo AS BaseVisibilityDemo\n"
+        "    FUNCTION ReadProtectedFromChild\n"
+        "        RETURN THIS.ProtectedValue\n"
+        "    ENDFUNC\n"
+        "ENDDEFINE\n";
+
+    const auto expect_denied = [&](const std::string &case_name, const std::string &statement) {
+        const fs::path temp_root = fs::temp_directory_path() / ("copperfin_native_prg_member_access_" + case_name);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+        const fs::path main_path = temp_root / "native_prg_member_access.prg";
+        write_text(
+            main_path,
+            "oDemo = CREATEOBJECT('ChildVisibilityDemo')\n" + statement + "\nRETURN\n" + class_source);
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(!state.completed, case_name + " should be rejected");
+        expect(state.message.find("Access denied") != std::string::npos,
+               case_name + " should report the localized access-denied diagnostic: " + state.message);
+        fs::remove_all(temp_root, ignored);
+    };
+
+    expect_denied("external_protected_read", "xValue = oDemo.ProtectedValue");
+    expect_denied("external_hidden_write", "oDemo.HiddenValue = 99");
+    expect_denied("external_protected_method", "xValue = oDemo.ProtectedMethod()");
+    expect_denied("external_hidden_method", "xValue = oDemo.HiddenMethod()");
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_member_access_allowed";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path main_path = temp_root / "native_prg_member_access_allowed.prg";
+    write_text(
+        main_path,
+        "oBase = CREATEOBJECT('BaseVisibilityDemo')\n"
+        "nBaseProtected = oBase.ReadProtected()\n"
+        "nBaseHidden = oBase.ReadHidden()\n"
+        "oChild = CREATEOBJECT('ChildVisibilityDemo')\n"
+        "nChildProtected = oChild.ReadProtectedFromChild()\n"
+        "RETURN\n" + class_source);
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("same-class and protected-subclass access should complete: ") + state.message);
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    check("nbaseprotected", "10");
+    check("nbasehidden", "20");
+    check("nchildprotected", "10");
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -675,6 +762,7 @@ int main() {
     test_native_list_control_controlsource_stays_synchronized_after_row_mutation_methods();
     test_native_list_control_controlsource_stays_synchronized_after_sorted_reordering();
     test_native_prg_member_visibility_flows_to_pemstatus_attribute_three();
+    test_native_prg_member_visibility_enforces_access_context();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

@@ -1391,6 +1391,7 @@
   "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded": "Runtime guardrail: maximum executed statements ({limit}) exceeded.",
   "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded": "Runtime guardrail: maximum loop iterations ({limit}) exceeded.",
   "Runtime.Prg.Core.Error.NewObjectVcxUnsupported": "[!! Vïsüål çľåšš ľïþŕåŕÿ šüþþøŕţ ïš ñøţ ïmþľëmëñţëð ƒøŕ ÑËWØBJËÇT: {classLibraryPath} !!]",
+  "Runtime.Prg.Core.Error.OleMemberAccessDenied": "[!! Âççêšš ðëñïëð fõr ñätïvë PRG mêmbër: {memberIdentifier} !!]",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation": "OLE member not found for method invocation: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead": "OLE member not found for property read: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation": "OLE object not found for method invocation: {targetIdentifier}",

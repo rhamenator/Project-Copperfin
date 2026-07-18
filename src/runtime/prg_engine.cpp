@@ -1127,6 +1127,15 @@ namespace copperfin::runtime
             const PrgValue &assigned_value,
             const Frame &source_frame,
             std::optional<std::string> assigned_expression_text = std::nullopt);
+        bool native_member_access_allowed(
+            const RuntimeOleObjectState &runtime_object,
+            NativeMemberVisibility visibility,
+            const std::string &owner_class_name,
+            const Frame &source_frame);
+        [[noreturn]] void raise_native_member_access_denied(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &member_name,
+            bool method_member);
         std::optional<PrgValue> invoke_native_object_method_body_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
@@ -5483,10 +5492,74 @@ namespace copperfin::runtime
         return true;
     }
 
+    bool PrgRuntimeSession::Impl::native_member_access_allowed(
+        const RuntimeOleObjectState &runtime_object,
+        NativeMemberVisibility visibility,
+        const std::string &owner_class_name,
+        const Frame &source_frame)
+    {
+        if (visibility == NativeMemberVisibility::public_member)
+        {
+            return true;
+        }
+
+        const std::string current_class_name =
+            normalize_identifier(source_frame.native_method_class_name);
+        const std::string normalized_owner_class_name =
+            normalize_identifier(owner_class_name);
+        if (current_class_name.empty() || normalized_owner_class_name.empty())
+        {
+            return false;
+        }
+        if (visibility == NativeMemberVisibility::hidden_member)
+        {
+            return current_class_name == normalized_owner_class_name;
+        }
+
+        const std::vector<NativeClassLookup> lineage =
+            resolved_native_object_class_lineage(runtime_object);
+        std::optional<std::size_t> owner_index;
+        std::optional<std::size_t> current_index;
+        for (std::size_t index = 0U; index < lineage.size(); ++index)
+        {
+            const std::string class_name = normalize_identifier(
+                lineage[index].class_definition->name);
+            if (class_name == normalized_owner_class_name)
+            {
+                owner_index = index;
+            }
+            if (class_name == current_class_name)
+            {
+                current_index = index;
+            }
+        }
+        return owner_index.has_value() && current_index.has_value() &&
+               *current_index >= *owner_index;
+    }
+
+    [[noreturn]] void PrgRuntimeSession::Impl::raise_native_member_access_denied(
+        const RuntimeOleObjectState &runtime_object,
+        const std::string &member_name,
+        bool method_member)
+    {
+        const Statement *statement = current_statement();
+        const std::string detail = runtime_object.prog_id + "." + member_name +
+            (method_member ? "()" : "");
+        record_ole_aerror_context(
+            detail,
+            "Copperfin OLE",
+            runtime_object.prog_id,
+            statement == nullptr ? detail : statement->text,
+            1429);
+        throw std::runtime_error(runtime_text(
+            "Runtime.Prg.Core.Error.OleMemberAccessDenied",
+            {{"memberIdentifier", detail}}));
+    }
+
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_body_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &identifier,
-        const Frame &,
+        const Frame &source_frame,
         const std::vector<PrgValue> &arguments,
         const std::vector<std::optional<std::string>> &argument_references)
     {
@@ -5509,6 +5582,15 @@ namespace copperfin::runtime
         if (!native_method.has_value())
         {
             return std::nullopt;
+        }
+
+        if (!native_member_access_allowed(
+                runtime_object,
+                native_method->routine->visibility,
+                native_defining_class_name,
+                source_frame))
+        {
+            raise_native_member_access_denied(runtime_object, identifier, true);
         }
 
         if (!can_push_frame())
@@ -6392,6 +6474,20 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        if (const auto visibility = runtime_object.member_visibility.find(normalized_property_name);
+            visibility != runtime_object.member_visibility.end())
+        {
+            const auto owner = runtime_object.member_visibility_owner.find(normalized_property_name);
+            if (!native_member_access_allowed(
+                    runtime_object,
+                    visibility->second,
+                    owner == runtime_object.member_visibility_owner.end() ? std::string{} : owner->second,
+                    source_frame))
+            {
+                raise_native_member_access_denied(runtime_object, property_name, false);
+            }
+        }
+
         auto resolve_list_member_cell = [&]() -> std::optional<NativeListControlCellReference>
         {
             const auto literal_cell =
@@ -7062,6 +7158,20 @@ namespace copperfin::runtime
         if (normalized_property_name.empty())
         {
             return false;
+        }
+
+        if (const auto visibility = runtime_object.member_visibility.find(normalized_property_name);
+            visibility != runtime_object.member_visibility.end())
+        {
+            const auto owner = runtime_object.member_visibility_owner.find(normalized_property_name);
+            if (!native_member_access_allowed(
+                    runtime_object,
+                    visibility->second,
+                    owner == runtime_object.member_visibility_owner.end() ? std::string{} : owner->second,
+                    source_frame))
+            {
+                raise_native_member_access_denied(runtime_object, property_name, false);
+            }
         }
 
         const auto remember_property_expression = [&]()
