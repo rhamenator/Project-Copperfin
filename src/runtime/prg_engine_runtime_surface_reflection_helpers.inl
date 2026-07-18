@@ -1,0 +1,975 @@
+// Copyright 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
+    runtime_object.properties["count"] = make_number_value(static_cast<double>(runtime_object.collection_items.size()));
+}
+
+std::optional<std::size_t> resolve_native_collection_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const PrgValue& selector) {
+    switch (selector.kind) {
+        case PrgValueKind::number: {
+            const long long index = std::llround(selector.number_value);
+            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(index - 1LL);
+            }
+            return std::nullopt;
+        }
+        case PrgValueKind::currency: {
+            const long long index = std::llround(value_as_number(selector));
+            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(index - 1LL);
+            }
+            return std::nullopt;
+        }
+        case PrgValueKind::int64:
+            if (selector.int64_value >= 1LL &&
+                static_cast<std::size_t>(selector.int64_value) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(selector.int64_value - 1LL);
+            }
+            return std::nullopt;
+        case PrgValueKind::uint64:
+            if (selector.uint64_value >= 1ULL &&
+                static_cast<std::size_t>(selector.uint64_value) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(selector.uint64_value - 1ULL);
+            }
+            return std::nullopt;
+        case PrgValueKind::boolean:
+        case PrgValueKind::string:
+        case PrgValueKind::empty:
+            break;
+    }
+
+    const std::string key = normalize_identifier(trim_copy(value_as_string(selector)));
+    if (key.empty()) {
+        return std::nullopt;
+    }
+
+    const auto found = std::find(runtime_object.collection_item_keys.begin(),
+                                 runtime_object.collection_item_keys.end(),
+                                 key);
+    if (found == runtime_object.collection_item_keys.end()) {
+        return std::nullopt;
+    }
+    return static_cast<std::size_t>(std::distance(runtime_object.collection_item_keys.begin(), found));
+}
+
+std::optional<PrgValue> get_native_identity_reflection_metadata(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name == "hwnd" && runtime_object.native_hwnd.has_value()) {
+        return make_int64_value(static_cast<std::int64_t>(*runtime_object.native_hwnd));
+    }
+    if (runtime_object.class_hierarchy.empty()) {
+        return std::nullopt;
+    }
+    if (normalized_member_name == "class" && !trim_copy(runtime_object.prog_id).empty()) {
+        return make_string_value(runtime_object.prog_id);
+    }
+    if (normalized_member_name == "baseclass" && !trim_copy(runtime_object.base_class_name).empty()) {
+        return make_string_value(runtime_object.base_class_name);
+    }
+    if (normalized_member_name == "parentclass" && !trim_copy(runtime_object.base_class_name).empty()) {
+        return make_string_value(runtime_object.base_class_name);
+    }
+    if (normalized_member_name == "classlibrary" && !trim_copy(runtime_object.class_library).empty()) {
+        return make_string_value(runtime_object.class_library);
+    }
+    return std::nullopt;
+}
+
+bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+    if (normalized_member_name == "hwnd" && runtime_object.native_hwnd.has_value()) {
+        return true;
+    }
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+    return normalized_member_name == "class" ||
+           normalized_member_name == "baseclass" ||
+           normalized_member_name == "parentclass" ||
+           normalized_member_name == "classlibrary";
+}
+
+bool native_olecontrol_creation_time_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    if (!is_olecontrol) {
+        return false;
+    }
+    return (normalized_member_name == "oleclass" ||
+            normalized_member_name == "documentfile" ||
+            normalized_member_name == "oletypeallowed") &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
+bool native_olecontrol_object_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return is_olecontrol &&
+           normalized_member_name == "object" &&
+           runtime_object.properties.contains("object");
+}
+
+bool native_olecontrol_inspection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    if (!is_olecontrol) {
+        return false;
+    }
+    return (normalized_member_name == "objectverbscount" ||
+            normalized_member_name == "objectverbs") &&
+           (normalized_member_name == "objectverbs" ||
+           runtime_object.properties.contains("objectverbscount"));
+}
+
+bool native_olecontrol_conflict_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return is_olecontrol &&
+           normalized_member_name == "application" &&
+           runtime_object.properties.contains("application");
+}
+
+bool native_child_parent_member_name_matches(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+    if (normalized_member_name != "parent") {
+        return false;
+    }
+
+    const auto parent = runtime_object.properties.find("parent");
+    if (parent == runtime_object.properties.end()) {
+        return false;
+    }
+
+    int handle = 0;
+    std::string prog_id;
+    return parse_object_handle_reference(parent->second, handle, prog_id);
+}
+
+bool native_controlcount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "controlcount" &&
+           runtime_object.properties.contains("controlcount");
+}
+
+bool native_pagecount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "pagecount" ||
+        !runtime_object.properties.contains("pagecount")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
+}
+
+bool native_activepage_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "activepage" ||
+        !runtime_object.properties.contains("activepage")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
+}
+
+bool native_form_alwaysontop_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "alwaysontop") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("alwaysontop");
+}
+
+bool native_form_showwindow_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "showwindow") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("showwindow");
+}
+
+bool native_form_windowtype_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "windowtype") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("windowtype");
+}
+
+bool native_form_windowstate_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "windowstate") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("windowstate");
+}
+
+bool native_form_borderstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "borderstyle") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("borderstyle");
+}
+
+bool native_form_titlebar_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "titlebar") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("titlebar");
+}
+
+bool native_form_desktop_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "desktop") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("desktop");
+}
+
+bool native_form_scrollbars_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "scrollbars") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("scrollbars");
+}
+
+bool native_form_lockscreen_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "lockscreen") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("lockscreen");
+}
+
+bool native_form_controlbox_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "controlbox") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("controlbox");
+}
+
+bool native_form_closable_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "closable") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("closable");
+}
+
+bool native_form_minbutton_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "minbutton") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("minbutton");
+}
+
+bool native_form_maxbutton_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "maxbutton") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("maxbutton");
+}
+
+bool native_form_autocenter_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "autocenter") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("autocenter");
+}
+
+bool native_visual_enabled_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "enabled" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("enabled");
+}
+
+bool native_visual_visible_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "visible" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("visible");
+}
+
+bool native_visual_backcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return normalized_member_name == "backcolor" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           !is_olecontrol &&
+           runtime_object.properties.contains("backcolor");
+}
+
+bool native_visual_forecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return normalized_member_name == "forecolor" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           !is_olecontrol &&
+           runtime_object.properties.contains("forecolor");
+}
+
+bool native_visual_geometry_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "left" &&
+        normalized_member_name != "top" &&
+        normalized_member_name != "width" &&
+        normalized_member_name != "height") {
+        return false;
+    }
+
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return is_native_visual_runtime_object(runtime_object) &&
+           !is_olecontrol &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
+bool native_tabindex_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "tabindex" &&
+           native_tabindex_runtime_object_matches(runtime_object) &&
+           runtime_object.properties.contains("tabindex");
+}
+
+bool native_tabstop_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "tabstop" &&
+           native_tabstop_runtime_object_matches(runtime_object) &&
+           runtime_object.properties.contains("tabstop");
+}
+
+bool native_string_control_value_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "value" ||
+        !runtime_object.properties.contains("value")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_controlsource_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "controlsource" ||
+        !runtime_object.properties.contains("controlsource")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "column" ||
+           normalized_base_class == "checkbox" ||
+           normalized_base_class == "spinner";
+}
+
+bool native_recordsource_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "recordsource" ||
+        !runtime_object.properties.contains("recordsource")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_allowaddnew_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "allowaddnew" ||
+        !runtime_object.properties.contains("allowaddnew")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_allowcellselection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "allowcellselection" ||
+        !runtime_object.properties.contains("allowcellselection")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_gridlines_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "gridlines" ||
+        !runtime_object.properties.contains("gridlines")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_highlight_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlight" ||
+        !runtime_object.properties.contains("highlight")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_highlightrow_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlightrow" ||
+        !runtime_object.properties.contains("highlightrow")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_deletemark_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "deletemark" ||
+        !runtime_object.properties.contains("deletemark")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_splitbar_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "splitbar" ||
+        !runtime_object.properties.contains("splitbar")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_leftcolumn_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "leftcolumn" ||
+        !runtime_object.properties.contains("leftcolumn")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_child_collection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return (normalized_member_name == "objects" ||
+            normalized_member_name == "controls" ||
+            normalized_member_name == "columns" ||
+            normalized_member_name == "pages") &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
+bool native_columnorder_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "columnorder" ||
+        !runtime_object.properties.contains("columnorder")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
+bool native_recordmark_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "recordmark" ||
+        !runtime_object.properties.contains("recordmark")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_currentcontrol_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "currentcontrol" ||
+        !runtime_object.properties.contains("currentcontrol")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
+bool native_dynamiccurrentcontrol_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "dynamiccurrentcontrol" ||
+        !runtime_object.properties.contains("dynamiccurrentcontrol")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
+bool native_recordsourcetype_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "recordsourcetype" ||
+        !runtime_object.properties.contains("recordsourcetype")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_rowsource_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "rowsource" ||
+        !runtime_object.properties.contains("rowsource")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_rowsourcetype_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "rowsourcetype" ||
+        !runtime_object.properties.contains("rowsourcetype")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_listindex_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "listindex" ||
+        !runtime_object.properties.contains("listindex")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_displayvalue_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "displayvalue" ||
+        !runtime_object.properties.contains("displayvalue")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_listcount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "listcount" ||
+        !runtime_object.properties.contains("listcount")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_sorted_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "sorted" ||
+        !runtime_object.properties.contains("sorted")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_multiselect_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "multiselect" ||
+        !runtime_object.properties.contains("multiselect")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+}
+
+bool native_boundto_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "boundto" ||
+        !runtime_object.properties.contains("boundto")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_newindex_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "newindex" ||
+        !runtime_object.properties.contains("newindex")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_newitemid_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "newitemid" ||
+        !runtime_object.properties.contains("newitemid")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_listitemid_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "listitemid" ||
+        !runtime_object.properties.contains("listitemid")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_listitem_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "listitem") {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_boundcolumn_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "boundcolumn" ||
+        !runtime_object.properties.contains("boundcolumn")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_columncount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "columncount" ||
+        !runtime_object.properties.contains("columncount")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "grid";
+}
+
+bool native_column_bound_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "bound" ||
+        !runtime_object.properties.contains("bound")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
+bool native_columnwidths_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "columnwidths" ||
+        !runtime_object.properties.contains("columnwidths")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_combobox_style_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "style" ||
+        !runtime_object.properties.contains("style")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox";
+}
+
+bool native_combobox_is_drop_down_list_style(const RuntimeOleObjectState& runtime_object) {
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    if (normalized_base_class != "combobox") {
+        return false;
+    }
+
+    const auto style = runtime_object.properties.find("style");
+    if (style == runtime_object.properties.end()) {
+        return false;
+    }
+
+    return std::llround(value_as_number(style->second)) == 2LL;
+}
+
+bool native_control_readonly_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "readonly" ||
+        !runtime_object.properties.contains("readonly")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "grid" ||
+           normalized_base_class == "column" ||
+           normalized_base_class == "checkbox" ||
+           normalized_base_class == "spinner";
+}
+
+bool native_name_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "name" &&
+           !runtime_object.class_hierarchy.empty() &&
+           runtime_object.properties.contains("name");
+}
+
+std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
+    std::vector<std::string> members;
+    if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
+        members.push_back("hwnd");
+    }
+    if (get_native_identity_reflection_metadata(runtime_object, "class").has_value()) {
+        members.push_back("class");
+    }
+    if (get_native_identity_reflection_metadata(runtime_object, "baseclass").has_value()) {
+        members.push_back("baseclass");
+    }
+    if (get_native_identity_reflection_metadata(runtime_object, "classlibrary").has_value()) {
+        members.push_back("classlibrary");
+    }
+    if (get_native_identity_reflection_metadata(runtime_object, "parentclass").has_value()) {
+        members.push_back("parentclass");
+    }
+    return members;
+}
+
+bool method_ends_with_suffix(
+    const std::string& method_name,
+    const std::string& suffix,
+    std::string* stem = nullptr) {
+    const std::string normalized_method = normalize_identifier(method_name);
+    if (normalized_method.size() <= suffix.size() ||
+        normalized_method.compare(normalized_method.size() - suffix.size(), suffix.size(), suffix) != 0) {
+        return false;
+    }
+
+    if (normalized_method[normalized_method.size() - suffix.size() - 1U] != '_') {
+        return false;
+    }
+
+    if (stem != nullptr) {
+        *stem = normalized_method.substr(0U, normalized_method.size() - suffix.size() - 1U);
+    }
+    return true;
+}
+
+bool object_has_accessor_property(const RuntimeOleObjectState& runtime_object, const std::string& normalized_property_name) {
+    return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string& method_name) {
+        std::string stem;
+        return method_ends_with_suffix(method_name, "access", &stem) && stem == normalized_property_name;
+    });
+}
+
+bool object_has_assigner_property(const RuntimeOleObjectState& runtime_object, const std::string& normalized_property_name) {
+    return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string& method_name) {
+        std::string stem;
+        return method_ends_with_suffix(method_name, "assign", &stem) && stem == normalized_property_name;
+    });
+}
+
+bool looks_like_file_path(const std::string& text) {
+    const std::string trimmed = trim_copy(text);
+    if (trimmed.empty()) {
+        return false;
+    }
+    if (trimmed.find('/') != std::string::npos || trimmed.find('\\') != std::string::npos) {
+        return true;
+    }
+    if (trimmed.size() >= 2U && std::isalpha(static_cast<unsigned char>(trimmed[0])) != 0 && trimmed[1] == ':') {
+        return true;
+    }
+    const std::string lower = lowercase_copy(trimmed);
+    const auto has_suffix = [&](const std::string& suffix) {
+        return lower.size() >= suffix.size() && lower.compare(lower.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
+    return has_suffix(".xml") || has_suffix(".txt");
+}
