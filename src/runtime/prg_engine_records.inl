@@ -613,6 +613,12 @@
                 return std::nullopt;
             }
 
+            if (const auto buffered = cursor.buffered_records.find(cursor.recno);
+                buffered != cursor.buffered_records.end())
+            {
+                return buffered->second;
+            }
+
             if (cursor.remote)
             {
                 if (cursor.recno > cursor.record_count || cursor.recno > cursor.remote_records.size())
@@ -1150,6 +1156,94 @@
                 }
                 return true;
             }
+
+            if (cursor.buffering_mode == 5)
+            {
+                if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord",
+                        {{"command", "REPLACE"}});
+                    return false;
+                }
+
+                auto buffered = cursor.buffered_records.find(cursor.recno);
+                if (buffered == cursor.buffered_records.end())
+                {
+                    const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
+                    if (!table_result.ok || cursor.recno > table_result.table.records.size())
+                    {
+                        last_error_message = table_result.error.empty()
+                            ? runtime_text("Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord", {{"command", "REPLACE"}})
+                            : table_result.error;
+                        return false;
+                    }
+                    buffered = cursor.buffered_records.emplace(
+                        cursor.recno,
+                        table_result.table.records[cursor.recno - 1U]).first;
+                }
+
+                std::vector<EvaluatedReplaceAssignment> evaluated_assignments;
+                evaluated_assignments.reserve(assignments.size());
+                for (const auto &assignment : assignments)
+                {
+                    const PrgValue value = evaluate_expression(assignment.expression, frame);
+                    std::string serialized_value = value_as_string(value);
+                    if (truncate_character_overflow_for_local_fields)
+                    {
+                        const std::string normalized_field = collapse_identifier(assignment.field_name);
+                        const auto descriptors = cursor_field_descriptors(cursor);
+                        const auto descriptor = std::find_if(
+                            descriptors.begin(),
+                            descriptors.end(),
+                            [&](const vfp::DbfFieldDescriptor &candidate)
+                            {
+                                return collapse_identifier(candidate.name) == normalized_field;
+                            });
+                        if (descriptor != descriptors.end() && descriptor->type == 'C')
+                        {
+                            const std::string trimmed = trim_copy(serialized_value);
+                            serialized_value = trimmed.size() > descriptor->length
+                                ? trimmed.substr(0U, descriptor->length)
+                                : trimmed;
+                        }
+                    }
+                    evaluated_assignments.push_back({
+                        .field_name = assignment.field_name,
+                        .serialized_value = std::move(serialized_value),
+                        .additive = assignment.additive});
+                }
+
+                for (const auto &assignment : evaluated_assignments)
+                {
+                    const std::string normalized_field = collapse_identifier(assignment.field_name);
+                    auto field = std::find_if(
+                        buffered->second.values.begin(),
+                        buffered->second.values.end(),
+                        [&](vfp::DbfRecordValue &candidate)
+                        {
+                            return collapse_identifier(candidate.field_name) == normalized_field;
+                        });
+                    if (field == buffered->second.values.end())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Records.Error.ConstraintFieldNotFound",
+                            {{"constraint", "REPLACE"}, {"fieldName", assignment.field_name}});
+                        return false;
+                    }
+                    if (assignment.additive && field->field_type == 'M')
+                    {
+                        field->display_value += assignment.serialized_value;
+                    }
+                    else
+                    {
+                        field->display_value = assignment.serialized_value;
+                    }
+                    field->is_null = false;
+                }
+                return true;
+            }
+
             if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
             {
                 last_error_message = runtime_text(
@@ -1471,20 +1565,14 @@
             {
                 return std::nullopt;
             }
-            const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
-            if (!table_result.ok)
-            {
-                last_error_message = table_result.error;
-                return std::nullopt;
-            }
-            if (cursor.recno > table_result.table.records.size())
+            const auto record = current_record(cursor);
+            if (!record.has_value())
             {
                 return std::nullopt;
             }
-            const auto &record = table_result.table.records[cursor.recno - 1U];
-            const auto value = std::find_if(record.values.begin(), record.values.end(), [&](const vfp::DbfRecordValue &candidate)
+            const auto value = std::find_if(record->values.begin(), record->values.end(), [&](const vfp::DbfRecordValue &candidate)
                                             { return collapse_identifier(candidate.field_name) == normalized; });
-            if (value == record.values.end())
+            if (value == record->values.end())
             {
                 return std::nullopt;
             }
@@ -1493,6 +1581,131 @@
                 return "null";
             }
             return value->display_value;
+        }
+
+        std::optional<PrgValue> cursor_buffering_function(
+            const std::string &function,
+            const std::vector<PrgValue> &arguments)
+        {
+            if (function != "cursorsetprop" && function != "cursorgetprop" &&
+                function != "tableupdate" && function != "tablerevert")
+            {
+                return std::nullopt;
+            }
+
+            const auto cursor_for_argument = [&](std::size_t index) -> CursorState *
+            {
+                return index < arguments.size()
+                    ? resolve_cursor_target(value_as_string(arguments[index]))
+                    : resolve_cursor_target({});
+            };
+            const auto require_local_cursor = [&](CursorState *cursor, const std::string &command) -> bool
+            {
+                if (cursor != nullptr && !cursor->remote && !cursor->source_path.empty())
+                {
+                    return true;
+                }
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+                    {{"command", command}});
+                return false;
+            };
+
+            if (function == "cursorgetprop")
+            {
+                if (arguments.empty() ||
+                    uppercase_copy(trim_copy(value_as_string(arguments[0]))) != "BUFFERING")
+                {
+                    return make_number_value(0.0);
+                }
+                CursorState *cursor = cursor_for_argument(1U);
+                if (cursor == nullptr)
+                {
+                    return make_number_value(0.0);
+                }
+                return require_local_cursor(cursor, "CURSORGETPROP")
+                    ? make_number_value(static_cast<double>(cursor->buffering_mode))
+                    : make_number_value(0.0);
+            }
+
+            if (function == "cursorsetprop")
+            {
+                if (arguments.size() < 2U ||
+                    uppercase_copy(trim_copy(value_as_string(arguments[0]))) != "BUFFERING")
+                {
+                    return make_boolean_value(false);
+                }
+                CursorState *cursor = cursor_for_argument(2U);
+                if (!require_local_cursor(cursor, "CURSORSETPROP"))
+                {
+                    return make_boolean_value(false);
+                }
+                const int requested_mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
+                if (requested_mode != 1 && requested_mode != 5)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode",
+                        {{"mode", std::to_string(requested_mode)}});
+                    return make_boolean_value(false);
+                }
+                if (requested_mode != cursor->buffering_mode && !cursor->buffered_records.empty())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.PendingCursorBufferChanges",
+                        {{"command", "CURSORSETPROP"}});
+                    return make_boolean_value(false);
+                }
+                cursor->buffering_mode = requested_mode;
+                return make_boolean_value(true);
+            }
+
+            const bool revert = function == "tablerevert";
+            const std::size_t alias_argument_index = revert ? 1U : 2U;
+            CursorState *cursor = cursor_for_argument(alias_argument_index);
+            if (!require_local_cursor(cursor, revert ? "TABLEREVERT" : "TABLEUPDATE"))
+            {
+                return make_boolean_value(false);
+            }
+            if (cursor->buffering_mode != 5)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
+                    {{"command", revert ? "TABLEREVERT" : "TABLEUPDATE"}});
+                return make_boolean_value(false);
+            }
+            if (revert)
+            {
+                cursor->buffered_records.clear();
+                return make_boolean_value(true);
+            }
+
+            if (cursor->buffered_records.empty())
+            {
+                return make_boolean_value(true);
+            }
+            if (!ensure_transaction_backup_for_table(cursor->source_path))
+            {
+                return make_boolean_value(false);
+            }
+            for (const auto &[recno, record] : cursor->buffered_records)
+            {
+                for (const auto &field : record.values)
+                {
+                    const auto result = vfp::replace_record_field_value(
+                        cursor->source_path,
+                        recno - 1U,
+                        field.field_name,
+                        field.display_value);
+                    if (!result.ok)
+                    {
+                        last_error_message = result.error;
+                        return make_boolean_value(false);
+                    }
+                    cursor->record_count = result.record_count;
+                }
+            }
+            cursor->buffered_records.clear();
+            return make_boolean_value(true);
         }
 
         bool validate_not_null_fields(CursorState &cursor)

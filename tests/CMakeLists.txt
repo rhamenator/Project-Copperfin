@@ -4736,6 +4736,15 @@ target_include_directories(test_prg_engine_runtime_surface_functions PRIVATE
     ${CMAKE_SOURCE_DIR}/src/runtime
 )
 
+copperfin_add_test(test_prg_engine_runtime_surface_functions_buffering cf_xbase_runtime
+    test_prg_engine_runtime_surface_functions_buffering.cpp
+    test_prg_engine_runtime_surface_functions_buffering_main.cpp
+    prg_engine_test_support.cpp
+)
+target_include_directories(test_prg_engine_runtime_surface_functions_buffering PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
+
 copperfin_add_test(test_prg_engine_runtime_surface_procedure_classes cf_xbase_runtime
     test_prg_engine_runtime_surface_procedure_classes.cpp
     prg_engine_test_support.cpp

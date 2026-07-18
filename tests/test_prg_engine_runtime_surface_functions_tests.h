@@ -3,6 +3,7 @@
 namespace copperfin::runtime_surface_tests
 {
     void test_expression_runtime_surface_extensions();
+    void test_local_optimistic_table_buffering();
     void test_filesize_expression_function();
     void test_recsize_reclength_expression_functions();
     void test_environment_and_sys_introspection_functions();

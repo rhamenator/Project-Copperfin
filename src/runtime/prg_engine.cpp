@@ -697,6 +697,8 @@ namespace copperfin::runtime
             std::string active_locate_while_expression;
             bool locate_active = false;
             std::string filter_expression;
+            int buffering_mode = 1;
+            std::map<std::size_t, vfp::DbfRecord> buffered_records;
             std::vector<vfp::DbfRecord> remote_records;
             std::vector<vfp::DbfFieldDescriptor> remote_fields;
             std::vector<vfp::DbfFieldDescriptor> local_fields;
@@ -2273,6 +2275,10 @@ namespace copperfin::runtime
                     return std::nullopt;
                 }
                 return snapshot.rows.size();
+            },
+            [this](const std::string &function, const std::vector<PrgValue> &arguments)
+            {
+                return cursor_buffering_function(function, arguments);
             },
             [this](const std::string &category, const std::string &detail)
             {

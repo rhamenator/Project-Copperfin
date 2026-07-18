@@ -130,6 +130,7 @@
                 std::function<std::string(const std::string &)> set_callback,
                 std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback,
                 std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
@@ -201,6 +202,7 @@
                   set_callback_(std::move(set_callback)),
                   snapshot_cursor_callback_(std::move(snapshot_cursor_callback)),
                   load_cursor_snapshot_callback_(std::move(load_cursor_snapshot_callback)),
+                  cursor_buffering_callback_(std::move(cursor_buffering_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   resolve_object_path_callback_(std::move(resolve_object_path_callback)),
@@ -1808,6 +1810,13 @@
                 if (const auto path_result = evaluate_path_function(function, arguments, default_directory_))
                 {
                     return *path_result;
+                }
+                if (cursor_buffering_callback_)
+                {
+                    if (const auto cursor_buffering_result = cursor_buffering_callback_(function, arguments))
+                    {
+                        return *cursor_buffering_result;
+                    }
                 }
                 if (const auto runtime_surface_result =
                         evaluate_runtime_surface_function(function,
@@ -3439,6 +3448,7 @@
             std::function<std::string(const std::string &)> set_callback_;
             std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback_;
             std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;
