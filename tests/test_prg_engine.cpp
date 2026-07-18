@@ -1021,7 +1021,8 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cPathAfter = SET('PATH')\n"
         "lPathFileAfter = FILE('path_only_session.txt')\n"
         "cDefaultBefore = SET('DEFAULT')\n"
-        "SET DEFAULT TO '" + new_default.string() + "'\n"
+        "nSetDefaultPathCalls = 0\n"
+        "SET DEFAULT TO set_default_path('" + new_default.string() + "')\n"
         "cDefaultAfter = SET('DEFAULT')\n"
         "cAliasFromEval = EVAL('ALIAS()')\n"
         "cAliasFromEvalMacro = EVAL(&cEvalAliasExpr)\n"
@@ -1049,7 +1050,12 @@ void test_eval_macro_and_runtime_state_semantics() {
         "cDefaultRestored = SET('DEFAULT')\n"
         "lFileRestored = FILE('people.dbf')\n"
         "lPathFileRestored = FILE('path_only_session.txt')\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION set_default_path\n"
+        "LPARAMETERS value\n"
+        "nSetDefaultPathCalls = nSetDefaultPathCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
 
@@ -1071,6 +1077,7 @@ void test_eval_macro_and_runtime_state_semantics() {
     const auto path_file_after = state.globals.find("lpathfileafter");
     const auto default_before = state.globals.find("cdefaultbefore");
     const auto default_after = state.globals.find("cdefaultafter");
+    const auto set_default_path_calls = state.globals.find("nsetdefaultpathcalls");
     const auto alias_from_eval = state.globals.find("caliasfromeval");
     const auto alias_from_eval_macro = state.globals.find("caliasfromevalmacro");
     const auto alias_from_eval_nested = state.globals.find("caliasfromevalnested");
@@ -1110,6 +1117,11 @@ void test_eval_macro_and_runtime_state_semantics() {
     expect(path_file_after != state.globals.end(), "FILE() after SET PATH should be captured");
     expect(default_before != state.globals.end(), "SET('DEFAULT') before change should be captured");
     expect(default_after != state.globals.end(), "SET('DEFAULT') after change should be captured");
+    expect(set_default_path_calls != state.globals.end(), "SET DEFAULT should preserve the path resolver call counter");
+    if (set_default_path_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(set_default_path_calls->second) == "1",
+               "SET DEFAULT should evaluate the path UDF exactly once");
+    }
     expect(alias_from_eval != state.globals.end(), "EVAL() should be able to evaluate runtime-state expressions");
     expect(alias_from_eval_macro != state.globals.end(), "EVAL(&macro) should preserve expression text for runtime-state evaluation");
     expect(alias_from_eval_nested != state.globals.end(), "EVAL(&holder) should preserve nested macro-indirection for runtime-state evaluation");

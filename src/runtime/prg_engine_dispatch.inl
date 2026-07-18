@@ -74,6 +74,7 @@
         std::optional<PrgValue> resumed_append_from_source_value;
         std::optional<PrgValue> resumed_save_memvars_path_value;
         std::optional<PrgValue> resumed_restore_memvars_path_value;
+        std::optional<PrgValue> resumed_set_default_path_value;
         std::optional<PrgValue> resumed_rename_source_value;
         std::optional<PrgValue> resumed_rename_destination_value;
         std::optional<PrgValue> resumed_do_argument_value;
@@ -531,6 +532,10 @@
                     {
                         resumed_restore_memvars_path_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::set_default)
+                    {
+                        resumed_set_default_path_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -591,6 +596,7 @@
                     !resumed_append_from_source_value.has_value() &&
                     !resumed_save_memvars_path_value.has_value() &&
                     !resumed_restore_memvars_path_value.has_value() &&
+                    !resumed_set_default_path_value.has_value() &&
                     !resumed_rename_source_value.has_value() &&
                     !resumed_rename_destination_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
@@ -5130,7 +5136,15 @@
             }
             case StatementKind::set_default:
             {
-                const std::string evaluated = value_as_string(evaluate_expression(statement.expression, frame));
+                const auto path_value = resumed_set_default_path_value.has_value()
+                                            ? resumed_set_default_path_value
+                                            : evaluate_resumable_expression(frame, statement);
+                if (!path_value.has_value())
+                {
+                    return {};
+                }
+                const std::string evaluated = value_as_string(*path_value);
+                resumed_set_default_path_value.reset();
                 if (!evaluated.empty())
                 {
                     current_default_directory() = normalize_path(evaluated);
