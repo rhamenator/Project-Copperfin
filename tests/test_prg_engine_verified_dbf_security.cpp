@@ -315,6 +315,53 @@ void test_append_from_array_reads_verified_destination_schema()
     fs::remove_all(root, ignored);
 }
 
+void test_list_query_file_requery_reads_verified_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_query_file_requery";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    write_simple_dbf(table_path, {"Ada", "Grace"});
+    const std::string verified_table_bytes = read_text(table_path);
+    const fs::path query_path = root / "names.qpr";
+    const std::string verified_query_text =
+        "SELECT name FROM customers WHERE name = 'Ada' INTO CURSOR temp2\n";
+    write_text(query_path, verified_query_text);
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
+    options.verified_file_byte_overrides.emplace(query_path.string(), verified_query_text);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_query_file.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.RowSourceType = 4\n"
+        "oList.RowSource = 'names.qpr'\n"
+        "oList.Requery()\n"
+        "cBefore = oList.List(1)\n"
+        "nTampered = STRTOFILE(\"SELECT name FROM customers WHERE name = 'Grace' INTO CURSOR temp2\", 'names.qpr')\n"
+        "oList.Requery()\n"
+        "cAfter = oList.List(1)\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict query-file RowSource should complete from the verified query snapshot: " + state.message);
+    const std::string before = global_text(state, "cbefore");
+    const std::string tampered = global_text(state, "ntampered");
+    const std::string after = global_text(state, "cafter");
+    expect(before == "Ada",
+           "strict query-file RowSource should initially use the admitted query bytes, got " + before);
+    expect(tampered != "0",
+           "query-file security fixture should replace the physical query after initial load");
+    expect(after == "Ada",
+           "strict query-file Requery() should ignore a replaced physical query file, got " + after);
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main()
@@ -326,5 +373,6 @@ int main()
     test_append_from_reads_verified_source_rows();
     test_buffered_append_blank_reads_verified_dbf_rows();
     test_append_from_array_reads_verified_destination_schema();
+    test_list_query_file_requery_reads_verified_bytes();
     return test_failures() == 0 ? 0 : 1;
 }

@@ -5299,29 +5299,53 @@ namespace copperfin::runtime
 
         const auto load_query_file_text =
             [&](const std::string &query_file,
-                const std::string &fallback_path) -> std::string
+                const std::string &fallback_path) -> std::optional<std::string>
         {
             std::string resolved_query_path =
                 resolve_native_prg_program_path(unquote_string(query_file), fallback_path);
             std::error_code ignored;
-            std::filesystem::path query_path(resolved_query_path);
-            if (!std::filesystem::exists(query_path, ignored) &&
-                query_path.extension().empty())
+            std::filesystem::path query_path =
+                copperfin::platform::path_from_utf8_string(resolved_query_path);
+            const bool physical_query_exists = std::filesystem::exists(query_path, ignored);
+            const bool verified_query_exists =
+                options.require_verified_file_byte_overrides &&
+                find_verified_file_byte_override(query_path) != options.verified_file_byte_overrides.end();
+            if (!physical_query_exists && !verified_query_exists && query_path.extension().empty())
             {
                 query_path.replace_extension(".qpr");
                 resolved_query_path =
                     resolve_native_prg_program_path(
                         copperfin::platform::path_to_utf8_string(query_path), fallback_path);
+                query_path = copperfin::platform::path_from_utf8_string(resolved_query_path);
             }
 
-            std::ifstream input(resolved_query_path, std::ios::binary);
+            std::filesystem::path snapshot_root;
+            const auto query_snapshot = materialize_verified_file_snapshot(
+                query_path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                false);
+            if (!query_snapshot.has_value())
+            {
+                return std::nullopt;
+            }
+
+            std::ifstream input(*query_snapshot, std::ios::binary);
             if (!input)
             {
-                return {};
+                if (!snapshot_root.empty())
+                {
+                    std::filesystem::remove_all(snapshot_root, ignored);
+                }
+                return std::nullopt;
             }
 
             std::ostringstream buffer;
             buffer << input.rdbuf();
+            if (!snapshot_root.empty())
+            {
+                std::filesystem::remove_all(snapshot_root, ignored);
+            }
             return buffer.str();
         };
 
@@ -5468,12 +5492,20 @@ namespace copperfin::runtime
         case 3:
         case 4:
         {
-            const std::string query_text =
+            const std::optional<std::string> query_text =
                 row_source_type == 3
-                    ? row_source
+                    ? std::optional<std::string>(row_source)
                     : load_query_file_text(row_source, frame.file_path);
+            if (!query_text.has_value())
+            {
+                if (options.require_verified_file_byte_overrides || require_query_resolution)
+                {
+                    return false;
+                }
+                break;
+            }
             QueryPlan plan;
-            if (!parse_query_plan(query_text, plan))
+            if (!parse_query_plan(*query_text, plan))
             {
                 if (require_query_resolution)
                 {
