@@ -233,6 +233,7 @@ void test_quit_closes_open_database_and_runtime_handles();
 void test_do_with_parameters_binds_arguments_in_called_routine();
 void test_call_with_parameters_binds_arguments_in_called_routine();
 void test_unsupplied_parameters_initialize_to_logical_false();
+void test_parameter_defaults_use_heap_backed_expression_continuations();
 void test_call_external_target_with_by_reference_updates_caller_variable();
 void test_do_with_by_reference_updates_caller_variable();
 void test_expression_level_function_call_assigns_return_value();

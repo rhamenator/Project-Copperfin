@@ -137,6 +137,51 @@ void test_unsupplied_parameters_initialize_to_logical_false() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parameter_defaults_use_heap_backed_expression_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_parameter_default_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "parameter_default_continuation.prg";
+    write_text(
+        main_path,
+        "nDefaultCalls = 0\n"
+        "DO inspectdefaults WITH 5\n"
+        "RETURN\n"
+        "PROCEDURE inspectdefaults\n"
+        "LPARAMETERS supplied, first = make_default(supplied), second = make_default(first)\n"
+        "nFirstDefault = first\n"
+        "nSecondDefault = second\n"
+        "RETURN\n"
+        "FUNCTION make_default\n"
+        "LPARAMETERS value\n"
+        "nDefaultCalls = nDefaultCalls + 1\n"
+        "RETURN value + 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "parameter default continuation script should complete: " + state.message);
+
+    const auto expect_value = [&](const char *name, const char *expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), std::string("parameter default continuation should assign ") + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   std::string("parameter default continuation value mismatch for ") + name);
+        }
+    };
+    expect_value("nfirstdefault", "6");
+    expect_value("nseconddefault", "7");
+    expect_value("ndefaultcalls", "2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_call_external_target_with_by_reference_updates_caller_variable() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_external_byref";

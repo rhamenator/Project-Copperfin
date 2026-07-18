@@ -44,6 +44,7 @@
                 frame.expression_continuation.reset();
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
+                frame.parameter_default_continuation.reset();
             }
         };
         std::optional<PrgValue> resumed_assignment_value;
@@ -59,6 +60,7 @@
         std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_throw_value;
         std::optional<PrgValue> resumed_textmerge_value;
+        std::optional<PrgValue> resumed_parameter_default_value;
         std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_call_argument_value;
@@ -471,6 +473,12 @@
                     {
                         resumed_textmerge_value = *expression_value;
                     }
+                    else if ((continued_statement.kind == StatementKind::parameters_declaration ||
+                              continued_statement.kind == StatementKind::lparameters_declaration) &&
+                             frame.parameter_default_continuation.has_value())
+                    {
+                        resumed_parameter_default_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
                     {
@@ -501,6 +509,7 @@
                     !resumed_with_target_value.has_value() &&
                     !resumed_throw_value.has_value() &&
                     !resumed_textmerge_value.has_value() &&
+                    !resumed_parameter_default_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
                     !resumed_spawn_argument_value.has_value() &&
                     !resumed_call_argument_value.has_value() &&
@@ -1728,6 +1737,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
+                frame.parameter_default_continuation.reset();
                 Program &program = load_program(frame.file_path);
                 if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
@@ -1915,6 +1925,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
+                frame.parameter_default_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                 std::shared_ptr<Impl> child = std::make_shared<Impl>(*this);
@@ -2179,6 +2190,7 @@
                     std::move(argument_continuation.references);
                 frame.command_argument_continuation.reset();
                 frame.text_merge_continuation.reset();
+                frame.parameter_default_continuation.reset();
 
                 Program &program = load_program(frame.file_path);
                     if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
@@ -5237,25 +5249,51 @@
                     }
                     return std::pair<std::string, std::string>{parameter_name, default_expression};
                 };
-                for (std::size_t index = 0U; index < statement.names.size(); ++index)
+                if (!frame.parameter_default_continuation.has_value() ||
+                    frame.parameter_default_continuation->statement.text != statement.text)
                 {
+                    frame.parameter_default_continuation = ParameterDefaultContinuation{.statement = statement};
+                }
+
+                ParameterDefaultContinuation &continuation = *frame.parameter_default_continuation;
+                while (continuation.next_parameter_index < statement.names.size())
+                {
+                    const std::size_t index = continuation.next_parameter_index;
                     const auto [parameter_name, default_expression] = split_parameter_default(statement.names[index]);
                     const std::string normalized = normalize_memory_variable_identifier(parameter_name);
                     if (normalized.empty())
                     {
+                        ++continuation.next_parameter_index;
                         continue;
                     }
+
                     frame.local_names.insert(normalized);
                     if (index < frame.call_arguments.size())
                     {
                         frame.locals[normalized] = frame.call_arguments[index];
                     }
+                    else if (default_expression.empty())
+                    {
+                        frame.locals[normalized] = make_boolean_value(false);
+                    }
                     else
                     {
-                        frame.locals[normalized] = default_expression.empty()
-                                                       ? make_boolean_value(false)
-                                                       : evaluate_expression(default_expression, frame);
+                        Statement default_statement = continuation.statement;
+                        default_statement.expression = default_expression;
+                        default_statement.text = continuation.statement.text + " [parameter-default]";
+                        continuation.pending_default = true;
+                        const auto default_value = resumed_parameter_default_value.has_value()
+                                                       ? resumed_parameter_default_value
+                                                       : evaluate_resumable_expression(frame, default_statement);
+                        if (!default_value.has_value())
+                        {
+                            return {};
+                        }
+                        frame.locals[normalized] = *default_value;
+                        continuation.pending_default = false;
+                        resumed_parameter_default_value.reset();
                     }
+
                     if (index < frame.call_argument_references.size() && frame.call_argument_references[index].has_value())
                     {
                         const std::string &reference_name = *frame.call_argument_references[index];
@@ -5269,7 +5307,9 @@
                             frame.parameter_reference_bindings[normalized] = reference_name;
                         }
                     }
+                    ++continuation.next_parameter_index;
                 }
+                frame.parameter_default_continuation.reset();
                 return {};
             }
             case StatementKind::dimension_command:
@@ -8854,6 +8894,7 @@
                                 candidate.expression_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
+                                candidate.parameter_default_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = scan_resume_pc;
@@ -8868,6 +8909,7 @@
                                     stack[nested_index].expression_routine_return_pending = false;
                                     stack[nested_index].expression_continuation.reset();
                                     stack[nested_index].text_merge_continuation.reset();
+                                    stack[nested_index].parameter_default_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -8916,6 +8958,7 @@
                                 candidate.expression_continuation.reset();
                                 candidate.command_argument_continuation.reset();
                                 candidate.text_merge_continuation.reset();
+                                candidate.parameter_default_continuation.reset();
                                 if (index == stack.size())
                                 {
                                     resume_pc = loop_resume_pc;
@@ -8930,6 +8973,7 @@
                                     stack[nested_index].expression_routine_return_pending = false;
                                     stack[nested_index].expression_continuation.reset();
                                     stack[nested_index].text_merge_continuation.reset();
+                                    stack[nested_index].parameter_default_continuation.reset();
                                     stack[nested_index].loop_expression_continuation.reset();
                                     stack[nested_index].scan_expression_continuation.reset();
                                 }
@@ -8946,6 +8990,7 @@
                             candidate.expression_continuation.reset();
                             candidate.command_argument_continuation.reset();
                             candidate.text_merge_continuation.reset();
+                            candidate.parameter_default_continuation.reset();
                             if (!candidate.cases.empty())
                             {
                                 candidate.pc = candidate.cases.back().endcase_statement_index + 1U;
@@ -8957,6 +9002,7 @@
                                 stack[nested_index].expression_routine_return_pending = false;
                                 stack[nested_index].expression_continuation.reset();
                                 stack[nested_index].text_merge_continuation.reset();
+                                stack[nested_index].parameter_default_continuation.reset();
                                 stack[nested_index].loop_expression_continuation.reset();
                                 stack[nested_index].scan_expression_continuation.reset();
                             }
