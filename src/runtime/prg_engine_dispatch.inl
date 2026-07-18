@@ -4080,11 +4080,11 @@
                 const std::string destination = uppercase_copy(trim_copy(statement.expression));
                 if (destination == "TOP")
                 {
-                    (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false);
+                    (void)seek_visible_record(*cursor, frame, 1, 1, {}, {}, false, true);
                 }
                 else if (destination == "BOTTOM")
                 {
-                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false) &&
+                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false, true) &&
                         cursor->record_count > 0U)
                     {
                         // VFP keeps physical EOF while reporting both boundary flags when the filtered set is empty.

@@ -1149,6 +1149,69 @@ void test_go_and_skip_cursor_navigation() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ordered_go_and_skip_cursor_navigation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_ordered_navigation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ZEBRA", "APPLE", "MANGO"});
+    const fs::path index_path = temp_root / "people.idx";
+    write_synthetic_idx(index_path, "NAME");
+
+    const fs::path main_path = temp_root / "ordered_navigate.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 1\n"
+        "GO TOP\n"
+        "cTop = NAME\n"
+        "SKIP\n"
+        "cNext = NAME\n"
+        "SKIP -1\n"
+        "cPrevious = NAME\n"
+        "GO BOTTOM\n"
+        "cBottom = NAME\n"
+        "SKIP -1\n"
+        "cBack = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ordered navigation script should complete");
+
+    const auto top = state.globals.find("ctop");
+    const auto next = state.globals.find("cnext");
+    const auto previous = state.globals.find("cprevious");
+    const auto bottom = state.globals.find("cbottom");
+    const auto back = state.globals.find("cback");
+    expect(top != state.globals.end(), "ordered GO TOP should expose the first key");
+    expect(next != state.globals.end(), "ordered SKIP should expose the next key");
+    expect(previous != state.globals.end(), "ordered reverse SKIP should expose the previous key");
+    expect(bottom != state.globals.end(), "ordered GO BOTTOM should expose the last key");
+    expect(back != state.globals.end(), "ordered reverse SKIP from the bottom should expose the previous key");
+    if (top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(top->second) == "APPLE", "ordered GO TOP should use the lowest active-order key");
+    }
+    if (next != state.globals.end()) {
+        expect(copperfin::runtime::format_value(next->second) == "MANGO", "ordered SKIP should advance in active-order sequence");
+    }
+    if (previous != state.globals.end()) {
+        expect(copperfin::runtime::format_value(previous->second) == "APPLE", "ordered reverse SKIP should move backward in active-order sequence");
+    }
+    if (bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom->second) == "ZEBRA", "ordered GO BOTTOM should use the highest active-order key");
+    }
+    if (back != state.globals.end()) {
+        expect(copperfin::runtime::format_value(back->second) == "MANGO", "ordered reverse SKIP from the bottom should use active-order sequence");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_skip_delta_uses_heap_backed_frame_continuations() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_skip_continuation";
@@ -1870,6 +1933,7 @@ int main() {
     test_select_zero_and_use_in_zero_reuse_closed_work_area();
     test_select_zero_skips_occupied_watermark_areas();
     test_go_and_skip_cursor_navigation();
+    test_ordered_go_and_skip_cursor_navigation();
     test_skip_delta_uses_heap_backed_frame_continuations();
     test_go_record_expression_uses_heap_backed_frame_continuations();
     test_unlock_record_expression_uses_heap_backed_frame_continuations();

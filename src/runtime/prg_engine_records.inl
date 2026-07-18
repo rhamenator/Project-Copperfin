@@ -357,6 +357,115 @@
             }
         }
 
+        std::optional<std::vector<IndexedCandidate>> load_ordered_record_candidates(const CursorState &cursor) const
+        {
+            if (cursor.active_order_expression.empty())
+            {
+                return std::nullopt;
+            }
+
+            std::vector<vfp::DbfRecord> local_records;
+            const std::vector<vfp::DbfRecord> *records = &cursor.remote_records;
+            if (!cursor.remote)
+            {
+                const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.record_count);
+                if (!table_result.ok)
+                {
+                    return std::nullopt;
+                }
+                local_records = table_result.table.records;
+                records = &local_records;
+            }
+
+            std::vector<IndexedCandidate> candidates;
+            candidates.reserve(records->size());
+            for (const auto &record : *records)
+            {
+                if (!order_for_expression_matches_record(cursor.active_order_for_expression, record))
+                {
+                    continue;
+                }
+                candidates.push_back({.key = normalize_seek_key_for_collation(
+                                          normalize_seek_key_for_order(
+                                              evaluate_index_expression(cursor.active_order_expression, record),
+                                              cursor.active_order_normalization_hint),
+                                          cursor.active_order_collation_hint,
+                                          cursor.active_order_key_domain_hint),
+                                      .recno = record.record_index + 1U});
+            }
+
+            std::sort(candidates.begin(), candidates.end(), [&](const IndexedCandidate &left, const IndexedCandidate &right)
+                      {
+                          const int comparison = compare_order_keys(
+                              left.key,
+                              right.key,
+                              cursor.active_order_key_domain_hint,
+                              cursor.active_order_descending);
+                          if (comparison != 0)
+                          {
+                              return comparison < 0;
+                          }
+                          return left.recno < right.recno;
+                      });
+            return candidates;
+        }
+
+        bool seek_ordered_visible_record(
+            CursorState &cursor,
+            const Frame &frame,
+            int direction,
+            bool start_after_current)
+        {
+            const auto candidates = load_ordered_record_candidates(cursor);
+            if (!candidates.has_value())
+            {
+                return false;
+            }
+
+            std::ptrdiff_t index = direction >= 0 ? 0 : static_cast<std::ptrdiff_t>(candidates->size()) - 1;
+            if (start_after_current)
+            {
+                const auto current = std::find_if(candidates->begin(), candidates->end(), [&](const auto &candidate)
+                                                  { return candidate.recno == cursor.recno; });
+                if (current != candidates->end())
+                {
+                    index = static_cast<std::ptrdiff_t>(std::distance(candidates->begin(), current)) + direction;
+                }
+                else if (cursor.eof && direction < 0)
+                {
+                    index = static_cast<std::ptrdiff_t>(candidates->size()) - 1;
+                }
+                else if (cursor.bof && direction > 0)
+                {
+                    index = 0;
+                }
+                else
+                {
+                    index = direction >= 0 ? static_cast<std::ptrdiff_t>(candidates->size())
+                                           : static_cast<std::ptrdiff_t>(-1);
+                }
+            }
+
+            for (; index >= 0 && index < static_cast<std::ptrdiff_t>(candidates->size()); index += direction)
+            {
+                move_cursor_to(cursor, static_cast<long long>((*candidates)[static_cast<std::size_t>(index)].recno));
+                if (current_record_matches_visibility(cursor, frame, {}))
+                {
+                    return true;
+                }
+            }
+
+            if (direction >= 0)
+            {
+                move_cursor_to(cursor, static_cast<long long>(cursor.record_count + 1U));
+            }
+            else
+            {
+                move_cursor_to(cursor, 0);
+            }
+            return false;
+        }
+
         bool seek_visible_record(
             CursorState &cursor,
             const Frame &frame,
@@ -364,8 +473,15 @@
             int direction,
             const std::string &extra_expression,
             const std::string &while_expression,
-            bool preserve_on_failure)
+            bool preserve_on_failure,
+            bool honor_active_order = false,
+            bool start_after_current = false)
         {
+            if (honor_active_order && !cursor.active_order_expression.empty())
+            {
+                return seek_ordered_visible_record(cursor, frame, direction, start_after_current);
+            }
+
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
             const long long first = direction >= 0 ? std::max<long long>(1, start_recno) : std::min<long long>(start_recno, static_cast<long long>(cursor.record_count));
             for (long long recno = first;
@@ -407,15 +523,13 @@
 
             const int direction = delta > 0 ? 1 : -1;
             long long remaining = std::llabs(delta);
-            long long next_start = static_cast<long long>(cursor.recno) + direction;
             while (remaining > 0)
             {
-                if (!seek_visible_record(cursor, frame, next_start, direction, {}, {}, false))
+                if (!seek_visible_record(cursor, frame, static_cast<long long>(cursor.recno) + direction, direction, {}, {}, false, true, true))
                 {
                     return false;
                 }
                 --remaining;
-                next_start = static_cast<long long>(cursor.recno) + direction;
             }
             return true;
         }
