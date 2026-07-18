@@ -162,12 +162,6 @@ enum class RoutineKind {
     function
 };
 
-enum class NativeMemberVisibility {
-    public_member,
-    protected_member,
-    hidden_member
-};
-
 struct Routine {
     std::string name;
     RoutineKind kind = RoutineKind::main;

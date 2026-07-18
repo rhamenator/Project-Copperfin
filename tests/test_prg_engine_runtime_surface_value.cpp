@@ -382,6 +382,67 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_prg_member_visibility_flows_to_pemstatus_attribute_three() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_member_visibility";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_prg_member_visibility.prg";
+    write_text(
+        main_path,
+        "oDemo = CREATEOBJECT('VisibilityDemo')\n"
+        "lProtectedProperty = PEMSTATUS(oDemo, 'ProtectedValue', 3)\n"
+        "lHiddenProperty = PEMSTATUS(oDemo, 'HiddenValue', 3)\n"
+        "lPublicProperty = PEMSTATUS(oDemo, 'PublicValue', 3)\n"
+        "lProtectedMethod = PEMSTATUS(oDemo, 'ProtectedMethod', 3)\n"
+        "lHiddenMethod = PEMSTATUS(oDemo, 'HiddenMethod', 3)\n"
+        "lPublicMethod = PEMSTATUS(oDemo, 'PublicMethod', 3)\n"
+        "RETURN\n"
+        "DEFINE CLASS VisibilityDemo AS Custom\n"
+        "    PROTECTED ProtectedValue\n"
+        "    HIDDEN HiddenValue\n"
+        "    ProtectedValue = 1\n"
+        "    HiddenValue = 2\n"
+        "    PublicValue = 3\n"
+        "    PROTECTED PROCEDURE ProtectedMethod\n"
+        "        RETURN THIS.ProtectedValue\n"
+        "    ENDPROC\n"
+        "    HIDDEN FUNCTION HiddenMethod\n"
+        "        RETURN THIS.HiddenValue\n"
+        "    ENDFUNC\n"
+        "    PROCEDURE PublicMethod\n"
+        "        RETURN THIS.PublicValue\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native member visibility script should complete: ") + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " variable should be present");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    check("lprotectedproperty", "true");
+    check("lhiddenproperty", "true");
+    check("lpublicproperty", "false");
+    check("lprotectedmethod", "true");
+    check("lhiddenmethod", "true");
+    check("lpublicmethod", "false");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -613,6 +674,7 @@ int main() {
     test_native_list_control_controlsource_requery_keeps_numeric_value_coherent();
     test_native_list_control_controlsource_stays_synchronized_after_row_mutation_methods();
     test_native_list_control_controlsource_stays_synchronized_after_sorted_reordering();
+    test_native_prg_member_visibility_flows_to_pemstatus_attribute_three();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

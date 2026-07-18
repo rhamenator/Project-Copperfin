@@ -137,6 +137,12 @@ struct RuntimeSqlConnectionState {
     std::map<std::string, std::string> properties{};
 };
 
+enum class NativeMemberVisibility {
+    public_member,
+    protected_member,
+    hidden_member
+};
+
 struct RuntimeOleObjectState {
     int handle = 0;
     std::string prog_id{};
@@ -154,6 +160,7 @@ struct RuntimeOleObjectState {
     std::vector<std::vector<PrgValue>> list_rows{};
     std::vector<bool> list_selected{};
     std::vector<std::string> class_hierarchy{};
+    std::map<std::string, NativeMemberVisibility> member_visibility{};
     std::string base_class_name{};
     std::string class_library{};
     std::vector<std::string> methods{};

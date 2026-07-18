@@ -4268,7 +4268,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(exists);
         }
         if (attribute == 3) {
-            return make_boolean_value(false);
+            const auto visibility = runtime_object->member_visibility.find(member_name);
+            return make_boolean_value(
+                visibility != runtime_object->member_visibility.end() &&
+                visibility->second != NativeMemberVisibility::public_member);
         }
         if (attribute == 5) {
             bool readonly = reflectable_member_readonly_locally(*runtime_object, member_name);

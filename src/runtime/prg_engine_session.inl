@@ -2916,6 +2916,10 @@
             std::map<std::string, std::string> effective_methods;
             for (const NativeClassLookup &lineage_class : class_lineage)
             {
+                for (const auto &[member_name, visibility] : lineage_class.class_definition->member_visibility)
+                {
+                    object_state.member_visibility[member_name] = visibility;
+                }
                 for (const auto &[normalized_method_name, method] : lineage_class.class_definition->methods)
                 {
                     effective_methods[normalized_method_name] = method.name;
