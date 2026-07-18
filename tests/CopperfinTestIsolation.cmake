@@ -202,6 +202,37 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_github_actions_contract
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    foreach(test_name IN ITEMS
+            test_prg_engine_dynamic_xasset_security
+            test_prg_engine_macro_expressions
+            test_prg_engine_native_focus_move_events
+            test_prg_engine_native_lifecycle_events
+            test_prg_engine_ordered_iteration
+            test_prg_engine_runtime_surface_functions_buffering
+            test_prg_engine_scope_declarations
+            test_prg_engine_transform_numeric_pictures
+            test_prg_engine_verified_dbf_security)
+        copperfin_set_test_isolation(${test_name}
+            FILESYSTEM process-owned
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+
     copperfin_set_test_isolation(test_package_document_install
         PARALLEL_SAFE
         FILESYSTEM process-owned
