@@ -462,6 +462,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "env_and_sys_introspection.prg";
         write_text(
             main_path,
+            "PUBLIC nPCountRoutine\n"
             "nPCountMain = PCOUNT()\n"
             "DO pcount_helper WITH 10, 'x', .T.\n"
             "lPutEnvSet = PUTENV('" + env_name + "', 'runtime-surface-value')\n"

@@ -265,21 +265,28 @@
 
             struct ScopedMacroTextPreservation
             {
-                ScopedMacroTextPreservation(ExpressionParser &parser, bool enabled)
+                ScopedMacroTextPreservation(
+                    ExpressionParser &parser,
+                    bool enabled,
+                    bool evaluate_resolved_text = true)
                     : parser_(parser),
-                      previous_(parser.preserve_macro_text_)
+                      previous_(parser.preserve_macro_text_),
+                      previous_evaluate_resolved_text_(parser.evaluate_preserved_macro_text_)
                 {
                     parser_.preserve_macro_text_ = enabled;
+                    parser_.evaluate_preserved_macro_text_ = evaluate_resolved_text;
                 }
 
                 ~ScopedMacroTextPreservation()
                 {
                     parser_.preserve_macro_text_ = previous_;
+                    parser_.evaluate_preserved_macro_text_ = previous_evaluate_resolved_text_;
                 }
 
             private:
                 ExpressionParser &parser_;
                 bool previous_;
+                bool previous_evaluate_resolved_text_;
             };
 
             static PrgValue currency_arithmetic(
@@ -858,12 +865,17 @@
                         return skip_postfix_member_and_collection_access();
                     }
 
+                    // EVALUATE consumes expression source, so indirect macro text must not
+                    // execute while its argument is being collected.
                     ScopedMacroTextPreservation macro_text_guard(
                         *this,
-                        normalized_identifier == "eval" ||
-                            normalized_identifier == "execscript" ||
+                        normalized_identifier == "execscript" ||
                             normalized_identifier == "lookup" ||
-                            normalized_identifier == "textmerge");
+                            normalized_identifier == "textmerge" ||
+                            normalized_identifier == "eval" ||
+                            normalized_identifier == "evaluate",
+                        normalized_identifier != "eval" &&
+                            normalized_identifier != "evaluate");
                     const auto invocation = parse_invocation_arguments(identifier);
                     const auto &arguments = invocation.arguments;
                     const auto &raw_arguments = invocation.raw_arguments;
@@ -3043,7 +3055,8 @@
 
                 if (preserve_macro_text_)
                 {
-                    if (!contains_unquoted_double_angle(resolved_expression))
+                    if (evaluate_preserved_macro_text_ &&
+                        !contains_unquoted_double_angle(resolved_expression))
                     {
                         try
                         {
@@ -3469,6 +3482,7 @@
             ExpressionContinuation *expression_continuation_ = nullptr;
             std::string text_;
             bool preserve_macro_text_ = false;
+            bool evaluate_preserved_macro_text_ = true;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;
             const std::string &default_directory_;

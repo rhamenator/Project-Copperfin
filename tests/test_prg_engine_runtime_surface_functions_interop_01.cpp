@@ -311,6 +311,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_aevents_zero.prg";
         write_text(
             main_path,
+            "PUBLIC nFirstRows, nFirstLen, lFirstMatchesSource, cFirstEvent, nFirstType, nSecondRows, nSecondLen, lSecondMatchesSource, cSecondEvent, nSecondType\n"
             "nCaptureCount = 0\n"
             "cLog = ''\n"
             "oSource = CREATEOBJECT('SourceThing')\n"
@@ -415,6 +416,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_winmsg_bindevent.prg";
         write_text(
             main_path,
+            "PUBLIC nExactRows, nExactLen, nExactCurrentHwnd, cExactCurrentEvent, nExactCurrentType, nAllRows, nAllLen, nAllCurrentHwnd, cAllCurrentEvent, nAllCurrentType\n"
             "nExactCalls = 0\n"
             "nAllCalls = 0\n"
             "cLog = ''\n"
@@ -579,6 +581,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "runtime_hwnd_sys2326.prg";
         write_text(
             main_path,
+            "PUBLIC nFormDispatchHwnd, nFormDispatchWHandle, nFormDispatchRoundTrip, nScreenDispatchHwnd, nScreenDispatchWHandle, nScreenDispatchRoundTrip\n"
             "oHandler = CREATEOBJECT('HandleSink')\n"
             "oForm = CREATEOBJECT('MainForm')\n"
             "oToolbar = CREATEOBJECT('MainToolbar')\n"

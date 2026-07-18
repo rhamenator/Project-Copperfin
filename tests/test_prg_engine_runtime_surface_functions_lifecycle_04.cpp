@@ -544,6 +544,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_formset_owner_chain.prg";
         write_text(
             main_path,
+            "PUBLIC cThisFormCaption, cThisFormBaseClass, cThisFormSetCaption, cThisFormSetBaseClass, cFormParentCaption, cFormParentBaseClass, cFormFromSetCaption\n"
             "oSet = CREATEOBJECT('MainFormSet')\n"
             "cOwnerSummary = oSet.frmWork.cmdSave.DescribeOwners()\n"
             "RETURN\n"
@@ -614,6 +615,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_formset_activeform.prg";
         write_text(
             main_path,
+            "PUBLIC lMethodContinued\n"
             "oSet = CREATEOBJECT('MainFormSet')\n"
             "oSet.frmWork.cmdSave.SetFocus()\n"
             "cActiveBaseClass = _SCREEN.ActiveForm.BaseClass\n"

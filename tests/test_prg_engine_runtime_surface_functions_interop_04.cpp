@@ -13,6 +13,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_bindevent_property.prg";
         write_text(
             main_path,
+            "PUBLIC nCaptionFirstRows, lCaptionFirstSource, nRawFirstRows, lRawFirstSource\n"
             "cLog = ''\n"
             "nCaptionCalls = 0\n"
             "nRawCalls = 0\n"

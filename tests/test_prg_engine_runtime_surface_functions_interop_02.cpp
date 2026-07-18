@@ -13,6 +13,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "runtime_olecontrol_hwnd.prg";
         write_text(
             main_path,
+            "PUBLIC nHostDispatchHwnd, nHostDispatchWHandle, nHostDispatchRoundTrip\n"
             "oHandler = CREATEOBJECT('HandleSink')\n"
             "oForm = CREATEOBJECT('MainForm')\n"
             "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"

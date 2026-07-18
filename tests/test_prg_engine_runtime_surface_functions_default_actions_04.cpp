@@ -115,6 +115,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_release_thisform.prg";
         write_text(
             main_path,
+            "PUBLIC lMethodContinued\n"
             "oForm = CREATEOBJECT('MainForm')\n"
             "lReleaseReturned = oForm.cmdClose.CloseOwner()\n"
             "RETURN\n"
@@ -169,6 +170,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_release_thisformset.prg";
         write_text(
             main_path,
+            "PUBLIC lMethodContinued\n"
             "oForm = CREATEOBJECT('MainForm')\n"
             "lReleaseReturned = oForm.cmdClose.CloseOwner()\n"
             "RETURN\n"
