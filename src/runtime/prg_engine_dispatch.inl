@@ -1585,7 +1585,9 @@
                     return false;
                 }
 
-                (void)evaluate_expression(trimmed_expression + "()", frame);
+                Statement member_invocation = statement;
+                member_invocation.expression = trimmed_expression + "()";
+                (void)evaluate_resumable_expression(frame, member_invocation);
                 return true;
             };
 

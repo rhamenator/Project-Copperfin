@@ -47117,16 +47117,21 @@ namespace
         const fs::path main_path = temp_root / "native_bare_refresh_override.prg";
         write_text(
             main_path,
+            "nRefreshProbeCalls = 0\n"
             "oForm = CREATEOBJECT('MainForm')\n"
             "lRefreshRan = oForm.lRefreshRan\n"
             "RETURN\n"
+            "FUNCTION RefreshProbe\n"
+            "    nRefreshProbeCalls = nRefreshProbeCalls + 1\n"
+            "    RETURN 42\n"
+            "ENDFUNC\n"
             "DEFINE CLASS MainForm AS Form\n"
             "    lRefreshRan = .F.\n"
             "    PROCEDURE Init\n"
             "        THIS.Refresh\n"
             "    ENDPROC\n"
             "    PROCEDURE Refresh\n"
-            "        THIS.lRefreshRan = .T.\n"
+            "        THIS.lRefreshRan = RefreshProbe() = 42\n"
             "    ENDPROC\n"
             "ENDDEFINE\n");
 
@@ -47145,6 +47150,15 @@ namespace
         {
             expect(copperfin::runtime::format_value(refreshed->second) == "true",
                    "bare dotted native Refresh override should invoke the class-defined Refresh method");
+        }
+
+        const auto refresh_probe_calls = state.globals.find("nrefreshprobecalls");
+        expect(refresh_probe_calls != state.globals.end(),
+               "bare dotted native Refresh override should preserve the nested UDF result state");
+        if (refresh_probe_calls != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(refresh_probe_calls->second) == "1",
+                   "bare dotted native Refresh override should resume the nested UDF exactly once");
         }
 
         const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
