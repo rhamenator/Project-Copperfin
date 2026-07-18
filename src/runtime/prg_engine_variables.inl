@@ -98,6 +98,29 @@
             }
         }
 
+        bool public_declaration_conflicts(
+            const std::string &name,
+            bool declaring_array) const
+        {
+            for (const auto &active_frame : stack)
+            {
+                if (active_frame.locals.contains(name) ||
+                    active_frame.local_names.contains(name) ||
+                    active_frame.local_arrays.contains(name) ||
+                    active_frame.private_saved_values.contains(name) ||
+                    active_frame.private_saved_arrays.contains(name))
+                {
+                    return true;
+                }
+            }
+
+            if (public_names.contains(name))
+            {
+                return declaring_array ? globals.contains(name) : arrays.contains(name);
+            }
+            return globals.contains(name) || arrays.contains(name);
+        }
+
         const PrgValue *find_variable(const Frame &frame, const std::string &name) const
         {
             const VariableStorageIdentity target =

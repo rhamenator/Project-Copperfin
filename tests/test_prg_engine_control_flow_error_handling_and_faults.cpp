@@ -1238,6 +1238,7 @@ void test_error_handler_still_fires_after_fault_inside_expression_invoked_routin
     const fs::path main_path = temp_root / "expr_invoked_error_handler_reset.prg";
     write_text(
         main_path,
+        "PUBLIC handlercount\n"
         "handlercount = 0\n"
         "ON ERROR DO handleerr\n"
         "x = FaultyFunc() + FaultyFunc2()\n"

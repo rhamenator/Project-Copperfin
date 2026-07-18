@@ -1343,6 +1343,7 @@
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE requires a target table name",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only",
   "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions": "DIMENSION/DECLARE requires array dimensions",
+  "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition": "[!! Ïllëgål rëdëfïñïtïøñ øf vårïåblë \"{variableName}\". !!]",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE failed: {errorMessage} ({path})",
   "Runtime.Prg.Dispatch.Error.ObjectTargetRequired": "{command}: object target required",
   "Runtime.Prg.Dispatch.Error.RenameFileFailed": "RENAME failed: {errorMessage}",

@@ -1280,6 +1280,7 @@ void test_compound_return_uses_heap_backed_expression_checkpoints() {
     const fs::path on_error_path = temp_root / "compound_return_on_error.prg";
     write_text(
         on_error_path,
+        "PUBLIC handlerCount, handlerMessage, handlerLine, handlerRows, handlerAErrorMessage, handlerAErrorLine, handlerStatement\n"
         "handlerCount = 0\n"
         "ON ERROR DO handleerr\n"
         "result = resumedonerror()\n"
@@ -1290,7 +1291,6 @@ void test_compound_return_uses_heap_backed_expression_checkpoints() {
         "FUNCTION childvalue\n"
         "RETURN 5\n"
         "PROCEDURE handleerr\n"
-        "PUBLIC handlerCount, handlerMessage, handlerLine, handlerRows, handlerAErrorMessage, handlerAErrorLine, handlerStatement\n"
         "handlerCount = handlerCount + 1\n"
         "handlerMessage = MESSAGE()\n"
         "handlerLine = LINENO()\n"
@@ -1315,8 +1315,8 @@ void test_compound_return_uses_heap_backed_expression_checkpoints() {
     };
     expect_on_error_global("handlercount", "1");
     expect_on_error_global("handlerrows", "1");
-    expect_on_error_global("handlerline", "7");
-    expect_on_error_global("handleraerrorline", "7");
+    expect_on_error_global("handlerline", "8");
+    expect_on_error_global("handleraerrorline", "8");
     expect_on_error_global("handlermessage", "Runtime fault: Division by zero");
     expect_on_error_global("handleraerrormessage", "Runtime fault: Division by zero");
     expect_on_error_global("handlerstatement", "RETURN childvalue() + 1 / 0");
@@ -1583,6 +1583,7 @@ void test_assignment_rhs_uses_heap_backed_expression_checkpoints() {
     const fs::path on_error_path = temp_root / "assignment_on_error.prg";
     write_text(
         on_error_path,
+        "PUBLIC handlerCount, handlerLine, handlerRows, handlerStatement\n"
         "handlerCount = 0\n"
         "target = 73\n"
         "ON ERROR DO handleerr\n"
@@ -1593,7 +1594,6 @@ void test_assignment_rhs_uses_heap_backed_expression_checkpoints() {
         "FUNCTION childvalue\n"
         "RETURN 5\n"
         "PROCEDURE handleerr\n"
-        "PUBLIC handlerCount, handlerLine, handlerRows, handlerStatement\n"
         "handlerCount = handlerCount + 1\n"
         "handlerLine = LINENO()\n"
         "handlerRows = AERROR(handlerError)\n"
@@ -1613,7 +1613,7 @@ void test_assignment_rhs_uses_heap_backed_expression_checkpoints() {
         }
     };
     expect_on_error_global("handlercount", "1");
-    expect_on_error_global("handlerline", "4");
+    expect_on_error_global("handlerline", "5");
     expect_on_error_global("handlerrows", "1");
     expect_on_error_global("handlerstatement", "target = childvalue() + 1 / 0");
     expect_on_error_global("targetafter", "73");
@@ -2335,6 +2335,7 @@ void test_case_predicates_use_heap_backed_expression_checkpoints() {
     const fs::path on_error_path = temp_root / "on_error.prg";
     write_text(
         on_error_path,
+        "PUBLIC handlerCalls\n"
         "handlerCalls = 0\n"
         "ON ERROR DO handlecaseerror\n"
         "DO CASE\n"
@@ -2782,6 +2783,7 @@ void test_elseif_predicate_resumption_review_gaps() {
     const fs::path on_error_path = temp_root / "elseif_on_error.prg";
     write_text(
         on_error_path,
+        "PUBLIC handlerCalls, handlerLine, handlerStatement\n"
         "handlerCalls = 0\n"
         "ON ERROR DO handleelseiferror\n"
         "IF .F.\n"
@@ -2798,7 +2800,6 @@ void test_elseif_predicate_resumption_review_gaps() {
         "FUNCTION predicatechild\n"
         "RETURN 7\n"
         "PROCEDURE handleelseiferror\n"
-        "PUBLIC handlerCalls, handlerLine, handlerStatement\n"
         "handlerCalls = handlerCalls + 1\n"
         "handlerLine = LINENO()\n"
         "handlerStatement = MESSAGE()\n"
@@ -2816,7 +2817,7 @@ void test_elseif_predicate_resumption_review_gaps() {
         }
     };
     expect_on_error_global("handlercalls", "1", "ON ERROR should run once for a resumed ELSEIF predicate fault");
-    expect_on_error_global("handlerline", "13", "ON ERROR should retain the resumed predicate UDF line");
+    expect_on_error_global("handlerline", "14", "ON ERROR should retain the resumed predicate UDF line");
     expect_on_error_global("handlerstatement", "Runtime fault: Division by zero",
                            "ON ERROR should retain the resumed ELSEIF predicate fault message");
     expect_on_error_global("afteronerror", "1", "execution should continue after ON ERROR handles an ELSEIF fault");
@@ -3237,6 +3238,7 @@ void test_loop_predicates_and_bounds_use_heap_backed_expression_checkpoints() {
     const fs::path retry_path = temp_root / "retry.prg";
     write_text(
         retry_path,
+        "PUBLIC handlerCalls\n"
         "handlerCalls = 0\n"
         "predicateCalls = 0\n"
         "retryBody = 0\n"

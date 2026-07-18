@@ -5324,6 +5324,8 @@
             case StatementKind::public_declaration:
                 if (statement.identifier == "array")
                 {
+                    std::vector<std::pair<std::string, std::pair<std::size_t, std::size_t>>> declarations;
+                    declarations.reserve(statement.names.size());
                     for (const auto &declaration : statement.names)
                     {
                         std::string array_name;
@@ -5337,13 +5339,39 @@
                             return {.ok = false, .message = last_error_message};
                         }
                         const std::string normalized = normalize_memory_variable_identifier(array_name);
+                        if (public_declaration_conflicts(normalized, true))
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition",
+                                {{"variableName", normalized}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        declarations.push_back({normalized, {rows, columns}});
+                    }
+                    for (const auto &[normalized, dimensions] : declarations)
+                    {
                         public_names.insert(normalized);
                         arrays[normalized] = RuntimeArray{
-                            .rows = rows,
-                            .columns = columns,
-                            .values = std::vector<PrgValue>(rows * columns, make_boolean_value(false))};
+                            .rows = dimensions.first,
+                            .columns = dimensions.second,
+                            .values = std::vector<PrgValue>(dimensions.first * dimensions.second, make_boolean_value(false))};
                     }
                     return {};
+                }
+                for (const auto &name : statement.names)
+                {
+                    const std::string normalized = normalize_memory_variable_identifier(name);
+                    if (!normalized.empty() && public_declaration_conflicts(normalized, false))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition",
+                            {{"variableName", normalized}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                 }
                 for (const auto &name : statement.names)
                 {

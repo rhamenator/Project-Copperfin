@@ -15,6 +15,7 @@ void test_bare_on_error_restores_default_error_handling() {
     const fs::path main_path = temp_root / "bare_on_error.prg";
     write_text(
         main_path,
+        "PUBLIC handlerCount\n"
         "handlerCount = 0\n"
         "ON ERROR DO handleerr\n"
         "DO missing_handled_target\n"

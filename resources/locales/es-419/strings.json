@@ -1343,6 +1343,7 @@
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE requiere un nombre de tabla de destino",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE solo admite ADD COLUMN, DROP COLUMN y ALTER COLUMN actualmente",
   "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions": "DIMENSION/DECLARE requiere dimensiones de arreglo",
+  "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition": "Redefinicion ilegal de la variable \"{variableName}\"",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE fallo: {errorMessage} ({path})",
   "Runtime.Prg.Dispatch.Error.ObjectTargetRequired": "{command}: se requiere un destino de objeto",
   "Runtime.Prg.Dispatch.Error.RenameFileFailed": "RENAME fallo: {errorMessage}",
