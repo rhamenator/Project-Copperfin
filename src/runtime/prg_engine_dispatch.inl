@@ -1275,6 +1275,16 @@
                         }
                     }
                 }
+                if (assignment_expression_text.has_value() &&
+                    is_memory_variable_reference_text(assignment_identifier))
+                {
+                    const std::string source_identifier = trim_copy(*assignment_expression_text);
+                    if (is_memory_variable_reference_text(source_identifier) &&
+                        assign_array_copy(assignment_identifier, source_identifier, frame))
+                    {
+                        return {};
+                    }
+                }
                 if (assign_array_element(assignment_identifier, frame, assignment_value))
                 {
                     return {};

@@ -387,6 +387,19 @@
             arrays[canonical_array_name(name)] = std::move(array);
         }
 
+        bool assign_array_copy(const std::string &target_name, const std::string &source_name, const Frame &frame)
+        {
+            const RuntimeArray *source = find_array(source_name, frame);
+            if (source == nullptr)
+            {
+                return false;
+            }
+
+            const std::vector<PrgValue> values = source->values;
+            assign_array(target_name, values, source->columns);
+            return true;
+        }
+
         bool parse_array_reference(
             const std::string &reference,
             const Frame &frame,
