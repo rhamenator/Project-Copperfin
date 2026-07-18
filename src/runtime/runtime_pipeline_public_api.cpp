@@ -318,6 +318,39 @@ public:
     }
 
 #if !defined(_WIN32)
+    bool open_child_directory(
+        const std::filesystem::path& path,
+        int& child_descriptor) const {
+        child_descriptor = -1;
+        if (descriptor_ < 0) {
+            return false;
+        }
+        child_descriptor = ::openat(
+            descriptor_,
+            copperfin::platform::path_to_utf8_string(path.filename()).c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        return child_descriptor >= 0;
+    }
+
+    bool adopt_descriptor(
+        const int descriptor,
+        std::filesystem::path path) {
+        if (descriptor < 0) {
+            return false;
+        }
+        struct stat information{};
+        if (::fstat(descriptor, &information) != 0 ||
+            !S_ISDIR(information.st_mode)) {
+            (void)::close(descriptor);
+            return false;
+        }
+        descriptor_ = descriptor;
+        parent_path_ = std::move(path);
+        device_id_ = information.st_dev;
+        inode_id_ = information.st_ino;
+        return true;
+    }
+
     bool create_child_directory(const std::filesystem::path& path) const {
         if (descriptor_ < 0) {
             return false;
@@ -898,6 +931,25 @@ public:
         return ensure_parent_identity(
             error,
             "Runtime.Package.Error.PackageTransactionStartFailed");
+    }
+
+    bool acquire_pinned_content_identity(
+        PackageParentIdentity& content_identity,
+        const std::filesystem::path& content_root) const {
+#if defined(_WIN32)
+        return content_identity.acquire(content_root);
+#else
+        int package_descriptor = -1;
+        if (!parent_identity_.open_child_directory(package_root_, package_descriptor)) {
+            return false;
+        }
+        const int content_descriptor = ::openat(
+            package_descriptor,
+            copperfin::platform::path_to_utf8_string(content_root.filename()).c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        (void)::close(package_descriptor);
+        return content_identity.adopt_descriptor(content_descriptor, content_root);
+#endif
     }
 
     [[nodiscard]] RuntimePackagePlan pinned_filesystem_plan(
@@ -1828,7 +1880,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         return {.ok = false, .error = error};
     }
     PackageParentIdentity content_identity;
-    if (!content_identity.acquire(filesystem_plan.content_root)) {
+    if (!transaction.acquire_pinned_content_identity(
+            content_identity,
+            copperfin::platform::path_from_utf8_string(filesystem_plan.content_root))) {
         return {
             .ok = false,
             .error = runtime_text(
