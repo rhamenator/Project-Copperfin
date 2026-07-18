@@ -1587,13 +1587,25 @@ void test_erase_copy_rename_file_commands() {
     write_text(
         main_path,
         "nEraseCalls = 0\n"
+        "nCopySourceCalls = 0\n"
+        "nCopyDestinationCalls = 0\n"
         "ERASE erase_target('to_erase.txt')\n"
-        "COPY FILE 'original.txt' TO 'copied.txt'\n"
+        "COPY FILE copy_source('original.txt') TO copy_destination('copied.txt')\n"
         "RENAME 'copied.txt' TO 'renamed.txt'\n"
         "RETURN\n"
         "FUNCTION erase_target\n"
         "LPARAMETERS value\n"
         "nEraseCalls = nEraseCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n"
+        "FUNCTION copy_source\n"
+        "LPARAMETERS value\n"
+        "nCopySourceCalls = nCopySourceCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n"
+        "FUNCTION copy_destination\n"
+        "LPARAMETERS value\n"
+        "nCopyDestinationCalls = nCopyDestinationCalls + 1\n"
         "RETURN value\n"
         "ENDFUNC\n");
 
@@ -1609,6 +1621,18 @@ void test_erase_copy_rename_file_commands() {
     if (erase_calls != state.globals.end()) {
         expect(copperfin::runtime::format_value(erase_calls->second) == "1",
                "ERASE should evaluate the UDF-produced path exactly once");
+    }
+    const auto copy_source_calls = state.globals.find("ncopysourcecalls");
+    expect(copy_source_calls != state.globals.end(), "COPY FILE should preserve the source resolver call counter");
+    if (copy_source_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_source_calls->second) == "1",
+               "COPY FILE should evaluate the source UDF exactly once");
+    }
+    const auto copy_destination_calls = state.globals.find("ncopydestinationcalls");
+    expect(copy_destination_calls != state.globals.end(), "COPY FILE should preserve the destination resolver call counter");
+    if (copy_destination_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copy_destination_calls->second) == "1",
+               "COPY FILE should evaluate the destination UDF exactly once");
     }
     expect(fs::exists(temp_root / "original.txt"), "COPY FILE should leave original.txt intact");
     expect(fs::exists(temp_root / "renamed.txt"), "RENAME should create renamed.txt");

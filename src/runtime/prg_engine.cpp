@@ -534,6 +534,13 @@ namespace copperfin::runtime
             bool pending_alias = false;
         };
 
+        struct CopyFileContinuation
+        {
+            Statement statement;
+            std::optional<PrgValue> source_value;
+            bool pending_destination = false;
+        };
+
         enum class LoopExpressionStage
         {
             for_start,
@@ -608,6 +615,7 @@ namespace copperfin::runtime
             std::optional<TextMergeContinuation> text_merge_continuation;
             std::optional<ParameterDefaultContinuation> parameter_default_continuation;
             std::optional<UseCommandContinuation> use_command_continuation;
+            std::optional<CopyFileContinuation> copy_file_continuation;
             std::optional<LoopExpressionContinuation> loop_expression_continuation;
             std::optional<ScanExpressionContinuation> scan_expression_continuation;
             bool evaluate_conditional_else = false;
@@ -3471,6 +3479,7 @@ namespace copperfin::runtime
             source_frame.expression_continuation.reset();
             source_frame.parameter_default_continuation.reset();
             source_frame.use_command_continuation.reset();
+            source_frame.copy_file_continuation.reset();
             throw;
         }
     }
@@ -8081,6 +8090,7 @@ namespace copperfin::runtime
                                 stack.back().text_merge_continuation.reset();
                                 stack.back().parameter_default_continuation.reset();
                                 stack.back().use_command_continuation.reset();
+                                stack.back().copy_file_continuation.reset();
                                 stack.back().loop_expression_continuation.reset();
                                 stack.back().scan_expression_continuation.reset();
                                 handled_by_try = dispatch_try_handler(stack.back(), *next);
@@ -8708,6 +8718,7 @@ namespace copperfin::runtime
                                     stack.back().text_merge_continuation.reset();
                                     stack.back().parameter_default_continuation.reset();
                                     stack.back().use_command_continuation.reset();
+                                    stack.back().copy_file_continuation.reset();
                                     stack.back().loop_expression_continuation.reset();
                                     stack.back().scan_expression_continuation.reset();
                                     handled_by_try = dispatch_try_handler(stack.back(), *next);
