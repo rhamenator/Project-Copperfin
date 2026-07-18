@@ -2857,6 +2857,12 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.move",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            (void)invoke_native_object_method_if_present(
+                *target_object,
+                "moved",
+                frame,
+                {},
+                {});
             return make_empty_value();
         }
         if (leaf == "refresh" && !target_object->class_hierarchy.empty())
@@ -2894,12 +2900,37 @@ namespace copperfin::runtime
             const PrgValue runtime_object_reference =
                 make_string_value("object:" + target_object->prog_id + "#" + std::to_string(target_object->handle));
             note_representative_active_form(*target_object);
+            std::optional<PrgValue> previous_active_control;
+            bool focus_changed = true;
             if (const auto owner_form_reference = native_object_owner_form_reference(*target_object);
                 owner_form_reference.has_value())
             {
                 if (auto owner_form = resolve_ole_object(*owner_form_reference);
                     owner_form.has_value())
                 {
+                    if (const auto current_active_control =
+                            read_native_property_if_present(**owner_form, "activecontrol", frame);
+                        current_active_control.has_value())
+                    {
+                        previous_active_control = *current_active_control;
+                    }
+                    if (previous_active_control.has_value())
+                    {
+                        if (auto previous_control = resolve_ole_object(*previous_active_control);
+                            previous_control.has_value())
+                        {
+                            focus_changed = (*previous_control)->handle != target_object->handle;
+                            if (focus_changed)
+                            {
+                                (void)invoke_native_object_method_if_present(
+                                    **previous_control,
+                                    "lostfocus",
+                                    frame,
+                                    {},
+                                    {});
+                            }
+                        }
+                    }
                     (void)write_native_property_if_present(
                         **owner_form,
                         "activecontrol",
@@ -2914,6 +2945,15 @@ namespace copperfin::runtime
                     "activecontrol",
                     runtime_object_reference,
                     frame);
+            }
+            if (focus_changed)
+            {
+                (void)invoke_native_object_method_if_present(
+                    *target_object,
+                    "gotfocus",
+                    frame,
+                    {},
+                    {});
             }
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
