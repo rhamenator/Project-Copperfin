@@ -12,6 +12,10 @@ if(NOT IS_DIRECTORY "${ARTIFACT_DIR}")
     message(FATAL_ERROR "CPack artifact directory does not exist: ${ARTIFACT_DIR}")
 endif()
 
+# CMake's RELATIVE glob base must be absolute when this script is invoked with
+# the relative paths used by the platform installer workflows.
+get_filename_component(ARTIFACT_DIR "${ARTIFACT_DIR}" ABSOLUTE)
+
 set(expected_artifacts ${EXPECTED_ARTIFACTS})
 list(SORT expected_artifacts)
 list(REMOVE_DUPLICATES expected_artifacts)
