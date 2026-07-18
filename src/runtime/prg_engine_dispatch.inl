@@ -62,6 +62,7 @@
         std::optional<PrgValue> resumed_use_alias_value;
         std::optional<PrgValue> resumed_open_database_target_value;
         std::optional<PrgValue> resumed_await_handle_value;
+        std::optional<PrgValue> resumed_erase_path_value;
         std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_throw_value;
         std::optional<PrgValue> resumed_textmerge_value;
@@ -479,6 +480,10 @@
                     {
                         resumed_await_handle_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::erase_command)
+                    {
+                        resumed_erase_path_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::with_statement)
                     {
                         resumed_with_target_value = *expression_value;
@@ -528,6 +533,7 @@
                     !resumed_use_alias_value.has_value() &&
                     !resumed_open_database_target_value.has_value() &&
                     !resumed_await_handle_value.has_value() &&
+                    !resumed_erase_path_value.has_value() &&
                     !resumed_with_target_value.has_value() &&
                     !resumed_throw_value.has_value() &&
                     !resumed_textmerge_value.has_value() &&
@@ -5429,8 +5435,14 @@
             case StatementKind::erase_command:
             {
                 // ERASE <file> / DELETE FILE <file>
-                const std::string raw_path = unquote_string(trim_copy(
-                    value_as_string(evaluate_expression(statement.expression, frame))));
+                const auto path_value = resumed_erase_path_value.has_value()
+                                            ? resumed_erase_path_value
+                                            : evaluate_resumable_expression(frame, statement);
+                if (!path_value.has_value())
+                {
+                    return {};
+                }
+                const std::string raw_path = unquote_string(trim_copy(value_as_string(*path_value)));
                 std::filesystem::path fpath = copperfin::platform::path_from_utf8_string(raw_path);
                 if (fpath.is_relative())
                 {

@@ -1586,10 +1586,16 @@ void test_erase_copy_rename_file_commands() {
     const fs::path main_path = temp_root / "file_ops.prg";
     write_text(
         main_path,
-        "ERASE 'to_erase.txt'\n"
+        "nEraseCalls = 0\n"
+        "ERASE erase_target('to_erase.txt')\n"
         "COPY FILE 'original.txt' TO 'copied.txt'\n"
         "RENAME 'copied.txt' TO 'renamed.txt'\n"
-        "RETURN\n");
+        "RETURN\n"
+        "FUNCTION erase_target\n"
+        "LPARAMETERS value\n"
+        "nEraseCalls = nEraseCalls + 1\n"
+        "RETURN value\n"
+        "ENDFUNC\n");
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
@@ -1598,6 +1604,12 @@ void test_erase_copy_rename_file_commands() {
     expect(state.completed, "file ops script should complete");
 
     expect(!fs::exists(temp_root / "to_erase.txt"), "ERASE should have deleted to_erase.txt");
+    const auto erase_calls = state.globals.find("nerasecalls");
+    expect(erase_calls != state.globals.end(), "ERASE should preserve the path resolver call counter");
+    if (erase_calls != state.globals.end()) {
+        expect(copperfin::runtime::format_value(erase_calls->second) == "1",
+               "ERASE should evaluate the UDF-produced path exactly once");
+    }
     expect(fs::exists(temp_root / "original.txt"), "COPY FILE should leave original.txt intact");
     expect(fs::exists(temp_root / "renamed.txt"), "RENAME should create renamed.txt");
     expect(!fs::exists(temp_root / "copied.txt"), "RENAME should remove the old file name copied.txt");
