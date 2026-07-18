@@ -1087,9 +1087,11 @@ private:
                 contents.empty() ? transaction_identity_ : contents,
                 write_error)) {
             std::filesystem::remove(temporary_path, filesystem_error);
-            error = runtime_text(
-                "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", copperfin::platform::path_to_utf8_string(path)}});
+            error = write_error.empty()
+                ? runtime_text(
+                      "Runtime.Package.Error.PackageTransactionStartFailed",
+                      {{"path", copperfin::platform::path_to_utf8_string(path)}})
+                : write_error;
             return false;
         }
 
