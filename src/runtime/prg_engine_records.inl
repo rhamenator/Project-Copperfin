@@ -1157,7 +1157,8 @@
                 return true;
             }
 
-            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 ||
+                cursor.buffering_mode == 4 || cursor.buffering_mode == 5)
             {
                 if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
                 {
@@ -1168,8 +1169,9 @@
                 }
 
                 auto buffered = cursor.buffered_records.find(cursor.recno);
-                bool acquired_mode2_lock = false;
-                if (cursor.buffering_mode == 2 && !cursor.buffered_record_locks.contains(cursor.recno))
+                bool acquired_buffer_lock = false;
+                if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
+                    !cursor.buffered_record_locks.contains(cursor.recno))
                 {
                     bool new_lock = false;
                     if (!acquire_record_lock(cursor, cursor.recno, "REPLACE", false, new_lock))
@@ -1179,7 +1181,7 @@
                     if (new_lock)
                     {
                         cursor.buffered_record_locks.insert(cursor.recno);
-                        acquired_mode2_lock = true;
+                        acquired_buffer_lock = true;
                     }
                 }
                 if (buffered == cursor.buffered_records.end())
@@ -1187,7 +1189,7 @@
                     const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
                     if (!table_result.ok || cursor.recno > table_result.table.records.size())
                     {
-                        if (acquired_mode2_lock)
+                        if (acquired_buffer_lock)
                         {
                             cursor.buffered_record_locks.erase(cursor.recno);
                             unlock_cursor_record_lock(cursor, cursor.recno);
@@ -1647,7 +1649,8 @@
             }
             cursor.record_count = deleted_result.record_count;
             cursor.buffered_records.erase(buffered);
-            if (cursor.buffering_mode == 2 && cursor.buffered_record_locks.erase(recno) != 0U)
+            if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
+                cursor.buffered_record_locks.erase(recno) != 0U)
             {
                 unlock_cursor_record_lock(cursor, recno);
             }
@@ -1712,7 +1715,8 @@
                     return make_boolean_value(false);
                 }
                 const int requested_mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
-                if (requested_mode != 1 && requested_mode != 2 && requested_mode != 3 && requested_mode != 5)
+                if (requested_mode != 1 && requested_mode != 2 && requested_mode != 3 &&
+                    requested_mode != 4 && requested_mode != 5)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode",
@@ -1737,7 +1741,8 @@
             {
                 return make_boolean_value(false);
             }
-            if (cursor->buffering_mode != 2 && cursor->buffering_mode != 3 && cursor->buffering_mode != 5)
+            if (cursor->buffering_mode != 2 && cursor->buffering_mode != 3 &&
+                cursor->buffering_mode != 4 && cursor->buffering_mode != 5)
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
@@ -1757,6 +1762,13 @@
                         }
                     }
                     return make_boolean_value(true);
+                }
+                if (cursor->buffering_mode == 4)
+                {
+                    while (!cursor->buffered_record_locks.empty())
+                    {
+                        unlock_cursor_record_lock(*cursor, *cursor->buffered_record_locks.begin());
+                    }
                 }
                 const std::size_t appended_count = cursor->buffered_appended_records.size();
                 const std::size_t persisted_record_count =
@@ -1824,6 +1836,12 @@
                     return make_boolean_value(false);
                 }
                 cursor->record_count = deleted_result.record_count;
+                if (cursor->buffering_mode == 4 &&
+                    !cursor->buffered_appended_records.contains(recno) &&
+                    cursor->buffered_record_locks.erase(recno) != 0U)
+                {
+                    unlock_cursor_record_lock(*cursor, recno);
+                }
             }
             cursor->buffered_records.clear();
             cursor->buffered_appended_records.clear();
@@ -2018,7 +2036,7 @@
                 return false;
             }
 
-            if (cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 3 || cursor.buffering_mode == 4 || cursor.buffering_mode == 5)
             {
                 const auto table_result = vfp::parse_dbf_table_from_file(
                     cursor.source_path,
@@ -2127,7 +2145,8 @@
                 return false;
             }
 
-            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 ||
+                cursor.buffering_mode == 4 || cursor.buffering_mode == 5)
             {
                 if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 3) &&
                     (scope.has_value() || !for_expression.empty() || !while_expression.empty()))
@@ -2158,7 +2177,8 @@
 
                 for (const std::size_t recno : target_records)
                 {
-                    if (cursor.buffering_mode == 2 && !cursor.buffered_record_locks.contains(recno))
+                    if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
+                        !cursor.buffered_record_locks.contains(recno))
                     {
                         bool new_lock = false;
                         if (!acquire_record_lock(cursor, recno, deleted ? "DELETE" : "RECALL", false, new_lock))
@@ -2176,7 +2196,8 @@
                         const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
                         if (!table_result.ok || recno > table_result.table.records.size())
                         {
-                            if (cursor.buffering_mode == 2 && cursor.buffered_record_locks.erase(recno) != 0U)
+                            if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 4) &&
+                                cursor.buffered_record_locks.erase(recno) != 0U)
                             {
                                 unlock_cursor_record_lock(cursor, recno);
                             }

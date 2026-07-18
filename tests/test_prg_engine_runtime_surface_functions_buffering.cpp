@@ -38,7 +38,7 @@ namespace copperfin::runtime_surface_tests
             "REPLACE NAME WITH 'Discarded' IN people\n"
             "TABLEREVERT(.T., 'people')\n"
             "cReverted = people.NAME\n"
-            "lUnsupported = CURSORSETPROP('Buffering', 4, 'people')\n"
+            "lUnsupported = CURSORSETPROP('Buffering', 6, 'people')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -261,6 +261,154 @@ namespace copperfin::runtime_surface_tests
                    after_revert.table.records[0].deleted && after_revert.table.records[1].deleted &&
                    !after_revert.table.records[2].deleted,
                "TABLEUPDATE should persist committed tombstones while TABLEREVERT discards later changes");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_local_pessimistic_table_buffering()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_pessimistic_table_buffering";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "pessimistic_table_buffering.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Alpha"}, {"Bravo"}, {"Charlie"}});
+        expect(create_result.ok, "pessimistic table buffering fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "SET REPROCESS TO 0\n"
+            "lSet = CURSORSETPROP('Buffering', 4, 'people')\n"
+            "nMode = CURSORGETPROP('Buffering', 'people')\n"
+            "REPLACE NAME WITH 'PendingOne' IN people\n"
+            "GO 2 IN people\n"
+            "REPLACE NAME WITH 'PendingTwo' IN people\n"
+            "cSecondPending = people.NAME\n"
+            "GO 1 IN people\n"
+            "cFirstPending = people.NAME\n"
+            "lFirstLocked = ISRLOCKED('people')\n"
+            "GO 2 IN people\n"
+            "lSecondLocked = ISRLOCKED('people')\n"
+            "GO 1 IN people\n"
+            "cStillPending = people.NAME\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "lUnlockedUpdate = !ISRLOCKED('people')\n"
+            "cFirstCommitted = people.NAME\n"
+            "GO 2 IN people\n"
+            "cSecondCommitted = people.NAME\n"
+            "GO 3 IN people\n"
+            "DELETE IN people\n"
+            "REPLACE NAME WITH 'PendingThree' IN people\n"
+            "lThirdLocked = ISRLOCKED('people')\n"
+            "GO 1 IN people\n"
+            "cAfterNavigation = people.NAME\n"
+            "TABLEREVERT(.T., 'people')\n"
+            "lUnlockedRevert = !ISRLOCKED('people')\n"
+            "GO 3 IN people\n"
+            "lThirdReverted = DELETED()\n"
+            "APPEND BLANK\n"
+            "REPLACE NAME WITH 'Appended' IN people\n"
+            "INSERT INTO people (NAME) VALUES ('Inserted')\n"
+            "nPendingCount = RECCOUNT('people')\n"
+            "GO 1 IN people\n"
+            "cBeforeAppendUpdate = people.NAME\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "nAfterUpdate = RECCOUNT('people')\n"
+            "GO 4 IN people\n"
+            "cAppended = people.NAME\n"
+            "GO 5 IN people\n"
+            "cInserted = people.NAME\n"
+            "GO 1 IN people\n"
+            "REPLACE NAME WITH 'Held' IN people\n"
+            "lHeld = ISRLOCKED('people')\n"
+            "SET DATASESSION TO 2\n"
+            "USE '" + table_path.string() + "' ALIAS other\n"
+            "SET REPROCESS TO 0\n"
+            "= CURSORSETPROP('Buffering', 4, 'other')\n"
+            "GO 1 IN other\n"
+            "lCompeting = .T.\n"
+            "TRY\n"
+            "    REPLACE NAME WITH 'Blocked' IN other\n"
+            "CATCH TO loError\n"
+            "    lCompeting = .F.\n"
+            "ENDTRY\n"
+            "SET DATASESSION TO 1\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "SET DATASESSION TO 2\n"
+            "REPLACE NAME WITH 'SecondCanEdit' IN other\n"
+            "lSecondUpdate = TABLEUPDATE(.T., .T., 'other')\n"
+            "SET DATASESSION TO 1\n"
+            "cFinal = people.NAME\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 15U});
+        session.add_breakpoint({.file_path = program_path.string(), .line = 37U});
+
+        const auto first_pause = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(first_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "pessimistic table buffering should pause before TABLEUPDATE");
+        const auto before_update = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(before_update.ok && before_update.table.records.size() == 3U &&
+                   before_update.table.records[0].values[0].display_value == "Alpha" &&
+                   before_update.table.records[1].values[0].display_value == "Bravo",
+               "mode 4 should keep multiple pending edits off disk before TABLEUPDATE");
+
+        const auto second_pause = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(second_pause.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "pessimistic table buffering should pause before append TABLEUPDATE");
+        const auto before_append_update = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(before_append_update.ok && before_append_update.table.records.size() == 3U,
+               "mode 4 APPEND and INSERT should remain pending until TABLEUPDATE");
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "pessimistic table buffering regression should complete after resume");
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lset") == "true", "CURSORSETPROP Buffering 4 should succeed");
+        expect(value_for("nmode") == "4", "CURSORGETPROP Buffering should report mode 4");
+        expect(value_for("csecondpending") == "PendingTwo", "mode 4 should expose a pending second-row value");
+        expect(value_for("cfirstpending") == "PendingOne", "navigation should preserve the first pending value");
+        expect(value_for("lfirstlocked") == "true", "mode 4 should lock the first changed row");
+        expect(value_for("lsecondlocked") == "true", "mode 4 should lock each changed row");
+        expect(value_for("cstillpending") == "PendingOne", "navigation should not commit mode-4 changes");
+        expect(value_for("lunlockedupdate") == "true", "mode 4 TABLEUPDATE should release all row locks");
+        expect(value_for("cfirstcommitted") == "PendingOne", "mode 4 should commit the first row");
+        expect(value_for("csecondcommitted") == "PendingTwo", "mode 4 should commit the second row");
+        expect(value_for("lthirdlocked") == "true", "mode 4 DELETE/REPLACE should retain a row lock");
+        expect(value_for("cafternavigation") == "PendingOne", "mode 4 navigation should retain deleted-row edits");
+        expect(value_for("lunlockedrevert") == "true", "mode 4 TABLEREVERT should release all row locks");
+        expect(value_for("lthirdreverted") == "false", "mode 4 TABLEREVERT should discard DELETE/REPLACE");
+        expect(value_for("npendingcount") == "5", "mode 4 APPEND and INSERT should affect cursor count");
+        expect(value_for("cbeforeappendupdate") == "PendingOne", "mode 4 should keep prior values while appends are pending");
+        expect(value_for("nafterupdate") == "5", "mode 4 TABLEUPDATE should commit appended rows");
+        expect(value_for("cappended") == "Appended", "mode 4 should commit APPEND BLANK values");
+        expect(value_for("cinserted") == "Inserted", "mode 4 should commit INSERT values");
+        expect(value_for("lheld") == "true", "mode 4 should retain a lock for a later pending edit");
+        expect(value_for("lcompeting") == "false", "a competing data session should not edit a locked mode-4 row");
+        expect(value_for("lsecondupdate") == "true", "a competing session should edit after the owner commits");
+        expect(value_for("cfinal") == "SecondCanEdit", "the competing mode-4 commit should persist");
+
+        const auto after_resume = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+        expect(after_resume.ok && after_resume.table.records.size() == 5U &&
+                   after_resume.table.records[0].values[0].display_value == "SecondCanEdit" &&
+                   after_resume.table.records[1].values[0].display_value == "PendingTwo" &&
+                   after_resume.table.records[2].values[0].display_value == "Charlie" &&
+                   after_resume.table.records[3].values[0].display_value == "Appended" &&
+                   after_resume.table.records[4].values[0].display_value == "Inserted",
+               "mode 4 should persist only the committed table changes");
 
         fs::remove_all(temp_root, ignored);
     }
