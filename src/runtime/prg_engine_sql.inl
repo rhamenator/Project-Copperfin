@@ -545,14 +545,32 @@
                         table_path;
                 }
                 table_path = table_path.lexically_normal();
-                if (!std::filesystem::exists(table_path))
+                const bool has_verified_primary =
+                    find_verified_file_byte_override(table_path) != options.verified_file_byte_overrides.end();
+                if (!std::filesystem::exists(table_path) &&
+                    !(options.require_verified_file_byte_overrides && has_verified_primary))
                 {
                     last_error_message = use_target_resolve_message(table_path);
                     return false;
                 }
 
+                std::filesystem::path verified_snapshot_root;
+                const auto verified_table_path = materialize_verified_file_snapshot(
+                    table_path,
+                    verified_snapshot_root,
+                    "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                    false);
+                if (!verified_table_path.has_value())
+                {
+                    return false;
+                }
                 const auto table_result = vfp::parse_dbf_table_from_file(
-                    copperfin::platform::path_to_utf8_string(table_path), 1U);
+                    copperfin::platform::path_to_utf8_string(*verified_table_path), 1U);
+                if (!verified_snapshot_root.empty())
+                {
+                    std::error_code snapshot_error;
+                    std::filesystem::remove_all(verified_snapshot_root, snapshot_error);
+                }
                 if (!table_result.ok)
                 {
                     last_error_message = table_result.error;

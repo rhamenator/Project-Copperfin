@@ -1202,7 +1202,9 @@ bool packaged_source_text_extension(const std::filesystem::path& path) {
 
 bool packaged_database_component_extension(const std::filesystem::path& path) {
     const std::string extension = lowercase_copy(path.extension().string());
-    return extension == ".dbc" || extension == ".dct" || extension == ".dcx";
+    return extension == ".dbf" || extension == ".fpt" || extension == ".cdx" ||
+           extension == ".idx" || extension == ".ndx" || extension == ".mdx" ||
+           extension == ".dbc" || extension == ".dct" || extension == ".dcx";
 }
 
 bool packaged_xasset_extension(const std::filesystem::path& path) {

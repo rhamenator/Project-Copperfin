@@ -1034,6 +1034,7 @@ namespace copperfin::runtime
         std::vector<std::pair<const CursorState *, const vfp::DbfRecord *>> record_evaluation_overrides;
 
 #include "prg_engine_session.inl"
+#include "prg_engine_verified_file_security.inl"
 #include "prg_engine_xasset_security.inl"
 #include "prg_engine_cursor.inl"
 #include "prg_engine_records.inl"
