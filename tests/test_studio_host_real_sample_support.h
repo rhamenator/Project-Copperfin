@@ -1,0 +1,68 @@
+// Copyright (c) 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#pragma once
+
+#include "test_environment_support.h"
+
+#include <filesystem>
+#include <string>
+#include <system_error>
+#include <vector>
+
+namespace copperfin::test_support {
+
+inline std::filesystem::path find_vfp9_reports_root() {
+    namespace fs = std::filesystem;
+
+    const auto contains_report_samples = [](const fs::path& candidate) {
+        std::error_code error;
+        if (!fs::exists(candidate / "invoice.frx", error) || error) {
+            return false;
+        }
+        error.clear();
+        return fs::exists(candidate / "cust.lbx", error) && !error;
+    };
+
+    if (const std::string override_root = getenv_value("COPPERFIN_VFP9_REPORTS_ROOT");
+        !override_root.empty()) {
+        const fs::path candidate = fs::path(override_root);
+        if (contains_report_samples(candidate)) {
+            return candidate;
+        }
+    }
+
+    const fs::path windows_candidate =
+        R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports)";
+    if (contains_report_samples(windows_candidate)) {
+        return windows_candidate;
+    }
+
+    const std::vector<fs::path> media_roots{
+        "/run/media",
+        "/media"
+    };
+    for (const auto& media_root : media_roots) {
+        std::error_code error;
+        if (!fs::exists(media_root, error) || error) {
+            continue;
+        }
+        fs::directory_iterator entries(media_root, error);
+        if (error) {
+            continue;
+        }
+        for (const auto& user_entry : entries) {
+            const fs::path candidate =
+                user_entry.path() / "VFPPROD1" / "program files" / "microsoft visual foxpro 9" /
+                "samples" / "solution" / "reports";
+            if (contains_report_samples(candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    return {};
+}
+
+}  // namespace copperfin::test_support

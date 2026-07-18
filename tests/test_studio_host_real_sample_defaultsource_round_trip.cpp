@@ -5,6 +5,7 @@
 #include "copperfin/vfp/visual_asset_editor.h"
 #include "test_environment_support.h"
 #include "test_locale_catalog_environment_support.h"
+#include "test_studio_host_real_sample_support.h"
 
 #include <filesystem>
 #include <fstream>
@@ -118,48 +119,6 @@ struct RealSamplePair {
     int defaultsource_memo_block_number = 0;
     bool is_label = false;
 };
-
-std::filesystem::path find_vfp9_reports_root() {
-    namespace fs = std::filesystem;
-
-    if (const std::string override_root = getenv_value("COPPERFIN_VFP9_REPORTS_ROOT");
-        !override_root.empty()) {
-        const fs::path candidate = fs::path(override_root);
-        if (fs::exists(candidate / "invoice.frx") && fs::exists(candidate / "cust.lbx")) {
-            return candidate;
-        }
-    }
-
-    const fs::path windows_candidate =
-        R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports)";
-    if (fs::exists(windows_candidate / "invoice.frx") && fs::exists(windows_candidate / "cust.lbx")) {
-        return windows_candidate;
-    }
-
-    const std::vector<fs::path> media_roots{
-        "/run/media",
-        "/media"
-    };
-    for (const auto& media_root : media_roots) {
-        std::error_code error;
-        if (!fs::exists(media_root, error)) {
-            continue;
-        }
-        for (const auto& user_entry : fs::directory_iterator(media_root, error)) {
-            if (error) {
-                break;
-            }
-            const fs::path candidate =
-                user_entry.path() / "VFPPROD1" / "program files" / "microsoft visual foxpro 9" /
-                "samples" / "solution" / "reports";
-            if (fs::exists(candidate / "invoice.frx") && fs::exists(candidate / "cust.lbx")) {
-                return candidate;
-            }
-        }
-    }
-
-    return {};
-}
 
 bool make_writable(const std::filesystem::path& path) {
     std::error_code error;
@@ -372,7 +331,7 @@ void exercise_real_sample_defaultsource_round_trip(
 void test_real_vfp9_report_and_label_defaultsource_round_trip(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path reports_root = find_vfp9_reports_root();
+    const fs::path reports_root = copperfin::test_support::find_vfp9_reports_root();
     if (reports_root.empty()) {
         std::cerr << "SKIP: #3767 real VFP9 report samples were not found\n";
         return;
