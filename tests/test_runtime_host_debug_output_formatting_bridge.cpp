@@ -3,6 +3,9 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_runtime_host_debug_output_support.h"
+#include "test_process_capture_support.h"
+
+#include "copperfin/platform/path.h"
 
 void test_runtime_host_writes_bridge_response_artifact(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
@@ -107,7 +110,9 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_secure_bridge_source";
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(
+            "copperfin_runtime_host_secure_bridge_source-\xD0\x9F\xD1\x83\xD1\x82\xD1\x8C");
     const fs::path content_root = temp_root / "content";
     const fs::path startup_path = content_root / "startup.prg";
     const fs::path source_path = content_root / "exports" / "exports.prg";
@@ -144,10 +149,13 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
 #endif
 
     const auto runtime_host_hash =
-        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
-    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
-    const auto source_hash = copperfin::security::sha256_hex_for_file(source_path.string());
-    const auto include_hash = copperfin::security::sha256_hex_for_file(include_path.string());
+        copperfin::security::sha256_hex_for_file(copperfin::platform::path_to_utf8_string(deployed_runtime_host));
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(
+        copperfin::platform::path_to_utf8_string(startup_path));
+    const auto source_hash = copperfin::security::sha256_hex_for_file(
+        copperfin::platform::path_to_utf8_string(source_path));
+    const auto include_hash = copperfin::security::sha256_hex_for_file(
+        copperfin::platform::path_to_utf8_string(include_path));
     expect(runtime_host_hash.ok && startup_hash.ok && source_hash.ok && include_hash.ok,
            "secure bridge fixture should hash host, startup, export source, and include");
     if (!runtime_host_hash.ok || !startup_hash.ok || !source_hash.ok || !include_hash.ok) {
@@ -160,24 +168,26 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         manifest_path,
         "manifest_version=1\n"
         "project_title=SecureBridgeSource\n"
-        "package_root=" + temp_root.string() + "\n"
-        "content_root=" + content_root.string() + "\n"
-        "working_directory=" + content_root.string() + "\n"
+        "package_root=" + copperfin::platform::path_to_utf8_string(temp_root) + "\n"
+        "content_root=" + copperfin::platform::path_to_utf8_string(content_root) + "\n"
+        "working_directory=" + copperfin::platform::path_to_utf8_string(content_root) + "\n"
         "startup_item=startup.prg\n"
-        "startup_source=" + startup_path.string() + "\n"
+        "startup_source=" + copperfin::platform::path_to_utf8_string(startup_path) + "\n"
         "security_enabled=true\n"
         "security_role=runtime-operator\n"
         "security_mode=native\n"
         "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
-        "asset=1|startup.prg|" + startup_path.string() +
+        "asset=1|startup.prg|" + copperfin::platform::path_to_utf8_string(startup_path) +
             "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
-        "asset=2|exports.prg|" + source_path.string() +
+        "asset=2|exports.prg|" + copperfin::platform::path_to_utf8_string(source_path) +
             "|Program|false|true|" + source_hash.hex_digest + "|true\n"
-        "extension_payload=" + include_path.string() + "|" + include_hash.hex_digest + "\n"
+        "extension_payload=" + copperfin::platform::path_to_utf8_string(include_path) + "|" +
+            include_hash.hex_digest + "\n"
         "dotnet_story=none\n");
 
     const auto write_request = [&](const fs::path& requested_source) {
-        const std::string escaped_source_path = json_escape_string(requested_source.string());
+        const std::string escaped_source_path = json_escape_string(
+            copperfin::platform::path_to_utf8_string(requested_source));
         write_text(
             request_path,
             std::string("{\n"
@@ -196,24 +206,28 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     const auto invoke = [&](const fs::path& requested_source) {
         write_request(requested_source);
         fs::remove(response_path, ignored);
-        return run_process_capture(
-            deployed_runtime_host.string(),
+        const auto captured = copperfin::test_support::run_process_capture(
+            deployed_runtime_host,
             {
-                "--manifest", manifest_path.string(),
+                "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
                 "--library-export", "GetAnswer",
                 "--routine-kind", "procedure",
-                "--source-path", requested_source.string(),
+                "--source-path", copperfin::platform::path_to_utf8_string(requested_source),
                 "--source-line", "1",
                 "--parameter-declaration", "LPARAMETERS",
                 "--parameter-names", "",
                 "--parameter-count", "0",
-                "--request-path", request_path.string(),
-                "--response-path", response_path.string(),
+                "--request-path", copperfin::platform::path_to_utf8_string(request_path),
+                "--response-path", copperfin::platform::path_to_utf8_string(response_path),
                 "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
                 "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
                 "--schema-version", "v1"
             },
             temp_root);
+        return ProcessResult{
+            .exit_code = captured.started ? captured.exit_code : -1,
+            .stdout_text = captured.stdout_text,
+            .stderr_text = captured.stderr_text};
     };
 
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());

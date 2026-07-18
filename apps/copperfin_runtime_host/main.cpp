@@ -6,6 +6,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/executable_path.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/platform/federation_execution.h"
@@ -767,15 +768,17 @@ int run_runtime_bridge_invocation(
     session_options.source_text_overrides = verified_source_texts;
     if (routine_bootstrap_materialized && verified_bridge_source_path.has_value()) {
         const std::filesystem::path bridge_source_root =
-            std::filesystem::path(*verified_bridge_source_path).parent_path();
+            copperfin::platform::path_from_utf8_string(*verified_bridge_source_path).parent_path();
         const std::filesystem::path bootstrap_root =
-            std::filesystem::path(execution_source).parent_path();
+            copperfin::platform::path_from_utf8_string(execution_source).parent_path();
         for (const auto& [source_path_text, source_text] : verified_source_texts) {
-            const std::filesystem::path source_path(source_path_text);
+            const std::filesystem::path source_path =
+                copperfin::platform::path_from_utf8_string(source_path_text);
             const std::filesystem::path relative = source_path.lexically_relative(bridge_source_root);
             if (!relative.empty() && relative != source_path && !relative.is_absolute()) {
                 session_options.source_text_overrides.emplace(
-                    (bootstrap_root / relative).lexically_normal().string(),
+                    copperfin::platform::path_to_utf8_string(
+                        (bootstrap_root / relative).lexically_normal()),
                     source_text);
             }
         }
@@ -1376,9 +1379,12 @@ void add_verified_deployment_bytes(
     const std::filesystem::path& canonical_startup_path,
     const std::filesystem::path& logical_startup_path,
     const std::string& bytes) {
-    verified_bytes.emplace(admitted_path.lexically_normal().string(), bytes);
     verified_bytes.emplace(
-        logical_deployment_path(admitted_path, manifest_directory).string(),
+        copperfin::platform::path_to_utf8_string(admitted_path.lexically_normal()),
+        bytes);
+    verified_bytes.emplace(
+        copperfin::platform::path_to_utf8_string(
+            logical_deployment_path(admitted_path, manifest_directory)),
         bytes);
 
     const std::filesystem::path canonical_startup_parent =
@@ -1395,7 +1401,8 @@ void add_verified_deployment_bytes(
         // Rootless manifests can retain an admitted alias after implicit manifest
         // discovery has canonicalized its directory.
         verified_bytes.emplace(
-            (logical_startup_parent / startup_relative_path).lexically_normal().string(),
+            copperfin::platform::path_to_utf8_string(
+                (logical_startup_parent / startup_relative_path).lexically_normal()),
             bytes);
     }
 }
@@ -3250,8 +3257,10 @@ int main(int argc, char** argv) {
                 const bool database_component = packaged_database_component_extension(source_path);
                 const bool xasset = packaged_xasset_extension(source_path);
                 if ((!source_text && !database_component && !xasset) ||
-                    (source_text && verified_source_texts.contains(source_path.string())) ||
-                    ((database_component || xasset) && verified_file_bytes.contains(source_path.string()))) {
+                    (source_text && verified_source_texts.contains(
+                        copperfin::platform::path_to_utf8_string(source_path))) ||
+                    ((database_component || xasset) && verified_file_bytes.contains(
+                        copperfin::platform::path_to_utf8_string(source_path)))) {
                     continue;
                 }
                 const auto source_snapshot =
@@ -3330,7 +3339,9 @@ int main(int argc, char** argv) {
             }
 
             if (security_enabled) {
-                const auto source_found = verified_source_texts.find(bound_bridge_source->string());
+                const std::string bound_bridge_source_text =
+                    copperfin::platform::path_to_utf8_string(*bound_bridge_source);
+                const auto source_found = verified_source_texts.find(bound_bridge_source_text);
                 if (source_found == verified_source_texts.end()) {
                     std::cout << "status: error\n";
                     print_error_line(
@@ -3342,7 +3353,7 @@ int main(int argc, char** argv) {
                     return 8;
                 }
                 verified_bridge_source_text = source_found->second;
-                verified_bridge_source_path = bound_bridge_source->string();
+                verified_bridge_source_path = bound_bridge_source_text;
             } else {
                 const auto bridge_containment =
                     copperfin::security::inspect_physical_path_containment(
