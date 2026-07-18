@@ -1236,6 +1236,61 @@ void test_with_endwith_preserves_reserved_dotted_logical_tokens() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_with_target_uses_heap_backed_expression_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with_target_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "with_target_continuation.prg";
+    write_text(
+        main_path,
+        "FUNCTION make_with_target\n"
+        "    LOCAL target\n"
+        "    target = CREATEOBJECT('Sample.Object')\n"
+        "    target.Caption = 'from udf'\n"
+        "    RETURN target\n"
+        "ENDFUNC\n"
+        "WITH make_with_target()\n"
+        "    outer_caption = .Caption\n"
+        "    WITH make_with_target()\n"
+        "        inner_caption = .Caption\n"
+        "    ENDWITH\n"
+        "    outer_after_inner = .Caption\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "WITH target UDF script should complete through the expression trampoline");
+
+    const auto expect_caption = [&](const char *name) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), std::string("WITH target UDF should assign ") + name);
+        if (value != state.globals.end()) {
+            expect(
+                copperfin::runtime::format_value(value->second) == "from udf",
+                std::string("WITH target UDF should preserve ") + name + " after resumption");
+        }
+    };
+    expect_caption("outer_caption");
+    expect_caption("inner_caption");
+    expect_caption("outer_after_inner");
+
+    const auto with_event_count = std::count_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "runtime.with";
+        });
+    expect(with_event_count == 2, "WITH target UDF should bind each target exactly once");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_loop_and_exit_unwind_with_bindings_before_jump() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with_loop_unwind";

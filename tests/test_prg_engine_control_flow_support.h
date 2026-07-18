@@ -70,6 +70,7 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop();
 void test_elseif_control_flow_executes_matching_branch();
 void test_with_endwith_resolves_leading_dot_member_access();
 void test_with_endwith_preserves_reserved_dotted_logical_tokens();
+void test_with_target_uses_heap_backed_expression_continuations();
 void test_loop_and_exit_unwind_with_bindings_before_jump();
 void test_loop_and_exit_unwind_case_contexts_before_jump();
 void test_print_command_emits_event();

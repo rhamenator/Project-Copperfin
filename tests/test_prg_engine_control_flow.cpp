@@ -105,6 +105,7 @@ int main() {
     test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata();
     test_with_endwith_resolves_leading_dot_member_access();
     test_with_endwith_preserves_reserved_dotted_logical_tokens();
+    test_with_target_uses_heap_backed_expression_continuations();
     test_loop_and_exit_unwind_with_bindings_before_jump();
     test_loop_and_exit_unwind_case_contexts_before_jump();
     test_try_catch_finally_handles_runtime_errors();

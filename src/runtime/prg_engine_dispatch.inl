@@ -55,6 +55,7 @@
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_use_target_value;
+        std::optional<PrgValue> resumed_with_target_value;
         std::optional<PrgValue> resumed_do_argument_value;
         std::optional<PrgValue> resumed_spawn_argument_value;
         std::optional<PrgValue> resumed_call_argument_value;
@@ -454,6 +455,10 @@
                     {
                         resumed_use_target_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::with_statement)
+                    {
+                        resumed_with_target_value = *expression_value;
+                    }
                     else if (continued_statement.kind == StatementKind::do_command &&
                              frame.command_argument_continuation.has_value())
                     {
@@ -481,6 +486,7 @@
                     !resumed_go_value.has_value() &&
                     !resumed_unlock_record_value.has_value() &&
                     !resumed_use_target_value.has_value() &&
+                    !resumed_with_target_value.has_value() &&
                     !resumed_do_argument_value.has_value() &&
                     !resumed_spawn_argument_value.has_value() &&
                     !resumed_call_argument_value.has_value() &&
@@ -2829,7 +2835,14 @@
                 return {};
             case StatementKind::with_statement:
             {
-                const PrgValue target = evaluate_expression(statement.expression, frame);
+                const auto target_value = resumed_with_target_value.has_value()
+                                              ? resumed_with_target_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!target_value.has_value())
+                {
+                    return {};
+                }
+                const PrgValue target = *target_value;
                 const std::string binding_name =
                     "__with_" + std::to_string(frame.withs.size() + 1U) + "_" + std::to_string(frame.pc - 1U);
                 frame.local_names.insert(binding_name);
