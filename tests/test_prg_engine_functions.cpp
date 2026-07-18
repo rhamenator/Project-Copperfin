@@ -38,7 +38,7 @@ namespace
             "cSelfRef = 'cSelfRef'\n"
             "cSelfRefHolder = 'cSelfRef'\n"
             "cSelfRefDeepHolder = 'cSelfRefHolder'\n"
-            "cFallbackExpr = 'plain text value'\n"
+            "cFallbackExpr = \"'plain text value'\"\n"
             "cFallbackExprHolder = 'cFallbackExpr'\n"
             "cFallbackExprDeepHolder = 'cFallbackExprHolder'\n"
             "nDirect = &cExpr\n"
@@ -375,6 +375,7 @@ namespace
         const fs::path main_path = temp_root / "parameter_defaults.prg";
         write_text(
             main_path,
+            "PUBLIC nProvidedSeen, cProvidedLabel, nDefaultSeen, cDefaultLabel\n"
             "cDefaultExpr = '40 + 2'\n"
             "cDefaultExprHolder = 'cDefaultExpr'\n"
             "cDefaultExprDeepHolder = 'cDefaultExprHolder'\n"
