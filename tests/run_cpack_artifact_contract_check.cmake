@@ -2,7 +2,7 @@
 # Licensed under the Project Copperfin Source-Available License or
 # Commercial License. See LICENSE.md in the repository root.
 
-foreach(required_variable IN ITEMS ARTIFACT_DIR EXPECTED_ARTIFACTS)
+foreach(required_variable IN ITEMS ARTIFACT_DIR VERSION_FILE EXPECTED_ARTIFACT_SUFFIXES)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")
         message(FATAL_ERROR "${required_variable} is required")
     endif()
@@ -16,7 +16,19 @@ endif()
 # the relative paths used by the platform installer workflows.
 get_filename_component(ARTIFACT_DIR "${ARTIFACT_DIR}" ABSOLUTE)
 
-set(expected_artifacts ${EXPECTED_ARTIFACTS})
+if(NOT EXISTS "${VERSION_FILE}")
+    message(FATAL_ERROR "Generated package version file does not exist: ${VERSION_FILE}")
+endif()
+file(READ "${VERSION_FILE}" package_version)
+string(STRIP "${package_version}" package_version)
+if(NOT package_version MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(FATAL_ERROR "Generated package version is invalid: '${package_version}'")
+endif()
+
+set(expected_artifacts)
+foreach(artifact_suffix IN LISTS EXPECTED_ARTIFACT_SUFFIXES)
+    list(APPEND expected_artifacts "copperfin-${package_version}-${artifact_suffix}")
+endforeach()
 list(SORT expected_artifacts)
 list(REMOVE_DUPLICATES expected_artifacts)
 list(LENGTH expected_artifacts expected_count)

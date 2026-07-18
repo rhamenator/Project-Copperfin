@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(Copperfin LANGUAGES CXX C)
+project(Copperfin VERSION 0.1.0 LANGUAGES CXX C)
 
 option(COPPERFIN_REQUIRE_X64
     "Require an x64 Windows toolchain for managed-product packaging"
@@ -553,9 +553,13 @@ install(DIRECTORY resources/locales/
 set(CPACK_PACKAGE_NAME "copperfin")
 set(CPACK_PACKAGE_VENDOR "Copperfin")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Copperfin standalone runtime and studio host tooling")
-set(CPACK_PACKAGE_VERSION "0.1.0")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_CONTACT "maintainers@copperfin.local")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}")
+file(GENERATE
+    OUTPUT "${CMAKE_BINARY_DIR}/CopperfinPackageVersion.txt"
+    CONTENT "${PROJECT_VERSION}\n"
+)
 
 if(WIN32)
     set(CPACK_GENERATOR "NSIS;ZIP")

@@ -287,13 +287,13 @@ require_text(".github/workflows/build-installers.yml"
     "cpack --config build/CPackConfig.cmake -B build/package -G \"productbuild;TGZ\""
     "macOS CPack generator inventory")
 foreach(installer_path IN ITEMS
-        "build/package/copperfin-0.1.0-Windows.exe"
-        "build/package/copperfin-0.1.0-Windows.zip"
-        "build/package/copperfin-0.1.0-Darwin.pkg"
-        "build/package/copperfin-0.1.0-Darwin.tar.gz"
-        "build/package/copperfin-0.1.0-Linux.deb"
-        "build/package/copperfin-0.1.0-Linux.rpm"
-        "build/package/copperfin-0.1.0-Linux.tar.gz")
+        "build/package/copperfin-*-Windows.exe"
+        "build/package/copperfin-*-Windows.zip"
+        "build/package/copperfin-*-Darwin.pkg"
+        "build/package/copperfin-*-Darwin.tar.gz"
+        "build/package/copperfin-*-Linux.deb"
+        "build/package/copperfin-*-Linux.rpm"
+        "build/package/copperfin-*-Linux.tar.gz")
     require_text(".github/workflows/build-installers.yml"
         "${installer_path}"
         "exact installer artifact path '${installer_path}'")
@@ -301,6 +301,13 @@ endforeach()
 require_text(".github/workflows/build-installers.yml"
     "tests/run_cpack_artifact_contract_check.cmake"
     "CPack artifact ownership verifier")
+require_text_count(".github/workflows/build-installers.yml"
+    "tests/run_package_version_contract_check.cmake"
+    3
+    "package version contract checks")
+forbid_text(".github/workflows/build-installers.yml"
+    "0.1.0"
+    "duplicated installer version literal")
 require_text_count(".github/workflows/build-installers.yml"
     "if-no-files-found: error"
     3
