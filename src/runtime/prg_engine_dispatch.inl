@@ -52,6 +52,7 @@
         std::optional<PrgValue> resumed_seek_value;
         std::optional<PrgValue> resumed_skip_value;
         std::optional<PrgValue> resumed_go_value;
+        std::optional<PrgValue> resumed_unlock_record_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -438,6 +439,11 @@
                     {
                         resumed_go_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::unlock_command &&
+                             !trim_copy(continued_statement.identifier).empty())
+                    {
+                        resumed_unlock_record_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -448,6 +454,7 @@
                     !resumed_seek_value.has_value() &&
                     !resumed_skip_value.has_value() &&
                     !resumed_go_value.has_value() &&
+                    !resumed_unlock_record_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -3570,8 +3577,22 @@
 
                 if (!trim_copy(statement.identifier).empty())
                 {
+                    const auto record_value = resumed_unlock_record_value.has_value()
+                                                  ? resumed_unlock_record_value
+                                                  : evaluate_resumable_expression(
+                                                        frame,
+                                                        [&]()
+                                                        {
+                                                            Statement record_statement = statement;
+                                                            record_statement.expression = statement.identifier;
+                                                            return record_statement;
+                                                        }());
+                    if (!record_value.has_value())
+                    {
+                        return {};
+                    }
                     const std::size_t recno = static_cast<std::size_t>(
-                        std::max<double>(0.0, std::llround(value_as_number(evaluate_expression(statement.identifier, frame)))));
+                        std::max<double>(0.0, std::llround(value_as_number(*record_value))));
                     if (recno == 0U || recno > cursor->record_count)
                     {
                         last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound");

@@ -1207,6 +1207,68 @@ void test_go_record_expression_uses_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_unlock_record_expression_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_unlock_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+
+    const fs::path deep_path = temp_root / "unlock_deep.prg";
+    write_text(
+        deep_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "UNLOCK RECORD unlock_record(2048) IN People\n"
+        "RETURN\n"
+        "FUNCTION unlock_record\n"
+        "LPARAMETERS nDepth\n"
+        "IF nDepth <= 0\n"
+        "RETURN 1\n"
+        "ENDIF\n"
+        "RETURN unlock_record(nDepth - 1)\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession deep_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(deep_path.string(), temp_root.string()));
+    const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!deep_state.completed, "deep UNLOCK RECORD recursion should stop at the configured call-depth guard");
+    expect(
+        deep_state.message.find("maximum call depth") != std::string::npos,
+        "deep UNLOCK RECORD recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
+
+    const fs::path side_effect_path = temp_root / "unlock_side_effect.prg";
+    write_text(
+        side_effect_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nCalls = 0\n"
+        "UNLOCK RECORD unlock_record() IN People\n"
+        "RETURN\n"
+        "FUNCTION unlock_record\n"
+        "nCalls = nCalls + 1\n"
+        "RETURN 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession side_effect_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(side_effect_path.string(), temp_root.string()));
+    const auto side_effect_state = side_effect_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(side_effect_state.completed, "UNLOCK RECORD UDF script should complete");
+
+    const auto calls = side_effect_state.globals.find("ncalls");
+    expect(calls != side_effect_state.globals.end(), "UNLOCK RECORD UDF call count should be captured");
+    if (calls != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(calls->second) == "1", "UNLOCK RECORD UDF should run exactly once across suspension and resume");
+    }
+    expect(
+        has_runtime_event(side_effect_state.events, "runtime.unlock", "People RECORD 1"),
+        "resumed UNLOCK RECORD should preserve the existing runtime.unlock event detail");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cursor_identity_functions_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_local";
@@ -1657,6 +1719,7 @@ int main() {
     test_go_and_skip_cursor_navigation();
     test_skip_delta_uses_heap_backed_frame_continuations();
     test_go_record_expression_uses_heap_backed_frame_continuations();
+    test_unlock_record_expression_uses_heap_backed_frame_continuations();
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();
