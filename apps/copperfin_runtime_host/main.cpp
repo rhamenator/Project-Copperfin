@@ -2344,7 +2344,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
         copperfin::runtime::build_xasset_bootstrap_source(
             result.model,
             include_read_events,
-            startup_read_path == logical_startup_source ? std::string{} : startup_read_path);
+            logical_startup_source);
 
     std::ofstream output(bootstrap_path, std::ios::binary | std::ios::trunc);
     output << result.bootstrap_source;

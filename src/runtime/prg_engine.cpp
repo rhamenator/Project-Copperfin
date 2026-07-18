@@ -8485,7 +8485,7 @@ namespace copperfin::runtime
             (copperfin::platform::path_to_utf8_string(asset_file.stem()) + "_copperfin_bootstrap.prg");
 
         const std::string bootstrap_source =
-            build_xasset_bootstrap_source(model, include_read_events);
+            build_xasset_bootstrap_source(model, include_read_events, asset_path);
         std::ofstream output(bootstrap_path, std::ios::binary);
         output << bootstrap_source;
         output.close();
