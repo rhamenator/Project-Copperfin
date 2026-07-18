@@ -10,6 +10,7 @@
 #include <array>
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <limits>
 #include <string_view>
 
@@ -28,6 +29,23 @@
 
 namespace copperfin::runtime::runtime_pipeline_detail {
 namespace {
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+void trace_content_root_failure(
+    const std::string_view stage,
+    const std::filesystem::path& path) {
+    const int saved_errno = errno;
+    std::cerr << "RUNTIME_PIPELINE_CONTENT_ROOT_FAILURE stage=" << stage
+              << " errno=" << saved_errno
+              << " path=" << copperfin::platform::path_to_utf8_string(path)
+              << "\n";
+}
+#else
+void trace_content_root_failure(
+    const std::string_view,
+    const std::filesystem::path&) {
+}
+#endif
 
 bool has_windows_drive_designator(const std::string& value) {
     return value.size() >= 2U &&
@@ -535,6 +553,7 @@ bool prepare_package_content_root(
             package_leaf.c_str(),
             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (package_descriptor < 0) {
+            trace_content_root_failure("open-package", absolute_package_root);
             error = content_root_creation_failed();
             return false;
         }
@@ -542,6 +561,7 @@ bool prepare_package_content_root(
             copperfin::platform::path_to_utf8_string(absolute_content_root.filename());
         const bool created = ::mkdirat(package_descriptor, content_leaf.c_str(), 0700) == 0;
         if (!created && errno != EEXIST) {
+            trace_content_root_failure("mkdir-content", absolute_content_root);
             (void)::close(package_descriptor);
             error = content_root_creation_failed();
             return false;
@@ -555,6 +575,7 @@ bool prepare_package_content_root(
             S_ISDIR(content_information.st_mode);
         (void)::close(package_descriptor);
         if (!is_directory) {
+            trace_content_root_failure("stat-content", absolute_content_root);
             error = content_root_creation_failed();
             return false;
         }
@@ -564,6 +585,7 @@ bool prepare_package_content_root(
                 content_leaf.c_str(),
                 O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
             if (*content_descriptor_out < 0) {
+                trace_content_root_failure("open-content", absolute_content_root);
                 (void)::close(package_descriptor);
                 error = content_root_creation_failed();
                 return false;

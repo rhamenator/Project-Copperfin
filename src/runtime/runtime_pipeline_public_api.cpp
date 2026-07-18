@@ -12,6 +12,7 @@
 #include <cerrno>
 #include <chrono>
 #include <condition_variable>
+#include <iostream>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -41,6 +42,14 @@ constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
 constexpr std::string_view kPackageTransactionDeferredPhase = "phase=awaiting_primary_output\n";
 
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+void trace_content_identity_failure(const std::filesystem::path& path) {
+    const int saved_errno = errno;
+    std::cerr << "RUNTIME_PIPELINE_CONTENT_ROOT_FAILURE stage=adopt-content"
+              << " errno=" << saved_errno
+              << " path=" << copperfin::platform::path_to_utf8_string(path)
+              << "\n";
+}
+
 std::atomic_bool force_package_backup_cleanup_warning{false};
 std::mutex package_materialization_pause_mutex;
 std::condition_variable package_materialization_pause_condition;
@@ -1882,6 +1891,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     const bool content_identity_acquired = content_identity.acquire(content_root_path);
 #endif
     if (!content_identity_acquired) {
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+        trace_content_identity_failure(content_root_path);
+#endif
         return {
             .ok = false,
             .error = runtime_text(
