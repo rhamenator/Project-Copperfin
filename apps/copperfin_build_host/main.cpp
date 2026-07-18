@@ -7,6 +7,7 @@
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/extensibility_model.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
@@ -224,8 +225,10 @@ bool run_dotnet_publish(
     const copperfin::runtime::RuntimePackagePlan& plan,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
-    const std::filesystem::path project_path(plan.launcher_project_path);
-    const std::filesystem::path output_dir(plan.package_root);
+    const std::filesystem::path project_path =
+        copperfin::platform::path_from_utf8_string(plan.launcher_project_path);
+    const std::filesystem::path output_dir =
+        copperfin::platform::path_from_utf8_string(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
 
     const auto auth = copperfin::security::authorize_external_process({
@@ -245,7 +248,7 @@ bool run_dotnet_publish(
     std::vector<std::string> publish_args = {
         auth.resolved_path,
         "publish",
-        project_path.string(),
+        copperfin::platform::path_to_utf8_string(project_path),
         "-noAutoResponse",
         "-p:ImportDirectoryBuildProps=false",
         "-p:ImportDirectoryBuildTargets=false",
@@ -256,17 +259,18 @@ bool run_dotnet_publish(
         "--self-contained",
         "false",
         "-o",
-        output_dir.string()
+        copperfin::platform::path_to_utf8_string(output_dir)
     };
 
     intptr_t exit_code = -1;
 #if defined(_WIN32)
     std::vector<std::wstring> wide_args;
     wide_args.reserve(publish_args.size());
-    wide_args.push_back(std::filesystem::path(auth.resolved_path).filename().wstring());
+    wide_args.push_back(
+        copperfin::platform::path_from_utf8_string(auth.resolved_path).filename().wstring());
     for (std::size_t index = 1U; index < publish_args.size(); ++index) {
         wide_args.push_back(quote_windows_spawn_argument(
-            std::filesystem::path(publish_args[index]).wstring()));
+            copperfin::platform::path_from_utf8_string(publish_args[index]).wstring()));
     }
 
     std::vector<const wchar_t*> argv;
@@ -277,7 +281,7 @@ bool run_dotnet_publish(
     argv.push_back(nullptr);
     exit_code = _wspawnv(
         _P_WAIT,
-        std::filesystem::path(auth.resolved_path).c_str(),
+        copperfin::platform::path_from_utf8_string(auth.resolved_path).c_str(),
         argv.data());
 #else
     std::vector<const char*> argv;
@@ -312,8 +316,11 @@ bool run_dotnet_publish(
     }
 
     const std::filesystem::path published_launcher =
-        output_dir / (project_path.stem().string() + ".exe");
-    const std::filesystem::path configured_launcher(plan.launcher_output_path);
+        output_dir /
+        copperfin::platform::path_from_utf8_string(
+            copperfin::platform::path_to_utf8_string(project_path.stem()) + ".exe");
+    const std::filesystem::path configured_launcher =
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path);
     if (!std::filesystem::exists(published_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;

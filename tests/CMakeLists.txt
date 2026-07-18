@@ -443,6 +443,38 @@ add_test(
     COMMAND $<TARGET_FILE:test_build_host_output> $<TARGET_FILE:copperfin_build_host>
 )
 
+add_executable(test_build_host_utf8_launcher_paths
+    test_build_host_utf8_launcher_paths.cpp
+)
+target_link_libraries(test_build_host_utf8_launcher_paths PRIVATE
+    cf_vfp_assets
+    cf_test_process_capture_support
+)
+add_dependencies(test_build_host_utf8_launcher_paths copperfin_build_host copperfin_runtime_host)
+
+if(MSVC)
+    target_compile_options(test_build_host_utf8_launcher_paths PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_build_host_utf8_launcher_paths PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+if(WIN32 AND DOTNET_EXECUTABLE)
+    add_test(
+        NAME test_build_host_utf8_launcher_paths
+        COMMAND $<TARGET_FILE:test_build_host_utf8_launcher_paths>
+            $<TARGET_FILE:copperfin_build_host>
+    )
+else()
+    add_test(
+        NAME test_build_host_utf8_launcher_paths
+        COMMAND $<TARGET_FILE:test_build_host_utf8_launcher_paths>
+    )
+endif()
+set_tests_properties(test_build_host_utf8_launcher_paths PROPERTIES
+    SKIP_RETURN_CODE 77
+    TIMEOUT 600
+)
+
 add_executable(test_studio_host_shell_command
     test_studio_host_shell_command.cpp
     ../apps/copperfin_studio_host/studio_host_main_shell_command.cpp

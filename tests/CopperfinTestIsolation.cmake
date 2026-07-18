@@ -693,6 +693,15 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM dotnet-conditional
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_build_host_utf8_launcher_paths
+        FILESYSTEM process-owned
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES bounded
+        NETWORK possible-package-restore
+        SAMPLES none
+        PLATFORM dotnet-conditional
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_runtime_pipeline
         FILESYSTEM process-owned
         ENVIRONMENT scoped-process
