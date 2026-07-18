@@ -481,6 +481,26 @@ install(TARGETS copperfin_inspect copperfin_studio_host copperfin_runtime_host c
     RUNTIME DESTINATION bin
 )
 
+if(WIN32)
+    # The managed shell is built by the Windows installer workflow. Keep it in
+    # a child directory so its host lookup reaches the native bin directory.
+    add_executable(copperfin_studio_managed IMPORTED GLOBAL)
+    set_target_properties(copperfin_studio_managed PROPERTIES
+        IMPORTED_LOCATION_DEBUG
+            "${CMAKE_SOURCE_DIR}/vsix/Copperfin.Studio/bin/Debug/net472/Copperfin.Studio.exe"
+        IMPORTED_LOCATION_RELWITHDEBINFO
+            "${CMAKE_SOURCE_DIR}/vsix/Copperfin.Studio/bin/RelWithDebInfo/net472/Copperfin.Studio.exe"
+        IMPORTED_LOCATION_RELEASE
+            "${CMAKE_SOURCE_DIR}/vsix/Copperfin.Studio/bin/Release/net472/Copperfin.Studio.exe"
+    )
+    install(FILES
+        "$<TARGET_FILE:copperfin_studio_managed>"
+        "$<TARGET_FILE_DIR:copperfin_studio_managed>/Copperfin.Studio.exe.config"
+        DESTINATION bin/studio
+        COMPONENT Studio
+    )
+endif()
+
 set(COPPERFIN_PACKAGE_DOCUMENTS
     README.md
     SECURITY.md

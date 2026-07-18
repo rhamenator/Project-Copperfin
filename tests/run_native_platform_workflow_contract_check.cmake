@@ -309,6 +309,15 @@ require_text_count(".github/workflows/build-installers.yml"
     "cmake -E remove_directory build/package/_CPack_Packages"
     3
     "CPack internal staging cleanup")
+require_text(".github/workflows/build-installers.yml"
+    "Build standalone Studio shell"
+    "Windows installer standalone Studio build")
+require_text(".github/workflows/build-installers.yml"
+    "tests/run_studio_install_contract_check.cmake"
+    "Windows standalone Studio install contract")
+require_text("CMakeLists.txt"
+    "copperfin_studio_managed"
+    "Windows managed Studio install target")
 foreach(stale_pattern IN ITEMS
         "copperfin-*.exe"
         "copperfin-*.zip"
