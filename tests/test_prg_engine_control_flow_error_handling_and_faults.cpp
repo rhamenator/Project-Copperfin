@@ -1286,13 +1286,17 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
         "  cCatchClass = oErr.Class\n"
         "  cCatchBaseClass = oErr.BaseClass\n"
         "  cCatchMessage = oErr.Message\n"
+        "  cCatchMessageText = oErr.MessageText\n"
         "  nCatchErrorNo = oErr.ErrorNo\n"
+        "  nCatchHelpContext = oErr.HelpContext\n"
         "  nCatchLineNo = oErr.LineNo\n"
         "  cCatchProcedure = oErr.Procedure\n"
         "  cCatchDetails = oErr.Details\n"
         "  cCatchLineContents = oErr.LineContents\n"
         "  nCatchStackLevel = oErr.StackLevel\n"
         "  lCatchHasMessage = PEMSTATUS(oErr, 'Message', 1)\n"
+        "  lCatchHasMessageText = PEMSTATUS(oErr, 'MessageText', 1)\n"
+        "  lCatchHasHelpContext = PEMSTATUS(oErr, 'HelpContext', 1)\n"
         "  lCatchHasBaseClass = PEMSTATUS(oErr, 'BaseClass', 1)\n"
         "  lCatchSameObject = COMPOBJ(oErr, oErr)\n"
         "  nErrRows = AERROR(aErr)\n"
@@ -1338,10 +1342,14 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     check("nerrrows", "1");
 
     const auto catch_message = state.globals.find("ccatchmessage");
+    const auto catch_message_text = state.globals.find("ccatchmessagetext");
     const auto catch_error_no = state.globals.find("ncatcherrorno");
+    const auto catch_help_context = state.globals.find("ncatchhelpcontext");
     const auto catch_line_no = state.globals.find("ncatchlineno");
     const auto catch_details = state.globals.find("ccatchdetails");
     const auto catch_stack_level = state.globals.find("ncatchstacklevel");
+    const auto catch_has_message_text = state.globals.find("lcatchhasmessagetext");
+    const auto catch_has_help_context = state.globals.find("lcatchhashelpcontext");
     const auto err_code = state.globals.find("nerrcode");
     const auto err_msg = state.globals.find("cerrmsg");
     const auto err_line = state.globals.find("nerrline");
@@ -1352,10 +1360,14 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     const auto fn_prog = state.globals.find("cfnprog");
 
     expect(catch_message != state.globals.end(), "caught Exception object should expose Message");
+    expect(catch_message_text != state.globals.end(), "caught Exception object should expose MessageText");
     expect(catch_error_no != state.globals.end(), "caught Exception object should expose ErrorNo");
+    expect(catch_help_context != state.globals.end(), "caught Exception object should expose HelpContext");
     expect(catch_line_no != state.globals.end(), "caught Exception object should expose LineNo");
     expect(catch_details != state.globals.end(), "caught Exception object should expose Details");
     expect(catch_stack_level != state.globals.end(), "caught Exception object should expose StackLevel");
+    expect(catch_has_message_text != state.globals.end(), "caught Exception object should reflect MessageText");
+    expect(catch_has_help_context != state.globals.end(), "caught Exception object should reflect HelpContext");
     expect(err_code != state.globals.end(), "AERROR() should still expose error code");
     expect(err_msg != state.globals.end(), "AERROR() should still expose error message");
     expect(err_line != state.globals.end(), "AERROR() should still expose fault line");
@@ -1371,6 +1383,21 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
                "caught Exception Message should match AERROR()[1,2]");
         expect(catch_msg == copperfin::runtime::format_value(fn_msg->second),
                "caught Exception Message should match MESSAGE()");
+    }
+    if (catch_message != state.globals.end() && catch_message_text != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catch_message_text->second) ==
+                   copperfin::runtime::format_value(catch_message->second),
+               "caught Exception MessageText should match Message");
+    }
+    if (catch_help_context != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catch_help_context->second) == "0",
+               "caught Exception HelpContext should default to zero");
+    }
+    if (catch_has_message_text != state.globals.end() && catch_has_help_context != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catch_has_message_text->second) == "true",
+               "caught Exception PEMSTATUS should expose MessageText");
+        expect(copperfin::runtime::format_value(catch_has_help_context->second) == "true",
+               "caught Exception PEMSTATUS should expose HelpContext");
     }
     if (catch_error_no != state.globals.end() && err_code != state.globals.end() && fn_code != state.globals.end()) {
         const std::string catch_code = copperfin::runtime::format_value(catch_error_no->second);

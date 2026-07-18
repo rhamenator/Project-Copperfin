@@ -3407,7 +3407,9 @@
             object_state.base_class_name = "Exception";
             object_state.class_hierarchy = {"EXCEPTION", "OBJECT"};
             object_state.properties["message"] = make_string_value(last_error_message);
+            object_state.properties["messagetext"] = make_string_value(last_error_message);
             object_state.properties["errorno"] = make_number_value(static_cast<double>(last_error_code));
+            object_state.properties["helpcontext"] = make_number_value(0.0);
             object_state.properties["lineno"] = make_number_value(static_cast<double>(last_fault_location.line));
             object_state.properties["procedure"] = make_string_value(last_error_procedure);
             object_state.properties["details"] = make_string_value(detail);
