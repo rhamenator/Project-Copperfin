@@ -231,11 +231,63 @@ void test_newobject_local_vcx_fails_closed_without_fabricated_ole_state() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_release_object_alias_waits_for_last_variable_reference() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_release_object_alias_reference";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "release_object_alias_reference.prg";
+    write_text(
+        main_path,
+        "nDestroyCount = 0\n"
+        "oFirst = CREATEOBJECT('AliasWorker')\n"
+        "oSecond = oFirst\n"
+        "RELEASE oFirst\n"
+        "nDestroyAfterFirstRelease = nDestroyCount\n"
+        "RELEASE oSecond\n"
+        "nDestroyAfterSecondRelease = nDestroyCount\n"
+        "RETURN\n"
+        "DEFINE CLASS AliasWorker AS Custom\n"
+        "    PROCEDURE Destroy\n"
+        "        nDestroyCount = nDestroyCount + 1\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("RELEASE object alias script should complete: ") +
+               state.message + " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        if (found == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        const std::string actual = copperfin::runtime::format_value(found->second);
+        expect(actual == expected,
+               name + " expected '" + expected + "' got '" + actual + "'");
+    };
+
+    check("ndestroyafterfirstrelease", "0");
+    check("ndestroyaftersecondrelease", "1");
+    expect(state.ole_objects.empty(),
+           "RELEASE of the last tracked object variable should remove the native object");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
     test_newobject_local_vcx_fails_closed_without_fabricated_ole_state();
+    test_release_object_alias_waits_for_last_variable_reference();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

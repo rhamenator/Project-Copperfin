@@ -10266,6 +10266,10 @@
                                 }
                             }
                         }
+                        if (release_object_memory_binding(frame, raw, released_special_handles))
+                        {
+                            continue;
+                        }
                         release_memory_binding(frame, raw, true);
                     }
                 }

@@ -137,6 +137,111 @@
             frame.locals.erase(name);
         }
 
+        bool value_references_object_handle(const PrgValue &value, int handle) const
+        {
+            int value_handle = 0;
+            std::string value_prog_id;
+            return parse_object_handle_reference(value, value_handle, value_prog_id) && value_handle == handle;
+        }
+
+        bool has_live_variable_reference_to_object(int handle) const
+        {
+            const auto map_has_reference = [this, handle](const auto &values) {
+                for (const auto &[name, value] : values)
+                {
+                    if (value_references_object_handle(value, handle))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            const auto optional_map_has_reference = [this, handle](const auto &values) {
+                for (const auto &[name, value] : values)
+                {
+                    if (value.has_value() && value_references_object_handle(*value, handle))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            const auto array_map_has_reference = [this, handle](const auto &value_arrays) {
+                for (const auto &[name, array] : value_arrays)
+                {
+                    for (const auto &value : array.values)
+                    {
+                        if (value_references_object_handle(value, handle))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
+
+            if (map_has_reference(globals) || array_map_has_reference(arrays))
+            {
+                return true;
+            }
+            for (const auto &active_frame : stack)
+            {
+                if (map_has_reference(active_frame.locals) ||
+                    optional_map_has_reference(active_frame.private_saved_values) ||
+                    array_map_has_reference(active_frame.local_arrays))
+                {
+                    return true;
+                }
+                for (const auto &[name, saved_array] : active_frame.private_saved_arrays)
+                {
+                    if (!saved_array.has_value())
+                    {
+                        continue;
+                    }
+                    for (const auto &value : saved_array->values)
+                    {
+                        if (value_references_object_handle(value, handle))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        bool release_object_memory_binding(
+            Frame &frame,
+            const std::string &raw_name,
+            std::set<int> &released_handles)
+        {
+            const PrgValue *value = find_variable(frame, raw_name);
+            if (value == nullptr)
+            {
+                return false;
+            }
+
+            int handle = 0;
+            std::string prog_id;
+            if (!parse_object_handle_reference(*value, handle, prog_id))
+            {
+                return false;
+            }
+
+            release_memory_binding(frame, raw_name, true);
+            if (has_live_variable_reference_to_object(handle))
+            {
+                return true;
+            }
+
+            const auto object = ole_objects.find(handle);
+            if (object != ole_objects.end() && released_handles.insert(handle).second)
+            {
+                (void)release_native_object(object->second, normalize_memory_variable_identifier(trim_copy(raw_name)));
+            }
+            return true;
+        }
+
         void sync_byref_arguments(Frame &frame)
         {
             if (frame.parameter_reference_bindings.empty())
