@@ -838,9 +838,11 @@ public:
             if (!write_owned_transaction_file_atomically(marker_path_, marker_error)) {
                 std::string ignored;
                 (void)rollback(ignored);
-                error = runtime_text(
-                    "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
+                error = marker_error.empty()
+                    ? runtime_text(
+                          "Runtime.Package.Error.PackageTransactionStartFailed",
+                          {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}})
+                    : marker_error;
                 return false;
             }
         }
@@ -1097,9 +1099,11 @@ public:
                 marker_path_,
                 marker_error,
                 transaction_identity_ + std::string(kPackageTransactionDeferredPhase))) {
-            error = runtime_text(
-                "Runtime.Package.Error.PackageTransactionStartFailed",
-                {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
+            error = marker_error.empty()
+                ? runtime_text(
+                      "Runtime.Package.Error.PackageTransactionStartFailed",
+                      {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}})
+                : marker_error;
             return false;
         }
         active_ = false;
