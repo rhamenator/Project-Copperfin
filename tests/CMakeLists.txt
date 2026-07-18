@@ -4260,7 +4260,15 @@ copperfin_add_test(test_toolbox_palette cf_design_model
 )
 
 copperfin_add_test(test_toolbox_creation cf_design_model
-    test_toolbox_creation.cpp
+    test_toolbox_creation_baseline_01.cpp
+    test_toolbox_creation_batch_01.cpp
+    test_toolbox_creation_catalog_context_01.cpp
+    test_toolbox_creation_catalog_context_02.cpp
+    test_toolbox_creation_dispatch_01.cpp
+    test_toolbox_creation_dispatch_02.cpp
+    test_toolbox_creation_main.cpp
+    test_toolbox_creation_planner_01.cpp
+    test_toolbox_creation_planner_02.cpp
 )
 
 copperfin_add_test(test_context_editor_actions cf_design_model
