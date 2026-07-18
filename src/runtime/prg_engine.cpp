@@ -2872,6 +2872,12 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.refresh",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            (void)invoke_native_object_method_if_present(
+                *target_object,
+                "paint",
+                frame,
+                {},
+                {});
             return make_empty_value();
         }
         if ((leaf == "show" || leaf == "hide") &&
@@ -2892,6 +2898,12 @@ namespace copperfin::runtime
             events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            (void)invoke_native_object_method_if_present(
+                *target_object,
+                visible ? "activate" : "deactivate",
+                frame,
+                {},
+                {});
             return make_empty_value();
         }
         if (leaf == "setfocus" &&
