@@ -108,6 +108,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private bool suppressSelectionSync;
     private bool embeddedStudioShell;
     private int loadGeneration;
+    private readonly object uiActionGate = new();
+    private readonly Queue<Action> pendingUiActions = new();
 
     public bool EmbeddedStudioShell
     {
@@ -787,8 +789,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         stack.Controls.Add(splitContainer);
 
         Controls.Add(stack);
+        HandleCreated += HandleCreatedForPendingUiActions;
         ApplyHostMode();
     }
+
+    internal bool SnapshotLoadFinished =>
+        currentSnapshot is not null ||
+        !string.Equals(
+            snapshotStatusLabel.Text,
+            this.localization.Text("AssetEditor.Snapshot.LoadingStatus"),
+            StringComparison.Ordinal);
 
     public bool CanHandleUndoCommand()
     {
@@ -972,6 +982,21 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         });
     }
 
+    private void HandleCreatedForPendingUiActions(object? sender, EventArgs e)
+    {
+        Action[] pendingActions;
+        lock (uiActionGate)
+        {
+            pendingActions = pendingUiActions.ToArray();
+            pendingUiActions.Clear();
+        }
+
+        foreach (var pendingAction in pendingActions)
+        {
+            PostToUi(pendingAction);
+        }
+    }
+
     private void PostToUi(Action action)
     {
         if (IsDisposed || Disposing)
@@ -979,9 +1004,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        if (!IsHandleCreated)
+        lock (uiActionGate)
         {
-            return;
+            if (!IsHandleCreated)
+            {
+                pendingUiActions.Enqueue(action);
+                return;
+            }
         }
 
         try

@@ -115,9 +115,9 @@ internal static partial class Program
             Location = new Point(-32000, -32000)
         };
 
+        form.OpenDocument(firstPath!);
         form.Show();
         Application.DoEvents();
-        form.OpenDocument(firstPath!);
         form.OpenDocument(secondPath!);
 
         var loaded = WaitUntil(
@@ -128,6 +128,17 @@ internal static partial class Program
                   FindTabControls(form).SelectMany(tab => tab.TabPages.Cast<TabPage>())
                       .Any(page => page.Text.Equals(Path.GetFileName(secondPath), StringComparison.OrdinalIgnoreCase)));
         Expect(loaded, "standalone Studio should open multiple assets as separate tabs");
+
+        var firstEditor = FindTabControls(form)
+            .SelectMany(tab => tab.TabPages.Cast<TabPage>())
+            .Where(page => page.Text.Equals(Path.GetFileName(firstPath), StringComparison.OrdinalIgnoreCase))
+            .SelectMany(page => page.Controls.OfType<CopperfinAssetEditorControl>())
+            .SingleOrDefault();
+        var preHandleLoadFinished = WaitUntil(
+            TimeSpan.FromSeconds(10),
+            () => firstEditor?.SnapshotLoadFinished == true);
+        Expect(preHandleLoadFinished,
+            "standalone Studio should finish an asset snapshot that started before the form handle was created");
 
         var tabControl = FindTabControls(form).FirstOrDefault();
         Expect(tabControl is not null, "standalone Studio should surface a document tab control");
