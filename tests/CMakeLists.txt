@@ -4580,6 +4580,11 @@ copperfin_add_test(test_prg_engine_parser_classes cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_macro_expressions cf_xbase_runtime
+    test_prg_engine_macro_expressions.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_data_io cf_xbase_runtime
     test_prg_engine_data_io.cpp
     test_prg_engine_data_io_shared_test_helpers.cpp

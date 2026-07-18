@@ -261,6 +261,25 @@
                 bool previous_;
             };
 
+            struct ScopedMacroTextPreservation
+            {
+                ScopedMacroTextPreservation(ExpressionParser &parser, bool enabled)
+                    : parser_(parser),
+                      previous_(parser.preserve_macro_text_)
+                {
+                    parser_.preserve_macro_text_ = enabled;
+                }
+
+                ~ScopedMacroTextPreservation()
+                {
+                    parser_.preserve_macro_text_ = previous_;
+                }
+
+            private:
+                ExpressionParser &parser_;
+                bool previous_;
+            };
+
             static PrgValue currency_arithmetic(
                 const PrgValue &left,
                 const PrgValue &right,
@@ -733,6 +752,7 @@
                     match(")");
                     return value;
                 }
+                const std::size_t macro_start = position_;
                 if (match("&"))
                 {
                     if (suppress_evaluation_)
@@ -740,7 +760,7 @@
                         skip_macro_reference();
                         return make_empty_value();
                     }
-                    PrgValue macro_value = parse_macro_reference();
+                    PrgValue macro_value = parse_macro_reference(macro_start);
                     if (macro_value.kind == PrgValueKind::string)
                     {
                         const std::string array_name = resolve_array_argument_name({}, &macro_value);
@@ -836,6 +856,12 @@
                         return skip_postfix_member_and_collection_access();
                     }
 
+                    ScopedMacroTextPreservation macro_text_guard(
+                        *this,
+                        normalized_identifier == "eval" ||
+                            normalized_identifier == "execscript" ||
+                            normalized_identifier == "lookup" ||
+                            normalized_identifier == "textmerge");
                     const auto invocation = parse_invocation_arguments(identifier);
                     const auto &arguments = invocation.arguments;
                     const auto &raw_arguments = invocation.raw_arguments;
@@ -2784,7 +2810,7 @@
                 }
             }
 
-            PrgValue parse_macro_reference()
+            PrgValue parse_macro_reference(std::size_t macro_start)
             {
                 const auto expand_memory_macro_identifier = [&](const std::string &macro_identifier)
                 {
@@ -3006,26 +3032,46 @@
                     resolved_expression = indirect_expression;
                 }
 
-                // Always treat macro expansion as an expression when possible, unless the resolved
-                // text still contains "<<", which can never appear in valid VFP expression syntax
-                // (there is no such operator) and is the hallmark of an unresolved TEXTMERGE
-                // placeholder (e.g. "Template <<cName>>"). Without this check, the parser's lack of
-                // a "<<" token can split such text into two chained "<" comparisons that may
-                // successfully (if nonsensically) evaluate instead of throwing, which previously
-                // acted as this function's only signal to fall back to the literal string.
-                if (!contains_unquoted_double_angle(resolved_expression))
-                try
+                if (preserve_macro_text_)
                 {
-                    const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
-                    if (expanded_value.kind != PrgValueKind::empty)
+                    if (!contains_unquoted_double_angle(resolved_expression))
                     {
-                        return expanded_value;
+                        try
+                        {
+                            const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
+                            if (expanded_value.kind != PrgValueKind::empty)
+                            {
+                                return expanded_value;
+                            }
+                        }
+                        catch (...)
+                        {
+                        }
                     }
+                    return make_string_value(resolved_expression);
                 }
-                catch (...)
+
+                // Macro substitution is textual in VFP: replace the reference before the
+                // surrounding precedence parser consumes its next operator. Keep the legacy
+                // literal fallback for unresolved TEXTMERGE markers, which are not expression
+                // syntax and must remain ordinary string values.
+                if (!contains_unquoted_double_angle(resolved_expression))
                 {
+                    text_.replace(macro_start, position_ - macro_start, resolved_expression);
+                    position_ = macro_start;
+                    if (expression_continuation_ != nullptr)
+                    {
+                        expression_continuation_->primary_checkpoints.clear();
+                    }
+                    const PrgValue expanded_value = parse_unary();
+                    if (expanded_value.kind == PrgValueKind::empty &&
+                        is_bare_identifier_text(resolved_expression))
+                    {
+                        return make_string_value(resolved_expression);
+                    }
+                    return expanded_value;
                 }
-                // If not an expression, return the expanded string value.
+
                 return make_string_value(resolved_expression);
             }
 
@@ -3411,7 +3457,8 @@
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::string> &, const std::vector<std::optional<std::string>> &, std::size_t, std::size_t)> user_routine_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             ExpressionContinuation *expression_continuation_ = nullptr;
-            const std::string &text_;
+            std::string text_;
+            bool preserve_macro_text_ = false;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;
             const std::string &default_directory_;
