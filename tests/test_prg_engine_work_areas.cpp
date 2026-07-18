@@ -1269,6 +1269,70 @@ void test_unlock_record_expression_uses_heap_backed_frame_continuations() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_use_target_expression_uses_heap_backed_frame_continuations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_continuation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_simple_dbf(table_path, {"ALPHA", "BRAVO", "CHARLIE"});
+
+    const fs::path deep_path = temp_root / "use_deep.prg";
+    write_text(
+        deep_path,
+        "USE use_target(2048) ALIAS People IN 0\n"
+        "RETURN\n"
+        "FUNCTION use_target\n"
+        "LPARAMETERS nDepth\n"
+        "IF nDepth <= 0\n"
+        "RETURN '" + table_path.string() + "'\n"
+        "ENDIF\n"
+        "RETURN use_target(nDepth - 1)\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession deep_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(deep_path.string(), temp_root.string()));
+    const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!deep_state.completed, "deep USE target recursion should stop at the configured call-depth guard");
+    expect(
+        deep_state.message.find("maximum call depth") != std::string::npos,
+        "deep USE target recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
+
+    const fs::path side_effect_path = temp_root / "use_side_effect.prg";
+    write_text(
+        side_effect_path,
+        "nCalls = 0\n"
+        "USE use_target() ALIAS People IN 0\n"
+        "cAlias = ALIAS()\n"
+        "RETURN\n"
+        "FUNCTION use_target\n"
+        "nCalls = nCalls + 1\n"
+        "RETURN '" + table_path.string() + "'\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::PrgRuntimeSession side_effect_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(side_effect_path.string(), temp_root.string()));
+    const auto side_effect_state = side_effect_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(side_effect_state.completed, "USE target UDF script should complete");
+
+    const auto calls = side_effect_state.globals.find("ncalls");
+    const auto alias = side_effect_state.globals.find("calias");
+    expect(calls != side_effect_state.globals.end(), "USE target UDF call count should be captured");
+    expect(alias != side_effect_state.globals.end(), "USE should still expose the selected alias after a resumed target evaluation");
+    if (calls != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(calls->second) == "1", "USE target UDF should run exactly once across suspension and resume");
+    }
+    if (alias != side_effect_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(alias->second) == "People", "resumed USE should preserve the explicit alias");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cursor_identity_functions_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_identity_local";
@@ -1720,6 +1784,7 @@ int main() {
     test_skip_delta_uses_heap_backed_frame_continuations();
     test_go_record_expression_uses_heap_backed_frame_continuations();
     test_unlock_record_expression_uses_heap_backed_frame_continuations();
+    test_use_target_expression_uses_heap_backed_frame_continuations();
     test_cursor_identity_functions_for_local_tables();
     test_local_use_auto_allocation_tracks_session_selection_flow();
     test_local_selected_empty_area_reuses_after_datasession_round_trip();

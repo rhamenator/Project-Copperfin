@@ -53,6 +53,7 @@
         std::optional<PrgValue> resumed_skip_value;
         std::optional<PrgValue> resumed_go_value;
         std::optional<PrgValue> resumed_unlock_record_value;
+        std::optional<PrgValue> resumed_use_target_value;
         std::optional<PrgValue> resumed_expression_value;
         std::optional<Statement> resumed_expression_statement;
         bool resumed_conditional_expression = false;
@@ -444,6 +445,11 @@
                     {
                         resumed_unlock_record_value = *expression_value;
                     }
+                    else if (continued_statement.kind == StatementKind::use_command &&
+                             !continued_statement.expression.empty())
+                    {
+                        resumed_use_target_value = *expression_value;
+                    }
                     else
                     {
                         last_return_value = *expression_value;
@@ -455,6 +461,7 @@
                     !resumed_skip_value.has_value() &&
                     !resumed_go_value.has_value() &&
                     !resumed_unlock_record_value.has_value() &&
+                    !resumed_use_target_value.has_value() &&
                     !resumed_expression_value.has_value() &&
                     !resumed_conditional_expression && !resumed_case_expression &&
                     !resumed_loop_expression && !resumed_scan_expression)
@@ -3821,7 +3828,14 @@
                     return {};
                 }
 
-                const std::string target = value_as_string(evaluate_expression(statement.expression, frame));
+                const auto target_value = resumed_use_target_value.has_value()
+                                              ? resumed_use_target_value
+                                              : evaluate_resumable_expression(frame, statement);
+                if (!target_value.has_value())
+                {
+                    return {};
+                }
+                const std::string target = value_as_string(*target_value);
                 std::string alias = statement.identifier.empty()
                                         ? copperfin::platform::path_to_utf8_string(
                                               copperfin::platform::path_from_utf8_string(
