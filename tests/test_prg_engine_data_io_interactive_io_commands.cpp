@@ -367,6 +367,7 @@ void test_input_accept_to_local_targets_stay_local_in_routine_scope() {
         "RETURN\n"
         "PROCEDURE run_dialogs\n"
         "LOCAL cInputLocal, cAcceptLocal\n"
+        "PUBLIC input_local_type, accept_local_type, input_local_value, accept_local_value\n"
         "INPUT \"Enter input:\" TO cInputLocal\n"
         "ACCEPT \"Enter accept:\" TO cAcceptLocal\n"
         "input_local_type = TYPE('cInputLocal')\n"

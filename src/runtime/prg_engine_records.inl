@@ -414,7 +414,10 @@
             CursorState &cursor,
             const Frame &frame,
             int direction,
-            bool start_after_current)
+            long long start_recno,
+            bool start_after_current,
+            const std::string &extra_expression,
+            const std::string &while_expression)
         {
             const auto candidates = load_ordered_record_candidates(cursor);
             if (!candidates.has_value())
@@ -445,11 +448,39 @@
                                            : static_cast<std::ptrdiff_t>(-1);
                 }
             }
+            else if (start_recno <= 1)
+            {
+                index = direction >= 0 ? 0 : static_cast<std::ptrdiff_t>(candidates->size()) - 1;
+            }
+            else
+            {
+                if (direction >= 0)
+                {
+                    const auto requested = std::find_if(candidates->begin(), candidates->end(), [&](const auto &candidate)
+                                                         { return candidate.recno >= static_cast<std::size_t>(start_recno); });
+                    index = requested == candidates->end()
+                        ? static_cast<std::ptrdiff_t>(candidates->size())
+                        : static_cast<std::ptrdiff_t>(std::distance(candidates->begin(), requested));
+                }
+                else
+                {
+                    const auto requested = std::find_if(candidates->rbegin(), candidates->rend(), [&](const auto &candidate)
+                                                         { return candidate.recno <= static_cast<std::size_t>(start_recno); });
+                    index = requested == candidates->rend()
+                        ? static_cast<std::ptrdiff_t>(-1)
+                        : static_cast<std::ptrdiff_t>(candidates->size() - 1U -
+                                                       static_cast<std::size_t>(std::distance(candidates->rbegin(), requested)));
+                }
+            }
 
             for (; index >= 0 && index < static_cast<std::ptrdiff_t>(candidates->size()); index += direction)
             {
                 move_cursor_to(cursor, static_cast<long long>((*candidates)[static_cast<std::size_t>(index)].recno));
-                if (current_record_matches_visibility(cursor, frame, {}))
+                if (!while_expression.empty() && !evaluate_visibility_expression(while_expression, frame, &cursor))
+                {
+                    break;
+                }
+                if (current_record_matches_visibility(cursor, frame, extra_expression))
                 {
                     return true;
                 }
@@ -479,7 +510,14 @@
         {
             if (honor_active_order && !cursor.active_order_expression.empty())
             {
-                return seek_ordered_visible_record(cursor, frame, direction, start_after_current);
+                return seek_ordered_visible_record(
+                    cursor,
+                    frame,
+                    direction,
+                    start_recno,
+                    start_after_current,
+                    extra_expression,
+                    while_expression);
             }
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
@@ -532,6 +570,28 @@
                 --remaining;
             }
             return true;
+        }
+
+        std::vector<std::size_t> record_iteration_order(const CursorState &cursor) const
+        {
+            if (const auto candidates = load_ordered_record_candidates(cursor); candidates.has_value())
+            {
+                std::vector<std::size_t> recnos;
+                recnos.reserve(candidates->size());
+                for (const auto &candidate : *candidates)
+                {
+                    recnos.push_back(candidate.recno);
+                }
+                return recnos;
+            }
+
+            std::vector<std::size_t> recnos;
+            recnos.reserve(cursor.record_count);
+            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+            {
+                recnos.push_back(recno);
+            }
+            return recnos;
         }
 
         std::optional<vfp::DbfRecord> current_record(const CursorState &cursor) const
@@ -831,6 +891,8 @@
                 }
             }
 
+            const bool start_after_current = cursor.recno > 0U &&
+                start_recno == cursor.recno + 1U;
             const bool found = seek_visible_record(
                 cursor,
                 frame,
@@ -838,7 +900,9 @@
                 1,
                 for_expression,
                 while_expression,
-                false);
+                false,
+                true,
+                start_after_current);
             cursor.found = found;
             events.push_back({.category = "runtime.rushmore", .detail = rushmore_detail});
             return true;

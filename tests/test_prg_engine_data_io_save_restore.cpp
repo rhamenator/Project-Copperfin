@@ -507,6 +507,7 @@ void test_restore_from_honors_current_frame_local_bindings() {
         "RETURN\n"
         "PROCEDURE restore_proc\n"
         "LOCAL saved_value\n"
+        "PUBLIC restored_local\n"
         "saved_value = 'stale'\n"
         "RESTORE FROM '" + mem_path.string() + "' ADDITIVE\n"
         "restored_local = saved_value\n"

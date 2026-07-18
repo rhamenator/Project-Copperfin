@@ -6819,7 +6819,7 @@
                     const std::size_t num_cols = col_names.empty() ? 1U : col_names.size();
                     std::vector<PrgValue> flat_values;
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
-                    for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
+                    for (const std::size_t recno : record_iteration_order(*cursor))
                     {
                         move_cursor_to(*cursor, static_cast<long long>(recno));
                         if (!current_record_matches_visibility(*cursor, frame, for_expr))
@@ -7016,7 +7016,7 @@
                 if (!is_structure)
                 {
                     const CursorPositionSnapshot saved = capture_cursor_snapshot(*cursor);
-                    for (std::size_t recno = 1U; recno <= cursor->record_count; ++recno)
+                    for (const std::size_t recno : record_iteration_order(*cursor))
                     {
                         move_cursor_to(*cursor, static_cast<long long>(recno));
                         if (!current_record_matches_visibility(*cursor, frame, for_expr))
