@@ -146,9 +146,21 @@
 
         bool has_live_variable_reference_to_object(int handle) const
         {
-            const auto map_has_reference = [this, handle](const auto &values) {
+            const auto is_context_alias = [](const std::string &name)
+            {
+                const std::string normalized = normalize_memory_variable_identifier(name);
+                return normalized == "this" ||
+                       normalized == "parent" ||
+                       normalized == "thisform" ||
+                       normalized == "thisformset";
+            };
+            const auto map_has_reference = [this, handle, &is_context_alias](const auto &values, bool skip_context_aliases) {
                 for (const auto &[name, value] : values)
                 {
+                    if (skip_context_aliases && is_context_alias(name))
+                    {
+                        continue;
+                    }
                     if (value_references_object_handle(value, handle))
                     {
                         return true;
@@ -179,14 +191,32 @@
                 }
                 return false;
             };
+            const auto native_collection_has_reference = [this, handle]()
+            {
+                for (const auto &[object_handle, object] : ole_objects)
+                {
+                    if (!is_native_collection_object(object))
+                    {
+                        continue;
+                    }
+                    for (const auto &value : object.collection_items)
+                    {
+                        if (value_references_object_handle(value, handle))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            };
 
-            if (map_has_reference(globals) || array_map_has_reference(arrays))
+            if (map_has_reference(globals, false) || array_map_has_reference(arrays) || native_collection_has_reference())
             {
                 return true;
             }
             for (const auto &active_frame : stack)
             {
-                if (map_has_reference(active_frame.locals) ||
+                if (map_has_reference(active_frame.locals, true) ||
                     optional_map_has_reference(active_frame.private_saved_values) ||
                     array_map_has_reference(active_frame.local_arrays))
                 {
@@ -242,6 +272,103 @@
             return true;
         }
 
+        void release_frame_object_bindings(Frame &frame)
+        {
+            const auto is_context_alias = [](const std::string &name)
+            {
+                const std::string normalized = normalize_memory_variable_identifier(name);
+                return normalized == "this" ||
+                       normalized == "parent" ||
+                       normalized == "thisform" ||
+                       normalized == "thisformset";
+            };
+            const auto object_handle_for_value = [this](const PrgValue &value) -> std::optional<int>
+            {
+                int handle = 0;
+                std::string prog_id;
+                return parse_object_handle_reference(value, handle, prog_id)
+                    ? std::optional<int>(handle)
+                    : std::nullopt;
+            };
+
+            std::set<int> contextual_handles;
+            for (const auto &[name, value] : frame.locals)
+            {
+                if (!is_context_alias(name))
+                {
+                    continue;
+                }
+                if (const auto handle = object_handle_for_value(value); handle.has_value())
+                {
+                    contextual_handles.insert(*handle);
+                }
+            }
+
+            std::set<int> returned_handles;
+            if (frame.return_pending && last_return_value.has_value())
+            {
+                if (const auto handle = object_handle_for_value(*last_return_value); handle.has_value())
+                {
+                    returned_handles.insert(*handle);
+                }
+            }
+
+            std::vector<std::string> local_object_names;
+            for (const auto &[name, value] : frame.locals)
+            {
+                if (is_context_alias(name))
+                {
+                    continue;
+                }
+                const auto handle = object_handle_for_value(value);
+                if (!handle.has_value() || contextual_handles.contains(*handle) || returned_handles.contains(*handle))
+                {
+                    continue;
+                }
+                local_object_names.push_back(name);
+            }
+
+            std::vector<std::pair<std::string, std::vector<int>>> local_array_objects;
+            for (const auto &[name, array] : frame.local_arrays)
+            {
+                std::vector<int> handles;
+                for (const PrgValue &value : array.values)
+                {
+                    if (const auto handle = object_handle_for_value(value);
+                        handle.has_value() && !contextual_handles.contains(*handle) && !returned_handles.contains(*handle))
+                    {
+                        handles.push_back(*handle);
+                    }
+                }
+                if (!handles.empty())
+                {
+                    local_array_objects.emplace_back(name, std::move(handles));
+                }
+            }
+
+            std::set<int> released_handles;
+            for (const std::string &name : local_object_names)
+            {
+                (void)release_object_memory_binding(frame, name, released_handles);
+            }
+            for (const auto &[name, handles] : local_array_objects)
+            {
+                release_memory_binding(frame, name, true);
+                for (const int handle : handles)
+                {
+                    if (has_live_variable_reference_to_object(handle))
+                    {
+                        continue;
+                    }
+                    const auto object = ole_objects.find(handle);
+                    if (object != ole_objects.end() && released_handles.insert(handle).second)
+                    {
+                        (void)release_native_object(object->second, name);
+                    }
+                }
+            }
+        }
+
         void sync_byref_arguments(Frame &frame)
         {
             if (frame.parameter_reference_bindings.empty())
@@ -272,10 +399,14 @@
         {
             if (!stack.empty())
             {
-                last_popped_frame_requested_nodefault = stack.back().requested_nodefault;
+                const bool requested_nodefault = stack.back().requested_nodefault;
+                const std::optional<PrgValue> saved_return_value = last_return_value;
                 sync_byref_arguments(stack.back());
+                release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());
                 stack.pop_back();
+                last_popped_frame_requested_nodefault = requested_nodefault;
+                last_return_value = saved_return_value;
             }
         }
 

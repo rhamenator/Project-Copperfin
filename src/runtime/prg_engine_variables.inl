@@ -376,6 +376,12 @@
                         local->second = std::move(array);
                         return;
                     }
+                    if (stack.back().local_names.contains(normalized) || stack.back().locals.contains(normalized))
+                    {
+                        stack.back().locals.erase(normalized);
+                        stack.back().local_arrays[normalized] = std::move(array);
+                        return;
+                    }
                 }
             }
             arrays[canonical_array_name(name)] = std::move(array);

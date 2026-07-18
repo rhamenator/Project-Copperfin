@@ -282,12 +282,91 @@ void test_release_object_alias_waits_for_last_variable_reference() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scope_exit_releases_unreferenced_objects_and_preserves_returns() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_scope_exit_object_lifetime";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "scope_exit_object_lifetime.prg";
+    write_text(
+        main_path,
+        "nDestroyCount = 0\n"
+        "DO MakeLocal\n"
+        "nDestroyAfterLocal = nDestroyCount\n"
+        "oGlobal = CREATEOBJECT('ScopeWorker')\n"
+        "DO MakeAlias\n"
+        "nDestroyAfterAliasScope = nDestroyCount\n"
+        "RELEASE oGlobal\n"
+        "nDestroyAfterGlobalRelease = nDestroyCount\n"
+        "DO MakeArray\n"
+        "nDestroyAfterArrayScope = nDestroyCount\n"
+        "oReturned = MakeReturned()\n"
+        "nDestroyAfterReturn = nDestroyCount\n"
+        "RELEASE oReturned\n"
+        "nDestroyAfterReturnedRelease = nDestroyCount\n"
+        "RETURN\n"
+        "PROCEDURE MakeLocal\n"
+        "    LOCAL oLocal\n"
+        "    oLocal = CREATEOBJECT('ScopeWorker')\n"
+        "ENDPROC\n"
+        "PROCEDURE MakeAlias\n"
+        "    LOCAL oAlias\n"
+        "    oAlias = oGlobal\n"
+        "ENDPROC\n"
+        "PROCEDURE MakeArray\n"
+        "    LOCAL aObjects\n"
+        "    DIMENSION aObjects[2]\n"
+        "    aObjects[1] = CREATEOBJECT('ScopeWorker')\n"
+        "    aObjects[2] = CREATEOBJECT('ScopeWorker')\n"
+        "ENDPROC\n"
+        "FUNCTION MakeReturned\n"
+        "    LOCAL oLocal\n"
+        "    oLocal = CREATEOBJECT('ScopeWorker')\n"
+        "    RETURN oLocal\n"
+        "ENDFUNC\n"
+        "DEFINE CLASS ScopeWorker AS Custom\n"
+        "    PROCEDURE Destroy\n"
+        "        nDestroyCount = nDestroyCount + 1\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("scope-exit object lifetime script should complete: ") + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    check("ndestroyafterlocal", "1");
+    check("ndestroyafteraliasscope", "1");
+    check("ndestroyafterglobalrelease", "2");
+    check("ndestroyafterarrayscope", "4");
+    check("ndestroyafterreturn", "4");
+    check("ndestroyafterreturnedrelease", "5");
+    expect(state.ole_objects.empty(),
+           "scope-exit lifetime test should release every unreferenced native object");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
     test_newobject_local_vcx_fails_closed_without_fabricated_ole_state();
     test_release_object_alias_waits_for_last_variable_reference();
+    test_scope_exit_releases_unreferenced_objects_and_preserves_returns();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";
