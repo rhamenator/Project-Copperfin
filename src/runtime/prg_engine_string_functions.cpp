@@ -998,15 +998,15 @@ std::optional<PrgValue> evaluate_string_function(
         std::ostringstream stream;
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
         std::string result = stream.str();
-        if (arguments.size() >= 2U) {
-            const int width = static_cast<int>(std::llround(value_as_number(arguments[1])));
-            if (width > 0) {
-                if (result.size() > static_cast<std::size_t>(width)) {
-                    return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
-                }
-                if (result.size() < static_cast<std::size_t>(width)) {
-                    result.insert(result.begin(), static_cast<std::size_t>(width) - result.size(), ' ');
-                }
+        const int width = arguments.size() >= 2U
+                              ? static_cast<int>(std::llround(value_as_number(arguments[1])))
+                              : 10;
+        if (width > 0) {
+            if (result.size() > static_cast<std::size_t>(width)) {
+                return make_string_value(std::string(static_cast<std::size_t>(width), '*'));
+            }
+            if (result.size() < static_cast<std::size_t>(width)) {
+                result.insert(result.begin(), static_cast<std::size_t>(width) - result.size(), ' ');
             }
         }
         return make_string_value(std::move(result));

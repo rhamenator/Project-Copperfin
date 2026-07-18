@@ -408,7 +408,7 @@ namespace
         check("soundex_schmidt", "S530");
         check("difference_tamar_ted", "2");
         check("difference_ted_teddy", "4");
-        check("str_default", "43");
+        check("str_default", "        43");
         check("str_width", "   42");
         check("str_decimals", "   42.68");
         check("str_overflow", "***");
