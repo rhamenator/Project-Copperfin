@@ -573,8 +573,10 @@ bool prepare_package_content_root(
             &content_information,
             AT_SYMLINK_NOFOLLOW) == 0 &&
             S_ISDIR(content_information.st_mode);
-        (void)::close(package_descriptor);
         if (!is_directory) {
+            const int saved_errno = errno;
+            (void)::close(package_descriptor);
+            errno = saved_errno;
             trace_content_root_failure("stat-content", absolute_content_root);
             error = content_root_creation_failed();
             return false;
