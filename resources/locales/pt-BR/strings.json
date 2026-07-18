@@ -1424,6 +1424,7 @@
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} exige um argumento positivo (recebeu {value})",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} exige um argumento entre -1 e 1 (recebeu {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} exige um registro local atual",
+  "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "APPEND BLANK nao e compativel com o modo de buffer de linha {mode}",
   "Runtime.Prg.Records.Error.CursorBufferingNotEnabled": "{command} requer o buffer do cursor",
   "Runtime.Prg.Records.Error.PendingCursorBufferChanges": "As alterações pendentes do buffer do cursor devem ser confirmadas ou revertidas antes de {command}",
   "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode": "Modo de buffer do cursor sem suporte: {mode}",

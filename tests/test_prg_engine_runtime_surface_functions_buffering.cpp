@@ -38,7 +38,7 @@ namespace copperfin::runtime_surface_tests
             "REPLACE NAME WITH 'Discarded' IN people\n"
             "TABLEREVERT(.T., 'people')\n"
             "cReverted = people.NAME\n"
-            "lUnsupported = CURSORSETPROP('Buffering', 2, 'people')\n"
+            "lUnsupported = CURSORSETPROP('Buffering', 4, 'people')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -294,6 +294,10 @@ namespace copperfin::runtime_surface_tests
             "cBeforeRevert = people.NAME\n"
             "TABLEREVERT(.T., 'people')\n"
             "cReverted = people.NAME\n"
+            "DELETE IN people\n"
+            "lDeleted = DELETED()\n"
+            "TABLEREVERT(.T., 'people')\n"
+            "lDeleteReverted = DELETED()\n"
             "REPLACE NAME WITH 'MoveCommitted' IN people\n"
             "GO 2 IN people\n"
             "cSecond = people.NAME\n"
@@ -327,6 +331,8 @@ namespace copperfin::runtime_surface_tests
         expect(value_for("ccommitted") == "RowPending", "TABLEUPDATE should commit the current row");
         expect(value_for("cbeforerevert") == "RowReverted", "row buffering should expose the second pending value");
         expect(value_for("creverted") == "RowPending", "TABLEREVERT should discard the current row change");
+        expect(value_for("ldeleted") == "true", "row buffering should expose a pending deletion");
+        expect(value_for("ldeletereverted") == "false", "TABLEREVERT should discard a pending deletion");
         expect(value_for("csecond") == "Other", "moving off a buffered row should select the target row");
         expect(value_for("caftermove") == "MoveCommitted", "moving off a changed row should commit it");
 
@@ -335,6 +341,109 @@ namespace copperfin::runtime_surface_tests
                    after_resume.table.records[0].values[0].display_value == "MoveCommitted" &&
                    after_resume.table.records[1].values[0].display_value == "Other",
                "row buffering should persist explicit and navigation commits only");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_local_pessimistic_row_buffering()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_surface_pessimistic_row_buffering";
+        const fs::path table_path = temp_root / "people.dbf";
+        const fs::path program_path = temp_root / "pessimistic_row_buffering.prg";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            {{.name = "NAME", .type = 'C', .length = 24U}},
+            {{"Before"}, {"Other"}});
+        expect(create_result.ok, "pessimistic row buffering fixture should be writable");
+
+        write_text(
+            program_path,
+            "USE '" + table_path.string() + "' ALIAS people\n"
+            "SET REPROCESS TO 0\n"
+            "lSet = CURSORSETPROP('Buffering', 2, 'people')\n"
+            "nMode = CURSORGETPROP('Buffering', 'people')\n"
+            "REPLACE NAME WITH 'Pending' IN people\n"
+            "cPending = people.NAME\n"
+            "lLockedPending = ISRLOCKED('people')\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "lUnlockedUpdate = !ISRLOCKED('people')\n"
+            "REPLACE NAME WITH 'Reverted' IN people\n"
+            "lLockedRevert = ISRLOCKED('people')\n"
+            "TABLEREVERT(.T., 'people')\n"
+            "lUnlockedRevert = !ISRLOCKED('people')\n"
+            "REPLACE NAME WITH 'MovedCommit' IN people\n"
+            "GO 2 IN people\n"
+            "cSecond = people.NAME\n"
+            "lUnlockedMove = !ISRLOCKED('people')\n"
+            "GO 1 IN people\n"
+            "REPLACE NAME WITH 'Held' IN people\n"
+            "lHeld = ISRLOCKED('people')\n"
+            "SET DATASESSION TO 2\n"
+            "USE '" + table_path.string() + "' ALIAS other\n"
+            "SET REPROCESS TO 0\n"
+            "= CURSORSETPROP('Buffering', 2, 'other')\n"
+            "GO 1 IN other\n"
+            "lCompeting = .T.\n"
+            "TRY\n"
+            "    REPLACE NAME WITH 'Blocked' IN other\n"
+            "CATCH TO loError\n"
+            "    lCompeting = .F.\n"
+            "ENDTRY\n"
+            "SET DATASESSION TO 1\n"
+            "lStillHeld = ISRLOCKED('people')\n"
+            "TABLEUPDATE(.T., .T., 'people')\n"
+            "SET DATASESSION TO 2\n"
+            "REPLACE NAME WITH 'SecondCanEdit' IN other\n"
+            "lSecondUpdate = TABLEUPDATE(.T., .T., 'other')\n"
+            "SET DATASESSION TO 1\n"
+            "cFinal = people.NAME\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 7U});
+        const auto paused = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(paused.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+               "pessimistic row buffering regression should pause before the first update");
+
+        const auto before_update = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+        expect(before_update.ok && before_update.table.records.size() == 2U &&
+                   before_update.table.records[0].values[0].display_value == "Before",
+               "pessimistic row buffering should leave disk unchanged before TABLEUPDATE");
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "pessimistic row buffering regression should complete after resume");
+        const auto value_for = [&](const std::string &name) -> std::string
+        {
+            const auto found = state.globals.find(name);
+            return found == state.globals.end() ? std::string{} : copperfin::runtime::format_value(found->second);
+        };
+        expect(value_for("lset") == "true", "CURSORSETPROP Buffering 2 should succeed");
+        expect(value_for("nmode") == "2", "CURSORGETPROP Buffering should report mode 2");
+        expect(value_for("cpending") == "Pending", "pessimistic row buffering should expose pending field values");
+        expect(value_for("llockedpending") == "true", "mode 2 should retain a record lock while editing");
+        expect(value_for("lunlockedupdate") == "true", "TABLEUPDATE should release the mode-2 record lock");
+        expect(value_for("llockedrevert") == "true", "mode 2 should lock a row before a revert");
+        expect(value_for("lunlockedrevert") == "true", "TABLEREVERT should release the mode-2 record lock");
+        expect(value_for("csecond") == "Other", "navigation should select the target row after a mode-2 commit");
+        expect(value_for("lunlockedmove") == "true", "navigation commit should release the mode-2 record lock");
+        expect(value_for("lheld") == "true", "mode 2 should retain the lock for a pending row");
+        expect(value_for("lcompeting") == "false", "a competing data session should not edit a locked row");
+        expect(value_for("lstillheld") == "true", "a failed competing edit should not release the owner lock");
+        expect(value_for("lsecondupdate") == "true", "the competing session should edit after the owner commits");
+        expect(value_for("cfinal") == "SecondCanEdit", "the competing session commit should persist after release");
+
+        const auto after_resume = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+        expect(after_resume.ok && after_resume.table.records.size() == 2U &&
+                   after_resume.table.records[0].values[0].display_value == "SecondCanEdit" &&
+                   after_resume.table.records[1].values[0].display_value == "Other",
+               "pessimistic row buffering should persist only committed values");
 
         fs::remove_all(temp_root, ignored);
     }

@@ -699,6 +699,7 @@ namespace copperfin::runtime
             std::string filter_expression;
             int buffering_mode = 1;
             std::map<std::size_t, vfp::DbfRecord> buffered_records;
+            std::set<std::size_t> buffered_record_locks;
             std::set<std::size_t> buffered_appended_records;
             std::vector<vfp::DbfRecord> remote_records;
             std::vector<vfp::DbfFieldDescriptor> remote_fields;

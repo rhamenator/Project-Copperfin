@@ -9,6 +9,7 @@ int main()
     test_local_optimistic_table_buffering_append_lifecycle();
     test_local_optimistic_table_buffering_delete_recall();
     test_local_optimistic_row_buffering();
+    test_local_pessimistic_row_buffering();
 
     if (test_failures() != 0)
     {

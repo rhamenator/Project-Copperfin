@@ -1157,7 +1157,7 @@
                 return true;
             }
 
-            if (cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
             {
                 if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
                 {
@@ -1168,11 +1168,30 @@
                 }
 
                 auto buffered = cursor.buffered_records.find(cursor.recno);
+                bool acquired_mode2_lock = false;
+                if (cursor.buffering_mode == 2 && !cursor.buffered_record_locks.contains(cursor.recno))
+                {
+                    bool new_lock = false;
+                    if (!acquire_record_lock(cursor, cursor.recno, "REPLACE", false, new_lock))
+                    {
+                        return false;
+                    }
+                    if (new_lock)
+                    {
+                        cursor.buffered_record_locks.insert(cursor.recno);
+                        acquired_mode2_lock = true;
+                    }
+                }
                 if (buffered == cursor.buffered_records.end())
                 {
                     const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, cursor.recno);
                     if (!table_result.ok || cursor.recno > table_result.table.records.size())
                     {
+                        if (acquired_mode2_lock)
+                        {
+                            cursor.buffered_record_locks.erase(cursor.recno);
+                            unlock_cursor_record_lock(cursor, cursor.recno);
+                        }
                         last_error_message = table_result.error.empty()
                             ? runtime_text("Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord", {{"command", "REPLACE"}})
                             : table_result.error;
@@ -1628,6 +1647,10 @@
             }
             cursor.record_count = deleted_result.record_count;
             cursor.buffered_records.erase(buffered);
+            if (cursor.buffering_mode == 2 && cursor.buffered_record_locks.erase(recno) != 0U)
+            {
+                unlock_cursor_record_lock(cursor, recno);
+            }
             return true;
         }
 
@@ -1689,7 +1712,7 @@
                     return make_boolean_value(false);
                 }
                 const int requested_mode = static_cast<int>(std::llround(value_as_number(arguments[1])));
-                if (requested_mode != 1 && requested_mode != 3 && requested_mode != 5)
+                if (requested_mode != 1 && requested_mode != 2 && requested_mode != 3 && requested_mode != 5)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Records.Error.UnsupportedCursorBufferingMode",
@@ -1714,7 +1737,7 @@
             {
                 return make_boolean_value(false);
             }
-            if (cursor->buffering_mode != 3 && cursor->buffering_mode != 5)
+            if (cursor->buffering_mode != 2 && cursor->buffering_mode != 3 && cursor->buffering_mode != 5)
             {
                 last_error_message = runtime_text(
                     "Runtime.Prg.Records.Error.CursorBufferingNotEnabled",
@@ -1723,11 +1746,15 @@
             }
             if (revert)
             {
-                if (cursor->buffering_mode == 3)
+                if (cursor->buffering_mode == 2 || cursor->buffering_mode == 3)
                 {
                     if (cursor->recno != 0U && !cursor->eof)
                     {
                         cursor->buffered_records.erase(cursor->recno);
+                        if (cursor->buffered_record_locks.erase(cursor->recno) != 0U)
+                        {
+                            unlock_cursor_record_lock(*cursor, cursor->recno);
+                        }
                     }
                     return make_boolean_value(true);
                 }
@@ -1743,7 +1770,7 @@
                 return make_boolean_value(true);
             }
 
-            if (cursor->buffering_mode == 3)
+            if (cursor->buffering_mode == 2 || cursor->buffering_mode == 3)
             {
                 return make_boolean_value(
                     cursor->recno == 0U || cursor->eof ||
@@ -1983,6 +2010,14 @@
                 return false;
             }
 
+            if (cursor.buffering_mode == 2)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported",
+                    {{"mode", "2"}});
+                return false;
+            }
+
             if (cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
             {
                 const auto table_result = vfp::parse_dbf_table_from_file(
@@ -2092,8 +2127,14 @@
                 return false;
             }
 
-            if (cursor.buffering_mode == 5)
+            if (cursor.buffering_mode == 2 || cursor.buffering_mode == 3 || cursor.buffering_mode == 5)
             {
+                if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 3) &&
+                    (scope.has_value() || !for_expression.empty() || !while_expression.empty()))
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresCurrentLocalRecord");
+                    return false;
+                }
                 std::vector<std::size_t> target_records;
                 if (!scope.has_value() && for_expression.empty() && while_expression.empty())
                 {
@@ -2117,12 +2158,28 @@
 
                 for (const std::size_t recno : target_records)
                 {
+                    if (cursor.buffering_mode == 2 && !cursor.buffered_record_locks.contains(recno))
+                    {
+                        bool new_lock = false;
+                        if (!acquire_record_lock(cursor, recno, deleted ? "DELETE" : "RECALL", false, new_lock))
+                        {
+                            return false;
+                        }
+                        if (new_lock)
+                        {
+                            cursor.buffered_record_locks.insert(recno);
+                        }
+                    }
                     auto buffered = cursor.buffered_records.find(recno);
                     if (buffered == cursor.buffered_records.end())
                     {
                         const auto table_result = vfp::parse_dbf_table_from_file(cursor.source_path, recno);
                         if (!table_result.ok || recno > table_result.table.records.size())
                         {
+                            if (cursor.buffering_mode == 2 && cursor.buffered_record_locks.erase(recno) != 0U)
+                            {
+                                unlock_cursor_record_lock(cursor, recno);
+                            }
                             last_error_message = table_result.error.empty()
                                 ? runtime_text("Runtime.Prg.Records.Error.RequiresCurrentLocalRecord")
                                 : table_result.error;
@@ -2383,9 +2440,10 @@
             DataSessionState &session = current_session_state();
             if (all_locks || cursor == nullptr)
             {
-                for (const auto &[_, held_cursor] : session.cursors)
+                for (auto &[_, held_cursor] : session.cursors)
                 {
                     release_shared_lock_ownership_for_cursor(held_cursor, session, current_data_session);
+                    held_cursor.buffered_record_locks.clear();
                 }
                 session.table_locks.clear();
                 session.record_locks.clear();
@@ -2393,6 +2451,7 @@
             }
 
             release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
+            cursor->buffered_record_locks.clear();
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
         }
@@ -2400,6 +2459,7 @@
         void unlock_cursor_record_lock(CursorState &cursor, std::size_t recno)
         {
             DataSessionState &session = current_session_state();
+            cursor.buffered_record_locks.erase(recno);
             auto found = session.record_locks.find(cursor.work_area);
             if (found == session.record_locks.end())
             {

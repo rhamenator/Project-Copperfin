@@ -881,7 +881,7 @@
 
         bool move_cursor_to(CursorState &cursor, long long target_recno)
         {
-            if (cursor.buffering_mode == 3 &&
+            if ((cursor.buffering_mode == 2 || cursor.buffering_mode == 3) &&
                 cursor.recno != 0U &&
                 !cursor.eof &&
                 cursor.buffered_records.contains(cursor.recno) &&
