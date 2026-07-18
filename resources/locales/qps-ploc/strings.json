@@ -1434,6 +1434,7 @@
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "This command requires a current remote record",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "This command requires a local table-backed cursor",
   "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}",
+  "Runtime.Prg.RuntimeSurface.Error.CollectionKeyNotUnique": "Collection key value is not unique.",
   "Runtime.Prg.RuntimeSurface.Error.CpDbfAliasNotFound": "CPDBF target alias not found: {alias}",
   "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "{function} fallback: unable to enumerate class chain",
   "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "{function} fallback: unable to enumerate members, returning empty array",

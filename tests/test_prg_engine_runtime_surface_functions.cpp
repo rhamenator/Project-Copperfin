@@ -6494,6 +6494,58 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_collection_duplicate_key_raises_without_mutation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_collection_duplicate_key";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_collection_duplicate_key.prg";
+        write_text(
+            main_path,
+            "oItems = CREATEOBJECT('Collection')\n"
+            "oItems.Add('first', 'shared')\n"
+            "nBeforeCount = oItems.Count\n"
+            "TRY\n"
+            "    oItems.Add('second', 'shared')\n"
+            "    lCaught = .F.\n"
+            "CATCH TO oError\n"
+            "    lCaught = .T.\n"
+            "    cCaughtMessage = oError.Message\n"
+            "ENDTRY\n"
+            "nAfterCount = oItems.Count\n"
+            "cAfterItem = oItems.Item('shared')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Collection duplicate-key script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lcaught", "true");
+        check("nbeforecount", "1");
+        check("naftercount", "1");
+        check("cafteritem", "first");
+        check("ccaughtmessage", "Runtime fault: Collection key value is not unique.");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_collection_subscript_access_routes_to_items_and_preserves_member_chains()
     {
         namespace fs = std::filesystem;
@@ -54771,6 +54823,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_collection_native_class();
     test_native_collection_default_item_invocation_routes_bare_and_member_path_calls();
     test_native_collection_default_item_calls_preserve_member_chains();
+    test_native_collection_duplicate_key_raises_without_mutation();
     test_native_collection_subscript_access_routes_to_items_and_preserves_member_chains();
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();

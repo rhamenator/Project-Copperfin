@@ -3488,8 +3488,8 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
                                             runtime_object.collection_item_keys.end(),
                                             key);
             if (existing != runtime_object.collection_item_keys.end()) {
-                runtime_object.collection_items[static_cast<std::size_t>(
-                    std::distance(runtime_object.collection_item_keys.begin(), existing))] = arguments[0];
+                throw std::runtime_error(
+                    runtime_text("Runtime.Prg.RuntimeSurface.Error.CollectionKeyNotUnique"));
             } else {
                 runtime_object.collection_items.push_back(arguments[0]);
                 runtime_object.collection_item_keys.push_back(key);
