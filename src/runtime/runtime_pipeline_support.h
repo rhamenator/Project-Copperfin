@@ -92,7 +92,8 @@ bool copy_file_if_exists(
 bool prepare_package_content_root(
     const std::filesystem::path& package_root,
     const std::filesystem::path& content_root,
-    std::string& error);
+    std::string& error,
+    int* content_descriptor = nullptr);
 bool copy_file_to_package_content(
     const std::filesystem::path& source,
     const std::filesystem::path& package_root,

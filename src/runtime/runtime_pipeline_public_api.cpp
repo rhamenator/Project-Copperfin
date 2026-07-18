@@ -933,25 +933,6 @@ public:
             "Runtime.Package.Error.PackageTransactionStartFailed");
     }
 
-    bool acquire_pinned_content_identity(
-        PackageParentIdentity& content_identity,
-        const std::filesystem::path& content_root) const {
-#if defined(_WIN32)
-        return content_identity.acquire(content_root);
-#else
-        int package_descriptor = -1;
-        if (!parent_identity_.open_child_directory(package_root_, package_descriptor)) {
-            return false;
-        }
-        const int content_descriptor = ::openat(
-            package_descriptor,
-            copperfin::platform::path_to_utf8_string(content_root.filename()).c_str(),
-            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
-        (void)::close(package_descriptor);
-        return content_identity.adopt_descriptor(content_descriptor, content_root);
-#endif
-    }
-
     [[nodiscard]] RuntimePackagePlan pinned_filesystem_plan(
         const RuntimePackagePlan& logical_plan) const {
         RuntimePackagePlan filesystem_plan = logical_plan;
@@ -1873,16 +1854,34 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     if (!transaction.validate_parent_identity_for_materialization(error)) {
         return {.ok = false, .error = error};
     }
+    PackageParentIdentity content_identity;
+    const std::filesystem::path content_root_path =
+        copperfin::platform::path_from_utf8_string(filesystem_plan.content_root);
+#if !defined(_WIN32)
+    int content_descriptor = -1;
+#endif
     if (!prepare_package_content_root(
             filesystem_plan.package_root,
             filesystem_plan.content_root,
-            error)) {
-        return {.ok = false, .error = error};
+            error,
+#if !defined(_WIN32)
+            &content_descriptor
+#else
+            nullptr
+#endif
+        )) {
+        return {
+            .ok = false,
+            .error = error};
     }
-    PackageParentIdentity content_identity;
-    if (!transaction.acquire_pinned_content_identity(
-            content_identity,
-            copperfin::platform::path_from_utf8_string(filesystem_plan.content_root))) {
+#if !defined(_WIN32)
+    const bool content_identity_acquired = content_descriptor >= 0
+        ? content_identity.adopt_descriptor(content_descriptor, content_root_path)
+        : content_identity.acquire(content_root_path);
+#else
+    const bool content_identity_acquired = content_identity.acquire(content_root_path);
+#endif
+    if (!content_identity_acquired) {
         return {
             .ok = false,
             .error = runtime_text(

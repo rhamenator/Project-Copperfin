@@ -497,7 +497,15 @@ bool prepare_direct_parent(
 bool prepare_package_content_root(
     const std::filesystem::path& package_root,
     const std::filesystem::path& content_root,
-    std::string& error) {
+    std::string& error,
+    int* content_descriptor_out) {
+#if !defined(_WIN32)
+    if (content_descriptor_out != nullptr) {
+        *content_descriptor_out = -1;
+    }
+#else
+    (void)content_descriptor_out;
+#endif
     std::error_code filesystem_error;
     const std::filesystem::path absolute_package_root =
         std::filesystem::absolute(package_root, filesystem_error).lexically_normal();
@@ -550,6 +558,18 @@ bool prepare_package_content_root(
             error = content_root_creation_failed();
             return false;
         }
+        if (content_descriptor_out != nullptr) {
+            *content_descriptor_out = ::openat(
+                package_descriptor,
+                content_leaf.c_str(),
+                O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+            if (*content_descriptor_out < 0) {
+                (void)::close(package_descriptor);
+                error = content_root_creation_failed();
+                return false;
+            }
+        }
+        (void)::close(package_descriptor);
         return true;
     }
 #endif
