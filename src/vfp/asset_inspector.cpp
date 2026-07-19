@@ -38,7 +38,7 @@ std::string asset_inspector_text(
 }
 
 std::string lowercase_extension(const std::filesystem::path& path) {
-    std::string ext = path.extension().string();
+    std::string ext = copperfin::platform::path_to_utf8_string(path.extension());
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
@@ -106,12 +106,13 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::f
         return std::nullopt;
     }
 
-    const std::string target_name = lowercase_copy(candidate.filename().string());
+    const std::string target_name = lowercase_copy(
+        copperfin::platform::path_to_utf8_string(candidate.filename()));
     for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
         if (ignored) {
             break;
         }
-        if (lowercase_copy(entry.path().filename().string()) == target_name) {
+        if (lowercase_copy(copperfin::platform::path_to_utf8_string(entry.path().filename())) == target_name) {
             return entry.path();
         }
     }
@@ -181,7 +182,7 @@ std::uint32_t read_be_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
 }
 
 std::vector<std::uint8_t> read_binary_file(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!input) {
         return {};
     }
@@ -442,25 +443,26 @@ void append_if_missing(std::vector<std::string>& paths, const std::string& candi
 
 std::vector<std::string> companion_index_paths_for(const std::filesystem::path& path, AssetFamily family) {
     std::vector<std::string> candidates;
+    const std::string path_text = copperfin::platform::path_to_utf8_string(path);
     const auto with_extension = [&](const char* extension) {
         std::filesystem::path candidate = path;
         candidate.replace_extension(extension);
-        return candidate.string();
+        return copperfin::platform::path_to_utf8_string(candidate);
     };
 
     switch (family) {
         case AssetFamily::table:
-            append_if_missing(candidates, path.string() + ".cdx");
-            append_if_missing(candidates, path.string() + ".idx");
-            append_if_missing(candidates, path.string() + ".ndx");
-            append_if_missing(candidates, path.string() + ".mdx");
+            append_if_missing(candidates, path_text + ".cdx");
+            append_if_missing(candidates, path_text + ".idx");
+            append_if_missing(candidates, path_text + ".ndx");
+            append_if_missing(candidates, path_text + ".mdx");
             append_if_missing(candidates, with_extension(".cdx"));
             append_if_missing(candidates, with_extension(".idx"));
             append_if_missing(candidates, with_extension(".ndx"));
             append_if_missing(candidates, with_extension(".mdx"));
             return candidates;
         case AssetFamily::database_container:
-            append_if_missing(candidates, path.string() + ".dcx");
+            append_if_missing(candidates, copperfin::platform::path_to_utf8_string(path) + ".dcx");
             append_if_missing(candidates, with_extension(".dcx"));
             return candidates;
         case AssetFamily::project:
@@ -480,16 +482,17 @@ std::vector<std::string> companion_index_paths_for(const std::filesystem::path& 
 
 std::vector<std::string> expected_structural_companion_paths_for(const std::filesystem::path& path, AssetFamily family) {
     std::vector<std::string> candidates;
+    const std::string path_text = copperfin::platform::path_to_utf8_string(path);
     const auto with_extension = [&](const char* extension) {
         std::filesystem::path candidate = path;
         candidate.replace_extension(extension);
-        return candidate.string();
+        return copperfin::platform::path_to_utf8_string(candidate);
     };
 
     switch (family) {
         case AssetFamily::table:
-            append_if_missing(candidates, path.string() + ".cdx");
-            append_if_missing(candidates, path.string() + ".mdx");
+            append_if_missing(candidates, path_text + ".cdx");
+            append_if_missing(candidates, path_text + ".mdx");
             append_if_missing(candidates, with_extension(".cdx"));
             append_if_missing(candidates, with_extension(".mdx"));
             return candidates;
@@ -513,7 +516,8 @@ std::vector<std::string> expected_structural_companion_paths_for(const std::file
 
 bool any_existing_path(const std::vector<std::string>& candidates) {
     return std::any_of(candidates.begin(), candidates.end(), [](const std::string& candidate) {
-        return resolve_existing_path_casefold(candidate).has_value();
+        return resolve_existing_path_casefold(
+            copperfin::platform::path_from_utf8_string(candidate)).has_value();
     });
 }
 
@@ -734,29 +738,29 @@ void validate_expected_companions(
     AssetFamily family,
     const DbfHeader& header,
     const std::string& memo_sidecar_path) {
-    const std::filesystem::path file_path(path);
+    const std::filesystem::path file_path = copperfin::platform::path_from_utf8_string(path);
 
     if (asset_expects_memo_sidecar(family, header)) {
         const SidecarPathResolution memo_resolution =
             memo_sidecar_resolution_for(file_path, memo_sidecar_path);
-        const std::string memo_path = memo_resolution.path.value_or(
-            memo_resolution.requested_path).string();
-        if (!memo_path.empty()) {
+        const auto memo_path = memo_resolution.path.value_or(memo_resolution.requested_path);
+        const std::string memo_path_text = copperfin::platform::path_to_utf8_string(memo_path);
+        if (!memo_path_text.empty()) {
             if (memo_resolution.ambiguous) {
                 append_validation_issue(
                     result,
                     AssetValidationSeverity::error,
                     "memo.sidecar_ambiguous",
-                    memo_resolution.requested_path.string(),
+                    copperfin::platform::path_to_utf8_string(memo_resolution.requested_path),
                     asset_inspector_text(
                         "Vfp.Sidecar.Error.AmbiguousPath",
-                        {{"path", memo_resolution.requested_path.string()}}));
+                        {{"path", copperfin::platform::path_to_utf8_string(memo_resolution.requested_path)}}));
             } else if (!memo_resolution.path.has_value()) {
                 append_validation_issue(
                     result,
                     AssetValidationSeverity::error,
                     "memo.sidecar_missing",
-                    memo_path,
+                    memo_path_text,
                     asset_inspector_text("Vfp.AssetInspector.Validation.MemoSidecarMissing"));
             }
         }
@@ -792,11 +796,12 @@ void validate_memo_sidecar(
     }
 
     const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
-        std::filesystem::path(table_path),
+        copperfin::platform::path_from_utf8_string(table_path),
         memo_sidecar_path);
-    const std::string memo_path = memo_resolution.path.value_or(
-        memo_resolution.requested_path).string();
-    if (memo_path.empty()) {
+    const auto memo_path = memo_resolution.path.value_or(
+        memo_resolution.requested_path);
+    const std::string memo_path_text = copperfin::platform::path_to_utf8_string(memo_path);
+    if (memo_path_text.empty()) {
         return;
     }
 
@@ -808,7 +813,7 @@ void validate_memo_sidecar(
         return;
     }
 
-    const std::string resolved_memo_path_text = resolved_memo_path->string();
+    const std::string resolved_memo_path_text = copperfin::platform::path_to_utf8_string(*resolved_memo_path);
     const std::vector<std::uint8_t> memo_bytes = read_binary_file(resolved_memo_path_text);
     if (memo_bytes.size() < 8U) {
         append_validation_issue(
@@ -926,7 +931,7 @@ void validate_memo_sidecar(
 }  // namespace
 
 AssetFamily asset_family_from_path(const std::string& path) {
-    const std::string ext = lowercase_extension(std::filesystem::path(path));
+    const std::string ext = lowercase_extension(copperfin::platform::path_from_utf8_string(path));
 
     if (ext == ".pjx" || ext == ".pjt") {
         return AssetFamily::project;
@@ -1011,8 +1016,9 @@ AssetInspectionResult inspect_asset(
     AssetInspectionResult result;
     result.path = path;
     result.family = asset_family_from_path(path);
+    const std::filesystem::path asset_path = copperfin::platform::path_from_utf8_string(path);
 
-    if (!std::filesystem::exists(path)) {
+    if (!std::filesystem::exists(asset_path)) {
         result.ok = false;
         result.error = asset_inspector_text("Vfp.AssetInspector.Error.PathMissing");
         return result;
@@ -1046,13 +1052,13 @@ AssetInspectionResult inspect_asset(
 
     if (result.family != AssetFamily::table) {
         const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
-            std::filesystem::path(path),
+            asset_path,
             memo_sidecar_path);
         if (memo_resolution.ambiguous) {
             result.ok = false;
             result.error = asset_inspector_text(
                 "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", memo_resolution.requested_path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(memo_resolution.requested_path)}});
             return result;
         }
     }
@@ -1066,13 +1072,13 @@ AssetInspectionResult inspect_asset(
 
     if (result.family == AssetFamily::table && header_result.header.has_memo_file()) {
         const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
-            std::filesystem::path(path),
+            asset_path,
             memo_sidecar_path);
         if (memo_resolution.ambiguous) {
             result.ok = false;
             result.error = asset_inspector_text(
                 "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", memo_resolution.requested_path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(memo_resolution.requested_path)}});
             return result;
         }
     }
@@ -1080,19 +1086,19 @@ AssetInspectionResult inspect_asset(
     result.ok = true;
     result.header_available = true;
     result.header = header_result.header;
-    const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
+    const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(asset_path));
     const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
 
     if (result.family == AssetFamily::table &&
         table_bytes_declare_memo_field(table_bytes, result.header)) {
         const SidecarPathResolution memo_resolution = memo_sidecar_resolution_for(
-            std::filesystem::path(path),
+            asset_path,
             memo_sidecar_path);
         if (memo_resolution.ambiguous) {
             result.ok = false;
             result.error = asset_inspector_text(
                 "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", memo_resolution.requested_path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(memo_resolution.requested_path)}});
             return result;
         }
     }
@@ -1106,13 +1112,15 @@ AssetInspectionResult inspect_asset(
         extract_database_container_metadata(result, path, result.header);
     }
 
-    for (const auto& companion_index : companion_index_paths_for(std::filesystem::path(path), result.family)) {
-        const auto resolved_companion_index = resolve_existing_path_casefold(companion_index);
+    for (const auto& companion_index : companion_index_paths_for(asset_path, result.family)) {
+        const auto resolved_companion_index = resolve_existing_path_casefold(
+            copperfin::platform::path_from_utf8_string(companion_index));
         if (!resolved_companion_index.has_value()) {
             continue;
         }
 
-        const std::string resolved_companion_index_text = resolved_companion_index->string();
+        const std::string resolved_companion_index_text =
+            copperfin::platform::path_to_utf8_string(*resolved_companion_index);
         const auto* override_bytes = find_byte_override(
             byte_overrides,
             *resolved_companion_index);
@@ -1430,8 +1438,9 @@ DatabaseExportResult export_database_as_json(
     std::size_t max_rows_per_table) {
 
     namespace fs = std::filesystem;
+    const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
 
-    if (!fs::exists(dbc_path)) {
+    if (!fs::exists(dbc_fs_path)) {
         return {
             .ok = false,
             .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}}),
@@ -1439,14 +1448,13 @@ DatabaseExportResult export_database_as_json(
         };
     }
 
-    const fs::path dbc_fs_path(dbc_path);
     const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(dbc_path);
     if (dct_resolution.ambiguous) {
         return {
             .ok = false,
             .error = asset_inspector_text(
                 "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", dct_resolution.requested_path.string()}}),
+                {{"path", copperfin::platform::path_to_utf8_string(dct_resolution.requested_path)}}),
             .json = {}
         };
     }
@@ -1491,7 +1499,9 @@ DatabaseExportResult export_database_as_json(
 
         if (raw.properties_block != 0U && has_dct) {
             const std::vector<std::uint8_t> prop_bytes =
-                read_memo_block_raw(dct_path->string(), raw.properties_block);
+                read_memo_block_raw(
+                    copperfin::platform::path_to_utf8_string(*dct_path),
+                    raw.properties_block);
             if (!prop_bytes.empty()) {
                 obj.properties = decode_dbc_properties_blob(prop_bytes);
             }
@@ -1505,7 +1515,7 @@ DatabaseExportResult export_database_as_json(
     json << "{\n";
 
     // -- database metadata block
-    std::string db_name = dbc_fs_path.stem().string();
+    std::string db_name = copperfin::platform::path_to_utf8_string(dbc_fs_path.stem());
     const auto database_object = std::find_if(
         catalog.begin(),
         catalog.end(),
@@ -1601,7 +1611,9 @@ DatabaseExportResult export_database_as_json(
         const std::size_t row_limit = (max_rows_per_table == 0U)
                                           ? std::numeric_limits<std::size_t>::max()
                                           : max_rows_per_table;
-        const DbfTableParseResult tbl = parse_dbf_table_from_file(rt.path.string(), row_limit);
+        const DbfTableParseResult tbl = parse_dbf_table_from_file(
+            copperfin::platform::path_to_utf8_string(rt.path),
+            row_limit);
         if (!tbl.ok) {
             // Emit an empty entry rather than skipping to preserve comma correctness
             json << "    \"" << json_escape_str(rt.name) << "\": {\"fields\":[], \"records\":[]}"

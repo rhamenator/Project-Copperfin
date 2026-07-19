@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/cdx_header.h"
 #include "copperfin/vfp/dbf_header.h"
@@ -769,7 +770,8 @@ void test_index_probe_errors_resolve_through_localization_catalog() {
 
 void test_inspect_asset_collects_companion_indexes() {
     namespace fs = std::filesystem;
-    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_assets_tests";
+    const fs::path temp_dir = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string("copperfin_vfp_assets_\xC3\xA9_tests");
     fs::create_directories(temp_dir);
 
     const fs::path table_path = temp_dir / "sample.dbf";
@@ -808,7 +810,8 @@ void test_inspect_asset_collects_companion_indexes() {
         output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     }
 
-    const auto result = copperfin::vfp::inspect_asset(table_path.string());
+    const auto result = copperfin::vfp::inspect_asset(
+        copperfin::platform::path_to_utf8_string(table_path));
     expect(result.ok, "inspect_asset should succeed for a synthetic DBF with companion indexes");
     expect(result.header_available, "inspect_asset should expose the DBF header");
     expect(result.indexes.size() == 3U, "inspect_asset should collect same-base CDX, NDX, and MDX companions");
