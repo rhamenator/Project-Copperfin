@@ -73,7 +73,8 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
     if (process.exit_code != 0) {
         std::cerr << "bridge-response stdout:\n" << process.stdout_text << "\n";
         std::cerr << "bridge-response stderr:\n" << process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
+        std::cerr << "fixture root: "
+                  << copperfin::platform::path_to_utf8_string(temp_root) << "\n";
     }
 
     expect(process.exit_code == 0,
