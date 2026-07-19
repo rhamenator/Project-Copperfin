@@ -12,8 +12,8 @@ namespace Copperfin.VisualStudio;
 
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 [InstalledProductRegistration(
-    "Copperfin for Visual Studio",
-    "Launches Copperfin Studio for Visual FoxPro-style assets and prepares the path toward native asset designers.",
+    "#110",
+    "#112",
     "0.1.0")]
 [ProvideMenuResource("Menus.ctmenu", 1)]
 [ProvideEditorFactory(typeof(CopperfinAssetEditorFactory), 200)]

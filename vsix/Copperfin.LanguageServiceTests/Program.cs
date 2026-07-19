@@ -21,6 +21,7 @@ internal static partial class Program
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
         TestVsixCommandTableLocalizesCommandCaptions();
+        TestVsixInstalledProductRegistrationLocalizesMetadata();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();

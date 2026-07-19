@@ -14,6 +14,8 @@
   "VSIX.Command.BuildProject": "Build Copperfin Project",
   "VSIX.Command.RunProject": "Run Copperfin Project",
   "VSIX.Command.DebugProject": "Debug Copperfin Project",
+  "VSIX.Package.Name": "Copperfin for Visual Studio",
+  "VSIX.Package.Description": "Launches Copperfin Studio for Visual FoxPro-style assets and prepares the path toward native asset designers.",
   "BuildHost.Error.BuildPlanCreationFailed": "Build plan creation failed.",
   "BuildHost.Error.InvalidConfiguration": "Invalid build configuration: {configuration}. Expected debug or release.",
   "BuildHost.Error.DotnetPublishDenied": "dotnet publish denied by external process policy: {error}",

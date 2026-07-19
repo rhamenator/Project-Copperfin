@@ -202,6 +202,85 @@ internal static partial class Program
             "VSIX build should provide explicit neutral and culture resource anchors for CTO satellite merging");
     }
 
+    private static void TestVsixInstalledProductRegistrationLocalizesMetadata()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "VSIX product localization test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var packagePath = Path.Combine(
+            repositoryRoot,
+            "vsix",
+            "Copperfin.VisualStudio",
+            "CopperfinPackage.cs");
+        var packageSource = File.ReadAllText(packagePath);
+        Expect(packageSource.Contains("[InstalledProductRegistration(\n    \"#110\",\n    \"#112\",", StringComparison.Ordinal),
+            "VSIX installed product registration should use stable resource ids instead of embedded English text");
+        Expect(!packageSource.Contains("Launches Copperfin Studio for Visual FoxPro-style assets", StringComparison.Ordinal),
+            "VSIX installed product registration should not retain a hard-coded product description");
+
+        var resources = new Dictionary<string, (string Locale, string FileName)>(StringComparer.Ordinal)
+        {
+            ["en-US"] = ("en-US", "CommandResources.resx"),
+            ["es-419"] = ("es-419", "CommandResources.es.resx"),
+            ["pt-BR"] = ("pt-BR", "CommandResources.pt.resx"),
+            ["qps-ploc"] = ("qps-ploc", "CommandResources.qps-ploc.resx")
+        };
+        var english = new CopperfinLocalization("en-US");
+        foreach (var entry in resources)
+        {
+            var resourcePath = Path.Combine(
+                repositoryRoot,
+                "vsix",
+                "Copperfin.VisualStudio",
+                entry.Value.FileName);
+            var resourceDocument = XDocument.Load(resourcePath);
+            var values = resourceDocument.Root?
+                .Elements("data")
+                .Where(element => (string?)element.Attribute("name") is "110" or "112")
+                .ToDictionary(
+                    element => (string?)element.Attribute("name") ?? string.Empty,
+                    element => element.Element("value")?.Value ?? string.Empty,
+                    StringComparer.Ordinal) ??
+                new Dictionary<string, string>(StringComparer.Ordinal);
+            var localization = new CopperfinLocalization(entry.Value.Locale);
+            var productName = values.TryGetValue("110", out var nameValue) ? nameValue : string.Empty;
+            var productDescription = values.TryGetValue("112", out var descriptionValue) ? descriptionValue : string.Empty;
+            Expect(values.ContainsKey("110") && values.ContainsKey("112"),
+                $"{entry.Key} VSIX product resources should define both registration strings");
+            Expect(productName == localization.Text("VSIX.Package.Name") &&
+                   productDescription == localization.Text("VSIX.Package.Description"),
+                $"{entry.Key} VSIX product resources should match the shared localization catalog");
+            if (!string.Equals(entry.Key, "en-US", StringComparison.OrdinalIgnoreCase))
+            {
+                Expect(productName != english.Text("VSIX.Package.Name") &&
+                       productDescription != english.Text("VSIX.Package.Description"),
+                    $"{entry.Key} VSIX product registration should not expose raw English text");
+            }
+
+            var catalogPath = Path.Combine(
+                repositoryRoot,
+                "resources",
+                "locales",
+                entry.Key,
+                "strings.json");
+            using var catalog = JsonDocument.Parse(File.ReadAllText(catalogPath));
+            var expectedCatalogName = string.Equals(entry.Key, "qps-ploc", StringComparison.OrdinalIgnoreCase)
+                ? english.Text("VSIX.Package.Name")
+                : localization.Text("VSIX.Package.Name");
+            var expectedCatalogDescription = string.Equals(entry.Key, "qps-ploc", StringComparison.OrdinalIgnoreCase)
+                ? english.Text("VSIX.Package.Description")
+                : localization.Text("VSIX.Package.Description");
+            Expect(catalog.RootElement.GetProperty("VSIX.Package.Name").GetString() == expectedCatalogName &&
+                   catalog.RootElement.GetProperty("VSIX.Package.Description").GetString() == expectedCatalogDescription,
+                $"{entry.Key} product catalog should define stable VSIX registration keys");
+        }
+    }
+
     private static string? FindRepositoryRoot()
     {
         foreach (var startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
