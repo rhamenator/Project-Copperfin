@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using DiagnosticsProcess = System.Diagnostics.Process;
 using DiagnosticsStartInfo = System.Diagnostics.ProcessStartInfo;
 
@@ -426,9 +427,40 @@ internal static class CopperfinStudioHostBridge
                string.Equals(extension, ".bat", StringComparison.OrdinalIgnoreCase);
     }
 
+    internal static string QuoteProcessArgument(string value)
+    {
+        var builder = new StringBuilder(value.Length + 2);
+        var backslashes = 0;
+        builder.Append('"');
+        foreach (var character in value)
+        {
+            if (character == '\\')
+            {
+                backslashes++;
+                continue;
+            }
+
+            if (character == '"')
+            {
+                builder.Append('\\', backslashes * 2 + 1);
+            }
+            else
+            {
+                builder.Append('\\', backslashes);
+            }
+
+            builder.Append(character);
+            backslashes = 0;
+        }
+
+        builder.Append('\\', backslashes * 2);
+        builder.Append('"');
+        return builder.ToString();
+    }
+
     private static string Quote(string value)
     {
-        return "\"" + value.Replace("\"", "\"\"") + "\"";
+        return QuoteProcessArgument(value);
     }
 
     private static string BuildObjectLifecycleArguments(string documentPath, string command, int recordIndex, string? uniqueId)

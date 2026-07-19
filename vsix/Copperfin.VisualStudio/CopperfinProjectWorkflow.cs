@@ -495,7 +495,7 @@ internal static class CopperfinProjectWorkflow
 
     private static string Quote(string value)
     {
-        return "\"" + value.Replace("\"", "\"\"") + "\"";
+        return CopperfinStudioHostBridge.QuoteProcessArgument(value);
     }
 
     private static string JoinProcessArguments(IEnumerable<string> arguments)

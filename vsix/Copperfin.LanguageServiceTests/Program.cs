@@ -460,7 +460,7 @@ internal static partial class Program
                 StringComparison.Ordinal),
             "VSIX property-batch arguments should preserve path quoting and record identity");
         Expect(propertyArguments.Contains(
-                "--property-name \"CAPTION\" --property-value \"Say \"\"Hi\"\"\"",
+                "--property-name \"CAPTION\" --property-value \"Say \\\"Hi\\\"\"",
                 StringComparison.Ordinal) &&
                propertyArguments.Contains(
                    "--property-name \"WIDTH\" --property-value \"120\"",
@@ -468,6 +468,25 @@ internal static partial class Program
             "VSIX property-batch arguments should preserve ordered property names and quoted values");
         Expect(propertyArguments.Split("--from-vs", StringSplitOptions.None).Length == 2,
             "VSIX property-batch arguments should emit Visual Studio provenance exactly once");
+
+        var debugArguments = CopperfinRuntimeDebugClient.BuildReplayArguments(
+            @"C:\debug manifest\app.cfdebug",
+            "es-419",
+            new[] { "Say \"Hi\"" });
+        Expect(debugArguments.Contains(
+                "--debug-command \"Say \\\"Hi\\\"\"",
+                StringComparison.Ordinal),
+            "runtime debug arguments should preserve embedded quotes through process quoting");
+
+        var trailingBackslashArguments = CopperfinStudioHostBridge.BuildPropertyUpdateArguments(
+            @"C:\Samples\invoice.frx",
+            7,
+            "OUTPUT",
+            @"C:\temp\");
+        Expect(trailingBackslashArguments.Contains(
+                "--property-value \"C:\\temp\\\\\"",
+                StringComparison.Ordinal),
+            "VSIX process arguments should preserve trailing backslashes before a closing quote");
 
         var deletedStateArguments = CopperfinStudioHostBridge.BuildDeletedStatesArguments(
             @"C:\Samples\invoice.frx",
@@ -481,7 +500,7 @@ internal static partial class Program
                 StringComparison.Ordinal),
             "VSIX deleted-state batch arguments should lead with Visual Studio provenance and preserve command tokens");
         Expect(deletedStateArguments.Contains(
-                "--deleted-state-target-unique-id \"save-\"\"guid\" --deleted-state true",
+                "--deleted-state-target-unique-id \"save-\\\"guid\" --deleted-state true",
                 StringComparison.Ordinal) &&
                deletedStateArguments.Contains(
                    "--deleted-state-target-unique-id \"name-guid\" --deleted-state false",

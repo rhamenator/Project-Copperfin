@@ -120,15 +120,9 @@ internal static class CopperfinRuntimeDebugClient
             }
 
             var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
-            var arguments = new StringBuilder();
-            arguments.Append("--manifest ").Append(Quote(effectiveDebugManifestPath)).Append(" --debug");
-            arguments.Append(" --locale ").Append(Quote(localization.Locale));
-            foreach (var command in session.Commands)
-            {
-                arguments.Append(" --debug-command ").Append(Quote(command));
-            }
+            var arguments = BuildReplayArguments(effectiveDebugManifestPath, localization.Locale, session.Commands);
 
-            var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments.ToString(), localization);
+            var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments, localization);
 
             try
             {
@@ -194,6 +188,22 @@ internal static class CopperfinRuntimeDebugClient
             redirectOutput: true,
             createNoWindow: true,
             isWindowsOverride);
+    }
+
+    internal static string BuildReplayArguments(
+        string debugManifestPath,
+        string locale,
+        IEnumerable<string> commands)
+    {
+        var arguments = new StringBuilder();
+        arguments.Append("--manifest ").Append(Quote(debugManifestPath)).Append(" --debug");
+        arguments.Append(" --locale ").Append(Quote(locale));
+        foreach (var command in commands)
+        {
+            arguments.Append(" --debug-command ").Append(Quote(command));
+        }
+
+        return arguments.ToString();
     }
 
     private static CopperfinRuntimePauseState ParsePauseState(string stdout)
@@ -552,6 +562,6 @@ internal static class CopperfinRuntimeDebugClient
 
     private static string Quote(string value)
     {
-        return "\"" + value.Replace("\"", "\"\"") + "\"";
+        return CopperfinStudioHostBridge.QuoteProcessArgument(value);
     }
 }
