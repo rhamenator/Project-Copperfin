@@ -8,6 +8,7 @@
 #include "runtime_pipeline_test_hooks.h"
 #endif
 
+#include <array>
 #include <atomic>
 #include <cerrno>
 #include <chrono>
@@ -396,6 +397,57 @@ public:
                    &information,
                    AT_SYMLINK_NOFOLLOW) == 0 &&
             S_ISREG(information.st_mode);
+    }
+
+    bool read_child_regular_file(
+        const std::filesystem::path& path,
+        std::string& contents) const {
+        contents.clear();
+        if (descriptor_ < 0) {
+            return false;
+        }
+        const int file_descriptor = ::openat(
+            descriptor_,
+            copperfin::platform::path_to_utf8_string(path.filename()).c_str(),
+            O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+        if (file_descriptor < 0) {
+            return false;
+        }
+        struct stat before{};
+        if (::fstat(file_descriptor, &before) != 0 || !S_ISREG(before.st_mode)) {
+            (void)::close(file_descriptor);
+            return false;
+        }
+
+        std::array<char, 4096U> buffer{};
+        bool read_successfully = true;
+        for (;;) {
+            const ssize_t count = ::read(file_descriptor, buffer.data(), buffer.size());
+            if (count < 0 && errno == EINTR) {
+                continue;
+            }
+            if (count < 0) {
+                read_successfully = false;
+                break;
+            }
+            if (count == 0) {
+                break;
+            }
+            contents.append(buffer.data(), static_cast<std::size_t>(count));
+        }
+
+        struct stat after{};
+        if (!read_successfully || ::fstat(file_descriptor, &after) != 0 ||
+            !S_ISREG(after.st_mode) || before.st_dev != after.st_dev ||
+            before.st_ino != after.st_ino) {
+            contents.clear();
+            read_successfully = false;
+        }
+        if (::close(file_descriptor) != 0) {
+            contents.clear();
+            read_successfully = false;
+        }
+        return read_successfully;
     }
 
     bool adopt_descriptor(
@@ -1598,7 +1650,8 @@ private:
 
     bool is_owned_transaction_file(const std::filesystem::path& path) const {
 #if !defined(_WIN32)
-        if (!parent_identity_.child_is_regular(path)) {
+        std::string contents;
+        if (!parent_identity_.read_child_regular_file(path, contents)) {
             trace_transaction_begin_failure("owned-file-status", path);
             return false;
         }
@@ -1611,7 +1664,9 @@ private:
             return false;
         }
 #endif
+#if defined(_WIN32)
         const std::string contents = read_text_file(path);
+#endif
         if (contents == transaction_identity_ ||
             contents == transaction_identity_ + std::string(kPackageTransactionDeferredPhase)) {
             return true;
