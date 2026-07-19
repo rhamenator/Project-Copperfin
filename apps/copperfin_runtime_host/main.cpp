@@ -3277,7 +3277,7 @@ int run_runtime_host_main(int argc, char** argv) {
     std::map<std::string, std::string> verified_file_bytes;
     if (!debug_manifest_privileges) {
         const auto current_identity = copperfin::security::inspect_physical_path_containment(
-            startup_source,
+            path_from_utf8(startup_source),
             manifest_directory);
         if (!current_identity.allowed) {
             std::cout << "status: error\n";
