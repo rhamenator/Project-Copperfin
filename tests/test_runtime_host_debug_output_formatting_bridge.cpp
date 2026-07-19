@@ -625,7 +625,7 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     if (process.exit_code != 0) {
         std::cerr << "bridge-unicode-descriptor stdout:\n" << process.stdout_text << "\n";
         std::cerr << "bridge-unicode-descriptor stderr:\n" << process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
+        std::cerr << "fixture root: [Unicode path omitted]\n";
     }
     std::cerr << "UNICODE: first invocation result captured\n";
     expect(process.exit_code == 0,
