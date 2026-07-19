@@ -322,6 +322,39 @@ void test_newobject_local_vcx_rejects_missing_class() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_newobject_local_vcx_rejects_missing_library() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_missing_library";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "newobject_local_vcx_missing_library.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MyWidget', 'missing.vcx')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed,
+           "missing local VCX library should fail closed");
+    expect(state.message.find("Visual class library could not be opened for NEWOBJECT: missing.vcx") !=
+               std::string::npos,
+           "missing local VCX library should report the localized open-failure diagnostic");
+    expect(state.ole_objects.empty(),
+           "missing local VCX library should not register a runtime object");
+    expect(std::none_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const auto& event) { return event.category == "ole.newobject"; }),
+           "missing local VCX library should not emit an ole.newobject event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_release_object_alias_waits_for_last_variable_reference() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_release_object_alias_reference";
@@ -457,6 +490,7 @@ int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
     test_newobject_local_vcx_materializes_native_class();
     test_newobject_local_vcx_rejects_missing_class();
+    test_newobject_local_vcx_rejects_missing_library();
     test_release_object_alias_waits_for_last_variable_reference();
     test_scope_exit_releases_unreferenced_objects_and_preserves_returns();
 
