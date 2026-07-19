@@ -12,6 +12,7 @@ permissions:
 jobs:
   windows-installer:
     runs-on: windows-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -38,10 +39,10 @@ jobs:
         run: cmake --build build --config Release --target copperfin_package_document_check
 
       - name: Build
-        run: cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+        run: cmake --build build --config Release --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect --parallel 2
 
       - name: Build standalone Studio shell
-        run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=Release
+        run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /m:2 /p:Configuration=Release
 
       - name: Verify standalone Studio install tree
         shell: pwsh

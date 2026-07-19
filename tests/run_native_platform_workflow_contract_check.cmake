@@ -343,6 +343,15 @@ require_text(".github/workflows/build-installers.yml"
 require_text(".github/workflows/build-installers.yml"
     "tests/run_studio_install_contract_check.cmake"
     "Windows standalone Studio install contract")
+require_text(".github/workflows/build-installers.yml"
+    "timeout-minutes: 120"
+    "bounded Windows installer job timeout")
+require_text(".github/workflows/build-installers.yml"
+    "copperfin_inspect --parallel 2"
+    "bounded Windows installer native build parallelism")
+require_text(".github/workflows/build-installers.yml"
+    "Copperfin.Studio.csproj /restore /t:Rebuild /m:2"
+    "bounded Windows installer managed build parallelism")
 require_text("CMakeLists.txt"
     "copperfin_studio_managed"
     "Windows managed Studio install target")
