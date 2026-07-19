@@ -585,8 +585,12 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     const fs::path response_path = temp_root / "nested" / "GetAnswer.response.json";
     std::cerr << "END: Unicode bridge path assembly\n";
     std::error_code ignored;
+    std::cerr << "BEGIN: Unicode bridge fixture remove\n";
     fs::remove_all(temp_root, ignored);
+    std::cerr << "END: Unicode bridge fixture remove\n";
+    std::cerr << "BEGIN: Unicode bridge fixture directories\n";
     fs::create_directories(source_path.parent_path());
+    std::cerr << "END: Unicode bridge fixture directories\n";
 
     write_text(
         manifest_path,
