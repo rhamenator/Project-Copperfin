@@ -1883,7 +1883,7 @@
   "AssetEditor.StandaloneSubtitle": "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack.",
   "AssetEditor.Guidance": "This shell now pulls a structured snapshot from the native Copperfin Studio host. For VFP visual assets, that gives us a real object/property view while we work toward high-fidelity inline designers.",
   "AssetEditor.OpenNativeStudioButton": "Open In Native Studio",
-  "AssetEditor.RevealInExplorerButton": "Reveal In Explorer",
+  "AssetEditor.RevealInExplorerButton": "Reveal In File Manager",
   "AssetEditor.RefreshButton": "Refresh",
   "AssetEditor.Tab.Summary": "Summary",
   "AssetEditor.Tab.Debugger": "Debugger",

@@ -1883,7 +1883,7 @@
   "AssetEditor.StandaloneSubtitle": "Este shell independente do Copperfin Studio hospeda a mesma superf\u00EDcie de designer usada dentro do Visual Studio, para que o trabalho com relat\u00F3rios, etiquetas, formul\u00E1rios, menus, classes e projetos evolua em uma pilha de editor compartilhada.",
   "AssetEditor.Guidance": "Este shell agora obt\u00E9m um instant\u00E2neo estruturado do host nativo do Copperfin Studio. Para ativos visuais VFP, isso oferece uma vis\u00E3o real de objetos e propriedades enquanto avan\u00E7amos para designers integrados de alta fidelidade.",
   "AssetEditor.OpenNativeStudioButton": "Abrir no Studio nativo",
-  "AssetEditor.RevealInExplorerButton": "Revelar no Explorer",
+  "AssetEditor.RevealInExplorerButton": "Revelar no gerenciador de arquivos",
   "AssetEditor.RefreshButton": "Atualizar",
   "AssetEditor.Tab.Summary": "Resumo",
   "AssetEditor.Tab.Debugger": "Depurador",

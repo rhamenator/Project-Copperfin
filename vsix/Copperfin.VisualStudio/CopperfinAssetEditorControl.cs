@@ -2390,14 +2390,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = "explorer.exe",
-            Arguments = $"/select,\"{currentPath}\"",
-            UseShellExecute = true
-        };
-
-        _ = Process.Start(startInfo);
+        _ = CopperfinFileManager.TryReveal(currentPath!);
     }
 
     private void ApplyHostMode()

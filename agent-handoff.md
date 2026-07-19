@@ -4,6 +4,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Standalone asset reveal is now cross-platform under #26/#4264: `CopperfinFileManager` keeps Windows Explorer `/select` behavior, uses `open --reveal` on macOS, and uses `xdg-open` on the containing directory on Linux. Keep the localized `AssetEditor.RevealInExplorerButton` wording platform-neutral and preserve quiet failure when no desktop opener exists.
 - PJX workspace entries are now an MVP open/edit path under #25/#4265: the shared editor must resolve only supported child assets beneath the PJX directory, reject traversal/missing/unsupported targets, and invoke the host-owned open callback on Enter or double-click. Standalone Studio routes the callback through normalized document-tab identity; the VSIX pane delegates to Visual Studio document hosting. Keep the path allowlist and machine contracts invariant.
 
 - Managed read-only visual-asset slice `#4263` now preserves the native `document.readOnly` capability result: `CopperfinStudioSnapshotClient.TryLoad` must not force `--read-only` on ordinary snapshot loads. The managed report/label property-grid selections and mutation handlers must keep read-only assets non-editable, while writable-copy smoke fixtures add POSIX owner-write permission explicitly. Preserve the existing `readOnly` JSON field and explicit `--read-only` launch option; do not localize or rename machine fields.

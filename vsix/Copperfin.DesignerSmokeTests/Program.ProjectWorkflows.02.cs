@@ -19,6 +19,34 @@ using System.Windows.Forms;
 namespace Copperfin.VisualStudio;
 internal static partial class Program
 {
+    private static void SmokeCrossPlatformFileRevealContracts()
+    {
+        const string assetPath = "/tmp/Copperfin Samples/orders.frx";
+        var windows = CopperfinFileManager.CreateRevealStartInfo(
+            assetPath,
+            CopperfinFileManagerPlatform.Windows);
+        Expect(windows.FileName == "explorer.exe" &&
+               windows.Arguments == "/select,\"/tmp/Copperfin Samples/orders.frx\"" &&
+               windows.UseShellExecute,
+            "Windows file reveal should select the exact asset in Explorer");
+
+        var macOs = CopperfinFileManager.CreateRevealStartInfo(
+            assetPath,
+            CopperfinFileManagerPlatform.MacOS);
+        Expect(macOs.FileName == "open" &&
+               macOs.Arguments == "--reveal \"/tmp/Copperfin Samples/orders.frx\"" &&
+               !macOs.UseShellExecute,
+            "macOS file reveal should ask Finder to reveal the exact asset");
+
+        var linux = CopperfinFileManager.CreateRevealStartInfo(
+            assetPath,
+            CopperfinFileManagerPlatform.Linux);
+        Expect(linux.FileName == "xdg-open" &&
+               linux.Arguments == "\"/tmp/Copperfin Samples\"" &&
+               !linux.UseShellExecute,
+            "Linux file reveal should open the containing directory through the desktop opener");
+    }
+
     private static void SmokeProjectWorkspaceEntryActivation()
     {
         var root = Path.Combine(
