@@ -8,7 +8,6 @@
 #include <cerrno>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
 #include <iterator>
 #include <limits>
 
@@ -139,7 +138,6 @@ CapturedProcessResult run_process_capture_windows(
     const std::filesystem::path& working_directory,
     const CapturePaths& paths) {
     CapturedProcessResult result;
-    std::cerr << "BEGIN: Windows process capture command-line conversion\n";
     int conversion_error = 0;
     std::wstring command_line = quote_windows_process_argument(executable_path.native());
     for (const auto& argument : utf8_arguments) {
@@ -151,7 +149,6 @@ CapturedProcessResult run_process_capture_windows(
         command_line.push_back(L' ');
         command_line += quote_windows_process_argument(wide_argument);
     }
-    std::cerr << "END: Windows process capture command-line conversion\n";
 
     SECURITY_ATTRIBUTES security_attributes{};
     security_attributes.nLength = sizeof(security_attributes);
@@ -180,7 +177,6 @@ CapturedProcessResult run_process_capture_windows(
         OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL,
         nullptr);
-    std::cerr << "END: Windows process capture handle setup\n";
     if (stdout_handle == INVALID_HANDLE_VALUE ||
         stderr_handle == INVALID_HANDLE_VALUE ||
         stdin_handle == INVALID_HANDLE_VALUE) {
@@ -215,8 +211,6 @@ CapturedProcessResult run_process_capture_windows(
         working_directory.c_str(),
         &startup_info,
         &process_info);
-    std::cerr << "END: Windows process capture CreateProcessW started="
-              << (started == TRUE ? "true" : "false") << '\n';
     result.launch_error = started == FALSE ? static_cast<int>(::GetLastError()) : 0;
     (void)::CloseHandle(stdin_handle);
     (void)::CloseHandle(stdout_handle);
@@ -369,16 +363,10 @@ CapturedProcessResult run_process_capture(
     const std::filesystem::path& executable_path,
     const std::vector<std::string>& utf8_arguments,
     const std::filesystem::path& working_directory) {
-    std::cerr << "BEGIN: process capture absolute executable\n";
     const std::filesystem::path absolute_executable = std::filesystem::absolute(executable_path);
-    std::cerr << "END: process capture absolute executable\n";
-    std::cerr << "BEGIN: process capture absolute working directory\n";
     const std::filesystem::path absolute_working_directory =
         std::filesystem::absolute(working_directory);
-    std::cerr << "END: process capture absolute working directory\n";
-    std::cerr << "BEGIN: process capture output paths\n";
     const CapturePaths paths = make_capture_paths(absolute_working_directory);
-    std::cerr << "END: process capture output paths\n";
 #if defined(_WIN32)
     CapturedProcessResult result = run_process_capture_windows(
         absolute_executable,

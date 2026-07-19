@@ -124,16 +124,12 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     const fs::path locale_root = temp_root / "locales";
     const fs::path deployed_runtime_host = deployed_runtime_host_path(temp_root, runtime_host_path);
     std::error_code ignored;
-    std::cerr << "BEGIN: verified bridge fixture remove\n";
     fs::remove_all(temp_root, ignored);
     fs::remove(outside_path, ignored);
-    std::cerr << "END: verified bridge fixture remove\n";
     fs::create_directories(content_root);
     fs::create_directories(source_path.parent_path());
     fs::create_directories(include_path.parent_path());
-    std::cerr << "END: verified bridge fixture directories\n";
     write_runtime_host_usage_catalogs(locale_root);
-    std::cerr << "END: verified bridge fixture catalogs\n";
     write_text(startup_path, "RETURN\n");
     write_text(
         source_path,
@@ -143,7 +139,6 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         "ENDPROC\n");
     write_text(include_path, "#DEFINE BRIDGE_VALUE 42\n");
     write_text(outside_path, "PROCEDURE GetAnswer\nRETURN 99\nENDPROC\n");
-    std::cerr << "END: verified bridge fixture sources\n";
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
     fs::permissions(
@@ -152,9 +147,7 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         fs::perm_options::add,
         ignored);
 #endif
-    std::cerr << "END: verified bridge fixture runtime host\n";
 
-    std::cerr << "BEGIN: verified bridge fixture hashes\n";
     const auto runtime_host_hash =
         copperfin::security::sha256_hex_for_file(copperfin::platform::path_to_utf8_string(deployed_runtime_host));
     const auto startup_hash = copperfin::security::sha256_hex_for_file(
@@ -163,7 +156,6 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         copperfin::platform::path_to_utf8_string(source_path));
     const auto include_hash = copperfin::security::sha256_hex_for_file(
         copperfin::platform::path_to_utf8_string(include_path));
-    std::cerr << "END: verified bridge fixture hashes\n";
     expect(runtime_host_hash.ok && startup_hash.ok && source_hash.ok && include_hash.ok,
            "secure bridge fixture should hash host, startup, export source, and include");
     if (!runtime_host_hash.ok || !startup_hash.ok || !source_hash.ok || !include_hash.ok) {
@@ -192,7 +184,6 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         "extension_payload=" + copperfin::platform::path_to_utf8_string(include_path) + "|" +
         include_hash.hex_digest + "\n"
         "dotnet_story=none\n");
-    std::cerr << "END: verified bridge fixture manifest\n";
 
     const auto write_request = [&](const fs::path& requested_source) {
         const std::string escaped_source_path = json_escape_string(
@@ -213,14 +204,8 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
             "}\n");
     };
     const auto invoke = [&](const fs::path& requested_source) {
-        std::cerr << "BEGIN: verified bridge request write\n";
         write_request(requested_source);
-        std::cerr << "END: verified bridge request write\n";
-        std::cerr << "BEGIN: verified bridge response remove\n";
         fs::remove(response_path, ignored);
-        std::cerr << "END: verified bridge response remove\n";
-        std::cerr << "BEGIN: verified bridge process capture "
-                  << copperfin::platform::path_to_utf8_string(requested_source) << '\n';
         const auto captured = copperfin::test_support::run_process_capture(
             deployed_runtime_host,
             {
@@ -239,31 +224,20 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
                 "--schema-version", "v1"
             },
             temp_root);
-        std::cerr << "END: verified bridge process capture started="
-                  << (captured.started ? "true" : "false")
-                  << " exit=" << captured.exit_code
-                  << " launch_error=" << captured.launch_error << '\n';
         return ProcessResult{
             .exit_code = captured.started ? captured.exit_code : -1,
             .stdout_text = captured.stdout_text,
             .stderr_text = captured.stderr_text};
     };
 
-    std::cerr << "BEGIN: verified bridge locale read\n";
     const auto original_locale_dir = copperfin::platform::read_environment_path(
         "COPPERFIN_LOCALE_DIR");
-    std::cerr << "END: verified bridge locale read\n";
-    std::cerr << "BEGIN: verified bridge locale write\n";
     const bool locale_write_succeeded = copperfin::platform::write_environment_path(
         "COPPERFIN_LOCALE_DIR",
         locale_root);
-    std::cerr << "END: verified bridge locale write succeeded="
-              << (locale_write_succeeded ? "true" : "false") << '\n';
     expect(locale_write_succeeded,
            "verified bridge fixture should set its locale directory override");
-    std::cerr << "BEGIN: verified bridge packaged invoke\n";
     const auto packaged_process = invoke(source_path);
-    std::cerr << "END: verified bridge packaged invoke\n";
     expect(packaged_process.exit_code == 0,
            "security-enabled bridge invocation should execute its verified packaged source bytes");
     expect(packaged_process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
@@ -279,7 +253,6 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     expect(external_process.stdout_text.find("bridge.return_value: 99") == std::string::npos,
            "security-enabled bridge invocation must not execute external source content");
 
-    std::cerr << "BEGIN: verified bridge locale restore\n";
     if (original_locale_dir.has_value()) {
         (void)copperfin::platform::write_environment_path(
             "COPPERFIN_LOCALE_DIR",
@@ -287,7 +260,6 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     } else {
         (void)copperfin::platform::clear_environment_path("COPPERFIN_LOCALE_DIR");
     }
-    std::cerr << "END: verified bridge locale restore\n";
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -569,30 +541,20 @@ void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::stri
 void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    std::cerr << "BEGIN: Unicode bridge temp-root conversion\n";
     const fs::path temp_root = fs::temp_directory_path() /
         copperfin::platform::path_from_utf8_string(
             "copperfin_runtime_host_bridge_unicode_descriptor_tests-\xC3\xA9-\xF0\x9F\x9A\x80");
-    std::cerr << "END: Unicode bridge temp-root conversion\n";
     const fs::path manifest_path = temp_root / "app.cfmanifest";
     const fs::path startup_path = temp_root / "content" / "startup.prg";
-    std::cerr << "BEGIN: Unicode bridge source-name conversion\n";
     const fs::path source_name = copperfin::platform::path_from_utf8_string(
         "exports-\xC3\xA9-\xF0\x9F\x9A\x80.prg");
-    std::cerr << "END: Unicode bridge source-name conversion\n";
     const fs::path source_path = temp_root / "content" / source_name;
     const fs::path request_path = temp_root / "GetAnswer.request.json";
     const fs::path response_path = temp_root / "nested" / "GetAnswer.response.json";
-    std::cerr << "END: Unicode bridge path assembly\n";
     std::error_code ignored;
-    std::cerr << "BEGIN: Unicode bridge fixture remove\n";
     fs::remove_all(temp_root, ignored);
-    std::cerr << "END: Unicode bridge fixture remove\n";
-    std::cerr << "BEGIN: Unicode bridge fixture directories\n";
     fs::create_directories(source_path.parent_path());
-    std::cerr << "END: Unicode bridge fixture directories\n";
 
-    std::cerr << "BEGIN: Unicode bridge manifest write\n";
     write_text(
         manifest_path,
         std::string("manifest_version=1\n"
@@ -601,41 +563,25 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         "startup_source=") + copperfin::platform::path_to_utf8_string(startup_path) + "\n"
         "security_enabled=false\n"
         "dotnet_story=none\n");
-    std::cerr << "END: Unicode bridge manifest write\n";
-    std::cerr << "BEGIN: Unicode bridge startup write\n";
     write_text(startup_path, "RETURN 7\n");
-    std::cerr << "END: Unicode bridge startup write\n";
-    std::cerr << "BEGIN: Unicode bridge source write\n";
     write_text(
         source_path,
         "PROCEDURE GetAnswer\n"
         "RETURN 42\n"
         "ENDPROC\n");
-    std::cerr << "END: Unicode bridge source write\n";
 
-    std::cerr << "BEGIN: Unicode bridge source-path UTF-8 conversion\n";
     const std::string source_path_utf8 = copperfin::platform::path_to_utf8_string(source_path);
-    std::cerr << "END: Unicode bridge source-path UTF-8 conversion\n";
-    std::cerr << "BEGIN: Unicode bridge descriptor escape\n";
     std::string escaped_source_path = json_escape_string(source_path_utf8);
-    std::cerr << "END: Unicode bridge descriptor escape\n";
-    std::cerr << "BEGIN: Unicode bridge source-name UTF-8 conversion\n";
     const std::string source_name_utf8 = copperfin::platform::path_to_utf8_string(source_name);
-    std::cerr << "END: Unicode bridge source-name UTF-8 conversion\n";
-    std::cerr << "BEGIN: Unicode bridge source-name search\n";
     const auto source_name_offset = escaped_source_path.find(source_name_utf8);
-    std::cerr << "END: Unicode bridge source-name search\n";
     expect(source_name_offset != std::string::npos,
            "Unicode bridge fixture should find its UTF-8 source name in the escaped path");
-    std::cerr << "END: Unicode bridge source-name expectation\n";
     if (source_name_offset == std::string::npos) {
         fs::remove_all(temp_root, ignored);
         return;
     }
     const std::string escaped_source_name = "exports-\\u00E9-\\uD83D\\uDE80.prg";
-    std::cerr << "BEGIN: Unicode bridge source-name replacement\n";
     escaped_source_path.replace(source_name_offset, source_name_utf8.size(), escaped_source_name);
-    std::cerr << "END: Unicode bridge source-name replacement\n";
     const auto write_request = [&](const std::string& encoded_source_path) {
         write_text(
             request_path,
@@ -654,11 +600,8 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
             "  \"parameters\": []\n"
             "}\n");
     };
-    std::cerr << "BEGIN: Unicode bridge request write\n";
     write_request(escaped_source_path);
-    std::cerr << "END: Unicode bridge request write\n";
 
-    std::cerr << "BEGIN: Unicode bridge process arguments\n";
     const std::vector<std::string> process_arguments{
         "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
         "--library-export", "GetAnswer",
@@ -674,8 +617,7 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
         "--schema-version", "v1"
     };
-    std::cerr << "END: Unicode bridge process arguments\n";
-    const auto process = run_process_capture(
+    const auto process = copperfin::test_support::run_process_capture(
         runtime_host_path,
         process_arguments,
         temp_root);
@@ -692,7 +634,7 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
 
     write_request(json_escape_string(source_path_utf8).replace(
         source_name_offset, source_name_utf8.size(), "exports-\\uD800.prg"));
-    const auto malformed_process = run_process_capture(
+    const auto malformed_process = copperfin::test_support::run_process_capture(
         runtime_host_path,
         {
             "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
