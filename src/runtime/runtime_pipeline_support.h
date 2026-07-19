@@ -89,6 +89,13 @@ bool copy_file_if_exists(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,
     std::string& error);
+#if !defined(_WIN32)
+bool try_copy_file_if_exists_fd_backed(
+    const std::filesystem::path& source,
+    const std::filesystem::path& destination,
+    bool& handled,
+    std::string& error);
+#endif
 bool prepare_package_content_root(
     const std::filesystem::path& package_root,
     const std::filesystem::path& content_root,

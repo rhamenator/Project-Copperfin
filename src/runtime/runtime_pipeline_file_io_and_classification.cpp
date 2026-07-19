@@ -511,6 +511,20 @@ bool copy_file_if_exists(
         return false;
     }
 
+#if !defined(_WIN32)
+    bool fd_copy_handled = false;
+    if (!try_copy_file_if_exists_fd_backed(
+            source,
+            destination,
+            fd_copy_handled,
+            error)) {
+        return false;
+    }
+    if (fd_copy_handled) {
+        return true;
+    }
+#endif
+
     std::error_code directory_error;
     std::filesystem::create_directories(destination.parent_path(), directory_error);
     if (directory_error) {

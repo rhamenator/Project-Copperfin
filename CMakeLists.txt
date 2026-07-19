@@ -283,6 +283,7 @@ set(COPPERFIN_RUNTIME_PIPELINE_SOURCES
     src/runtime/runtime_pipeline_ast_ir_manifest.cpp
     src/runtime/runtime_pipeline_csharp_and_launcher.cpp
     src/runtime/runtime_pipeline_launcher_artifact_inventory.cpp
+    src/runtime/runtime_pipeline_fd_file_io.cpp
     src/runtime/runtime_pipeline_package_content_io.cpp
     src/runtime/runtime_pipeline_manifest_pair.cpp
     src/runtime/runtime_pipeline_manifest_pair_io.cpp
