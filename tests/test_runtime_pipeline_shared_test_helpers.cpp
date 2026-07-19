@@ -876,7 +876,7 @@ void run_library_output_warning_debug_manifest_smoke(const std::string& output_k
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "library warning-path package should materialize for " + extension + " outputs");
+    expect_materialization(result, "library warning-path package should materialize for " + extension + " outputs");
     if (result.ok) {
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);

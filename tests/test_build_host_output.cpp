@@ -148,6 +148,15 @@ void expect_process_success(
             std::to_string(process.exit_code) + process_failure_detail(process));
 }
 
+void expect_process_output(
+    const ProcessResult& process,
+    const bool condition,
+    const std::string& message) {
+    expect(
+        condition,
+        condition ? message : message + process_failure_detail(process));
+}
+
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
@@ -699,12 +708,18 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
             temp_root);
 
         expect(process.exit_code == 0, "build host should resolve runtime host from executable directory");
-        expect(process.stdout_text.find("status: ok") != std::string::npos,
-               "runtime-host resolution smoke test should report status: ok");
-        expect(process.stdout_text.find("output.kind: executable") != std::string::npos,
-               "runtime-host resolution smoke test should build an executable output");
-        expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
-               "runtime-host resolution smoke test should materialize executable output");
+        expect_process_output(
+            process,
+            process.stdout_text.find("status: ok") != std::string::npos,
+            "runtime-host resolution smoke test should report status: ok");
+        expect_process_output(
+            process,
+            process.stdout_text.find("output.kind: executable") != std::string::npos,
+            "runtime-host resolution smoke test should build an executable output");
+        expect_process_output(
+            process,
+            process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+            "runtime-host resolution smoke test should materialize executable output");
         const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
         expect(!manifest_path.empty(), "runtime-host resolution smoke test should report manifest path");
         if (!manifest_path.empty()) {
@@ -745,10 +760,14 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
             {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
             caller_root);
 
-        expect(path_process.exit_code == 0,
-               "#4017: PATH-launched build host should resolve its deployed runtime-host sibling");
-        expect(path_process.stdout_text.find("status: ok") != std::string::npos,
-               "#4017: PATH-launched sibling resolution should preserve invariant success status");
+        expect_process_output(
+            path_process,
+            path_process.exit_code == 0,
+            "#4017: PATH-launched build host should resolve its deployed runtime-host sibling");
+        expect_process_output(
+            path_process,
+            path_process.stdout_text.find("status: ok") != std::string::npos,
+            "#4017: PATH-launched sibling resolution should preserve invariant success status");
         const fs::path path_debug_manifest = value_for_key(
             path_process.stdout_text,
             "debug.manifest.path");
@@ -837,14 +856,22 @@ void run_emit_dotnet_launcher_fallback_smoke(const std::string& build_host_path)
         },
         temp_root);
 
-    expect(process.exit_code == 0,
-           "build host should fall back to native packaging for POSIX --emit-dotnet-launcher requests");
-    expect(process.stdout_text.find("status: ok") != std::string::npos,
-           "dotnet-launcher fallback smoke should preserve machine-readable success status");
-    expect(process.stdout_text.find("output.kind: executable") != std::string::npos,
-           "dotnet-launcher fallback smoke should preserve executable output kind");
-    expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
-           "dotnet-launcher fallback smoke should still materialize a primary output");
+    expect_process_output(
+        process,
+        process.exit_code == 0,
+        "build host should fall back to native packaging for POSIX --emit-dotnet-launcher requests");
+    expect_process_output(
+        process,
+        process.stdout_text.find("status: ok") != std::string::npos,
+        "dotnet-launcher fallback smoke should preserve machine-readable success status");
+    expect_process_output(
+        process,
+        process.stdout_text.find("output.kind: executable") != std::string::npos,
+        "dotnet-launcher fallback smoke should preserve executable output kind");
+    expect_process_output(
+        process,
+        process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+        "dotnet-launcher fallback smoke should still materialize a primary output");
     expect(fs::exists(expected_output),
            "dotnet-launcher fallback smoke should materialize the native executable output");
 

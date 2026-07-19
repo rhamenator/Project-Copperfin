@@ -80,7 +80,7 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "fxp-output package should materialize");
+    expect_materialization(result, "fxp-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.fxp_token_manifest_path),
                "fxp-output package should emit a token manifest");
@@ -266,7 +266,7 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "app-output package should materialize");
+    expect_materialization(result, "app-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.app_archive_manifest_path),
                "app-output package should emit an archive manifest");

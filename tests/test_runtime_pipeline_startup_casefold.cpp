@@ -161,7 +161,7 @@ void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families()
                "#3953: resolved startup should retain debug support for " + family.type_title);
 
         const auto result = materialize_startup_plan(plan, runtime_host);
-        expect(result.ok, "#3953: uniquely casefolded startup should materialize for " + family.type_title);
+        expect_materialization(result, "#3953: uniquely casefolded startup should materialize for " + family.type_title);
         if (result.ok) {
             const std::string runtime_manifest = read_text(result.plan.manifest_path);
             const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -252,7 +252,7 @@ void test_exact_startup_path_wins_over_casefold_siblings() {
                plan.assets.front().source_path == (project_dir / "Exact" / "main.prg").string(),
            "#3953: exact startup components should win over casefold siblings");
     const auto result = materialize_startup_plan(plan, runtime_host);
-    expect(result.ok, "#3953: exact startup path should materialize despite casefold siblings");
+        expect_materialization(result, "#3953: exact startup path should materialize despite casefold siblings");
     if (result.ok) {
         expect(read_text(fs::path(result.plan.content_root) / "Exact" / "main.prg") == "exact-startup",
                "#3953: exact startup path should stage the exact source bytes");
@@ -598,7 +598,7 @@ void test_absolute_project_item_paths_never_rebind_to_project_decoys() {
                plan.debug_plan.startup_source_path == absolute_source.string(),
            "#3991: an existing absolute source should preserve authoritative provenance");
     const auto result = materialize_startup_plan(plan, runtime_host);
-    expect(result.ok, "#3991: an existing absolute source should still materialize");
+    expect_materialization(result, "#3991: an existing absolute source should still materialize");
     if (result.ok && !result.plan.assets.empty()) {
         expect(read_text(result.plan.assets[0U].staged_path) == "authoritative-absolute-bytes",
                "#3991: valid absolute materialization should stage source bytes, not decoy bytes");
@@ -748,7 +748,7 @@ void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts()
     }
 
     const auto result = materialize_startup_plan(plan, runtime_host);
-    expect(result.ok, "#3873: Unicode runtime package should materialize");
+    expect_materialization(result, "#3873: Unicode runtime package should materialize");
     if (result.ok) {
         const auto source_digest = copperfin::security::sha256_hex_for_file(
             copperfin::platform::path_to_utf8_string(source_path));

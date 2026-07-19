@@ -600,7 +600,7 @@ void test_package_transaction_rejects_rebound_output_parent() {
     materialization.join();
 
 #if defined(_WIN32)
-    expect(result.ok,
+    expect_materialization(result,
            "the Windows transaction should continue after the blocked parent-rebind attempt");
     expect(result.ok && fs::exists(fs::path(result.plan.package_root) / "content" / "startup.prg"),
            "the Windows parent-rebind guard should preserve package materialization");
@@ -710,13 +710,13 @@ void test_package_content_root_remains_pinned_during_asset_writes() {
     materialization.join();
 
 #if defined(_WIN32)
-    expect(result.ok,
+    expect_materialization(result,
            "the Windows transaction should continue after the blocked content rebind attempt");
     expect(
         result.ok && fs::exists(fs::path(result.plan.package_root) / "content" / "startup.prg"),
         "the Windows content-rebind guard should preserve package materialization");
 #else
-    expect(result.ok,
+    expect_materialization(result,
            "the POSIX transaction should write through the pinned content directory");
     expect(!fs::exists(external_content_dir / "startup.prg"),
            "a POSIX content rebind must not redirect staged bytes to the external directory");

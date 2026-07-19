@@ -66,7 +66,7 @@ void test_runtime_package_emits_ast_manifest_for_prg_sources() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "ast-output package should materialize");
+    expect_materialization(result, "ast-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.ast_manifest_path),
                "ast-output package should emit an AST manifest");
@@ -162,7 +162,7 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "ir-output package should materialize");
+    expect_materialization(result, "ir-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.ir_manifest_path),
                "ir-output package should emit an IR manifest");
@@ -263,7 +263,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "csharp-output package should materialize");
+    expect_materialization(result, "csharp-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.transpiled_csharp_path),
                "csharp-output package should emit a C# transpilation artifact");

@@ -99,7 +99,7 @@ void run_xasset_startup_companion_stage_smoke(
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, startup_type_title + " startup package should materialize");
+    expect_materialization(result, startup_type_title + " startup package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -197,7 +197,7 @@ void test_file_valued_home_directory_falls_back_to_project_directory() {
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
-    expect(result.ok, "#3989: a package with a file-valued project home should materialize through fallback");
+    expect_materialization(result, "#3989: a package with a file-valued project home should materialize through fallback");
     if (result.ok) {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(manifest_value_for_key(debug_manifest, "working_directory") ==
@@ -309,7 +309,7 @@ void test_relative_home_directory_resolves_from_project_directory() {
             copperfin::security::default_native_security_profile(),
             copperfin::platform::default_extensibility_profile(),
             runtime_host.string());
-        expect(result.ok,
+        expect_materialization(result,
                "#4051: a package with a project-relative home should materialize");
         if (result.ok) {
             const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -545,7 +545,7 @@ void test_runtime_package_license_fields_stay_debug_only() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "license manifest contract package should materialize");
+    expect_materialization(result, "license manifest contract package should materialize");
     if (result.ok) {
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -629,7 +629,7 @@ void test_materialize_excluded_xasset_startup_package() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "xasset runtime package should materialize");
+    expect_materialization(result, "xasset runtime package should materialize");
     if (result.ok) {
         expect(fs::exists(fs::path(result.plan.content_root) / "startup.scx"), "packaged xasset startup should be staged even if excluded");
         expect(fs::exists(fs::path(result.plan.content_root) / "startup.sct"), "packaged xasset memo sidecar should be staged");
@@ -699,7 +699,7 @@ void test_uppercase_xasset_companion_assets_are_staged() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "uppercase xasset companion runtime package should materialize");
+    expect_materialization(result, "uppercase xasset companion runtime package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -937,7 +937,7 @@ void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root(
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "VFP-style parent-relative package should materialize");
+    expect_materialization(result, "VFP-style parent-relative package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         expect(fs::exists(content_root / "wzcommon" / "registry.vcx"),
@@ -1027,7 +1027,7 @@ void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "VFPSource-style tail-match package should materialize");
+    expect_materialization(result, "VFPSource-style tail-match package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         expect(fs::exists(content_root / "wzcommon" / "registry.vcx"),
@@ -1090,7 +1090,7 @@ void test_startup_dbf_companion_assets_are_staged() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "dbf companion runtime package should materialize");
+    expect_materialization(result, "dbf companion runtime package should materialize");
     if (result.ok) {
         const std::filesystem::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -1176,7 +1176,7 @@ void test_uppercase_dbf_companion_assets_are_staged() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "uppercase dbf companion runtime package should materialize");
+    expect_materialization(result, "uppercase dbf companion runtime package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -1267,7 +1267,7 @@ void test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable(
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
-    expect(result.ok, "writable DBF and immutable DBC package contract should materialize");
+    expect_materialization(result, "writable DBF and immutable DBC package contract should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
@@ -1553,7 +1553,7 @@ void test_startup_asset_is_staged_even_when_marked_excluded() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "runtime package should materialize when startup asset is excluded");
+    expect_materialization(result, "runtime package should materialize when startup asset is excluded");
     if (result.ok) {
         expect(fs::exists(fs::path(result.plan.content_root) / "MAIN.PRG"),
                "startup program should still be staged even when entry is marked excluded");

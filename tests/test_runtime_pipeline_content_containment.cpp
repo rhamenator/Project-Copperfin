@@ -221,7 +221,7 @@ void run_windows_drive_relative_case(
             copperfin::security::default_native_security_profile(),
             copperfin::platform::default_extensibility_profile(),
             runtime_host.string());
-        expect(result.ok, "#4065: contained Windows drive-relative asset should materialize");
+        expect_materialization(result, "#4065: contained Windows drive-relative asset should materialize");
         expect(read_text(external_target) == "external-sentinel",
                "#4065: Windows drive-relative staging must not overwrite the drive-root target");
         expect(read_text(external_companion) == "external-companion-sentinel",
@@ -480,7 +480,7 @@ void test_optional_rejected_asset_identity_stays_out_of_manifests() {
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
-    expect(result.ok,
+    expect_materialization(result,
            "#4065: a rejected optional destination should remain a package warning");
     const auto* rejected_asset = asset_by_record(result.plan, 2U);
     expect(rejected_asset != nullptr && rejected_asset->exists &&
@@ -781,7 +781,7 @@ void test_relative_output_root_preserves_plan_path_contract() {
             copperfin::security::default_native_security_profile(),
             copperfin::platform::default_extensibility_profile(),
             runtime_host.string());
-        expect(result.ok,
+        expect_materialization(result,
                "#4065: package staging should support a relative output root");
         const fs::path expected_staged =
             (fs::path(plan.content_root) / "main.prg").lexically_normal();

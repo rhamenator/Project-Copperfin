@@ -84,7 +84,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "fll-output package should materialize");
+    expect_materialization(result, "fll-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.module_definition_path),
                "fll-output package should emit a module-definition file");

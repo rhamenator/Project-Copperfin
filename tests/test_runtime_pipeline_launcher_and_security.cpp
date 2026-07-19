@@ -54,7 +54,7 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "launcher contract package should materialize");
+    expect_materialization(result, "launcher contract package should materialize");
     if (result.ok) {
         const std::string launcher_source = read_text(result.plan.launcher_source_path);
         const std::string launcher_project = read_text(result.plan.launcher_project_path);
@@ -168,7 +168,7 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
         extensibility_profile,
         runtime_host.string());
 
-    expect(result.ok, "dotnet-fallback package should materialize");
+    expect_materialization(result, "dotnet-fallback package should materialize");
     if (result.ok) {
         expect(!fs::exists(result.plan.launcher_project_path),
                "dotnet-fallback package should not emit a launcher project when .NET output is unavailable");
@@ -461,7 +461,7 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
-    expect(result.ok, "dotnet-finalize package should materialize");
+    expect_materialization(result, "dotnet-finalize package should materialize");
     if (result.ok) {
         const std::string pre_runtime_manifest = read_text(result.plan.manifest_path);
         const std::string pre_debug_manifest = read_text(result.plan.debug_manifest_path);

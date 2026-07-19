@@ -57,7 +57,7 @@ void test_runtime_package_emits_csharp_transpilation_for_class_library_objects()
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "class-library csharp-output package should materialize");
+    expect_materialization(result, "class-library csharp-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.transpiled_csharp_path),
                "class-library csharp-output package should emit a C# transpilation artifact");
@@ -154,7 +154,7 @@ void test_runtime_manifest_records_generated_compiler_contract_digests() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "compiler-contract-digest package should materialize");
+    expect_materialization(result, "compiler-contract-digest package should materialize");
     if (result.ok) {
         const auto has_digest = [&](const std::string& path) {
             return std::find_if(
@@ -235,7 +235,7 @@ void test_manifest_asset_lines_include_copy_state_contract() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "manifest-asset-copy-state package should materialize");
+    expect_materialization(result, "manifest-asset-copy-state package should materialize");
     if (result.ok) {
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string startup_line_marker = "asset=1|main.prg|";

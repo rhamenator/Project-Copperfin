@@ -109,7 +109,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         copperfin::platform::default_extensibility_profile(),
         runtime_host.string());
 
-    expect(result.ok, "library-output package should materialize");
+    expect_materialization(result, "library-output package should materialize");
     if (result.ok) {
         expect(fs::exists(result.plan.module_definition_path),
                "library-output package should emit a module-definition file");
