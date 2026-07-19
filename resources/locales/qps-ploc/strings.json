@@ -2326,6 +2326,8 @@
   "AssetEditor.Summary.LabelEncrypt": "Encrypt",
   "AssetEditor.Summary.LabelSaveCode": "Save Code",
   "AssetEditor.Summary.LabelNoLogo": "No Logo",
+  "AssetEditor.Summary.Boolean.True": "True",
+  "AssetEditor.Summary.Boolean.False": "False",
   "AssetEditor.Summary.GroupsHeading": "Groups",
   "AssetEditor.Summary.GroupLine": "- {0}: {1} item(s), {2} excluded",
   "AssetEditor.Summary.BuildWorkflowHeading": "Next build-workflow step",

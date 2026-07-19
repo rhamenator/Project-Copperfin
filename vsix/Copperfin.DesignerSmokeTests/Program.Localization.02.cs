@@ -205,6 +205,49 @@ internal static partial class Program
             "Pseudo-localized project summaries should route workspace group titles through the shared catalog instead of leaking raw English labels");
     }
 
+    private static void SmokeLocalizedProjectWorkspaceBooleanValues()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                ProjectTitle = "sample.pjx",
+                BuildPlan = new CopperfinStudioProjectBuildPlan
+                {
+                    DebugEnabled = true,
+                    EncryptEnabled = false,
+                    SaveCode = true,
+                    NoLogo = false
+                }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishSummary = InvokeAssetEditorString(spanishControl, "BuildProjectWorkspaceSummary", snapshot);
+        Expect(spanishSummary.IndexOf("Depurar: Verdadero", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("Cifrar: Falso", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("Guardar código: Verdadero", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("Sin logotipo: Falso", StringComparison.Ordinal) >= 0,
+            "Spanish project workspace summaries should localize build-plan boolean display values");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseSummary = InvokeAssetEditorString(portugueseControl, "BuildProjectWorkspaceSummary", snapshot);
+        Expect(portugueseSummary.IndexOf("Depurar: Verdadeiro", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("Criptografar: Falso", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("Salvar código: Verdadeiro", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("Sem logotipo: Falso", StringComparison.Ordinal) >= 0,
+            "Portuguese project workspace summaries should localize build-plan boolean display values");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoSummary = InvokeAssetEditorString(pseudoControl, "BuildProjectWorkspaceSummary", snapshot);
+        Expect(pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.Boolean.True"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.Boolean.False"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(": True\n", StringComparison.Ordinal) < 0 &&
+               pseudoSummary.IndexOf(": False\n", StringComparison.Ordinal) < 0,
+            "Pseudo-localized project workspace summaries should route build-plan boolean display values through the shared catalog");
+    }
+
     private static void SmokeLocalizedProjectWorkspaceExplorerGroupTitles()
     {
         var snapshot = new CopperfinStudioSnapshotDocument

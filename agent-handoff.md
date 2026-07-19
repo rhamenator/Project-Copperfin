@@ -12,6 +12,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 - Native lifecycle slice `#4251` dispatches Form/FormSet `Unload` in the existing iterative release order after contained objects and `Destroy`. Preserve stack-frugal frame execution, contained Form-before-FormSet ordering, `Destroy`/`Release`/`NODEFAULT` semantics, and existing telemetry; the additive `prg.object.unload` event is covered by the focused runtime test.
 
+- VSIX localization slice `#4252` routes project-workspace build-plan booleans through `AssetEditor.Summary.Boolean.True` and `.False`. Keep `DebugEnabled`, `EncryptEnabled`, `SaveCode`, and `NoLogo` as invariant managed booleans and preserve all snapshot/JSON contracts; maintain key parity across en-US, es-419, pt-BR, and qps-ploc, with pseudo-locale coverage preventing raw `True`/`False` display leakage.
+
 - Start from live GitHub issue state plus the current repo guidance in `agents.md` and `docs/23-phase-a-dependency-breakdown.md`.
 - Use the issue hierarchy: umbrella issues are planning/tracking units, parent/lane issues group work, and prompt-sized child issues are execution units.
 - Shipped installer CPack verifier slice `#4235`: CPack artifact checks use namespaced typed inputs (`COPPERFIN_ARTIFACT_DIR`, `COPPERFIN_VERSION_FILE`, and `COPPERFIN_EXPECTED_ARTIFACT_SUFFIXES`) and normalize relative roots from the repository source. Keep the generated `CopperfinPackageVersion.txt` path and artifact suffix contracts stable; the focused fixture covers relative success plus missing/invalid version rejection, and hosted Windows evidence remains required.

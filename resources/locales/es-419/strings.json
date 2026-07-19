@@ -2326,6 +2326,8 @@
   "AssetEditor.Summary.LabelEncrypt": "Cifrar",
   "AssetEditor.Summary.LabelSaveCode": "Guardar c\u00F3digo",
   "AssetEditor.Summary.LabelNoLogo": "Sin logotipo",
+  "AssetEditor.Summary.Boolean.True": "Verdadero",
+  "AssetEditor.Summary.Boolean.False": "Falso",
   "AssetEditor.Summary.GroupsHeading": "Grupos",
   "AssetEditor.Summary.GroupLine": "- {0}: {1} elemento(s), {2} excluido(s)",
   "AssetEditor.Summary.BuildWorkflowHeading": "Siguiente paso de flujo de compilaci\u00F3n",

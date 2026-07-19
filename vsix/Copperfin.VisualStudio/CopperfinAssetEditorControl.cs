@@ -3254,10 +3254,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 "AssetEditor.Summary.LabelItems",
                 workspace.BuildPlan.TotalItems,
                 workspace.BuildPlan.ExcludedItems));
-        summary.AppendLine($"{L("AssetEditor.Summary.LabelDebug")}: {workspace.BuildPlan.DebugEnabled}");
-        summary.AppendLine($"{L("AssetEditor.Summary.LabelEncrypt")}: {workspace.BuildPlan.EncryptEnabled}");
-        summary.AppendLine($"{L("AssetEditor.Summary.LabelSaveCode")}: {workspace.BuildPlan.SaveCode}");
-        summary.AppendLine($"{L("AssetEditor.Summary.LabelNoLogo")}: {workspace.BuildPlan.NoLogo}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDebug")}: {FormatLocalizedBoolean(workspace.BuildPlan.DebugEnabled)}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelEncrypt")}: {FormatLocalizedBoolean(workspace.BuildPlan.EncryptEnabled)}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelSaveCode")}: {FormatLocalizedBoolean(workspace.BuildPlan.SaveCode)}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelNoLogo")}: {FormatLocalizedBoolean(workspace.BuildPlan.NoLogo)}");
         summary.AppendLine();
         summary.AppendLine(L("AssetEditor.Summary.GroupsHeading"));
         foreach (var group in workspace.Groups)
@@ -3274,6 +3274,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine($"{L("AssetEditor.Summary.BuildWorkflowHeading")}:");
         summary.AppendLine(L("AssetEditor.Summary.BuildWorkflowText"));
         return summary.ToString();
+    }
+
+    private string FormatLocalizedBoolean(bool value)
+    {
+        return L(value ? "AssetEditor.Summary.Boolean.True" : "AssetEditor.Summary.Boolean.False");
     }
 
     private string BuildProjectWorkspaceSummary(CopperfinStudioSnapshotDocument snapshot)

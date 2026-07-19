@@ -2326,6 +2326,8 @@
   "AssetEditor.Summary.LabelEncrypt": "Criptografar",
   "AssetEditor.Summary.LabelSaveCode": "Salvar c\u00F3digo",
   "AssetEditor.Summary.LabelNoLogo": "Sem logotipo",
+  "AssetEditor.Summary.Boolean.True": "Verdadeiro",
+  "AssetEditor.Summary.Boolean.False": "Falso",
   "AssetEditor.Summary.GroupsHeading": "Grupos",
   "AssetEditor.Summary.GroupLine": "- {0}: {1} item(s), {2} exclu\u00EDdos",
   "AssetEditor.Summary.BuildWorkflowHeading": "Pr\u00F3xima etapa do fluxo de build",
