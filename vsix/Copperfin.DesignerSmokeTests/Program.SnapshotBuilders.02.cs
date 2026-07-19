@@ -231,12 +231,40 @@ internal static partial class Program
             {
                 File.SetAttributes(destinationPath, destinationAttributes & ~FileAttributes.ReadOnly);
             }
+
+            MakeWritableCopy(destinationPath);
         }
 
         foreach (var childDirectory in Directory.GetDirectories(sourceDirectory))
         {
             var destinationChild = Path.Combine(destinationDirectory, Path.GetFileName(childDirectory));
             CopyDirectoryRecursive(childDirectory, destinationChild);
+        }
+    }
+
+    private static void MakeWritableCopy(string path)
+    {
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            return;
+        }
+
+        var processResult = CopperfinProcessRunner.Run(
+            new ProcessStartInfo
+            {
+                FileName = "/bin/chmod",
+                Arguments = $"u+w \"{path}\"",
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            });
+        if (!processResult.Started || processResult.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(processResult.StandardError)
+                    ? $"Could not make copied asset writable: {path}."
+                    : processResult.StandardError);
         }
     }
 

@@ -74,7 +74,11 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     public int RecordIndex { get; private set; }
 
-    public static CopperfinDesignerSelection? FromSnapshot(string assetFamily, CopperfinStudioSnapshotObject snapshotObject, CopperfinLocalization? localization = null)
+    public static CopperfinDesignerSelection? FromSnapshot(
+        string assetFamily,
+        CopperfinStudioSnapshotObject snapshotObject,
+        CopperfinLocalization? localization = null,
+        bool documentReadOnly = false)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
 
@@ -148,10 +152,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 break;
         }
 
+        selection.ApplyDocumentReadOnly(documentReadOnly);
         return selection;
     }
 
-    public static CopperfinDesignerSelection FromReportSection(CopperfinStudioReportSection section, CopperfinLocalization localization)
+    public static CopperfinDesignerSelection FromReportSection(
+        CopperfinStudioReportSection section,
+        CopperfinLocalization localization,
+        bool documentReadOnly = false)
     {
         var selection = new CopperfinDesignerSelection
         {
@@ -289,6 +297,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             }
         }
 
+        selection.ApplyDocumentReadOnly(documentReadOnly);
         return selection;
     }
 
@@ -297,7 +306,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         CopperfinLocalization localization,
         bool deleted = false,
         CopperfinStudioReportLayout? reportLayout = null,
-        IEnumerable<string>? availablePropertyNames = null)
+        IEnumerable<string>? availablePropertyNames = null,
+        bool documentReadOnly = false)
     {
         var selection = new CopperfinDesignerSelection
         {
@@ -432,12 +442,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 string.Empty);
         }
 
+        selection.ApplyDocumentReadOnly(documentReadOnly);
         return selection;
     }
 
     public static CopperfinDesignerSelection FromReportGrouping(
         CopperfinStudioReportGrouping grouping,
-        CopperfinLocalization localization)
+        CopperfinLocalization localization,
+        bool documentReadOnly = false)
     {
         var selection = new CopperfinDesignerSelection
         {
@@ -522,6 +534,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 BuildStateText(localization, grouping.FooterDeleted));
         }
 
+        selection.ApplyDocumentReadOnly(documentReadOnly);
         return selection;
     }
 
@@ -765,8 +778,25 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     private void AddField(SelectionField field)
     {
+        field.IsReadOnly |= documentReadOnly;
         fields.Add(field);
         fieldMap[field.Name] = field;
+    }
+
+    private bool documentReadOnly;
+
+    private void ApplyDocumentReadOnly(bool value)
+    {
+        documentReadOnly = value;
+        if (!value)
+        {
+            return;
+        }
+
+        foreach (var field in fields)
+        {
+            field.IsReadOnly = true;
+        }
     }
 
     private object? GetValue(string propertyName)

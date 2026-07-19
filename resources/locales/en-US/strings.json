@@ -1919,6 +1919,7 @@
   "AssetEditor.Snapshot.LoadingStatus": "Loading Copperfin Studio snapshot...",
   "AssetEditor.Snapshot.Unavailable": "Snapshot unavailable: {0}",
   "AssetEditor.Snapshot.Loaded": "Snapshot loaded: {0} object rows, {1} fields, {2} companion indexes.",
+  "AssetEditor.Snapshot.ReadOnly": " Read-only; editing is disabled.",
   "AssetEditor.Snapshot.UndoAvailable": " Undo available: {0}.",
   "AssetEditor.Undo.Command": "Undo",
   "AssetEditor.Undo.WithLabel": "Undo {0}",

@@ -840,6 +840,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return false;
         }
 
+        if (!CanMutateCurrentDocument())
+        {
+            return false;
+        }
+
         var priorLabel = currentSnapshot.CommandUndoLabel;
         var explorerSelection = CaptureExplorerSelectionState();
         var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
@@ -1230,7 +1235,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
             ? null
-            : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization);
+            : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization, currentSnapshot.ReadOnly);
         designSurface.SelectRecord(selectedObject?.RecordIndex);
         UpdateObjectLifecycleButtonVisibility();
     }
@@ -1259,7 +1264,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     item.Selected = false;
                 }
 
-                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, localization);
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(
+                    reportSection,
+                    localization,
+                    currentSnapshot?.ReadOnly == true);
                 designSurface.SelectReportSection(reportSection.RecordIndex);
                 return;
             }
@@ -1273,7 +1281,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
                 propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportGrouping(
                     groupingScope.Grouping,
-                    localization);
+                    localization,
+                    currentSnapshot?.ReadOnly == true);
                 designSurface.SelectRecord(null);
                 return;
             }
@@ -1302,7 +1311,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     localization,
                     settingsScope.Deleted,
                     currentSnapshot?.ReportLayout,
-                    settingsScope.AvailablePropertyNames);
+                    settingsScope.AvailablePropertyNames,
+                    currentSnapshot?.ReadOnly == true);
                 designSurface.SelectRecord(null);
                 return;
             }
@@ -1390,7 +1400,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
                 ? null
-                : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization);
+                : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization, currentSnapshot.ReadOnly);
         }
         finally
         {
@@ -1440,7 +1450,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ApplyPropertyGridChange(string propertyName, object oldValue)
     {
-        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection selection || string.IsNullOrWhiteSpace(currentPath))
+        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection selection ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return;
         }
@@ -1463,7 +1475,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ApplyVisualPropertyChanges(int recordIndex, IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
     {
-        if (string.IsNullOrWhiteSpace(currentPath) || propertyChanges.Count == 0)
+        if (string.IsNullOrWhiteSpace(currentPath) || propertyChanges.Count == 0 || !CanMutateCurrentDocument())
         {
             return;
         }
@@ -1494,7 +1506,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private bool TryHandleObjectLifecycleCommand(bool restoring)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1544,7 +1558,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private bool TryHandleDuplicateObjectCommand()
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1592,7 +1608,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private bool TryHandleRenameObjectCommand()
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1644,7 +1662,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         string failedKey,
         string completedKey)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1697,7 +1717,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         string failedKey,
         string completedKey)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1771,7 +1793,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         string failedKey,
         string completedKey)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1843,7 +1867,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         string failedKey,
         string completedKey)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1917,7 +1943,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         string failedKey,
         string completedKey)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -1990,7 +2018,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private bool TryHandleNudgeObjectCommand(string mode, double deltaHpos, double deltaVpos)
     {
-        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            !CanMutateCurrentDocument())
         {
             return false;
         }
@@ -2187,12 +2217,27 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapshot.Objects.Count,
             snapshot.FieldCount,
             snapshot.IndexCount);
+        if (snapshot.ReadOnly)
+        {
+            status += this.localization.Text("AssetEditor.Snapshot.ReadOnly");
+        }
         if (snapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(snapshot.CommandUndoLabel))
         {
             status += this.localization.Format("AssetEditor.Snapshot.UndoAvailable", snapshot.CommandUndoLabel);
         }
 
         return status;
+    }
+
+    private bool CanMutateCurrentDocument()
+    {
+        if (currentSnapshot?.ReadOnly != true)
+        {
+            return true;
+        }
+
+        snapshotStatusLabel.Text = this.localization.Text("AssetEditor.Snapshot.ReadOnly");
+        return false;
     }
 
     private string BuildPropertyApplyingStatus(string propertyName)
@@ -2508,6 +2553,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void UpdateObjectLifecycleButtonVisibility()
     {
+        var canMutate = currentSnapshot?.ReadOnly != true && !string.IsNullOrWhiteSpace(currentPath);
         var selectedObjects = currentSnapshot?.AssetFamily is "report" or "label"
             ? TryGetSelectedSnapshotObjects()
             : Array.Empty<CopperfinStudioSnapshotObject>();
@@ -2552,37 +2598,37 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var showDelete = singleSelection && selectedObject is not null && !selectedObject.Deleted;
         var showRestore = singleSelection && selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
-        renameObjectButton.Enabled = showRename && !string.IsNullOrWhiteSpace(currentPath);
+        renameObjectButton.Enabled = showRename && canMutate;
         duplicateObjectButton.Visible = showDuplicate;
-        duplicateObjectButton.Enabled = showDuplicate && !string.IsNullOrWhiteSpace(currentPath);
+        duplicateObjectButton.Enabled = showDuplicate && canMutate;
         reorderFrontObjectButton.Visible = showReorder;
-        reorderFrontObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
+        reorderFrontObjectButton.Enabled = showReorder && canMutate;
         reorderBackObjectButton.Visible = showReorder;
-        reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
+        reorderBackObjectButton.Enabled = showReorder && canMutate;
         alignLeftObjectButton.Visible = showAlignLeft;
-        alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
+        alignLeftObjectButton.Enabled = showAlignLeft && canMutate;
         alignTopObjectButton.Visible = showAlignTop;
-        alignTopObjectButton.Enabled = showAlignTop && !string.IsNullOrWhiteSpace(currentPath);
+        alignTopObjectButton.Enabled = showAlignTop && canMutate;
         matchWidthObjectButton.Visible = showMatchWidth;
-        matchWidthObjectButton.Enabled = showMatchWidth && !string.IsNullOrWhiteSpace(currentPath);
+        matchWidthObjectButton.Enabled = showMatchWidth && canMutate;
         matchHeightObjectButton.Visible = showMatchHeight;
-        matchHeightObjectButton.Enabled = showMatchHeight && !string.IsNullOrWhiteSpace(currentPath);
+        matchHeightObjectButton.Enabled = showMatchHeight && canMutate;
         matchSizeObjectButton.Visible = showMatchSize;
-        matchSizeObjectButton.Enabled = showMatchSize && !string.IsNullOrWhiteSpace(currentPath);
+        matchSizeObjectButton.Enabled = showMatchSize && canMutate;
         distributeHorizontalObjectButton.Visible = showDistributeHorizontal;
-        distributeHorizontalObjectButton.Enabled = showDistributeHorizontal && !string.IsNullOrWhiteSpace(currentPath);
+        distributeHorizontalObjectButton.Enabled = showDistributeHorizontal && canMutate;
         distributeVerticalObjectButton.Visible = showDistributeVertical;
-        distributeVerticalObjectButton.Enabled = showDistributeVertical && !string.IsNullOrWhiteSpace(currentPath);
+        distributeVerticalObjectButton.Enabled = showDistributeVertical && canMutate;
         snapHorizontalObjectButton.Visible = showSnapHorizontal;
-        snapHorizontalObjectButton.Enabled = showSnapHorizontal && !string.IsNullOrWhiteSpace(currentPath);
+        snapHorizontalObjectButton.Enabled = showSnapHorizontal && canMutate;
         snapVerticalObjectButton.Visible = showSnapVertical;
-        snapVerticalObjectButton.Enabled = showSnapVertical && !string.IsNullOrWhiteSpace(currentPath);
+        snapVerticalObjectButton.Enabled = showSnapVertical && canMutate;
         snapToGridObjectButton.Visible = showSnapToGrid;
-        snapToGridObjectButton.Enabled = showSnapToGrid && !string.IsNullOrWhiteSpace(currentPath);
+        snapToGridObjectButton.Enabled = showSnapToGrid && canMutate;
         deleteObjectButton.Visible = showDelete;
-        deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
+        deleteObjectButton.Enabled = showDelete && canMutate;
         restoreObjectButton.Visible = showRestore;
-        restoreObjectButton.Enabled = showRestore && !string.IsNullOrWhiteSpace(currentPath);
+        restoreObjectButton.Enabled = showRestore && canMutate;
     }
 
     private void ConfigureObjectColumns()
@@ -2763,7 +2809,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 propertyGrid.SelectedObject = CopperfinDesignerSelection.FromSnapshot(
                     currentSnapshot.AssetFamily,
                     focusedObject,
-                    localization);
+                    localization,
+                    currentSnapshot.ReadOnly);
             }
         }
         finally

@@ -29,6 +29,7 @@ internal static partial class Program
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
+        TestDesignerSelectionHonorsReadOnlyDocumentState();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
@@ -369,6 +370,35 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
         }
+    }
+
+    private static void TestDesignerSelectionHonorsReadOnlyDocumentState()
+    {
+        var selection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 11,
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "EXPR", Value = "customer.name" },
+                    new() { Name = "HPOS", Value = "10" }
+                }
+            },
+            new CopperfinLocalization("en-US"),
+            documentReadOnly: true);
+
+        Expect(selection is not null, "read-only designer selection should materialize from report snapshot data");
+        if (selection is null)
+        {
+            return;
+        }
+
+        var expression = selection.GetProperties().Find("EXPR", false);
+        Expect(expression is not null && expression.IsReadOnly,
+            "read-only document selections should expose editable fields as read-only");
+        Expect(!selection.TryGetUpdate("EXPR", out _, out _),
+            "read-only document selections should reject property updates");
     }
 
     private static void TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments()

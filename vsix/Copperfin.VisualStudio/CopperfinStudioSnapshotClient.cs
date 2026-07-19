@@ -196,7 +196,7 @@ internal static class CopperfinStudioSnapshotClient
 
             return RunSnapshotCommand(
                 studioHostPath,
-                CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json",
+                CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: false) + " --json",
                 localization);
         }
         catch (InvalidOperationException ex)
@@ -226,7 +226,7 @@ internal static class CopperfinStudioSnapshotClient
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json",
+            CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: false) + " --json",
             localization);
     }
 

@@ -4,6 +4,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Managed read-only visual-asset slice `#4263` now preserves the native `document.readOnly` capability result: `CopperfinStudioSnapshotClient.TryLoad` must not force `--read-only` on ordinary snapshot loads. The managed report/label property-grid selections and mutation handlers must keep read-only assets non-editable, while writable-copy smoke fixtures add POSIX owner-write permission explicitly. Preserve the existing `readOnly` JSON field and explicit `--read-only` launch option; do not localize or rename machine fields.
+
 - Durable report-layout note: FRX/LBX document titles remain filename-based display text, but the shared snapshot and host JSON now expose the header record's `NAME` field ordinal and memo block when that title slot exists. Keep null/zero provenance for synthetic or legacy assets without a header `NAME` field, and keep the managed report-layout model aligned with the additive native fields.
 
 - Runtime-host path boundary slice `#4249` preserves UTF-8 runtime-host strings through validation and staging by converting them with `path_from_utf8_string(...)` before native filesystem operations. Keep automatic discovery, environment overrides, explicit paths, security validation, and package/debug fields unchanged; retain the Unicode package-path regression and require hosted Windows evidence before closing #3873.

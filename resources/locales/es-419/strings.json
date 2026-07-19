@@ -1919,6 +1919,7 @@
   "AssetEditor.Snapshot.LoadingStatus": "Cargando instant\u00E1nea de Copperfin Studio...",
   "AssetEditor.Snapshot.Unavailable": "Instant\u00E1nea no disponible: {0}",
   "AssetEditor.Snapshot.Loaded": "Instant\u00E1nea cargada: {0} filas de objetos, {1} campos, {2} \u00EDndices complementarios.",
+  "AssetEditor.Snapshot.ReadOnly": " Solo lectura; la edici\u00F3n est\u00E1 deshabilitada.",
   "AssetEditor.Snapshot.UndoAvailable": " Deshacer disponible: {0}.",
   "AssetEditor.Undo.Command": "Deshacer",
   "AssetEditor.Undo.WithLabel": "Deshacer {0}",
