@@ -17,6 +17,8 @@ namespace Copperfin.VisualStudio;
 
 internal sealed class CopperfinAssetEditorControl : UserControl
 {
+    public event Action<string>? OpenDocumentRequested;
+
     private sealed class ReportUnplacedObjectScope
     {
         public List<int> RecordIndexes { get; } = new();
@@ -450,6 +452,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Type"), 180);
         objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Record"), 70);
         objectListView.SelectedIndexChanged += (_, _) => SyncSelectionFromList();
+        objectListView.DoubleClick += (_, _) => TryActivateSelectedProjectEntry();
+        objectListView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedProjectEntry();
+        };
 
         sectionListView = new ListView
         {
@@ -808,6 +822,34 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return currentSnapshot?.CommandUndoAvailable == true && !string.IsNullOrWhiteSpace(currentPath);
+    }
+
+    public bool TryActivateSelectedProjectEntry()
+    {
+        if (currentSnapshot?.AssetFamily != "project" ||
+            string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        var projectEntry = selectedObject is null
+            ? null
+            : LookupProjectEntry(selectedObject.RecordIndex);
+        if (projectEntry is null ||
+            !CopperfinProjectEntryActivation.TryResolve(currentPath!, projectEntry, out var resolvedPath))
+        {
+            return false;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(resolvedPath);
+        return true;
     }
 
     public string GetUndoCommandText()

@@ -4,6 +4,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- PJX workspace entries are now an MVP open/edit path under #25/#4265: the shared editor must resolve only supported child assets beneath the PJX directory, reject traversal/missing/unsupported targets, and invoke the host-owned open callback on Enter or double-click. Standalone Studio routes the callback through normalized document-tab identity; the VSIX pane delegates to Visual Studio document hosting. Keep the path allowlist and machine contracts invariant.
+
 - Managed read-only visual-asset slice `#4263` now preserves the native `document.readOnly` capability result: `CopperfinStudioSnapshotClient.TryLoad` must not force `--read-only` on ordinary snapshot loads. The managed report/label property-grid selections and mutation handlers must keep read-only assets non-editable, while writable-copy smoke fixtures add POSIX owner-write permission explicitly. Preserve the existing `readOnly` JSON field and explicit `--read-only` launch option; do not localize or rename machine fields.
 
 - Durable report-layout note: FRX/LBX document titles remain filename-based display text, but the shared snapshot and host JSON now expose the header record's `NAME` field ordinal and memo block when that title slot exists. Keep null/zero provenance for synthetic or legacy assets without a header `NAME` field, and keep the managed report-layout model aligned with the additive native fields.

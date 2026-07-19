@@ -95,6 +95,7 @@ internal sealed class StudioMainForm : Form
             Dock = DockStyle.Fill,
             EmbeddedStudioShell = true
         };
+        editorControl.OpenDocumentRequested += OpenDocument;
 
         var page = new TabPage(Path.GetFileName(normalizedPath))
         {

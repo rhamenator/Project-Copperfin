@@ -22,6 +22,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         : base(serviceProvider)
     {
         control = new CopperfinAssetEditorControl();
+        control.OpenDocumentRequested += OpenDocumentInVisualStudio;
         this.documentPath = documentPath;
         control.LoadDocument(documentPath);
     }
@@ -98,6 +99,19 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         documentPath = pszDocDataPath;
         control.LoadDocument(documentPath);
         return VSConstants.S_OK;
+    }
+
+    private void OpenDocumentInVisualStudio(string path)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        VsShellUtilities.OpenDocument(
+            ServiceProvider.GlobalProvider,
+            path,
+            Guid.Empty,
+            out IVsUIHierarchy _,
+            out uint _,
+            out IVsWindowFrame _,
+            out IVsTextView _);
     }
 
     public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)

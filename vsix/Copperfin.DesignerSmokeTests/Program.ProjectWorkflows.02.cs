@@ -19,6 +19,133 @@ using System.Windows.Forms;
 namespace Copperfin.VisualStudio;
 internal static partial class Program
 {
+    private static void SmokeProjectWorkspaceEntryActivation()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "project-entry-activation",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var projectPath = Path.Combine(root, "sample.pjx");
+        var childPath = Path.Combine(root, "forms", "orders.scx");
+        var outsidePath = Path.Combine(root, "..", "outside.prg");
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(childPath)!);
+            File.WriteAllText(projectPath, "project");
+            File.WriteAllText(childPath, "form");
+            File.WriteAllText(Path.GetFullPath(outsidePath), "outside");
+
+            var entry = new CopperfinStudioProjectEntry
+            {
+                RelativePath = "forms\\orders.scx"
+            };
+            Expect(
+                CopperfinProjectEntryActivation.TryResolve(projectPath, entry, out var resolvedPath) &&
+                string.Equals(
+                    resolvedPath,
+                    CopperfinDocumentPathIdentity.Normalize(childPath),
+                    StringComparison.Ordinal),
+                "project workspace activation should resolve supported child assets relative to the PJX directory");
+
+            entry.RelativePath = "../outside.prg";
+            Expect(
+                !CopperfinProjectEntryActivation.TryResolve(projectPath, entry, out _),
+                "project workspace activation should reject child paths that escape the PJX directory");
+
+            entry.RelativePath = "missing.prg";
+            Expect(
+                !CopperfinProjectEntryActivation.TryResolve(projectPath, entry, out _),
+                "project workspace activation should reject missing child assets");
+
+            entry.RelativePath = "notes.txt";
+            File.WriteAllText(Path.Combine(root, "notes.txt"), "unsupported");
+            Expect(
+                !CopperfinProjectEntryActivation.TryResolve(projectPath, entry, out _),
+                "project workspace activation should reject unsupported child asset types");
+
+            using var hostForm = new Form
+            {
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+            string? requestedPath = null;
+            control.OpenDocumentRequested += path => requestedPath = path;
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            SetPrivateField(control, "currentPath", projectPath);
+            SetCurrentSnapshot(control, new CopperfinStudioSnapshotDocument
+            {
+                Path = projectPath,
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries = new List<CopperfinStudioProjectEntry>
+                    {
+                        new()
+                        {
+                            RecordIndex = 7,
+                            RelativePath = "forms\\orders.scx"
+                        }
+                    }
+                },
+                Objects = new List<CopperfinStudioSnapshotObject>
+                {
+                    new()
+                    {
+                        RecordIndex = 7,
+                        Title = "forms\\orders.scx"
+                    }
+                }
+            });
+            typeof(CopperfinAssetEditorControl)
+                .GetMethod("PopulateObjectList", BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.Invoke(control, new object[] { true });
+
+            var objectList = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count >= 3 &&
+                                        string.Equals(
+                                            list.Columns[0].Text,
+                                            "Item",
+                                            StringComparison.OrdinalIgnoreCase));
+            Expect(objectList is not null && objectList.SelectedItems.Count == 1,
+                "project workspace activation should select the first project entry in the shared editor list");
+            Expect(
+                control.TryActivateSelectedProjectEntry() &&
+                string.Equals(
+                    requestedPath,
+                    CopperfinDocumentPathIdentity.Normalize(childPath),
+                    StringComparison.Ordinal),
+                "project workspace activation should invoke the host callback with the normalized child path");
+            hostForm.Close();
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeProjectDebugReplayWithRealAsset(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))

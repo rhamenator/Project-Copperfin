@@ -41,6 +41,8 @@ internal static partial class Program
             Dock = DockStyle.Fill
         };
         control.SuppressProjectWorkflowDialogs = true;
+        string? activatedPath = null;
+        control.OpenDocumentRequested += path => activatedPath = path;
 
         hostForm.Controls.Add(control);
         hostForm.Show();
@@ -65,6 +67,40 @@ internal static partial class Program
             .SelectMany(list => list.Items.Cast<ListViewItem>())
             .Any(item => expectGroups.Any(expectGroup => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase)));
         Expect(groupFound, $"project editor should surface one of the expected groups for {path}");
+
+        var projectEntryList = FindListViews(control)
+            .FirstOrDefault(list => list.Columns.Count >= 3 &&
+                                    string.Equals(
+                                        list.Columns[0].Text,
+                                        "Item",
+                                        StringComparison.OrdinalIgnoreCase));
+        var projectEntryItem = projectEntryList?.Items
+            .Cast<ListViewItem>()
+            .FirstOrDefault(item => CopperfinProjectEntryActivation.TryResolve(
+                path!,
+                new CopperfinStudioProjectEntry { RelativePath = item.Text },
+                out _));
+        Expect(projectEntryItem is not null,
+            $"project editor should list at least one activatable child asset for {path}");
+        if (projectEntryList is not null && projectEntryItem is not null)
+        {
+            CopperfinProjectEntryActivation.TryResolve(
+                path!,
+                new CopperfinStudioProjectEntry { RelativePath = projectEntryItem.Text },
+                out var expectedActivatedPath);
+            projectEntryList.SelectedItems.Clear();
+            projectEntryItem.Selected = true;
+            projectEntryItem.Focused = true;
+            Application.DoEvents();
+            var activated = control.TryActivateSelectedProjectEntry();
+            Expect(activated &&
+                   !string.IsNullOrWhiteSpace(activatedPath) &&
+                   string.Equals(
+                       activatedPath,
+                       expectedActivatedPath,
+                       StringComparison.Ordinal),
+                $"project editor should activate the selected child asset through the host callback for {path}");
+        }
 
         var projectButtons = FindButtons(control).Select(button => button.Text).ToList();
         Expect(projectButtons.Contains("Build Copperfin Project"), $"project editor should expose a build command for {path}");
