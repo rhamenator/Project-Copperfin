@@ -184,7 +184,10 @@ std::string trim_newline(std::string value) {
 std::optional<PrgValue> evaluate_file_io_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
-    const std::string& default_directory) {
+    const std::string& default_directory,
+    bool require_verified_file_byte_overrides,
+    const std::function<std::optional<std::string>(const std::filesystem::path&)>& read_verified_file_callback,
+    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback) {
     if (function == "ferror" && arguments.empty()) {
         return make_number_value(static_cast<double>(last_file_error_code()));
     }
@@ -434,7 +437,21 @@ std::optional<PrgValue> evaluate_file_io_function(
     }
 
     if (function == "filetostr" && !arguments.empty()) {
-        std::ifstream input(resolve_file_path(value_as_string(arguments[0]), default_directory), std::ios::binary);
+        const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
+        if (require_verified_file_byte_overrides) {
+            const auto verified = read_verified_file_callback ? read_verified_file_callback(path) : std::nullopt;
+            if (!verified.has_value()) {
+                if (verified_file_unavailable_callback) {
+                    verified_file_unavailable_callback(path);
+                }
+                last_file_error_code() = 5;
+                return make_string_value(std::string{});
+            }
+            clear_file_error();
+            return make_string_value(*verified);
+        }
+
+        std::ifstream input(path, std::ios::binary);
         if (!input.good()) {
             set_file_error_from_errno();
             return make_string_value(std::string{});

@@ -87,7 +87,18 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
     };
 
-    if (const auto file_io_result = evaluate_file_io_function(function, arguments, default_directory)) {
+    if (const auto file_io_result = evaluate_file_io_function(
+            function,
+            arguments,
+            default_directory,
+            require_verified_file_byte_overrides,
+            read_verified_file_callback,
+            [&](const std::filesystem::path& path)
+            {
+                record_runtime_warning(runtime_text(
+                    "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable",
+                    {{"path", copperfin::platform::path_to_utf8_string(path)}}));
+            })) {
         return file_io_result;
     }
 

@@ -1071,6 +1071,7 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} failed to materialize destination cursor",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable": "Verified package bytes are unavailable for XMLTOCURSOR() input: {path}",
+  "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable": "Verified package bytes are unavailable for FILETOSTR() input: {path}",
   "Runtime.Prg.ReportAsset.Error.ResolveFailed": "Unable to resolve report asset: {path}",
   "Runtime.Prg.ReportOutput.Error.OpenFailed": "Unable to open report output path: {path}",
   "Runtime.Prg.ReportOutput.Error.PathRequired": "REPORT/LABEL TO clause requires a writable output path",

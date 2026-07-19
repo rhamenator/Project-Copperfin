@@ -7,6 +7,8 @@
 #include "copperfin/runtime/prg_engine.h"
 
 #include <optional>
+#include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -15,7 +17,10 @@ namespace copperfin::runtime {
 std::optional<PrgValue> evaluate_file_io_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
-    const std::string& default_directory);
+    const std::string& default_directory,
+    bool require_verified_file_byte_overrides,
+    const std::function<std::optional<std::string>(const std::filesystem::path&)>& read_verified_file_callback,
+    const std::function<void(const std::filesystem::path&)>& verified_file_unavailable_callback);
 
 void close_all_file_io_handles();
 

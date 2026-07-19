@@ -1476,6 +1476,7 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} nao conseguiu materializar o cursor de destino",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} nao conseguiu analisar o payload XML fornecido",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable": "Os bytes verificados do pacote nao estao disponiveis para a entrada de XMLTOCURSOR(): {path}",
+  "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable": "Os bytes verificados do pacote nao estao disponiveis para a entrada de FILETOSTR(): {path}",
   "Runtime.Prg.Watch.Error.EmptyExpression": "A expressao de watch esta vazia.",
   "Runtime.Prg.Watch.Error.Failed": "A avaliacao de watch falhou.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "A avaliacao de watch ficou sem memoria.",

@@ -1476,6 +1476,7 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} failed to materialize destination cursor",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable": "[!! Vërïfïëð þåçkåġë þÿtëš årë üñåvåïļåþļë føř XMLTOCURSOR() ïñþüť: {path} !!]",
+  "Runtime.Prg.RuntimeSurface.Warning.FileToStrVerifiedBytesUnavailable": "[!! Vërïfïëð þåçkåġë þÿtëš årë üñåvåïļåþļë føř FILETOSTR() ïñþüť: {path} !!]",
   "Runtime.Prg.Watch.Error.EmptyExpression": "Watch expression is empty.",
   "Runtime.Prg.Watch.Error.Failed": "Watch evaluation failed.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "Watch evaluation ran out of memory.",

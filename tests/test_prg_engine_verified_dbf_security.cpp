@@ -6,6 +6,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
@@ -109,6 +110,59 @@ void test_initial_use_fails_closed_without_verified_dbf_bytes()
            "strict verified DBF USE should fail closed without package bytes");
     expect(state.message.find("Verified package bytes are unavailable for database component") != std::string::npos,
            "strict DBF rejection should retain the localized verified-byte diagnostic: " + state.message);
+    fs::remove_all(root, ignored);
+}
+
+void test_filetostr_reads_verified_bytes_and_fails_closed_without_admission()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_filetostr";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path payload_path = root / "payload.txt";
+    write_text(payload_path, "TAMPERED");
+
+    copperfin::runtime::RuntimeSessionOptions verified_options;
+    verified_options.verified_file_byte_overrides.emplace(payload_path.string(), "VERIFIED");
+    verified_options.require_verified_file_byte_overrides = true;
+    const auto verified_state = run_program(
+        root,
+        "verified_filetostr.prg",
+        "cValue = FILETOSTR('payload.txt')\nRETURN\n",
+        verified_options);
+
+    expect(verified_state.completed,
+           "strict FILETOSTR should complete from admitted bytes: " + verified_state.message);
+    expect(global_text(verified_state, "cvalue") == "VERIFIED",
+           "strict FILETOSTR should ignore tampered disk bytes");
+
+    copperfin::runtime::RuntimeSessionOptions missing_options;
+    missing_options.require_verified_file_byte_overrides = true;
+    const auto missing_state = run_program(
+        root,
+        "missing_filetostr.prg",
+        "cValue = FILETOSTR('payload.txt')\nRETURN\n",
+        missing_options);
+
+    expect(missing_state.completed,
+           "strict FILETOSTR without admission should fail safely: " + missing_state.message);
+    expect(global_text(missing_state, "cvalue").empty(),
+           "strict FILETOSTR without admission should return no file bytes");
+    expect(std::any_of(missing_state.events.begin(), missing_state.events.end(), [](const auto& event)
+    {
+        return event.category == "runtime.warning" &&
+               event.detail.find("Verified package bytes are unavailable for FILETOSTR() input") != std::string::npos;
+    }),
+           "strict FILETOSTR rejection should emit the verified-byte warning");
+
+    const auto non_strict_state = run_program(
+        root,
+        "non_strict_filetostr.prg",
+        "cValue = FILETOSTR('payload.txt')\nRETURN\n");
+    expect(non_strict_state.completed,
+           "non-strict FILETOSTR should preserve ordinary disk reads: " + non_strict_state.message);
+    expect(global_text(non_strict_state, "cvalue") == "TAMPERED",
+           "non-strict FILETOSTR should retain ordinary filesystem behavior");
     fs::remove_all(root, ignored);
 }
 
@@ -603,6 +657,7 @@ int main()
 {
     test_initial_use_reads_verified_dbf_bytes();
     test_initial_use_fails_closed_without_verified_dbf_bytes();
+    test_filetostr_reads_verified_bytes_and_fails_closed_without_admission();
     test_initial_use_reads_verified_index_metadata();
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
