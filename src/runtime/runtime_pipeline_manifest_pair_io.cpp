@@ -265,10 +265,20 @@ bool ManifestPairDirectory::read_direct_file(
     (void)::CloseHandle(handle);
     return ok;
 #else
+#if defined(__APPLE__)
+    // macOS can report ELOOP for this no-follow openat form even when the
+    // transaction entry is a regular file. Verify the directory entry
+    // without following links, then bind the read to the opened identity.
+    const int file = ::openat(
+        descriptor_,
+        leaf.c_str(),
+        O_RDONLY | O_CLOEXEC);
+#else
     const int file = ::openat(
         descriptor_,
         leaf.c_str(),
         O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+#endif
     if (file < 0) {
         return false;
     }
@@ -278,6 +288,17 @@ bool ManifestPairDirectory::read_direct_file(
         before.st_size >= 0 &&
         static_cast<std::uintmax_t>(before.st_size) <=
             static_cast<std::uintmax_t>(std::numeric_limits<std::size_t>::max());
+#if defined(__APPLE__)
+    struct stat entry_before{};
+    ok = ok &&
+        ::fstatat(
+            descriptor_,
+            leaf.c_str(),
+            &entry_before,
+            AT_SYMLINK_NOFOLLOW) == 0 &&
+        S_ISREG(entry_before.st_mode) &&
+        same_file_identity(before, entry_before);
+#endif
     if (ok) {
         bytes.assign(static_cast<std::size_t>(before.st_size), '\0');
         std::size_t offset = 0U;
@@ -299,7 +320,8 @@ bool ManifestPairDirectory::read_direct_file(
     }
     struct stat after{};
     struct stat entry{};
-    if (!ok || ::fstat(file, &after) != 0 || !same_file_identity(before, after) ||
+    if (!ok ||
+        ::fstat(file, &after) != 0 || !same_file_identity(before, after) ||
         ::fstatat(descriptor_, leaf.c_str(), &entry, AT_SYMLINK_NOFOLLOW) != 0 ||
         !same_file_identity(after, entry)) {
         ok = false;
