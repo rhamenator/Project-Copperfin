@@ -344,6 +344,60 @@ void test_typed_append_from_fails_closed_without_verified_source_bytes()
     fs::remove_all(root, ignored);
 }
 
+void test_restore_from_reads_verified_mem_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_restore_mem";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path source_path = root / "state.mem";
+    const std::string verified_bytes = "saved_value=C:verified\n";
+    write_text(source_path, verified_bytes);
+    write_text(source_path, "saved_value=C:tampered\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(source_path.string(), verified_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_restore_mem.prg",
+        "RESTORE FROM '" + source_path.string() + "'\n"
+        "restored_value = saved_value\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict RESTORE FROM should read admitted .mem bytes: " + state.message);
+    expect(global_text(state, "restored_value") == "verified",
+           "strict RESTORE FROM should ignore the replaced physical .mem file");
+    fs::remove_all(root, ignored);
+}
+
+void test_restore_from_fails_closed_without_verified_mem_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_unverified_restore_mem";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path source_path = root / "state.mem";
+    write_text(source_path, "saved_value=C:physical\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "unverified_restore_mem.prg",
+        "RESTORE FROM '" + source_path.string() + "'\n"
+        "RETURN\n",
+        options);
+
+    expect(!state.completed,
+           "strict RESTORE FROM should fail closed without admitted .mem bytes");
+    expect(state.message == "RESTORE FROM: unable to open source file",
+           "strict RESTORE FROM rejection should preserve the localized open diagnostic: " + state.message);
+    fs::remove_all(root, ignored);
+}
+
 void test_buffered_append_blank_reads_verified_dbf_rows()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_buffered_append";
@@ -489,6 +543,8 @@ int main()
     test_typed_append_from_reads_verified_json_bytes();
     test_typed_append_from_reads_verified_delimited_bytes();
     test_typed_append_from_fails_closed_without_verified_source_bytes();
+    test_restore_from_reads_verified_mem_bytes();
+    test_restore_from_fails_closed_without_verified_mem_bytes();
     test_buffered_append_blank_reads_verified_dbf_rows();
     test_append_from_array_reads_verified_destination_schema();
     test_list_query_file_requery_reads_verified_bytes();

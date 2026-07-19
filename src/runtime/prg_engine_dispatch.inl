@@ -6642,8 +6642,36 @@
                 }
                 source_path = source_path.lexically_normal();
 
-                std::ifstream input(source_path, std::ios::binary);
-                if (!input.good())
+                std::ifstream file_input;
+                std::istringstream verified_input;
+                std::istream *input = nullptr;
+                if (options.require_verified_file_byte_overrides)
+                {
+                    const auto verified = find_verified_file_byte_override(source_path);
+                    if (verified == options.verified_file_byte_overrides.end() || verified->second.empty())
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    verified_input.str(verified->second);
+                    input = &verified_input;
+                }
+                else
+                {
+                    file_input.open(source_path, std::ios::binary);
+                    if (!file_input.good())
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    input = &file_input;
+                }
+
+                if (input == nullptr)
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed");
                     last_fault_location = statement.location;
@@ -6667,7 +6695,7 @@
 
                 std::size_t restored_count = 0U;
                 std::string line;
-                while (std::getline(input, line))
+                while (std::getline(*input, line))
                 {
                     if (!line.empty() && line.back() == '\r')
                     {
