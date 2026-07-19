@@ -654,7 +654,9 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
             "  \"parameters\": []\n"
             "}\n");
     };
+    std::cerr << "BEGIN: Unicode bridge request write\n";
     write_request(escaped_source_path);
+    std::cerr << "END: Unicode bridge request write\n";
 
     const auto process = run_process_capture(
         runtime_host_path,
