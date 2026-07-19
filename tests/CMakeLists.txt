@@ -473,6 +473,10 @@ target_link_libraries(test_build_host_utf8_launcher_paths PRIVATE
     cf_vfp_assets
     cf_test_process_capture_support
 )
+target_compile_definitions(
+    test_build_host_utf8_launcher_paths
+    PRIVATE COPPERFIN_TEST_LOCALE_DIR="${PROJECT_SOURCE_DIR}/resources/locales"
+)
 add_dependencies(test_build_host_utf8_launcher_paths copperfin_build_host copperfin_runtime_host)
 
 if(MSVC)

@@ -4,6 +4,7 @@
 
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "test_process_capture_support.h"
 
 #include <cstdlib>
@@ -89,19 +90,35 @@ int main(int argc, char** argv) {
     fs::create_directories(project_dir);
     fs::create_directories(output_root);
 
+    const fs::path tool_dir = temp_root /
+        copperfin::platform::path_from_utf8_string("tool-\xD0\xBF\xD1\x83\xD1\x82\xD1\x8C");
+    fs::create_directories(tool_dir);
+    copperfin::test_support::ScopedEnvironmentPath locale_root(
+        "COPPERFIN_LOCALE_DIR",
+        copperfin::platform::path_from_utf8_string(COPPERFIN_TEST_LOCALE_DIR));
+    const fs::path source_build_host_path =
+        copperfin::platform::path_from_utf8_string(argv[1]);
+    const fs::path source_runtime_host_path = source_build_host_path.parent_path() /
+        "copperfin_runtime_host.exe";
+    const fs::path build_host_path = tool_dir / "copperfin_build_host.exe";
+    const fs::path runtime_host_path = tool_dir / "copperfin_runtime_host.exe";
+    std::error_code copy_error;
+    fs::copy_file(source_build_host_path, build_host_path,
+                  fs::copy_options::overwrite_existing, copy_error);
+    expect(!copy_error, "UTF-8 launcher test should copy the build host into a Unicode directory");
+    copy_error.clear();
+    fs::copy_file(source_runtime_host_path, runtime_host_path,
+                  fs::copy_options::overwrite_existing, copy_error);
+    expect(!copy_error, "UTF-8 launcher test should copy the runtime host beside the build host");
+
     std::ofstream source(project_dir / "main.prg", std::ios::binary | std::ios::trunc);
     source << "RETURN\n";
     write_utf8_project(project_path, project_dir);
 
-    const fs::path build_host_path =
-        copperfin::platform::path_from_utf8_string(argv[1]);
-    const fs::path runtime_host_path = build_host_path.parent_path() /
-        "copperfin_runtime_host.exe";
     const auto process = copperfin::test_support::run_process_capture(
         build_host_path,
         {"build", "--project", copperfin::platform::path_to_utf8_string(project_path),
          "--output-dir", copperfin::platform::path_to_utf8_string(output_root),
-         "--runtime-host", copperfin::platform::path_to_utf8_string(runtime_host_path),
          "--emit-dotnet-launcher"},
         temp_root);
     if (process.exit_code != 0) {

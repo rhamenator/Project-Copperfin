@@ -185,11 +185,11 @@ std::string resolve_runtime_host_path(
     };
     for (const auto& candidate : candidate_paths) {
         if (std::filesystem::exists(candidate)) {
-            return candidate.string();
+            return copperfin::platform::path_to_utf8_string(candidate);
         }
     }
 
-    return (host_root / host_name).string();
+    return copperfin::platform::path_to_utf8_string(host_root / host_name);
 }
 
 #if defined(_WIN32)
