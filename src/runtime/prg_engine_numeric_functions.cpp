@@ -67,7 +67,13 @@ std::optional<PrgValue> evaluate_numeric_function(
     }
     if (function == "sqrt" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
-        return make_number_value(value < 0.0 ? 0.0 : std::sqrt(value));
+        if (value < 0.0) {
+            throw std::runtime_error(numeric_domain_error(
+                "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired",
+                "SQRT()",
+                value));
+        }
+        return make_number_value(std::sqrt(value));
     }
     if (function == "ceiling" && !arguments.empty()) {
         return make_number_value(std::ceil(value_as_number(arguments[0])));

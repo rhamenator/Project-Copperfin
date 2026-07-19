@@ -1036,6 +1036,7 @@
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "User-defined routine call cannot enter READ EVENTS during expression evaluation",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} requires a positive argument (got {value})",
+  "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired": "{function} requires a non-negative argument (got {value})",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requires a current local record",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "APPEND BLANK is not supported with row buffering mode {mode}",

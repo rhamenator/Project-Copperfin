@@ -1441,6 +1441,7 @@
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "La llamada a la rutina definida por el usuario no puede entrar en READ EVENTS durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division por cero en expresion entera",
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} requiere un argumento positivo (recibio {value})",
+  "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired": "{function} requiere un argumento no negativo (recibio {value})",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requiere un argumento entre -1 y 1 (recibio {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requiere un registro local actual",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "APPEND BLANK no es compatible con el modo de bufer de filas {mode}",

@@ -877,6 +877,23 @@ namespace
         expect(acos_state.message == "Runtime fault: ACOS() requires an argument between -1 and 1 (got -2.000000)",
                "#2540: ACOS() domain error should preserve function and value placeholders");
 
+        const auto sqrt_state = run_fault("sqrt_domain.prg", "n = SQRT(-1)\nRETURN\n");
+        expect(!sqrt_state.completed, "SQRT(-1) should pause with a runtime error");
+        expect(sqrt_state.message == "Runtime fault: SQRT() requires a non-negative argument (got -1.000000)",
+               "#4268: SQRT() domain error should route through the default locale catalog");
+
+        const auto sqrt_valid_state = run_fault(
+            "sqrt_valid.prg",
+            "nZero = SQRT(0)\n"
+            "nPositive = SQRT(9)\n"
+            "RETURN\n");
+        expect(sqrt_valid_state.completed,
+               "#4268: SQRT() should retain valid non-negative behavior: " + sqrt_valid_state.message);
+        expect(copperfin::runtime::format_value(sqrt_valid_state.globals.at("nzero")) == "0",
+               "#4268: SQRT(0) should remain zero");
+        expect(copperfin::runtime::format_value(sqrt_valid_state.globals.at("npositive")) == "3",
+               "#4268: SQRT(9) should remain three");
+
         fs::remove_all(temp_root, ignored);
     }
 
