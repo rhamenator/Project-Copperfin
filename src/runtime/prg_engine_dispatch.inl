@@ -7558,6 +7558,38 @@
                 }
                 src_path = src_path.lexically_normal();
 
+                const auto read_append_source_bytes = [&](const fs::path &path,
+                                                          const std::string &type,
+                                                          std::string &bytes)
+                {
+                    if (options.require_verified_file_byte_overrides)
+                    {
+                        const auto verified = find_verified_file_byte_override(path);
+                        if (verified == options.verified_file_byte_overrides.end() || verified->second.empty())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                                {{"type", type}});
+                            return false;
+                        }
+                        bytes = verified->second;
+                        return true;
+                    }
+
+                    std::ifstream input(path, std::ios::binary);
+                    if (!input.good())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {{"type", type}});
+                        return false;
+                    }
+                    std::ostringstream buffer;
+                    buffer << input.rdbuf();
+                    bytes = buffer.str();
+                    return true;
+                };
+
                 const std::string fields_clause = statement.tertiary_expression;
                 const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
 
@@ -7575,20 +7607,13 @@
 
                     if (append_from_json)
                     {
-                        std::ifstream json_input(src_path, std::ios::binary);
-                        if (!json_input.good())
+                        std::string json_bytes;
+                        if (!read_append_source_bytes(src_path, "JSON", json_bytes))
                         {
-                            last_error_message = runtime_text(
-                                "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                                {
-                                    {"type", "JSON"},
-                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
-                        std::ostringstream json_buffer;
-                        json_buffer << json_input.rdbuf();
 
                         std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
                         const std::string for_expr = statement.quaternary_expression;
@@ -7607,7 +7632,7 @@
                         }
 
                         const std::vector<std::map<std::string, std::string>> json_rows =
-                            parse_json_record_objects(json_buffer.str());
+                            parse_json_record_objects(json_bytes);
                         std::size_t appended_count = 0U;
                         for (const auto &row : json_rows)
                         {
@@ -7675,20 +7700,13 @@
 
                     if (append_from_delimited)
                     {
-                        std::ifstream csv_input(src_path, std::ios::binary);
-                        if (!csv_input.good())
+                        std::string csv_bytes;
+                        if (!read_append_source_bytes(src_path, "DELIMITED", csv_bytes))
                         {
-                            last_error_message = runtime_text(
-                                "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                                {
-                                    {"type", "DELIMITED"},
-                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
                         }
-                        std::ostringstream csv_buffer;
-                        csv_buffer << csv_input.rdbuf();
 
                         std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
                         const std::string for_expr = statement.quaternary_expression;
@@ -7710,7 +7728,7 @@
                             parse_delimited_text_options(append_type, with_clause);
                         std::size_t appended_count = 0U;
                         bool first_line = true;
-                        for (const std::string &line : split_text_lines(csv_buffer.str()))
+                        for (const std::string &line : split_text_lines(csv_bytes))
                         {
                             if (line.empty())
                             {
@@ -7961,20 +7979,13 @@
 
                 if (append_from_sdf)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "SDF", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "SDF"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8012,7 +8023,7 @@
                     }
 
                     std::size_t appended_count = 0U;
-                    for (const std::string &line : split_sdf_lines(buffer.str()))
+                    for (const std::string &line : split_sdf_lines(buffer))
                     {
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
@@ -8069,20 +8080,13 @@
 
                 if (append_from_json)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "JSON", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "JSON"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8119,7 +8123,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const std::vector<std::map<std::string, std::string>> json_rows = parse_json_record_objects(buffer.str());
+                    const std::vector<std::map<std::string, std::string>> json_rows = parse_json_record_objects(buffer);
                     std::size_t appended_count = 0U;
                     for (const auto &row : json_rows)
                     {
@@ -8178,20 +8182,13 @@
 
                 if (append_from_dif)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "DIF", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "DIF"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8228,7 +8225,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer.str(), target_fields.size());
+                    std::vector<std::vector<std::string>> dif_rows = parse_dif_table(buffer, target_fields.size());
                     if (!dif_rows.empty() && dif_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
@@ -8299,20 +8296,13 @@
 
                 if (append_from_sylk)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "SYLK", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "SYLK"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8349,7 +8339,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<std::vector<std::string>> sylk_rows = parse_sylk_table(buffer.str(), target_fields.size());
+                    std::vector<std::vector<std::string>> sylk_rows = parse_sylk_table(buffer, target_fields.size());
                     if (!sylk_rows.empty() && sylk_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
@@ -8420,20 +8410,13 @@
 
                 if (append_from_xls)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "XLS", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "XLS"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8470,7 +8453,7 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<std::vector<std::string>> workbook_rows = parse_spreadsheetml_workbook(buffer.str());
+                    std::vector<std::vector<std::string>> workbook_rows = parse_spreadsheetml_workbook(buffer);
                     if (!workbook_rows.empty() && workbook_rows.front().size() >= target_fields.size())
                     {
                         bool matches_header = true;
@@ -8541,20 +8524,13 @@
 
                 if (append_from_delimited)
                 {
-                    std::ifstream input(src_path, std::ios::binary);
-                    if (!input.good())
+                    std::string buffer;
+                    if (!read_append_source_bytes(src_path, "DELIMITED", buffer))
                     {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
-                            {
-                                {"type", "DELIMITED"},
-                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    std::ostringstream buffer;
-                    buffer << input.rdbuf();
 
                     const auto dest_result = vfp::parse_dbf_table_from_file(
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
@@ -8594,7 +8570,7 @@
                     const DelimitedTextOptions delimited_options = parse_delimited_text_options(append_type, with_clause);
                     std::size_t appended_count = 0U;
                     bool first_delimited_line = true;
-                    for (const std::string &line : split_text_lines(buffer.str()))
+                    for (const std::string &line : split_text_lines(buffer))
                     {
                         if (line.empty())
                         {

@@ -229,6 +229,121 @@ void test_append_from_reads_verified_source_rows()
     fs::remove_all(root, ignored);
 }
 
+void test_typed_append_from_reads_verified_json_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_typed_append_json";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path source_path = root / "source.json";
+    write_simple_dbf(destination_path, {"Existing"});
+    write_text(source_path, "[{\"NAME\":\"Ada\"},{\"NAME\":\"Grace\"}]\n");
+    const std::string verified_destination_bytes = read_text(destination_path);
+    const std::string verified_source_bytes = read_text(source_path);
+    write_text(source_path, "[{\"NAME\":\"Tampered\"}]\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(destination_path.string(), verified_destination_bytes);
+    options.verified_file_byte_overrides.emplace(source_path.string(), verified_source_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_typed_append_json.prg",
+        "USE '" + destination_path.string() + "' ALIAS destination\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE JSON\n"
+        "nRows = RECCOUNT('destination')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict typed APPEND FROM JSON should read admitted source bytes: " + state.message);
+    expect(global_text(state, "nrows") == "3",
+           "strict typed APPEND FROM JSON should append both admitted rows");
+    const auto json_persisted = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(json_persisted.ok && json_persisted.table.records.size() == 3U,
+           "strict typed APPEND FROM JSON should persist both admitted rows");
+    if (json_persisted.ok && json_persisted.table.records.size() == 3U)
+    {
+        expect(json_persisted.table.records[1].values.front().display_value == "Ada" &&
+                   json_persisted.table.records[2].values.front().display_value == "Grace",
+               "strict typed APPEND FROM JSON should ignore the replaced physical source");
+    }
+    fs::remove_all(root, ignored);
+}
+
+void test_typed_append_from_reads_verified_delimited_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_typed_append_csv";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path source_path = root / "source.csv";
+    write_simple_dbf(destination_path, {"Existing"});
+    write_text(source_path, "NAME\nAda\nGrace\n");
+    const std::string verified_destination_bytes = read_text(destination_path);
+    const std::string verified_source_bytes = read_text(source_path);
+    write_text(source_path, "NAME\nTampered\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(destination_path.string(), verified_destination_bytes);
+    options.verified_file_byte_overrides.emplace(source_path.string(), verified_source_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_typed_append_csv.prg",
+        "USE '" + destination_path.string() + "' ALIAS destination\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE CSV\n"
+        "nRows = RECCOUNT('destination')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict typed APPEND FROM CSV should read admitted source bytes: " + state.message);
+    expect(global_text(state, "nrows") == "3",
+           "strict typed APPEND FROM CSV should append both admitted rows");
+    const auto csv_persisted = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(csv_persisted.ok && csv_persisted.table.records.size() == 3U,
+           "strict typed APPEND FROM CSV should persist both admitted rows");
+    if (csv_persisted.ok && csv_persisted.table.records.size() == 3U)
+    {
+        expect(csv_persisted.table.records[1].values.front().display_value == "Ada" &&
+                   csv_persisted.table.records[2].values.front().display_value == "Grace",
+               "strict typed APPEND FROM CSV should ignore the replaced physical source");
+    }
+    fs::remove_all(root, ignored);
+}
+
+void test_typed_append_from_fails_closed_without_verified_source_bytes()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_unverified_typed_append";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path source_path = root / "source.json";
+    write_simple_dbf(destination_path, {"Existing"});
+    write_text(source_path, "[{\"NAME\":\"Ada\"}]\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(destination_path.string(), read_text(destination_path));
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "unverified_typed_append.prg",
+        "USE '" + destination_path.string() + "' ALIAS destination\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE JSON\n"
+        "RETURN\n",
+        options);
+
+    expect(!state.completed,
+           "strict typed APPEND FROM should fail closed without admitted source bytes");
+    expect(state.message.find("APPEND FROM TYPE JSON") != std::string::npos,
+           "strict typed APPEND FROM rejection should preserve the localized type diagnostic: " + state.message);
+    fs::remove_all(root, ignored);
+}
+
 void test_buffered_append_blank_reads_verified_dbf_rows()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_buffered_append";
@@ -371,6 +486,9 @@ int main()
     test_initial_use_reads_verified_index_metadata();
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
+    test_typed_append_from_reads_verified_json_bytes();
+    test_typed_append_from_reads_verified_delimited_bytes();
+    test_typed_append_from_fails_closed_without_verified_source_bytes();
     test_buffered_append_blank_reads_verified_dbf_rows();
     test_append_from_array_reads_verified_destination_schema();
     test_list_query_file_requery_reads_verified_bytes();
