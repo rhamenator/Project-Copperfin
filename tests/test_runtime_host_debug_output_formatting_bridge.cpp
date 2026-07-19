@@ -658,23 +658,26 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     write_request(escaped_source_path);
     std::cerr << "END: Unicode bridge request write\n";
 
+    std::cerr << "BEGIN: Unicode bridge process arguments\n";
+    const std::vector<std::string> process_arguments{
+        "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
+        "--library-export", "GetAnswer",
+        "--routine-kind", "procedure",
+        "--source-path", source_path_utf8,
+        "--source-line", "1",
+        "--parameter-declaration", "LPARAMETERS",
+        "--parameter-names", "",
+        "--parameter-count", "0",
+        "--request-path", copperfin::platform::path_to_utf8_string(request_path),
+        "--response-path", copperfin::platform::path_to_utf8_string(response_path),
+        "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+        "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+        "--schema-version", "v1"
+    };
+    std::cerr << "END: Unicode bridge process arguments\n";
     const auto process = run_process_capture(
         runtime_host_path,
-        {
-            "--manifest", copperfin::platform::path_to_utf8_string(manifest_path),
-            "--library-export", "GetAnswer",
-            "--routine-kind", "procedure",
-            "--source-path", source_path_utf8,
-            "--source-line", "1",
-            "--parameter-declaration", "LPARAMETERS",
-            "--parameter-names", "",
-            "--parameter-count", "0",
-            "--request-path", copperfin::platform::path_to_utf8_string(request_path),
-            "--response-path", copperfin::platform::path_to_utf8_string(response_path),
-            "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
-            "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
-            "--schema-version", "v1"
-        },
+        process_arguments,
         temp_root);
 
     if (process.exit_code != 0) {
