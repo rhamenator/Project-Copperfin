@@ -305,7 +305,7 @@ std::vector<std::string> load_source_lines(std::istream& input) {
 }
 
 std::vector<std::string> load_source_lines(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     return input ? load_source_lines(input) : std::vector<std::string>{};
 }
 

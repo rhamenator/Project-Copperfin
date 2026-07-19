@@ -845,7 +845,7 @@ int run_runtime_bridge_invocation(
         routine_bootstrap_materialized = true;
         execution_source_text = std::move(bootstrap_source_text);
     }
-    if (lowercase_copy(path_from_utf8(execution_source).extension().string()) != ".prg") {
+    if (lowercase_copy(copperfin::platform::path_to_utf8_string(path_from_utf8(execution_source).extension())) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.PrgStartupRequired"));
@@ -895,7 +895,7 @@ int run_runtime_bridge_invocation(
             localized_message(
                 catalog,
                 "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
         return 6;
     }
     auto& session = *created_session;
@@ -1099,8 +1099,8 @@ ManifestVersionContract inspect_manifest_version_contract(const ManifestMap& man
 bool has_debug_manifest_path_identity(const std::string& manifest_path) {
     const std::filesystem::path normalized_manifest_path =
         path_from_utf8(manifest_path).lexically_normal();
-    return equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
-           equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
+    return equals_insensitive(copperfin::platform::path_to_utf8_string(normalized_manifest_path.filename()), "app.cfdebug") ||
+           equals_insensitive(copperfin::platform::path_to_utf8_string(normalized_manifest_path.extension()), ".cfdebug");
 }
 
 std::optional<int> resolved_manifest_version(const ManifestMap& manifest) {
@@ -1291,21 +1291,21 @@ bool physical_indirection_was_rejected(
 }
 
 bool packaged_source_text_extension(const std::filesystem::path& path) {
-    const std::string extension = lowercase_copy(path.extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
     return extension == ".prg" || extension == ".mpr" || extension == ".qpr" ||
            extension == ".h" || extension == ".inc" || extension == ".ch" ||
            extension == ".txt";
 }
 
 bool packaged_database_component_extension(const std::filesystem::path& path) {
-    const std::string extension = lowercase_copy(path.extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
     return extension == ".dbf" || extension == ".fpt" || extension == ".cdx" ||
            extension == ".idx" || extension == ".ndx" || extension == ".mdx" ||
            extension == ".dbc" || extension == ".dct" || extension == ".dcx";
 }
 
 bool packaged_xasset_extension(const std::filesystem::path& path) {
-    const std::string extension = lowercase_copy(path.extension().string());
+    const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
     return extension == ".scx" || extension == ".sct" ||
            extension == ".vcx" || extension == ".vct" ||
            extension == ".frx" || extension == ".frt" ||
@@ -1524,7 +1524,7 @@ bool verify_manifest_hashes(
         error = localized_message(
             catalog,
             "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-            {{"fileName", runtime_host_path.filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(runtime_host_path.filename())}});
         return false;
     }
     const auto runtime_host_snapshot =
@@ -1535,7 +1535,7 @@ bool verify_manifest_hashes(
         error = localized_message(
             catalog,
             "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-            {{"fileName", runtime_host_path.filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(runtime_host_path.filename())}});
         return false;
     }
     const auto runtime_host_hash = copperfin::security::sha256_hex_for_text(
@@ -1586,7 +1586,7 @@ bool verify_manifest_hashes(
                 physical_indirection_was_rejected(containment_failure)
                     ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
                     : "RuntimeHost.Error.PackagedAssetMissing",
-                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(portable_manifest_path(parts[0]).filename())}});
             return false;
         }
         if (std::find(writable_data_paths.begin(), writable_data_paths.end(), *bound_path) !=
@@ -1629,7 +1629,7 @@ bool verify_manifest_hashes(
                 physical_indirection_was_rejected(containment_failure)
                     ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
                     : "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
-                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(portable_manifest_path(parts[0]).filename())}});
             return false;
         }
         if (std::find(
@@ -1651,7 +1651,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", bound_path->filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_path->filename())}});
             return false;
         }
         writable_data_payload_paths.push_back(payload_snapshot.containment.canonical_path);
@@ -1679,7 +1679,7 @@ bool verify_manifest_hashes(
                 physical_indirection_was_rejected(payload_containment_failure)
                     ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
                     : "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
-                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(portable_manifest_path(parts[0]).filename())}});
             return false;
         }
 
@@ -1690,7 +1690,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", bound_payload_path->filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_payload_path->filename())}});
             return false;
         }
         if (std::find(
@@ -1708,7 +1708,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", bound_payload_path->filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_payload_path->filename())}});
             return false;
         }
         const auto digest = copperfin::security::sha256_hex_for_text(payload_snapshot.bytes);
@@ -1720,7 +1720,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
-                {{"fileName", bound_payload_path->filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_payload_path->filename())}});
             return false;
         }
         verified_paths.push_back({
@@ -1752,7 +1752,7 @@ bool verify_manifest_hashes(
             manifest_directory,
             PackagePathBindingMode::strict_relative_fidelity,
             &asset_containment_failure);
-        const std::string asset_file_name = portable_manifest_path(parts[2]).filename().string();
+        const std::string asset_file_name = copperfin::platform::path_to_utf8_string(portable_manifest_path(parts[2]).filename());
         if (!bound_asset_path.has_value()) {
             error = localized_message(
                 catalog,
@@ -1808,7 +1808,7 @@ bool verify_manifest_hashes(
         }
         // A copied xAsset is not fully verified until its memo table is admitted by the same manifest.
         const std::string asset_extension =
-            lowercase_copy(bound_asset_path->extension().string());
+            lowercase_copy(copperfin::platform::path_to_utf8_string(bound_asset_path->extension()));
         const bool is_executable_xasset =
             asset_extension == ".scx" || asset_extension == ".vcx" ||
             asset_extension == ".frx" || asset_extension == ".lbx" ||
@@ -1821,7 +1821,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "Vfp.Sidecar.Error.AmbiguousPath",
-                {{"path", sidecar_resolution.requested_path.string()}});
+                {{"path", copperfin::platform::path_to_utf8_string(sidecar_resolution.requested_path)}});
             return false;
         }
         const std::string sidecar_path = copperfin::platform::path_to_utf8_string(
@@ -1833,7 +1833,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagedAssetMissing",
-            {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
                 return false;
             }
 
@@ -1844,7 +1844,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
                 return false;
             }
             const auto verified_sidecar = std::find_if(
@@ -1858,7 +1858,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagedAssetDigestMissing",
-                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
                 return false;
             }
         }
@@ -1882,7 +1882,7 @@ bool verify_manifest_hashes(
             return false;
         }
 
-        const std::string primary_extension = lowercase_copy(data_path.extension().string());
+        const std::string primary_extension = lowercase_copy(copperfin::platform::path_to_utf8_string(data_path.extension()));
         const std::vector<std::string> companion_extensions = primary_extension == ".dbf"
             ? std::vector<std::string>{".fpt", ".cdx", ".idx", ".ndx", ".mdx"}
             : std::vector<std::string>{};
@@ -1897,11 +1897,12 @@ bool verify_manifest_hashes(
                 break;
             }
             const std::filesystem::path candidate = entry.path();
-            if (lowercase_copy(candidate.stem().string()) != lowercase_copy(data_path.stem().string()) ||
+            if (lowercase_copy(copperfin::platform::path_to_utf8_string(candidate.stem())) !=
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(data_path.stem())) ||
                 std::find(
                     companion_extensions.begin(),
                     companion_extensions.end(),
-                    lowercase_copy(candidate.extension().string())) == companion_extensions.end()) {
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate.extension()))) == companion_extensions.end()) {
                 continue;
             }
             const auto containment = copperfin::security::inspect_physical_path_containment(
@@ -1911,7 +1912,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", candidate.filename().string()}});
+                    {{"fileName", copperfin::platform::path_to_utf8_string(candidate.filename())}});
                 return false;
             }
             if (std::find(
@@ -1921,7 +1922,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagedAssetDigestMissing",
-                    {{"fileName", candidate.filename().string()}});
+                    {{"fileName", copperfin::platform::path_to_utf8_string(candidate.filename())}});
                 return false;
             }
         }
@@ -1929,26 +1930,26 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", data_path.filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(data_path.filename())}});
             return false;
         }
     }
 
     for (const auto& payload_path : writable_data_payload_paths) {
-        const std::string payload_stem = lowercase_copy(payload_path.stem().string());
+        const std::string payload_stem = lowercase_copy(copperfin::platform::path_to_utf8_string(payload_path.stem()));
         const auto owner = std::find_if(
             writable_data_paths.begin(),
             writable_data_paths.end(),
             [&](const auto& candidate) {
                 return candidate.parent_path() == payload_path.parent_path() &&
-                    lowercase_copy(candidate.stem().string()) == payload_stem;
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate.stem())) == payload_stem;
             });
         if (owner == writable_data_paths.end()) {
             error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
             return false;
         }
-        const std::string owner_extension = lowercase_copy(owner->extension().string());
-        const std::string payload_extension = lowercase_copy(payload_path.extension().string());
+        const std::string owner_extension = lowercase_copy(copperfin::platform::path_to_utf8_string(owner->extension()));
+        const std::string payload_extension = lowercase_copy(copperfin::platform::path_to_utf8_string(payload_path.extension()));
         const bool allowed_payload = owner_extension == ".dbf" &&
             (payload_extension == ".fpt" || payload_extension == ".cdx" ||
              payload_extension == ".idx" || payload_extension == ".ndx" ||
@@ -2257,7 +2258,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
     const copperfin::localization::LocalizedCatalog& catalog,
     const bool security_enabled,
     const VerifiedPackagePaths& verified_package_paths) {
-    const std::filesystem::path logical_path(logical_startup_source);
+    const std::filesystem::path logical_path = path_from_utf8(logical_startup_source);
     XAssetFileSnapshotResult result;
     const copperfin::vfp::SidecarPathResolution sidecar_resolution =
         copperfin::vfp::resolve_vfp_memo_sidecar_path(logical_path);
@@ -2265,7 +2266,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         result.error = localized_message(
             catalog,
             "Vfp.Sidecar.Error.AmbiguousPath",
-            {{"path", sidecar_resolution.requested_path.string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(sidecar_resolution.requested_path)}});
         return result;
     }
     const std::string sidecar_path = copperfin::platform::path_to_utf8_string(
@@ -2275,7 +2276,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-            {{"fileName", logical_path.filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(logical_path.filename())}});
         return result;
     }
     result.root = *snapshot_root;
@@ -2285,7 +2286,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-            {{"fileName", logical_path.filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(logical_path.filename())}});
         return result;
     }
 
@@ -2296,14 +2297,14 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
         return result;
     }
     if (security_enabled && !sidecar_path.empty() && !sidecar_exists) {
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.PackagedAssetMissing",
-            {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+            {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
         return result;
     }
     if (sidecar_exists) {
@@ -2314,7 +2315,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
             return result;
         }
         const auto verified_sidecar = std::find_if(
@@ -2327,7 +2328,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagedAssetDigestMissing",
-                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
             return result;
         }
         const auto sidecar_snapshot = copperfin::security::read_physically_contained_file_snapshot(
@@ -2353,7 +2354,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(sidecar_path).filename())}});
             return result;
         }
     }
@@ -2384,7 +2385,7 @@ std::filesystem::path make_runtime_host_xasset_bootstrap_path(const std::filesys
             std::chrono::steady_clock::now().time_since_epoch())
             .count());
     const unsigned long long nonce_counter = bootstrap_nonce_counter.fetch_add(1ULL, std::memory_order_relaxed);
-    std::string startup_stem = startup_path.stem().string();
+    std::string startup_stem = copperfin::platform::path_to_utf8_string(startup_path.stem());
     if (startup_stem.empty()) {
         startup_stem = "startup";
     }
@@ -2400,7 +2401,7 @@ void remove_xasset_bootstrap(const std::optional<std::string>& bootstrap_path) {
         return;
     }
     std::error_code ignored;
-    std::filesystem::remove(*bootstrap_path, ignored);
+    std::filesystem::remove(path_from_utf8(*bootstrap_path), ignored);
 }
 
 XAssetBootstrapResult materialize_xasset_bootstrap(
@@ -2421,7 +2422,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
 
     open_result.document.path = logical_startup_source;
     open_result.document.display_name =
-        path_from_utf8(logical_startup_source).filename().string();
+        copperfin::platform::path_to_utf8_string(path_from_utf8(logical_startup_source).filename());
     open_result.document.inspection.path = logical_startup_source;
     const copperfin::vfp::SidecarPathResolution sidecar_resolution =
         copperfin::vfp::resolve_vfp_memo_sidecar_path(logical_startup_source);
@@ -2429,7 +2430,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
         result.error = localized_message(
             catalog,
             "Vfp.Sidecar.Error.AmbiguousPath",
-            {{"path", sidecar_resolution.requested_path.string()}});
+            {{"path", copperfin::platform::path_to_utf8_string(sidecar_resolution.requested_path)}});
         return result;
     }
     open_result.document.sidecar_path = copperfin::platform::path_to_utf8_string(
@@ -2442,7 +2443,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
         return result;
     }
 
-    const std::filesystem::path startup_path(logical_startup_source);
+    const std::filesystem::path startup_path = path_from_utf8(logical_startup_source);
     const std::filesystem::path bootstrap_path = make_runtime_host_xasset_bootstrap_path(startup_path);
     result.bootstrap_source =
         copperfin::runtime::build_xasset_bootstrap_source(
@@ -3161,7 +3162,7 @@ int run_runtime_host_main(int argc, char** argv) {
             first_value(manifest, "audit_log_path"));
         const std::string audit_log_name = recorded_audit_log_path.filename().empty()
             ? "security_audit.log"
-            : recorded_audit_log_path.filename().string();
+            : copperfin::platform::path_to_utf8_string(recorded_audit_log_path.filename());
         std::cout << "status: error\n";
         print_error_line(
             catalog,
@@ -3253,7 +3254,7 @@ int run_runtime_host_main(int argc, char** argv) {
             recorded_startup_source.empty() ? recorded_startup_item : recorded_startup_source);
         const std::string missing_startup_name = missing_startup_path.filename().empty()
             ? (recorded_startup_source.empty() ? recorded_startup_item : recorded_startup_source)
-            : missing_startup_path.filename().string();
+            : copperfin::platform::path_to_utf8_string(missing_startup_path.filename());
         std::cout << "status: error\n";
         print_error_line(
             catalog,
@@ -3286,7 +3287,7 @@ int run_runtime_host_main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
             return 4;
         }
 
@@ -3304,7 +3305,7 @@ int run_runtime_host_main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.StartupAssetDigestMissing",
-                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
             return 8;
         }
 
@@ -3321,7 +3322,7 @@ int run_runtime_host_main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                    {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
             return 4;
         }
         if (verified != verified_package_paths.end()) {
@@ -3333,7 +3334,7 @@ int run_runtime_host_main(int argc, char** argv) {
                     localized_message(
                         catalog,
                         "RuntimeHost.Error.PackagedAssetSha256Mismatch",
-                        {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                        {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
                 return 8;
             }
         }
@@ -3377,7 +3378,7 @@ int run_runtime_host_main(int argc, char** argv) {
                         localized_message(
                             catalog,
                             "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                            {{"fileName", source_path.filename().string()}}));
+                            {{"fileName", copperfin::platform::path_to_utf8_string(source_path.filename())}}));
                     return 8;
                 }
                 if (source_text) {
@@ -3432,7 +3433,7 @@ int run_runtime_host_main(int argc, char** argv) {
                         physical_indirection_was_rejected(bridge_containment_failure)
                             ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
                             : "RuntimeHost.Bridge.Error.SourceMissingFromPackage",
-                        {{"fileName", portable_manifest_path(bridge_options.source_path).filename().string()}}));
+                        {{"fileName", copperfin::platform::path_to_utf8_string(portable_manifest_path(bridge_options.source_path).filename())}}));
                 return 4;
             }
 
@@ -3447,7 +3448,7 @@ int run_runtime_host_main(int argc, char** argv) {
                         localized_message(
                             catalog,
                             "RuntimeHost.Error.PackagedAssetDigestMissing",
-                            {{"fileName", bound_bridge_source->filename().string()}}));
+                        {{"fileName", copperfin::platform::path_to_utf8_string(bound_bridge_source->filename())}}));
                     return 8;
                 }
                 verified_bridge_source_text = source_found->second;
@@ -3468,7 +3469,7 @@ int run_runtime_host_main(int argc, char** argv) {
                         localized_message(
                             catalog,
                             "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                            {{"fileName", bound_bridge_source->filename().string()}}));
+                        {{"fileName", copperfin::platform::path_to_utf8_string(bound_bridge_source->filename())}}));
                     return 4;
                 }
                 verified_bridge_source_text = bridge_snapshot.bytes;
@@ -3488,7 +3489,7 @@ int run_runtime_host_main(int argc, char** argv) {
             security_enabled && !debug_manifest_privileges);
     }
 
-    const std::string startup_extension = lowercase_copy(path_from_utf8(startup_source).extension().string());
+    const std::string startup_extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).extension()));
     const bool prg_startup = startup_extension == ".prg";
     copperfin::runtime::XAssetExecutableModel xasset_model;
 
@@ -3617,7 +3618,7 @@ int run_runtime_host_main(int argc, char** argv) {
             localized_message(
                 catalog,
                 "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", path_from_utf8(startup_source).filename().string()}}));
+                {{"fileName", copperfin::platform::path_to_utf8_string(path_from_utf8(startup_source).filename())}}));
         return security_enabled ? 8 : 4;
     }
     auto& session = *created_session;

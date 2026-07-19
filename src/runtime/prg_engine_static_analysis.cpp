@@ -168,7 +168,7 @@ bool body_has_obvious_exit(const std::vector<StaticLine>& lines, std::size_t sta
 std::vector<PrgStaticDiagnostic> analyze_prg_file(const std::string& path) {
     std::vector<PrgStaticDiagnostic> diagnostics;
 
-    std::ifstream probe(path, std::ios::binary);
+    std::ifstream probe(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
     if (!probe.good()) {
         diagnostics.push_back({
             .code = "PRG0001",

@@ -36,12 +36,12 @@
             std::error_code ignored;
             for (const auto &[_, entry] : state.tracked_files)
             {
-                const std::filesystem::path original(entry.original_path);
+                const std::filesystem::path original = copperfin::platform::path_from_utf8_string(entry.original_path);
                 if (entry.existed_at_start)
                 {
                     if (!entry.backup_path.empty())
                     {
-                        const std::filesystem::path backup(entry.backup_path);
+                        const std::filesystem::path backup = copperfin::platform::path_from_utf8_string(entry.backup_path);
                         if (std::filesystem::exists(backup, ignored))
                         {
                             std::error_code copy_error;
