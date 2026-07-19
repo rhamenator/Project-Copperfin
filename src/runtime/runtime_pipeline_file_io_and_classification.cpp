@@ -405,6 +405,13 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
 }
 
 std::string read_text_file(const std::filesystem::path& path) {
+#if !defined(_WIN32)
+    bool fd_read_handled = false;
+    std::string fd_contents;
+    if (try_read_file_fd_backed(path, fd_read_handled, fd_contents) && fd_read_handled) {
+        return fd_contents;
+    }
+#endif
     std::ifstream input(path, std::ios::binary);
     std::ostringstream stream;
     stream << input.rdbuf();
