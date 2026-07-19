@@ -638,7 +638,7 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
         "nFraction = CopperfinDeclaredDllX86Split(3.75, @nWhole)\n"
         "cText = CopperfinDeclaredDllX86Text()\n"
         "nEight = CopperfinDeclaredDllX86Eight(1, 2, 3, 4, 5, 6, 7, 8)\n"
-        "nByRefResult = CopperfinDeclaredDllX86NumericByRef(@nLongOut, @nInteger64Out)\n"
+        "nNumericByRefResult = CopperfinDeclaredDllX86NumericByRef(@nLongOut, @nInteger64Out)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -689,7 +689,7 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
     expect_value("nwhole", "3", "#3940: DOUBLE @ writeback");
     expect_value("ctext", "copperfin-x86", "#3940: pointer-shaped STRING return");
     expect_value("neight", "36", "#3940: signed LONG return across eight stdcall stack positions");
-    expect_value("nbyrefresult", "-7", "#3940: signed LONG return from numeric by-reference call");
+    expect_value("nnumericbyrefresult", "-7", "#3940: signed LONG return from numeric by-reference call");
     expect_value("nlongout", "-123456789", "#3940: signed LONG @ writeback");
     expect_value("ninteger64out", "-4294967297", "#3940: signed INTEGER64 @ writeback");
 
