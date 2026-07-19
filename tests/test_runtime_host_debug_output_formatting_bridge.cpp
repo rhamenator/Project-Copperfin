@@ -576,8 +576,10 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     std::cerr << "END: Unicode bridge temp-root conversion\n";
     const fs::path manifest_path = temp_root / "app.cfmanifest";
     const fs::path startup_path = temp_root / "content" / "startup.prg";
+    std::cerr << "BEGIN: Unicode bridge source-name conversion\n";
     const fs::path source_name = copperfin::platform::path_from_utf8_string(
         "exports-\xC3\xA9-\xF0\x9F\x9A\x80.prg");
+    std::cerr << "END: Unicode bridge source-name conversion\n";
     const fs::path source_path = temp_root / "content" / source_name;
     const fs::path request_path = temp_root / "GetAnswer.request.json";
     const fs::path response_path = temp_root / "nested" / "GetAnswer.response.json";
