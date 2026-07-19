@@ -81,12 +81,18 @@ struct AssetInspectionResult {
     }
 };
 
+// Optional immutable bytes keyed by the exact UTF-8 path being inspected.
+// Runtime security paths use this to prevent a parser from reopening a path
+// after the package verifier has admitted its contents.
+using AssetByteOverrides = std::map<std::string, std::string>;
+
 [[nodiscard]] AssetFamily asset_family_from_path(const std::string& path);
 [[nodiscard]] const char* asset_family_name(AssetFamily family);
 [[nodiscard]] const char* asset_validation_severity_name(AssetValidationSeverity severity);
 AssetInspectionResult inspect_asset(
     const std::string& path,
-    const std::string& memo_sidecar_path = {});
+    const std::string& memo_sidecar_path = {},
+    const AssetByteOverrides* byte_overrides = nullptr);
 
 // ---- Whole-database JSON export ----
 

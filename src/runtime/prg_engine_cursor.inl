@@ -209,6 +209,7 @@
             std::vector<CursorState::OrderState> orders;
             std::filesystem::path snapshot_root;
             std::string inspection_path = table_path;
+            vfp::AssetByteOverrides inspection_byte_overrides;
             if (options.require_verified_file_byte_overrides)
             {
                 auto *mutable_impl = const_cast<Impl *>(this);
@@ -220,9 +221,38 @@
                     return orders;
                 }
                 inspection_path = copperfin::platform::path_to_utf8_string(*verified_table_path);
+
+                const std::string table_directory = lowercase_copy(
+                    normalize_path(copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(table_path).parent_path())));
+                const std::string table_stem = lowercase_copy(
+                    copperfin::platform::path_to_utf8_string(
+                        copperfin::platform::path_from_utf8_string(table_path).stem()));
+                for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+                {
+                    const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
+                    const std::string extension = lowercase_copy(
+                        copperfin::platform::path_to_utf8_string(candidate_path.extension()));
+                    if ((extension != ".cdx" && extension != ".idx" &&
+                         extension != ".ndx" && extension != ".mdx") ||
+                        lowercase_copy(normalize_path(copperfin::platform::path_to_utf8_string(
+                            candidate_path.parent_path()))) != table_directory ||
+                        lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.stem())) != table_stem ||
+                        bytes.empty())
+                    {
+                        continue;
+                    }
+
+                    inspection_byte_overrides.emplace(
+                        copperfin::platform::path_to_utf8_string(snapshot_root / candidate_path.filename()),
+                        bytes);
+                }
             }
 
-            const auto inspection = vfp::inspect_asset(inspection_path);
+            const auto inspection = vfp::inspect_asset(
+                inspection_path,
+                {},
+                &inspection_byte_overrides);
             if (!inspection.ok)
             {
                 if (!snapshot_root.empty())

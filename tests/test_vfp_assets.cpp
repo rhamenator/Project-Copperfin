@@ -852,6 +852,41 @@ void test_inspect_asset_collects_companion_indexes() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_inspect_asset_uses_admitted_index_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_verified_index_inspection_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path index_path = temp_dir / "sample.cdx";
+    const auto admitted_bytes = make_synthetic_cdx_family_bytes(false, true);
+    const auto mutated_bytes = make_synthetic_cdx_family_bytes(true, true);
+    {
+        std::ofstream output(index_path, std::ios::binary);
+        output.write(
+            reinterpret_cast<const char*>(mutated_bytes.data()),
+            static_cast<std::streamsize>(mutated_bytes.size()));
+    }
+
+    copperfin::vfp::AssetByteOverrides overrides{
+        {index_path.lexically_normal().string(),
+         std::string(admitted_bytes.begin(), admitted_bytes.end())}};
+    const auto result = copperfin::vfp::inspect_asset(index_path.string(), {}, &overrides);
+    expect(result.ok, "verified index inspection should parse admitted bytes");
+    expect(result.indexes.size() == 1U, "verified index inspection should return one index asset");
+    if (result.indexes.size() == 1U) {
+        expect(
+            result.indexes.front().probe.tags.size() == 1U,
+            "verified index inspection should ignore a post-admission pathname mutation");
+        expect(
+            result.indexes.front().probe.file_size == admitted_bytes.size(),
+            "verified index inspection should report the admitted byte size");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_inspect_database_container_collects_dcx_companion() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_assets_tests";
@@ -1986,6 +2021,7 @@ int main() {
     test_parse_index_probe_for_mdx_rejects_implausible_header();
     test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
+    test_inspect_asset_uses_admitted_index_bytes();
     test_inspect_database_container_collects_dcx_companion();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();

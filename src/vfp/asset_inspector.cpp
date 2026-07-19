@@ -4,6 +4,7 @@
 
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/sidecar_path.h"
 
@@ -62,6 +63,35 @@ std::string lowercase_copy(std::string value) {
         return static_cast<char>(std::tolower(ch));
     });
     return value;
+}
+
+const std::string* find_byte_override(
+    const AssetByteOverrides* byte_overrides,
+    const std::filesystem::path& path) {
+    if (byte_overrides == nullptr) {
+        return nullptr;
+    }
+
+    const std::string normalized = copperfin::platform::path_to_utf8_string(path.lexically_normal());
+    const auto exact = byte_overrides->find(normalized);
+    if (exact != byte_overrides->end()) {
+        return &exact->second;
+    }
+
+#if defined(_WIN32)
+    const std::string folded = lowercase_copy(normalized);
+    const auto folded_match = std::find_if(
+        byte_overrides->begin(),
+        byte_overrides->end(),
+        [&](const auto& candidate) {
+            return lowercase_copy(candidate.first) == folded;
+        });
+    if (folded_match != byte_overrides->end()) {
+        return &folded_match->second;
+    }
+#endif
+
+    return nullptr;
 }
 
 std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
@@ -974,7 +1004,10 @@ const char* asset_validation_severity_name(AssetValidationSeverity severity) {
     return "warning";
 }
 
-AssetInspectionResult inspect_asset(const std::string& path, const std::string& memo_sidecar_path) {
+AssetInspectionResult inspect_asset(
+    const std::string& path,
+    const std::string& memo_sidecar_path,
+    const AssetByteOverrides* byte_overrides) {
     AssetInspectionResult result;
     result.path = path;
     result.family = asset_family_from_path(path);
@@ -986,7 +1019,15 @@ AssetInspectionResult inspect_asset(const std::string& path, const std::string& 
     }
 
     if (result.family == AssetFamily::index) {
-        const IndexParseResult index_result = parse_index_probe_from_file(path);
+        const auto* override_bytes = find_byte_override(
+            byte_overrides,
+            copperfin::platform::path_from_utf8_string(path));
+        const IndexParseResult index_result = override_bytes == nullptr
+            ? parse_index_probe_from_file(path)
+            : parse_index_probe(
+                std::vector<std::uint8_t>(override_bytes->begin(), override_bytes->end()),
+                static_cast<std::uint64_t>(override_bytes->size()),
+                index_kind_from_path(path));
         if (!index_result.ok) {
             result.ok = false;
             result.error = index_result.error;
@@ -1072,7 +1113,15 @@ AssetInspectionResult inspect_asset(const std::string& path, const std::string& 
         }
 
         const std::string resolved_companion_index_text = resolved_companion_index->string();
-        const IndexParseResult index_result = parse_index_probe_from_file(resolved_companion_index_text);
+        const auto* override_bytes = find_byte_override(
+            byte_overrides,
+            *resolved_companion_index);
+        const IndexParseResult index_result = override_bytes == nullptr
+            ? parse_index_probe_from_file(resolved_companion_index_text)
+            : parse_index_probe(
+                std::vector<std::uint8_t>(override_bytes->begin(), override_bytes->end()),
+                static_cast<std::uint64_t>(override_bytes->size()),
+                index_kind_from_path(resolved_companion_index_text));
         if (index_result.ok) {
             result.indexes.push_back({.path = resolved_companion_index_text, .probe = index_result.probe});
         } else if (!has_validation_issue(result, "index.companion_parse_failed", resolved_companion_index_text)) {
