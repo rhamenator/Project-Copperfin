@@ -750,6 +750,11 @@ void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts()
     const auto result = materialize_startup_plan(plan, runtime_host);
     expect_materialization(result, "#3873: Unicode runtime package should materialize");
     if (result.ok) {
+        expect(
+            fs::exists(copperfin::platform::path_from_utf8_string(result.plan.runtime_host_destination_path)) &&
+                read_text(copperfin::platform::path_from_utf8_string(result.plan.runtime_host_destination_path)) ==
+                    "runtime-host",
+            "#4249: Unicode runtime-host source paths should stage the runtime host payload");
         const auto source_digest = copperfin::security::sha256_hex_for_file(
             copperfin::platform::path_to_utf8_string(source_path));
         expect(result.plan.assets.size() == 1U && source_digest.ok &&

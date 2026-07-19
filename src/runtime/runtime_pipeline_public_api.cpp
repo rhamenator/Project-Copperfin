@@ -2264,6 +2264,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
+    const std::filesystem::path runtime_host_source =
+        copperfin::platform::path_from_utf8_string(runtime_host_source_path);
     std::string error;
     if (!transaction.validate_parent_identity_for_materialization(error)) {
         return {.ok = false, .error = error};
@@ -2567,7 +2569,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             return {.ok = false, .error = error};
         }
         if (!copy_file_if_exists(
-                runtime_host_source_path,
+                runtime_host_source,
                 filesystem_plan.runtime_host_destination_path,
                 error)) {
             return {.ok = false, .error = error};
@@ -2766,7 +2768,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             return {.ok = false, .error = error};
         }
         if (!copy_file_if_exists(
-                runtime_host_source_path,
+                runtime_host_source,
                 filesystem_plan.runtime_host_destination_path,
                 error)) {
             return {.ok = false, .error = error};

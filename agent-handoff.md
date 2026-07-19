@@ -6,6 +6,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 - Durable report-layout note: FRX/LBX document titles remain filename-based display text, but the shared snapshot and host JSON now expose the header record's `NAME` field ordinal and memo block when that title slot exists. Keep null/zero provenance for synthetic or legacy assets without a header `NAME` field, and keep the managed report-layout model aligned with the additive native fields.
 
+- Runtime-host path boundary slice `#4249` preserves UTF-8 runtime-host strings through validation and staging by converting them with `path_from_utf8_string(...)` before native filesystem operations. Keep automatic discovery, environment overrides, explicit paths, security validation, and package/debug fields unchanged; retain the Unicode package-path regression and require hosted Windows evidence before closing #3873.
+
 - Start from live GitHub issue state plus the current repo guidance in `agents.md` and `docs/23-phase-a-dependency-breakdown.md`.
 - Use the issue hierarchy: umbrella issues are planning/tracking units, parent/lane issues group work, and prompt-sized child issues are execution units.
 - Shipped installer CPack verifier slice `#4235`: CPack artifact checks use namespaced typed inputs (`COPPERFIN_ARTIFACT_DIR`, `COPPERFIN_VERSION_FILE`, and `COPPERFIN_EXPECTED_ARTIFACT_SUFFIXES`) and normalize relative roots from the repository source. Keep the generated `CopperfinPackageVersion.txt` path and artifact suffix contracts stable; the focused fixture covers relative success plus missing/invalid version rejection, and hosted Windows evidence remains required.

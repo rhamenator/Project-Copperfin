@@ -593,7 +593,12 @@ bool validate_runtime_host_source_path(
         return false;
     }
 
-    std::filesystem::path source(runtime_host_source_path);
+    std::filesystem::path source =
+        copperfin::platform::path_from_utf8_string(runtime_host_source_path);
+    if (source.empty()) {
+        error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathResolveFailed");
+        return false;
+    }
     if (plan.security_enabled && !source.is_absolute()) {
         error = runtime_text("Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath");
         return false;
