@@ -249,8 +249,12 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
             .stderr_text = captured.stderr_text};
     };
 
+    std::cerr << "BEGIN: verified bridge locale override\n";
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    std::cerr << "END: verified bridge locale override\n";
+    std::cerr << "BEGIN: verified bridge packaged invoke\n";
     const auto packaged_process = invoke(source_path);
+    std::cerr << "END: verified bridge packaged invoke\n";
     expect(packaged_process.exit_code == 0,
            "security-enabled bridge invocation should execute its verified packaged source bytes");
     expect(packaged_process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
