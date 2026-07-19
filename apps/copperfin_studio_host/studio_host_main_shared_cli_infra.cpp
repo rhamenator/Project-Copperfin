@@ -3649,6 +3649,9 @@ void print_json_subsystems(const copperfin::localization::LocalizedCatalog& cata
         std::cout << "      \"vfp9Equivalent\": ";
         print_json_string(std::string(subsystem.vfp9_equivalent));
         std::cout << ",\n";
+        std::cout << "      \"vfp9EquivalentDisplay\": ";
+        print_json_string(std::string(subsystem.vfp9_equivalent_display));
+        std::cout << ",\n";
         std::cout << "      \"copperfinComponent\": ";
         print_json_string(std::string(subsystem.copperfin_component));
         std::cout << ",\n";
@@ -3681,7 +3684,7 @@ void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog) 
     for (const auto& subsystem : subsystems) {
         std::cout << "subsystem.id: " << subsystem.id << "\n";
         std::cout << "  title: " << subsystem.title << "\n";
-        std::cout << "  vfp9_equivalent: " << subsystem.vfp9_equivalent << "\n";
+        std::cout << "  vfp9_equivalent: " << subsystem.vfp9_equivalent_display << "\n";
         std::cout << "  copperfin_component: " << subsystem.copperfin_component << "\n";
         std::cout << "  host_kind: " << copperfin::studio::product_host_kind_name(subsystem.host_kind) << "\n";
         std::cout << "  current_status: " << subsystem.current_status << "\n";

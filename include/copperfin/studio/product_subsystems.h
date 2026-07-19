@@ -24,6 +24,7 @@ struct ProductSubsystemDescriptor {
     std::string id;
     std::string title;
     std::string vfp9_equivalent;
+    std::string vfp9_equivalent_display;
     std::string copperfin_component;
     ProductHostKind host_kind = ProductHostKind::native_ide;
     std::string current_status;

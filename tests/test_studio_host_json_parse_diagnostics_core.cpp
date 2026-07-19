@@ -1513,6 +1513,9 @@ void test_studio_host_list_subsystems_localizes_descriptor_text(const std::strin
     expect_contains(process.stdout_text,
         "\"vfp9Equivalent\": \"FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app\"",
         "#2395: pseudo-localized list-subsystems JSON should preserve VFP-equivalent identifiers");
+    expect_contains(process.stdout_text,
+        "\"vfp9EquivalentDisplay\": \"[!! ",
+        "#4246: pseudo-localized list-subsystems JSON should expose localized VFP-equivalent display text");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

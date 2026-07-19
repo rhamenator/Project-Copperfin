@@ -15,6 +15,7 @@ namespace {
 struct ProductSubsystemSource {
     std::string_view id;
     std::string_view title_key;
+    std::string_view vfp9_equivalent;
     std::string_view vfp9_equivalent_key;
     std::string_view copperfin_component;
     ProductHostKind host_kind = ProductHostKind::native_ide;
@@ -28,6 +29,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "ide-shell",
             .title_key = "Studio.ProductSubsystem.IdeShell.Title",
+            .vfp9_equivalent = "vfp9.exe shell, taskpane.app, Toolbox.app",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
             .copperfin_component = "copperfin-studio-shell + copperfin-vsix",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -38,6 +40,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "forms-designer",
             .title_key = "Studio.ProductSubsystem.FormsDesigner.Title",
+            .vfp9_equivalent = "SCX/SCT designer",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
             .copperfin_component = "cf_form_surface",
             .host_kind = ProductHostKind::native_ide,
@@ -48,6 +51,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "class-designer",
             .title_key = "Studio.ProductSubsystem.ClassDesigner.Title",
+            .vfp9_equivalent = "VCX/VCT designer",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
             .copperfin_component = "cf_class_surface",
             .host_kind = ProductHostKind::native_ide,
@@ -58,6 +62,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "report-designer",
             .title_key = "Studio.ProductSubsystem.ReportDesigner.Title",
+            .vfp9_equivalent = "FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
             .copperfin_component = "cf_report_surface + cf_reporting_apps",
             .host_kind = ProductHostKind::native_ide,
@@ -68,6 +73,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "label-designer",
             .title_key = "Studio.ProductSubsystem.LabelDesigner.Title",
+            .vfp9_equivalent = "LBX/LBT designer",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
             .copperfin_component = "cf_label_surface",
             .host_kind = ProductHostKind::native_ide,
@@ -78,6 +84,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "menu-designer",
             .title_key = "Studio.ProductSubsystem.MenuDesigner.Title",
+            .vfp9_equivalent = "MNX/MNT menu designer",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
             .copperfin_component = "cf_menu_surface",
             .host_kind = ProductHostKind::native_ide,
@@ -88,6 +95,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "project-manager",
             .title_key = "Studio.ProductSubsystem.ProjectManager.Title",
+            .vfp9_equivalent = "PJX/PJT project manager",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
             .copperfin_component = "cf_project_explorer",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -98,6 +106,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "runtime-engine",
             .title_key = "Studio.ProductSubsystem.RuntimeEngine.Title",
+            .vfp9_equivalent = "vfp9r.dll, vfp9t.dll, executable runtime behavior",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
             .copperfin_component = "cf_runtime",
             .host_kind = ProductHostKind::shared_service,
@@ -108,6 +117,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "builders-wizards",
             .title_key = "Studio.ProductSubsystem.BuildersWizards.Title",
+            .vfp9_equivalent = "builder.app, wizard.app, Wizards folder",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
             .copperfin_component = "cf_builders + cf_wizards",
             .host_kind = ProductHostKind::native_ide,
@@ -118,6 +128,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "object-browser",
             .title_key = "Studio.ProductSubsystem.ObjectBrowser.Title",
+            .vfp9_equivalent = "objectbrowser.app, browser.app, Foxref.app",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
             .copperfin_component = "cf_browser_tools",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -128,6 +139,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "data-explorer",
             .title_key = "Studio.ProductSubsystem.DataExplorer.Title",
+            .vfp9_equivalent = "DataExplorer.app, data environment tooling",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
             .copperfin_component = "cf_data_explorer",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -138,6 +150,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "debugger",
             .title_key = "Studio.ProductSubsystem.Debugger.Title",
+            .vfp9_equivalent = "VFP debugger, coverage.app, tasklist.app",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
             .copperfin_component = "cf_debugger + cf_diagnostics",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -148,6 +161,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "toolbox-task-pane",
             .title_key = "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+            .vfp9_equivalent = "Toolbox.app, taskpane.app, gallery.app",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
             .copperfin_component = "cf_toolbox + cf_task_panes",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -158,6 +172,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
         {
             .id = "build-deploy",
             .title_key = "Studio.ProductSubsystem.BuildDeploy.Title",
+            .vfp9_equivalent = "Project build, executable generation, redistributable runtime packaging",
             .vfp9_equivalent_key = "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
             .copperfin_component = "cf_build_host + cf_packaging",
             .host_kind = ProductHostKind::visual_studio_shell,
@@ -199,7 +214,8 @@ std::vector<ProductSubsystemDescriptor> product_subsystems_for_catalog(
         subsystems.push_back({
             .id = std::string(source.id),
             .title = catalog.translate(source.title_key),
-            .vfp9_equivalent = catalog.translate(source.vfp9_equivalent_key),
+            .vfp9_equivalent = std::string(source.vfp9_equivalent),
+            .vfp9_equivalent_display = catalog.translate(source.vfp9_equivalent_key),
             .copperfin_component = std::string(source.copperfin_component),
             .host_kind = source.host_kind,
             .current_status = std::string(source.current_status),

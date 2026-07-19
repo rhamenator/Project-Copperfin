@@ -204,7 +204,9 @@ int main() {
             "#2395: en-US registry should preserve report designer parity prose");
         expect(english_report->vfp9_equivalent ==
                 "FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
-            "#4246: en-US registry should route the report designer VFP equivalent through the catalog");
+            "#4246: en-US registry should preserve the report designer VFP-equivalent identifier");
+        expect(english_report->vfp9_equivalent_display == english_report->vfp9_equivalent,
+            "#4246: en-US registry display should match the invariant report designer identifier");
         expect(spanish_report->title == "Disenador De Reportes",
             "#2648: es-419 registry should localize the report designer title");
         expect(
@@ -212,8 +214,11 @@ int main() {
                 "parecerse mas a SSRS y a las herramientas actuales de reportes de Visual Studio con contornos mas fuertes, inspectores, vista previa en vivo y paneles mas claros de bandas/propiedades",
             "#2648: es-419 registry should localize report designer direction prose");
         expect(spanish_report->vfp9_equivalent ==
+                "FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
+            "#4246: es-419 registry should preserve the report designer VFP-equivalent identifier");
+        expect(spanish_report->vfp9_equivalent_display ==
                 "disenador de FRX/FRT, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
-            "#4246: es-419 registry should localize the report designer VFP equivalent");
+            "#4246: es-419 registry should localize the report designer VFP-equivalent display");
         expect(portuguese_project->title == "Gerenciador De Projetos",
             "#2648: pt-BR registry should localize the project manager title");
         expect(
@@ -226,8 +231,10 @@ int main() {
             "#2395: pseudo-localized registry should decorate report designer parity prose");
         expect(pseudo_report->modern_editor_direction.starts_with("[!! "),
             "#2395: pseudo-localized registry should decorate report designer direction prose");
-        expect(pseudo_report->vfp9_equivalent.starts_with("[!! "),
-            "#4246: pseudo-localized registry should decorate the report designer VFP equivalent");
+        expect(pseudo_report->vfp9_equivalent == english_report->vfp9_equivalent,
+            "#4246: pseudo-localized registry should preserve the report designer VFP-equivalent identifier");
+        expect(pseudo_report->vfp9_equivalent_display.starts_with("[!! "),
+            "#4246: pseudo-localized registry should decorate the report designer VFP-equivalent display");
         expect(pseudo_report->id == english_report->id &&
                 pseudo_report->copperfin_component == english_report->copperfin_component &&
                 pseudo_report->host_kind == english_report->host_kind &&
