@@ -218,7 +218,18 @@ internal static partial class Program
             "Copperfin.VisualStudio",
             "CopperfinPackage.cs");
         var packageSource = File.ReadAllText(packagePath);
-        Expect(packageSource.Contains("[InstalledProductRegistration(\n    \"#110\",\n    \"#112\",", StringComparison.Ordinal),
+        var registrationStart = packageSource.IndexOf(
+            "[InstalledProductRegistration(",
+            StringComparison.Ordinal);
+        var registrationEnd = packageSource.IndexOf(
+            ")]",
+            registrationStart >= 0 ? registrationStart : 0,
+            StringComparison.Ordinal);
+        var registration = registrationStart >= 0 && registrationEnd > registrationStart
+            ? packageSource.Substring(registrationStart, registrationEnd - registrationStart)
+            : string.Empty;
+        Expect(registration.Contains("\"#110\"", StringComparison.Ordinal) &&
+               registration.Contains("\"#112\"", StringComparison.Ordinal),
             "VSIX installed product registration should use stable resource ids instead of embedded English text");
         Expect(!packageSource.Contains("Launches Copperfin Studio for Visual FoxPro-style assets", StringComparison.Ordinal),
             "VSIX installed product registration should not retain a hard-coded product description");
