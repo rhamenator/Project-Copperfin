@@ -429,6 +429,7 @@ public:
         const std::string& contents,
         std::string& error) const {
         if (descriptor_ < 0) {
+            trace_transaction_begin_failure("marker-parent-descriptor", path);
             error = runtime_text(
                 "Runtime.Package.Error.CreateFileFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(path)}});
@@ -448,6 +449,7 @@ public:
             O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
             0600);
         if (temporary_descriptor < 0) {
+            trace_transaction_begin_failure("marker-open-temp", path);
             error = runtime_text(
                 "Runtime.Package.Error.CreateFileFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(path)}});
@@ -472,6 +474,7 @@ public:
         }
         if (!written || ::fsync(temporary_descriptor) != 0 ||
             ::close(temporary_descriptor) != 0) {
+            trace_transaction_begin_failure("marker-write-or-sync", path);
             (void)::close(temporary_descriptor);
             (void)::unlinkat(descriptor_, temporary_name.c_str(), 0);
             error = runtime_text(
@@ -484,6 +487,7 @@ public:
                 temporary_name.c_str(),
                 descriptor_,
                 target_name.c_str()) != 0) {
+            trace_transaction_begin_failure("marker-rename", path);
             (void)::unlinkat(descriptor_, temporary_name.c_str(), 0);
             error = runtime_text(
                 "Runtime.Package.Error.WriteFileFailed",
