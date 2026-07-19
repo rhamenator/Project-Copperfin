@@ -18,7 +18,7 @@ namespace copperfin::platform {
 inline std::string path_to_utf8_string(const std::filesystem::path& value) {
 #if defined(_WIN32)
     const std::wstring native = value.wstring();
-    if (native.empty() || native.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    if (native.empty() || native.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
         return {};
     }
     const int byte_count = ::WideCharToMultiByte(
@@ -59,7 +59,7 @@ inline std::string path_to_utf8_string(const std::filesystem::path& value) {
 
 inline std::filesystem::path path_from_utf8_string(std::string_view value) {
 #if defined(_WIN32)
-    if (value.empty() || value.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+    if (value.empty() || value.size() > static_cast<std::size_t>((std::numeric_limits<int>::max)())) {
         return {};
     }
     const int character_count = ::MultiByteToWideChar(
