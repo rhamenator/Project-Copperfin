@@ -164,7 +164,7 @@ internal sealed class CopperfinStudioReportLayoutObject
     public int? ContainingSectionRecordIndex { get; set; }
     public int SectionRelativeTop { get; set; }
     public int SectionRelativeBottom { get; set; }
-    public int SectionObjectIndex { get; set; }
+    public int? SectionObjectIndex { get; set; }
     public int SectionObjectCount { get; set; }
     public string ObjectKind { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
