@@ -462,6 +462,62 @@ public:
         return is_directory;
     }
 
+    bool remove_child(
+        const std::filesystem::path& path,
+        std::error_code& error) const {
+        if (descriptor_ < 0) {
+            error = std::make_error_code(std::errc::bad_file_descriptor);
+            return false;
+        }
+        const std::string leaf =
+            copperfin::platform::path_to_utf8_string(path.filename());
+        if (::unlinkat(descriptor_, leaf.c_str(), 0) == 0 || errno == ENOENT) {
+            error.clear();
+            return true;
+        }
+        error = std::error_code(errno, std::generic_category());
+        return false;
+    }
+
+    bool remove_child_tree(
+        const std::filesystem::path& path,
+        std::error_code& error) const {
+        if (descriptor_ < 0) {
+            error = std::make_error_code(std::errc::bad_file_descriptor);
+            return false;
+        }
+        errno = 0;
+        const bool removed = remove_tree_at(
+            descriptor_,
+            copperfin::platform::path_to_utf8_string(path.filename()));
+        if (removed) {
+            error.clear();
+            return true;
+        }
+        error = std::error_code(errno == 0 ? EIO : errno, std::generic_category());
+        return false;
+    }
+
+    bool rename_child(
+        const std::filesystem::path& source,
+        const std::filesystem::path& destination,
+        std::error_code& error) const {
+        if (descriptor_ < 0) {
+            error = std::make_error_code(std::errc::bad_file_descriptor);
+            return false;
+        }
+        if (::renameat(
+                descriptor_,
+                copperfin::platform::path_to_utf8_string(source.filename()).c_str(),
+                descriptor_,
+                copperfin::platform::path_to_utf8_string(destination.filename()).c_str()) == 0) {
+            error.clear();
+            return true;
+        }
+        error = std::error_code(errno, std::generic_category());
+        return false;
+    }
+
     bool write_text_file_atomically(
         const std::filesystem::path& path,
         const std::string& contents,
@@ -826,7 +882,11 @@ public:
                     "Runtime.Package.Error.PackageTransactionStartFailed")) {
                 return false;
             }
+#if defined(_WIN32)
             std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
+#else
+            parent_identity_.remove_child(backup_owner_path_, filesystem_error);
+#endif
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -917,7 +977,11 @@ public:
                         "Runtime.Package.Error.PackageTransactionStartFailed")) {
                     return false;
                 }
+#if defined(_WIN32)
                 std::filesystem::remove_all(pinned_path(package_root_), filesystem_error);
+#else
+                parent_identity_.remove_child_tree(package_root_, filesystem_error);
+#endif
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -932,14 +996,22 @@ public:
                         "Runtime.Package.Error.PackageTransactionStartFailed")) {
                     return false;
                 }
+#if defined(_WIN32)
                 std::filesystem::remove_all(pinned_path(backup_root_), filesystem_error);
+#else
+                parent_identity_.remove_child_tree(backup_root_, filesystem_error);
+#endif
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
                         {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
                     return false;
                 }
+#if defined(_WIN32)
                 std::filesystem::remove(pinned_path(backup_owner_path_), filesystem_error);
+#else
+                parent_identity_.remove_child(backup_owner_path_, filesystem_error);
+#endif
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -959,7 +1031,11 @@ public:
                         "Runtime.Package.Error.PackageTransactionStartFailed")) {
                     return false;
                 }
+#if defined(_WIN32)
                 std::filesystem::remove_all(pinned_path(package_root_), filesystem_error);
+#else
+                parent_identity_.remove_child_tree(package_root_, filesystem_error);
+#endif
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -973,7 +1049,11 @@ public:
                     "Runtime.Package.Error.PackageTransactionStartFailed")) {
                 return false;
             }
+#if defined(_WIN32)
             std::filesystem::remove(pinned_path(marker_path_), filesystem_error);
+#else
+            parent_identity_.remove_child(marker_path_, filesystem_error);
+#endif
             if (filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -1010,16 +1090,28 @@ public:
                     error,
                     "Runtime.Package.Error.PackageTransactionStartFailed")) {
                 std::error_code ignored;
+#if defined(_WIN32)
                 std::filesystem::remove(pinned_path(backup_owner_path_), ignored);
+#else
+                parent_identity_.remove_child(backup_owner_path_, ignored);
+#endif
                 return false;
             }
+#if defined(_WIN32)
             std::filesystem::rename(
                 pinned_path(package_root_),
                 pinned_path(backup_root_),
                 filesystem_error);
+#else
+            parent_identity_.rename_child(package_root_, backup_root_, filesystem_error);
+#endif
             if (filesystem_error) {
                 std::error_code ignored;
+#if defined(_WIN32)
                 std::filesystem::remove(pinned_path(backup_owner_path_), ignored);
+#else
+                parent_identity_.remove_child(backup_owner_path_, ignored);
+#endif
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
@@ -1162,20 +1254,39 @@ public:
             return true;
         }
 
-        if (!ensure_parent_identity(
-                error,
-                "Runtime.Package.Error.PackageRollbackFailed")) {
 #if !defined(_WIN32)
-            if (parent_identity_.rollback_at_pinned_parent(
+        if (!parent_identity_.still_same()) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageRollbackFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
+            if (!parent_identity_.rollback_at_pinned_parent(
                     copperfin::platform::path_to_utf8_string(package_root_.filename()),
                     copperfin::platform::path_to_utf8_string(backup_root_.filename()),
                     copperfin::platform::path_to_utf8_string(marker_path_.filename()),
                     copperfin::platform::path_to_utf8_string(backup_owner_path_.filename()),
                     had_previous_package_)) {
-                active_ = false;
-                return true;
+                return false;
             }
-#endif
+            active_ = false;
+            return true;
+        }
+        if (!parent_identity_.rollback_at_pinned_parent(
+                copperfin::platform::path_to_utf8_string(package_root_.filename()),
+                copperfin::platform::path_to_utf8_string(backup_root_.filename()),
+                copperfin::platform::path_to_utf8_string(marker_path_.filename()),
+                copperfin::platform::path_to_utf8_string(backup_owner_path_.filename()),
+                had_previous_package_)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageRollbackFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
+            return false;
+        }
+        active_ = false;
+        return true;
+#else
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageRollbackFailed")) {
             return false;
         }
 
@@ -1246,6 +1357,7 @@ public:
 
         active_ = false;
         return true;
+#endif
     }
 
     bool commit(std::string& error, std::string& warning) {
@@ -1253,6 +1365,47 @@ public:
             return true;
         }
 
+#if !defined(_WIN32)
+        if (!ensure_parent_identity(
+                error,
+                "Runtime.Package.Error.PackageTransactionStartFailed")) {
+            return false;
+        }
+        std::error_code filesystem_error;
+        if (!parent_identity_.remove_child(marker_path_, filesystem_error)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
+            return false;
+        }
+        if (!had_previous_package_) {
+            active_ = false;
+            return true;
+        }
+        if (!parent_identity_.remove_child_tree(backup_root_, filesystem_error)) {
+            active_ = false;
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
+            return true;
+        }
+        if (!parent_identity_.remove_child(backup_owner_path_, filesystem_error)) {
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(backup_owner_path_)}});
+        }
+        active_ = false;
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+        if (force_package_backup_cleanup_warning.exchange(
+                false,
+                std::memory_order_relaxed)) {
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
+        }
+#endif
+        return true;
+#else
         if (!ensure_parent_identity(
                 error,
                 "Runtime.Package.Error.PackageTransactionStartFailed")) {
@@ -1304,6 +1457,7 @@ public:
         }
 #endif
         return true;
+#endif
     }
 
     bool defer_until_primary_output(std::string& error) {
