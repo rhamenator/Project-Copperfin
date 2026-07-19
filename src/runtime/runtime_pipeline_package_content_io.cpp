@@ -323,6 +323,24 @@ bool copy_to_pinned_posix_parent(
         parent_descriptor = child_descriptor;
     }
 
+    struct stat existing_information{};
+    if (::fstatat(
+            parent_descriptor,
+            copperfin::platform::path_to_utf8_string(relative_path.filename()).c_str(),
+            &existing_information,
+            AT_SYMLINK_NOFOLLOW) == 0) {
+        if (!S_ISREG(existing_information.st_mode) ||
+            existing_information.st_nlink != 1) {
+            (void)::close(parent_descriptor);
+            error = rejected_destination(destination);
+            return false;
+        }
+    } else if (errno != ENOENT) {
+        (void)::close(parent_descriptor);
+        error = copy_file_failed(destination);
+        return false;
+    }
+
     const std::string temporary_name = unique_temporary_name();
     const int temporary_descriptor = ::openat(
         parent_descriptor,
@@ -349,6 +367,20 @@ bool copy_to_pinned_posix_parent(
         (void)::unlinkat(parent_descriptor, temporary_name.c_str(), 0);
         (void)::close(parent_descriptor);
         error = copy_file_failed(destination);
+        return false;
+    }
+    struct stat copied_information{};
+    const std::string destination_name =
+        copperfin::platform::path_to_utf8_string(relative_path.filename());
+    if (::fstatat(
+            parent_descriptor,
+            destination_name.c_str(),
+            &copied_information,
+            AT_SYMLINK_NOFOLLOW) != 0 ||
+        !S_ISREG(copied_information.st_mode) ||
+        copied_information.st_nlink != 1) {
+        (void)::close(parent_descriptor);
+        error = rejected_destination(destination);
         return false;
     }
     (void)::fsync(parent_descriptor);
@@ -672,11 +704,13 @@ bool copy_file_to_package_content(
         return false;
     }
 #if defined(_WIN32)
+    constexpr bool use_pinned_write = true;
     if (!prepare_package_content_root(package_root, content_root, error)) {
         return false;
     }
 #else
-    if (!is_fd_backed_path(content_root) &&
+    const bool use_pinned_write = is_fd_backed_path(content_root);
+    if (!use_pinned_write &&
         !prepare_package_content_root(package_root, content_root, error)) {
         return false;
     }
@@ -689,45 +723,48 @@ bool copy_file_to_package_content(
         error = directory_creation_failed(content_root);
         return false;
     }
-    if (!prepare_direct_parent(
-            absolute_root,
-            admitted->parent_path(),
-            content_root / *admitted,
-            error)) {
+    if (!use_pinned_write &&
+        !prepare_direct_parent(
+                absolute_root,
+                admitted->parent_path(),
+                content_root / *admitted,
+                error)) {
         return false;
     }
     destination = (content_root / *admitted).lexically_normal();
     const std::filesystem::path write_destination =
         (absolute_root / *admitted).lexically_normal();
 
-    const auto status =
-        std::filesystem::symlink_status(write_destination, filesystem_error);
-    if (filesystem_error && filesystem_error != std::errc::no_such_file_or_directory) {
-        error = copy_file_failed(destination);
-        return false;
-    }
-    if (std::filesystem::exists(status)) {
-        const auto containment =
-            security::inspect_physical_path_containment(write_destination, absolute_root);
-        if (!containment.allowed) {
-            error = is_containment_policy_rejection(containment.failure)
-                ? rejected_destination(destination)
-                : copy_file_failed(destination);
+    if (!use_pinned_write) {
+        const auto status =
+            std::filesystem::symlink_status(write_destination, filesystem_error);
+        if (filesystem_error && filesystem_error != std::errc::no_such_file_or_directory) {
+            error = copy_file_failed(destination);
             return false;
         }
-        if (containment.identity.link_count != 1U ||
-            !std::filesystem::is_regular_file(status)) {
-            error = rejected_destination(destination);
-            return false;
+        if (std::filesystem::exists(status)) {
+            const auto containment =
+                security::inspect_physical_path_containment(write_destination, absolute_root);
+            if (!containment.allowed) {
+                error = is_containment_policy_rejection(containment.failure)
+                    ? rejected_destination(destination)
+                    : copy_file_failed(destination);
+                return false;
+            }
+            if (containment.identity.link_count != 1U ||
+                !std::filesystem::is_regular_file(status)) {
+                error = rejected_destination(destination);
+                return false;
+            }
         }
     }
 
 #if defined(_WIN32)
-    const bool use_pinned_write = true;
+    const bool write_with_pinned_parent = true;
 #else
-    const bool use_pinned_write = is_fd_backed_path(content_root);
+    const bool write_with_pinned_parent = use_pinned_write;
 #endif
-    if (use_pinned_write) {
+    if (write_with_pinned_parent) {
 #if defined(_WIN32)
         if (!copy_to_pinned_windows_parent(
                 source,
@@ -747,6 +784,7 @@ bool copy_file_to_package_content(
             return false;
         }
 #endif
+#if defined(_WIN32)
         const auto copied =
             security::inspect_physical_path_containment(write_destination, absolute_root);
         if (!copied.allowed) {
@@ -759,6 +797,7 @@ bool copy_file_to_package_content(
             error = rejected_destination(destination);
             return false;
         }
+#endif
         return true;
     }
 

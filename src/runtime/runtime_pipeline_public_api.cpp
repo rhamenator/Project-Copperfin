@@ -381,6 +381,30 @@ public:
             S_ISDIR(information.st_mode);
     }
 
+    bool create_child_directory_under(
+        const std::filesystem::path& parent,
+        const std::string_view child) const {
+        int parent_descriptor = -1;
+        if (!open_child_directory(parent, parent_descriptor)) {
+            return false;
+        }
+        const std::string child_name(child);
+        const bool created = ::mkdirat(parent_descriptor, child_name.c_str(), 0700) == 0;
+        if (!created && errno != EEXIST) {
+            (void)::close(parent_descriptor);
+            return false;
+        }
+        struct stat information{};
+        const bool is_directory = ::fstatat(
+            parent_descriptor,
+            child_name.c_str(),
+            &information,
+            AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISDIR(information.st_mode);
+        (void)::close(parent_descriptor);
+        return is_directory;
+    }
+
     bool write_text_file_atomically(
         const std::filesystem::path& path,
         const std::string& contents,
@@ -941,6 +965,14 @@ public:
             error,
             "Runtime.Package.Error.PackageTransactionStartFailed");
     }
+
+#if !defined(_WIN32)
+    bool create_pinned_child_directory(
+        const std::filesystem::path& parent,
+        const std::string_view child) const {
+        return parent_identity_.create_child_directory_under(parent, child);
+    }
+#endif
 
     [[nodiscard]] RuntimePackagePlan pinned_filesystem_plan(
         const RuntimePackagePlan& logical_plan) const {
@@ -1923,12 +1955,20 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
         }
+#if defined(_WIN32)
         std::filesystem::create_directories(
             copperfin::platform::path_from_utf8_string(filesystem_plan.launcher_project_path).parent_path(),
             directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
         }
+#else
+        if (!transaction.create_pinned_child_directory(
+                filesystem_plan.package_root,
+                "launcher")) {
+            return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
+        }
+#endif
     }
 
     RuntimePackagePlan materialized_plan = plan;
