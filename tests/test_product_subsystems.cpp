@@ -134,45 +134,59 @@ int main() {
         "Studio.ProductSubsystem.BuildDeploy.ModernEditorDirection",
         "Studio.ProductSubsystem.BuildDeploy.ParityScope",
         "Studio.ProductSubsystem.BuildDeploy.Title",
+        "Studio.ProductSubsystem.BuildDeploy.Vfp9Equivalent",
         "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection",
         "Studio.ProductSubsystem.BuildersWizards.ParityScope",
         "Studio.ProductSubsystem.BuildersWizards.Title",
+        "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
         "Studio.ProductSubsystem.ClassDesigner.ModernEditorDirection",
         "Studio.ProductSubsystem.ClassDesigner.ParityScope",
         "Studio.ProductSubsystem.ClassDesigner.Title",
+        "Studio.ProductSubsystem.ClassDesigner.Vfp9Equivalent",
         "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection",
         "Studio.ProductSubsystem.DataExplorer.ParityScope",
         "Studio.ProductSubsystem.DataExplorer.Title",
+        "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
         "Studio.ProductSubsystem.Debugger.ModernEditorDirection",
         "Studio.ProductSubsystem.Debugger.ParityScope",
         "Studio.ProductSubsystem.Debugger.Title",
+        "Studio.ProductSubsystem.Debugger.Vfp9Equivalent",
         "Studio.ProductSubsystem.FormsDesigner.ModernEditorDirection",
         "Studio.ProductSubsystem.FormsDesigner.ParityScope",
         "Studio.ProductSubsystem.FormsDesigner.Title",
+        "Studio.ProductSubsystem.FormsDesigner.Vfp9Equivalent",
         "Studio.ProductSubsystem.IdeShell.ModernEditorDirection",
         "Studio.ProductSubsystem.IdeShell.ParityScope",
         "Studio.ProductSubsystem.IdeShell.Title",
+        "Studio.ProductSubsystem.IdeShell.Vfp9Equivalent",
         "Studio.ProductSubsystem.LabelDesigner.ModernEditorDirection",
         "Studio.ProductSubsystem.LabelDesigner.ParityScope",
         "Studio.ProductSubsystem.LabelDesigner.Title",
+        "Studio.ProductSubsystem.LabelDesigner.Vfp9Equivalent",
         "Studio.ProductSubsystem.MenuDesigner.ModernEditorDirection",
         "Studio.ProductSubsystem.MenuDesigner.ParityScope",
         "Studio.ProductSubsystem.MenuDesigner.Title",
+        "Studio.ProductSubsystem.MenuDesigner.Vfp9Equivalent",
         "Studio.ProductSubsystem.ObjectBrowser.ModernEditorDirection",
         "Studio.ProductSubsystem.ObjectBrowser.ParityScope",
         "Studio.ProductSubsystem.ObjectBrowser.Title",
+        "Studio.ProductSubsystem.ObjectBrowser.Vfp9Equivalent",
         "Studio.ProductSubsystem.ProjectManager.ModernEditorDirection",
         "Studio.ProductSubsystem.ProjectManager.ParityScope",
         "Studio.ProductSubsystem.ProjectManager.Title",
+        "Studio.ProductSubsystem.ProjectManager.Vfp9Equivalent",
         "Studio.ProductSubsystem.ReportDesigner.ModernEditorDirection",
         "Studio.ProductSubsystem.ReportDesigner.ParityScope",
         "Studio.ProductSubsystem.ReportDesigner.Title",
+        "Studio.ProductSubsystem.ReportDesigner.Vfp9Equivalent",
         "Studio.ProductSubsystem.RuntimeEngine.ModernEditorDirection",
         "Studio.ProductSubsystem.RuntimeEngine.ParityScope",
         "Studio.ProductSubsystem.RuntimeEngine.Title",
+        "Studio.ProductSubsystem.RuntimeEngine.Vfp9Equivalent",
         "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection",
         "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
-        "Studio.ProductSubsystem.ToolboxTaskPane.Title"};
+        "Studio.ProductSubsystem.ToolboxTaskPane.Title",
+        "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent"};
 
     const auto* english_report = find_subsystem(english_subsystems, "report-designer");
     const auto* spanish_report = find_subsystem(spanish_subsystems, "report-designer");
@@ -188,12 +202,18 @@ int main() {
         expect(english_report->parity_scope ==
                 "band editing, expression authoring, grouping, preview, export, report listeners, builder workflows",
             "#2395: en-US registry should preserve report designer parity prose");
+        expect(english_report->vfp9_equivalent ==
+                "FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
+            "#4246: en-US registry should route the report designer VFP equivalent through the catalog");
         expect(spanish_report->title == "Disenador De Reportes",
             "#2648: es-419 registry should localize the report designer title");
         expect(
             spanish_report->modern_editor_direction ==
                 "parecerse mas a SSRS y a las herramientas actuales de reportes de Visual Studio con contornos mas fuertes, inspectores, vista previa en vivo y paneles mas claros de bandas/propiedades",
             "#2648: es-419 registry should localize report designer direction prose");
+        expect(spanish_report->vfp9_equivalent ==
+                "disenador de FRX/FRT, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
+            "#4246: es-419 registry should localize the report designer VFP equivalent");
         expect(portuguese_project->title == "Gerenciador De Projetos",
             "#2648: pt-BR registry should localize the project manager title");
         expect(
@@ -206,8 +226,9 @@ int main() {
             "#2395: pseudo-localized registry should decorate report designer parity prose");
         expect(pseudo_report->modern_editor_direction.starts_with("[!! "),
             "#2395: pseudo-localized registry should decorate report designer direction prose");
+        expect(pseudo_report->vfp9_equivalent.starts_with("[!! "),
+            "#4246: pseudo-localized registry should decorate the report designer VFP equivalent");
         expect(pseudo_report->id == english_report->id &&
-                pseudo_report->vfp9_equivalent == english_report->vfp9_equivalent &&
                 pseudo_report->copperfin_component == english_report->copperfin_component &&
                 pseudo_report->host_kind == english_report->host_kind &&
                 pseudo_report->current_status == english_report->current_status,
