@@ -690,7 +690,7 @@ std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstra
     if (verified_source_text.has_value()) {
         source_text = *verified_source_text;
     } else {
-        std::ifstream source_input(options.source_path, std::ios::binary);
+        std::ifstream source_input(path_from_utf8(options.source_path), std::ios::binary);
         if (!source_input.good()) {
             error_message = localized_message(catalog, "RuntimeHost.Bridge.Error.SourceArtifactNotFound");
             return std::nullopt;
