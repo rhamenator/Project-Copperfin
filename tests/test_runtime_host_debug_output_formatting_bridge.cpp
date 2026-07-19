@@ -627,13 +627,18 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         std::cerr << "bridge-unicode-descriptor stderr:\n" << process.stderr_text << "\n";
         std::cerr << "fixture root: " << temp_root << "\n";
     }
+    std::cerr << "UNICODE: first invocation result captured\n";
     expect(process.exit_code == 0,
            "runtime host should decode Unicode bridge descriptor paths before validation");
+    std::cerr << "UNICODE: first exit assertion complete\n";
     expect(process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
            "runtime host should execute a bridge source path decoded from Unicode escapes");
+    std::cerr << "UNICODE: first output assertion complete\n";
 
+    std::cerr << "UNICODE: writing malformed request\n";
     write_request(json_escape_string(source_path_utf8).replace(
         source_name_offset, source_name_utf8.size(), "exports-\\uD800.prg"));
+    std::cerr << "UNICODE: malformed request written\n";
     const auto malformed_process = copperfin::test_support::run_process_capture(
         runtime_host_path,
         {
@@ -652,10 +657,13 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
             "--schema-version", "v1"
         },
         temp_root);
+    std::cerr << "UNICODE: malformed invocation result captured\n";
     expect(malformed_process.exit_code == 6,
            "runtime host should reject an unpaired Unicode bridge escape");
+    std::cerr << "UNICODE: malformed exit assertion complete\n";
     expect(malformed_process.stdout_text.find("error: Bridge request descriptor mismatch.") != std::string::npos,
            "malformed Unicode bridge escapes should preserve descriptor mismatch diagnostics");
+    std::cerr << "UNICODE: malformed output assertion complete\n";
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
