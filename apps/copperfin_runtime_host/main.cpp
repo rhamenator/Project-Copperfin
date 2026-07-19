@@ -89,6 +89,10 @@ bool equals_insensitive(const std::string& value, const std::string& expected) {
     return value.size() == expected.size() && starts_with_insensitive(value, expected);
 }
 
+std::filesystem::path path_from_utf8(const std::string& value) {
+    return copperfin::platform::path_from_utf8_string(value);
+}
+
 std::string packaged_runtime_host_file_name() {
 #if defined(_WIN32)
     return "copperfin_runtime_host.exe";
@@ -759,7 +763,7 @@ int run_runtime_bridge_invocation(
         return 2;
     }
 
-    std::ifstream request_input(options.request_path, std::ios::binary);
+    std::ifstream request_input(path_from_utf8(options.request_path), std::ios::binary);
     if (!request_input.good()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
@@ -836,12 +840,12 @@ int run_runtime_bridge_invocation(
             print_error_line(catalog, bootstrap_error);
             return 6;
         }
-        execution_source = bootstrap_path->string();
+        execution_source = copperfin::platform::path_to_utf8_string(*bootstrap_path);
         routine_bootstrap_path = *bootstrap_path;
         routine_bootstrap_materialized = true;
         execution_source_text = std::move(bootstrap_source_text);
     }
-    if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
+    if (lowercase_copy(path_from_utf8(execution_source).extension().string()) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.PrgStartupRequired"));
@@ -891,7 +895,7 @@ int run_runtime_bridge_invocation(
             localized_message(
                 catalog,
                 "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                {{"fileName", path_from_utf8(startup_source).filename().string()}}));
         return 6;
     }
     auto& session = *created_session;
@@ -908,7 +912,7 @@ int run_runtime_bridge_invocation(
         ? copperfin::runtime::format_value(*runtime_state.last_return_value)
         : std::string{};
 
-    const std::filesystem::path response_path(options.response_path);
+    const std::filesystem::path response_path = path_from_utf8(options.response_path);
     const auto parent_path = response_path.parent_path();
     if (!parent_path.empty()) {
         std::error_code directory_error;
@@ -1009,7 +1013,7 @@ bool path_exists_without_error(const std::filesystem::path& path) {
 
 ManifestMap load_manifest(const std::string& path) {
     ManifestMap values;
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(path_from_utf8(path), std::ios::binary);
     std::string line;
     while (std::getline(input, line)) {
         const auto delimiter = line.find('=');
@@ -1094,7 +1098,7 @@ ManifestVersionContract inspect_manifest_version_contract(const ManifestMap& man
 
 bool has_debug_manifest_path_identity(const std::string& manifest_path) {
     const std::filesystem::path normalized_manifest_path =
-        std::filesystem::path(manifest_path).lexically_normal();
+        path_from_utf8(manifest_path).lexically_normal();
     return equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
            equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
 }
@@ -1234,7 +1238,7 @@ std::filesystem::path portable_manifest_path(std::string value) {
 #if !defined(_WIN32)
     std::replace(value.begin(), value.end(), '\\', '/');
 #endif
-    return std::filesystem::path(value).lexically_normal();
+    return path_from_utf8(value).lexically_normal();
 }
 
 bool manifest_path_is_absolute(const std::filesystem::path& path) {
@@ -1320,7 +1324,7 @@ std::optional<std::filesystem::path> bind_packaged_path(
     }
 
     const std::filesystem::path native_recorded_path =
-        std::filesystem::path(manifest_value).lexically_normal();
+        path_from_utf8(manifest_value).lexically_normal();
     if (trim_copy(recorded_package_root).empty() &&
         binding_mode == PackagePathBindingMode::strict_relative_fidelity &&
         native_recorded_path.is_absolute()) {
@@ -1820,27 +1824,27 @@ bool verify_manifest_hashes(
                 {{"path", sidecar_resolution.requested_path.string()}});
             return false;
         }
-        const std::string sidecar_path = sidecar_resolution.path.value_or(
-            sidecar_resolution.requested_path).string();
+        const std::string sidecar_path = copperfin::platform::path_to_utf8_string(
+            sidecar_resolution.path.value_or(sidecar_resolution.requested_path));
         if (!sidecar_path.empty()) {
             std::error_code sidecar_error;
-            const bool sidecar_exists = std::filesystem::exists(sidecar_path, sidecar_error);
+            const bool sidecar_exists = std::filesystem::exists(path_from_utf8(sidecar_path), sidecar_error);
             if (sidecar_error || !sidecar_exists) {
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagedAssetMissing",
-                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+            {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
                 return false;
             }
 
             const auto sidecar_containment = copperfin::security::inspect_physical_path_containment(
-                sidecar_path,
+                path_from_utf8(sidecar_path),
                 manifest_directory);
             if (!sidecar_containment.allowed) {
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
                 return false;
             }
             const auto verified_sidecar = std::find_if(
@@ -1854,7 +1858,7 @@ bool verify_manifest_hashes(
                 error = localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagedAssetDigestMissing",
-                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
                 return false;
             }
         }
@@ -2264,8 +2268,8 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             {{"path", sidecar_resolution.requested_path.string()}});
         return result;
     }
-    const std::string sidecar_path = sidecar_resolution.path.value_or(
-        sidecar_resolution.requested_path).string();
+    const std::string sidecar_path = copperfin::platform::path_to_utf8_string(
+        sidecar_resolution.path.value_or(sidecar_resolution.requested_path));
     const auto snapshot_root = create_private_xasset_snapshot_root();
     if (!snapshot_root.has_value()) {
         result.error = localized_message(
@@ -2287,30 +2291,30 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
 
     std::error_code filesystem_error;
     const bool sidecar_exists = !sidecar_path.empty() &&
-        std::filesystem::exists(sidecar_path, filesystem_error);
+        std::filesystem::exists(path_from_utf8(sidecar_path), filesystem_error);
     if (filesystem_error) {
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-            {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                    {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
         return result;
     }
     if (security_enabled && !sidecar_path.empty() && !sidecar_exists) {
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.PackagedAssetMissing",
-            {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+            {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
         return result;
     }
     if (sidecar_exists) {
         const auto sidecar_containment = copperfin::security::inspect_physical_path_containment(
-            sidecar_path,
+            path_from_utf8(sidecar_path),
             manifest_directory);
         if (!sidecar_containment.allowed) {
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
             return result;
         }
         const auto verified_sidecar = std::find_if(
@@ -2323,7 +2327,7 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagedAssetDigestMissing",
-                {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
             return result;
         }
         const auto sidecar_snapshot = copperfin::security::read_physically_contained_file_snapshot(
@@ -2344,12 +2348,12 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
             (security_enabled &&
              lowercase_copy(sidecar_digest.hex_digest) != verified_sidecar->sha256) ||
             !write_binary_snapshot_file(
-                result.root / std::filesystem::path(sidecar_path).filename(),
+                result.root / path_from_utf8(sidecar_path).filename(),
                 sidecar_snapshot.bytes)) {
             result.error = localized_message(
                 catalog,
                 "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
-                {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                {{"fileName", path_from_utf8(sidecar_path).filename().string()}});
             return result;
         }
     }
@@ -2417,7 +2421,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
 
     open_result.document.path = logical_startup_source;
     open_result.document.display_name =
-        std::filesystem::path(logical_startup_source).filename().string();
+        path_from_utf8(logical_startup_source).filename().string();
     open_result.document.inspection.path = logical_startup_source;
     const copperfin::vfp::SidecarPathResolution sidecar_resolution =
         copperfin::vfp::resolve_vfp_memo_sidecar_path(logical_startup_source);
@@ -2428,8 +2432,8 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
             {{"path", sidecar_resolution.requested_path.string()}});
         return result;
     }
-    open_result.document.sidecar_path = sidecar_resolution.path.value_or(
-        sidecar_resolution.requested_path).string();
+    open_result.document.sidecar_path = copperfin::platform::path_to_utf8_string(
+        sidecar_resolution.path.value_or(sidecar_resolution.requested_path));
     result.model = copperfin::runtime::build_xasset_executable_model(open_result.document);
     if (!result.model.ok || !result.model.runnable_startup) {
         result.error = result.model.error.empty()
@@ -2454,7 +2458,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
         return result;
     }
 
-    result.bootstrap_path = bootstrap_path.string();
+    result.bootstrap_path = copperfin::platform::path_to_utf8_string(bootstrap_path);
     return result;
 }
 
@@ -2566,10 +2570,11 @@ std::string resolve_effective_working_directory(
                 ? PackagePathBindingMode::allow_external_fidelity
                 : PackagePathBindingMode::strict_relative_fidelity);
         if (bound.has_value() && is_existing_directory(*bound)) {
-            return bound->string();
+            return copperfin::platform::path_to_utf8_string(*bound);
         }
     }
-    return (manifest_directory / "content").lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(
+        (manifest_directory / "content").lexically_normal());
 }
 
 std::optional<std::filesystem::path> admit_direct_packaged_output_path(
@@ -2725,7 +2730,7 @@ std::optional<std::filesystem::path> bind_relative_startup_item(
     }
 
     const std::filesystem::path candidate =
-        (std::filesystem::path(root) / relative_item).lexically_normal();
+        (path_from_utf8(root) / relative_item).lexically_normal();
     return admit_existing_packaged_path(
         candidate,
         manifest_directory,
@@ -2747,7 +2752,7 @@ std::optional<std::string> resolve_startup_root(
         (manifest_directory / empty_value_fallback).lexically_normal();
     const std::string recorded_root = first_value(manifest, key);
     if (trim_copy(recorded_root).empty()) {
-        return fallback.string();
+        return copperfin::platform::path_to_utf8_string(fallback);
     }
 
     const auto bound = bind_packaged_path(
@@ -2761,10 +2766,10 @@ std::optional<std::string> resolve_startup_root(
             : PackagePathBindingMode::strict_relative_fidelity,
         containment_failure);
     if (bound.has_value() && (!require_directory || is_existing_directory(*bound))) {
-        return bound->string();
+        return copperfin::platform::path_to_utf8_string(*bound);
     }
     if (require_directory && is_existing_directory(fallback)) {
-        return fallback.string();
+        return copperfin::platform::path_to_utf8_string(fallback);
     }
     return std::nullopt;
 }
@@ -2783,10 +2788,10 @@ std::optional<std::string> resolve_startup_source(
     if (allow_external_debug_source &&
         manifest_path_is_absolute(normalized_startup_source) &&
         std::filesystem::exists(normalized_startup_source)) {
-        return normalized_startup_source.string();
+        return copperfin::platform::path_to_utf8_string(normalized_startup_source);
     }
     const std::filesystem::path native_startup_source =
-        std::filesystem::path(startup_source).lexically_normal();
+        path_from_utf8(startup_source).lexically_normal();
     if (trim_copy(recorded_package_root).empty() &&
         native_startup_source.is_absolute()) {
         if (admit_existing_packaged_path(
@@ -2794,7 +2799,7 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 PackagePathBindingMode::strict_relative_fidelity,
                 containment_failure).has_value()) {
-            return native_startup_source.string();
+            return copperfin::platform::path_to_utf8_string(native_startup_source);
         }
     }
     if (const auto bound_startup = bind_packaged_path(
@@ -2803,9 +2808,9 @@ std::optional<std::string> resolve_startup_source(
             manifest_directory,
             PackagePathBindingMode::strict_relative_fidelity,
             containment_failure)) {
-        return logical_deployment_path(
+        return copperfin::platform::path_to_utf8_string(logical_deployment_path(
             *bound_startup,
-            manifest_directory).string();
+            manifest_directory));
     }
 
     const std::string startup_item = first_value(manifest, "startup_item");
@@ -2832,9 +2837,9 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 allow_external_debug_source,
                 containment_failure)) {
-            return logical_deployment_path(
+            return copperfin::platform::path_to_utf8_string(logical_deployment_path(
                 *candidate,
-                manifest_directory).string();
+                manifest_directory));
         }
     }
 
@@ -2853,9 +2858,9 @@ std::optional<std::string> resolve_startup_source(
                 manifest_directory,
                 allow_external_debug_source,
                 containment_failure)) {
-            return logical_deployment_path(
+            return copperfin::platform::path_to_utf8_string(logical_deployment_path(
                 *candidate,
-                manifest_directory).string();
+                manifest_directory));
         }
     }
 
@@ -2876,7 +2881,7 @@ std::string resolve_implicit_manifest_path(
     if (debug_mode) {
         const std::filesystem::path debug_manifest_path = deployed_path("app.cfdebug");
         if (std::filesystem::exists(debug_manifest_path)) {
-            return debug_manifest_path.lexically_normal().string();
+            return copperfin::platform::path_to_utf8_string(debug_manifest_path.lexically_normal());
         }
     }
 
@@ -2884,14 +2889,14 @@ std::string resolve_implicit_manifest_path(
     if (!std::filesystem::exists(manifest_path)) {
         return {};
     }
-    return manifest_path.lexically_normal().string();
+    return copperfin::platform::path_to_utf8_string(manifest_path.lexically_normal());
 }
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int run_runtime_host_main(int argc, char** argv) {
     const std::filesystem::path invocation_path =
-        argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
+        argc > 0 && argv[0] != nullptr ? path_from_utf8(argv[0]) : std::filesystem::path();
     const std::filesystem::path running_executable_path =
         copperfin::platform::resolve_running_executable_path(invocation_path);
     const std::string explicit_locale = explicit_locale_from_arguments(argc, argv);
@@ -3100,7 +3105,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (!std::filesystem::exists(manifest_path)) {
+    if (!std::filesystem::exists(path_from_utf8(manifest_path))) {
         std::cout << "status: error\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestNotFound"));
         return 3;
@@ -3135,7 +3140,7 @@ int main(int argc, char** argv) {
 
     std::error_code manifest_path_error;
     std::filesystem::path normalized_manifest_path =
-        std::filesystem::path(manifest_path).lexically_normal();
+        path_from_utf8(manifest_path).lexically_normal();
     if (normalized_manifest_path.is_relative()) {
         const std::filesystem::path absolute_manifest_path =
             std::filesystem::absolute(normalized_manifest_path, manifest_path_error);
@@ -3167,12 +3172,12 @@ int main(int argc, char** argv) {
         return 8;
     }
     const std::string audit_log_path = resolved_audit_log_path.has_value()
-        ? resolved_audit_log_path->string()
+        ? copperfin::platform::path_to_utf8_string(*resolved_audit_log_path)
         : std::string{};
     const auto append_audit_event = [&](const std::string& event_name, const std::string& detail) {
         return copperfin::security::append_immutable_audit_event_to_contained_file(
             audit_log_path,
-            manifest_directory.string(),
+            copperfin::platform::path_to_utf8_string(manifest_directory),
             event_name,
             detail);
     };
@@ -3281,7 +3286,7 @@ int main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
             return 4;
         }
 
@@ -3299,7 +3304,7 @@ int main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.StartupAssetDigestMissing",
-                    {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
             return 8;
         }
 
@@ -3316,7 +3321,7 @@ int main(int argc, char** argv) {
                 localized_message(
                     catalog,
                     "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
-                    {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                    {{"fileName", path_from_utf8(startup_source).filename().string()}}));
             return 4;
         }
         if (verified != verified_package_paths.end()) {
@@ -3328,7 +3333,7 @@ int main(int argc, char** argv) {
                     localized_message(
                         catalog,
                         "RuntimeHost.Error.PackagedAssetSha256Mismatch",
-                        {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                        {{"fileName", path_from_utf8(startup_source).filename().string()}}));
                 return 8;
             }
         }
@@ -3483,7 +3488,7 @@ int main(int argc, char** argv) {
             security_enabled && !debug_manifest_privileges);
     }
 
-    const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
+    const std::string startup_extension = lowercase_copy(path_from_utf8(startup_source).extension().string());
     const bool prg_startup = startup_extension == ".prg";
     copperfin::runtime::XAssetExecutableModel xasset_model;
 
@@ -3545,7 +3550,7 @@ int main(int argc, char** argv) {
                 print_error_line(catalog, file_snapshot.error);
                 return 4;
             }
-            startup_read_path = file_snapshot.primary_path.string();
+            startup_read_path = copperfin::platform::path_to_utf8_string(file_snapshot.primary_path);
             xasset_execution_asset_path = startup_read_path;
         }
         const auto bootstrap = materialize_xasset_bootstrap(
@@ -3582,7 +3587,8 @@ int main(int argc, char** argv) {
     session_options.require_verified_file_byte_overrides = security_enabled && !debug_manifest_privileges;
     if (!xasset_execution_asset_path.empty()) {
         session_options.source_path_display_aliases.emplace(
-            std::filesystem::path(xasset_execution_asset_path).lexically_normal().string(),
+            copperfin::platform::path_to_utf8_string(
+                path_from_utf8(xasset_execution_asset_path).lexically_normal()),
             startup_source);
     }
     session_options.working_directory = working_directory;
@@ -3611,7 +3617,7 @@ int main(int argc, char** argv) {
             localized_message(
                 catalog,
                 "RuntimeHost.Error.VerifiedSourceUnavailable",
-                {{"fileName", std::filesystem::path(startup_source).filename().string()}}));
+                {{"fileName", path_from_utf8(startup_source).filename().string()}}));
         return security_enabled ? 8 : 4;
     }
     auto& session = *created_session;
@@ -3850,3 +3856,22 @@ int main(int argc, char** argv) {
 
     return state.reason == copperfin::runtime::DebugPauseReason::error ? 5 : 0;
 }
+
+#if defined(_WIN32)
+int wmain(int argc, wchar_t* argv[]) {
+    std::vector<std::string> utf8_arguments;
+    std::vector<char*> narrow_arguments;
+    utf8_arguments.reserve(static_cast<std::size_t>(argc));
+    narrow_arguments.reserve(static_cast<std::size_t>(argc));
+    for (int index = 0; index < argc; ++index) {
+        utf8_arguments.push_back(copperfin::platform::path_to_utf8_string(
+            std::filesystem::path(argv[index])));
+        narrow_arguments.push_back(utf8_arguments.back().data());
+    }
+    return run_runtime_host_main(argc, narrow_arguments.data());
+}
+#else
+int main(int argc, char** argv) {
+    return run_runtime_host_main(argc, argv);
+}
+#endif
