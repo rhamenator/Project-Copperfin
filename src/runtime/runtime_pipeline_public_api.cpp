@@ -408,31 +408,20 @@ public:
         }
         const std::string leaf =
             copperfin::platform::path_to_utf8_string(path.filename());
-        const int file_descriptor = ::openat(
+#if defined(__APPLE__)
+        // macOS reports ELOOP for the no-follow openat form used here even
+        // for the regular marker files created by this transaction. Open the
+        // descriptor, then reject symlinks through fstatat and bind the read
+        // to the descriptor identity before and after consumption.
+        const int opened_descriptor = ::openat(
+            descriptor_,
+            leaf.c_str(),
+            O_RDONLY | O_CLOEXEC);
+#else
+        const int opened_descriptor = ::openat(
             descriptor_,
             leaf.c_str(),
             O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-#if defined(__APPLE__)
-        int opened_descriptor = file_descriptor;
-        struct stat entry_before_open{};
-        if (opened_descriptor < 0 && errno == ELOOP &&
-            ::fstatat(
-                descriptor_,
-                leaf.c_str(),
-                &entry_before_open,
-                AT_SYMLINK_NOFOLLOW) == 0 &&
-            S_ISREG(entry_before_open.st_mode)) {
-            // Some macOS filesystems report ELOOP for a regular file on the
-            // O_NOFOLLOW openat path. Recheck the entry without following
-            // symlinks, then verify the descriptor identity before and after
-            // reading so the compatibility path remains fail-closed.
-            opened_descriptor = ::openat(
-                descriptor_,
-                leaf.c_str(),
-                O_RDONLY | O_CLOEXEC);
-        }
-#else
-        const int opened_descriptor = file_descriptor;
 #endif
         if (opened_descriptor < 0) {
             return false;
@@ -443,9 +432,15 @@ public:
             return false;
         }
 #if defined(__APPLE__)
-        if (file_descriptor < 0 &&
-            (before.st_dev != entry_before_open.st_dev ||
-             before.st_ino != entry_before_open.st_ino)) {
+        struct stat entry_before_read{};
+        if (::fstatat(
+                descriptor_,
+                leaf.c_str(),
+                &entry_before_read,
+                AT_SYMLINK_NOFOLLOW) != 0 ||
+            !S_ISREG(entry_before_read.st_mode) ||
+            before.st_dev != entry_before_read.st_dev ||
+            before.st_ino != entry_before_read.st_ino) {
             (void)::close(opened_descriptor);
             return false;
         }
