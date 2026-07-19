@@ -22,9 +22,9 @@ copperfin::runtime::RuntimePauseState run_program(
 {
     const fs::path program = root / name;
     write_text(program, source);
-    options.startup_path = program.string();
-    options.working_directory = root.string();
-    options.temp_directory = (root / "runtime-temp").string();
+    options.startup_path = copperfin::platform::path_to_utf8_string(program);
+    options.working_directory = copperfin::platform::path_to_utf8_string(root);
+    options.temp_directory = copperfin::platform::path_to_utf8_string(root / "runtime-temp");
     auto session = copperfin::runtime::PrgRuntimeSession::create(options);
     return session.run(copperfin::runtime::DebugResumeAction::continue_run);
 }
@@ -398,6 +398,72 @@ void test_restore_from_fails_closed_without_verified_mem_bytes()
     fs::remove_all(root, ignored);
 }
 
+void test_verified_prg_data_readers_preserve_unicode_paths()
+{
+    const fs::path root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string("copperfin_verified_prg_data_\xE2\x98\x83");
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path restore_path = root / "state.mem";
+    const std::string verified_restore_bytes = "saved_value=C:verified\n";
+    write_text(restore_path, verified_restore_bytes);
+    write_text(restore_path, "saved_value=C:tampered\n");
+
+    copperfin::runtime::RuntimeSessionOptions restore_options;
+    restore_options.verified_file_byte_overrides.emplace(
+        copperfin::platform::path_to_utf8_string(restore_path),
+        verified_restore_bytes);
+    restore_options.require_verified_file_byte_overrides = true;
+    const std::string restore_utf8_path = copperfin::platform::path_to_utf8_string(restore_path);
+    const auto restore_state = run_program(
+        root,
+        "unicode_verified_restore.prg",
+        "RESTORE FROM '" + restore_utf8_path + "'\n"
+        "restored_value = saved_value\n"
+        "RETURN\n",
+        restore_options);
+
+    expect(restore_state.completed,
+           "#4250: strict RESTORE FROM should resolve a Unicode admitted path: " + restore_state.message);
+    expect(global_text(restore_state, "restored_value") == "verified",
+           "#4250: strict RESTORE FROM should consume bytes admitted under a Unicode path");
+
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path append_source_path = root / "source.json";
+    write_simple_dbf(destination_path, {"Existing"});
+    write_text(append_source_path, "[{\"NAME\":\"Ada\"},{\"NAME\":\"Grace\"}]\n");
+    const std::string verified_destination_bytes = read_text(destination_path);
+    const std::string verified_append_bytes = read_text(append_source_path);
+    write_text(append_source_path, "[{\"NAME\":\"Tampered\"}]\n");
+
+    copperfin::runtime::RuntimeSessionOptions append_options;
+    append_options.verified_file_byte_overrides.emplace(
+        copperfin::platform::path_to_utf8_string(destination_path),
+        verified_destination_bytes);
+    append_options.verified_file_byte_overrides.emplace(
+        copperfin::platform::path_to_utf8_string(append_source_path),
+        verified_append_bytes);
+    append_options.require_verified_file_byte_overrides = true;
+    const std::string append_destination_utf8 = copperfin::platform::path_to_utf8_string(destination_path);
+    const std::string append_source_utf8 = copperfin::platform::path_to_utf8_string(append_source_path);
+    const auto append_state = run_program(
+        root,
+        "unicode_verified_append.prg",
+        "USE '" + append_destination_utf8 + "' ALIAS destination\n"
+        "APPEND FROM '" + append_source_utf8 + "' TYPE JSON\n"
+        "nRows = RECCOUNT('destination')\n"
+        "RETURN\n",
+        append_options);
+
+    expect(append_state.completed,
+           "#4250: strict typed APPEND FROM should resolve a Unicode admitted path: " + append_state.message);
+    expect(global_text(append_state, "nrows") == "3",
+           "#4250: strict typed APPEND FROM should consume admitted bytes under a Unicode path");
+    fs::remove_all(root, ignored);
+}
+
 void test_buffered_append_blank_reads_verified_dbf_rows()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_buffered_append";
@@ -545,6 +611,7 @@ int main()
     test_typed_append_from_fails_closed_without_verified_source_bytes();
     test_restore_from_reads_verified_mem_bytes();
     test_restore_from_fails_closed_without_verified_mem_bytes();
+    test_verified_prg_data_readers_preserve_unicode_paths();
     test_buffered_append_blank_reads_verified_dbf_rows();
     test_append_from_array_reads_verified_destination_schema();
     test_list_query_file_requery_reads_verified_bytes();

@@ -6631,14 +6631,15 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                fs::path source_path(source);
+                fs::path source_path = copperfin::platform::path_from_utf8_string(source);
                 if (source_path.extension().empty())
                 {
                     source_path += ".mem";
                 }
                 if (source_path.is_relative())
                 {
-                    source_path = fs::path(current_default_directory()) / source_path;
+                    source_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        source_path;
                 }
                 source_path = source_path.lexically_normal();
 
@@ -7548,7 +7549,7 @@
                 }
 
                 namespace fs = std::filesystem;
-                fs::path src_path(src_raw);
+                fs::path src_path = copperfin::platform::path_from_utf8_string(src_raw);
                 if (src_path.extension().empty())
                 {
                     if (append_from_xls)
@@ -7582,7 +7583,8 @@
                 }
                 if (src_path.is_relative())
                 {
-                    src_path = fs::path(current_default_directory()) / src_path;
+                    src_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        src_path;
                 }
                 src_path = src_path.lexically_normal();
 

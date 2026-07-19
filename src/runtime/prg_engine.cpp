@@ -8151,6 +8151,52 @@ namespace copperfin::runtime
                 }
             }
 
+            RuntimeOleObjectState &lifecycle_object = found->second;
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(lifecycle_object.base_class_name));
+            if (normalized_base_class == "form" || normalized_base_class == "formset")
+            {
+                std::string unload_program_path;
+                std::string unload_method_name;
+                if (const Routine *unload_method = find_native_object_method(
+                        lifecycle_object,
+                        "unload",
+                        unload_program_path,
+                        unload_method_name);
+                    unload_method != nullptr)
+                {
+                    if (!can_push_frame())
+                    {
+                        throw std::runtime_error(call_depth_limit_message());
+                    }
+
+                    events.push_back({.category = "prg.object.unload",
+                                      .detail = unload_method_name,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    const std::size_t return_depth = stack.size();
+                    const PrgValue this_reference =
+                        make_string_value("object:" + lifecycle_object.prog_id + "#" + std::to_string(lifecycle_object.handle));
+                    push_method_frame(unload_program_path,
+                                      unload_method_name,
+                                      *unload_method,
+                                      this_reference,
+                                      unload_method_name.substr(0U, unload_method_name.rfind('.')),
+                                      "unload",
+                                      native_object_parent_reference(lifecycle_object),
+                                      native_object_owner_form_reference(lifecycle_object),
+                                      native_object_owner_formset_reference(lifecycle_object),
+                                      {},
+                                      {});
+                    (void)run_expression_invoked_routine_until_return(return_depth);
+
+                    found = ole_objects.find(handle);
+                    if (found == ole_objects.end())
+                    {
+                        continue;
+                    }
+                }
+            }
+
             RuntimeOleObjectState &released_object = found->second;
             const auto parent_reference = native_object_parent_reference(released_object);
             if (parent_reference.has_value())

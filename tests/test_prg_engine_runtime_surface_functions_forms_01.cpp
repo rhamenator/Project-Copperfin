@@ -725,4 +725,80 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_and_formset_unload_lifecycle_order()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_unload_lifecycle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_unload_lifecycle.prg";
+        write_text(
+            main_path,
+            "cSequence = ''\n"
+            "oSet = CREATEOBJECT('UnloadFormSet')\n"
+            "lReleased = oSet.Release()\n"
+            "RETURN\n"
+            "DEFINE CLASS UnloadFormSet AS FormSet\n"
+            "    ADD OBJECT frmProbe AS UnloadForm\n"
+            "    PROCEDURE Destroy\n"
+            "        cSequence = cSequence + 'set-destroy>'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Unload\n"
+            "        cSequence = cSequence + 'set-unload>'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS UnloadForm AS Form\n"
+            "    PROCEDURE Destroy\n"
+            "        cSequence = cSequence + 'form-destroy>'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Unload\n"
+            "        cSequence = cSequence + 'form-unload>'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "native Form/FormSet Unload lifecycle script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be exported by the Unload lifecycle script");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lreleased", "true");
+        check("csequence", "form-destroy>form-unload>set-destroy>set-unload>");
+        const bool has_form_unload_event = std::any_of(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.unload" &&
+                       event.detail == "UnloadForm.Unload";
+            });
+        expect(has_form_unload_event,
+               "native Form release should emit the Form Unload lifecycle event");
+        const bool has_formset_unload_event = std::any_of(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.unload" &&
+                       event.detail == "UnloadFormSet.Unload";
+            });
+        expect(has_formset_unload_event,
+               "native FormSet release should emit the FormSet Unload lifecycle event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

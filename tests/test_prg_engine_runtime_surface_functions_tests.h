@@ -371,6 +371,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_release_thisformset_command_releases_owner_alias();
     void test_native_release_override_runs_before_builtin_release_path();
     void test_native_release_override_nodefault_suppresses_builtin_release_path();
+    void test_native_form_and_formset_unload_lifecycle_order();
     void test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
     void test_native_resettodefault_override_wins_over_builtin_default_restore();
     void test_native_readexpression_returns_live_property_expression_text();
