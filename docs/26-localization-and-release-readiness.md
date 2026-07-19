@@ -35,7 +35,7 @@ Future surfaces should reuse an existing catalog where practical or add equivale
 - CLI/native diagnostics: keep command switches and JSON fields stable; localize human summaries behind locale-aware lookup.
 - Studio host JSON: keep JSON contracts stable; localize optional display text only when a consumer requests it.
 - VSIX UI: continue moving dialogs, deeper pane body text, and dynamic project/debugger detail text into shared resources while preserving VS command IDs.
-- Installer text: ship `en-US`, `es-419`, `pt-BR`, and `qps-ploc` resources with packaging smoke tests; Windows install validation must verify every catalog is present and non-empty.
+- Installer text: ship en-US, es-419, pt-BR, and qps-ploc resources with packaging smoke tests; every Windows, macOS, and Linux installer job must materialize an install tree and verify each catalog is present, non-empty, and a regular file.
 - Docs/help and generated templates: version translated text separately from generated file identifiers and code symbols.
 
 ## Installer Artifact Contract

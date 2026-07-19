@@ -235,6 +235,13 @@ add_test(
 )
 
 add_test(
+    NAME test_locale_catalog_install_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/locale-catalog-install-contract
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_locale_catalog_install_contract_test.cmake
+)
+
+add_test(
     NAME test_build_parallelism_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

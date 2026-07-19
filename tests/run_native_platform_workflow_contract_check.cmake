@@ -302,6 +302,17 @@ require_text(".github/workflows/build-installers.yml"
     "tests/run_cpack_artifact_contract_check.cmake"
     "CPack artifact ownership verifier")
 require_text_count(".github/workflows/build-installers.yml"
+    "tests/run_locale_catalog_install_contract_check.cmake"
+    3
+    "locale catalog install contract checks")
+require_text_count(".github/workflows/build-installers.yml"
+    "cmake --install build --prefix build/install"
+    2
+    "POSIX installer install-tree materialization")
+require_text(".github/workflows/build-installers.yml"
+    "-DINSTALL_ROOT=build/standalone-studio-install -P tests/run_locale_catalog_install_contract_check.cmake"
+    "Windows installer locale install contract invocation")
+require_text_count(".github/workflows/build-installers.yml"
     "tests/run_package_version_contract_check.cmake"
     3
     "package version contract checks")

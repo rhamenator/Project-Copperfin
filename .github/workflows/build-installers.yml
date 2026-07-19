@@ -54,6 +54,10 @@ jobs:
             -DINSTALL_ROOT=build/standalone-studio-install `
             -P tests/run_studio_install_contract_check.cmake
 
+      - name: Verify localized catalog install
+        shell: pwsh
+        run: cmake -DINSTALL_ROOT=build/standalone-studio-install -P tests/run_locale_catalog_install_contract_check.cmake
+
       - name: Package (NSIS and ZIP)
         run: |
           cmake -E remove_directory build/package
@@ -94,6 +98,13 @@ jobs:
 
       - name: Build
         run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+
+      - name: Verify localized catalog install
+        run: |
+          cmake -E remove_directory build/install
+          cmake -E make_directory build/install
+          cmake --install build --prefix build/install
+          cmake -DINSTALL_ROOT=build/install -P tests/run_locale_catalog_install_contract_check.cmake
 
       - name: Package (productbuild and TGZ)
         run: |
@@ -140,6 +151,13 @@ jobs:
 
       - name: Build
         run: cmake --build build --target copperfin_studio_host copperfin_runtime_host copperfin_build_host copperfin_inspect
+
+      - name: Verify localized catalog install
+        run: |
+          cmake -E remove_directory build/install
+          cmake -E make_directory build/install
+          cmake --install build --prefix build/install
+          cmake -DINSTALL_ROOT=build/install -P tests/run_locale_catalog_install_contract_check.cmake
 
       - name: Package Debian, RedHat, and portable archives
         run: |
