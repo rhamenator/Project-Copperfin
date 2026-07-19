@@ -592,6 +592,7 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     fs::create_directories(source_path.parent_path());
     std::cerr << "END: Unicode bridge fixture directories\n";
 
+    std::cerr << "BEGIN: Unicode bridge manifest write\n";
     write_text(
         manifest_path,
         std::string("manifest_version=1\n"
@@ -600,12 +601,17 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         "startup_source=") + copperfin::platform::path_to_utf8_string(startup_path) + "\n"
         "security_enabled=false\n"
         "dotnet_story=none\n");
+    std::cerr << "END: Unicode bridge manifest write\n";
+    std::cerr << "BEGIN: Unicode bridge startup write\n";
     write_text(startup_path, "RETURN 7\n");
+    std::cerr << "END: Unicode bridge startup write\n";
+    std::cerr << "BEGIN: Unicode bridge source write\n";
     write_text(
         source_path,
         "PROCEDURE GetAnswer\n"
         "RETURN 42\n"
         "ENDPROC\n");
+    std::cerr << "END: Unicode bridge source write\n";
 
     const std::string source_path_utf8 = copperfin::platform::path_to_utf8_string(source_path);
     std::string escaped_source_path = json_escape_string(source_path_utf8);
