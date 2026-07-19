@@ -18,4 +18,7 @@
   <data name="112" xml:space="preserve">
     <value>Inicia Copperfin Studio para activos de estilo Visual FoxPro y prepara el camino hacia diseñadores de activos nativos.</value>
   </data>
+  <data name="200" xml:space="preserve">
+    <value>Diseñador visual de Copperfin</value>
+  </data>
 </root>

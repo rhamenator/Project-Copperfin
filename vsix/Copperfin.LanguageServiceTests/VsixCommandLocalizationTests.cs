@@ -292,6 +292,55 @@ internal static partial class Program
         }
     }
 
+    private static void TestVsixEditorRegistrationLocalizesName()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "VSIX editor localization test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var packageSource = File.ReadAllText(Path.Combine(
+            repositoryRoot,
+            "vsix",
+            "Copperfin.VisualStudio",
+            "CopperfinPackage.cs"));
+        Expect(packageSource.Split("NameResourceID = 200", StringSplitOptions.None).Length - 1 == 6,
+            "all six VSIX editor registrations should retain the invariant editor-name resource id");
+
+        var resources = new Dictionary<string, (string Locale, string FileName)>(StringComparer.Ordinal)
+        {
+            ["en-US"] = ("en-US", "CommandResources.resx"),
+            ["es-419"] = ("es-419", "CommandResources.es.resx"),
+            ["pt-BR"] = ("pt-BR", "CommandResources.pt.resx"),
+            ["qps-ploc"] = ("qps-ploc", "CommandResources.qps-ploc.resx")
+        };
+        var english = new CopperfinLocalization("en-US");
+        foreach (var entry in resources)
+        {
+            var resourceDocument = XDocument.Load(Path.Combine(
+                repositoryRoot,
+                "vsix",
+                "Copperfin.VisualStudio",
+                entry.Value.FileName));
+            var editorName = resourceDocument.Root?
+                .Elements("data")
+                .Where(element => (string?)element.Attribute("name") == "200")
+                .Select(element => element.Element("value")?.Value ?? string.Empty)
+                .SingleOrDefault() ?? string.Empty;
+            var localization = new CopperfinLocalization(entry.Value.Locale);
+            Expect(editorName == localization.Text("AssetEditor.Title"),
+                $"{entry.Key} VSIX editor registration should match the shared AssetEditor.Title catalog");
+            if (!string.Equals(entry.Key, "en-US", StringComparison.OrdinalIgnoreCase))
+            {
+                Expect(editorName != english.Text("AssetEditor.Title"),
+                    $"{entry.Key} VSIX editor registration should not expose the English editor name");
+            }
+        }
+    }
+
     private static string? FindRepositoryRoot()
     {
         foreach (var startPath in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
