@@ -352,6 +352,7 @@ foreach(runtime_host_test_target IN ITEMS
     add_executable(${runtime_host_test_target} ${runtime_host_test_sources})
     target_link_libraries(${runtime_host_test_target} PRIVATE cf_design_model cf_xbase_runtime cf_vfp_assets)
     target_link_libraries(${runtime_host_test_target} PRIVATE cf_security)
+    copperfin_apply_windows_stack_reserve(${runtime_host_test_target})
     if(runtime_host_test_target STREQUAL "test_runtime_host_debug_output_formatting")
         target_link_libraries(${runtime_host_test_target} PRIVATE cf_test_process_capture_support)
     endif()
