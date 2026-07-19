@@ -206,6 +206,8 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     const auto invoke = [&](const fs::path& requested_source) {
         write_request(requested_source);
         fs::remove(response_path, ignored);
+        std::cerr << "BEGIN: verified bridge process capture "
+                  << copperfin::platform::path_to_utf8_string(requested_source) << '\n';
         const auto captured = copperfin::test_support::run_process_capture(
             deployed_runtime_host,
             {
@@ -224,6 +226,10 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
                 "--schema-version", "v1"
             },
             temp_root);
+        std::cerr << "END: verified bridge process capture started="
+                  << (captured.started ? "true" : "false")
+                  << " exit=" << captured.exit_code
+                  << " launch_error=" << captured.launch_error << '\n';
         return ProcessResult{
             .exit_code = captured.started ? captured.exit_code : -1,
             .stdout_text = captured.stdout_text,
