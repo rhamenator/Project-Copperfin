@@ -985,13 +985,23 @@ public:
 #if defined(_WIN32)
             const bool package_is_directory =
                 is_direct_directory(pinned_path(package_root_), filesystem_error);
+            const bool deferred_marker_matches =
+                transaction_marker_exists &&
+                read_text_file(pinned_path(marker_path_)) ==
+                    transaction_identity_ + std::string(kPackageTransactionDeferredPhase);
 #else
             const bool package_is_directory =
                 parent_identity_.child_is_directory(package_root_);
+            std::string deferred_marker_contents;
+            const bool deferred_marker_matches =
+                transaction_marker_exists &&
+                parent_identity_.read_child_regular_file(
+                    marker_path_,
+                    deferred_marker_contents) &&
+                deferred_marker_contents ==
+                    transaction_identity_ + std::string(kPackageTransactionDeferredPhase);
 #endif
-            if (!transaction_marker_exists ||
-                read_text_file(pinned_path(marker_path_)) !=
-                    transaction_identity_ + std::string(kPackageTransactionDeferredPhase) ||
+            if (!deferred_marker_matches ||
                 !package_exists ||
                 !package_is_directory ||
                 filesystem_error) {
