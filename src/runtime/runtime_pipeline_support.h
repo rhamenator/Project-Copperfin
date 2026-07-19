@@ -99,6 +99,10 @@ bool try_read_file_fd_backed(
     const std::filesystem::path& source,
     bool& handled,
     std::string& contents);
+bool try_collect_fd_backed_regular_files(
+    const std::filesystem::path& root,
+    bool& handled,
+    std::vector<std::filesystem::path>& relative_files);
 bool try_write_text_file_fd_backed(
     const std::filesystem::path& destination,
     const std::string& contents,

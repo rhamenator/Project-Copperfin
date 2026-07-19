@@ -23,7 +23,9 @@ std::string staged_content_relative_path(
         content_path.lexically_relative(content_root));
 }
 
-std::map<std::string, StagedContentFile> collect_staged_content_files(const RuntimePackagePlan& plan) {
+std::map<std::string, StagedContentFile> collect_staged_content_files(
+    const RuntimePackagePlan& plan,
+    std::string* error = nullptr) {
     std::map<std::string, StagedContentFile> files;
     const std::filesystem::path content_root = plan.content_root;
 
@@ -39,15 +41,44 @@ std::map<std::string, StagedContentFile> collect_staged_content_files(const Runt
         };
     }
 
-    std::error_code error;
-    if (content_root.empty() || !std::filesystem::exists(content_root, error)) {
+#if !defined(_WIN32)
+    bool fd_handled = false;
+    std::vector<std::filesystem::path> fd_relative_files;
+    if (!try_collect_fd_backed_regular_files(
+            content_root,
+            fd_handled,
+            fd_relative_files)) {
+        if (error != nullptr) {
+            *error = runtime_text(
+                "Runtime.Package.Error.OpenFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(content_root)}});
+        }
+        return files;
+    }
+    if (fd_handled) {
+        for (const auto& relative_path : fd_relative_files) {
+            const std::string relative =
+                copperfin::platform::path_to_utf8_string(relative_path);
+            files.emplace(relative, StagedContentFile{
+                .relative_path = relative,
+                .absolute_path = copperfin::platform::path_to_utf8_string(
+                    content_root / relative_path),
+                .declared_asset = false
+            });
+        }
+        return files;
+    }
+#endif
+
+    std::error_code filesystem_error;
+    if (content_root.empty() || !std::filesystem::exists(content_root, filesystem_error)) {
         return files;
     }
 
-    for (std::filesystem::recursive_directory_iterator it(content_root, error), end;
-         it != end && !error;
-         it.increment(error)) {
-        if (error || !it->is_regular_file(error)) {
+    for (std::filesystem::recursive_directory_iterator it(content_root, filesystem_error), end;
+         it != end && !filesystem_error;
+         it.increment(filesystem_error)) {
+        if (filesystem_error || !it->is_regular_file(filesystem_error)) {
             continue;
         }
 
@@ -157,7 +188,11 @@ bool write_app_archive_primary_output(
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "content_manifest=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
 
-    for (const auto& [relative_path, file] : collect_staged_content_files(filesystem_plan)) {
+    const auto files = collect_staged_content_files(filesystem_plan, &error);
+    if (!error.empty()) {
+        return false;
+    }
+    for (const auto& [relative_path, file] : files) {
         error.clear();
         const std::string bytes = read_binary_file(file.absolute_path, error);
         if (!error.empty()) {

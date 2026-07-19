@@ -9,6 +9,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
 #include <limits>
@@ -313,6 +314,118 @@ bool try_read_file_fd_backed(
     }
     handled = true;
     return read_file_bytes(source, contents);
+}
+
+bool collect_fd_regular_files_at(
+    const int directory_descriptor,
+    const std::filesystem::path& prefix,
+    std::vector<std::filesystem::path>& relative_files) {
+    const int duplicate = ::dup(directory_descriptor);
+    if (duplicate < 0) {
+        return false;
+    }
+    DIR* directory = ::fdopendir(duplicate);
+    if (directory == nullptr) {
+        (void)::close(duplicate);
+        return false;
+    }
+
+    bool success = true;
+    for (;;) {
+        errno = 0;
+        const dirent* entry = ::readdir(directory);
+        if (entry == nullptr) {
+            if (errno != 0) {
+                success = false;
+            }
+            break;
+        }
+        const std::string name(entry->d_name);
+        if (name == "." || name == "..") {
+            continue;
+        }
+
+        struct stat information{};
+        if (::fstatat(
+                directory_descriptor,
+                name.c_str(),
+                &information,
+                AT_SYMLINK_NOFOLLOW) != 0) {
+            success = false;
+            break;
+        }
+        const std::filesystem::path child =
+            prefix / copperfin::platform::path_from_utf8_string(name);
+        if (S_ISREG(information.st_mode)) {
+            relative_files.push_back(child);
+            continue;
+        }
+        if (!S_ISDIR(information.st_mode)) {
+            continue;
+        }
+
+        const int child_descriptor = ::openat(
+            directory_descriptor,
+            name.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (child_descriptor < 0 ||
+            !collect_fd_regular_files_at(child_descriptor, child, relative_files)) {
+            if (child_descriptor >= 0) {
+                (void)::close(child_descriptor);
+            }
+            success = false;
+            break;
+        }
+        (void)::close(child_descriptor);
+    }
+    (void)::closedir(directory);
+    return success;
+}
+
+bool try_collect_fd_backed_regular_files(
+    const std::filesystem::path& root,
+    bool& handled,
+    std::vector<std::filesystem::path>& relative_files) {
+    handled = false;
+    relative_files.clear();
+    const auto parsed = parse_fd_backed_path(root);
+    if (!parsed.has_value()) {
+        return true;
+    }
+    handled = true;
+
+    int directory_descriptor = ::dup(parsed->descriptor);
+    if (directory_descriptor < 0) {
+        return false;
+    }
+    for (const auto& component : parsed->relative) {
+        if (component == ".") {
+            continue;
+        }
+        if (component == "..") {
+            (void)::close(directory_descriptor);
+            return false;
+        }
+        const std::string name =
+            copperfin::platform::path_to_utf8_string(component);
+        const int child_descriptor = ::openat(
+            directory_descriptor,
+            name.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+        if (child_descriptor < 0) {
+            (void)::close(directory_descriptor);
+            return false;
+        }
+        (void)::close(directory_descriptor);
+        directory_descriptor = child_descriptor;
+    }
+
+    const bool success = collect_fd_regular_files_at(
+        directory_descriptor,
+        std::filesystem::path{},
+        relative_files);
+    (void)::close(directory_descriptor);
+    return success;
 }
 
 bool try_write_text_file_fd_backed(

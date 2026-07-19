@@ -1001,7 +1001,7 @@ void test_visual_asset_raw_create_write_faults_are_atomic() {
 void test_visual_asset_raw_unicode_path_transaction_round_trip() {
     const auto temp_dir = std::filesystem::temp_directory_path() /
         copperfin::platform::path_from_utf8_string(
-            "copperfin_visual_asset_raw-\xD0\xBF\xD1\x83\xD1\x82\x8C");
+            "copperfin_visual_asset_raw-\xD0\xBF\xD1\x83\xD1\x82\xD1\x8C");
     std::error_code ignored;
     std::filesystem::remove_all(temp_dir, ignored);
     std::filesystem::create_directories(temp_dir);
