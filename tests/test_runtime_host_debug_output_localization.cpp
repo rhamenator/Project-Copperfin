@@ -644,6 +644,33 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
     {
         write_text(
             startup_path,
+            "nValue = 1\n"
+            "nValue = 2\n"
+            "RETURN\n");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-stop-on-entry",
+                "--debug-command", "continue",
+                "--debug-command", "step"
+            },
+            temp_root);
+        expect(process.exit_code == 0,
+               "#4262: entry-stop debug sessions should keep the runtime-host success exit code");
+        expect(process.stdout_text.find("debug.command[0]: continue") != std::string::npos &&
+                   process.stdout_text.find("debug.reason: entry") != std::string::npos,
+               "#4262: entry-stop debug sessions should expose the initial entry pause");
+        expect(process.stdout_text.find("debug.command[1]: step") != std::string::npos &&
+                   process.stdout_text.find("debug.reason: step") != std::string::npos,
+               "#4262: entry-stop debug sessions should preserve the next step pause");
+    }
+
+    {
+        write_text(
+            startup_path,
             "LOCAL nValue\n"
             "nValue = 1\n"
             "RETURN\n");

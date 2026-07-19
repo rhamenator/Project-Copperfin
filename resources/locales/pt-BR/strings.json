@@ -421,7 +421,7 @@
   "RuntimeHost.Launch.Note.CompatibilityLauncher": "O asset de inicializacao nao e um arquivo PRG e nao pode ser materializado para xAsset bootstrap. Esta inicializacao esta recorrendo ao modo compatibility-launcher.",
   "RuntimeHost.Usage.Federation": "   ou: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
   "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
-  "RuntimeHost.Usage.Manifest": "Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",
+  "RuntimeHost.Usage.Manifest": "Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{debugStopOnEntryOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",
   "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed": "Nao foi possivel criar o diretorio de resposta bridge.",
   "RuntimeHost.Bridge.Error.PrgStartupRequired": "A invocacao bridge atualmente exige uma origem de inicializacao PRG.",
   "RuntimeHost.Bridge.Error.RequestArtifactNotFound": "Artefato de solicitacao bridge nao encontrado.",

@@ -15,6 +15,7 @@ internal sealed class CopperfinRuntimeDebugSession
     public int BuildWarningCount { get; set; }
     public List<string> BuildWarnings { get; set; } = new();
     public List<string> Commands { get; set; } = new();
+    public bool StopOnEntry { get; set; }
     public CopperfinRuntimePauseState State { get; set; } = new();
 }
 

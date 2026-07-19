@@ -785,7 +785,7 @@
   "RuntimeHost.Launch.Note.CompatibilityLauncher": "Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.",
   "RuntimeHost.Usage.Federation": "   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
   "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
-  "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",
+  "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{debugStopOnEntryOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",
   "RuntimeHost.Error.BridgeFederationModeConflict": "Bridge invocation mode cannot be combined with federation query mode.",
   "RuntimeHost.Error.FederationRequiredOptions": "{federationBackendOption} and {federationQueryOption} are both required in federation mode.",
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "Manifest is empty or invalid.",

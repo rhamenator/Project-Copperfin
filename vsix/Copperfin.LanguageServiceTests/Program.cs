@@ -836,7 +836,7 @@ internal static partial class Program
                 $"printf 'COPPERFIN_UI_LOCALE=%s\\n' \"${{COPPERFIN_UI_LOCALE:-}}\" > \"{runtimeEnvPath}\"",
                 $"printf 'COPPERFIN_LOCALE=%s\\n' \"${{COPPERFIN_LOCALE:-}}\" >> \"{runtimeEnvPath}\"",
                 "printf 'debug.command[0]: continue\\n'",
-                "printf 'debug.reason: breakpoint\\n'",
+                "printf 'debug.reason: entry\\n'",
                 "printf 'debug.location: app/main.prg:12\\n'",
                 "printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
                 "printf 'debug.stack.depth: 1\\n'",
@@ -863,14 +863,16 @@ internal static partial class Program
                 new CopperfinLocalization("pt-BR")).GetAwaiter().GetResult();
 
             Expect(session.Success, "runtime debug client should succeed against the fake runtime host");
-            Expect(string.Equals(session.State.Reason, "breakpoint", StringComparison.Ordinal),
-                "runtime debug client should preserve the fake pause reason");
+            Expect(string.Equals(session.State.Reason, "entry", StringComparison.Ordinal),
+                "runtime debug client should stop the initial session at entry");
 
             var capturedArgs = File.ReadAllText(runtimeArgsPath);
             var capturedEnv = File.ReadAllText(runtimeEnvPath);
             Expect(capturedArgs.Contains("--locale", StringComparison.Ordinal) &&
                    capturedArgs.Contains("pt-BR", StringComparison.Ordinal),
                 "runtime debug client should pass the explicit locale through the runtime-host command line");
+            Expect(capturedArgs.Contains("--debug-stop-on-entry", StringComparison.Ordinal),
+                "runtime debug client should request the explicit entry-stop contract");
             Expect(capturedEnv.Contains("COPPERFIN_UI_LOCALE=pt-BR", StringComparison.Ordinal),
                 "runtime debug client should stamp COPPERFIN_UI_LOCALE for the runtime host");
             Expect(capturedEnv.Contains("COPPERFIN_LOCALE=pt-BR", StringComparison.Ordinal),

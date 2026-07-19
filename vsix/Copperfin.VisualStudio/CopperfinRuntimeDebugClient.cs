@@ -52,7 +52,8 @@ internal static class CopperfinRuntimeDebugClient
             DebugManifestPath = buildResult.DebugManifestPath,
             BuildWarningCount = buildResult.WarningCount,
             BuildWarnings = buildResult.Warnings.ToList(),
-            Commands = new List<string> { "continue" }
+            Commands = new List<string> { "continue" },
+            StopOnEntry = true
         }, localization);
     }
 
@@ -100,7 +101,8 @@ internal static class CopperfinRuntimeDebugClient
             DebugManifestPath = session.DebugManifestPath,
             BuildWarningCount = session.BuildWarningCount,
             BuildWarnings = session.BuildWarnings.ToList(),
-            Commands = commands
+            Commands = commands,
+            StopOnEntry = session.StopOnEntry
         }, localization);
     }
 
@@ -120,7 +122,11 @@ internal static class CopperfinRuntimeDebugClient
             }
 
             var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
-            var arguments = BuildReplayArguments(effectiveDebugManifestPath, localization.Locale, session.Commands);
+            var arguments = BuildReplayArguments(
+                effectiveDebugManifestPath,
+                localization.Locale,
+                session.Commands,
+                session.StopOnEntry);
 
             var startInfo = CreateReplayProcessStartInfo(runtimeHostPath!, arguments, localization);
 
@@ -193,11 +199,16 @@ internal static class CopperfinRuntimeDebugClient
     internal static string BuildReplayArguments(
         string debugManifestPath,
         string locale,
-        IEnumerable<string> commands)
+        IEnumerable<string> commands,
+        bool stopOnEntry = false)
     {
         var arguments = new StringBuilder();
         arguments.Append("--manifest ").Append(Quote(debugManifestPath)).Append(" --debug");
         arguments.Append(" --locale ").Append(Quote(locale));
+        if (stopOnEntry)
+        {
+            arguments.Append(" --debug-stop-on-entry");
+        }
         foreach (var command in commands)
         {
             arguments.Append(" --debug-command ").Append(Quote(command));

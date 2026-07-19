@@ -2009,6 +2009,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
         {"debugCommandOption", "--debug-command"},
         {"debugCommandValue", "<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>"},
         {"debugOption", "--debug"},
+        {"debugStopOnEntryOption", "--debug-stop-on-entry"},
         {"federationBackendOption", "--federation-backend"},
         {"federationBackendValue", "<sqlite|postgresql|sqlserver|oracle>"},
         {"federationQueryOption", "--federation-query"},
@@ -2925,6 +2926,7 @@ int run_runtime_host_main(int argc, char** argv) {
     bool federation_planning_require = false;
     bool federation_policy_audit = true;
     bool debug_mode = false;
+    bool debug_stop_on_entry = false;
     bool license_status_requested = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
@@ -2974,6 +2976,8 @@ int run_runtime_host_main(int argc, char** argv) {
             }
         } else if (equals_insensitive(arg, "--debug") || equals_insensitive(arg, "/debug")) {
             debug_mode = true;
+        } else if (arg == "--debug-stop-on-entry") {
+            debug_stop_on_entry = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {
             breakpoint_args.emplace_back(argv[++index]);
         } else if (arg == "--debug-command" && (index + 1) < argc) {
@@ -3608,7 +3612,7 @@ int run_runtime_host_main(int argc, char** argv) {
             startup_source);
     }
     session_options.working_directory = working_directory;
-    session_options.stop_on_entry = false;
+    session_options.stop_on_entry = debug_mode && debug_stop_on_entry;
     const std::string quit_confirm_prompt = localized_message_or_default(
         catalog,
         "RuntimeHost.Prompt.QuitConfirm",
