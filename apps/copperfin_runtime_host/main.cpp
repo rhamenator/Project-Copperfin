@@ -3473,7 +3473,7 @@ int run_runtime_host_main(int argc, char** argv) {
                     return 4;
                 }
                 verified_bridge_source_text = bridge_snapshot.bytes;
-                verified_bridge_source_path = bound_bridge_source->string();
+                verified_bridge_source_path = copperfin::platform::path_to_utf8_string(*bound_bridge_source);
             }
         }
         return run_runtime_bridge_invocation(
