@@ -29,12 +29,17 @@ foreach(path IN ITEMS
     file(WRITE "${TEST_ROOT}/${path}" "contract fixture\n")
 endforeach()
 
+get_filename_component(source_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+file(RELATIVE_PATH relative_test_root "${source_root}" "${TEST_ROOT}")
+file(RELATIVE_PATH relative_binary_dir "${source_root}" "${TEST_BINARY_DIR}")
+
 execute_process(
     COMMAND "${CMAKE_COMMAND}"
         -DWIN32=TRUE
-        "-DBINARY_DIR=${TEST_BINARY_DIR}"
-        "-DINSTALL_ROOT=${TEST_ROOT}"
+        "-DBINARY_DIR=${relative_binary_dir}"
+        "-DINSTALL_ROOT=${relative_test_root}"
         -P "${CMAKE_CURRENT_LIST_DIR}/run_studio_install_contract_check.cmake"
+    WORKING_DIRECTORY "${source_root}"
     RESULT_VARIABLE complete_result)
 if(NOT complete_result EQUAL 0)
     message(FATAL_ERROR "Relative install-root Studio contract fixture should pass")
@@ -44,9 +49,10 @@ file(WRITE "${TEST_ROOT}/bin/studio/unexpected.txt" "unexpected\n")
 execute_process(
     COMMAND "${CMAKE_COMMAND}"
         -DWIN32=TRUE
-        "-DBINARY_DIR=${TEST_BINARY_DIR}"
-        "-DINSTALL_ROOT=${TEST_ROOT}"
+        "-DBINARY_DIR=${relative_binary_dir}"
+        "-DINSTALL_ROOT=${relative_test_root}"
         -P "${CMAKE_CURRENT_LIST_DIR}/run_studio_install_contract_check.cmake"
+    WORKING_DIRECTORY "${source_root}"
     RESULT_VARIABLE unexpected_result)
 if(unexpected_result EQUAL 0)
     message(FATAL_ERROR "Unexpected Studio install fixture should fail")
