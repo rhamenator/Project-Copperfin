@@ -908,9 +908,11 @@ public:
             }
             std::string owner_error;
             if (!write_owned_transaction_file_atomically(backup_owner_path_, owner_error)) {
-                error = runtime_text(
-                    "Runtime.Package.Error.PackageTransactionStartFailed",
-                    {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
+                error = owner_error.empty()
+                    ? runtime_text(
+                          "Runtime.Package.Error.PackageTransactionStartFailed",
+                          {{"path", copperfin::platform::path_to_utf8_string(package_root_)}})
+                    : owner_error;
                 return false;
             }
             if (!ensure_parent_identity(
