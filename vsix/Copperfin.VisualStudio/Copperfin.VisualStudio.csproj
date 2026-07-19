@@ -42,6 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Copperfin.Studio\CopperfinDocumentPathIdentity.cs" Link="Shared\CopperfinDocumentPathIdentity.cs" />
     <VSCTCompile Include="Copperfin.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
