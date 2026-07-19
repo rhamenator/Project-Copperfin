@@ -971,6 +971,7 @@ public:
         const bool package_root_ready =
             parent_identity_.create_child_directory(package_root_);
         if (!package_root_ready) {
+            trace_transaction_begin_failure("create-package-root", package_root_);
             filesystem_error = std::make_error_code(std::errc::io_error);
         }
 #endif
@@ -1255,6 +1256,7 @@ private:
         if (parent_identity_.still_same()) {
             return true;
         }
+        trace_transaction_begin_failure("parent-identity", package_root_);
         error = runtime_text(error_key, {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
         return false;
     }
@@ -1264,6 +1266,7 @@ private:
         std::string& error,
         const std::string& contents = {}) const {
         if (!parent_identity_.still_same()) {
+            trace_transaction_begin_failure("owned-file-parent", path);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(path)}});
@@ -1285,6 +1288,7 @@ private:
 
         std::error_code filesystem_error;
         if (directory_entry_exists(temporary_path, filesystem_error) || filesystem_error) {
+            trace_transaction_begin_failure("owned-file-temp", temporary_path);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(temporary_path)}});
@@ -1296,6 +1300,7 @@ private:
                 temporary_path,
                 contents.empty() ? transaction_identity_ : contents,
                 write_error)) {
+            trace_transaction_begin_failure("owned-file-write", path);
             std::filesystem::remove(temporary_path, filesystem_error);
             error = write_error.empty()
                 ? runtime_text(
@@ -1315,6 +1320,7 @@ private:
         error = runtime_text(
             "Runtime.Package.Error.PackageTransactionStartFailed",
             {{"path", copperfin::platform::path_to_utf8_string(path)}});
+        trace_transaction_begin_failure("owned-file-rename", path);
         return false;
 #endif
     }
@@ -1328,6 +1334,9 @@ private:
             error.clear();
             return false;
         }
+        if (error) {
+            trace_transaction_begin_failure("directory-entry", path);
+        }
         return !error && status.type() != std::filesystem::file_type::not_found;
     }
 
@@ -1336,6 +1345,9 @@ private:
         std::error_code& error) {
         const std::filesystem::file_status status =
             std::filesystem::symlink_status(path, error);
+        if (error) {
+            trace_transaction_begin_failure("direct-directory", path);
+        }
         return !error && status.type() == std::filesystem::file_type::directory;
     }
 
@@ -1344,6 +1356,7 @@ private:
         const std::filesystem::file_status status =
             std::filesystem::symlink_status(path, filesystem_error);
         if (status.type() != std::filesystem::file_type::regular || filesystem_error) {
+            trace_transaction_begin_failure("owned-file-status", path);
             return false;
         }
         const std::string contents = read_text_file(path);
