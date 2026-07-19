@@ -1990,6 +1990,11 @@ internal sealed class CopperfinLocalization
         return new CopperfinLocalization(requestedLocale);
     }
 
+    public static CopperfinLocalization FromCurrentUiCulture()
+    {
+        return new CopperfinLocalization(CultureInfo.CurrentUICulture.Name);
+    }
+
     internal static IReadOnlyDictionary<string, string> CatalogEntries(string? requestedLocale = null)
     {
         var locale = NormalizeLocale(requestedLocale);

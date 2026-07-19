@@ -1,0 +1,60 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+using System;
+using System.Globalization;
+using System.IO;
+
+namespace Copperfin.VisualStudio;
+
+internal static partial class Program
+{
+    private static void TestVsixEditorPaneUsesCurrentUiCulture()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "VSIX editor pane localization test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var paneSource = File.ReadAllText(Path.Combine(
+            repositoryRoot,
+            "vsix",
+            "Copperfin.VisualStudio",
+            "CopperfinAssetEditorPane.cs"));
+        Expect(paneSource.Contains(
+                "new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture())",
+                StringComparison.Ordinal),
+            "VSIX editor pane should pass Visual Studio's current UI culture to the shared editor");
+
+        var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", null);
+
+            CultureInfo.CurrentUICulture = new CultureInfo("es-419");
+            var spanish = CopperfinLocalization.FromCurrentUiCulture();
+            Expect(spanish.Locale == CopperfinLocalization.SpanishLatinAmericaLocale &&
+                   spanish.Text("AssetEditor.Title") == "Diseñador visual de Copperfin",
+                "VSIX editor pane localization should follow a Spanish Visual Studio UI culture");
+
+            CultureInfo.CurrentUICulture = new CultureInfo("pt-BR");
+            var portuguese = CopperfinLocalization.FromCurrentUiCulture();
+            Expect(portuguese.Locale == CopperfinLocalization.PortugueseBrazilLocale &&
+                   portuguese.Text("AssetEditor.Title") == "Designer visual do Copperfin",
+                "VSIX editor pane localization should follow a Brazilian Portuguese Visual Studio UI culture");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+        }
+    }
+}

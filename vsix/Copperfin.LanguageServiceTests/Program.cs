@@ -23,6 +23,7 @@ internal static partial class Program
         TestVsixCommandTableLocalizesCommandCaptions();
         TestVsixInstalledProductRegistrationLocalizesMetadata();
         TestVsixEditorRegistrationLocalizesName();
+        TestVsixEditorPaneUsesCurrentUiCulture();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();

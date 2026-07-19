@@ -4,6 +4,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- VSIX editor-pane localization slice `#4270` under `#2348` now passes `CopperfinLocalization.FromCurrentUiCulture()` into the shared editor control. Keep the actual Visual Studio pane aligned with `CultureInfo.CurrentUICulture` so localized VS instances do not show mixed-language editor chrome; standalone Studio and explicit managed controls must continue using their environment/explicit locale paths, and machine contracts plus catalog keys remain invariant.
 - Standalone asset reveal is now cross-platform under #26/#4264: `CopperfinFileManager` keeps Windows Explorer `/select` behavior, uses `open --reveal` on macOS, and uses `xdg-open` on the containing directory on Linux. Keep the localized `AssetEditor.RevealInExplorerButton` wording platform-neutral and preserve quiet failure when no desktop opener exists.
 - PJX workspace entries are now an MVP open/edit path under #25/#4265: the shared editor must resolve only supported child assets beneath the PJX directory, reject traversal/missing/unsupported targets, and invoke the host-owned open callback on Enter or double-click. Standalone Studio routes the callback through normalized document-tab identity; the VSIX pane delegates to Visual Studio document hosting. Keep the path allowlist and machine contracts invariant.
 

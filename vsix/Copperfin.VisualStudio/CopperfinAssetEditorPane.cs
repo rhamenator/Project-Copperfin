@@ -22,7 +22,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
     public CopperfinAssetEditorPane(System.IServiceProvider serviceProvider, string documentPath)
         : base(serviceProvider)
     {
-        control = new CopperfinAssetEditorControl();
+        control = new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture());
         control.OpenDocumentRequested += OpenDocumentInVisualStudio;
         this.documentPath = documentPath;
         control.LoadDocument(documentPath);
