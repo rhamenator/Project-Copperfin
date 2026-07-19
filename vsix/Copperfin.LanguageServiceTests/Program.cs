@@ -406,7 +406,9 @@ internal static partial class Program
 
             Expect(startInfo.FileName == @"C:\Windows\System32\cmd.exe",
                 "Windows batch-backed Studio hosts should launch through COMSPEC");
-            Expect(startInfo.Arguments == "/d /c \"\"C:\\temp\\fake studio host.cmd\" --from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"\"",
+            Expect(startInfo.Arguments == "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%" &&
+                   startInfo.EnvironmentVariables["COPPERFIN_SCRIPT_WRAPPER_COMMAND"] ==
+                       "\"C:\\temp\\fake studio host.cmd\" --from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"",
                 "Windows batch-backed Studio hosts should preserve the invariant command arguments inside the cmd wrapper");
             Expect(!startInfo.UseShellExecute &&
                    startInfo.RedirectStandardOutput &&

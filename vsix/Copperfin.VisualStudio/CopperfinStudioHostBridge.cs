@@ -15,6 +15,7 @@ namespace Copperfin.VisualStudio;
 internal static class CopperfinStudioHostBridge
 {
     private const int PosixExecutePermission = 1;
+    private const string WindowsScriptWrapperCommandVariable = "COPPERFIN_SCRIPT_WRAPPER_COMMAND";
     private static readonly string[] HostBuildConfigurations = { "Release", "RelWithDebInfo", "Debug" };
 
     public static string? ResolveStudioHostPath(string? baseDirectory = null)
@@ -355,6 +356,7 @@ internal static class CopperfinStudioHostBridge
         var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
         var commandPath = studioHostPath;
         var commandArguments = arguments;
+        string? wrapperCommand = null;
 
         if (isWindows && IsWindowsScriptWrapper(studioHostPath))
         {
@@ -364,7 +366,8 @@ internal static class CopperfinStudioHostBridge
                 commandPath = "cmd.exe";
             }
 
-            commandArguments = $"/d /c \"{Quote(studioHostPath)}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : " " + arguments)}\"";
+            wrapperCommand = $"{Quote(studioHostPath)}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : " " + arguments)}";
+            commandArguments = $"/d /c %{WindowsScriptWrapperCommandVariable}%";
         }
 
         var startInfo = new DiagnosticsStartInfo
@@ -376,6 +379,10 @@ internal static class CopperfinStudioHostBridge
             RedirectStandardError = redirectOutput,
             CreateNoWindow = createNoWindow
         };
+        if (wrapperCommand is not null)
+        {
+            startInfo.EnvironmentVariables[WindowsScriptWrapperCommandVariable] = wrapperCommand;
+        }
         ApplyLocalizationEnvironment(startInfo, localization);
         return startInfo;
     }

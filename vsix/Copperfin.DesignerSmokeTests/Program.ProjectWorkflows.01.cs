@@ -618,10 +618,9 @@ internal static partial class Program
                 createNoWindow: true,
                 isWindowsOverride: true);
             Expect(string.Equals(wrapperStartInfo.FileName, expectedCommandInterpreter, StringComparison.OrdinalIgnoreCase) &&
-                   wrapperStartInfo.Arguments.StartsWith("/d /c \"", StringComparison.OrdinalIgnoreCase) &&
-                   wrapperStartInfo.Arguments.IndexOf("\"" + wrapperPath + "\"", StringComparison.Ordinal) >= 0 &&
-                   wrapperStartInfo.Arguments.IndexOf(quotedProject, StringComparison.Ordinal) >= 0 &&
-                   wrapperStartInfo.Arguments.IndexOf("--empty \"\"", StringComparison.Ordinal) >= 0,
+                   string.Equals(wrapperStartInfo.Arguments, "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%", StringComparison.Ordinal) &&
+                   string.Equals(wrapperStartInfo.EnvironmentVariables["COPPERFIN_SCRIPT_WRAPPER_COMMAND"],
+                       "\"" + wrapperPath + "\" build --project " + quotedProject + " --empty \"\"", StringComparison.Ordinal),
                 $"managed project workflow should route Windows {extension} hosts through COMSPEC without dropping spaced or empty arguments");
 
             var posixStartInfo = CopperfinProjectWorkflow.CreateProcessStartInfo(
@@ -631,6 +630,16 @@ internal static partial class Program
             Expect(string.Equals(posixStartInfo.FileName, wrapperPath, StringComparison.Ordinal) &&
                    string.Equals(posixStartInfo.Arguments, string.Join(" ", launchArguments.Take(launchArguments.Length - 1)) + " \"\"", StringComparison.Ordinal),
                 $"managed project workflow should preserve direct-executable behavior for {extension} paths off Windows");
+
+            var percentWrapperPath = @"C:\tools\%USERNAME%\build host" + extension;
+            var percentWrapperStartInfo = CopperfinProjectWorkflow.CreateProcessStartInfo(
+                percentWrapperPath,
+                launchArguments,
+                isWindowsOverride: true);
+            Expect(string.Equals(percentWrapperStartInfo.Arguments, "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%", StringComparison.Ordinal) &&
+                   string.Equals(percentWrapperStartInfo.EnvironmentVariables["COPPERFIN_SCRIPT_WRAPPER_COMMAND"],
+                       "\"" + percentWrapperPath + "\" build --project " + quotedProject + " --empty \"\"", StringComparison.Ordinal),
+                $"managed project workflow should preserve literal percent characters in Windows {extension} wrapper paths");
         }
 
         const string debugArguments = "--manifest \"C:\\debug manifest\\app.cfdebug\" --debug --locale \"es-419\" --debug-command \"step into\" --debug-command \"\"";
@@ -660,11 +669,20 @@ internal static partial class Program
                 debugArguments,
                 isWindowsOverride: true);
             Expect(string.Equals(wrapperStartInfo.FileName, expectedCommandInterpreter, StringComparison.OrdinalIgnoreCase) &&
-                   wrapperStartInfo.Arguments.StartsWith("/d /c \"", StringComparison.OrdinalIgnoreCase) &&
-                   wrapperStartInfo.Arguments.IndexOf("\"" + wrapperPath + "\"", StringComparison.Ordinal) >= 0 &&
-                   wrapperStartInfo.Arguments.IndexOf("\"C:\\debug manifest\\app.cfdebug\"", StringComparison.Ordinal) >= 0 &&
-                   wrapperStartInfo.Arguments.IndexOf("--debug-command \"\"", StringComparison.Ordinal) >= 0,
+                   string.Equals(wrapperStartInfo.Arguments, "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%", StringComparison.Ordinal) &&
+                   string.Equals(wrapperStartInfo.EnvironmentVariables["COPPERFIN_SCRIPT_WRAPPER_COMMAND"],
+                       "\"" + wrapperPath + "\" " + debugArguments, StringComparison.Ordinal),
                 $"runtime debug replay should route Windows {extension} hosts through COMSPEC without dropping manifest, debug-command, or empty arguments");
+
+            var percentWrapperPath = @"C:\tools\%USERNAME%\runtime host" + extension;
+            var percentWrapperStartInfo = CopperfinRuntimeDebugClient.CreateReplayProcessStartInfo(
+                percentWrapperPath,
+                debugArguments,
+                isWindowsOverride: true);
+            Expect(string.Equals(percentWrapperStartInfo.Arguments, "/d /c %COPPERFIN_SCRIPT_WRAPPER_COMMAND%", StringComparison.Ordinal) &&
+                   string.Equals(percentWrapperStartInfo.EnvironmentVariables["COPPERFIN_SCRIPT_WRAPPER_COMMAND"],
+                       "\"" + percentWrapperPath + "\" " + debugArguments, StringComparison.Ordinal),
+                $"runtime debug replay should preserve literal percent characters in Windows {extension} wrapper paths");
 
             var posixStartInfo = CopperfinRuntimeDebugClient.CreateReplayProcessStartInfo(
                 wrapperPath,
