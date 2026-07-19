@@ -253,7 +253,18 @@
         std::error_code ignored;
         if (looks_like_file_path(xml_or_path)) {
             std::filesystem::path probe_path = filesystem_probe_path(xml_or_path, default_directory);
-            if (std::filesystem::exists(probe_path, ignored)) {
+            if (require_verified_file_byte_overrides) {
+                const auto verified_payload = read_verified_file_callback
+                    ? read_verified_file_callback(probe_path)
+                    : std::nullopt;
+                if (!verified_payload.has_value()) {
+                    record_runtime_warning(runtime_text(
+                        "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable",
+                        {{"path", copperfin::platform::path_to_utf8_string(probe_path)}}));
+                    return make_number_value(0.0);
+                }
+                xml_payload = *verified_payload;
+            } else if (std::filesystem::exists(probe_path, ignored)) {
                 std::ifstream input(probe_path, std::ios::binary);
                 std::ostringstream buffer;
                 buffer << input.rdbuf();

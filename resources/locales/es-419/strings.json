@@ -1475,6 +1475,7 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requiere entrada XML y alias de destino",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} no pudo materializar el cursor destino",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} no pudo analizar la carga XML proporcionada",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable": "Los bytes verificados del paquete no estan disponibles para la entrada de XMLTOCURSOR(): {path}",
   "Runtime.Prg.Watch.Error.EmptyExpression": "La expresion de watch esta vacia.",
   "Runtime.Prg.Watch.Error.Failed": "La evaluacion de watch fallo.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "La evaluacion de watch se quedo sin memoria.",

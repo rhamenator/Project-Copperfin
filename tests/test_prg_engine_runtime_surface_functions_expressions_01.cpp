@@ -767,6 +767,100 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_cursor_xml_verified_file_bytes_are_enforced()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_verified_bytes";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path xml_path = temp_root / "verified.xml";
+        const std::string verified_xml =
+            "<CopperfinCursor alias=\"Verified\">\n"
+            "  <Fields>\n"
+            "    <Field name=\"ID\" type=\"N\" width=\"4\" decimals=\"0\" />\n"
+            "    <Field name=\"NAME\" type=\"C\" width=\"20\" decimals=\"0\" />\n"
+            "  </Fields>\n"
+            "  <Rows>\n"
+            "    <Row><Col>1</Col><Col>VERIFIED</Col></Row>\n"
+            "  </Rows>\n"
+            "</CopperfinCursor>\n";
+        const std::string tampered_xml =
+            "<CopperfinCursor alias=\"Tampered\">\n"
+            "  <Fields>\n"
+            "    <Field name=\"ID\" type=\"N\" width=\"4\" decimals=\"0\" />\n"
+            "    <Field name=\"NAME\" type=\"C\" width=\"20\" decimals=\"0\" />\n"
+            "  </Fields>\n"
+            "  <Rows>\n"
+            "    <Row><Col>9</Col><Col>TAMPERED</Col></Row>\n"
+            "    <Row><Col>10</Col><Col>UNTRUSTED</Col></Row>\n"
+            "  </Rows>\n"
+            "</CopperfinCursor>\n";
+        write_text(xml_path, tampered_xml);
+
+        const fs::path strict_program = temp_root / "strict.prg";
+        write_text(
+            strict_program,
+            "nLoaded = XMLTOCURSOR('verified.xml', 'Verified')\n"
+            "nCount = RECCOUNT('Verified')\n"
+            "RETURN\n");
+        copperfin::runtime::RuntimeSessionOptions strict_options =
+            make_runtime_session_options(strict_program.string(), temp_root.string());
+        strict_options.verified_file_byte_overrides.emplace(xml_path.string(), verified_xml);
+        strict_options.require_verified_file_byte_overrides = true;
+        const auto strict_state = copperfin::runtime::PrgRuntimeSession::create(strict_options)
+                                       .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(strict_state.completed,
+               "strict XMLTOCURSOR verified-byte script should complete: " + strict_state.message);
+        const std::string strict_loaded = copperfin::runtime::format_value(strict_state.globals.at("nloaded"));
+        const std::string strict_count = copperfin::runtime::format_value(strict_state.globals.at("ncount"));
+        std::string strict_events;
+        for (const auto &event : strict_state.events)
+        {
+            strict_events += event.category + ":" + event.detail + ";";
+        }
+        expect(strict_loaded == "1",
+               "strict XMLTOCURSOR should load the verified row count (got " + strict_loaded + ", events=" + strict_events + ")");
+        expect(strict_count == "1",
+               "strict XMLTOCURSOR should ignore tampered disk rows (got " + strict_count + ", events=" + strict_events + ")");
+
+        const fs::path missing_program = temp_root / "missing.prg";
+        write_text(missing_program, "nLoaded = XMLTOCURSOR('verified.xml', 'Missing')\nRETURN\n");
+        copperfin::runtime::RuntimeSessionOptions missing_options =
+            make_runtime_session_options(missing_program.string(), temp_root.string());
+        missing_options.require_verified_file_byte_overrides = true;
+        const auto missing_state = copperfin::runtime::PrgRuntimeSession::create(missing_options)
+                                       .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(missing_state.completed,
+               "strict XMLTOCURSOR missing-byte script should fail safely: " + missing_state.message);
+        expect(copperfin::runtime::format_value(missing_state.globals.at("nloaded")) == "0",
+               "strict XMLTOCURSOR should reject an unverified file path");
+        expect(std::any_of(missing_state.events.begin(), missing_state.events.end(), [](const auto &event)
+        {
+            return event.category == "runtime.warning" &&
+                   event.detail.find("Verified package bytes are unavailable") != std::string::npos;
+        }),
+               "strict XMLTOCURSOR rejection should emit the verified-byte warning");
+
+        const fs::path non_strict_program = temp_root / "non_strict.prg";
+        write_text(
+            non_strict_program,
+            "nLoaded = XMLTOCURSOR('verified.xml', 'Tampered')\n"
+            "nCount = RECCOUNT('Tampered')\n"
+            "RETURN\n");
+        const auto non_strict_state = copperfin::runtime::PrgRuntimeSession::create(
+                                           make_runtime_session_options(non_strict_program.string(), temp_root.string()))
+                                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(non_strict_state.completed,
+               "non-strict XMLTOCURSOR file script should complete: " + non_strict_state.message);
+        expect(copperfin::runtime::format_value(non_strict_state.globals.at("nloaded")) == "2" &&
+                   copperfin::runtime::format_value(non_strict_state.globals.at("ncount")) == "2",
+               "non-strict XMLTOCURSOR should preserve direct file loading");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_invalid_input_runtime_surface_functions()
     {
         namespace fs = std::filesystem;

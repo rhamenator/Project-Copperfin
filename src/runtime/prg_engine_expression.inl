@@ -51,6 +51,8 @@
         const std::function<std::string(const std::string&)>& set_callback,
         const std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string&)>& snapshot_cursor_callback,
         const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
+        bool require_verified_file_byte_overrides,
+        const std::function<std::optional<std::string>(const std::filesystem::path&)>& read_verified_file_callback,
         const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
         const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
         const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
@@ -130,6 +132,8 @@
                 std::function<std::string(const std::string &)> set_callback,
                 std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback,
                 std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback,
+                bool require_verified_file_byte_overrides,
+                std::function<std::optional<std::string>(const std::filesystem::path &)> read_verified_file_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
@@ -202,6 +206,8 @@
                   set_callback_(std::move(set_callback)),
                   snapshot_cursor_callback_(std::move(snapshot_cursor_callback)),
                   load_cursor_snapshot_callback_(std::move(load_cursor_snapshot_callback)),
+                  require_verified_file_byte_overrides_(require_verified_file_byte_overrides),
+                  read_verified_file_callback_(std::move(read_verified_file_callback)),
                   cursor_buffering_callback_(std::move(cursor_buffering_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
@@ -1844,6 +1850,8 @@
                                                           set_callback_,
                                                           snapshot_cursor_callback_,
                                                           load_cursor_snapshot_callback_,
+                                                          require_verified_file_byte_overrides_,
+                                                          read_verified_file_callback_,
                                                           resolve_object_callback_,
                                                           read_native_member_callback_,
                                                           write_native_member_callback_,
@@ -3458,6 +3466,8 @@
             std::function<std::string(const std::string &)> set_callback_;
             std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string &)> snapshot_cursor_callback_;
             std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback_;
+            bool require_verified_file_byte_overrides_ = false;
+            std::function<std::optional<std::string>(const std::filesystem::path &)> read_verified_file_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &)> cursor_buffering_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;

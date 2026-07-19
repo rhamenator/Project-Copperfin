@@ -2303,12 +2303,35 @@ namespace copperfin::runtime
                     return std::nullopt;
                 }
 
+                if (options.require_verified_file_byte_overrides)
+                {
+                    std::ifstream input(table_path, std::ios::binary);
+                    std::ostringstream bytes;
+                    bytes << input.rdbuf();
+                    if (!input.good() && !input.eof())
+                    {
+                        return std::nullopt;
+                    }
+                    options.verified_file_byte_overrides[
+                        copperfin::platform::path_to_utf8_string(table_path)] = bytes.str();
+                }
+
                 if (!open_table_cursor(
                         copperfin::platform::path_to_utf8_string(table_path), alias, {}, true, false, 0, {}, 0U))
                 {
                     return std::nullopt;
                 }
                 return snapshot.rows.size();
+            },
+            options.require_verified_file_byte_overrides,
+            [this](const std::filesystem::path &path) -> std::optional<std::string>
+            {
+                const auto verified = find_verified_file_byte_override(path);
+                if (verified == options.verified_file_byte_overrides.end() || verified->second.empty())
+                {
+                    return std::nullopt;
+                }
+                return verified->second;
             },
             [this](const std::string &function, const std::vector<PrgValue> &arguments)
             {

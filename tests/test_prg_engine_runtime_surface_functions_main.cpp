@@ -12,6 +12,7 @@ int main()
     test_object_reflection_runtime_surface_functions();
     test_common_native_oop_function_abbreviations();
     test_cursor_xml_round_trip_runtime_surface_functions();
+    test_cursor_xml_verified_file_bytes_are_enforced();
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_cursor_xml_cardinality_mismatch_preserves_destinations();
     test_newobject_getpem_setpem_compobj_functions();

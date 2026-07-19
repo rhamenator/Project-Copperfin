@@ -1070,6 +1070,7 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requires XML input and destination alias",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} failed to materialize destination cursor",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorVerifiedBytesUnavailable": "Verified package bytes are unavailable for XMLTOCURSOR() input: {path}",
   "Runtime.Prg.ReportAsset.Error.ResolveFailed": "Unable to resolve report asset: {path}",
   "Runtime.Prg.ReportOutput.Error.OpenFailed": "Unable to open report output path: {path}",
   "Runtime.Prg.ReportOutput.Error.PathRequired": "REPORT/LABEL TO clause requires a writable output path",
