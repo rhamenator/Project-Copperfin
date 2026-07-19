@@ -131,6 +131,18 @@ COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllX86In
     return 9007199254740993LL;
 }
 
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Int64Echo(std::int64_t value) {
+    return value;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Int64ByRef(std::int64_t* value) {
+    if (value == nullptr) {
+        return 0L;
+    }
+    *value = 9007199254740993LL;
+    return 1L;
+}
+
 COPPERFIN_TEST_EXPORT double COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Split(double value, double* whole) {
     const int integral = static_cast<int>(value);
     if (whole != nullptr) {
