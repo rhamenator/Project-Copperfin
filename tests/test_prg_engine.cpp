@@ -28,6 +28,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
+void test_verified_source_errors_are_localized();
 
 
 
@@ -1823,6 +1824,7 @@ void test_transaction_commands_without_active_transaction_fault() {
 int main() {
     test_runtime_session_options_contain_temporary_files();
     test_verified_startup_source_text_overrides_changed_disk_source();
+    test_verified_source_errors_are_localized();
     test_read_events_pause();
     test_activate_popup_pause();
     test_dispatch_event_handler();

@@ -57,7 +57,9 @@
                 source_override == options.source_text_overrides.end() &&
                 options.require_source_text_overrides)
             {
-                throw std::runtime_error("verified source text unavailable: " + normalized);
+                throw std::runtime_error(runtime_text(
+                    "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable",
+                    {{"path", normalized}}));
             }
             auto [inserted, _] = programs.emplace(
                 normalized,

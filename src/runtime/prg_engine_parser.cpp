@@ -5,6 +5,7 @@
 #include "prg_engine_internal.h"
 
 #include "copperfin/platform/path.h"
+#include "localized_text.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 
@@ -909,7 +910,9 @@ void append_preprocessed_logical_lines(
                     state.include_stack.erase(include_key);
                 }
             } else if (require_source_text_overrides) {
-                throw std::runtime_error("verified include source unavailable: " + include_key);
+                throw std::runtime_error(runtime_text(
+                    "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
+                    {{"path", include_key}}));
             }
             continue;
         }

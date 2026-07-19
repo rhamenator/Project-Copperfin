@@ -4507,6 +4507,7 @@ copperfin_add_test(test_security_controls cf_security
 
 copperfin_add_test(test_prg_engine cf_xbase_runtime
     test_prg_engine.cpp
+    test_prg_engine_verified_source_localization.cpp
     prg_engine_test_support.cpp
 )
 

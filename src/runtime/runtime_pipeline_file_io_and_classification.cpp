@@ -671,7 +671,7 @@ std::string resolve_project_item_source(
         const std::filesystem::path& lookup_path = from_relative;
 #endif
         if (const auto resolved = resolve_candidate(lookup_path); resolved.has_value()) {
-            return resolved->string();
+            return copperfin::platform::path_to_utf8_string(resolved->lexically_normal());
         }
 #if defined(_WIN32)
         if (drive_relative && error.empty() && lookup_path.is_absolute()) {
@@ -695,7 +695,7 @@ std::string resolve_project_item_source(
                     entry.relative_path,
                     require_unique_casefold,
                     fallback_ambiguous)) {
-                return fallback->string();
+                return copperfin::platform::path_to_utf8_string(fallback->lexically_normal());
             }
             if (fallback_ambiguous) {
                 error = runtime_text(
@@ -715,7 +715,7 @@ std::string resolve_project_item_source(
 
     const std::filesystem::path from_name = resolve_vfp_path_from_base(base_dir, entry.name);
     if (const auto resolved = resolve_candidate(from_name); resolved.has_value()) {
-        return resolved->string();
+        return copperfin::platform::path_to_utf8_string(resolved->lexically_normal());
     }
     return copperfin::platform::path_to_utf8_string(from_name.lexically_normal());
 }

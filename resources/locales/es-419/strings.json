@@ -9,6 +9,8 @@
   "Runtime.Prg.Database.Error.PathRequired": "OPEN DATABASE requiere una ruta de base de datos.",
   "Runtime.Prg.Database.Error.ValidateUnsupported": "Este runtime no admite OPEN DATABASE VALIDATE.",
   "Runtime.Prg.Database.Error.VerifiedBytesUnavailable": "Los bytes verificados del paquete no estan disponibles para el componente de la base de datos: {path}",
+  "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable": "La fuente verificada del paquete no esta disponible: {path}",
+  "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable": "La fuente INCLUDE verificada del paquete no esta disponible: {path}",
   "Command.Build": "Compilar",
   "VSIX.Command.OpenInStudio": "Abrir en Copperfin Studio",
   "VSIX.Command.BuildProject": "Compilar proyecto Copperfin",

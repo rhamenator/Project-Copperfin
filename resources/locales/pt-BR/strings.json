@@ -9,6 +9,8 @@
   "Runtime.Prg.Database.Error.PathRequired": "OPEN DATABASE exige um caminho de banco de dados.",
   "Runtime.Prg.Database.Error.ValidateUnsupported": "Este runtime nao oferece suporte a OPEN DATABASE VALIDATE.",
   "Runtime.Prg.Database.Error.VerifiedBytesUnavailable": "Os bytes verificados do pacote nao estao disponiveis para o componente do banco de dados: {path}",
+  "Runtime.Prg.Parser.Error.VerifiedSourceUnavailable": "A origem verificada do pacote nao esta disponivel: {path}",
+  "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable": "A origem INCLUDE verificada do pacote nao esta disponivel: {path}",
   "Command.Build": "Compilar",
   "VSIX.Command.OpenInStudio": "Abrir no Copperfin Studio",
   "VSIX.Command.BuildProject": "Compilar projeto Copperfin",
