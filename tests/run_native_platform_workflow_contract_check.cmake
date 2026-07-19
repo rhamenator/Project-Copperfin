@@ -353,6 +353,9 @@ require_text("CMakeLists.txt"
     "CMAKE_SIZEOF_VOID_P must be 8"
     "Windows x64 pointer-size failure")
 require_text("CMakeLists.txt"
+    "COPPERFIN_NATIVE_POINTER_SIZE"
+    "Persisted native pointer-size contract")
+require_text("CMakeLists.txt"
     "COPPERFIN_REQUIRE_X64"
     "Opt-in Windows x64 packaging contract")
 foreach(stale_pattern IN ITEMS

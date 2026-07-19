@@ -6,6 +6,11 @@ option(COPPERFIN_REQUIRE_X64
     "Require an x64 Windows toolchain for managed-product packaging"
     OFF)
 
+# Keep the configure-time architecture result available to install-contract
+# checks; CMake does not persist CMAKE_SIZEOF_VOID_P in its public cache.
+set(COPPERFIN_NATIVE_POINTER_SIZE "${CMAKE_SIZEOF_VOID_P}" CACHE INTERNAL
+    "Detected native pointer size used by Copperfin contract checks")
+
 if(WIN32 AND COPPERFIN_REQUIRE_X64)
     if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
         message(FATAL_ERROR

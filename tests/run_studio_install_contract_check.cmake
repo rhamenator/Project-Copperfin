@@ -16,8 +16,9 @@ endif()
 if(NOT EXISTS "${BINARY_DIR}/CMakeCache.txt")
     message(FATAL_ERROR "Windows architecture contract is missing CMakeCache.txt")
 endif()
+
 file(STRINGS "${BINARY_DIR}/CMakeCache.txt" pointer_size_lines
-    REGEX "^CMAKE_SIZEOF_VOID_P:INTERNAL=8$")
+    REGEX "^COPPERFIN_NATIVE_POINTER_SIZE:INTERNAL=8$")
 if(NOT pointer_size_lines)
     message(FATAL_ERROR "Windows installer native build is not configured for an x64 pointer size")
 endif()
