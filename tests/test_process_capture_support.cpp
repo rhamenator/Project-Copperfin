@@ -369,10 +369,16 @@ CapturedProcessResult run_process_capture(
     const std::filesystem::path& executable_path,
     const std::vector<std::string>& utf8_arguments,
     const std::filesystem::path& working_directory) {
+    std::cerr << "BEGIN: process capture absolute executable\n";
     const std::filesystem::path absolute_executable = std::filesystem::absolute(executable_path);
+    std::cerr << "END: process capture absolute executable\n";
+    std::cerr << "BEGIN: process capture absolute working directory\n";
     const std::filesystem::path absolute_working_directory =
         std::filesystem::absolute(working_directory);
+    std::cerr << "END: process capture absolute working directory\n";
+    std::cerr << "BEGIN: process capture output paths\n";
     const CapturePaths paths = make_capture_paths(absolute_working_directory);
+    std::cerr << "END: process capture output paths\n";
 #if defined(_WIN32)
     CapturedProcessResult result = run_process_capture_windows(
         absolute_executable,
