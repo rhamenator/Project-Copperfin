@@ -5,6 +5,8 @@
 #include "test_visual_asset_editor_support.h"
 #include "test_environment_support.h"
 
+#include "copperfin/platform/path.h"
+
 #include <array>
 
 namespace cf_test_visual_asset_editor {
@@ -993,6 +995,40 @@ void test_visual_asset_raw_create_write_faults_are_atomic() {
     }
     test_table_only_recovery_keeps_committed_target(temp_dir);
     test_table_only_dbf_ignores_ambiguous_stray_sidecars(temp_dir);
+    std::filesystem::remove_all(temp_dir, ignored);
+}
+
+void test_visual_asset_raw_unicode_path_transaction_round_trip() {
+    const auto temp_dir = std::filesystem::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(
+            "copperfin_visual_asset_raw-\xD0\xBF\xD1\x83\xD1\x82\x8C");
+    std::error_code ignored;
+    std::filesystem::remove_all(temp_dir, ignored);
+    std::filesystem::create_directories(temp_dir);
+    const auto fixture = make_raw_fixture(temp_dir, ".frx");
+    const auto result = copperfin::vfp::create_visual_object({
+        .path = copperfin::platform::path_to_utf8_string(fixture.table_path),
+        .field_values = {
+            {.property_name = "OBJNAME", .property_value = "cmdUnicode"},
+            {.property_name = "NAME", .property_value = "btnUnicode"},
+            {.property_name = "UNIQUEID", .property_value = "unicode-guid"},
+            {.property_name = "PROPERTIES", .property_value = "unicode"}
+        }
+    });
+    expect(result.ok, "#4245 Unicode visual-asset transaction should round-trip: " + result.error);
+
+    auto staged = fixture.table_path;
+    staged += ".cptmp";
+    auto backup = fixture.table_path;
+    backup += ".cpbak";
+    auto marker = fixture.table_path;
+    marker += ".cpcommit";
+    expect(!std::filesystem::exists(staged) && !std::filesystem::exists(backup) &&
+               !std::filesystem::exists(marker),
+           "#4245 Unicode visual-asset transaction should clean temporary artifacts");
+    expect(!read_file_bytes(fixture.table_path).empty() &&
+               !read_file_bytes(fixture.memo_path).empty(),
+           "#4245 Unicode visual-asset transaction should preserve accessible FRX/FRT files");
     std::filesystem::remove_all(temp_dir, ignored);
 }
 

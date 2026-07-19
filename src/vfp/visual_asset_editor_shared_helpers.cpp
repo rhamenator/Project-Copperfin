@@ -5,6 +5,7 @@
 #include "visual_asset_editor_support.h"
 
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/path.h"
 
 namespace copperfin::vfp {
 namespace {
@@ -19,11 +20,15 @@ struct VisualAssetTransactionFile {
 VisualAssetTransactionFile transaction_file(
     const std::string& path,
     const std::vector<std::uint8_t>* bytes = nullptr) {
-    const std::filesystem::path target(path);
+    const std::filesystem::path target = copperfin::platform::path_from_utf8_string(path);
+    std::filesystem::path staged = target;
+    staged += ".cptmp";
+    std::filesystem::path backup = target;
+    backup += ".cpbak";
     return {
         .target = target,
-        .staged = target.string() + ".cptmp",
-        .backup = target.string() + ".cpbak",
+        .staged = std::move(staged),
+        .backup = std::move(backup),
         .bytes = bytes
     };
 }
@@ -135,7 +140,8 @@ VisualAssetEditResult transaction_failure(
 }
 
 std::string lowercase_extension(const std::string& path) {
-    std::string extension = std::filesystem::path(path).extension().string();
+    std::string extension = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).extension());
     std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
@@ -287,7 +293,9 @@ std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t 
 }
 
 std::vector<std::uint8_t> read_binary_file(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+    std::ifstream input(
+        copperfin::platform::path_from_utf8_string(path),
+        std::ios::binary);
     if (!input) {
         return {};
     }
@@ -299,7 +307,9 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
 }
 
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
-    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    std::ofstream output(
+        copperfin::platform::path_from_utf8_string(path),
+        std::ios::binary | std::ios::trunc);
     if (!output) {
         return false;
     }
@@ -389,7 +399,8 @@ VisualAssetEditResult recover_visual_asset_file_transaction(
     const std::string& memo_path) {
     const auto table = transaction_file(table_path);
     const auto memo = transaction_file(memo_path);
-    const std::filesystem::path commit_marker = table.target.string() + ".cpcommit";
+    std::filesystem::path commit_marker = table.target;
+    commit_marker += ".cpcommit";
 
     if (transaction_failure_requested(table_path, memo_path, "stale-cleanup")) {
         return {
@@ -400,7 +411,8 @@ VisualAssetEditResult recover_visual_asset_file_transaction(
         };
     }
 
-    const std::vector<std::uint8_t> marker_bytes = read_binary_file(commit_marker.string());
+    const std::vector<std::uint8_t> marker_bytes = read_binary_file(
+        copperfin::platform::path_to_utf8_string(commit_marker));
     const std::string marker_text(marker_bytes.begin(), marker_bytes.end());
     const bool commit_completed = marker_text == "committed\n";
 
@@ -451,7 +463,8 @@ VisualAssetEditResult write_visual_asset_file_transaction(
     const std::vector<std::uint8_t>& memo_bytes) {
     const auto table = transaction_file(table_path, &table_bytes);
     const auto memo = transaction_file(memo_path, &memo_bytes);
-    const std::filesystem::path commit_marker = table.target.string() + ".cpcommit";
+    std::filesystem::path commit_marker = table.target;
+    commit_marker += ".cpcommit";
 
     if (transaction_failure_requested(table_path, memo_path, "sidecar-stage") ||
         !stage_transaction_file(memo)) {
@@ -531,17 +544,19 @@ VisualAssetEditResult write_visual_asset_file_transaction(
 }
 
 SidecarPathResolution infer_memo_sidecar_path(const std::string& path) {
-    return resolve_vfp_memo_sidecar_path(path);
+    return resolve_vfp_memo_sidecar_path(
+        copperfin::platform::path_from_utf8_string(path));
 }
 
 std::string selected_memo_sidecar_path(const SidecarPathResolution& resolution) {
-    return resolution.path.value_or(resolution.requested_path).string();
+    return copperfin::platform::path_to_utf8_string(
+        resolution.path.value_or(resolution.requested_path));
 }
 
 std::string ambiguous_memo_sidecar_error(const SidecarPathResolution& resolution) {
     return visual_asset_text(
         "Vfp.Sidecar.Error.AmbiguousPath",
-        {{"path", resolution.requested_path.string()}});
+        {{"path", copperfin::platform::path_to_utf8_string(resolution.requested_path)}});
 }
 
 VisualAssetEditResult resolve_visual_asset_storage_memo_path(
@@ -570,8 +585,10 @@ VisualAssetEditResult recover_visual_asset_storage_transaction(
         if (memo_resolution.requested_path.empty()) {
             break;
         }
+        std::filesystem::path artifact_path = memo_resolution.requested_path;
+        artifact_path += suffix;
         const SidecarPathResolution artifact_resolution = resolve_unique_casefold_path(
-            memo_resolution.requested_path.string() + std::string(suffix));
+            artifact_path);
         if (artifact_resolution.ambiguous) {
             return {.ok = false, .error = ambiguous_memo_sidecar_error(artifact_resolution)};
         }
@@ -580,19 +597,19 @@ VisualAssetEditResult recover_visual_asset_storage_transaction(
             recovered_memo_path.replace_extension();
             return recover_visual_asset_file_transaction(
                 table_path,
-                recovered_memo_path.string());
+                copperfin::platform::path_to_utf8_string(recovered_memo_path));
         }
     }
 
     const SidecarPathResolution commit_resolution = resolve_unique_casefold_path(
-        table_path + ".cpcommit");
+        copperfin::platform::path_from_utf8_string(table_path + ".cpcommit"));
     if (commit_resolution.ambiguous) {
         return {.ok = false, .error = ambiguous_memo_sidecar_error(commit_resolution)};
     }
     if (commit_resolution.path.has_value() && !memo_resolution.requested_path.empty()) {
         return recover_visual_asset_file_transaction(
             table_path,
-            memo_resolution.requested_path.string());
+            copperfin::platform::path_to_utf8_string(memo_resolution.requested_path));
     }
 
     std::string memo_path;

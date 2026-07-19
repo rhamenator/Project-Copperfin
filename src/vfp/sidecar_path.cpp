@@ -4,6 +4,8 @@
 
 #include "copperfin/vfp/sidecar_path.h"
 
+#include "copperfin/platform/path.h"
+
 #include <string>
 
 namespace copperfin::vfp {
@@ -44,7 +46,7 @@ SidecarPathResolution resolve_unique_casefold_path(
         return result;
     }
 
-    const std::string requested_name = candidate.filename().string();
+    const std::string requested_name = copperfin::platform::path_to_utf8_string(candidate.filename());
     const std::string folded_name = lowercase_ascii(requested_name);
     for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
         if (ignored) {
@@ -54,7 +56,7 @@ SidecarPathResolution resolve_unique_casefold_path(
             continue;
         }
 
-        const std::string entry_name = entry.path().filename().string();
+        const std::string entry_name = copperfin::platform::path_to_utf8_string(entry.path().filename());
         if (entry_name == requested_name) {
             result.path = entry.path();
             result.ambiguous = false;
@@ -87,7 +89,8 @@ SidecarPathResolution resolve_vfp_sidecar_path(
 
 SidecarPathResolution resolve_vfp_memo_sidecar_path(
     const std::filesystem::path& primary_path) {
-    const std::string extension = lowercase_ascii(primary_path.extension().string());
+    const std::string extension = lowercase_ascii(
+        copperfin::platform::path_to_utf8_string(primary_path.extension()));
     if (extension == ".pjx") {
         return resolve_vfp_sidecar_path(primary_path, ".pjt");
     }

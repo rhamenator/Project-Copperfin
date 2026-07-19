@@ -14,6 +14,7 @@ int main() {
     test_visual_asset_raw_batch_and_subtree_edits_preserve_bytes();
     test_visual_asset_raw_create_preserves_binary_memo_payloads();
     test_visual_asset_raw_create_write_faults_are_atomic();
+    test_visual_asset_raw_unicode_path_transaction_round_trip();
     test_visual_asset_raw_malformed_layouts_fail_without_writes();
     test_update_visual_object_property_rewrites_properties_memo();
     test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets();
