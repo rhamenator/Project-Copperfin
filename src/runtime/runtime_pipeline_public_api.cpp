@@ -360,6 +360,14 @@ public:
         return child_descriptor >= 0;
     }
 
+    bool child_is_directory(const std::filesystem::path& path) const {
+        int child_descriptor = -1;
+        if (!open_child_directory(path, child_descriptor)) {
+            return false;
+        }
+        return ::close(child_descriptor) == 0;
+    }
+
     bool adopt_descriptor(
         const int descriptor,
         std::filesystem::path path) {
@@ -783,11 +791,18 @@ public:
         }
 
         if (mode_ == Mode::resume_deferred) {
+#if defined(_WIN32)
+            const bool package_is_directory =
+                is_direct_directory(pinned_path(package_root_), filesystem_error);
+#else
+            const bool package_is_directory =
+                parent_identity_.child_is_directory(package_root_);
+#endif
             if (!transaction_marker_exists ||
                 read_text_file(pinned_path(marker_path_)) !=
                     transaction_identity_ + std::string(kPackageTransactionDeferredPhase) ||
                 !package_exists ||
-                !is_direct_directory(pinned_path(package_root_), filesystem_error) ||
+                !package_is_directory ||
                 filesystem_error) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -795,7 +810,11 @@ public:
                 return false;
             }
             if (interrupted_backup_exists &&
+#if defined(_WIN32)
                 (!is_direct_directory(pinned_path(backup_root_), filesystem_error) ||
+#else
+                (!parent_identity_.child_is_directory(backup_root_) ||
+#endif
                  filesystem_error)) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -808,7 +827,11 @@ public:
         }
 
         if (interrupted_backup_exists) {
+#if defined(_WIN32)
             if (!is_direct_directory(pinned_path(backup_root_), filesystem_error) || filesystem_error) {
+#else
+            if (!parent_identity_.child_is_directory(backup_root_)) {
+#endif
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
@@ -816,8 +839,13 @@ public:
             }
             bool partial_package = false;
             if (package_exists) {
+#if defined(_WIN32)
                 const bool package_is_directory =
                     std::filesystem::is_directory(pinned_path(package_root_), filesystem_error);
+#else
+                const bool package_is_directory =
+                    parent_identity_.child_is_directory(package_root_);
+#endif
                 if (filesystem_error) {
                     error = runtime_text(
                         "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -904,7 +932,14 @@ public:
         }
 
         if (!interrupted_backup_exists && package_exists) {
-            if (filesystem_error || !std::filesystem::is_directory(pinned_path(package_root_), filesystem_error)) {
+#if defined(_WIN32)
+            const bool package_is_directory =
+                std::filesystem::is_directory(pinned_path(package_root_), filesystem_error);
+#else
+            const bool package_is_directory =
+                parent_identity_.child_is_directory(package_root_);
+#endif
+            if (filesystem_error || !package_is_directory) {
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
