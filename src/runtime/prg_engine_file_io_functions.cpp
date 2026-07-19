@@ -15,6 +15,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <unordered_map>
 
 #if defined(_WIN32)
@@ -30,6 +31,10 @@ namespace {
 struct OpenFileHandle {
     std::FILE* file = nullptr;
     std::filesystem::path path;
+    std::string verified_bytes;
+    std::size_t verified_position = 0U;
+    bool verified_read = false;
+    bool verified_eof = false;
 };
 
 std::unordered_map<int, OpenFileHandle>& open_file_handles() {
@@ -172,6 +177,17 @@ bool fopen_numeric_read_write_mode(const PrgValue& mode_value) {
     return mode == 2 || mode == 12;
 }
 
+bool fopen_read_only_mode(const std::string& mode) {
+    return mode.find('r') != std::string::npos &&
+        mode.find('+') == std::string::npos &&
+        mode.find('w') == std::string::npos &&
+        mode.find('a') == std::string::npos;
+}
+
+bool is_open_handle(const OpenFileHandle* handle) {
+    return handle != nullptr && (handle->file != nullptr || handle->verified_read);
+}
+
 std::string trim_newline(std::string value) {
     while (!value.empty() && (value.back() == '\r' || value.back() == '\n')) {
         value.pop_back();
@@ -196,6 +212,23 @@ std::optional<PrgValue> evaluate_file_io_function(
         const std::filesystem::path path = resolve_file_path(value_as_string(arguments[0]), default_directory);
         const std::string mode = arguments.size() >= 2U ? fopen_mode_from_value(arguments[1]) : std::string{"rb"};
 
+        if (require_verified_file_byte_overrides && fopen_read_only_mode(mode)) {
+            const auto verified = read_verified_file_callback ? read_verified_file_callback(path) : std::nullopt;
+            if (!verified.has_value()) {
+                last_file_error_code() = 5;
+                return make_number_value(-1.0);
+            }
+
+            const int handle = next_file_handle_id()++;
+            open_file_handles()[handle] = OpenFileHandle{
+                .path = path,
+                .verified_bytes = *verified,
+                .verified_read = true,
+                .verified_eof = false};
+            clear_file_error();
+            return make_number_value(static_cast<double>(handle));
+        }
+
         std::FILE* opened = open_file_utf8(path, mode);
         if (opened == nullptr &&
             fopen_numeric_read_write_mode(arguments.size() >= 2U ? arguments[1] : make_number_value(0.0)) &&
@@ -210,7 +243,13 @@ std::optional<PrgValue> evaluate_file_io_function(
         }
 
         const int handle = next_file_handle_id()++;
-        open_file_handles()[handle] = OpenFileHandle{.file = opened, .path = path};
+        open_file_handles()[handle] = OpenFileHandle{
+            .file = opened,
+            .path = path,
+            .verified_bytes = {},
+            .verified_position = 0U,
+            .verified_read = false,
+            .verified_eof = false};
         clear_file_error();
         return make_number_value(static_cast<double>(handle));
     }
@@ -218,9 +257,15 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fclose" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
+        }
+
+        if (opened->verified_read) {
+            open_file_handles().erase(handle);
+            clear_file_error();
+            return make_number_value(0.0);
         }
 
         const int result = std::fclose(opened->file);
@@ -236,12 +281,26 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fread" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_string_value(std::string{});
         }
 
         const std::size_t requested = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        if (opened->verified_read) {
+            const std::size_t available = opened->verified_position < opened->verified_bytes.size()
+                ? opened->verified_bytes.size() - opened->verified_position
+                : 0U;
+            const std::size_t read = std::min(requested, available);
+            std::string buffer = opened->verified_bytes.substr(opened->verified_position, read);
+            opened->verified_position += read;
+            if (requested > 0U && read == 0U) {
+                opened->verified_eof = true;
+            }
+            clear_file_error();
+            return make_string_value(std::move(buffer));
+        }
+
         std::string buffer(requested, '\0');
         if (requested == 0U) {
             clear_file_error();
@@ -261,7 +320,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fwrite" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened) || opened->verified_read) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
@@ -286,7 +345,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fgets" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_string_value(std::string{});
         }
@@ -294,6 +353,33 @@ std::optional<PrgValue> evaluate_file_io_function(
         const std::size_t max_length = arguments.size() >= 2U
                                            ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])))
                                            : 4096U;
+        if (opened->verified_read) {
+            if (opened->verified_position >= opened->verified_bytes.size()) {
+                opened->verified_eof = true;
+                clear_file_error();
+                return make_string_value(std::string{});
+            }
+            const std::size_t remaining = opened->verified_bytes.size() - opened->verified_position;
+            const std::size_t limit = std::min(max_length, remaining);
+            const std::size_t newline = opened->verified_bytes.find_first_of(
+                "\r\n",
+                opened->verified_position);
+            std::size_t count = limit;
+            if (newline != std::string::npos && newline - opened->verified_position < count) {
+                count = newline - opened->verified_position + 1U;
+                if (opened->verified_bytes[newline] == '\r' &&
+                    newline + 1U < opened->verified_bytes.size() &&
+                    opened->verified_bytes[newline + 1U] == '\n' &&
+                    count < limit) {
+                    ++count;
+                }
+            }
+            std::string buffer = opened->verified_bytes.substr(opened->verified_position, count);
+            opened->verified_position += count;
+            clear_file_error();
+            return make_string_value(trim_newline(std::move(buffer)));
+        }
+
         std::string buffer(max_length + 1U, '\0');
         if (std::fgets(buffer.data(), static_cast<int>(buffer.size()), opened->file) == nullptr) {
             if (std::ferror(opened->file) != 0) {
@@ -312,7 +398,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fputs" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened) || opened->verified_read) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
@@ -338,7 +424,7 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fseek" && arguments.size() >= 2U) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
         }
@@ -350,6 +436,30 @@ std::optional<PrgValue> evaluate_file_io_function(
             origin = SEEK_CUR;
         } else if (origin_mode == 2) {
             origin = SEEK_END;
+        }
+
+        if (opened->verified_read) {
+            const long long base = origin == SEEK_SET
+                ? 0LL
+                : origin == SEEK_CUR
+                    ? static_cast<long long>(opened->verified_position)
+                    : static_cast<long long>(opened->verified_bytes.size());
+            const long long delta = static_cast<long long>(offset);
+            if ((delta > 0 && base > std::numeric_limits<long long>::max() - delta) ||
+                (delta < 0 && base < std::numeric_limits<long long>::min() - delta)) {
+                last_file_error_code() = 25;
+                return make_number_value(-1.0);
+            }
+            const long long target = base + delta;
+            if (target < 0 || static_cast<unsigned long long>(target) >
+                    static_cast<unsigned long long>(std::numeric_limits<std::size_t>::max())) {
+                last_file_error_code() = 25;
+                return make_number_value(-1.0);
+            }
+            opened->verified_position = static_cast<std::size_t>(target);
+            opened->verified_eof = false;
+            clear_file_error();
+            return make_number_value(static_cast<double>(opened->verified_position));
         }
 
         if (std::fseek(opened->file, offset, origin) != 0) {
@@ -368,9 +478,14 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "ftell" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
+        }
+
+        if (opened->verified_read) {
+            clear_file_error();
+            return make_number_value(static_cast<double>(opened->verified_position));
         }
 
         const long position = std::ftell(opened->file);
@@ -385,9 +500,14 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "feof" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_boolean_value(true);
+        }
+
+        if (opened->verified_read) {
+            clear_file_error();
+            return make_boolean_value(opened->verified_eof);
         }
 
         clear_file_error();
@@ -397,9 +517,14 @@ std::optional<PrgValue> evaluate_file_io_function(
     if (function == "fflush" && !arguments.empty()) {
         const int handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
         auto* opened = resolve_open_handle(handle);
-        if (opened == nullptr || opened->file == nullptr) {
+        if (!is_open_handle(opened)) {
             last_file_error_code() = 6;
             return make_number_value(-1.0);
+        }
+
+        if (opened->verified_read) {
+            clear_file_error();
+            return make_number_value(0.0);
         }
 
         const int result = std::fflush(opened->file);

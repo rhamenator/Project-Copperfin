@@ -120,27 +120,54 @@ void test_filetostr_reads_verified_bytes_and_fails_closed_without_admission()
     fs::remove_all(root, ignored);
     fs::create_directories(root);
     const fs::path payload_path = root / "payload.txt";
-    write_text(payload_path, "TAMPERED");
+    write_text(payload_path, "TAMPERED\nPHYSICAL");
 
     copperfin::runtime::RuntimeSessionOptions verified_options;
-    verified_options.verified_file_byte_overrides.emplace(payload_path.string(), "VERIFIED");
+    verified_options.verified_file_byte_overrides.emplace(payload_path.string(), "VERIFIED\nSECOND");
     verified_options.require_verified_file_byte_overrides = true;
     const auto verified_state = run_program(
         root,
         "verified_filetostr.prg",
+        "hRead = FOPEN('payload.txt', 0)\n"
+        "cChunk = FREAD(hRead, 8)\n"
+        "nTell = FTELL(hRead)\n"
+        "nSeekStart = FSEEK(hRead, 0, 0)\n"
+        "cLine = FGETS(hRead, 64)\n"
+        "nSeekTail = FSEEK(hRead, -6, 2)\n"
+        "cTail = FREAD(hRead, 6)\n"
+        "cAfterEof = FREAD(hRead, 1)\n"
+        "lEof = FEOF(hRead)\n"
+        "nClose = FCLOSE(hRead)\n"
         "cValue = FILETOSTR('payload.txt')\nRETURN\n",
         verified_options);
 
     expect(verified_state.completed,
            "strict FILETOSTR should complete from admitted bytes: " + verified_state.message);
-    expect(global_text(verified_state, "cvalue") == "VERIFIED",
+    expect(global_text(verified_state, "cvalue") == "VERIFIED\nSECOND",
            "strict FILETOSTR should ignore tampered disk bytes");
+    expect(global_text(verified_state, "cchunk") == "VERIFIED",
+           "strict FREAD should ignore tampered disk bytes");
+    expect(global_text(verified_state, "ntell") == "8",
+           "strict FTELL should track admitted-byte position");
+    expect(global_text(verified_state, "cline") == "VERIFIED",
+           "strict FGETS should read admitted lines");
+    expect(global_text(verified_state, "ctail") == "SECOND",
+           "strict FSEEK and FREAD should use admitted bytes");
+    expect(global_text(verified_state, "caftereof").empty(),
+           "strict FREAD should return an empty value after admitted bytes are exhausted");
+    expect(global_text(verified_state, "leof") == "true",
+           "strict FEOF should report the admitted-byte end");
+    expect(global_text(verified_state, "nclose") == "0",
+           "strict verified read handles should close successfully");
 
     copperfin::runtime::RuntimeSessionOptions missing_options;
     missing_options.require_verified_file_byte_overrides = true;
     const auto missing_state = run_program(
         root,
         "missing_filetostr.prg",
+        "hRead = FOPEN('payload.txt', 0)\n"
+        "nError = FERROR()\n"
+        "cChunk = FREAD(hRead, 3)\n"
         "cValue = FILETOSTR('payload.txt')\nRETURN\n",
         missing_options);
 
@@ -148,6 +175,10 @@ void test_filetostr_reads_verified_bytes_and_fails_closed_without_admission()
            "strict FILETOSTR without admission should fail safely: " + missing_state.message);
     expect(global_text(missing_state, "cvalue").empty(),
            "strict FILETOSTR without admission should return no file bytes");
+    expect(global_text(missing_state, "hread") == "-1",
+           "strict read-only FOPEN without admission should fail closed");
+    expect(global_text(missing_state, "nerror") == "5",
+           "strict read-only FOPEN should expose the verified-byte access error");
     expect(std::any_of(missing_state.events.begin(), missing_state.events.end(), [](const auto& event)
     {
         return event.category == "runtime.warning" &&
@@ -158,11 +189,16 @@ void test_filetostr_reads_verified_bytes_and_fails_closed_without_admission()
     const auto non_strict_state = run_program(
         root,
         "non_strict_filetostr.prg",
+        "hRead = FOPEN('payload.txt', 0)\n"
+        "cChunk = FREAD(hRead, 3)\n"
+        "nClose = FCLOSE(hRead)\n"
         "cValue = FILETOSTR('payload.txt')\nRETURN\n");
     expect(non_strict_state.completed,
            "non-strict FILETOSTR should preserve ordinary disk reads: " + non_strict_state.message);
-    expect(global_text(non_strict_state, "cvalue") == "TAMPERED",
+    expect(global_text(non_strict_state, "cvalue") == "TAMPERED\nPHYSICAL",
            "non-strict FILETOSTR should retain ordinary filesystem behavior");
+    expect(global_text(non_strict_state, "cchunk") == "TAM",
+           "non-strict FREAD should retain ordinary filesystem behavior");
     fs::remove_all(root, ignored);
 }
 
