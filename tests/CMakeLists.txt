@@ -250,6 +250,13 @@ add_test(
 )
 
 add_test(
+    NAME test_cpack_artifact_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/cpack-artifact-contract
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_cpack_artifact_contract_test.cmake
+)
+
+add_test(
     NAME test_build_parallelism_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

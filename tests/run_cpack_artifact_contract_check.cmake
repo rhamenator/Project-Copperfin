@@ -2,31 +2,35 @@
 # Licensed under the Project Copperfin Source-Available License or
 # Commercial License. See LICENSE.md in the repository root.
 
-foreach(required_variable IN ITEMS ARTIFACT_DIR VERSION_FILE EXPECTED_ARTIFACT_SUFFIXES)
+foreach(required_variable IN ITEMS
+        COPPERFIN_ARTIFACT_DIR
+        COPPERFIN_VERSION_FILE
+        COPPERFIN_EXPECTED_ARTIFACT_SUFFIXES)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")
         message(FATAL_ERROR "${required_variable} is required")
     endif()
 endforeach()
 
-if(NOT IS_DIRECTORY "${ARTIFACT_DIR}")
-    message(FATAL_ERROR "CPack artifact directory does not exist: ${ARTIFACT_DIR}")
+get_filename_component(artifact_dir "${COPPERFIN_ARTIFACT_DIR}" ABSOLUTE
+    BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
+if(NOT IS_DIRECTORY "${artifact_dir}")
+    message(FATAL_ERROR "CPack artifact directory does not exist: ${artifact_dir}")
 endif()
 
-# CMake's RELATIVE glob base must be absolute when this script is invoked with
-# the relative paths used by the platform installer workflows.
-get_filename_component(ARTIFACT_DIR "${ARTIFACT_DIR}" ABSOLUTE)
+get_filename_component(version_file "${COPPERFIN_VERSION_FILE}" ABSOLUTE
+    BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
 
-if(NOT EXISTS "${VERSION_FILE}")
-    message(FATAL_ERROR "Generated package version file does not exist: ${VERSION_FILE}")
+if(NOT EXISTS "${version_file}")
+    message(FATAL_ERROR "Generated package version file does not exist: ${version_file}")
 endif()
-file(READ "${VERSION_FILE}" package_version)
+file(READ "${version_file}" package_version)
 string(STRIP "${package_version}" package_version)
 if(NOT package_version MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
     message(FATAL_ERROR "Generated package version is invalid: '${package_version}'")
 endif()
 
 set(expected_artifacts)
-foreach(artifact_suffix IN LISTS EXPECTED_ARTIFACT_SUFFIXES)
+foreach(artifact_suffix IN LISTS COPPERFIN_EXPECTED_ARTIFACT_SUFFIXES)
     list(APPEND expected_artifacts "copperfin-${package_version}-${artifact_suffix}")
 endforeach()
 list(SORT expected_artifacts)
@@ -40,7 +44,7 @@ foreach(artifact IN LISTS expected_artifacts)
     if(artifact MATCHES "[/\\\\]" OR artifact STREQUAL "." OR artifact STREQUAL "..")
         message(FATAL_ERROR "Expected CPack artifact must be a direct file name: ${artifact}")
     endif()
-    set(artifact_path "${ARTIFACT_DIR}/${artifact}")
+    set(artifact_path "${artifact_dir}/${artifact}")
     if(NOT EXISTS "${artifact_path}" OR
             IS_DIRECTORY "${artifact_path}" OR
             IS_SYMLINK "${artifact_path}")
@@ -52,9 +56,9 @@ foreach(artifact IN LISTS expected_artifacts)
     endif()
 endforeach()
 
-file(GLOB artifact_entries RELATIVE "${ARTIFACT_DIR}" "${ARTIFACT_DIR}/*")
+file(GLOB artifact_entries RELATIVE "${artifact_dir}" "${artifact_dir}/*")
 foreach(entry IN LISTS artifact_entries)
-    if(IS_DIRECTORY "${ARTIFACT_DIR}/${entry}")
+    if(IS_DIRECTORY "${artifact_dir}/${entry}")
         message(FATAL_ERROR "CPack output directory contains an unexpected directory: ${entry}")
     endif()
     list(FIND expected_artifacts "${entry}" expected_index)
@@ -69,4 +73,4 @@ if(NOT actual_count EQUAL expected_count)
         "CPack artifact count mismatch: expected ${expected_count}, found ${actual_count}")
 endif()
 
-message(STATUS "CPack artifact contract passed: ${ARTIFACT_DIR}")
+message(STATUS "CPack artifact contract passed: ${artifact_dir}")

@@ -69,9 +69,9 @@ jobs:
       - name: Verify CPack artifacts
         run: >-
           cmake
-          -DARTIFACT_DIR=build/package
-          -DVERSION_FILE=build/CopperfinPackageVersion.txt
-          -DEXPECTED_ARTIFACT_SUFFIXES="Windows.exe;Windows.zip"
+          -DCOPPERFIN_ARTIFACT_DIR:PATH=build/package
+          -DCOPPERFIN_VERSION_FILE:FILEPATH=build/CopperfinPackageVersion.txt
+          -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Windows.exe;Windows.zip"
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload Windows installer artifacts
@@ -117,9 +117,9 @@ jobs:
       - name: Verify CPack artifacts
         run: >-
           cmake
-          -DARTIFACT_DIR=build/package
-          -DVERSION_FILE=build/CopperfinPackageVersion.txt
-          -DEXPECTED_ARTIFACT_SUFFIXES="Darwin.pkg;Darwin.tar.gz"
+          -DCOPPERFIN_ARTIFACT_DIR:PATH=build/package
+          -DCOPPERFIN_VERSION_FILE:FILEPATH=build/CopperfinPackageVersion.txt
+          -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Darwin.pkg;Darwin.tar.gz"
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload macOS installer artifacts
@@ -170,9 +170,9 @@ jobs:
       - name: Verify CPack artifacts
         run: >-
           cmake
-          -DARTIFACT_DIR=build/package
-          -DVERSION_FILE=build/CopperfinPackageVersion.txt
-          -DEXPECTED_ARTIFACT_SUFFIXES="Linux.deb;Linux.rpm;Linux.tar.gz"
+          -DCOPPERFIN_ARTIFACT_DIR:PATH=build/package
+          -DCOPPERFIN_VERSION_FILE:FILEPATH=build/CopperfinPackageVersion.txt
+          -DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="Linux.deb;Linux.rpm;Linux.tar.gz"
           -P tests/run_cpack_artifact_contract_check.cmake
 
       - name: Upload Linux installer artifacts

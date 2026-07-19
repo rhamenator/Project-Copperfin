@@ -302,6 +302,21 @@ require_text(".github/workflows/build-installers.yml"
     "tests/run_cpack_artifact_contract_check.cmake"
     "CPack artifact ownership verifier")
 require_text_count(".github/workflows/build-installers.yml"
+    "-DCOPPERFIN_ARTIFACT_DIR:PATH=build/package"
+    3
+    "namespaced CPack artifact directories")
+require_text_count(".github/workflows/build-installers.yml"
+    "-DCOPPERFIN_VERSION_FILE:FILEPATH=build/CopperfinPackageVersion.txt"
+    3
+    "namespaced CPack version-file paths")
+require_text_count(".github/workflows/build-installers.yml"
+    "-DCOPPERFIN_EXPECTED_ARTIFACT_SUFFIXES="
+    3
+    "namespaced CPack artifact suffixes")
+forbid_text(".github/workflows/build-installers.yml"
+    "-DVERSION_FILE=build/CopperfinPackageVersion.txt"
+    "generic CPack version-file variable")
+require_text_count(".github/workflows/build-installers.yml"
     "tests/run_locale_catalog_install_contract_check.cmake"
     3
     "locale catalog install contract checks")
