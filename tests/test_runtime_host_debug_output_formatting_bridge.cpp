@@ -613,9 +613,15 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         "ENDPROC\n");
     std::cerr << "END: Unicode bridge source write\n";
 
+    std::cerr << "BEGIN: Unicode bridge source-path UTF-8 conversion\n";
     const std::string source_path_utf8 = copperfin::platform::path_to_utf8_string(source_path);
+    std::cerr << "END: Unicode bridge source-path UTF-8 conversion\n";
+    std::cerr << "BEGIN: Unicode bridge descriptor escape\n";
     std::string escaped_source_path = json_escape_string(source_path_utf8);
+    std::cerr << "END: Unicode bridge descriptor escape\n";
+    std::cerr << "BEGIN: Unicode bridge source-name UTF-8 conversion\n";
     const std::string source_name_utf8 = copperfin::platform::path_to_utf8_string(source_name);
+    std::cerr << "END: Unicode bridge source-name UTF-8 conversion\n";
     const auto source_name_offset = escaped_source_path.find(source_name_utf8);
     expect(source_name_offset != std::string::npos,
            "Unicode bridge fixture should find its UTF-8 source name in the escaped path");
