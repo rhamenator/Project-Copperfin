@@ -569,9 +569,11 @@ void test_runtime_host_unescapes_bridge_descriptor_string_fields(const std::stri
 void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
+    std::cerr << "BEGIN: Unicode bridge temp-root conversion\n";
     const fs::path temp_root = fs::temp_directory_path() /
         copperfin::platform::path_from_utf8_string(
             "copperfin_runtime_host_bridge_unicode_descriptor_tests-\xC3\xA9-\xF0\x9F\x9A\x80");
+    std::cerr << "END: Unicode bridge temp-root conversion\n";
     const fs::path manifest_path = temp_root / "app.cfmanifest";
     const fs::path startup_path = temp_root / "content" / "startup.prg";
     const fs::path source_name = copperfin::platform::path_from_utf8_string(
