@@ -306,9 +306,9 @@ require_text_count(".github/workflows/build-installers.yml"
     3
     "package version contract checks")
 require_text_count(".github/workflows/build-installers.yml"
-    "-DCOPPERFIN_SOURCE_DIR=. -DCOPPERFIN_BINARY_DIR=build"
+    "-DCOPPERFIN_SOURCE_DIR:PATH=\${{ github.workspace }} -DCOPPERFIN_BINARY_DIR:PATH=\${{ github.workspace }}/build"
     3
-    "non-reserved package version verifier variables")
+    "absolute package version verifier paths")
 forbid_text(".github/workflows/build-installers.yml"
     "-DSOURCE_DIR=. -DBINARY_DIR=build -P tests/run_package_version_contract_check.cmake"
     "reserved package version verifier variables")

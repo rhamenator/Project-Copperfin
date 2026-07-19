@@ -32,7 +32,7 @@ jobs:
         run: cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=OFF -DCOPPERFIN_REQUIRE_X64=ON
 
       - name: Verify package version contract
-        run: cmake -DCOPPERFIN_SOURCE_DIR=. -DCOPPERFIN_BINARY_DIR=build -P tests/run_package_version_contract_check.cmake
+        run: cmake -DCOPPERFIN_SOURCE_DIR:PATH=${{ github.workspace }} -DCOPPERFIN_BINARY_DIR:PATH=${{ github.workspace }}/build -P tests/run_package_version_contract_check.cmake
 
       - name: Verify package documents
         run: cmake --build build --config Release --target copperfin_package_document_check
@@ -87,7 +87,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
 
       - name: Verify package version contract
-        run: cmake -DCOPPERFIN_SOURCE_DIR=. -DCOPPERFIN_BINARY_DIR=build -P tests/run_package_version_contract_check.cmake
+        run: cmake -DCOPPERFIN_SOURCE_DIR:PATH=${{ github.workspace }} -DCOPPERFIN_BINARY_DIR:PATH=${{ github.workspace }}/build -P tests/run_package_version_contract_check.cmake
 
       - name: Verify package documents
         run: cmake --build build --config Release --target copperfin_package_document_check
@@ -133,7 +133,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=OFF
 
       - name: Verify package version contract
-        run: cmake -DCOPPERFIN_SOURCE_DIR=. -DCOPPERFIN_BINARY_DIR=build -P tests/run_package_version_contract_check.cmake
+        run: cmake -DCOPPERFIN_SOURCE_DIR:PATH=${{ github.workspace }} -DCOPPERFIN_BINARY_DIR:PATH=${{ github.workspace }}/build -P tests/run_package_version_contract_check.cmake
 
       - name: Verify package documents
         run: cmake --build build --config Release --target copperfin_package_document_check
