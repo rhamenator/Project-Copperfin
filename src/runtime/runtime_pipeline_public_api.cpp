@@ -9,7 +9,6 @@
 #endif
 
 #include <atomic>
-#include <array>
 #include <cerrno>
 #include <chrono>
 #include <condition_variable>
@@ -405,72 +404,6 @@ public:
             S_ISDIR(information.st_mode);
         (void)::close(parent_descriptor);
         return is_directory;
-    }
-
-    bool read_relative_file(
-        const std::filesystem::path& relative,
-        std::string& contents) const {
-        contents.clear();
-        if (descriptor_ < 0 || relative.empty() || relative.is_absolute()) {
-            return false;
-        }
-        int parent_descriptor = ::dup(descriptor_);
-        if (parent_descriptor < 0) {
-            return false;
-        }
-        for (const auto& component : relative.parent_path()) {
-            if (component == ".") {
-                continue;
-            }
-            if (component == "..") {
-                (void)::close(parent_descriptor);
-                return false;
-            }
-            const std::string name =
-                copperfin::platform::path_to_utf8_string(component);
-            const int child_descriptor = ::openat(
-                parent_descriptor,
-                name.c_str(),
-                O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
-            if (child_descriptor < 0) {
-                (void)::close(parent_descriptor);
-                return false;
-            }
-            (void)::close(parent_descriptor);
-            parent_descriptor = child_descriptor;
-        }
-        const std::string file_name =
-            copperfin::platform::path_to_utf8_string(relative.filename());
-        const int file_descriptor = ::openat(
-            parent_descriptor,
-            file_name.c_str(),
-            O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-        if (file_descriptor < 0) {
-            (void)::close(parent_descriptor);
-            return false;
-        }
-        std::array<char, 64U * 1024U> buffer{};
-        bool read_successfully = true;
-        for (;;) {
-            const ssize_t count = ::read(file_descriptor, buffer.data(), buffer.size());
-            if (count < 0 && errno == EINTR) {
-                continue;
-            }
-            if (count < 0) {
-                read_successfully = false;
-                break;
-            }
-            if (count == 0) {
-                break;
-            }
-            contents.append(buffer.data(), static_cast<std::size_t>(count));
-        }
-        (void)::close(file_descriptor);
-        (void)::close(parent_descriptor);
-        if (!read_successfully) {
-            contents.clear();
-        }
-        return read_successfully;
     }
 
     bool write_text_file_atomically(
@@ -1041,23 +974,6 @@ public:
         return parent_identity_.create_child_directory_under(parent, child);
     }
 
-    bool read_pinned_file(
-        const std::filesystem::path& path,
-        std::string& contents) const {
-        const std::filesystem::path relative =
-            path.lexically_relative(package_root_);
-        if (relative.empty() || relative.is_absolute()) {
-            return false;
-        }
-        for (const auto& component : relative) {
-            if (component == "..") {
-                return false;
-            }
-        }
-        return parent_identity_.read_relative_file(
-            package_root_.filename() / relative,
-            contents);
-    }
 #endif
 
     [[nodiscard]] RuntimePackagePlan pinned_filesystem_plan(
@@ -2112,23 +2028,12 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         [&](const std::filesystem::path& physical_path) {
 #if !defined(_WIN32)
             std::string contents;
-            const std::filesystem::path content_relative =
-                physical_path.lexically_relative(
-                    copperfin::platform::path_from_utf8_string(filesystem_plan.content_root));
-            if (!content_relative.empty() && !content_relative.is_absolute()) {
-                bool escapes_content = false;
-                for (const auto& component : content_relative) {
-                    if (component == "..") {
-                        escapes_content = true;
-                        break;
-                    }
-                }
-                if (!escapes_content &&
-                    content_identity.read_relative_file(content_relative, contents)) {
-                    return security::sha256_hex_for_text(contents);
-                }
-            }
-            if (transaction.read_pinned_file(physical_path, contents)) {
+            bool fd_read_handled = false;
+            if (try_read_file_fd_backed(
+                    physical_path,
+                    fd_read_handled,
+                    contents) &&
+                fd_read_handled) {
                 return security::sha256_hex_for_text(contents);
             }
 #endif

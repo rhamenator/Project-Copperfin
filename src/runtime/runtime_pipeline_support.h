@@ -95,6 +95,10 @@ bool try_copy_file_if_exists_fd_backed(
     const std::filesystem::path& destination,
     bool& handled,
     std::string& error);
+bool try_read_file_fd_backed(
+    const std::filesystem::path& source,
+    bool& handled,
+    std::string& contents);
 #endif
 bool prepare_package_content_root(
     const std::filesystem::path& package_root,

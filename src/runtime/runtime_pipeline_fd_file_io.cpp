@@ -302,6 +302,19 @@ bool try_copy_file_if_exists_fd_backed(
     return true;
 }
 
+bool try_read_file_fd_backed(
+    const std::filesystem::path& source,
+    bool& handled,
+    std::string& contents) {
+    handled = false;
+    if (!parse_fd_backed_path(source).has_value()) {
+        contents.clear();
+        return true;
+    }
+    handled = true;
+    return read_file_bytes(source, contents);
+}
+
 }  // namespace copperfin::runtime::runtime_pipeline_detail
 
 #endif
