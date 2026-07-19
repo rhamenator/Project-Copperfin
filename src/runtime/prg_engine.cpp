@@ -1046,6 +1046,11 @@ namespace copperfin::runtime
         PrgValue evaluate_expression(const std::string &expression, const Frame &frame);
         PrgValue evaluate_expression(const std::string &expression, const Frame &frame, const CursorState *preferred_cursor);
         std::optional<std::string> materialize_xasset_bootstrap(const std::string &asset_path, bool include_read_events);
+        std::optional<std::string> materialize_vcx_class_source(
+            const Frame &frame,
+            const std::string &class_name,
+            const std::string &library_path,
+            std::string &resolved_library_path);
 
 #include "prg_engine_variables.inl"
 #include "prg_engine_arrays.inl"
@@ -8576,6 +8581,160 @@ namespace copperfin::runtime
             copperfin::platform::path_to_utf8_string(bootstrap_path))] = bootstrap_source;
 
         return copperfin::platform::path_to_utf8_string(bootstrap_path);
+    }
+
+    std::optional<std::string> PrgRuntimeSession::Impl::materialize_vcx_class_source(
+        const Frame &frame,
+        const std::string &class_name,
+        const std::string &library_path,
+        std::string &resolved_library_path)
+    {
+        const std::string trimmed_class_name = trim_copy(class_name);
+        const std::string trimmed_library_path = trim_copy(library_path);
+        if (!is_bare_identifier_text(trimmed_class_name) || trimmed_library_path.empty())
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+                {{"className", trimmed_class_name}, {"classLibraryPath", trimmed_library_path}});
+            return std::nullopt;
+        }
+
+        const std::string resolved_path =
+            resolve_native_prg_program_path(trimmed_library_path, frame.file_path);
+        const std::filesystem::path library_file =
+            copperfin::platform::path_from_utf8_string(resolved_path);
+        std::error_code filesystem_error;
+        if (!std::filesystem::is_regular_file(library_file, filesystem_error))
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path},
+                 {"errorMessage", filesystem_error ? filesystem_error.message() : "file not found"}});
+            return std::nullopt;
+        }
+
+        const auto open_result = studio::open_document({
+            .path = resolved_path,
+            .read_only = true,
+            .load_full_table = true
+        });
+        if (!open_result.ok)
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path}, {"errorMessage", open_result.error}});
+            return std::nullopt;
+        }
+
+        const XAssetExecutableModel model = build_xasset_executable_model(open_result.document);
+        if (!model.ok)
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path}, {"errorMessage", model.error}});
+            return std::nullopt;
+        }
+
+        const auto objects = studio::build_object_snapshot(open_result.document);
+        const std::string normalized_requested_class = normalize_identifier(trimmed_class_name);
+        const studio::StudioObjectSnapshot *root_object = nullptr;
+        for (const auto &object : objects)
+        {
+            if (!object.parent_name.empty())
+            {
+                continue;
+            }
+            const std::string normalized_object_name = normalize_identifier(trim_copy(object.object_name));
+            const std::string normalized_class_field = normalize_identifier(trim_copy(object.class_name));
+            if (normalized_object_name == normalized_requested_class ||
+                normalized_class_field == normalized_requested_class ||
+                normalize_identifier(trim_copy(object.object_path)) == normalized_requested_class)
+            {
+                root_object = &object;
+                break;
+            }
+        }
+        if (root_object == nullptr)
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+                {{"className", trimmed_class_name}, {"classLibraryPath", trimmed_library_path}});
+            return std::nullopt;
+        }
+
+        const std::string base_class_name = trim_copy(root_object->baseclass_name).empty()
+            ? "Custom"
+            : trim_copy(root_object->baseclass_name);
+        if (!is_bare_identifier_text(base_class_name))
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path},
+                 {"errorMessage", "root BASECLASS is not a valid identifier"}});
+            return std::nullopt;
+        }
+
+        std::ostringstream source;
+        source << "* Copperfin generated VCX class bridge\n"
+               << "DEFINE CLASS " << trimmed_class_name << " AS " << base_class_name << "\n";
+        for (const auto &property : root_object->properties)
+        {
+            if (!property.derived_from_property_blob ||
+                !is_bare_identifier_text(property.name) ||
+                trim_copy(property.value).empty() ||
+                property.value.find('\n') != std::string::npos ||
+                property.value.find('\r') != std::string::npos)
+            {
+                continue;
+            }
+            source << "    " << property.name << " = " << property.value << "\n";
+        }
+
+        const std::string root_path = normalize_identifier(trim_copy(root_object->object_path));
+        std::set<std::string> emitted_methods;
+        for (const auto &method : model.methods)
+        {
+            if (normalize_identifier(trim_copy(method.object_path)) != root_path ||
+                !is_bare_identifier_text(method.method_name) ||
+                trim_copy(method.source_text).empty() ||
+                !emitted_methods.insert(normalize_identifier(method.method_name)).second)
+            {
+                continue;
+            }
+            source << "    PROCEDURE " << method.method_name << "\n"
+                   << method.source_text;
+            if (method.source_text.back() != '\n')
+            {
+                source << '\n';
+            }
+            source << "    ENDPROC\n";
+        }
+        source << "ENDDEFINE\n";
+
+        std::error_code ignored;
+        std::filesystem::create_directories(runtime_temp_directory, ignored);
+        const std::string cache_key = resolved_path + ":" + normalized_requested_class;
+        const std::filesystem::path generated_path =
+            runtime_temp_directory /
+            ("vcx_class_" + std::to_string(std::hash<std::string>{}(cache_key)) + ".prg");
+        const std::string generated_source = source.str();
+        std::ofstream output(generated_path, std::ios::binary | std::ios::trunc);
+        output << generated_source;
+        output.close();
+        if (!output.good())
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path},
+                 {"errorMessage", "generated class source could not be written"}});
+            return std::nullopt;
+        }
+
+        const std::string generated_path_text =
+            copperfin::platform::path_to_utf8_string(generated_path);
+        options.source_text_overrides[normalize_path(generated_path_text)] = generated_source;
+        resolved_library_path = resolved_path;
+        return generated_path_text;
     }
 
 #include "prg_engine_dispatch.inl"

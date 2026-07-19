@@ -1343,20 +1343,15 @@
                         !explicit_server &&
                         lowercase_copy(copperfin::platform::path_to_utf8_string(
                             copperfin::platform::path_from_utf8_string(trim_copy(library)).extension())) == ".vcx";
-                    if (explicit_local_vcx_library)
-                    {
-                        throw std::runtime_error(runtime_text(
-                            "Runtime.Prg.Core.Error.NewObjectVcxUnsupported",
-                            {{"classLibraryPath", trim_copy(library)}}));
-                    }
                     const bool library_looks_explicit = looks_like_library_target(library);
                     const bool bare_native_candidate = !explicit_server && (!trim_copy(library).empty() ? !library_looks_explicit : true);
 
                     std::vector<PrgValue> constructor_arguments;
                     std::vector<std::optional<std::string>> constructor_argument_references;
-                    if (bare_native_candidate || explicit_native_prg_library)
+                    if (bare_native_candidate || explicit_native_prg_library || explicit_local_vcx_library)
                     {
-                        const std::size_t constructor_start_index = explicit_native_prg_library ? 2U : 1U;
+                        const std::size_t constructor_start_index =
+                            (explicit_native_prg_library || explicit_local_vcx_library) ? 2U : 1U;
                         constructor_arguments.reserve(arguments.size() > constructor_start_index ? arguments.size() - constructor_start_index : 0U);
                         constructor_argument_references.reserve(argument_references.size() > constructor_start_index ? argument_references.size() - constructor_start_index : 0U);
                         for (std::size_t index = constructor_start_index; index < arguments.size(); ++index)
@@ -1388,7 +1383,9 @@
                     {
                         return make_null_value();
                     }
-                    record_event_callback_("ole.newobject", detail);
+                    record_event_callback_(
+                        explicit_local_vcx_library ? "prg.object.newobject" : "ole.newobject",
+                        detail);
                     return make_string_value("object:" + class_name + "#" + std::to_string(handle));
                 }
                 if (function == "getobject" && !arguments.empty())

@@ -1409,6 +1409,43 @@
                     }
                 }
             }
+            else if (lowercase_copy(copperfin::platform::path_to_utf8_string(
+                         copperfin::platform::path_from_utf8_string(trim_copy(source)).extension())) == ".vcx")
+            {
+                std::string resolved_library_path;
+                const auto generated_source_path = materialize_vcx_class_source(
+                    frame,
+                    prog_id,
+                    source,
+                    resolved_library_path);
+                if (!generated_source_path.has_value())
+                {
+                    throw std::runtime_error(last_error_message);
+                }
+
+                Program &program = load_program(*generated_source_path);
+                const bool native_class_found =
+                    find_native_class_lookup(program, prog_id).has_value();
+                RuntimeOleObjectState *runtime_object = instantiate_native_class_object(
+                    frame,
+                    prog_id,
+                    *generated_source_path,
+                    normalize_identifier(resolved_library_path),
+                    constructor_arguments,
+                    constructor_argument_references);
+                if (runtime_object != nullptr)
+                {
+                    runtime_object->class_library = resolved_library_path;
+                    return runtime_object->handle;
+                }
+                if (native_class_found)
+                {
+                    return 0;
+                }
+                throw std::runtime_error(runtime_text(
+                    "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound",
+                    {{"className", prog_id}, {"classLibraryPath", source}}));
+            }
 
             return register_ole_object(prog_id, source);
         }

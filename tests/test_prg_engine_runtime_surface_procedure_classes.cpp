@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -14,6 +15,38 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void write_synthetic_vcx_class_library(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 32U},
+        {.name = "CLASS", .type = 'C', .length = 32U},
+        {.name = "BASECLASS", .type = 'C', .length = 32U},
+        {.name = "METHODS", .type = 'M', .length = 4U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "MyWidget",
+            "",
+            "MyWidget",
+            "Custom",
+            "PROCEDURE Init\r\n"
+            "LPARAMETERS seed\r\n"
+            "THIS.nSeed = seed\r\n"
+            "ENDPROC\r\n"
+            "FUNCTION Answer\r\n"
+            "RETURN THIS.nSeed + 1\r\n"
+            "ENDFUNC\r\n",
+            "Caption = 'vcx-default'\r\n"
+        }
+    };
+    const auto result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        records);
+    expect(result.ok, "synthetic VCX class library should be created");
+}
 
 void test_set_procedure_classes_follow_vfp_activation_precedence() {
     namespace fs = std::filesystem;
@@ -198,17 +231,75 @@ void test_set_procedure_classes_follow_vfp_activation_precedence() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_newobject_local_vcx_fails_closed_without_fabricated_ole_state() {
+void test_newobject_local_vcx_materializes_native_class() {
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_rejection";
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_activation";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const fs::path main_path = temp_root / "newobject_local_vcx_rejection.prg";
+    const fs::path class_library_path = temp_root / "myclasslib.vcx";
+    write_synthetic_vcx_class_library(class_library_path);
+    const fs::path main_path = temp_root / "newobject_local_vcx_activation.prg";
     write_text(
         main_path,
-        "oWidget = NEWOBJECT('MyWidget', 'myclasslib.vcx')\n"
+        "oWidget = NEWOBJECT('MyWidget', 'myclasslib.vcx', 40)\n"
+        "nAnswer = oWidget.Answer()\n"
+        "cCaption = oWidget.Caption\n"
+        "cClass = oWidget.Class\n"
+        "cBaseClass = oWidget.BaseClass\n"
+        "cClassLibrary = oWidget.ClassLibrary\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("local VCX NEWOBJECT should activate a native class: ") + state.message);
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+    check("nanswer", "41");
+    check("ccaption", "vcx-default");
+    check("cclass", "MyWidget");
+    check("cbaseclass", "Custom");
+    check("cclasslibrary", class_library_path.string());
+    expect(state.ole_objects.size() == 1U,
+           "local VCX NEWOBJECT should create one native runtime object");
+    expect(std::none_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const auto& event) { return event.category == "ole.newobject"; }),
+           "local VCX NEWOBJECT should not emit an ole.newobject event");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const auto& event) { return event.category == "prg.object.newobject"; }),
+           "local VCX NEWOBJECT should emit the native object activation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_newobject_local_vcx_rejects_missing_class() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_missing_class";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path class_library_path = temp_root / "myclasslib.vcx";
+    write_synthetic_vcx_class_library(class_library_path);
+    const fs::path main_path = temp_root / "newobject_local_vcx_missing_class.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MissingWidget', 'myclasslib.vcx')\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -216,17 +307,17 @@ void test_newobject_local_vcx_fails_closed_without_fabricated_ole_state() {
             make_runtime_session_options(main_path, temp_root));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!state.completed,
-           "local VCX NEWOBJECT should fail instead of returning a fabricated object handle");
-    expect(state.message.find("Visual class library support is not implemented for NEWOBJECT: myclasslib.vcx") !=
+           "missing local VCX class should fail closed");
+    expect(state.message.find("Class MissingWidget was not found in visual class library") !=
                std::string::npos,
-           "local VCX NEWOBJECT should report the catalog-routed unsupported-library diagnostic");
+           "missing local VCX class should report the localized class-not-found diagnostic");
     expect(state.ole_objects.empty(),
-           "local VCX NEWOBJECT should not register an OLE callback object");
+           "missing local VCX class should not register a runtime object");
     expect(std::none_of(
                state.events.begin(),
                state.events.end(),
                [](const auto& event) { return event.category == "ole.newobject"; }),
-           "local VCX NEWOBJECT should not emit an ole.newobject event");
+           "missing local VCX class should not emit an ole.newobject event");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -364,7 +455,8 @@ void test_scope_exit_releases_unreferenced_objects_and_preserves_returns() {
 
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
-    test_newobject_local_vcx_fails_closed_without_fabricated_ole_state();
+    test_newobject_local_vcx_materializes_native_class();
+    test_newobject_local_vcx_rejects_missing_class();
     test_release_object_alias_waits_for_last_variable_reference();
     test_scope_exit_releases_unreferenced_objects_and_preserves_returns();
 

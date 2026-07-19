@@ -1392,6 +1392,8 @@
   "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded": "Guardrail de runtime: o maximo de instrucoes executadas ({limit}) foi excedido.",
   "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded": "Guardrail de runtime: o maximo de iteracoes de loop ({limit}) foi excedido.",
   "Runtime.Prg.Core.Error.NewObjectVcxUnsupported": "O suporte a bibliotecas de classes visuais nao esta implementado para NEWOBJECT: {classLibraryPath}",
+  "Runtime.Prg.Core.Error.NewObjectVcxClassNotFound": "A classe {className} nao foi encontrada na biblioteca de classes visuais: {classLibraryPath}",
+  "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed": "Nao foi possivel abrir a biblioteca de classes visuais para NEWOBJECT: {classLibraryPath} ({errorMessage})",
   "Runtime.Prg.Core.Error.OleMemberAccessDenied": "Acesso negado ao membro PRG nativo: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation": "Membro OLE nao encontrado para a invocacao do metodo: {memberIdentifier}",
   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead": "Membro OLE nao encontrado para a leitura da propriedade: {memberIdentifier}",
