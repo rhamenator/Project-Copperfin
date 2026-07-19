@@ -51,6 +51,24 @@ void trace_content_identity_failure(const std::filesystem::path& path) {
               << "\n";
 }
 
+void trace_transaction_begin_failure(
+    const std::string_view stage,
+    const std::filesystem::path& path) {
+    std::cerr << "RUNTIME_PIPELINE_TRANSACTION_BEGIN_FAILURE stage=" << stage
+              << " errno=" << errno
+              << " path=" << copperfin::platform::path_to_utf8_string(path)
+              << "\n";
+}
+#endif
+
+#if !defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+void trace_transaction_begin_failure(
+    const std::string_view,
+    const std::filesystem::path&) {
+}
+#endif
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
 std::atomic_bool force_package_backup_cleanup_warning{false};
 std::mutex package_materialization_pause_mutex;
 std::condition_variable package_materialization_pause_condition;
@@ -646,6 +664,7 @@ public:
         if (!parent.empty()) {
             std::filesystem::create_directories(parent, filesystem_error);
             if (filesystem_error) {
+                trace_transaction_begin_failure("create-parent", parent);
                 error = runtime_text(
                     "Runtime.Package.Error.PackageTransactionStartFailed",
                     {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
@@ -653,6 +672,7 @@ public:
             }
         }
         if (!parent_identity_.acquire(parent)) {
+            trace_transaction_begin_failure("acquire-parent", parent);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
@@ -681,12 +701,14 @@ public:
 #endif
         const auto lock_identity = security::sha256_hex_for_text(lock_identity_value);
         if (!lock_identity.ok || !transaction_lock_.acquire(lock_identity_path, lock_identity.hex_digest)) {
+            trace_transaction_begin_failure("acquire-lock", lock_identity_path);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
         if (!parent_identity_.still_same()) {
+            trace_transaction_begin_failure("parent-rebound", parent);
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(parent)}});
