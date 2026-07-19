@@ -71,10 +71,33 @@ set(executable_path_inputs
 set(declare_abi_inputs
     ".github/workflows/windows-x86-declare-validation.yml"
     ${common_focused_inputs})
+set(audit_containment_inputs
+    ".github/workflows/audit-containment-validation.yml"
+    "apps/copperfin_runtime_host/**"
+    "include/copperfin/security/**"
+    "src/security/**"
+    "tests/test_runtime_host_audit_containment.cpp"
+    "tests/test_runtime_host_audit_containment_main.cpp"
+    "tests/test_runtime_host_audit_snapshots.cpp"
+    "tests/test_runtime_host_audit_package.cpp"
+    "tests/test_runtime_host_audit_contracts.cpp"
+    "tests/test_runtime_host_audit_main.cpp"
+    "tests/test_runtime_host_debug_output_support.h"
+    "tests/test_runtime_host_debug_output_formatting_xasset.cpp"
+    "tests/test_runtime_host_debug_output_formatting_bridge.cpp"
+    "tests/test_runtime_host_debug_output_formatting_contract.cpp"
+    "tests/test_runtime_host_debug_output_localization.cpp"
+    "tests/test_runtime_host_debug_output_formatting_main.cpp"
+    "tests/run_runtime_host_binding_check.cmake"
+    "tests/test_security_controls.cpp"
+    "cmake/validate_focused_workflow_path_filters.cmake"
+    "CMakeLists.txt"
+    "tests/CMakeLists.txt")
 
 require_path_filter_contract("windows-environment-validation.yml" ${environment_host_inputs})
 require_path_filter_contract("executable-path-validation.yml" ${executable_path_inputs})
 require_path_filter_contract("windows-x86-declare-validation.yml" ${declare_abi_inputs})
+require_path_filter_contract("audit-containment-validation.yml" ${audit_containment_inputs})
 
 require_workflow_text(
     "audit-containment-validation.yml"
