@@ -4,6 +4,7 @@
 
 #include "copperfin/security/audit_stream.h"
 
+#include "copperfin/platform/path.h"
 #include "copperfin/security/sha256.h"
 #include "localized_text.h"
 
@@ -131,9 +132,10 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
 }
 
 AuditTailReadResult read_last_hash(const std::string& log_path) {
+    const std::filesystem::path native_log_path = copperfin::platform::path_from_utf8_string(log_path);
     std::error_code type_error;
     const std::filesystem::file_status status =
-        std::filesystem::status(log_path, type_error);
+        std::filesystem::status(native_log_path, type_error);
     if (!type_error &&
         status.type() != std::filesystem::file_type::not_found &&
         !std::filesystem::is_regular_file(status)) {
@@ -143,10 +145,10 @@ AuditTailReadResult read_last_hash(const std::string& log_path) {
             .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
     }
 
-    std::ifstream input(log_path, std::ios::binary);
+    std::ifstream input(native_log_path, std::ios::binary);
     if (!input) {
         std::error_code status_error;
-        const bool exists = std::filesystem::exists(log_path, status_error);
+        const bool exists = std::filesystem::exists(native_log_path, status_error);
         if (!exists && !status_error) {
             return {
                 .ok = true,
@@ -201,12 +203,16 @@ std::optional<ContainedAuditPath> resolve_contained_audit_path(
     const std::string& package_root) {
     std::error_code error;
     const std::filesystem::path canonical_root =
-        std::filesystem::canonical(package_root, error);
+        std::filesystem::canonical(
+            copperfin::platform::path_from_utf8_string(package_root),
+            error);
     if (error) {
         return std::nullopt;
     }
     const std::filesystem::path normalized_log_path =
-        std::filesystem::weakly_canonical(log_path, error);
+        std::filesystem::weakly_canonical(
+            copperfin::platform::path_from_utf8_string(log_path),
+            error);
     if (error) {
         return std::nullopt;
     }
@@ -557,7 +563,7 @@ AuditAppendResult append_contained_audit_event(
         if (part == ".") {
             continue;
         }
-        const std::string component = part.string();
+        const std::string component = copperfin::platform::path_to_utf8_string(part);
         int next_descriptor = ::openat(
             current_directory.get(),
             component.c_str(),
@@ -587,7 +593,8 @@ AuditAppendResult append_contained_audit_event(
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
 
-    const std::string leaf_name = path.relative_path.filename().string();
+    const std::string leaf_name =
+        copperfin::platform::path_to_utf8_string(path.relative_path.filename());
     std::string existing_text;
     ScopedFileDescriptor existing_descriptor(::openat(
         current_directory.get(),
@@ -693,8 +700,9 @@ AuditAppendResult append_immutable_audit_event(
     const std::string& log_path,
     const std::string& event_name,
     const std::string& detail) {
+    const std::filesystem::path native_log_path = copperfin::platform::path_from_utf8_string(log_path);
     std::error_code error;
-    std::filesystem::create_directories(std::filesystem::path(log_path).parent_path(), error);
+    std::filesystem::create_directories(native_log_path.parent_path(), error);
     if (error) {
         return {.ok = false, .error = security_text("Security.Audit.Error.CreateLogDirectoryFailed"), .entry_hash = {}};
     }
@@ -714,7 +722,7 @@ AuditAppendResult append_immutable_audit_event(
         return {.ok = false, .error = hash.error, .entry_hash = {}};
     }
 
-    std::ofstream output(log_path, std::ios::app | std::ios::binary);
+    std::ofstream output(native_log_path, std::ios::app | std::ios::binary);
     if (!output) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
@@ -740,7 +748,8 @@ AuditAppendResult append_immutable_audit_event_to_contained_file(
 }
 
 AuditChainVerifyResult verify_immutable_audit_chain(const std::string& log_path) {
-    std::ifstream input(log_path, std::ios::binary);
+    const std::filesystem::path native_log_path = copperfin::platform::path_from_utf8_string(log_path);
+    std::ifstream input(native_log_path, std::ios::binary);
     if (!input) {
         return {.ok = true, .error = {}, .entries = 0U};
     }

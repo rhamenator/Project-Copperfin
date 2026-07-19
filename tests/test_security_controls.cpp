@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
 #include "copperfin/security/external_process_policy.h"
@@ -112,6 +113,46 @@ void test_audit_stream_chain() {
         }
     }
     expect(line_count == 2, "audit stream should persist appended events");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_audit_stream_preserves_unicode_paths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(
+            "copperfin_security_unicode_audit_tests-\xC3\xA9-\xF0\x9F\x9A\x80");
+    const fs::path package_root = temp_root / "package";
+    const fs::path contained_log = package_root / "logs" /
+        copperfin::platform::path_from_utf8_string(
+            "security-\xC3\xA9-\xF0\x9F\x9A\x80.log");
+    const fs::path direct_log = temp_root / "direct" / "events.log";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(package_root);
+
+    const auto contained = copperfin::security::append_immutable_audit_event_to_contained_file(
+        copperfin::platform::path_to_utf8_string(contained_log),
+        copperfin::platform::path_to_utf8_string(package_root),
+        "runtime.unicode",
+        "contained");
+    expect(contained.ok, "contained audit append should preserve Unicode package and log paths");
+    const auto contained_chain = copperfin::security::verify_immutable_audit_chain(
+        copperfin::platform::path_to_utf8_string(contained_log));
+    expect(contained_chain.ok && contained_chain.entries == 1U,
+           "contained Unicode audit log should retain a valid chain");
+    expect(read_file_bytes(contained_log).find("|runtime.unicode|contained|") != std::string::npos,
+           "contained Unicode audit log should persist its invariant event fields");
+
+    const auto direct = copperfin::security::append_immutable_audit_event(
+        copperfin::platform::path_to_utf8_string(direct_log),
+        "runtime.direct",
+        "direct");
+    expect(direct.ok, "direct audit append should preserve a Unicode parent path");
+    const auto direct_chain = copperfin::security::verify_immutable_audit_chain(
+        copperfin::platform::path_to_utf8_string(direct_log));
+    expect(direct_chain.ok && direct_chain.entries == 1U,
+           "direct Unicode audit log should retain a valid chain");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -897,6 +938,7 @@ int main() {
     test_authorization();
     test_secret_provider();
     test_audit_stream_chain();
+    test_audit_stream_preserves_unicode_paths();
     test_sha256_helpers();
     test_security_diagnostics_resolve_through_localization_catalog();
     test_security_diagnostics_follow_selected_locale();
