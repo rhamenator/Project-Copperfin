@@ -253,6 +253,16 @@ function(copperfin_configure_native_test_isolation)
         PLATFORM portable
         AUDIT complete
     )
+    copperfin_set_test_isolation(test_studio_install_contract
+        PARALLEL_SAFE
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_safety_traceability_workflow_contract
         PARALLEL_SAFE
         FILESYSTEM read-only

@@ -242,6 +242,14 @@ add_test(
 )
 
 add_test(
+    NAME test_studio_install_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/studio-install-contract
+        -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/studio-install-contract-binary
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_studio_install_contract_test.cmake
+)
+
+add_test(
     NAME test_build_parallelism_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

@@ -8,21 +8,26 @@ foreach(required_variable IN ITEMS BINARY_DIR INSTALL_ROOT)
     endif()
 endforeach()
 
+get_filename_component(binary_dir "${BINARY_DIR}" ABSOLUTE
+    BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
+get_filename_component(install_root "${INSTALL_ROOT}" ABSOLUTE
+    BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/..")
+
 if(NOT WIN32)
     message(STATUS "Standalone Studio install contract is Windows-only; skipped")
     return()
 endif()
 
-if(NOT EXISTS "${BINARY_DIR}/CMakeCache.txt")
+if(NOT EXISTS "${binary_dir}/CMakeCache.txt")
     message(FATAL_ERROR "Windows architecture contract is missing CMakeCache.txt")
 endif()
 
-file(STRINGS "${BINARY_DIR}/CMakeCache.txt" pointer_size_lines
+file(STRINGS "${binary_dir}/CMakeCache.txt" pointer_size_lines
     REGEX "^COPPERFIN_NATIVE_POINTER_SIZE:INTERNAL=8$")
 if(NOT pointer_size_lines)
     message(FATAL_ERROR "Windows installer native build is not configured for an x64 pointer size")
 endif()
-file(STRINGS "${BINARY_DIR}/CMakeCache.txt" generator_platform_lines
+file(STRINGS "${binary_dir}/CMakeCache.txt" generator_platform_lines
     REGEX "^CMAKE_GENERATOR_PLATFORM:INTERNAL=x64$")
 if(NOT generator_platform_lines)
     message(FATAL_ERROR "Windows installer generator platform is not pinned to x64")
@@ -51,7 +56,7 @@ set(required_files
     "share/copperfin/locales/qps-ploc/strings.json"
 )
 foreach(relative_path IN LISTS required_files)
-    set(installed_path "${INSTALL_ROOT}/${relative_path}")
+    set(installed_path "${install_root}/${relative_path}")
     if(NOT EXISTS "${installed_path}" OR IS_DIRECTORY "${installed_path}" OR IS_SYMLINK "${installed_path}")
         message(FATAL_ERROR "Standalone Studio install contract is missing ${installed_path}")
     endif()
@@ -61,11 +66,11 @@ foreach(relative_path IN LISTS required_files)
     endif()
 endforeach()
 
-file(GLOB studio_entries RELATIVE "${INSTALL_ROOT}/bin/studio" "${INSTALL_ROOT}/bin/studio/*")
+file(GLOB studio_entries RELATIVE "${install_root}/bin/studio" "${install_root}/bin/studio/*")
 list(SORT studio_entries)
 if(NOT studio_entries STREQUAL "Copperfin.Studio.exe;Copperfin.Studio.exe.config")
     message(FATAL_ERROR
         "Standalone Studio install directory contains unexpected files: ${studio_entries}")
 endif()
 
-message(STATUS "Standalone Studio install contract passed: ${INSTALL_ROOT}")
+message(STATUS "Standalone Studio install contract passed: ${install_root}")
