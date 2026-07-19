@@ -21,7 +21,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("OBJCODE", "53"),
                 value("EXPR", "ORIENTATION=0\r\nPAPERSIZE=1", 9U),
                 value("TOPMARGIN", "10"),
-                value("BOTMARGIN", "12")
+                value("BOTMARGIN", "12"),
+                value("NAME", "", 77U)
             }
         },
         {
@@ -120,10 +121,10 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.available, "report layout should be available for report assets");
     expect(!layout.is_label, "report layout should distinguish reports from labels");
     expect(layout.document_title == "synthetic.frx", "#728: report layout document titles should mirror Studio display names");
-    expect(layout.document_title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
-        "#728: display-name report titles should use missing DBF field provenance");
-    expect(layout.document_title_memo_block_number == 0U,
-        "#728: display-name report titles should expose memo block zero");
+    expect(layout.document_title_field_index == 5U,
+        "#4248: report document titles should retain the header NAME field provenance");
+    expect(layout.document_title_memo_block_number == 77U,
+        "#4248: report document titles should retain the header NAME memo provenance");
     expect(layout.sections.size() == 2U, "report layout should detect two sections");
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");

@@ -80,6 +80,8 @@ internal sealed class CopperfinStudioReportLayout
 {
     public bool IsLabel { get; set; }
     public string DocumentTitle { get; set; } = string.Empty;
+    public int? DocumentTitleFieldIndex { get; set; }
+    public int DocumentTitleMemoBlockNumber { get; set; }
     public bool PreviewBoundsAvailable { get; set; }
     public int PreviewBoundsLeft { get; set; }
     public int PreviewBoundsTop { get; set; }

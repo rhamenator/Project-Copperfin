@@ -222,6 +222,12 @@ void exercise_real_sample_round_trip(
     expect_contains(reopen_process.stdout_text,
                     "\"documentTitle\": \"" + sample.title + "\"",
                     "#3526: real sample reopen should preserve document title");
+    expect_contains(reopen_process.stdout_text,
+                    "\"documentTitleFieldIndex\": 5",
+                    "#4248: real sample document titles should preserve the header NAME field provenance");
+    expect_contains(reopen_process.stdout_text,
+                    "\"documentTitleMemoBlockNumber\": 0",
+                    "#4248: real sample document titles should preserve the header NAME memo provenance");
     if (sample.is_label) {
         expect_contains(reopen_process.stdout_text,
                         "\"isLabel\": true",

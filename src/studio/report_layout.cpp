@@ -343,6 +343,43 @@ bool is_report_root_record(const DbfRecord& record) {
     return vfp::is_report_settings_root_record(parse_scaled_int_or_default(record, "OBJTYPE"));
 }
 
+FieldSelection document_title_source(const std::vector<DbfRecord>& records) {
+    const DbfRecord* deleted_root = nullptr;
+    for (const auto& record : records) {
+        if (!is_report_root_record(record)) {
+            continue;
+        }
+        if (record.deleted) {
+            if (deleted_root == nullptr) {
+                deleted_root = &record;
+            }
+            continue;
+        }
+
+        const std::size_t field_index = field_index_or_missing(record, "NAME");
+        if (field_index != StudioReportMissingFieldIndex) {
+            return {
+                .value = trim_copy(value_or_empty(record, "NAME")),
+                .field_index = field_index,
+                .memo_block_number = memo_block_number_or_zero(record, "NAME")
+            };
+        }
+        return {};
+    }
+
+    if (deleted_root != nullptr) {
+        const std::size_t field_index = field_index_or_missing(*deleted_root, "NAME");
+        if (field_index != StudioReportMissingFieldIndex) {
+            return {
+                .value = trim_copy(value_or_empty(*deleted_root, "NAME")),
+                .field_index = field_index,
+                .memo_block_number = memo_block_number_or_zero(*deleted_root, "NAME")
+            };
+        }
+    }
+    return {};
+}
+
 bool is_band_record(const DbfRecord& record) {
     return parse_scaled_int_or_default(record, "OBJTYPE") == 9;
 }
@@ -917,8 +954,9 @@ StudioReportLayoutSnapshot build_report_layout(
     snapshot.available = true;
     snapshot.is_label = document.kind == StudioAssetKind::label;
     snapshot.document_title = document.display_name;
-    snapshot.document_title_field_index = StudioReportMissingFieldIndex;
-    snapshot.document_title_memo_block_number = 0U;
+    const FieldSelection title_source = document_title_source(document.table_preview.records);
+    snapshot.document_title_field_index = title_source.field_index;
+    snapshot.document_title_memo_block_number = title_source.memo_block_number;
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {

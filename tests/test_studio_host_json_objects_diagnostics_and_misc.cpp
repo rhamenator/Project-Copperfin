@@ -216,8 +216,10 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report documents should expose report layout JSON");
     expect_contains(process.stdout_text, "\"documentTitle\": \"summary.frx\"",
                     "#1452: report layout JSON should preserve document titles");
-    expect_contains(process.stdout_text, "\"documentTitleFieldIndex\": null",
-                    "#1452: report layout JSON should expose missing document-title field provenance as null");
+    expect_contains(process.stdout_text, "\"documentTitleFieldIndex\": 10",
+                    "#4248: report layout JSON should expose header NAME field provenance");
+    expect_contains(process.stdout_text, "\"documentTitleMemoBlockNumber\": 0",
+                    "#4248: report layout JSON should expose header NAME memo provenance");
     expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
                     "#1516: report layout JSON should expose preview bounds availability");
     expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",

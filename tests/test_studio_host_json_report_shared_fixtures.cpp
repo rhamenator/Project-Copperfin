@@ -16,16 +16,17 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "HEIGHT", .type = 'N', .length = 10U},
         {.name = "FONTFACE", .type = 'M', .length = 4U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
-        {"9", "1", "", "", "0", "", "2000", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
-        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
-        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
-        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid", ""},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid", ""},
+        {"6", "", "", "50", "8000", "100", "100", "", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
