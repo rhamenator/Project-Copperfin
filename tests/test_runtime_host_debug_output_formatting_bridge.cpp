@@ -249,9 +249,18 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
             .stderr_text = captured.stderr_text};
     };
 
-    std::cerr << "BEGIN: verified bridge locale override\n";
-    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-    std::cerr << "END: verified bridge locale override\n";
+    std::cerr << "BEGIN: verified bridge locale read\n";
+    const auto original_locale_dir = copperfin::platform::read_environment_path(
+        "COPPERFIN_LOCALE_DIR");
+    std::cerr << "END: verified bridge locale read\n";
+    std::cerr << "BEGIN: verified bridge locale write\n";
+    const bool locale_write_succeeded = copperfin::platform::write_environment_path(
+        "COPPERFIN_LOCALE_DIR",
+        locale_root);
+    std::cerr << "END: verified bridge locale write succeeded="
+              << (locale_write_succeeded ? "true" : "false") << '\n';
+    expect(locale_write_succeeded,
+           "verified bridge fixture should set its locale directory override");
     std::cerr << "BEGIN: verified bridge packaged invoke\n";
     const auto packaged_process = invoke(source_path);
     std::cerr << "END: verified bridge packaged invoke\n";
@@ -269,6 +278,16 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
            "external bridge-source rejection should use the localized package-boundary diagnostic");
     expect(external_process.stdout_text.find("bridge.return_value: 99") == std::string::npos,
            "security-enabled bridge invocation must not execute external source content");
+
+    std::cerr << "BEGIN: verified bridge locale restore\n";
+    if (original_locale_dir.has_value()) {
+        (void)copperfin::platform::write_environment_path(
+            "COPPERFIN_LOCALE_DIR",
+            *original_locale_dir);
+    } else {
+        (void)copperfin::platform::clear_environment_path("COPPERFIN_LOCALE_DIR");
+    }
+    std::cerr << "END: verified bridge locale restore\n";
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
