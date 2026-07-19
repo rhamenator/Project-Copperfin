@@ -213,8 +213,12 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
             "}\n");
     };
     const auto invoke = [&](const fs::path& requested_source) {
+        std::cerr << "BEGIN: verified bridge request write\n";
         write_request(requested_source);
+        std::cerr << "END: verified bridge request write\n";
+        std::cerr << "BEGIN: verified bridge response remove\n";
         fs::remove(response_path, ignored);
+        std::cerr << "END: verified bridge response remove\n";
         std::cerr << "BEGIN: verified bridge process capture "
                   << copperfin::platform::path_to_utf8_string(requested_source) << '\n';
         const auto captured = copperfin::test_support::run_process_capture(
