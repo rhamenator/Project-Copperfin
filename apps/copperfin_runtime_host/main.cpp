@@ -3623,9 +3623,18 @@ int run_runtime_host_main(int argc, char** argv) {
     }
     auto& session = *created_session;
     for (const auto& breakpoint_arg : breakpoint_args) {
-        if (const auto breakpoint = parse_breakpoint(breakpoint_arg, effective_startup_source)) {
-            session.add_breakpoint(*breakpoint);
+        const auto breakpoint = parse_breakpoint(breakpoint_arg, effective_startup_source);
+        if (!breakpoint.has_value()) {
+            std::cout << "status: error\n";
+            print_error_line(
+                catalog,
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                    {{"command", breakpoint_arg}}));
+            return 5;
         }
+        session.add_breakpoint(*breakpoint);
     }
 
     print_runtime_summary();
