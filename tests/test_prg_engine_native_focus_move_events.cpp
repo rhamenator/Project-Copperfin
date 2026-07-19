@@ -44,7 +44,14 @@ void test_native_focus_and_move_events()
         "cActiveAfterZeroValid = oForm.ActiveControl.cId\n"
         "oForm.first.SetFocus()\n"
         "cActiveAfterAcceptedValid = oForm.ActiveControl.cId\n"
+        "oForm.nodefaultvalidator.SetFocus()\n"
+        "cActiveBeforeNodefaultValid = oForm.ActiveControl.cId\n"
+        "oForm.first.SetFocus()\n"
+        "cActiveAfterNodefaultValid = oForm.ActiveControl.cId\n"
+        "oForm.first.SetFocus()\n"
+        "cActiveAfterNodefaultRetry = oForm.ActiveControl.cId\n"
         "nValidatorValid = oForm.validator.nValid\n"
+        "nNodefaultValidatorValid = oForm.nodefaultvalidator.nValid\n"
         "cEvents = oForm.cEvents\n"
         "nFirstLeft = oForm.first.Left\n"
         "nFirstTop = oForm.first.Top\n"
@@ -65,6 +72,7 @@ void test_native_focus_and_move_events()
         "    ADD OBJECT nodefault AS NodefaultMoveBox\n"
         "    ADD OBJECT override AS OverrideBox\n"
         "    ADD OBJECT validator AS ValidatingFocusBox WITH cId = 'validator'\n"
+        "    ADD OBJECT nodefaultvalidator AS NodefaultValidatingFocusBox WITH cId = 'nodefaultvalidator'\n"
         "    PROCEDURE RecordValidation\n"
         "        THIS.cEvents = THIS.cEvents + 'nested;'\n"
         "    ENDPROC\n"
@@ -93,6 +101,25 @@ void test_native_focus_and_move_events()
         "        ENDIF\n"
         "        IF THIS.nValid = 2\n"
         "            RETURN 0\n"
+        "        ENDIF\n"
+        "        RETURN .T.\n"
+        "    ENDPROC\n"
+        "    PROCEDURE LostFocus\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':lost;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE GotFocus\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':got;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS NodefaultValidatingFocusBox AS TextBox\n"
+        "    cId = ''\n"
+        "    nValid = 0\n"
+        "    PROCEDURE Valid\n"
+        "        THIS.nValid = THIS.nValid + 1\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':valid;'\n"
+        "        THISFORM.RecordValidation()\n"
+        "        IF THIS.nValid = 1\n"
+        "            NODEFAULT\n"
         "        ENDIF\n"
         "        RETURN .T.\n"
         "    ENDPROC\n"
@@ -155,12 +182,15 @@ void test_native_focus_and_move_events()
         }
     };
 
-    check("cevents", "first:got;first:lost;blocked:got;blocked:lost;blocked:lost;second:got;first:moved;second:lost;validator:got;validator:valid;nested;validator:valid;nested;validator:valid;nested;validator:lost;first:got;");
+    check("cevents", "first:got;first:lost;blocked:got;blocked:lost;blocked:lost;second:got;first:moved;second:lost;validator:got;validator:valid;nested;validator:valid;nested;validator:valid;nested;validator:lost;first:got;first:lost;nodefaultvalidator:got;nodefaultvalidator:valid;nested;nodefaultvalidator:valid;nested;nodefaultvalidator:lost;first:got;");
     check("cactiveafterblocked", "blocked");
     check("cactiveaftersuppressed", "blocked");
     check("cactiveafterrejectedvalid", "validator");
     check("cactiveafterzerovalid", "validator");
     check("cactiveafteracceptedvalid", "first");
+    check("cactivebeforenodefaultvalid", "nodefaultvalidator");
+    check("cactiveafternodefaultvalid", "nodefaultvalidator");
+    check("cactiveafternodefaultretry", "first");
     check("nfirstleft", "30");
     check("nfirsttop", "40");
     check("nfirstwidth", "50");
@@ -172,6 +202,7 @@ void test_native_focus_and_move_events()
     check("loverridesetfocus", "true");
     check("noverrideleft", "0");
     check("nvalidatorvalid", "3");
+    check("nnodefaultvalidatorvalid", "2");
 
     expect(has_runtime_event(state.events, "prg.object.invoke", "FocusBox.GotFocus"),
            "GotFocus should use the native method invocation event path");
