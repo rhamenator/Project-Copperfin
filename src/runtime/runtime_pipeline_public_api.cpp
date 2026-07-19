@@ -406,23 +406,55 @@ public:
         if (descriptor_ < 0) {
             return false;
         }
+        const std::string leaf =
+            copperfin::platform::path_to_utf8_string(path.filename());
         const int file_descriptor = ::openat(
             descriptor_,
-            copperfin::platform::path_to_utf8_string(path.filename()).c_str(),
+            leaf.c_str(),
             O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
-        if (file_descriptor < 0) {
+#if defined(__APPLE__)
+        int opened_descriptor = file_descriptor;
+        struct stat entry_before_open{};
+        if (opened_descriptor < 0 && errno == ELOOP &&
+            ::fstatat(
+                descriptor_,
+                leaf.c_str(),
+                &entry_before_open,
+                AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISREG(entry_before_open.st_mode)) {
+            // Some macOS filesystems report ELOOP for a regular file on the
+            // O_NOFOLLOW openat path. Recheck the entry without following
+            // symlinks, then verify the descriptor identity before and after
+            // reading so the compatibility path remains fail-closed.
+            opened_descriptor = ::openat(
+                descriptor_,
+                leaf.c_str(),
+                O_RDONLY | O_CLOEXEC);
+        }
+#else
+        const int opened_descriptor = file_descriptor;
+#endif
+        if (opened_descriptor < 0) {
             return false;
         }
         struct stat before{};
-        if (::fstat(file_descriptor, &before) != 0 || !S_ISREG(before.st_mode)) {
-            (void)::close(file_descriptor);
+        if (::fstat(opened_descriptor, &before) != 0 || !S_ISREG(before.st_mode)) {
+            (void)::close(opened_descriptor);
             return false;
         }
+#if defined(__APPLE__)
+        if (file_descriptor < 0 &&
+            (before.st_dev != entry_before_open.st_dev ||
+             before.st_ino != entry_before_open.st_ino)) {
+            (void)::close(opened_descriptor);
+            return false;
+        }
+#endif
 
         std::array<char, 4096U> buffer{};
         bool read_successfully = true;
         for (;;) {
-            const ssize_t count = ::read(file_descriptor, buffer.data(), buffer.size());
+            const ssize_t count = ::read(opened_descriptor, buffer.data(), buffer.size());
             if (count < 0 && errno == EINTR) {
                 continue;
             }
@@ -437,13 +469,13 @@ public:
         }
 
         struct stat after{};
-        if (!read_successfully || ::fstat(file_descriptor, &after) != 0 ||
+        if (!read_successfully || ::fstat(opened_descriptor, &after) != 0 ||
             !S_ISREG(after.st_mode) || before.st_dev != after.st_dev ||
             before.st_ino != after.st_ino) {
             contents.clear();
             read_successfully = false;
         }
-        if (::close(file_descriptor) != 0) {
+        if (::close(opened_descriptor) != 0) {
             contents.clear();
             read_successfully = false;
         }
