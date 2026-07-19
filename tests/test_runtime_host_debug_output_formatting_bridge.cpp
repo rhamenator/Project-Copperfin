@@ -623,6 +623,7 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
         temp_root);
 
     if (process.exit_code != 0) {
+        std::cerr << "bridge-unicode-descriptor exit code: " << process.exit_code << "\n";
         std::cerr << "bridge-unicode-descriptor stdout:\n" << process.stdout_text << "\n";
         std::cerr << "bridge-unicode-descriptor stderr:\n" << process.stderr_text << "\n";
         std::cerr << "fixture root: [Unicode path omitted]\n";
@@ -657,6 +658,11 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
             "--schema-version", "v1"
         },
         temp_root);
+    if (malformed_process.exit_code != 6) {
+        std::cerr << "bridge-unicode-malformed exit code: " << malformed_process.exit_code << "\n";
+        std::cerr << "bridge-unicode-malformed stdout:\n" << malformed_process.stdout_text << "\n";
+        std::cerr << "bridge-unicode-malformed stderr:\n" << malformed_process.stderr_text << "\n";
+    }
     std::cerr << "UNICODE: malformed invocation result captured\n";
     expect(malformed_process.exit_code == 6,
            "runtime host should reject an unpaired Unicode bridge escape");
