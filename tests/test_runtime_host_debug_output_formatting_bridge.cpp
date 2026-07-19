@@ -622,15 +622,20 @@ void test_runtime_host_decodes_unicode_bridge_descriptor_paths(const std::string
     std::cerr << "BEGIN: Unicode bridge source-name UTF-8 conversion\n";
     const std::string source_name_utf8 = copperfin::platform::path_to_utf8_string(source_name);
     std::cerr << "END: Unicode bridge source-name UTF-8 conversion\n";
+    std::cerr << "BEGIN: Unicode bridge source-name search\n";
     const auto source_name_offset = escaped_source_path.find(source_name_utf8);
+    std::cerr << "END: Unicode bridge source-name search\n";
     expect(source_name_offset != std::string::npos,
            "Unicode bridge fixture should find its UTF-8 source name in the escaped path");
+    std::cerr << "END: Unicode bridge source-name expectation\n";
     if (source_name_offset == std::string::npos) {
         fs::remove_all(temp_root, ignored);
         return;
     }
     const std::string escaped_source_name = "exports-\\u00E9-\\uD83D\\uDE80.prg";
+    std::cerr << "BEGIN: Unicode bridge source-name replacement\n";
     escaped_source_path.replace(source_name_offset, source_name_utf8.size(), escaped_source_name);
+    std::cerr << "END: Unicode bridge source-name replacement\n";
     const auto write_request = [&](const std::string& encoded_source_path) {
         write_text(
             request_path,
