@@ -419,6 +419,17 @@ std::string read_text_file(const std::filesystem::path& path) {
 }
 
 std::string read_binary_file(const std::filesystem::path& path, std::string& error) {
+#if !defined(_WIN32)
+    bool fd_read_handled = false;
+    std::string fd_contents;
+    if (try_read_file_fd_backed(path, fd_read_handled, fd_contents) && fd_read_handled) {
+        return fd_contents;
+    }
+    if (fd_read_handled) {
+        error = runtime_text("Runtime.Package.Error.OpenFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
+        return {};
+    }
+#endif
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         error = runtime_text("Runtime.Package.Error.OpenFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
