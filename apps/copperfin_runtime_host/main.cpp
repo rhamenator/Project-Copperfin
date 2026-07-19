@@ -1183,7 +1183,17 @@ bool validate_manifest_data_contract_header(
 std::vector<std::string> split_pipe(const std::string& value) {
     std::vector<std::string> result;
     std::string current;
-    for (const char ch : value) {
+    current.reserve(value.size());
+    for (std::size_t index = 0; index < value.size(); ++index) {
+        const char ch = value[index];
+        if (ch == '\\' && (index + 1U) < value.size()) {
+            const char next = value[index + 1U];
+            if (next == '\\' || next == '|') {
+                current.push_back(next);
+                ++index;
+                continue;
+            }
+        }
         if (ch == '|') {
             result.push_back(current);
             current.clear();

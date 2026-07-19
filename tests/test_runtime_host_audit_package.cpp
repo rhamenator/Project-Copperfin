@@ -471,6 +471,80 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
     }
 }
 
+void test_runtime_host_accepts_escaped_manifest_pipe_fields(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_escaped_manifest_pipe";
+    const fs::path builder_root = temp_root / "builder" / "PipeFieldApp";
+    const fs::path builder_content_root = builder_root / "content";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path deployed_content_root = deployed_root / "content";
+    const fs::path startup_path = deployed_content_root / "main.prg";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(builder_content_root);
+    fs::create_directories(deployed_content_root);
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(startup_path, "RETURN\n");
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+    expect(runtime_host_hash.ok && startup_hash.ok,
+           "escaped manifest pipe fixture should hash the runtime host and startup asset");
+    if (!runtime_host_hash.ok || !startup_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=EscapedManifestPipe\n"
+        "project_path=" + (builder_root / "pipefield.pjx").string() + "\n"
+        "package_root=" + builder_root.string() + "\n"
+        "content_root=" + builder_content_root.string() + "\n"
+        "working_directory=" + builder_content_root.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + (builder_content_root / "main.prg").string() + "\n"
+        "configuration=debug\n"
+        "security_enabled=true\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|main.prg|" + (builder_content_root / "main.prg").string() +
+            "|Program\\|Preview|false|true|" + startup_hash.hex_digest + "|true\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    if (process.exit_code != 0) {
+        std::cerr << "escaped manifest pipe stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "escaped manifest pipe stderr:\n" << process.stderr_text << "\n";
+    }
+    expect(process.exit_code == 0,
+           "runtime host should accept an asset metadata field containing an escaped pipe");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "escaped manifest pipe success should preserve the machine-readable status contract");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
