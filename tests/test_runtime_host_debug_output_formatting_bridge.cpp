@@ -124,12 +124,16 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
     const fs::path locale_root = temp_root / "locales";
     const fs::path deployed_runtime_host = deployed_runtime_host_path(temp_root, runtime_host_path);
     std::error_code ignored;
+    std::cerr << "BEGIN: verified bridge fixture remove\n";
     fs::remove_all(temp_root, ignored);
     fs::remove(outside_path, ignored);
+    std::cerr << "END: verified bridge fixture remove\n";
     fs::create_directories(content_root);
     fs::create_directories(source_path.parent_path());
     fs::create_directories(include_path.parent_path());
+    std::cerr << "END: verified bridge fixture directories\n";
     write_runtime_host_usage_catalogs(locale_root);
+    std::cerr << "END: verified bridge fixture catalogs\n";
     write_text(startup_path, "RETURN\n");
     write_text(
         source_path,
@@ -139,6 +143,7 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         "ENDPROC\n");
     write_text(include_path, "#DEFINE BRIDGE_VALUE 42\n");
     write_text(outside_path, "PROCEDURE GetAnswer\nRETURN 99\nENDPROC\n");
+    std::cerr << "END: verified bridge fixture sources\n";
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
     fs::permissions(
@@ -147,7 +152,9 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         fs::perm_options::add,
         ignored);
 #endif
+    std::cerr << "END: verified bridge fixture runtime host\n";
 
+    std::cerr << "BEGIN: verified bridge fixture hashes\n";
     const auto runtime_host_hash =
         copperfin::security::sha256_hex_for_file(copperfin::platform::path_to_utf8_string(deployed_runtime_host));
     const auto startup_hash = copperfin::security::sha256_hex_for_file(
@@ -156,6 +163,7 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         copperfin::platform::path_to_utf8_string(source_path));
     const auto include_hash = copperfin::security::sha256_hex_for_file(
         copperfin::platform::path_to_utf8_string(include_path));
+    std::cerr << "END: verified bridge fixture hashes\n";
     expect(runtime_host_hash.ok && startup_hash.ok && source_hash.ok && include_hash.ok,
            "secure bridge fixture should hash host, startup, export source, and include");
     if (!runtime_host_hash.ok || !startup_hash.ok || !source_hash.ok || !include_hash.ok) {
@@ -182,8 +190,9 @@ void test_security_enabled_bridge_source_stays_inside_verified_package(
         "asset=2|exports.prg|" + copperfin::platform::path_to_utf8_string(source_path) +
             "|Program|false|true|" + source_hash.hex_digest + "|true\n"
         "extension_payload=" + copperfin::platform::path_to_utf8_string(include_path) + "|" +
-            include_hash.hex_digest + "\n"
+        include_hash.hex_digest + "\n"
         "dotnet_story=none\n");
+    std::cerr << "END: verified bridge fixture manifest\n";
 
     const auto write_request = [&](const fs::path& requested_source) {
         const std::string escaped_source_path = json_escape_string(
