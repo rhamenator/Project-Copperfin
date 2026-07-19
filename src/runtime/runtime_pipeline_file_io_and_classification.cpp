@@ -376,6 +376,19 @@ std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier) 
 }
 
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error) {
+#if !defined(_WIN32)
+    bool fd_write_handled = false;
+    if (!try_write_text_file_fd_backed(
+            path,
+            contents,
+            fd_write_handled,
+            error)) {
+        return false;
+    }
+    if (fd_write_handled) {
+        return true;
+    }
+#endif
     std::ofstream output(path, std::ios::binary);
     if (!output) {
         error = runtime_text("Runtime.Package.Error.CreateFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});

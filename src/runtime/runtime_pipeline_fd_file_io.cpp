@@ -315,6 +315,78 @@ bool try_read_file_fd_backed(
     return read_file_bytes(source, contents);
 }
 
+bool try_write_text_file_fd_backed(
+    const std::filesystem::path& destination,
+    const std::string& contents,
+    bool& handled,
+    std::string& error) {
+    handled = false;
+    const auto parsed_destination = parse_fd_backed_path(destination);
+    if (!parsed_destination.has_value()) {
+        return true;
+    }
+    handled = true;
+    int parent_descriptor = -1;
+    if (!open_destination_parent(*parsed_destination, parent_descriptor)) {
+        error = runtime_text(
+            "Runtime.Package.Error.CreateDirectoryFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination.parent_path())}});
+        return false;
+    }
+    const std::string file_name =
+        copperfin::platform::path_to_utf8_string(parsed_destination->relative.filename());
+    const std::string temporary = temporary_name();
+    const int temporary_descriptor = ::openat(
+        parent_descriptor,
+        temporary.c_str(),
+        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+        0600);
+    if (temporary_descriptor < 0) {
+        (void)::close(parent_descriptor);
+        error = runtime_text(
+            "Runtime.Package.Error.CreateFileFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+        return false;
+    }
+    std::size_t offset = 0U;
+    while (offset < contents.size()) {
+        const ssize_t count = ::write(
+            temporary_descriptor,
+            contents.data() + offset,
+            contents.size() - offset);
+        if (count < 0 && errno == EINTR) {
+            continue;
+        }
+        if (count <= 0) {
+            (void)::close(temporary_descriptor);
+            (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
+            (void)::close(parent_descriptor);
+            error = runtime_text(
+                "Runtime.Package.Error.WriteFileFailed",
+                {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+            return false;
+        }
+        offset += static_cast<std::size_t>(count);
+    }
+    if (::fsync(temporary_descriptor) != 0 ||
+        ::close(temporary_descriptor) != 0 ||
+        ::renameat(
+            parent_descriptor,
+            temporary.c_str(),
+            parent_descriptor,
+            file_name.c_str()) != 0) {
+        (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
+        (void)::close(parent_descriptor);
+        error = runtime_text(
+            "Runtime.Package.Error.WriteFileFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+        return false;
+    }
+    (void)::fsync(parent_descriptor);
+    (void)::close(parent_descriptor);
+    return true;
+}
+
 }  // namespace copperfin::runtime::runtime_pipeline_detail
 
 #endif

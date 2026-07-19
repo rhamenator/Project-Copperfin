@@ -2186,12 +2186,20 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         if (!transaction.validate_parent_identity_for_materialization(error)) {
             return {.ok = false, .error = error};
         }
+#if defined(_WIN32)
         std::filesystem::create_directories(
             copperfin::platform::path_from_utf8_string(filesystem_plan.native_wrapper_source_path).parent_path(),
             directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
         }
+#else
+        if (!transaction.create_pinned_child_directory(
+                filesystem_plan.package_root,
+                "wrapper")) {
+            return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
+        }
+#endif
         if (!write_text_file(
                 filesystem_plan.module_definition_path,
                 build_module_definition_source(materialized_plan),

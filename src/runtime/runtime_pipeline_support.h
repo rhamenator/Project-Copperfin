@@ -99,6 +99,11 @@ bool try_read_file_fd_backed(
     const std::filesystem::path& source,
     bool& handled,
     std::string& contents);
+bool try_write_text_file_fd_backed(
+    const std::filesystem::path& destination,
+    const std::string& contents,
+    bool& handled,
+    std::string& error);
 #endif
 bool prepare_package_content_root(
     const std::filesystem::path& package_root,
