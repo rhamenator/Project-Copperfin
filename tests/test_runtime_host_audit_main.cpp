@@ -15,6 +15,7 @@ void test_security_enabled_writable_package_data_contract(const std::string& run
 void test_runtime_host_rejects_extension_payload_basename_fallback(const std::string& runtime_host_path);
 void test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(const std::string& runtime_host_path);
 void test_runtime_host_rejects_audit_paths_outside_the_direct_package(const std::string& runtime_host_path);
+void test_runtime_host_rejects_malformed_security_enabled_before_startup(const std::string& runtime_host_path);
 void test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(const std::string& runtime_host_path);
 void test_runtime_host_validates_manifest_versions_without_changing_error_contracts(const std::string& runtime_host_path);
 void test_runtime_host_debug_privileges_require_debug_document_contract(const std::string& runtime_host_path);
@@ -46,6 +47,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("debug privilege document", runtime_host_path, test_runtime_host_debug_privileges_require_debug_document_contract);
     run_runtime_host_test("manifest verification localization", runtime_host_path, test_runtime_host_manifest_verification_errors_localize_without_changing_contracts);
     run_runtime_host_test("audit package boundary", runtime_host_path, test_runtime_host_rejects_audit_paths_outside_the_direct_package);
+    run_runtime_host_test("malformed security metadata", runtime_host_path, test_runtime_host_rejects_malformed_security_enabled_before_startup);
     run_runtime_host_test("security audit localization", runtime_host_path, test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts);
     run_runtime_host_test("AI federation permission", runtime_host_path, test_runtime_host_rejects_ai_federation_planning_without_ai_permission);
 

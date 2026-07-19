@@ -212,6 +212,102 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
         fs::remove_all(temp_root, ignored);
     }
 }
+
+void test_runtime_host_rejects_malformed_security_enabled_before_startup(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_malformed_security_enabled";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path marker_path = temp_root / "marker.txt";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(startup_path, "STRTOFILE('ran', 'marker.txt')\nRETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=MalformedSecurityEnabled\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=garbage\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "audit_log_path=security_audit.log\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 4,
+               "#4241: malformed security_enabled should preserve the manifest error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#4241: malformed security_enabled should preserve machine-readable error status");
+        expect(process.stdout_text.find("The security_enabled value must be true or false.") !=
+                   std::string::npos,
+               "#4241: malformed security_enabled should use the localized boolean diagnostic");
+        expect(process.stdout_text.find("garbage") == std::string::npos,
+               "#4241: security metadata should not be echoed as executable input");
+        expect(!fs::exists(marker_path),
+               "#4241: malformed security_enabled must not execute the startup PRG");
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=MissingSecurityEnabled\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "audit_log_path=security_audit.log\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 4,
+               "#4241: missing security_enabled should preserve the manifest error exit code");
+        expect(process.stdout_text.find("The security_enabled value must be true or false.") !=
+                   std::string::npos,
+               "#4241: missing security_enabled should use the localized boolean diagnostic");
+        expect(!fs::exists(marker_path),
+               "#4241: missing security_enabled must not execute the startup PRG");
+    }
+
+    {
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 4,
+               "#4241: pseudo-locale malformed security_enabled should preserve the manifest error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#4241: pseudo-locale malformed security_enabled should preserve machine-readable status");
+        expect(process.stdout_text.find("security_enabled") != std::string::npos,
+               "#4241: pseudo-locale malformed security_enabled should preserve the invariant field token");
+        expect(!fs::exists(marker_path),
+               "#4241: pseudo-locale malformed security_enabled must not execute the startup PRG");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
 void test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;

@@ -125,9 +125,17 @@ const copperfin::runtime::XAssetActionBinding* find_pause_xasset_action(
     return nullptr;
 }
 
-bool parse_bool(const std::string& value) {
+bool parse_manifest_bool_token(const std::string& value, bool& parsed) {
     const std::string normalized = lowercase_copy(trim_copy(value));
-    return normalized == "1" || normalized == "true" || normalized == "yes";
+    if (normalized == "true") {
+        parsed = true;
+        return true;
+    }
+    if (normalized == "false") {
+        parsed = false;
+        return true;
+    }
+    return false;
 }
 
 bool parse_cli_bool_token(const std::string& value, bool& parsed) {
@@ -3153,7 +3161,14 @@ int run_runtime_host_main(int argc, char** argv) {
         normalized_manifest_path.parent_path();
     const auto assets = all_values(manifest, "asset");
     const auto warnings = all_values(manifest, "warning");
-    const bool security_enabled = parse_bool(first_value(manifest, "security_enabled"));
+    bool security_enabled = false;
+    if (!parse_manifest_bool_token(first_value(manifest, "security_enabled"), security_enabled)) {
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            runtime_host_parse_boolean_value_required(catalog, "security_enabled"));
+        return 4;
+    }
     const std::string security_role = first_value(manifest, "security_role");
     const auto resolved_audit_log_path =
         resolve_effective_audit_log_path(manifest, manifest_directory);
