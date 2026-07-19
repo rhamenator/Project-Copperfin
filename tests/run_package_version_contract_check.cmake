@@ -2,13 +2,13 @@
 # Licensed under the Project Copperfin Source-Available License or
 # Commercial License. See LICENSE.md in the repository root.
 
-foreach(required_variable IN ITEMS SOURCE_DIR BINARY_DIR)
+foreach(required_variable IN ITEMS COPPERFIN_SOURCE_DIR COPPERFIN_BINARY_DIR)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")
         message(FATAL_ERROR "${required_variable} is required")
     endif()
 endforeach()
 
-set(version_file "${BINARY_DIR}/CopperfinPackageVersion.txt")
+set(version_file "${COPPERFIN_BINARY_DIR}/CopperfinPackageVersion.txt")
 if(NOT EXISTS "${version_file}")
     message(FATAL_ERROR "Generated package version file does not exist: ${version_file}")
 endif()
@@ -19,8 +19,8 @@ if(NOT package_version MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
 endif()
 
 foreach(manifest_path IN ITEMS
-        "${SOURCE_DIR}/vsix/Copperfin.VisualStudio/source.extension.vsixmanifest"
-        "${SOURCE_DIR}/vsix/Copperfin.VisualStudio/extension.vsixmanifest")
+        "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/source.extension.vsixmanifest"
+        "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/extension.vsixmanifest")
     if(NOT EXISTS "${manifest_path}")
         message(FATAL_ERROR "VSIX manifest is missing: ${manifest_path}")
     endif()
@@ -38,7 +38,7 @@ foreach(manifest_path IN ITEMS
     endif()
 endforeach()
 
-set(package_source "${SOURCE_DIR}/vsix/Copperfin.VisualStudio/CopperfinPackage.cs")
+set(package_source "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/CopperfinPackage.cs")
 if(NOT EXISTS "${package_source}")
     message(FATAL_ERROR "Visual Studio package source is missing: ${package_source}")
 endif()

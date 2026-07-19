@@ -48,7 +48,7 @@ using copperfin::test_support::ScopedEnvironmentValue;
 using copperfin::test_support::set_env_value;
 
 #if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
-std::filesystem::path declared_dll_fixture_source_path() {
+inline std::filesystem::path declared_dll_fixture_source_path() {
     std::wstring executable_path(32768U, L'\0');
     const DWORD executable_length = GetModuleFileNameW(
         nullptr,

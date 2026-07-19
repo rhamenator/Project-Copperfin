@@ -305,6 +305,13 @@ require_text_count(".github/workflows/build-installers.yml"
     "tests/run_package_version_contract_check.cmake"
     3
     "package version contract checks")
+require_text_count(".github/workflows/build-installers.yml"
+    "-DCOPPERFIN_SOURCE_DIR=. -DCOPPERFIN_BINARY_DIR=build"
+    3
+    "non-reserved package version verifier variables")
+forbid_text(".github/workflows/build-installers.yml"
+    "-DSOURCE_DIR=. -DBINARY_DIR=build -P tests/run_package_version_contract_check.cmake"
+    "reserved package version verifier variables")
 forbid_text(".github/workflows/build-installers.yml"
     "0.1.0"
     "duplicated installer version literal")
