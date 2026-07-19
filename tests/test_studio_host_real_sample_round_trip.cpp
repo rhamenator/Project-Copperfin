@@ -178,6 +178,44 @@ void exercise_real_sample_round_trip(
     expect(read_binary(copied_sidecar) == original_sidecar_bytes,
            "#3526: real sample no-op read should preserve sidecar bytes");
 
+    const auto original_gridv = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "GRIDV"
+    });
+    expect(original_gridv.ok && original_gridv.exists && !original_gridv.value.empty(),
+           "#4253: real sample no-op property write should find the existing GRIDV value");
+    if (original_gridv.ok && original_gridv.exists && !original_gridv.value.empty()) {
+        const auto no_op_write_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", copied_primary.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "GRIDV",
+                "--property-value", original_gridv.value,
+                "--json"
+            },
+            temp_root);
+        if (no_op_write_process.exit_code != 0) {
+            std::cerr << "studio host sample no-op GRIDV write stdout:\n"
+                      << no_op_write_process.stdout_text << "\n";
+            std::cerr << "studio host sample no-op GRIDV write stderr:\n"
+                      << no_op_write_process.stderr_text << "\n";
+        }
+        expect(no_op_write_process.exit_code == 0,
+               "#4253: real sample no-op GRIDV write should succeed");
+        expect_contains(no_op_write_process.stdout_text,
+                        "\"gridVertical\": " + original_gridv.value,
+                        "#4253: real sample no-op GRIDV write should return the existing value");
+        expect(read_binary(copied_primary) == original_primary_bytes,
+               "#4253: real sample no-op GRIDV write should preserve primary asset bytes");
+        expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+               "#4253: real sample no-op GRIDV write should preserve sidecar bytes");
+    }
+
     const auto update_process = run_process_capture(
         studio_host_path,
         {
