@@ -2425,9 +2425,30 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         [&](std::vector<RuntimeArtifactDigest>& digests,
             const std::filesystem::path& physical_path,
             std::string& digest_error) {
-            if (physical_path.empty() || !std::filesystem::exists(physical_path)) {
+            if (physical_path.empty()) {
                 return true;
             }
+#if !defined(_WIN32)
+            bool fd_source_handled = false;
+            std::string fd_source_contents;
+            const bool fd_source_readable = try_read_file_fd_backed(
+                physical_path,
+                fd_source_handled,
+                fd_source_contents);
+            if (fd_source_handled && !fd_source_readable) {
+                digest_error = runtime_text(
+                    "Runtime.Package.Error.OpenFileFailed",
+                    {{"path", copperfin::platform::path_to_utf8_string(physical_path)}});
+                return false;
+            }
+            if (!fd_source_handled && !std::filesystem::exists(physical_path)) {
+                return true;
+            }
+#else
+            if (!std::filesystem::exists(physical_path)) {
+                return true;
+            }
+#endif
             const auto digest = sha256_for_materialized_file(physical_path);
             if (!digest.ok) {
                 digest_error = digest.error;

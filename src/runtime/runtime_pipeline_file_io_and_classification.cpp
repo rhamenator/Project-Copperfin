@@ -537,7 +537,18 @@ bool copy_file_if_exists(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,
     std::string& error) {
+#if !defined(_WIN32)
+    bool fd_source_handled = false;
+    std::string fd_source_contents;
+    const bool fd_source_readable = try_read_file_fd_backed(
+        source,
+        fd_source_handled,
+        fd_source_contents);
+    if ((fd_source_handled && !fd_source_readable) ||
+        (!fd_source_handled && !std::filesystem::exists(source))) {
+#else
     if (!std::filesystem::exists(source)) {
+#endif
         error = runtime_text("Runtime.Package.Error.SourceFileMissing", {{"path", copperfin::platform::path_to_utf8_string(source)}});
         return false;
     }
