@@ -2999,6 +2999,26 @@ namespace copperfin::runtime
                             if (focus_changed)
                             {
                                 last_popped_frame_requested_nodefault = false;
+                                const auto valid_result =
+                                    invoke_native_object_method_if_present(
+                                        **previous_control,
+                                        "valid",
+                                        frame,
+                                        {},
+                                        {});
+                                (void)consume_last_popped_frame_requested_nodefault();
+                                const bool validation_rejected =
+                                    valid_result.has_value() &&
+                                    valid_result->kind != PrgValueKind::empty &&
+                                    !value_as_bool(*valid_result);
+                                if (validation_rejected)
+                                {
+                                    suppress_focus_transition = true;
+                                }
+                            }
+                            if (focus_changed && !suppress_focus_transition)
+                            {
+                                last_popped_frame_requested_nodefault = false;
                                 bool lost_focus_requested_nodefault = false;
                                 (void)invoke_native_object_method_if_present(
                                     **previous_control,

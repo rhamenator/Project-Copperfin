@@ -37,6 +37,14 @@ void test_native_focus_and_move_events()
         "oForm.nodefault.Move(21, 22)\n"
         "oForm.override.Move(1, 2, 3, 4)\n"
         "oForm.override.SetFocus()\n"
+        "oForm.validator.SetFocus()\n"
+        "oForm.first.SetFocus()\n"
+        "cActiveAfterRejectedValid = oForm.ActiveControl.cId\n"
+        "oForm.first.SetFocus()\n"
+        "cActiveAfterZeroValid = oForm.ActiveControl.cId\n"
+        "oForm.first.SetFocus()\n"
+        "cActiveAfterAcceptedValid = oForm.ActiveControl.cId\n"
+        "nValidatorValid = oForm.validator.nValid\n"
         "cEvents = oForm.cEvents\n"
         "nFirstLeft = oForm.first.Left\n"
         "nFirstTop = oForm.first.Top\n"
@@ -56,6 +64,10 @@ void test_native_focus_and_move_events()
         "    ADD OBJECT blocked AS SuppressingFocusBox WITH cId = 'blocked'\n"
         "    ADD OBJECT nodefault AS NodefaultMoveBox\n"
         "    ADD OBJECT override AS OverrideBox\n"
+        "    ADD OBJECT validator AS ValidatingFocusBox WITH cId = 'validator'\n"
+        "    PROCEDURE RecordValidation\n"
+        "        THIS.cEvents = THIS.cEvents + 'nested;'\n"
+        "    ENDPROC\n"
         "ENDDEFINE\n"
         "DEFINE CLASS FocusBox AS TextBox\n"
         "    cId = ''\n"
@@ -67,6 +79,28 @@ void test_native_focus_and_move_events()
         "    ENDPROC\n"
         "    PROCEDURE Moved\n"
         "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':moved;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS ValidatingFocusBox AS TextBox\n"
+        "    cId = ''\n"
+        "    nValid = 0\n"
+        "    PROCEDURE Valid\n"
+        "        THIS.nValid = THIS.nValid + 1\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':valid;'\n"
+        "        THISFORM.RecordValidation()\n"
+        "        IF THIS.nValid = 1\n"
+        "            RETURN .F.\n"
+        "        ENDIF\n"
+        "        IF THIS.nValid = 2\n"
+        "            RETURN 0\n"
+        "        ENDIF\n"
+        "        RETURN .T.\n"
+        "    ENDPROC\n"
+        "    PROCEDURE LostFocus\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':lost;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE GotFocus\n"
+        "        THISFORM.cEvents = THISFORM.cEvents + THIS.cId + ':got;'\n"
         "    ENDPROC\n"
         "ENDDEFINE\n"
         "DEFINE CLASS SuppressingFocusBox AS TextBox\n"
@@ -121,9 +155,12 @@ void test_native_focus_and_move_events()
         }
     };
 
-    check("cevents", "first:got;first:lost;blocked:got;blocked:lost;blocked:lost;second:got;first:moved;");
+    check("cevents", "first:got;first:lost;blocked:got;blocked:lost;blocked:lost;second:got;first:moved;second:lost;validator:got;validator:valid;nested;validator:valid;nested;validator:valid;nested;validator:lost;first:got;");
     check("cactiveafterblocked", "blocked");
     check("cactiveaftersuppressed", "blocked");
+    check("cactiveafterrejectedvalid", "validator");
+    check("cactiveafterzerovalid", "validator");
+    check("cactiveafteracceptedvalid", "first");
     check("nfirstleft", "30");
     check("nfirsttop", "40");
     check("nfirstwidth", "50");
@@ -134,11 +171,16 @@ void test_native_focus_and_move_events()
     check("loverridemove", "true");
     check("loverridesetfocus", "true");
     check("noverrideleft", "0");
+    check("nvalidatorvalid", "3");
 
     expect(has_runtime_event(state.events, "prg.object.invoke", "FocusBox.GotFocus"),
            "GotFocus should use the native method invocation event path");
     expect(has_runtime_event(state.events, "prg.object.invoke", "FocusBox.LostFocus"),
            "LostFocus should use the native method invocation event path");
+    expect(has_runtime_event(state.events, "prg.object.invoke", "ValidatingFocusBox.Valid"),
+           "Valid should use the native method invocation event path");
+    expect(has_runtime_event(state.events, "prg.object.invoke", "MainForm.RecordValidation"),
+           "Valid should support nested native method invocation");
     expect(has_runtime_event(state.events, "prg.object.invoke", "FocusBox.Moved"),
            "Moved should use the native method invocation event path");
     expect(!has_runtime_event(state.events, "prg.object.invoke", "OverrideBox.Moved"),
