@@ -368,6 +368,36 @@ public:
         return ::close(child_descriptor) == 0;
     }
 
+    bool child_entry_exists(
+        const std::filesystem::path& path,
+        std::error_code& error) const {
+        struct stat information{};
+        if (::fstatat(
+                descriptor_,
+                copperfin::platform::path_to_utf8_string(path.filename()).c_str(),
+                &information,
+                AT_SYMLINK_NOFOLLOW) == 0) {
+            error.clear();
+            return true;
+        }
+        if (errno == ENOENT) {
+            error.clear();
+            return false;
+        }
+        error = std::error_code(errno, std::generic_category());
+        return false;
+    }
+
+    bool child_is_regular(const std::filesystem::path& path) const {
+        struct stat information{};
+        return ::fstatat(
+                   descriptor_,
+                   copperfin::platform::path_to_utf8_string(path.filename()).c_str(),
+                   &information,
+                   AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISREG(information.st_mode);
+    }
+
     bool adopt_descriptor(
         const int descriptor,
         std::filesystem::path path) {
@@ -727,22 +757,38 @@ public:
             return false;
         }
 
+#if defined(_WIN32)
         bool interrupted_backup_exists =
             directory_entry_exists(pinned_path(backup_root_), filesystem_error);
+#else
+        bool interrupted_backup_exists =
+            parent_identity_.child_entry_exists(backup_root_, filesystem_error);
+#endif
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(backup_root_)}});
             return false;
         }
+#if defined(_WIN32)
         bool package_exists = directory_entry_exists(pinned_path(package_root_), filesystem_error);
+#else
+        bool package_exists =
+            parent_identity_.child_entry_exists(package_root_, filesystem_error);
+#endif
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
                 {{"path", copperfin::platform::path_to_utf8_string(package_root_)}});
             return false;
         }
-        bool transaction_marker_exists = directory_entry_exists(pinned_path(marker_path_), filesystem_error);
+#if defined(_WIN32)
+        bool transaction_marker_exists =
+            directory_entry_exists(pinned_path(marker_path_), filesystem_error);
+#else
+        bool transaction_marker_exists =
+            parent_identity_.child_entry_exists(marker_path_, filesystem_error);
+#endif
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -755,7 +801,13 @@ public:
                 {{"path", copperfin::platform::path_to_utf8_string(marker_path_)}});
             return false;
         }
-        bool backup_owner_exists = directory_entry_exists(pinned_path(backup_owner_path_), filesystem_error);
+#if defined(_WIN32)
+        bool backup_owner_exists =
+            directory_entry_exists(pinned_path(backup_owner_path_), filesystem_error);
+#else
+        bool backup_owner_exists =
+            parent_identity_.child_entry_exists(backup_owner_path_, filesystem_error);
+#endif
         if (filesystem_error) {
             error = runtime_text(
                 "Runtime.Package.Error.PackageTransactionStartFailed",
@@ -1391,6 +1443,12 @@ private:
     }
 
     bool is_owned_transaction_file(const std::filesystem::path& path) const {
+#if !defined(_WIN32)
+        if (!parent_identity_.child_is_regular(path)) {
+            trace_transaction_begin_failure("owned-file-status", path);
+            return false;
+        }
+#else
         std::error_code filesystem_error;
         const std::filesystem::file_status status =
             std::filesystem::symlink_status(path, filesystem_error);
@@ -1398,6 +1456,7 @@ private:
             trace_transaction_begin_failure("owned-file-status", path);
             return false;
         }
+#endif
         const std::string contents = read_text_file(path);
         if (contents == transaction_identity_ ||
             contents == transaction_identity_ + std::string(kPackageTransactionDeferredPhase)) {
