@@ -164,7 +164,7 @@ bool write_app_archive_primary_output(
             return false;
         }
 
-        const auto digest = security::sha256_hex_for_file(file.absolute_path);
+        const auto digest = security::sha256_hex_for_text(bytes);
         if (!digest.ok) {
             error = digest.error;
             return false;
