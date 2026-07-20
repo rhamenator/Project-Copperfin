@@ -650,18 +650,20 @@ void test_list_query_file_requery_reads_verified_bytes()
     write_simple_dbf(table_path, {"Ada", "Grace"});
     const std::string verified_table_bytes = read_text(table_path);
     const fs::path query_path = root / "names.qpr";
+    const std::string table_utf8_path = copperfin::platform::path_to_utf8_string(table_path);
+    const std::string query_utf8_path = copperfin::platform::path_to_utf8_string(query_path);
     const std::string verified_query_text =
         "SELECT name FROM customers WHERE name = 'Ada' INTO CURSOR temp2\n";
     write_text(query_path, verified_query_text);
 
     copperfin::runtime::RuntimeSessionOptions options;
-    options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
-    options.verified_file_byte_overrides.emplace(query_path.string(), verified_query_text);
+    options.verified_file_byte_overrides.emplace(table_utf8_path, verified_table_bytes);
+    options.verified_file_byte_overrides.emplace(query_utf8_path, verified_query_text);
     options.require_verified_file_byte_overrides = true;
     const auto state = run_program(
         root,
         "verified_query_file.prg",
-        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "USE '" + table_utf8_path + "' ALIAS customers\n"
         "oList = CREATEOBJECT('ListBox')\n"
         "oList.RowSourceType = 4\n"
         "oList.RowSource = 'names.qpr'\n"
