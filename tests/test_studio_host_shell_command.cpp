@@ -4,9 +4,15 @@
 
 #include "studio_host_main_support.h"
 
+#include "copperfin/platform/path.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 namespace {
 
@@ -74,14 +80,68 @@ void test_execute_launch_command_handles_paths_and_arguments_with_spaces() {
 
     fs::remove_all(temp_dir, ignored);
 }
+#else
+void test_execute_launch_command_preserves_unicode_paths_and_percent_arguments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / L"copperfin_studio_host_\u00E9";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    std::wstring executable_buffer(32768U, L'\0');
+    const DWORD executable_length = GetModuleFileNameW(
+        nullptr,
+        executable_buffer.data(),
+        static_cast<DWORD>(executable_buffer.size()));
+    expect(executable_length > 0U && executable_length < executable_buffer.size(),
+           "#4279: Windows Studio-host test should resolve its executable path through the wide API");
+    if (executable_length == 0U || executable_length >= executable_buffer.size()) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+    executable_buffer.resize(executable_length);
+
+    const fs::path fixture_path = temp_dir / L"studio-host-launch-fixture.exe";
+    std::error_code copy_error;
+    fs::copy_file(
+        fs::path(executable_buffer),
+        fixture_path,
+        fs::copy_options::overwrite_existing,
+        copy_error);
+    expect(!copy_error,
+           "#4279: Windows Studio-host test should copy a launch fixture into a Unicode directory");
+    if (copy_error) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    const int exit_code = cf_studio_host_main_detail::execute_launch_command(
+        copperfin::platform::path_to_utf8_string(fixture_path),
+        {"--fixture", "literal%value"});
+    expect(exit_code == 17,
+           "#4279: Windows Studio-host direct launch should preserve Unicode executable paths and percent arguments");
+
+    fs::remove_all(temp_dir, ignored);
+}
 #endif
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
+#if defined(_WIN32)
+    if (argc == 3 && std::string(argv[1]) == "--fixture" && std::string(argv[2]) == "literal%value") {
+        return 17;
+    }
+#else
+    (void)argc;
+    (void)argv;
+#endif
+
     test_build_shell_command_uses_platform_quoting();
 #if !defined(_WIN32)
     test_execute_launch_command_handles_paths_and_arguments_with_spaces();
+#else
+    test_execute_launch_command_preserves_unicode_paths_and_percent_arguments();
 #endif
 
     if (failures != 0) {
