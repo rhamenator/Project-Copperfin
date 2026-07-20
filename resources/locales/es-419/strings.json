@@ -2260,6 +2260,7 @@
   "AssetEditor.Property.Left": "Izquierda",
   "AssetEditor.Property.Width": "Ancho",
   "AssetEditor.Property.FontFace": "Fuente",
+  "AssetEditor.Property.Picture": "Imagen",
   "AssetEditor.Property.FontStyle": "Estilo de fuente",
   "AssetEditor.Property.FontSize": "Tama\u00F1o de fuente",
   "AssetEditor.Property.Height": "Altura",

@@ -9,6 +9,24 @@ namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private static void TestReportLayoutObjectPreservesPictureMetadata()
+    {
+        const string json =
+            "{\"recordIndex\":4,\"objectKind\":\"label\",\"objectKindFieldIndex\":0," +
+            "\"objectKindMemoBlockNumber\":0,\"picture\":\"@I\",\"pictureFieldIndex\":7," +
+            "\"pictureMemoBlockNumber\":3,\"pictureAlignment\":\"center\"}";
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var layoutObject = JsonSerializer.Deserialize<CopperfinStudioReportLayoutObject>(json, options);
+
+        Expect(layoutObject is not null &&
+               layoutObject.ObjectKind == "label" &&
+               layoutObject.Picture == "@I" &&
+               layoutObject.PictureFieldIndex == 7 &&
+               layoutObject.PictureMemoBlockNumber == 3 &&
+               layoutObject.PictureAlignment == "center",
+            "managed report layout objects should preserve label PICTURE and provenance metadata");
+    }
+
     private static void TestReportLayoutObjectPreservesNullableSectionIndex()
     {
         const string unplacedJson =

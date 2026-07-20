@@ -33,6 +33,8 @@ internal static partial class Program
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
+        TestReportLayoutObjectPreservesPictureMetadata();
+        TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects();
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestDesignerSelectionHonorsReadOnlyDocumentState();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
@@ -381,6 +383,35 @@ internal static partial class Program
         var unsupported = new CopperfinLocalization("de-DE");
         Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", unsupported) == "Visual report",
             "unsupported locales should keep English asset-kind fallback labels");
+    }
+
+    private static void TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects()
+    {
+        CopperfinStudioSnapshotObject Snapshot(string objectType) => new()
+        {
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = objectType },
+                new() { Name = "PICTURE", Value = "@J" }
+            }
+        };
+
+        var labelSelection = CopperfinDesignerSelection.FromSnapshot(
+            "label",
+            Snapshot("5"),
+            new CopperfinLocalization("en-US"));
+        var nonLabelSelection = CopperfinDesignerSelection.FromSnapshot(
+            "label",
+            Snapshot("8"),
+            new CopperfinLocalization("en-US"));
+
+        var pictureProperty = labelSelection?.GetProperties().Find("PICTURE", false);
+        Expect(pictureProperty is not null,
+            "label-object selections should expose editable PICTURE");
+        Expect(pictureProperty?.DisplayName == "Picture",
+            "label-object PICTURE should use the localized property label");
+        Expect(nonLabelSelection?.GetProperties().Find("PICTURE", false) is null,
+            "non-label report objects should not expose label PICTURE");
     }
 
     private static void TestDesignerSelectionDefaultsToEnvironmentLocalization()

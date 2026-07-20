@@ -167,8 +167,16 @@ internal sealed class CopperfinStudioReportLayoutObject
     public int? SectionObjectIndex { get; set; }
     public int SectionObjectCount { get; set; }
     public string ObjectKind { get; set; } = string.Empty;
+    public int? ObjectKindFieldIndex { get; set; }
+    public int ObjectKindMemoBlockNumber { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Expression { get; set; } = string.Empty;
+    public int? ExpressionFieldIndex { get; set; }
+    public int ExpressionMemoBlockNumber { get; set; }
+    public string Picture { get; set; } = string.Empty;
+    public int? PictureFieldIndex { get; set; }
+    public int PictureMemoBlockNumber { get; set; }
+    public string PictureAlignment { get; set; } = string.Empty;
     public int Left { get; set; }
     public int Top { get; set; }
     public int Width { get; set; }
