@@ -358,7 +358,11 @@ std::optional<PrgValue> evaluate_string_function(
         if (function == "getwordcount") {
             return make_number_value(static_cast<double>(words.size()));
         }
-        const std::size_t n = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1])));
+        const double requested_index = value_as_number(arguments[1]);
+        if (requested_index <= 0.0) {
+            return make_string_value(std::string{});
+        }
+        const std::size_t n = static_cast<std::size_t>(requested_index);
         return make_string_value(n <= words.size() ? words[n - 1U] : std::string{});
     }
     if (function == "memlines" && !arguments.empty()) {

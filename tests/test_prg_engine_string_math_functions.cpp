@@ -190,6 +190,9 @@ namespace
             "getwordnum_2 = GETWORDNUM('a,b,c', 3, ',')\n"
             "getwordnum_multi_delim = GETWORDNUM('a,b;c', 3, ',;')\n"
             "getwordnum_tab = GETWORDNUM('one' + CHR(9) + 'two', 2)\n"
+            "getwordnum_zero = GETWORDNUM('one two', 0)\n"
+            "getwordnum_negative = GETWORDNUM('one two', -1)\n"
+            "getwordnum_out_of_range = GETWORDNUM('one two', 3)\n"
             "memo_text = 'first line' + CHR(13) + CHR(10) + 'second line' + CHR(10) + 'still second' + CHR(13) + 'third line'\n"
             "memline_count = MEMLINES(memo_text)\n"
             "mline_one = MLINE(memo_text, 1)\n"
@@ -463,6 +466,9 @@ namespace
         check("getwordnum_2", "c");
         check("getwordnum_multi_delim", "c");
         check("getwordnum_tab", "two");
+        check("getwordnum_zero", "");
+        check("getwordnum_negative", "");
+        check("getwordnum_out_of_range", "");
         check("memline_count", "3");
         check("mline_one", "first line");
         check("mline_two", "second line\nstill second");

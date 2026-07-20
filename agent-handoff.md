@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- String parity slice `#4307` under `#3217`: `GETWORDNUM()` must return an empty string for zero or negative word indexes; do not clamp those values to one. Preserve positive-index, out-of-range, delimiter, flag, localization, and stack-frugal runtime behavior. Keep focused zero, negative, and out-of-range regressions.
+
 - String parity slice `#4306` under `#3217`: `STRTRAN()` must dispatch with two or more arguments; when the optional replacement is omitted, use an empty replacement to remove matches. Preserve existing start-occurrence, count, flags, no-match, localization, and stack-frugal runtime behavior. Keep regression coverage for removal and no-match cases.
 
 - Numeric parity slice `#4305` under `#3217`: `MOD()` must treat only an exact zero divisor as zero. Do not use a magnitude cutoff that discards valid sub-micro remainders; preserve the existing divisor-sign adjustment and stack-frugal runtime path. The PRG string/math regression checks tiny positive and negative-divisor results through `value_as_number()` because the generic display formatter intentionally rounds near-zero values for text output.
