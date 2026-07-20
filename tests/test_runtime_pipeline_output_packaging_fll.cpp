@@ -622,6 +622,17 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should build the request artifact directly from the response-validation plan once the wrapper contract is upstream.");
         expect(wrapper_source.find("const auto request_write_plan = copperfin_build_runtime_bridge_request_write_plan(\n        request_artifact);") != std::string::npos,
                "fll-output wrapper source should build the request-write plan directly from the request artifact once the wrapper contract is upstream.");
+        const auto request_write_position = wrapper_source.find("const auto request_write_execution =");
+        const auto process_launch_position = wrapper_source.find("const auto process_launch = request_write_execution");
+        const auto response_read_position = wrapper_source.find("const auto response_read_plan =");
+        expect(request_write_position != std::string::npos && process_launch_position != std::string::npos &&
+                   response_read_position != std::string::npos && request_write_position < process_launch_position &&
+                   process_launch_position < response_read_position,
+               "fll-output wrapper source should write the request before launching and reading the response");
+        expect(wrapper_source.find("copperfin_runtime_bridge_failed_process_launch(dispatch_execution);") != std::string::npos,
+               "fll-output wrapper source should avoid launching when request preparation fails");
+        expect(wrapper_source.find("copperfin_runtime_bridge_cleanup_artifacts(response_read_plan);") != std::string::npos,
+               "fll-output wrapper source should clean request, response, and log artifacts after each call");
         expect(wrapper_source.find("const auto response_read_plan = copperfin_build_runtime_bridge_response_read_plan(\n        request_write_plan,\n        request_write_execution);") != std::string::npos,
                "fll-output wrapper source should build the response-read plan from the request-write plan and executed write result.");
         expect(wrapper_source.find("const auto response_document =\n        copperfin_runtime_bridge_execute_read_response(response_read_plan);") != std::string::npos,
@@ -710,7 +721,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should route the dispatch plan through the shared dispatch-execution helper.");
         expect(wrapper_source.find("(void)dispatch_execution;") == std::string::npos,
                "fll-output wrapper source should consume dispatch execution when launching the process.");
-        expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
+        expect(wrapper_source.find("copperfin_runtime_bridge_launch_process(dispatch_execution)") != std::string::npos,
                "fll-output wrapper source should route dispatch execution through the shared process-launch helper.");
         expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
                "fll-output wrapper source should consume process launch when evaluating host failure.");
@@ -930,18 +941,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should feed the bridge result from the enriched descriptor and shared placeholder return binding");
         expect(wrapper_source.find("{copperfin_runtime_bridge_library_export_env_var(), result.call.invocation.descriptor.export_name}") != std::string::npos,
                "fll-output wrapper source should preserve launch environment export metadata");
-        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
-               "fll-output wrapper source should derive stdout observation paths");
-        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
-               "fll-output wrapper source should derive stderr observation paths");
+        expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_stdout_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should derive unique stdout observation paths");
+        expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_stderr_log_suffix()") != std::string::npos,
+               "fll-output wrapper source should derive unique stderr observation paths");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.descriptor.runtime_host_path") != std::string::npos,
                "fll-output wrapper source should preserve the runtime-host executable path in the execution plan");
         expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                "fll-output wrapper source should preserve the bridge invocation arguments in the execution plan");
-        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
-               "fll-output wrapper source should derive request transport paths");
-        expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
-               "fll-output wrapper source should derive response transport paths");
+        expect(wrapper_source.find("const std::string artifact_stem = std::string(export_name) + \".\" + invocation_identity;") != std::string::npos,
+               "fll-output wrapper source should derive a per-call transport artifact stem");
+        expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should derive unique request transport paths");
+        expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+               "fll-output wrapper source should derive unique response transport paths");
+        expect(wrapper_source.find("static std::atomic<unsigned long long> invocation_sequence{0};") != std::string::npos,
+               "fll-output wrapper source should serialize per-process invocation identities");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                "fll-output wrapper source should declare a shared request serialization media-type helper");
         expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_response_media_type_value()") != std::string::npos,
