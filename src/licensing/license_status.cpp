@@ -76,14 +76,14 @@ LicenseStatus load_license_status(
     std::filesystem::path resolved_path;
     bool path_was_explicit = false;
 
-    const std::string env_license_path = platform::read_environment_variable_or_empty("COPPERFIN_LICENSE_PATH");
-    const bool has_env_license_path = !env_license_path.empty();
+    const auto env_license_path = platform::read_environment_path("COPPERFIN_LICENSE_PATH");
+    const bool has_env_license_path = env_license_path.has_value() && !env_license_path->empty();
 
     if (explicit_override.has_value() && !explicit_override->empty()) {
         resolved_path = *explicit_override;
         path_was_explicit = true;
     } else if (has_env_license_path) {
-        resolved_path = std::filesystem::path(env_license_path);
+        resolved_path = *env_license_path;
         path_was_explicit = true;
     } else {
         resolved_path = executable_path.parent_path() / "license.cflicense";

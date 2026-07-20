@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- License-path hardening slice `#4302`: `load_license_status()` now reads `COPPERFIN_LICENSE_PATH` with `platform::read_environment_path(...)`, preserving Unicode Windows filenames through the existing wide environment boundary. Keep explicit license overrides ahead of the environment path, preserve license state/diagnostic contracts, and retain the focused non-ASCII licensing regression before closing the issue.
+
 - Windows package-root rebinding and physical containment under #4301 must use the shared `path_component_equal_for_platform` helper. It compares with `CompareStringOrdinal` first, then invariant `LCMapStringEx`, retaining the `CharLowerBuffW` fallback because hosted Windows validation demonstrated that the invariant mapping API can return no usable result on a supported environment. Do not change POSIX case sensitivity or package/audit path contracts.
 
 Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a shipped-slice ledger here.

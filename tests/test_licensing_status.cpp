@@ -20,6 +20,7 @@ namespace {
 
 namespace fs = std::filesystem;
 using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::ScopedEnvironmentPath;
 using copperfin::test_support::set_env_value;
 using copperfin::licensing::LicenseState;
 using copperfin::licensing::LicenseStatus;
@@ -503,6 +504,25 @@ void test_env_var_takes_priority_over_default_location() {
     expect(status.state == LicenseState::perpetual_current, "COPPERFIN_LICENSE_PATH should be consulted when no explicit override is passed");
 }
 
+void test_env_var_preserves_non_ascii_license_path() {
+    const fs::path env_path =
+        test_root() / copperfin::test_support::path_from_utf8_string("licence_caf\xC3\xA9") /
+        copperfin::test_support::path_from_utf8_string("licence_\xE7\xA9\xB0.cflicense");
+    write_text_file(env_path, kFixture1Json);
+
+    const fs::path empty_default_dir = test_root() / "unicode_env_priority_app";
+    std::error_code ignored;
+    fs::remove_all(empty_default_dir, ignored);
+    fs::create_directories(empty_default_dir);
+
+    ScopedEnvironmentPath env("COPPERFIN_LICENSE_PATH", env_path);
+
+    const auto status = load_license_status(empty_default_dir / "app.exe", std::nullopt, kFixtureSignerKeys);
+    expect(
+        status.state == LicenseState::perpetual_current,
+        "#4302: COPPERFIN_LICENSE_PATH should preserve a non-ASCII Windows path through license loading");
+}
+
 void test_explicit_override_takes_priority_over_env_var() {
     const fs::path env_path = test_root() / "should_be_ignored.cflicense";
     write_text_file(env_path, kFixture1Json);
@@ -564,6 +584,7 @@ int main() {
     test_directory_as_explicit_path_is_unreadable();
     test_default_location_is_used_when_present();
     test_env_var_takes_priority_over_default_location();
+    test_env_var_preserves_non_ascii_license_path();
     test_explicit_override_takes_priority_over_env_var();
     test_license_state_name_round_trip();
 
