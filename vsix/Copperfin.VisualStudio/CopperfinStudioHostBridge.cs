@@ -24,11 +24,25 @@ internal static class CopperfinStudioHostBridge
         return ResolveHostPath("COPPERFIN_STUDIO_HOST_PATH", "copperfin_studio_host", baseDirectory);
     }
 
-    public static string BuildArguments(string documentPath, bool readOnly = false)
+    public static string BuildArguments(
+        string documentPath,
+        bool readOnly = false,
+        string? objectName = null,
+        string? uniqueId = null)
     {
-        return readOnly
+        var arguments = readOnly
             ? $"--from-vs --read-only --path {Quote(documentPath)}"
             : $"--from-vs --path {Quote(documentPath)}";
+        if (!string.IsNullOrWhiteSpace(objectName))
+        {
+            arguments += $" --object-name {Quote(objectName!)}";
+        }
+        if (!string.IsNullOrWhiteSpace(uniqueId))
+        {
+            arguments += $" --unique-id {Quote(uniqueId!)}";
+        }
+
+        return arguments;
     }
 
     public static string BuildPropertyUpdateArguments(string documentPath, int recordIndex, string propertyName, string propertyValue)
@@ -206,11 +220,13 @@ internal static class CopperfinStudioHostBridge
         string studioHostPath,
         string documentPath,
         bool readOnly = false,
-        CopperfinLocalization? localization = null)
+        CopperfinLocalization? localization = null,
+        string? objectName = null,
+        string? uniqueId = null)
     {
         var startInfo = CreateProcessStartInfo(
             studioHostPath,
-            BuildArguments(documentPath, readOnly),
+            BuildArguments(documentPath, readOnly, objectName, uniqueId),
             localization: localization);
 
         try

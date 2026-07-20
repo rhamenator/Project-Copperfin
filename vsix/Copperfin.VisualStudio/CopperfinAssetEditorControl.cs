@@ -103,6 +103,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly CopperfinLocalization localization;
 
     private string? currentPath;
+    private string? currentStartupObjectName;
+    private string? currentStartupUniqueId;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
     private CopperfinRuntimeDebugSession? currentDebugSession;
     private CopperfinProjectExecutionResult? currentProjectWorkflowResult;
@@ -193,7 +195,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             if (!string.IsNullOrWhiteSpace(currentPath))
             {
-                LoadDocument(currentPath!);
+                LoadDocument(currentPath!, currentStartupObjectName, currentStartupUniqueId);
             }
         };
 
@@ -950,9 +952,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return TryGetSelectedSnapshotObject()?.RecordIndex ?? -1;
     }
 
-    public void LoadDocument(string path)
+    public void LoadDocument(string path, string? objectName = null, string? uniqueId = null)
     {
         loadGeneration++;
+        if (!string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase) ||
+            objectName is not null ||
+            uniqueId is not null)
+        {
+            currentStartupObjectName = objectName;
+            currentStartupUniqueId = uniqueId;
+        }
         currentPath = path;
 
         var info = new FileInfo(path);
@@ -991,13 +1000,17 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         snapshotStatusLabel.Text = this.localization.Text("AssetEditor.Snapshot.LoadingStatus");
         UpdateProjectCommandVisibility();
         UpdateObjectLifecycleButtonVisibility();
-        _ = LoadSnapshotAsync(path);
+        _ = LoadSnapshotAsync(path, currentStartupObjectName, currentStartupUniqueId);
     }
 
-    private async Task LoadSnapshotAsync(string path)
+    private async Task LoadSnapshotAsync(string path, string? objectName, string? uniqueId)
     {
         var expectedGeneration = loadGeneration;
-        var snapshotResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoad(path, localization));
+        var snapshotResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoad(
+            path,
+            localization,
+            objectName,
+            uniqueId));
         if (IsDisposed || Disposing || expectedGeneration != loadGeneration || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
         {
             return;

@@ -17,6 +17,7 @@
     <Compile Include="VsixCommandLocalizationTests.cs" />
     <Compile Include="VsixEditorPaneLocalizationTests.cs" />
     <Compile Include="VsixSnapshotModelTests.cs" />
+    <Compile Include="..\Copperfin.Studio\CopperfinStudioStartupArguments.cs" Link="Shared\CopperfinStudioStartupArguments.cs" />
     <Compile Include="..\Copperfin.Studio\CopperfinDocumentPathIdentity.cs" Link="Shared\CopperfinDocumentPathIdentity.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />

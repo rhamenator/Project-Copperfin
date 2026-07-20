@@ -3,7 +3,6 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -17,15 +16,20 @@ internal static class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         var localization = new CopperfinLocalization(ReadLocaleArgument(args));
-        using var form = new StudioMainForm(localization);
-        foreach (var candidate in ReadAssetArguments(args))
+        if (!CopperfinStudioStartupArguments.TryParse(args, localization, out var documents, out var error))
         {
-            if (string.IsNullOrWhiteSpace(candidate))
-            {
-                continue;
-            }
+            MessageBox.Show(
+                error,
+                localization.Text("Studio.AppTitle"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
 
-            form.OpenDocument(candidate);
+        using var form = new StudioMainForm(localization);
+        foreach (var document in documents)
+        {
+            form.OpenDocument(document.Path, document.ObjectName, document.UniqueId);
         }
 
         Application.Run(form);
@@ -48,17 +52,4 @@ internal static class Program
             : locale;
     }
 
-    private static IEnumerable<string> ReadAssetArguments(string[] args)
-    {
-        for (var index = 0; index < args.Length; ++index)
-        {
-            if (string.Equals(args[index], "--locale", StringComparison.OrdinalIgnoreCase))
-            {
-                ++index;
-                continue;
-            }
-
-            yield return args[index];
-        }
-    }
 }

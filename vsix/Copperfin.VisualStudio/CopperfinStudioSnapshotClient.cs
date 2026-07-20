@@ -211,7 +211,9 @@ internal static class CopperfinStudioSnapshotClient
 
     public static CopperfinStudioSnapshotResult TryLoad(
         string assetPath,
-        CopperfinLocalization? localization = null)
+        CopperfinLocalization? localization = null,
+        string? objectName = null,
+        string? uniqueId = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
@@ -226,7 +228,11 @@ internal static class CopperfinStudioSnapshotClient
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: false) + " --json",
+            CopperfinStudioHostBridge.BuildArguments(
+                assetPath,
+                readOnly: false,
+                objectName: objectName,
+                uniqueId: uniqueId) + " --json",
             localization);
     }
 

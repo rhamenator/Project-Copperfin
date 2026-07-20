@@ -69,7 +69,7 @@ internal sealed class StudioMainForm : Form
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
-    public void OpenDocument(string path)
+    public void OpenDocument(string path, string? objectName = null, string? uniqueId = null)
     {
         if (!File.Exists(path))
         {
@@ -95,7 +95,7 @@ internal sealed class StudioMainForm : Form
             Dock = DockStyle.Fill,
             EmbeddedStudioShell = true
         };
-        editorControl.OpenDocumentRequested += OpenDocument;
+        editorControl.OpenDocumentRequested += path => OpenDocument(path);
 
         var page = new TabPage(Path.GetFileName(normalizedPath))
         {
@@ -105,7 +105,7 @@ internal sealed class StudioMainForm : Form
         documentTabs.TabPages.Add(page);
         documentTabs.SelectedTab = page;
         openDocuments[normalizedPath] = page;
-        editorControl.LoadDocument(normalizedPath);
+        editorControl.LoadDocument(normalizedPath, objectName, uniqueId);
 
         var assetKind = CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath, localization);
         Text = localization.Format("Studio.WindowTitleWithAssetKind", assetKind);

@@ -33,6 +33,9 @@ internal static partial class Program
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestDesignerSelectionHonorsReadOnlyDocumentState();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
+        TestStudioStartupArgumentsPreserveSelectors();
+        TestStudioStartupArgumentsRejectMalformedSelectors();
+        TestStudioHostBuildArgumentsPreserveStartupSelectors();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
         TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
@@ -422,6 +425,66 @@ internal static partial class Program
                startInfo.RedirectStandardError &&
                startInfo.CreateNoWindow,
             "direct Studio host executable launch info should preserve non-shell redirected execution");
+    }
+
+    private static void TestStudioStartupArgumentsPreserveSelectors()
+    {
+        var localization = new CopperfinLocalization("en-US");
+        var parsed = CopperfinStudioStartupArguments.TryParse(
+            new[] { "--locale", "en-US", "--path", @"C:\Samples\form.scx", "--object-name", "cmdSave", "--unique-id", "cmd-save-guid" },
+            localization,
+            out var documents,
+            out var error);
+
+        Expect(parsed && error is null && documents.Count == 1,
+            "standalone Studio startup parsing should accept one form path with both selectors");
+        if (documents.Count == 1)
+        {
+            Expect(documents[0].Path == @"C:\Samples\form.scx" &&
+                   documents[0].ObjectName == "cmdSave" &&
+                   documents[0].UniqueId == "cmd-save-guid",
+                "standalone Studio startup parsing should preserve selector values and the document path");
+        }
+    }
+
+    private static void TestStudioStartupArgumentsRejectMalformedSelectors()
+    {
+        var localization = new CopperfinLocalization("es-419");
+
+        var cases = new[]
+        {
+            (Arguments: new[] { @"C:\Samples\form.scx", "--object-name" },
+             Expected: "La opción de inicio de Copperfin Studio '"),
+            (Arguments: new[] { @"C:\Samples\form.scx", "--unique-id", "one", "--unique-id", "two" },
+             Expected: "El selector de inicio de Copperfin Studio '"),
+            (Arguments: new[] { @"C:\Samples\form.scx", "--not-a-startup-option" },
+             Expected: "El argumento de inicio de Copperfin Studio '"),
+            (Arguments: new[] { @"C:\Samples\invoice.frx", "--unique-id", "invoice-guid" },
+             Expected: "Los selectores de inicio se aplican solo a activos de formulario y biblioteca de clases.")
+        };
+
+        foreach (var testCase in cases)
+        {
+            var parsed = CopperfinStudioStartupArguments.TryParse(
+                testCase.Arguments,
+                localization,
+                out var documents,
+                out var error);
+            Expect(!parsed && documents.Count == 0 &&
+                   !string.IsNullOrWhiteSpace(error) && error!.StartsWith(testCase.Expected, StringComparison.Ordinal),
+                "malformed standalone Studio selectors should fail with localized diagnostics");
+        }
+    }
+
+    private static void TestStudioHostBuildArgumentsPreserveStartupSelectors()
+    {
+        var arguments = CopperfinStudioHostBridge.BuildArguments(
+            @"C:\Samples\form.scx",
+            objectName: "cmd Save",
+            uniqueId: "cmd-save-guid");
+
+        Expect(arguments == "--from-vs --path \"C:\\Samples\\form.scx\" --object-name \"cmd Save\" --unique-id \"cmd-save-guid\"",
+            "managed Studio host bridge should preserve optional startup selectors after the invariant path argument");
     }
 
     private static void TestStudioHostProcessStartInfoWrapsWindowsBatchHosts()
