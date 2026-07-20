@@ -1261,7 +1261,8 @@ bool package_path_component_equal(
     // CompareStringOrdinal does not provide the same invariant simple-case
     // mapping for every Unicode code point on all supported Windows builds.
     // Normalize both components through the invariant locale before deciding
-    // that a package-root spelling is different.
+    // that a package-root spelling is different. Older Windows environments
+    // can reject the invariant mapping call, so retain a native API fallback.
     const auto invariant_lowercase = [](const std::wstring& value) {
         if (value.empty()) {
             return std::wstring{};
@@ -1276,23 +1277,27 @@ bool package_path_component_equal(
             nullptr,
             nullptr,
             0);
-        if (required <= 0) {
+        if (required > 0) {
+            std::wstring mapped(static_cast<std::size_t>(required), L'\0');
+            if (::LCMapStringEx(
+                    LOCALE_NAME_INVARIANT,
+                    LCMAP_LOWERCASE,
+                    value.c_str(),
+                    static_cast<int>(value.size()),
+                    mapped.data(),
+                    required,
+                    nullptr,
+                    nullptr,
+                    0) > 0) {
+                return mapped;
+            }
+        }
+
+        std::wstring fallback = value;
+        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
             return std::wstring{};
         }
-        std::wstring mapped(static_cast<std::size_t>(required), L'\0');
-        if (::LCMapStringEx(
-                LOCALE_NAME_INVARIANT,
-                LCMAP_LOWERCASE,
-                value.c_str(),
-                static_cast<int>(value.size()),
-                mapped.data(),
-                required,
-                nullptr,
-                nullptr,
-                0) <= 0) {
-            return std::wstring{};
-        }
-        return mapped;
+        return fallback;
     };
     const std::wstring left_lower = invariant_lowercase(left_value);
     const std::wstring right_lower = invariant_lowercase(right_value);
