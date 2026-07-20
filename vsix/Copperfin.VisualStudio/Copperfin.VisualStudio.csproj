@@ -79,6 +79,18 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="es\Extension.vsixlangpack">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>es</VSIXSubPath>
+    </Content>
+    <Content Include="pt\Extension.vsixlangpack">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>pt</VSIXSubPath>
+    </Content>
+    <Content Include="qps-ploc\Extension.vsixlangpack">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>qps-ploc</VSIXSubPath>
+    </Content>
   </ItemGroup>
 
   <Target Name="PackageVsixAfterBuild"

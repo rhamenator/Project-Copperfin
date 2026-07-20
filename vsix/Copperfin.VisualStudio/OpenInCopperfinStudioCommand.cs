@@ -15,7 +15,7 @@ namespace Copperfin.VisualStudio;
 internal sealed class OpenInCopperfinStudioCommand
 {
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromVisualStudioUiCulture();
 
     private readonly AsyncPackage package;
 

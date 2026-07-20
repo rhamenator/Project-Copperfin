@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageLanguagePackManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
+  <Metadata>
+    <DisplayName>Copperfin para Visual Studio</DisplayName>
+    <Description>Inicia o Copperfin Studio para ativos no estilo Visual FoxPro e prepara o caminho para designers de ativos nativos.</Description>
+  </Metadata>
+</PackageLanguagePackManifest>

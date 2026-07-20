@@ -24,14 +24,17 @@ internal static partial class Program
         var packageSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinPackage.cs"));
         var paneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowPane.cs"));
         var commandSource = File.ReadAllText(Path.Combine(vsixRoot, "ShowCopperfinCommandWindowCommand.cs"));
+        var controlSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowControl.cs"));
         var commandTable = File.ReadAllText(Path.Combine(vsixRoot, "Copperfin.vsct"));
+        var projectSource = File.ReadAllText(Path.Combine(vsixRoot, "Copperfin.VisualStudio.csproj"));
 
         Expect(packageSource.Contains("ProvideToolWindow(", StringComparison.Ordinal) &&
                packageSource.Contains("typeof(CopperfinCommandWindowPane)", StringComparison.Ordinal),
             "VSIX package should register the Copperfin command window");
         Expect(packageSource.Contains("Style = VsDockStyle.Tabbed", StringComparison.Ordinal) &&
-               packageSource.Contains("Orientation = ToolWindowOrientation.Bottom", StringComparison.Ordinal),
-            "VSIX command window should default to the Visual Studio bottom tabbed tool-window region");
+               packageSource.Contains("Orientation = ToolWindowOrientation.Bottom", StringComparison.Ordinal) &&
+               packageSource.Contains("Window = ToolWindowGuids80.Outputwindow", StringComparison.Ordinal),
+            "VSIX command window should default to the Visual Studio Output-window bottom tabbed region");
         Expect(packageSource.Contains("ShowCopperfinCommandWindowCommand.InitializeAsync(this)", StringComparison.Ordinal),
             "VSIX package should initialize the command-window command");
         Expect(paneSource.Contains("[Guid(PackageGuids.CommandWindowString)]", StringComparison.Ordinal) &&
@@ -41,6 +44,18 @@ internal static partial class Program
         Expect(commandSource.Contains("ShowToolWindowAsync", StringComparison.Ordinal) &&
                commandSource.Contains("typeof(CopperfinCommandWindowPane)", StringComparison.Ordinal),
             "VSIX command should show the registered command window instead of launching a second shell");
+        Expect(controlSource.Contains("VSColorTheme.GetThemedColor", StringComparison.Ordinal) &&
+               controlSource.Contains("EnvironmentColors.ToolWindowBackgroundColorKey", StringComparison.Ordinal) &&
+               controlSource.Contains("VsShellUtilities.GetEnvironmentFont", StringComparison.Ordinal),
+            "VSIX command window should use Visual Studio theme colors and environment font settings");
+        Expect(File.ReadAllText(Path.Combine(vsixRoot, "OpenInCopperfinStudioCommand.cs"))
+                   .Contains("FromVisualStudioUiCulture()", StringComparison.Ordinal) &&
+               File.ReadAllText(Path.Combine(vsixRoot, "CopperfinProjectCommands.cs"))
+                   .Contains("FromVisualStudioUiCulture()", StringComparison.Ordinal),
+            "VSIX command captions should follow the Visual Studio UI culture");
+        Expect(projectSource.Contains("Extension.vsixlangpack", StringComparison.Ordinal) &&
+               projectSource.Contains("IncludeInVSIX", StringComparison.Ordinal),
+            "VSIX project should package localized installation metadata");
         Expect(commandTable.Contains("ShowCopperfinCommandWindowCommand", StringComparison.Ordinal) &&
                commandTable.Contains("value=\"0x0300\"", StringComparison.Ordinal) &&
                commandTable.Contains(".Copperfin.ShowCommandWindow", StringComparison.Ordinal),
@@ -60,6 +75,23 @@ internal static partial class Program
             Expect(root.TryGetProperty("VSIX.CommandWindow.Unavailable", out var unavailable) &&
                    !string.IsNullOrWhiteSpace(unavailable.GetString()),
                 $"{locale} catalog should provide the command-window unavailable message");
+        }
+
+        foreach (var languageFolder in new[] { "es", "pt", "qps-ploc" })
+        {
+            var languagePackPath = Path.Combine(vsixRoot, languageFolder, "Extension.vsixlangpack");
+            Expect(File.Exists(languagePackPath),
+                $"VSIX should include an installation language pack for {languageFolder}");
+            if (!File.Exists(languagePackPath))
+            {
+                continue;
+            }
+
+            var languagePack = File.ReadAllText(languagePackPath);
+            Expect(languagePack.Contains("PackageLanguagePackManifest", StringComparison.Ordinal) &&
+                   languagePack.Contains("<DisplayName>", StringComparison.Ordinal) &&
+                   languagePack.Contains("<Description>", StringComparison.Ordinal),
+                $"VSIX installation language pack for {languageFolder} should contain localized metadata");
         }
     }
 }

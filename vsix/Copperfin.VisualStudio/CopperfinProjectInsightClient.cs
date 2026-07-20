@@ -12,7 +12,7 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinProjectInsightClient
 {
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromVisualStudioUiCulture();
 
     private static readonly string[] TaskMarkers = { "TODO", "FIXME", "HACK", "BUG", "UNDONE" };
     private static readonly Regex ProcedureRegex = new(@"^\s*PROCEDURE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

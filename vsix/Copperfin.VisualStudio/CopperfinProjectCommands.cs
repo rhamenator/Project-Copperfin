@@ -17,7 +17,7 @@ internal sealed class CopperfinProjectCommands
     private const int RunCommandId = 0x0201;
     private const int DebugCommandId = 0x0202;
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromVisualStudioUiCulture();
 
     private readonly AsyncPackage package;
 

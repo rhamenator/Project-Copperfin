@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Copperfin.VisualStudio;
 
@@ -20,6 +21,7 @@ namespace Copperfin.VisualStudio;
     typeof(CopperfinCommandWindowPane),
     Style = VsDockStyle.Tabbed,
     Orientation = ToolWindowOrientation.Bottom,
+    Window = ToolWindowGuids80.Outputwindow,
     DockedHeight = 240)]
 [ProvideEditorFactory(typeof(CopperfinAssetEditorFactory), 200)]
 [ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".pjx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
