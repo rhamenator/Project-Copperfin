@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <algorithm>
 
 namespace
 {
@@ -118,11 +119,167 @@ void test_native_show_hide_refresh_events()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_query_unload_runs_for_quit_but_not_direct_release()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_native_query_unload";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_query_unload.prg";
+    write_text(
+        main_path,
+        "PUBLIC cEvents\n"
+        "cEvents = ''\n"
+        "oDirect = CREATEOBJECT('DirectForm')\n"
+        "oDirect.Release()\n"
+        "cDirectEvents = cEvents\n"
+        "oSet = CREATEOBJECT('QueryFormSet')\n"
+        "QUIT\n"
+        "RETURN\n"
+        "DEFINE CLASS DirectForm AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'direct-query;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'direct-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'direct-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS QueryChild AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'child-query;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'child-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'child-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS QueryFormSet AS FormSet\n"
+        "    ADD OBJECT frmChild AS QueryChild\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'set-query;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'set-destroy;'\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Unload\n"
+        "        cEvents = cEvents + 'set-unload;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "native QueryUnload QUIT script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present");
+        if (it != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cdirectevents", "direct-destroy;direct-unload;");
+    check("cevents", "direct-destroy;direct-unload;child-query;set-query;child-destroy;child-unload;set-destroy;set-unload;");
+    expect(has_runtime_event(state.events, "prg.object.queryunload", "QueryChild.QueryUnload"),
+           "QUIT should dispatch QueryUnload on the child form before release");
+    expect(has_runtime_event(state.events, "prg.object.queryunload", "QueryFormSet.QueryUnload"),
+           "QUIT should dispatch QueryUnload on the formset");
+    expect(!has_runtime_event(state.events, "prg.object.queryunload", "DirectForm.QueryUnload"),
+           "direct Release should not dispatch QueryUnload");
+    expect(has_runtime_event(state.events, "prg.object.destroy", "QueryChild.Destroy"),
+           "accepted QUIT should continue to child Destroy");
+    expect(has_runtime_event(state.events, "prg.object.unload", "QueryFormSet.Unload"),
+           "accepted QUIT should continue to formset Unload");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_native_query_unload_nodefault_vetoes_quit()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_native_query_unload_veto";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_query_unload_veto.prg";
+    write_text(
+        main_path,
+        "PUBLIC cEvents\n"
+        "cEvents = ''\n"
+        "oVeto = CREATEOBJECT('VetoForm')\n"
+        "QUIT\n"
+        "lStillAlive = PEMSTATUS(oVeto, 'cEvents', 1)\n"
+        "cAfterQuit = cEvents\n"
+        "oVeto.Release()\n"
+        "RETURN\n"
+        "DEFINE CLASS VetoForm AS Form\n"
+        "    cEvents = ''\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'query;'\n"
+        "        NODEFAULT\n"
+        "    ENDPROC\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'destroy;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "native QueryUnload veto script should continue: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " variable should be present");
+        if (it != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("lstillalive", "true");
+    check("cafterquit", "query;");
+    expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "VetoForm"),
+           "NODEFAULT from QueryUnload should veto QUIT");
+    expect(has_runtime_event(state.events, "prg.object.destroy", "VetoForm.Destroy"),
+           "direct Release after a veto should still destroy the form");
+    const auto query_unload_count = static_cast<std::size_t>(std::count_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const auto& event)
+        {
+            return event.category == "prg.object.queryunload" &&
+                   event.detail == "VetoForm.QueryUnload";
+        }));
+    expect(query_unload_count == 1U,
+           "direct Release after a veto should not dispatch QueryUnload again");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 } // namespace
 
 int main()
 {
     test_native_show_hide_refresh_events();
+    test_native_query_unload_runs_for_quit_but_not_direct_release();
+    test_native_query_unload_nodefault_vetoes_quit();
     if (test_failures() != 0)
     {
         std::cerr << test_failures() << " test(s) failed.\n";

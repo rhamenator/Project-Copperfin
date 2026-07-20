@@ -68,6 +68,162 @@
             procedure_program_paths.clear();
         }
 
+        std::vector<int> collect_native_shutdown_roots() const
+        {
+            std::vector<int> roots;
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                const auto parent_reference = native_object_parent_reference(runtime_object);
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (!parent_reference.has_value() ||
+                    !parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id) ||
+                    !ole_objects.contains(parent_handle))
+                {
+                    roots.push_back(handle);
+                }
+            }
+
+            if (roots.empty())
+            {
+                for (const auto &[handle, _] : ole_objects)
+                {
+                    roots.push_back(handle);
+                }
+            }
+            return roots;
+        }
+
+        std::vector<int> collect_native_shutdown_order()
+        {
+            struct PendingObject
+            {
+                int handle = 0;
+                bool children_queued = false;
+            };
+
+            std::vector<int> order;
+            std::vector<PendingObject> pending;
+            std::set<int> scheduled_handles;
+            const auto append_tree = [&](int root_handle) -> void
+            {
+                if (!scheduled_handles.insert(root_handle).second)
+                {
+                    return;
+                }
+                pending.push_back({.handle = root_handle, .children_queued = false});
+                while (!pending.empty())
+                {
+                    const PendingObject current = pending.back();
+                    pending.pop_back();
+                    const auto found = ole_objects.find(current.handle);
+                    if (found == ole_objects.end())
+                    {
+                        continue;
+                    }
+
+                    if (!current.children_queued)
+                    {
+                        pending.push_back({.handle = current.handle, .children_queued = true});
+                        const std::vector<int> child_handles =
+                            collect_native_owned_child_handles(found->second);
+                        for (auto it = child_handles.rbegin(); it != child_handles.rend(); ++it)
+                        {
+                            if (scheduled_handles.insert(*it).second)
+                            {
+                                pending.push_back({.handle = *it, .children_queued = false});
+                            }
+                        }
+                        continue;
+                    }
+
+                    order.push_back(current.handle);
+                }
+            };
+
+            for (const int root_handle : collect_native_shutdown_roots())
+            {
+                append_tree(root_handle);
+            }
+            for (const auto &[handle, _] : ole_objects)
+            {
+                append_tree(handle);
+            }
+            return order;
+        }
+
+        bool dispatch_query_unload_for_quit(const SourceLocation &location)
+        {
+            for (const int handle : collect_native_shutdown_order())
+            {
+                auto found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    continue;
+                }
+
+                const std::string normalized_base_class =
+                    normalize_identifier(trim_copy(found->second.base_class_name));
+                if (normalized_base_class != "form" && normalized_base_class != "formset")
+                {
+                    continue;
+                }
+
+                std::string query_unload_program_path;
+                std::string query_unload_method_name;
+                if (find_native_object_method(
+                        found->second,
+                        "queryunload",
+                        query_unload_program_path,
+                        query_unload_method_name) == nullptr)
+                {
+                    continue;
+                }
+                if (!can_push_frame() || stack.empty())
+                {
+                    throw std::runtime_error(call_depth_limit_message());
+                }
+
+                events.push_back({.category = "prg.object.queryunload",
+                                  .detail = query_unload_method_name,
+                                  .location = location});
+                last_popped_frame_requested_nodefault = false;
+                bool query_unload_requested_nodefault = false;
+                const auto query_unload_result = invoke_native_object_method_if_present(
+                    found->second,
+                    "queryunload",
+                    stack.back(),
+                    {},
+                    {},
+                    &query_unload_requested_nodefault);
+                (void)consume_last_popped_frame_requested_nodefault();
+                const bool query_unload_rejected =
+                    query_unload_result.has_value() &&
+                    query_unload_result->kind != PrgValueKind::empty &&
+                    !value_as_bool(*query_unload_result);
+                if (query_unload_rejected || query_unload_requested_nodefault)
+                {
+                    events.push_back({.category = "prg.object.queryunload_veto",
+                                      .detail = found->second.prog_id,
+                                      .location = location});
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        void release_native_objects_for_shutdown()
+        {
+            for (const int handle : collect_native_shutdown_roots())
+            {
+                const auto found = ole_objects.find(handle);
+                if (found != ole_objects.end())
+                {
+                    (void)release_native_object(found->second, "QUIT");
+                }
+            }
+        }
+
         void close_runtime_scope(const std::string &scope, const SourceLocation &location)
         {
             DataSessionState &session = current_session_state();
@@ -175,8 +331,18 @@
             }
         }
 
-        void perform_quit(const SourceLocation &location)
+        bool perform_quit(const SourceLocation &location)
         {
+            if (!dispatch_query_unload_for_quit(location))
+            {
+                quit_pending_after_shutdown = false;
+                pending_quit_location = {};
+                events.push_back({.category = "runtime.quit_cancelled",
+                                  .detail = "QueryUnload veto",
+                                  .location = location});
+                return false;
+            }
+
             waiting_for_events = false;
             restore_event_loop_after_dispatch = false;
             event_dispatch_return_depth.reset();
@@ -189,6 +355,7 @@
             pending_quit_location = {};
             abandon_expression_continuations();
 
+            release_native_objects_for_shutdown();
             cleanup_runtime_resources_for_shutdown();
             events.push_back({.category = "runtime.quit",
                               .detail = "QUIT",
@@ -207,6 +374,7 @@
                     top.pc = top.routine->statements.size();
                 }
             }
+            return true;
         }
 
         bool dispatch_shutdown_handler(const Frame &source_frame, const SourceLocation &location)
