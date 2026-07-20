@@ -145,9 +145,10 @@ inline bool path_component_equal_for_platform(
         }
 
         std::wstring fallback = value;
-        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
-            return std::wstring{};
-        }
+        // CharLowerBuffW returns zero when the buffer needs no changes as
+        // well as when the call cannot process the buffer. The unchanged
+        // value is still a valid case-folding result.
+        (void)::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size()));
         return fallback;
     };
     return invariant_lowercase(left_value) == invariant_lowercase(right_value);
