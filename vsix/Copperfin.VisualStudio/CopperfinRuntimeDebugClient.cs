@@ -411,6 +411,10 @@ internal static class CopperfinRuntimeDebugClient
 
         var key = line.Substring(0, separator);
         var value = line.Substring(separator + 2);
+        if (IsEscapedDebugLineValueKey(key))
+        {
+            value = UnescapeDebugLineValue(value);
+        }
 
         if (string.Equals(key, "debug.reason", StringComparison.OrdinalIgnoreCase))
         {
@@ -469,6 +473,50 @@ internal static class CopperfinRuntimeDebugClient
         }
 
         _ = TryParseEvent(state, key, value);
+    }
+
+    private static bool IsEscapedDebugLineValueKey(string key)
+    {
+        return key.StartsWith("debug.global.", StringComparison.OrdinalIgnoreCase) ||
+               (key.StartsWith("debug.frame[", StringComparison.OrdinalIgnoreCase) &&
+                key.IndexOf("].local.", StringComparison.OrdinalIgnoreCase) >= 0) ||
+               string.Equals(key, "debug.watch.expression", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(key, "debug.watch.value", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(key, "debug.watch.error", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string UnescapeDebugLineValue(string value)
+    {
+        if (value.IndexOf('\\') < 0)
+        {
+            return value;
+        }
+
+        var builder = new System.Text.StringBuilder(value.Length);
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] != '\\' || index + 1 >= value.Length)
+            {
+                builder.Append(value[index]);
+                continue;
+            }
+
+            var escaped = value[++index];
+            builder.Append(escaped switch
+            {
+                '\\' => '\\',
+                'n' => '\n',
+                'r' => '\r',
+                't' => '\t',
+                _ => '\\'
+            });
+            if (escaped is not ('\\' or 'n' or 'r' or 't'))
+            {
+                builder.Append(escaped);
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static bool TryParseFrame(CopperfinRuntimePauseState state, string key, string value)

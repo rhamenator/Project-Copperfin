@@ -56,6 +56,7 @@ internal static partial class Program
         TestProjectWorkflowUsesDistinctOutputDirectoriesForBackToBackBuildsOnPosix();
         TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix();
         TestRuntimeDebugClientCleansTransientReplayManifestOnPosix();
+        TestRuntimeDebugParserUnescapesEscapedLineValues();
         TestProcessRunnerCapturesLargeConcurrentOutput();
         TestProcessRunnerPreservesSuccessfulExitWhenDescendantHoldsPipe();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
@@ -993,6 +994,24 @@ internal static partial class Program
             Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
             TryDelete(root);
         }
+    }
+
+    private static void TestRuntimeDebugParserUnescapesEscapedLineValues()
+    {
+        var state = CopperfinRuntimeDebugClient.ParsePauseState(
+            "debug.command[0]: continue\n" +
+            "debug.global.cGlobal: line1\\r\\n\\t\\\\tail\n" +
+            "debug.frame[0].local.cLocal: line1\\r\\n\\t\\\\tail\n" +
+            "debug.location: C:\\notes\\nfile.prg:3\n");
+        const string expected = "line1\r\n\t\\tail";
+
+        Expect(state.Globals.Count == 1 && state.Globals[0].Value == expected,
+            "runtime debug parser should decode escaped multiline global values");
+        Expect(state.Frames.Count == 1 && state.Frames[0].Locals.Count == 1 &&
+               state.Frames[0].Locals[0].Value == expected,
+            "runtime debug parser should decode escaped multiline local values");
+        Expect(state.Location == @"C:\notes\nfile.prg:3",
+            "runtime debug parser should preserve unencoded path fields containing escape-like text");
     }
 
     private static void TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix()

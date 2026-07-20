@@ -181,6 +181,31 @@ std::string escape_json_string(const std::string& value) {
     return result;
 }
 
+std::string escape_debug_line_value(const std::string& value) {
+    std::string result;
+    result.reserve(value.size());
+    for (const char ch : value) {
+        switch (ch) {
+            case '\\':
+                result += "\\\\";
+                break;
+            case '\n':
+                result += "\\n";
+                break;
+            case '\r':
+                result += "\\r";
+                break;
+            case '\t':
+                result += "\\t";
+                break;
+            default:
+                result.push_back(ch);
+                break;
+        }
+    }
+    return result;
+}
+
 std::optional<std::string> parse_json_string_at(
     const std::string& document,
     std::size_t value_start,
@@ -2179,11 +2204,13 @@ void print_pause_state(
         const auto& frame = state.call_stack[index];
         std::cout << "debug.frame[" << index << "]: " << frame.routine_name << "@" << frame.file_path << ":" << frame.line << "\n";
         for (const auto& [name, value] : frame.locals) {
-            std::cout << "debug.frame[" << index << "].local." << name << ": " << copperfin::runtime::format_value(value) << "\n";
+            std::cout << "debug.frame[" << index << "].local." << name << ": "
+                      << escape_debug_line_value(copperfin::runtime::format_value(value)) << "\n";
         }
     }
     for (const auto& [name, value] : state.globals) {
-        std::cout << "debug.global." << name << ": " << copperfin::runtime::format_value(value) << "\n";
+        std::cout << "debug.global." << name << ": "
+                  << escape_debug_line_value(copperfin::runtime::format_value(value)) << "\n";
     }
     for (std::size_t index = 0; index < state.events.size(); ++index) {
         const auto& event = state.events[index];
@@ -3762,9 +3789,10 @@ int run_runtime_host_main(int argc, char** argv) {
                     std::cout << "debug.watch.expression: " << watch.expression << "\n";
                     std::cout << "debug.watch.ok: " << (watch.ok ? "true" : "false") << "\n";
                     if (watch.ok) {
-                        std::cout << "debug.watch.value: " << copperfin::runtime::format_value(watch.value) << "\n";
+                        std::cout << "debug.watch.value: "
+                                  << escape_debug_line_value(copperfin::runtime::format_value(watch.value)) << "\n";
                     } else {
-                        std::cout << "debug.watch.error: " << watch.message << "\n";
+                        std::cout << "debug.watch.error: " << escape_debug_line_value(watch.message) << "\n";
                     }
                     const auto breakpoints = session.list_breakpoints();
                     print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
@@ -3919,12 +3947,14 @@ int run_runtime_host_main(int argc, char** argv) {
                 }
                 const auto watch = session.evaluate_watch_expression(command.substr(6U));
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
-                std::cout << "debug.watch.expression: " << watch.expression << "\n";
+                std::cout << "debug.watch.expression: "
+                          << escape_debug_line_value(watch.expression) << "\n";
                 std::cout << "debug.watch.ok: " << (watch.ok ? "true" : "false") << "\n";
                 if (watch.ok) {
-                    std::cout << "debug.watch.value: " << copperfin::runtime::format_value(watch.value) << "\n";
+                    std::cout << "debug.watch.value: "
+                              << escape_debug_line_value(copperfin::runtime::format_value(watch.value)) << "\n";
                 } else {
-                    std::cout << "debug.watch.error: " << watch.message << "\n";
+                    std::cout << "debug.watch.error: " << escape_debug_line_value(watch.message) << "\n";
                 }
                 const auto breakpoints = session.list_breakpoints();
                 print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);

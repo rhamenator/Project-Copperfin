@@ -867,6 +867,66 @@ void test_runtime_host_watch_errors_localize_without_changing_watch_fields(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_escapes_multiline_debug_values(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_multiline_debug_value_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const fs::path startup_path = temp_root / "multiline.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(
+        startup_path,
+        "PUBLIC cGlobal\n"
+        "LOCAL cLocal\n"
+        "cGlobal = \"line1\" + CHR(13) + CHR(10) + CHR(9) + \"\\tail\"\n"
+        "cLocal = \"line1\" + CHR(13) + CHR(10) + CHR(9) + \"\\tail\"\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=MultilineDebugValues\n"
+        "startup_item=multiline.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--debug-server",
+            "--breakpoint", startup_path.string() + ":5"
+        },
+        temp_root,
+        "continue\ncontinue\nwatch:cLocal\nwatch:cGlobal\nexit\n");
+    const std::string escaped_value = "line1\\r\\n\\t\\\\tail";
+    const std::string escaped_watch_value = "debug.watch.value: " + escaped_value;
+    const std::string escaped_local_value = "debug.frame[0].local.clocal: " + escaped_value;
+    const std::string escaped_global_value = "debug.global.cglobal: " + escaped_value;
+    expect(process.exit_code == 0,
+           "#4300: multiline debug values should keep the persistent debug server exit contract");
+    expect(process.stdout_text.find(escaped_watch_value) != std::string::npos,
+           "#4300: watch values should escape CR, LF, tab, and backslash characters");
+    expect(process.stdout_text.find(escaped_local_value) != std::string::npos,
+           "#4300: local values should escape CR, LF, tab, and backslash characters");
+    expect(process.stdout_text.find(escaped_global_value) != std::string::npos,
+           "#4300: global values should escape CR, LF, tab, and backslash characters");
+    expect(process.stdout_text.find("debug.watch.value: line1\r") == std::string::npos &&
+               process.stdout_text.find("debug.watch.value: line1\n") == std::string::npos,
+           "#4300: escaped debug values should not inject raw line breaks into responses");
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;

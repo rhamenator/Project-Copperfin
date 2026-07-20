@@ -33,6 +33,7 @@ void test_runtime_host_rejects_invalid_debug_command_without_execution(const std
 void test_runtime_host_rejects_invalid_startup_breakpoint_without_execution(const std::string& runtime_host_path);
 void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(const std::string& runtime_host_path);
 void test_runtime_host_watch_errors_localize_without_changing_watch_fields(const std::string& runtime_host_path);
+void test_runtime_host_escapes_multiline_debug_values(const std::string& runtime_host_path);
 void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(const std::string& runtime_host_path);
 
 void run_runtime_host_test(
@@ -79,6 +80,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("invalid startup breakpoint rejection", runtime_host_path, test_runtime_host_rejects_invalid_startup_breakpoint_without_execution);
     run_runtime_host_test("pause localization", runtime_host_path, test_runtime_host_pause_messages_localize_without_changing_pause_reasons);
     run_runtime_host_test("watch localization", runtime_host_path, test_runtime_host_watch_errors_localize_without_changing_watch_fields);
+    run_runtime_host_test("multiline debug values", runtime_host_path, test_runtime_host_escapes_multiline_debug_values);
     run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);
 
     if (failures != 0) {
