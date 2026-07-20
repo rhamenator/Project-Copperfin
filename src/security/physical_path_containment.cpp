@@ -4,6 +4,8 @@
 
 #include "copperfin/security/physical_path_containment.h"
 
+#include "copperfin/platform/path.h"
+
 #include <array>
 #include <cerrno>
 #include <cstdint>
@@ -55,14 +57,9 @@ std::optional<std::filesystem::path> contained_relative_path(
         if (path_iterator == path.end()) {
             return std::nullopt;
         }
-        const auto path_component = path_iterator->native();
-        const auto root_component = root_iterator->native();
-        if (::CompareStringOrdinal(
-                path_component.data(),
-                static_cast<int>(path_component.size()),
-                root_component.data(),
-                static_cast<int>(root_component.size()),
-                TRUE) != CSTR_EQUAL) {
+        if (!copperfin::platform::path_component_equal_for_platform(
+                *path_iterator,
+                *root_iterator)) {
             return std::nullopt;
         }
     }

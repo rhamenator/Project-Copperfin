@@ -96,4 +96,64 @@ inline std::filesystem::path path_from_utf8_string(std::string_view value) {
 #endif
 }
 
+inline bool path_component_equal_for_platform(
+    const std::filesystem::path& left,
+    const std::filesystem::path& right) {
+#if defined(_WIN32)
+    const std::wstring left_value = left.native();
+    const std::wstring right_value = right.native();
+    if (::CompareStringOrdinal(
+            left_value.c_str(),
+            static_cast<int>(left_value.size()),
+            right_value.c_str(),
+            static_cast<int>(right_value.size()),
+            TRUE) == CSTR_EQUAL) {
+        return true;
+    }
+
+    // Some supported Windows environments do not provide complete Unicode
+    // simple-case behavior through CompareStringOrdinal alone. Prefer the
+    // invariant mapping API, with a native fallback when it is unavailable.
+    const auto invariant_lowercase = [](const std::wstring& value) {
+        if (value.empty()) {
+            return std::wstring{};
+        }
+        const int required = ::LCMapStringEx(
+            LOCALE_NAME_INVARIANT,
+            LCMAP_LOWERCASE,
+            value.c_str(),
+            static_cast<int>(value.size()),
+            nullptr,
+            0,
+            nullptr,
+            nullptr,
+            0);
+        if (required > 0) {
+            std::wstring mapped(static_cast<std::size_t>(required), L'\0');
+            if (::LCMapStringEx(
+                    LOCALE_NAME_INVARIANT,
+                    LCMAP_LOWERCASE,
+                    value.c_str(),
+                    static_cast<int>(value.size()),
+                    mapped.data(),
+                    required,
+                    nullptr,
+                    nullptr,
+                    0) > 0) {
+                return mapped;
+            }
+        }
+
+        std::wstring fallback = value;
+        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
+            return std::wstring{};
+        }
+        return fallback;
+    };
+    return invariant_lowercase(left_value) == invariant_lowercase(right_value);
+#else
+    return left == right;
+#endif
+}
+
 }  // namespace copperfin::platform

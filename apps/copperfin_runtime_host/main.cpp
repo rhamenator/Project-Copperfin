@@ -1246,65 +1246,7 @@ bool relative_path_escapes_root(const std::filesystem::path& relative_path) {
 bool package_path_component_equal(
     const std::filesystem::path& left,
     const std::filesystem::path& right) {
-#if defined(_WIN32)
-    const std::wstring left_value = left.native();
-    const std::wstring right_value = right.native();
-    if (::CompareStringOrdinal(
-               left_value.c_str(),
-               static_cast<int>(left_value.size()),
-               right_value.c_str(),
-               static_cast<int>(right_value.size()),
-               TRUE) == CSTR_EQUAL) {
-        return true;
-    }
-
-    // CompareStringOrdinal does not provide the same invariant simple-case
-    // mapping for every Unicode code point on all supported Windows builds.
-    // Normalize both components through the invariant locale before deciding
-    // that a package-root spelling is different. Older Windows environments
-    // can reject the invariant mapping call, so retain a native API fallback.
-    const auto invariant_lowercase = [](const std::wstring& value) {
-        if (value.empty()) {
-            return std::wstring{};
-        }
-        const int required = ::LCMapStringEx(
-            LOCALE_NAME_INVARIANT,
-            LCMAP_LOWERCASE,
-            value.c_str(),
-            static_cast<int>(value.size()),
-            nullptr,
-            0,
-            nullptr,
-            nullptr,
-            0);
-        if (required > 0) {
-            std::wstring mapped(static_cast<std::size_t>(required), L'\0');
-            if (::LCMapStringEx(
-                    LOCALE_NAME_INVARIANT,
-                    LCMAP_LOWERCASE,
-                    value.c_str(),
-                    static_cast<int>(value.size()),
-                    mapped.data(),
-                    required,
-                    nullptr,
-                    nullptr,
-                    0) > 0) {
-                return mapped;
-            }
-        }
-
-        std::wstring fallback = value;
-        if (::CharLowerBuffW(fallback.data(), static_cast<DWORD>(fallback.size())) == 0) {
-            return std::wstring{};
-        }
-        return fallback;
-    };
-    const std::wstring left_lower = invariant_lowercase(left_value);
-    const std::wstring right_lower = invariant_lowercase(right_value);
-    return !left_lower.empty() && left_lower == right_lower;
-#else
-    return left == right;
-#endif
+    return copperfin::platform::path_component_equal_for_platform(left, right);
 }
 
 std::optional<std::filesystem::path> package_relative_path(
