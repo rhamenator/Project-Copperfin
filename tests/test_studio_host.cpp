@@ -553,6 +553,7 @@ int main() {
     test_parse_launch_arguments_rejects_missing_selection_context();
     test_open_document_infers_form_sidecar();
     test_open_document_casefold_preserves_utf8_filename_bytes();
+    test_open_document_preserves_utf8_paths_across_native_boundary();
     test_open_document_canonicalizes_direct_sidecar_paths();
     test_open_document_infers_read_only_from_asset_family_writability();
     test_open_document_uses_vfp_filename_for_display_name();

@@ -4,6 +4,8 @@
 
 #include "test_studio_host_support.h"
 
+#include "copperfin/platform/path.h"
+
 namespace cf_test_studio_host {
 void test_open_document_path_error_resolves_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
@@ -141,6 +143,58 @@ void test_open_document_casefold_preserves_utf8_filename_bytes() {
         expect(result.document.sidecar_path == sidecar_path.string(),
                "#3973: opened UTF-8 " + std::string(sidecar_case.label) +
                    " documents should retain actual sidecar filename spelling");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_open_document_preserves_utf8_paths_across_native_boundary() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string("copperfin_studio_host_utf8_boundary_tests");
+    const fs::path form_path = temp_dir /
+        copperfin::platform::path_from_utf8_string("caf\xC3\xA9-form.scx");
+    const fs::path sidecar_path = temp_dir /
+        copperfin::platform::path_from_utf8_string("caf\xC3\xA9-form.SCT");
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto bytes = make_vfp_header();
+    {
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+    {
+        std::ofstream output(sidecar_path, std::ios::binary);
+        output << "memo-sidecar";
+    }
+
+    const std::string form_path_utf8 = copperfin::platform::path_to_utf8_string(form_path);
+    const std::string sidecar_path_utf8 = copperfin::platform::path_to_utf8_string(sidecar_path);
+    expect(
+        copperfin::studio::infer_sidecar_path(form_path_utf8, copperfin::studio::StudioAssetKind::form) ==
+            sidecar_path_utf8,
+        "#4275: inferred UTF-8 sidecar paths should cross the native filesystem boundary losslessly");
+
+    const auto primary_result = copperfin::studio::open_document({.path = form_path_utf8});
+    expect(primary_result.ok,
+           "#4275: UTF-8 primary document paths should remain openable through the shared Studio model");
+    if (primary_result.ok) {
+        expect(primary_result.document.path == form_path_utf8,
+               "#4275: inferred UTF-8 opens should preserve the primary document path");
+        expect(primary_result.document.sidecar_path == sidecar_path_utf8,
+               "#4275: inferred UTF-8 opens should preserve the actual sidecar path spelling");
+    }
+
+    const auto sidecar_result = copperfin::studio::open_document({.path = sidecar_path_utf8});
+    expect(sidecar_result.ok,
+           "#4275: direct UTF-8 sidecar paths should remain openable through the shared Studio model");
+    if (sidecar_result.ok) {
+        expect(sidecar_result.document.path == form_path_utf8,
+               "#4275: direct UTF-8 sidecar opens should preserve the canonical primary path");
+        expect(sidecar_result.document.sidecar_path == sidecar_path_utf8,
+               "#4275: direct UTF-8 sidecar opens should preserve the sidecar path spelling");
     }
 
     fs::remove_all(temp_dir, ignored);

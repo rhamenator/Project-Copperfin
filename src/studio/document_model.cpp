@@ -5,6 +5,7 @@
 #include "copperfin/studio/document_model.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/sidecar_path.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -65,7 +66,7 @@ bool asset_family_is_writable(
         return true;
     }
 
-    return path_is_writable(std::filesystem::path(sidecar_path));
+    return path_is_writable(copperfin::platform::path_from_utf8_string(sidecar_path));
 }
 
 const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
@@ -631,14 +632,15 @@ const char* studio_asset_kind_name(StudioAssetKind kind) {
 }
 
 std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind) {
-    const std::filesystem::path file_path(path);
+    const std::filesystem::path file_path = copperfin::platform::path_from_utf8_string(path);
     const auto resolve_sidecar = [&](std::string_view extension) {
         const vfp::SidecarPathResolution resolution =
             vfp::resolve_vfp_sidecar_path(file_path, extension);
         if (resolution.ambiguous) {
             return std::string{};
         }
-        return resolution.path.value_or(resolution.requested_path).string();
+        return copperfin::platform::path_to_utf8_string(
+            resolution.path.value_or(resolution.requested_path));
     };
 
     switch (kind) {
@@ -875,7 +877,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
 
     std::string document_path = request.path;
     std::optional<std::string> opened_sidecar_path;
-    const std::filesystem::path requested_path(request.path);
+    const std::filesystem::path requested_path =
+        copperfin::platform::path_from_utf8_string(request.path);
     if (const auto primary_extension = primary_extension_for_sidecar(requested_path);
         primary_extension.has_value()) {
         const vfp::SidecarPathResolution sidecar_resolution =
@@ -891,7 +894,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         if (sidecar_resolution.path.has_value()) {
             const std::filesystem::path actual_sidecar_path =
                 *sidecar_resolution.path;
-            opened_sidecar_path = actual_sidecar_path.string();
+            opened_sidecar_path = copperfin::platform::path_to_utf8_string(actual_sidecar_path);
             std::filesystem::path primary_candidate = actual_sidecar_path;
             primary_candidate.replace_extension(*primary_extension);
             const vfp::SidecarPathResolution primary_resolution =
@@ -912,29 +915,33 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                         {{"path", request.path}})
                 };
             }
-            document_path = primary_resolution.path->string();
+            document_path = copperfin::platform::path_to_utf8_string(*primary_resolution.path);
         }
     }
 
     vfp::SidecarPathResolution inferred_sidecar_resolution;
     const bool defer_table_sidecar_resolution =
-        lowercase_ascii(std::filesystem::path(document_path).extension().string()) == ".dbf";
+        lowercase_ascii(copperfin::platform::path_to_utf8_string(
+            copperfin::platform::path_from_utf8_string(document_path).extension())) == ".dbf";
     if (!opened_sidecar_path.has_value() && !defer_table_sidecar_resolution) {
         inferred_sidecar_resolution =
-            vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+            vfp::resolve_vfp_memo_sidecar_path(
+                copperfin::platform::path_from_utf8_string(document_path));
         if (inferred_sidecar_resolution.ambiguous) {
             return {
                 .ok = false,
                 .error = document_text(
                     "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
-                    {{"path", inferred_sidecar_resolution.requested_path.string()}})
+                    {{"path", copperfin::platform::path_to_utf8_string(
+                        inferred_sidecar_resolution.requested_path)}})
             };
         }
     }
 
     const std::string memo_sidecar_path = opened_sidecar_path.value_or(
-        inferred_sidecar_resolution.path.value_or(
-            inferred_sidecar_resolution.requested_path).string());
+        copperfin::platform::path_to_utf8_string(
+            inferred_sidecar_resolution.path.value_or(
+                inferred_sidecar_resolution.requested_path)));
     const vfp::AssetInspectionResult inspection =
         vfp::inspect_asset(document_path, memo_sidecar_path);
     if (!inspection.ok) {
@@ -961,17 +968,20 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     if (inspection.header_available) {
         if (defer_table_sidecar_resolution && inspection.header.has_memo_file()) {
             inferred_sidecar_resolution =
-                vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+                vfp::resolve_vfp_memo_sidecar_path(
+                    copperfin::platform::path_from_utf8_string(document_path));
             if (inferred_sidecar_resolution.ambiguous) {
                 return {
                     .ok = false,
                     .error = document_text(
                         "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
-                        {{"path", inferred_sidecar_resolution.requested_path.string()}})
+                        {{"path", copperfin::platform::path_to_utf8_string(
+                            inferred_sidecar_resolution.requested_path)}})
                 };
             }
-            document.sidecar_path = inferred_sidecar_resolution.path.value_or(
-                inferred_sidecar_resolution.requested_path).string();
+            document.sidecar_path = copperfin::platform::path_to_utf8_string(
+                inferred_sidecar_resolution.path.value_or(
+                    inferred_sidecar_resolution.requested_path));
             document.has_sidecar = inferred_sidecar_resolution.path.has_value();
         }
 
@@ -1003,17 +1013,20 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                 document.sidecar_path.empty() &&
                 table_declares_memo_field) {
                 inferred_sidecar_resolution =
-                    vfp::resolve_vfp_memo_sidecar_path(std::filesystem::path(document_path));
+                    vfp::resolve_vfp_memo_sidecar_path(
+                        copperfin::platform::path_from_utf8_string(document_path));
                 if (inferred_sidecar_resolution.ambiguous) {
                     return {
                         .ok = false,
                         .error = document_text(
                             "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
-                            {{"path", inferred_sidecar_resolution.requested_path.string()}})
+                            {{"path", copperfin::platform::path_to_utf8_string(
+                                inferred_sidecar_resolution.requested_path)}})
                     };
                 }
-                document.sidecar_path = inferred_sidecar_resolution.path.value_or(
-                    inferred_sidecar_resolution.requested_path).string();
+                document.sidecar_path = copperfin::platform::path_to_utf8_string(
+                    inferred_sidecar_resolution.path.value_or(
+                        inferred_sidecar_resolution.requested_path));
                 document.has_sidecar = inferred_sidecar_resolution.path.has_value();
             }
             document.table_preview_available = true;
