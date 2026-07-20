@@ -111,29 +111,25 @@ internal static partial class Program
             Application.DoEvents();
 
             SetPrivateField(control, "currentPath", projectPath);
+            var projectEntry = new CopperfinStudioProjectEntry
+            {
+                RecordIndex = 7,
+                RelativePath = "forms\\orders.scx"
+            };
+            var snapshotObject = new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 7,
+                Title = "forms\\orders.scx"
+            };
             SetCurrentSnapshot(control, new CopperfinStudioSnapshotDocument
             {
                 Path = projectPath,
                 AssetFamily = "project",
                 ProjectWorkspace = new CopperfinStudioProjectWorkspace
                 {
-                    Entries = new List<CopperfinStudioProjectEntry>
-                    {
-                        new()
-                        {
-                            RecordIndex = 7,
-                            RelativePath = "forms\\orders.scx"
-                        }
-                    }
+                    Entries = new List<CopperfinStudioProjectEntry> { projectEntry }
                 },
-                Objects = new List<CopperfinStudioSnapshotObject>
-                {
-                    new()
-                    {
-                        RecordIndex = 7,
-                        Title = "forms\\orders.scx"
-                    }
-                }
+                Objects = new List<CopperfinStudioSnapshotObject> { snapshotObject }
             });
             typeof(CopperfinAssetEditorControl)
                 .GetMethod("PopulateObjectList", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -154,6 +150,18 @@ internal static partial class Program
                     CopperfinDocumentPathIdentity.Normalize(childPath),
                     StringComparison.Ordinal),
                 "project workspace activation should invoke the host callback with the normalized child path");
+
+            requestedPath = null;
+            snapshotObject.Deleted = true;
+            Expect(
+                !control.TryActivateSelectedProjectEntry() && requestedPath is null,
+                "project workspace activation should reject deleted snapshot entries without opening a document");
+
+            snapshotObject.Deleted = false;
+            projectEntry.Excluded = true;
+            Expect(
+                !control.TryActivateSelectedProjectEntry() && requestedPath is null,
+                "project workspace activation should reject excluded project entries without opening a document");
             hostForm.Close();
         }
         finally

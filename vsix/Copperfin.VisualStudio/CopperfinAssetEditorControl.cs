@@ -838,7 +838,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var projectEntry = selectedObject is null
             ? null
             : LookupProjectEntry(selectedObject.RecordIndex);
-        if (projectEntry is null ||
+        if (selectedObject is null ||
+            selectedObject.Deleted ||
+            projectEntry is null ||
+            projectEntry.Excluded ||
             !CopperfinProjectEntryActivation.TryResolve(currentPath!, projectEntry, out var resolvedPath))
         {
             return false;
