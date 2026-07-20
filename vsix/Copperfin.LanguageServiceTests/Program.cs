@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Copperfin.VisualStudio;
 
@@ -38,6 +39,7 @@ internal static partial class Program
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestDesignerSelectionHonorsReadOnlyDocumentState();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
+        TestStudioHostProcessStartInfoUsesUtf8ForRedirectedStreams();
         TestStudioStartupArgumentsPreserveSelectors();
         TestStudioStartupArgumentsRejectMalformedSelectors();
         TestStudioHostBuildArgumentsPreserveStartupSelectors();
@@ -518,6 +520,20 @@ internal static partial class Program
                startInfo.RedirectStandardError &&
                startInfo.CreateNoWindow,
             "direct Studio host executable launch info should preserve non-shell redirected execution");
+    }
+
+    private static void TestStudioHostProcessStartInfoUsesUtf8ForRedirectedStreams()
+    {
+        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+            @"C:\tools\copperfin_studio_host.exe",
+            "--from-vs --json --path \"C:\\Samples\\café.frx\"",
+            redirectOutput: true,
+            createNoWindow: true,
+            isWindowsOverride: true);
+
+        Expect(startInfo.StandardOutputEncoding == Encoding.UTF8 &&
+               startInfo.StandardErrorEncoding == Encoding.UTF8,
+            "redirected Studio host stdout and stderr should decode native UTF-8 JSON and diagnostics");
     }
 
     private static void TestStudioStartupArgumentsPreserveSelectors()

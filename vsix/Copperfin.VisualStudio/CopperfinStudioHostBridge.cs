@@ -396,6 +396,11 @@ internal static class CopperfinStudioHostBridge
             RedirectStandardError = redirectOutput,
             CreateNoWindow = createNoWindow
         };
+        if (redirectOutput)
+        {
+            startInfo.StandardOutputEncoding = Encoding.UTF8;
+            startInfo.StandardErrorEncoding = Encoding.UTF8;
+        }
         if (wrapperCommand is not null)
         {
             startInfo.EnvironmentVariables[WindowsScriptWrapperCommandVariable] = wrapperCommand;
