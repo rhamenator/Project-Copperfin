@@ -1693,10 +1693,9 @@ private:
             return false;
         }
 #else
-        std::error_code filesystem_error;
-        const std::filesystem::file_status status =
-            std::filesystem::symlink_status(path, filesystem_error);
-        if (status.type() != std::filesystem::file_type::regular || filesystem_error) {
+        const DWORD attributes = ::GetFileAttributesW(path.c_str());
+        if (attributes == INVALID_FILE_ATTRIBUTES ||
+            (attributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) != 0U) {
             trace_transaction_begin_failure("owned-file-status", path);
             return false;
         }

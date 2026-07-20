@@ -158,7 +158,7 @@ void append_plan_owned_direct_file_name(
     if (path_text.empty()) {
         return;
     }
-    const std::filesystem::path path(path_text);
+    const std::filesystem::path path = copperfin::platform::path_from_utf8_string(path_text);
     if (path.parent_path().lexically_normal() != package_root.lexically_normal()) {
         return;
     }
@@ -216,10 +216,12 @@ bool validate_public_output_artifact_name(
         return true;
     }
 
-    const std::filesystem::path output_name(plan.launcher_output_path);
+    const std::filesystem::path output_name =
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path);
     std::vector<std::filesystem::path> reserved_names;
     if (is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) {
-        reserved_names.emplace_back(plan.runtime_host_destination_path);
+        reserved_names.emplace_back(
+            copperfin::platform::path_from_utf8_string(plan.runtime_host_destination_path));
     }
     if (plan.emit_dotnet_launcher) {
         reserved_names.emplace_back(kGeneratedLauncherDll);
@@ -247,7 +249,8 @@ bool inventory_generated_launcher_artifacts(
     const RuntimePackagePlan& plan,
     std::vector<RuntimeLauncherArtifact>& inventory,
     std::string& error) {
-    const std::filesystem::path package_root(plan.package_root);
+    const std::filesystem::path package_root =
+        copperfin::platform::path_from_utf8_string(plan.package_root);
     const std::vector<LauncherArtifactSpec> specs{
         {
             .path = copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
@@ -324,8 +327,9 @@ bool inventory_generated_launcher_artifacts(
 bool is_launcher_owned_digest(
     const RuntimeArtifactDigest& digest,
     const RuntimePackagePlan& plan) {
-    const std::filesystem::path path(digest.path);
-    const std::filesystem::path package_root(plan.package_root);
+    const std::filesystem::path path = copperfin::platform::path_from_utf8_string(digest.path);
+    const std::filesystem::path package_root =
+        copperfin::platform::path_from_utf8_string(plan.package_root);
     bool parent_is_package_root =
         path.parent_path().lexically_normal() == package_root.lexically_normal();
     if (!parent_is_package_root) {

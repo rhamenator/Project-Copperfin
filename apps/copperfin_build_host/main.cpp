@@ -359,7 +359,9 @@ bool supports_dotnet_launcher_publish() {
 
 int run_build_host_main(int argc, char** argv) {
     const std::filesystem::path invocation_path =
-        argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
+        argc > 0 && argv[0] != nullptr
+            ? copperfin::platform::path_from_utf8_string(argv[0])
+            : std::filesystem::path();
     const std::filesystem::path running_executable_path =
         copperfin::platform::resolve_running_executable_path(invocation_path);
     const copperfin::localization::LocalizedCatalog catalog =
