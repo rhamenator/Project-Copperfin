@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 
 namespace Copperfin.VisualStudio;
