@@ -14,14 +14,13 @@ void run_direct_library_bridge_shell_safety_smoke(
     const fs::path injected_package_directory =
         package_directory.parent_path() / "LibraryDemo_$(touch${IFS}copperfin_generated_bridge_shell_sentinel)";
     fs::remove_all(injected_package_directory, ignored);
-    std::error_code copy_error;
-    fs::copy(
+    std::error_code move_error;
+    fs::rename(
         package_directory,
         injected_package_directory,
-        fs::copy_options::recursive | fs::copy_options::overwrite_existing,
-        copy_error);
-    expect(!copy_error, "native library bridge shell-safety fixture should copy the complete package");
-    if (copy_error) {
+        move_error);
+    expect(!move_error, "native library bridge shell-safety fixture should move the complete package");
+    if (move_error) {
         return;
     }
 
