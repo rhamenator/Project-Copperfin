@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- VSIX #2996/#4311 host-mode editor chrome now calls `ApplyVisualStudioHostTheme()` when `EmbeddedStudioShell` is false, using `VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey/ToolWindowTextColorKey)` with `SystemColors.Control/ControlText` fallback. It recursively themes shell controls but skips `CopperfinDesignSurfaceControl`, preserving the canvas rendering contract and standalone shell colors. Keep the managed source-contract test and require live Visual Studio dark/high-contrast smoke evidence before closing the parent.
+
 - PJX activation coverage under #25/#4265/#4309 now exercises the shared resolver and callback for `.prg`, `.scx`, `.vcx`, `.frx`, `.lbx`, and `.mnx`. Preserve the allowlist, normalized project-relative paths, traversal/missing/unsupported rejection, and the stale `Deleted`/`Excluded` guards without changing host contracts.
 
 - PJX child activation under #25/#4265/#4308 fails closed for stale entries: `CopperfinAssetEditorControl.TryActivateSelectedProjectEntry()` must reject a selected `CopperfinStudioSnapshotObject` with `Deleted` or a matching `CopperfinStudioProjectEntry` with `Excluded` before path resolution or `OpenDocumentRequested`. Preserve valid supported-child activation, containment, localized UI, and machine contracts; keep the focused designer smoke regression proving neither stale case invokes the host callback.

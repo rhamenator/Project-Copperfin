@@ -10,6 +10,33 @@ namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private static void TestVsixEditorHostThemeContract()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "VSIX editor theme test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var editorSource = File.ReadAllText(Path.Combine(
+            repositoryRoot,
+            "vsix",
+            "Copperfin.VisualStudio",
+            "CopperfinAssetEditorControl.cs"));
+        Expect(editorSource.Contains("ApplyVisualStudioHostTheme()", StringComparison.Ordinal) &&
+               editorSource.Contains("VSColorTheme.GetThemedColor", StringComparison.Ordinal) &&
+               editorSource.Contains("EnvironmentColors.ToolWindowBackgroundColorKey", StringComparison.Ordinal) &&
+               editorSource.Contains("EnvironmentColors.ToolWindowTextColorKey", StringComparison.Ordinal),
+            "VSIX editor host mode should read Visual Studio background and text theme colors");
+        Expect(editorSource.Contains("background = SystemColors.Control", StringComparison.Ordinal) &&
+               editorSource.Contains("foreground = SystemColors.ControlText", StringComparison.Ordinal),
+            "VSIX editor host theme should fall back to system colors outside a live Visual Studio shell");
+        Expect(editorSource.Contains("if (child is CopperfinDesignSurfaceControl)", StringComparison.Ordinal),
+            "VSIX editor host theme should leave the designer canvas rendering contract independent from shell chrome");
+    }
+
     private static void TestVsixCommandWindowRegistration()
     {
         var repositoryRoot = FindRepositoryRoot();

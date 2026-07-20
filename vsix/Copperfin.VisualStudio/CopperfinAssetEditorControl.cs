@@ -12,6 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 
 namespace Copperfin.VisualStudio;
 
@@ -2433,16 +2435,71 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buildButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         runButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         debugButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
-        BackColor = embeddedStudioShell
-            ? Color.FromArgb(248, 249, 252)
-            : SystemColors.Control;
-        ForeColor = SystemColors.ControlText;
         Padding = embeddedStudioShell
             ? new Padding(24)
             : new Padding(12, 8, 12, 12);
+        if (embeddedStudioShell)
+        {
+            BackColor = Color.FromArgb(248, 249, 252);
+            ForeColor = Color.FromArgb(28, 32, 39);
+        }
+        else
+        {
+            ApplyVisualStudioHostTheme();
+        }
+
         subtitleLabel.Text = embeddedStudioShell
             ? this.localization.Text("AssetEditor.StandaloneSubtitle")
             : this.localization.Text("AssetEditor.Subtitle");
+    }
+
+    private void ApplyVisualStudioHostTheme()
+    {
+        Color background;
+        Color foreground;
+        try
+        {
+            background = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey);
+            foreground = VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowTextColorKey);
+        }
+        catch (Exception)
+        {
+            background = SystemColors.Control;
+            foreground = SystemColors.ControlText;
+        }
+
+        BackColor = background;
+        ForeColor = foreground;
+        ApplyVisualStudioHostThemeToChildren(this, background, foreground);
+    }
+
+    private static void ApplyVisualStudioHostThemeToChildren(
+        Control parent,
+        Color background,
+        Color foreground)
+    {
+        foreach (Control child in parent.Controls)
+        {
+            if (child is CopperfinDesignSurfaceControl)
+            {
+                continue;
+            }
+
+            if (child is Panel ||
+                child is SplitContainer ||
+                child is ListView ||
+                child is PropertyGrid ||
+                child is RichTextBox ||
+                child is TabControl ||
+                child is TabPage ||
+                child is TextBox)
+            {
+                child.BackColor = background;
+                child.ForeColor = foreground;
+            }
+
+            ApplyVisualStudioHostThemeToChildren(child, background, foreground);
+        }
     }
 
     private void QueueUiAction(Func<Task> action)

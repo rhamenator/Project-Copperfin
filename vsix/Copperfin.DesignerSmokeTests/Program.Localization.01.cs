@@ -212,7 +212,8 @@ internal static partial class Program
 
     private static void SmokeLocalizedAssetEditorChrome()
     {
-        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishLocalization = new CopperfinLocalization("es-419");
+        using var spanishControl = new CopperfinAssetEditorControl(spanishLocalization);
         spanishControl.EmbeddedStudioShell = true;
         Expect(HasLabelText(spanishControl, "Diseñador visual de Copperfin"),
             "Spanish editor chrome should localize the asset editor title");
@@ -221,14 +222,15 @@ internal static partial class Program
         Expect(HasLabelTextContaining(spanishControl, "host nativo de Copperfin Studio"),
             "Spanish editor chrome should localize the asset editor guidance text");
         Expect(HasButtonText(spanishControl, "Abrir en Studio nativo") &&
-               HasButtonText(spanishControl, "Mostrar en Explorer") &&
+               HasButtonText(spanishControl, spanishLocalization.Text("AssetEditor.RevealInExplorerButton")) &&
                HasButtonText(spanishControl, "Actualizar") &&
                HasButtonText(spanishControl, "Duplicar objeto") &&
                HasButtonText(spanishControl, "Eliminar objeto") &&
                HasButtonText(spanishControl, "Restaurar objeto"),
             "Spanish editor chrome should localize shell command buttons");
 
-        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseLocalization = new CopperfinLocalization("pt-BR");
+        using var portugueseControl = new CopperfinAssetEditorControl(portugueseLocalization);
         portugueseControl.EmbeddedStudioShell = true;
         Expect(HasLabelText(portugueseControl, "Designer visual do Copperfin"),
             "Portuguese editor chrome should localize the asset editor title");
@@ -237,7 +239,7 @@ internal static partial class Program
         Expect(HasLabelTextContaining(portugueseControl, "host nativo do Copperfin Studio"),
             "Portuguese editor chrome should localize the asset editor guidance text");
         Expect(HasButtonText(portugueseControl, "Abrir no Studio nativo") &&
-               HasButtonText(portugueseControl, "Revelar no Explorer") &&
+               HasButtonText(portugueseControl, portugueseLocalization.Text("AssetEditor.RevealInExplorerButton")) &&
                HasButtonText(portugueseControl, "Atualizar") &&
                HasButtonText(portugueseControl, "Duplicar objeto") &&
                HasButtonText(portugueseControl, "Excluir objeto") &&
