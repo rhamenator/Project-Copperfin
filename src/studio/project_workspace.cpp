@@ -5,6 +5,7 @@
 #include "copperfin/studio/project_workspace.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -117,7 +118,8 @@ std::string type_code_of(const vfp::DbfRecord& record) {
 }
 
 std::string extension_of(const std::string& value) {
-    return lowercase_copy(std::filesystem::path(value).extension().string());
+    return lowercase_copy(copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(value).extension()));
 }
 
 std::string filename_stem_for_vfp_path(const std::string& value) {
@@ -158,7 +160,8 @@ bool is_unc_path(const std::string& value) {
 }
 
 bool is_vfp_absolute_path(const std::string& value) {
-    return is_windows_drive_absolute_path(value) || is_unc_path(value) || std::filesystem::path(value).is_absolute();
+    return is_windows_drive_absolute_path(value) || is_unc_path(value) ||
+        copperfin::platform::path_from_utf8_string(value).is_absolute();
 }
 
 std::optional<std::string> vfp_relative_to_document_dir(const StudioDocumentModel& document, const std::string& value) {
@@ -287,7 +290,9 @@ std::string default_output_path(const StudioDocumentModel& document, const std::
     if (separator != std::string::npos) {
         return document.path.substr(0U, separator + 1U) + leaf;
     }
-    return (std::filesystem::path(document.path).parent_path() / leaf).string();
+    return copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(document.path).parent_path() /
+        copperfin::platform::path_from_utf8_string(leaf));
 }
 
 std::string infer_output_kind(const std::string& output_path) {

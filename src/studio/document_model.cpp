@@ -161,7 +161,8 @@ std::string lowercase_ascii(std::string_view value) {
 }
 
 std::optional<std::string_view> primary_extension_for_sidecar(const std::filesystem::path& path) {
-    const std::string extension = lowercase_ascii(path.extension().string());
+    const std::string extension = lowercase_ascii(
+        copperfin::platform::path_to_utf8_string(path.extension()));
     if (extension == ".pjt") {
         return ".pjx";
     }

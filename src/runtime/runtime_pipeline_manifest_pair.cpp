@@ -160,8 +160,10 @@ std::optional<ManifestPairJournal> parse_journal_text(
 class ManifestPairTransaction {
 public:
     explicit ManifestPairTransaction(const RuntimePackagePlan& plan)
-        : configured_root_(plan.package_root),
-          configured_destinations_{plan.manifest_path, plan.debug_manifest_path} {
+        : configured_root_(copperfin::platform::path_from_utf8_string(plan.package_root)),
+          configured_destinations_{
+              copperfin::platform::path_from_utf8_string(plan.manifest_path),
+              copperfin::platform::path_from_utf8_string(plan.debug_manifest_path)} {
     }
 
     bool publish(

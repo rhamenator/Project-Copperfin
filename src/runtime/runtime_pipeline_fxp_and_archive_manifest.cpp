@@ -27,7 +27,8 @@ std::map<std::string, StagedContentFile> collect_staged_content_files(
     const RuntimePackagePlan& plan,
     std::string* error = nullptr) {
     std::map<std::string, StagedContentFile> files;
-    const std::filesystem::path content_root = plan.content_root;
+    const std::filesystem::path content_root =
+        copperfin::platform::path_from_utf8_string(plan.content_root);
 
     for (const auto& asset : plan.assets) {
         if (!asset.copied || trim_copy(asset.staged_path).empty()) {
@@ -150,7 +151,10 @@ bool write_fxp_primary_output_contract(
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "token_manifest=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
     stream << token_manifest_text;
-    return write_text_file(output_path, stream.str(), error);
+    return write_text_file(
+        copperfin::platform::path_from_utf8_string(output_path),
+        stream.str(),
+        error);
 }
 
 std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
@@ -216,7 +220,10 @@ bool write_app_archive_primary_output(
                << hex_encode_bytes(bytes) << "\n";
     }
 
-    return write_text_file(filesystem_plan.launcher_output_path, stream.str(), error);
+    return write_text_file(
+        copperfin::platform::path_from_utf8_string(filesystem_plan.launcher_output_path),
+        stream.str(),
+        error);
 }
 
 void append_library_function_manifest_lines(

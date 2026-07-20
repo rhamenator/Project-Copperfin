@@ -57,6 +57,7 @@ std::string join_strings(const std::vector<std::string>& values);
 BuildOutputKind parse_build_output_kind(const std::string& value);
 std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier);
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error);
+bool write_text_file(const std::string& utf8_path, const std::string& contents, std::string& error);
 bool write_runtime_manifest_pair_atomically(
     const RuntimePackagePlan& plan,
     const std::string& runtime_contents,
@@ -88,6 +89,10 @@ BuildOutputKind infer_build_output_kind_from_output_path(const std::string& outp
 bool copy_file_if_exists(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,
+    std::string& error);
+bool copy_file_if_exists(
+    const std::filesystem::path& source,
+    const std::string& utf8_destination,
     std::string& error);
 #if !defined(_WIN32)
 bool try_copy_file_if_exists_fd_backed(

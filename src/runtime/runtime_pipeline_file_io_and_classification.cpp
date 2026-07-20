@@ -404,6 +404,16 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
     return true;
 }
 
+bool write_text_file(
+    const std::string& utf8_path,
+    const std::string& contents,
+    std::string& error) {
+    return write_text_file(
+        copperfin::platform::path_from_utf8_string(utf8_path),
+        contents,
+        error);
+}
+
 std::string read_text_file(const std::filesystem::path& path) {
 #if !defined(_WIN32)
     bool fd_read_handled = false;
@@ -584,6 +594,16 @@ bool copy_file_if_exists(
     }
 
     return true;
+}
+
+bool copy_file_if_exists(
+    const std::filesystem::path& source,
+    const std::string& utf8_destination,
+    std::string& error) {
+    return copy_file_if_exists(
+        source,
+        copperfin::platform::path_from_utf8_string(utf8_destination),
+        error);
 }
 
 bool validate_runtime_host_source_path(

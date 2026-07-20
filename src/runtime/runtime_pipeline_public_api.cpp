@@ -2272,7 +2272,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     }
     std::error_code directory_error;
 #if defined(_WIN32)
-    std::filesystem::create_directories(filesystem_plan.package_root, directory_error);
+    std::filesystem::create_directories(
+        copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
+        directory_error);
     if (directory_error) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreatePackageRootFailed")};
     }
@@ -2287,8 +2289,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     int content_descriptor = -1;
 #endif
     if (!prepare_package_content_root(
-            filesystem_plan.package_root,
-            filesystem_plan.content_root,
+            copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
+            copperfin::platform::path_from_utf8_string(filesystem_plan.content_root),
             error,
 #if !defined(_WIN32)
             &content_descriptor
@@ -2349,7 +2351,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
 #else
         if (!transaction.create_pinned_child_directory(
-                filesystem_plan.package_root,
+                copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
                 "launcher")) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
         }
@@ -2376,7 +2378,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     materialized_plan.startup_source_path.clear();
     const auto logical_package_path = [&](const std::filesystem::path& physical_path) {
         const std::filesystem::path content_relative =
-            physical_path.lexically_relative(filesystem_plan.content_root);
+            physical_path.lexically_relative(
+                copperfin::platform::path_from_utf8_string(filesystem_plan.content_root));
         if (!content_relative.empty() && !content_relative.is_absolute()) {
             bool escapes_content = false;
             for (const auto& component : content_relative) {
@@ -2391,7 +2394,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             }
         }
         const std::filesystem::path relative =
-            physical_path.lexically_relative(filesystem_plan.package_root);
+            physical_path.lexically_relative(
+                copperfin::platform::path_from_utf8_string(filesystem_plan.package_root));
         if (!relative.empty() && !relative.is_absolute()) {
             bool escapes = false;
             for (const auto& component : relative) {
@@ -2499,10 +2503,10 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
 
         std::filesystem::path destination;
         if (!copy_file_to_package_content(
-                asset.source_path,
-                filesystem_plan.package_root,
-                filesystem_plan.content_root,
-                asset.relative_path,
+                copperfin::platform::path_from_utf8_string(asset.source_path),
+                copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
+                copperfin::platform::path_from_utf8_string(filesystem_plan.content_root),
+                copperfin::platform::path_from_utf8_string(asset.relative_path),
                 destination,
                 error)) {
             if (asset.required_for_runtime) {
@@ -2530,8 +2534,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         const auto companion_copy_result =
             copy_companion_files_if_present(
                 asset,
-                filesystem_plan.package_root,
-                filesystem_plan.content_root,
+                copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
+                copperfin::platform::path_from_utf8_string(filesystem_plan.content_root),
                 materialized_plan.warnings);
         if (!companion_copy_result.ok) {
             return {.ok = false, .error = companion_copy_result.error};
@@ -2576,12 +2580,14 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.extension_payload_digests,
-                filesystem_plan.runtime_host_destination_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.runtime_host_destination_path),
                 error)) {
             return {.ok = false, .error = error};
         }
         const auto runtime_host_digest = sha256_for_materialized_file(
-            filesystem_plan.runtime_host_destination_path);
+            copperfin::platform::path_from_utf8_string(
+                filesystem_plan.runtime_host_destination_path));
         if (!runtime_host_digest.ok) {
             return {.ok = false, .error = runtime_host_digest.error};
         }
@@ -2599,7 +2605,7 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
 #else
         if (!transaction.create_pinned_child_directory(
-                filesystem_plan.package_root,
+                copperfin::platform::path_from_utf8_string(filesystem_plan.package_root),
                 "wrapper")) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
         }
@@ -2636,7 +2642,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.compiler_contract_digests,
-                filesystem_plan.native_wrapper_cmake_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.native_wrapper_cmake_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2648,7 +2655,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.compiler_contract_digests,
-                filesystem_plan.native_wrapper_build_script_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.native_wrapper_build_script_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2660,7 +2668,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.compiler_contract_digests,
-                filesystem_plan.native_wrapper_build_powershell_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.native_wrapper_build_powershell_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2673,7 +2682,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             }
             if (!append_pinned_digest(
                     materialized_plan.compiler_contract_digests,
-                    filesystem_plan.library_api_manifest_path,
+                    copperfin::platform::path_from_utf8_string(
+                        filesystem_plan.library_api_manifest_path),
                     error)) {
                 return {.ok = false, .error = error};
             }
@@ -2687,7 +2697,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             }
             if (!append_pinned_digest(
                     materialized_plan.compiler_contract_digests,
-                    filesystem_plan.fll_api_manifest_path,
+                    copperfin::platform::path_from_utf8_string(
+                        filesystem_plan.fll_api_manifest_path),
                     error)) {
                 return {.ok = false, .error = error};
             }
@@ -2702,7 +2713,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.compiler_contract_digests,
-                filesystem_plan.fxp_token_manifest_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.fxp_token_manifest_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2715,7 +2727,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.extension_payload_digests,
-                filesystem_plan.launcher_output_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.launcher_output_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2758,7 +2771,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
         if (!append_pinned_digest(
                 materialized_plan.extension_payload_digests,
-                filesystem_plan.launcher_output_path,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.launcher_output_path),
                 error)) {
             return {.ok = false, .error = error};
         }
@@ -2775,33 +2789,39 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         }
 
         const auto runtime_host_digest = sha256_for_materialized_file(
-            filesystem_plan.runtime_host_destination_path);
+            copperfin::platform::path_from_utf8_string(
+                filesystem_plan.runtime_host_destination_path));
         if (!runtime_host_digest.ok) {
             return {.ok = false, .error = runtime_host_digest.error};
         }
         materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
         materialized_plan.extension_payload_digests.push_back({
             .path = copperfin::platform::path_to_utf8_string(
-                logical_package_path(filesystem_plan.runtime_host_destination_path)),
+                logical_package_path(copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.runtime_host_destination_path))),
             .sha256 = runtime_host_digest.hex_digest
         });
 
         if (!plan.emit_dotnet_launcher) {
             if (!copy_file_if_exists(
-                    filesystem_plan.runtime_host_destination_path,
-                    filesystem_plan.launcher_output_path,
+                    copperfin::platform::path_from_utf8_string(
+                        filesystem_plan.runtime_host_destination_path),
+                    copperfin::platform::path_from_utf8_string(
+                        filesystem_plan.launcher_output_path),
                     error)) {
                 return {.ok = false, .error = error};
             }
 
             const auto native_entrypoint_digest = sha256_for_materialized_file(
-                filesystem_plan.launcher_output_path);
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.launcher_output_path));
             if (!native_entrypoint_digest.ok) {
                 return {.ok = false, .error = native_entrypoint_digest.error};
             }
             materialized_plan.extension_payload_digests.push_back({
             .path = copperfin::platform::path_to_utf8_string(
-                logical_package_path(filesystem_plan.launcher_output_path)),
+                logical_package_path(copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.launcher_output_path))),
                 .sha256 = native_entrypoint_digest.hex_digest
             });
             materialized_plan.primary_output_materialized = true;
@@ -2834,8 +2854,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         return {.ok = false, .error = error};
     }
     if (!append_pinned_digest(
-            materialized_plan.compiler_contract_digests,
-            filesystem_plan.ast_manifest_path,
+                materialized_plan.compiler_contract_digests,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.ast_manifest_path),
             error)) {
         return {.ok = false, .error = error};
     }
@@ -2847,8 +2868,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         return {.ok = false, .error = error};
     }
     if (!append_pinned_digest(
-            materialized_plan.compiler_contract_digests,
-            filesystem_plan.ir_manifest_path,
+                materialized_plan.compiler_contract_digests,
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.ir_manifest_path),
             error)) {
         return {.ok = false, .error = error};
     }
@@ -2863,7 +2885,8 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     if (plan.requested_dotnet_launcher &&
         !append_pinned_digest(
             materialized_plan.compiler_contract_digests,
-            filesystem_plan.transpiled_csharp_path,
+            copperfin::platform::path_from_utf8_string(
+                filesystem_plan.transpiled_csharp_path),
             error)) {
         return {.ok = false, .error = error};
     }
@@ -2902,7 +2925,8 @@ RuntimeMaterializeResult materialize_runtime_package(
         return {.ok = false, .error = error};
     }
 
-    PackageRootTransaction transaction(plan.package_root);
+    PackageRootTransaction transaction(
+        copperfin::platform::path_from_utf8_string(plan.package_root));
     if (!transaction.begin(error)) {
         return {.ok = false, .error = error};
     }
@@ -2989,7 +3013,8 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
-    if (!plan.emit_dotnet_launcher && !std::filesystem::exists(plan.launcher_output_path)) {
+    if (!plan.emit_dotnet_launcher && !std::filesystem::exists(
+            copperfin::platform::path_from_utf8_string(plan.launcher_output_path))) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputMissing")};
     }
 
@@ -2997,7 +3022,7 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     if ((plan.emit_dotnet_launcher || is_library_output_kind(plan.output_kind)) &&
         !plan.primary_output_materialized) {
         package_transaction.emplace(
-            plan.package_root,
+            copperfin::platform::path_from_utf8_string(plan.package_root),
             PackageRootTransaction::Mode::resume_deferred);
         if (!package_transaction->begin(error)) {
             return {.ok = false, .error = error};
@@ -3099,7 +3124,7 @@ RuntimeBuildResult abort_runtime_package_transaction(
     }
 
     PackageRootTransaction transaction(
-        plan.package_root,
+        copperfin::platform::path_from_utf8_string(plan.package_root),
         PackageRootTransaction::Mode::resume_deferred);
     if (!transaction.begin(error)) {
         return {.ok = false, .error = error};
@@ -3124,7 +3149,8 @@ RuntimeBuildResult build_runtime_package_primary_output(
     if (!is_library_output_kind(plan.output_kind)) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput")};
     }
-    if (!std::filesystem::exists(plan.native_wrapper_cmake_path)) {
+    if (!std::filesystem::exists(
+            copperfin::platform::path_from_utf8_string(plan.native_wrapper_cmake_path))) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperCMakeMissing")};
     }
 
@@ -3136,7 +3162,9 @@ RuntimeBuildResult build_runtime_package_primary_output(
     const std::filesystem::path build_log_path = build_root / "cmake-build.log";
     std::error_code ignored;
     std::filesystem::remove_all(build_root, ignored);
-    std::filesystem::remove(plan.launcher_output_path, ignored);
+    std::filesystem::remove(
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
+        ignored);
     std::filesystem::create_directories(build_root, ignored);
     if (ignored) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed")};
@@ -3165,7 +3193,8 @@ RuntimeBuildResult build_runtime_package_primary_output(
         return {.ok = false, .error = error};
     }
 
-    if (!std::filesystem::exists(plan.launcher_output_path)) {
+    if (!std::filesystem::exists(
+            copperfin::platform::path_from_utf8_string(plan.launcher_output_path))) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
     }
 
