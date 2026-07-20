@@ -219,12 +219,27 @@ void test_native_query_unload_nodefault_vetoes_quit()
         main_path,
         "PUBLIC cEvents\n"
         "cEvents = ''\n"
+        "oFalse = CREATEOBJECT('FalseForm')\n"
+        "QUIT\n"
+        "lFalseStillAlive = PEMSTATUS(oFalse, 'cEvents', 1)\n"
+        "cAfterFalse = cEvents\n"
+        "oFalse.Release()\n"
         "oVeto = CREATEOBJECT('VetoForm')\n"
         "QUIT\n"
         "lStillAlive = PEMSTATUS(oVeto, 'cEvents', 1)\n"
         "cAfterQuit = cEvents\n"
         "oVeto.Release()\n"
         "RETURN\n"
+        "DEFINE CLASS FalseForm AS Form\n"
+        "    PROCEDURE QueryUnload\n"
+        "        cEvents = cEvents + 'false-query;'\n"
+        "        RETURN .F.\n"
+        "    ENDPROC\n"
+        "    cEvents = ''\n"
+        "    PROCEDURE Destroy\n"
+        "        cEvents = cEvents + 'false-destroy;'\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
         "DEFINE CLASS VetoForm AS Form\n"
         "    cEvents = ''\n"
         "    PROCEDURE QueryUnload\n"
@@ -253,8 +268,12 @@ void test_native_query_unload_nodefault_vetoes_quit()
         }
     };
 
+    check("lfalsestillalive", "true");
+    check("cafterfalse", "false-query;");
     check("lstillalive", "true");
-    check("cafterquit", "query;");
+    check("cafterquit", "false-query;false-destroy;query;");
+    expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "FalseForm"),
+           "false QueryUnload result should veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.queryunload_veto", "VetoForm"),
            "NODEFAULT from QueryUnload should veto QUIT");
     expect(has_runtime_event(state.events, "prg.object.destroy", "VetoForm.Destroy"),
