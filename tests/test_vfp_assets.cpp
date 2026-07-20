@@ -1838,6 +1838,7 @@ void test_export_database_as_json_decodes_properties_blob() {
     fs::create_directories(temp_dir);
 
     const fs::path dbc_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.dbc");
+    const std::string dbc_utf8_path = copperfin::platform::path_to_utf8_string(dbc_path);
 
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
@@ -1852,7 +1853,7 @@ void test_export_database_as_json_decodes_properties_blob() {
         {"TABLE", "Customers", "sample", ""}
     };
 
-    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
+    const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_utf8_path, fields, records);
     expect(create_result.ok, "properties-decode test: DBC fixture should be created");
 
     // Build a binary PROPERTIES blob for the TABLE record (record index 1, 0-based):
@@ -1877,10 +1878,10 @@ void test_export_database_as_json_decodes_properties_blob() {
 
     // Write the properties blob into the PROPERTIES memo for record 1 (TABLE, 0-based)
     const auto write_result = copperfin::vfp::replace_record_field_value(
-        dbc_path.string(), 1U, "PROPERTIES", props_blob);
+        dbc_utf8_path, 1U, "PROPERTIES", props_blob);
     expect(write_result.ok, "properties-decode test: PROPERTIES memo should be writable");
 
-    const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
+    const auto result = copperfin::vfp::export_database_as_json(dbc_utf8_path);
     expect(result.ok, "export_database_as_json should succeed when PROPERTIES blob is present");
     if (result.ok) {
         expect(result.json.find("\"Caption\"") != std::string::npos,

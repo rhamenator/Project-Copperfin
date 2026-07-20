@@ -769,12 +769,18 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
 }
 
 CdxParseResult parse_cdx_header_from_file(const std::string& path) {
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
+    const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
+    std::ifstream input(native_path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.OpenFileFailed")};
     }
 
-    const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
+    std::error_code file_size_error;
+    const std::uint64_t file_size = static_cast<std::uint64_t>(
+        std::filesystem::file_size(native_path, file_size_error));
+    if (file_size_error) {
+        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")};
+    }
     if (file_size < 16U) {
         return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")};
     }
