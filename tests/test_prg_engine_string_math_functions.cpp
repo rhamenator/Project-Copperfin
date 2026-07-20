@@ -6,6 +6,7 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -51,6 +52,9 @@ namespace
             "mod_negative_dividend = MOD(-7, 2)\n"
             "mod_negative_divisor = MOD(7, -2)\n"
             "mod_both_negative = MOD(-7, -2)\n"
+            "mod_small_divisor = MOD(0.00000025, 0.0000005)\n"
+            "mod_small_negative_divisor = MOD(0.00000025, -0.0000005)\n"
+            "mod_below_former_cutoff = MOD(0.00000075, 0.000001)\n"
             "d = ROUND(3.567, 2)\n"
             "e = SIGN(-5)\n"
             "log10_value = LOG10(1000)\n"
@@ -293,6 +297,19 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
+        const auto check_number = [&](const std::string &name, const double expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const double actual = copperfin::runtime::value_as_number(it->second);
+            expect(std::abs(actual - expected) < 1.0e-15,
+                   name + " expected numeric value " + std::to_string(expected) + " got " + std::to_string(actual));
+        };
+
         check("l", "5");
         check("lft", "hel");
         check("rgt", "lo");
@@ -474,6 +491,9 @@ namespace
         check("mod_negative_dividend", "1");
         check("mod_negative_divisor", "-1");
         check("mod_both_negative", "-1");
+        check_number("mod_small_divisor", 0.00000025);
+        check_number("mod_small_negative_divisor", -0.00000025);
+        check_number("mod_below_former_cutoff", 0.00000075);
         check("strextract_case_sensitive", "");
         check("strextract_case_insensitive", "Beta");
         check("strextract_empty_begin_first", "hell");

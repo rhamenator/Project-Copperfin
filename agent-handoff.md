@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Numeric parity slice `#4305` under `#3217`: `MOD()` must treat only an exact zero divisor as zero. Do not use a magnitude cutoff that discards valid sub-micro remainders; preserve the existing divisor-sign adjustment and stack-frugal runtime path. The PRG string/math regression checks tiny positive and negative-divisor results through `value_as_number()` because the generic display formatter intentionally rounds near-zero values for text output.
+
 - Runtime package text-write slice `#4304` under `#110`: `write_text_file()` must check the stream after content insertion, explicit `flush()`, and explicit `close()` before publishing success. Preserve the existing localized `Runtime.Package.Error.WriteFileFailed` diagnostic, UTF-8 path handling, package/manifest schemas, and rollback behavior. The POSIX fd-relative writer remains syscall-based with `fsync`/close checks. Keep the Linux `/dev/full` close-time regression and do not broaden this into a format change.
 
 - Studio builder localization slice `#4303` under `#2348`: keep `StudioBuilderDescriptor.vfp9_equivalent` invariant for VFP identity and machine contracts, and use `vfp9_equivalent_display` for catalog-backed human-facing text. Host JSON preserves `vfp9Equivalent` and adds optional `vfp9EquivalentDisplay`; plain builder output uses the display value. Keep all nine `Studio.Builder.*.Vfp9Equivalent` keys aligned in en-US, es-419, pt-BR, and qps-ploc, and do not translate builder IDs, entry points, component IDs, or other parser/runtime tokens.

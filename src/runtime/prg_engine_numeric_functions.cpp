@@ -56,7 +56,7 @@ std::optional<PrgValue> evaluate_numeric_function(
     if (function == "mod" && arguments.size() >= 2U) {
         const double a = value_as_number(arguments[0]);
         const double b = value_as_number(arguments[1]);
-        if (std::abs(b) < 0.000001) {
+        if (b == 0.0) {
             return make_number_value(0.0);
         }
         double remainder = std::fmod(a, b);
