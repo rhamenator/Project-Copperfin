@@ -14,6 +14,7 @@
     <Compile Include="Program.LocalizationCatalogs.01.cs" />
     <Compile Include="CopperfinDocumentPathIdentityTests.cs" />
     <Compile Include="CopperfinStudioTargetSelectionTests.cs" />
+    <Compile Include="CopperfinProjectSelectionTests.cs" />
     <Compile Include="VsixCommandLocalizationTests.cs" />
     <Compile Include="VsixCommandWindowTests.cs" />
     <Compile Include="VsixEditorPaneLocalizationTests.cs" />
@@ -26,6 +27,7 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinExternalLocaleCatalog.cs" Link="Shared\CopperfinExternalLocaleCatalog.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProcessRunner.cs" Link="Shared\CopperfinProcessRunner.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectWorkflow.cs" Link="Shared\CopperfinProjectWorkflow.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectPathResolver.cs" Link="Shared\CopperfinProjectPathResolver.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightClient.cs" Link="Shared\CopperfinProjectInsightClient.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightModels.cs" Link="Shared\CopperfinProjectInsightModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinRuntimeDebugClient.cs" Link="Shared\CopperfinRuntimeDebugClient.cs" />

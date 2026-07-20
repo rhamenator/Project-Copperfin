@@ -15,10 +15,15 @@ internal static class CopperfinProjectSelection
     {
         ThreadHelper.ThrowIfNotOnUIThread();
 
-        var activeDocumentPath = dte?.ActiveDocument?.FullName;
-        if (CopperfinProjectWorkflow.IsCopperfinProjectPath(activeDocumentPath) && File.Exists(activeDocumentPath))
+        var activeDocument = dte?.ActiveDocument;
+        var activeDocumentPath = activeDocument?.FullName;
+        var containingProjectPath = activeDocument?.ProjectItem?.ContainingProject?.FullName;
+        var activeProjectPath = CopperfinProjectPathResolver.ResolveActiveDocumentProjectPath(
+            activeDocumentPath,
+            containingProjectPath);
+        if (activeProjectPath is not null)
         {
-            return activeDocumentPath;
+            return activeProjectPath;
         }
 
         var selectedItems = dte?.SelectedItems;

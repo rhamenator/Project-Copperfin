@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-20: Shipped #4312 on the #23 IDE workflow lane. `CopperfinProjectSelection.ResolveProjectPath(...)` now checks the active document's containing project before falling back to selected Solution Explorer items, and the shared pure resolver plus managed tests cover active PRG/SCX/VCX/FRX/LBX/MNX documents, direct PJX activation, and missing-project fail-closed behavior. This keeps Build/Run/Debug available for active project assets without changing command IDs or machine contracts. The local VSIX project cannot build on Linux because the installed VSSDK task is missing `Microsoft.VisualStudio.Validation`; Windows hosted VSIX validation remains required.
+
 - VSIX #2996/#4311 host-mode editor chrome now calls `ApplyVisualStudioHostTheme()` when `EmbeddedStudioShell` is false, using `VSColorTheme.GetThemedColor(EnvironmentColors.ToolWindowBackgroundColorKey/ToolWindowTextColorKey)` with `SystemColors.Control/ControlText` fallback. It recursively themes shell controls but skips `CopperfinDesignSurfaceControl`, preserving the canvas rendering contract and standalone shell colors. Keep the managed source-contract test and require live Visual Studio dark/high-contrast smoke evidence before closing the parent.
 
 - PJX activation coverage under #25/#4265/#4309 now exercises the shared resolver and callback for `.prg`, `.scx`, `.vcx`, `.frx`, `.lbx`, and `.mnx`. Preserve the allowlist, normalized project-relative paths, traversal/missing/unsupported rejection, and the stale `Deleted`/`Excluded` guards without changing host contracts.

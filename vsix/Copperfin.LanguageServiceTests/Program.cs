@@ -50,6 +50,7 @@ internal static partial class Program
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
         TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
         TestStudioTargetSelectionPrefersSelectedItemsForItemCommands();
+        TestProjectSelectionResolvesContainingProjectForActiveAssets();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
         TestManagedHostResolutionUsesPlatformNativeCandidateRules();
         TestManagedHostResolutionChecksRealPosixExecutePermission();
