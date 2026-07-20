@@ -389,6 +389,7 @@ int main()
         test_same_prg_native_bindevent_method_handler_fault_does_not_disable_future_delegate_dispatch();
         test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
+        test_same_prg_native_event_delegate_chain_preserves_context_and_recovers();
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
         test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
         test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();

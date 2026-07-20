@@ -789,4 +789,116 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_event_delegate_chain_preserves_context_and_recovers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_event_delegate_chain";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_event_delegate_chain.prg";
+        write_text(
+            main_path,
+            "PUBLIC nBridgeCalls, nHandlerCalls, nBridgeRows, nHandlerRows, lBridgeSource, lHandlerSource, cLog\n"
+            "nBridgeCalls = 0\n"
+            "nHandlerCalls = 0\n"
+            "cLog = ''\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "oBridge = CREATEOBJECT('BridgeThing')\n"
+            "oTarget = CREATEOBJECT('TargetThing')\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "nBindSource = BINDEVENT(oSource, 'Ping', oBridge, 'ForwardPing')\n"
+            "nBindTarget = BINDEVENT(oTarget, 'Pong', oHandler, 'HandlePong')\n"
+            "lCaught = .F.\n"
+            "TRY\n"
+            "    lFirst = RAISEEVENT(oSource, 'Ping', 7)\n"
+            "CATCH TO oErr\n"
+            "    lCaught = .T.\n"
+            "ENDTRY\n"
+            "lSecond = RAISEEVENT(oSource, 'Ping', 8)\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    FUNCTION Ping\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BridgeThing AS Custom\n"
+            "    FUNCTION ForwardPing\n"
+            "        LPARAMETERS tnValue\n"
+            "        nBridgeCalls = nBridgeCalls + 1\n"
+            "        nBridgeRows = AEVENTS(aBridgeCurrent, 0)\n"
+            "        lBridgeSource = COMPOBJ(aBridgeCurrent[1], oSource)\n"
+            "        cLog = cLog + '[bridge:' + aBridgeCurrent[2] + ':' + TRANSFORM(aBridgeCurrent[3]) + ':' + TRANSFORM(tnValue) + ']'\n"
+            "        lNested = RAISEEVENT(oTarget, 'Pong', tnValue + 1)\n"
+            "        RETURN lNested\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TargetThing AS Custom\n"
+            "    FUNCTION Pong\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    FUNCTION HandlePong\n"
+            "        LPARAMETERS tnValue\n"
+            "        nHandlerCalls = nHandlerCalls + 1\n"
+            "        nHandlerRows = AEVENTS(aHandlerCurrent, 0)\n"
+            "        lHandlerSource = COMPOBJ(aHandlerCurrent[1], oTarget)\n"
+            "        cLog = cLog + '[handler:' + aHandlerCurrent[2] + ':' + TRANSFORM(aHandlerCurrent[3]) + ':' + TRANSFORM(tnValue) + ']'\n"
+            "        IF nHandlerCalls = 1\n"
+            "            1 / 0\n"
+            "        ENDIF\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native event delegate chain should recover after nested handler fault: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbindsource", "1");
+        check("nbindtarget", "1");
+        check("lcaught", "true");
+        check("lsecond", "true");
+        check("nbridgecalls", "2");
+        check("nhandlercalls", "2");
+        check("nbridgerows", "3");
+        check("nhandlerrows", "3");
+        check("lbridgesource", "true");
+        check("lhandlersource", "true");
+        check("clog", "[bridge:ping:1:7][handler:pong:1:8][bridge:ping:1:8][handler:pong:1:9]");
+
+        const bool has_bridge_delegate = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.event.delegate" && event.detail == "ping -> BridgeThing.ForwardPing";
+        });
+        const bool has_handler_delegate = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.event.delegate" && event.detail == "pong -> HandlerThing.HandlePong";
+        });
+        expect(has_bridge_delegate, "nested native event dispatch should emit bridge delegate telemetry");
+        expect(has_handler_delegate, "nested native event dispatch should emit handler delegate telemetry");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }
