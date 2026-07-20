@@ -131,6 +131,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Current State
 
+- Native manifest-pair slice #4257 is pushed in `e887a31c`: POSIX `/proc/self/fd/N/...` and `/dev/fd/N/...` roots are opened by duplicated descriptor and no-follow `openat` walking before manifest/debug pair publication. Keep descriptor-backed roots on descriptor-relative operations; do not reintroduce high-level path reopening on macOS. Focused `test_runtime_pipeline` passes locally; hosted exact-head macOS evidence is pending.
+
 - Standalone Studio now forwards a later `--object-name` or `--unique-id` request to an already-open SCX/VCX editor instead of dropping the selector; ordinary same-path revisits preserve the existing selection.
 
 - Shipped dynamic xAsset security slice `#4182` locally: host verification now retains supported xAsset primary/companion bytes under canonical/deployment aliases, dynamic `DO FORM` materialization consumes those bytes through a private runtime snapshot, and missing verified data becomes a localized runtime fault. The focused dynamic xAsset target, runtime-host binding, localization, and database lifecycle tests pass; the existing PRG macro-target pair still fails independently and remains outside this slice. Hosted cross-platform evidence remains required before issue closure.
