@@ -212,6 +212,7 @@ void test_manifest_pair_directory_stays_pinned_and_never_overwrites();
 void test_manifest_pair_finalization_rolls_back_failed_promotions();
 void test_manifest_pair_finalization_recovers_stale_transactions();
 void test_materialize_cleanup_warning_rewrites_manifest_pair_atomically();
+void test_write_text_file_reports_close_failure();
 void test_drive_relative_asset_paths_use_contained_package_identity();
 void test_materialization_rejects_external_asset_destinations();
 void test_optional_rejected_asset_identity_stays_out_of_manifests();

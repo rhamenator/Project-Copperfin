@@ -54,6 +54,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_manifest_pair_finalization_rolls_back_failed_promotions();
     test_manifest_pair_finalization_recovers_stale_transactions();
     test_materialize_cleanup_warning_rewrites_manifest_pair_atomically();
+    test_write_text_file_reports_close_failure();
     test_drive_relative_asset_paths_use_contained_package_identity();
     test_materialization_rejects_external_asset_destinations();
     test_optional_rejected_asset_identity_stays_out_of_manifests();

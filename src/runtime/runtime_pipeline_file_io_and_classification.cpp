@@ -396,7 +396,12 @@ bool write_text_file(const std::filesystem::path& path, const std::string& conte
     }
 
     output << contents;
-    if (!output.good()) {
+    const bool wrote = output.good();
+    output.flush();
+    const bool flushed = output.good();
+    output.close();
+    const bool closed = output.good();
+    if (!wrote || !flushed || !closed) {
         error = runtime_text("Runtime.Package.Error.WriteFileFailed", {{"path", copperfin::platform::path_to_utf8_string(path)}});
         return false;
     }

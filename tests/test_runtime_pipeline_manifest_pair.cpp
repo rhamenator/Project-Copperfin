@@ -606,4 +606,22 @@ void test_materialize_cleanup_warning_rewrites_manifest_pair_atomically() {
     remove_fixture(fixture);
 }
 
+void test_write_text_file_reports_close_failure() {
+#if defined(__linux__)
+    if (!fs::exists("/dev/full")) {
+        return;
+    }
+
+    std::string error;
+    const bool result = copperfin::runtime::runtime_pipeline_detail::write_text_file(
+        fs::path("/dev/full"),
+        "close-time failure",
+        error);
+    expect(!result,
+           "#4304: text-file writes should fail when the destination reports a close-time write error");
+    expect(!error.empty(),
+           "#4304: close-time text-file failures should preserve a localized write diagnostic");
+#endif
+}
+
 }  // namespace cf_test_runtime_pipeline
