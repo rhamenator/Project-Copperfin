@@ -1,5 +1,7 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
 
+#include <vector>
+
 namespace copperfin::runtime_surface_tests
 {
     void test_same_prg_native_raiseevent_handler_fault_does_not_disable_future_dispatch()
@@ -800,7 +802,7 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_event_delegate_chain.prg";
         write_text(
             main_path,
-            "PUBLIC nBridgeCalls, nHandlerCalls, nBridgeRows, nHandlerRows, lBridgeSource, lHandlerSource, cLog\n"
+            "PUBLIC nBridgeCalls, nHandlerCalls, nBridgeRows, nHandlerRows, nBridgeAfterRows, nBridgeAfterType, nAfterFaultRows, nReentryCalls, lBridgeSource, lBridgeSourceAfter, lHandlerSource, lReentry, cBridgeAfterEvent, cLog\n"
             "nBridgeCalls = 0\n"
             "nHandlerCalls = 0\n"
             "cLog = ''\n"
@@ -815,6 +817,7 @@ namespace copperfin::runtime_surface_tests
             "    lFirst = RAISEEVENT(oSource, 'Ping', 7)\n"
             "CATCH TO oErr\n"
             "    lCaught = .T.\n"
+            "    nAfterFaultRows = AEVENTS(aAfterFault, 0)\n"
             "ENDTRY\n"
             "lSecond = RAISEEVENT(oSource, 'Ping', 8)\n"
             "RETURN\n"
@@ -831,7 +834,13 @@ namespace copperfin::runtime_surface_tests
             "        nBridgeRows = AEVENTS(aBridgeCurrent, 0)\n"
             "        lBridgeSource = COMPOBJ(aBridgeCurrent[1], oSource)\n"
             "        cLog = cLog + '[bridge:' + aBridgeCurrent[2] + ':' + TRANSFORM(aBridgeCurrent[3]) + ':' + TRANSFORM(tnValue) + ']'\n"
+            "        nReentryCalls = nReentryCalls + 1\n"
+            "        lReentry = RAISEEVENT(oSource, 'Ping', tnValue)\n"
             "        lNested = RAISEEVENT(oTarget, 'Pong', tnValue + 1)\n"
+            "        nBridgeAfterRows = AEVENTS(aBridgeAfter, 0)\n"
+            "        cBridgeAfterEvent = aBridgeAfter[2]\n"
+            "        nBridgeAfterType = aBridgeAfter[3]\n"
+            "        lBridgeSourceAfter = COMPOBJ(aBridgeAfter[1], oSource)\n"
             "        RETURN lNested\n"
             "    ENDFUNC\n"
             "ENDDEFINE\n"
@@ -883,20 +892,35 @@ namespace copperfin::runtime_surface_tests
         check("nhandlercalls", "2");
         check("nbridgerows", "3");
         check("nhandlerrows", "3");
+        check("nbridgeafterrows", "3");
+        check("nbridgeaftertype", "1");
+        check("nafterfaultrows", "0");
+        check("nreentrycalls", "2");
         check("lbridgesource", "true");
+        check("lbridgesourceafter", "true");
         check("lhandlersource", "true");
+        check("lreentry", "true");
+        check("cbridgeafterevent", "ping");
         check("clog", "[bridge:ping:1:7][handler:pong:1:8][bridge:ping:1:8][handler:pong:1:9]");
 
-        const bool has_bridge_delegate = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        std::vector<std::string> delegate_details;
+        for (const auto &event : state.events)
         {
-            return event.category == "prg.event.delegate" && event.detail == "ping -> BridgeThing.ForwardPing";
-        });
-        const bool has_handler_delegate = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
-        {
-            return event.category == "prg.event.delegate" && event.detail == "pong -> HandlerThing.HandlePong";
-        });
-        expect(has_bridge_delegate, "nested native event dispatch should emit bridge delegate telemetry");
-        expect(has_handler_delegate, "nested native event dispatch should emit handler delegate telemetry");
+            if (event.category == "prg.event.delegate")
+            {
+                expect(event.location.line > 0,
+                       "nested native event delegate telemetry should retain a source line");
+                expect(event.location.file_path == main_path.string(),
+                       "nested native event delegate telemetry should retain the source path");
+                delegate_details.push_back(event.detail);
+            }
+        }
+        expect(delegate_details == std::vector<std::string>{
+                                    "ping -> BridgeThing.ForwardPing",
+                                    "pong -> HandlerThing.HandlePong",
+                                    "ping -> BridgeThing.ForwardPing",
+                                    "pong -> HandlerThing.HandlePong"},
+               "nested native event dispatch should emit exactly-once delegate telemetry in dispatch order");
 
         fs::remove_all(temp_root, ignored);
     }
