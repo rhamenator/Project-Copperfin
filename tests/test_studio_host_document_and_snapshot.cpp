@@ -125,14 +125,16 @@ void test_open_document_casefold_preserves_utf8_filename_bytes() {
             output << "memo-sidecar";
         }
 
+        const std::string primary_path_utf8 = copperfin::platform::path_to_utf8_string(primary_path);
+        const std::string sidecar_path_utf8 = copperfin::platform::path_to_utf8_string(sidecar_path);
         const std::string inferred = copperfin::studio::infer_sidecar_path(
-            primary_path.string(),
+            primary_path_utf8,
             sidecar_case.kind);
-        expect(inferred == sidecar_path.string(),
+        expect(inferred == sidecar_path_utf8,
                "#3973: " + std::string(sidecar_case.label) +
                    " recovery should preserve UTF-8 bytes and actual entry spelling");
 
-        const auto result = copperfin::studio::open_document({.path = primary_path.string()});
+        const auto result = copperfin::studio::open_document({.path = primary_path_utf8});
         expect(result.ok,
                "#3973: UTF-8 " + std::string(sidecar_case.label) + " paths should remain openable");
         expect(result.document.kind == sidecar_case.kind,
@@ -140,7 +142,7 @@ void test_open_document_casefold_preserves_utf8_filename_bytes() {
         expect(result.document.has_sidecar,
                "#3973: UTF-8 " + std::string(sidecar_case.label) +
                    " paths should discover case-variant sidecars");
-        expect(result.document.sidecar_path == sidecar_path.string(),
+        expect(result.document.sidecar_path == sidecar_path_utf8,
                "#3973: opened UTF-8 " + std::string(sidecar_case.label) +
                    " documents should retain actual sidecar filename spelling");
     }
