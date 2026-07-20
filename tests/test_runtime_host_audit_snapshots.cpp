@@ -6,6 +6,123 @@
 
 // Safety-relevant coverage: these tests exercise immutable audit-chain and integrity contracts.
 
+void test_security_enabled_query_file_uses_verified_snapshot(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+    const int failures_before_test = failures;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_verified_query_snapshot";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path content_root = deployed_root / "content";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path table_path = content_root / "customers.dbf";
+    const fs::path query_path = content_root / "names.qpr";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(
+        startup_path,
+        "USE 'customers.dbf' ALIAS customers\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.RowSourceType = 4\n"
+        "oList.RowSource = 'names.qpr'\n"
+        "oList.Requery()\n"
+        "cBefore = oList.List(1)\n"
+        "oList.Requery()\n"
+        "cAfter = oList.List(1)\n"
+        "RETURN\n");
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 16U}},
+        {{"Ada"}, {"Grace"}});
+    expect(table_create.ok, "verified query snapshot fixture should create its DBF");
+    const std::string query_bytes =
+        "SELECT name FROM customers WHERE name = 'Ada' INTO CURSOR temp2\n";
+    write_text(query_path, query_bytes);
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+    const auto table_hash = copperfin::security::sha256_hex_for_file(table_path.string());
+    const auto query_hash = copperfin::security::sha256_hex_for_file(query_path.string());
+    expect(runtime_host_hash.ok && startup_hash.ok && table_hash.ok && query_hash.ok,
+           "verified query snapshot fixture should hash all packaged inputs");
+    if (!runtime_host_hash.ok || !startup_hash.ok || !table_hash.ok || !query_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path recorded_package_root = temp_root / "builder" / "QuerySnapshotApp";
+    const fs::path recorded_content_root = recorded_package_root / "content";
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=QuerySnapshotApp\n"
+        "package_root=" + recorded_package_root.string() + "\n"
+        "content_root=" + recorded_content_root.string() + "\n"
+        "working_directory=" + recorded_content_root.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + (recorded_content_root / "main.prg").string() + "\n"
+        "security_enabled=true\n"
+        "security_role=runtime-operator\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|main.prg|" + (recorded_content_root / "main.prg").string() +
+            "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
+        "asset=2|customers.dbf|" + (recorded_content_root / "customers.dbf").string() +
+            "|Table|false|true|" + table_hash.hex_digest + "|true\n"
+        "asset=3|names.qpr|" + (recorded_content_root / "names.qpr").string() +
+            "|Query|false|true|" + query_hash.hex_digest + "|true\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentValue locale_dir(locale_root.string());
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--breakpoint", "6",
+            "--breakpoint", "9",
+            "--debug-command", "continue",
+            "--debug-command", "watch:STRTOFILE(\"SELECT name FROM customers WHERE name = 'Grace' INTO CURSOR temp2\", 'names.qpr')",
+            "--debug-command", "continue",
+            "--debug-command", "watch:cBefore",
+            "--debug-command", "watch:cAfter",
+            "--debug-command", "continue"
+        },
+        deployed_root);
+    if (process.exit_code != 0) {
+        std::cerr << "verified query snapshot stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "verified query snapshot stderr:\n" << process.stderr_text << "\n";
+    }
+    expect(process.exit_code == 0,
+           "security-enabled query-file startup should continue after physical query mutation");
+    const std::string watch_value = "debug.watch.value: Ada";
+    expect(process.stdout_text.find(watch_value) != std::string::npos,
+           "verified query snapshot should preserve the initial admitted query result");
+    const std::size_t first_watch = process.stdout_text.find(watch_value);
+    expect(first_watch != std::string::npos &&
+               process.stdout_text.find(watch_value, first_watch + watch_value.size()) != std::string::npos,
+           "verified query snapshot should preserve the result after Requery");
+    expect(read_text(query_path).find("'Grace'") != std::string::npos,
+           "verified query snapshot should prove the physical query was replaced during debugging");
+
+    if (failures == failures_before_test) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_security_enabled_report_and_label_execute_verified_snapshots(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;

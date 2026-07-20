@@ -1310,9 +1310,13 @@ bool physical_indirection_was_rejected(
 
 bool packaged_source_text_extension(const std::filesystem::path& path) {
     const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
-    return extension == ".prg" || extension == ".mpr" || extension == ".qpr" ||
+    return extension == ".prg" || extension == ".mpr" ||
            extension == ".h" || extension == ".inc" || extension == ".ch" ||
            extension == ".txt";
+}
+
+bool packaged_query_extension(const std::filesystem::path& path) {
+    return lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension())) == ".qpr";
 }
 
 bool packaged_database_component_extension(const std::filesystem::path& path) {
@@ -3386,12 +3390,13 @@ int run_runtime_host_main(int argc, char** argv) {
             for (const auto& verified_path : verified_package_paths) {
                 const auto& source_path = verified_path.containment.canonical_path;
                 const bool source_text = packaged_source_text_extension(source_path);
+                const bool query_file = packaged_query_extension(source_path);
                 const bool database_component = packaged_database_component_extension(source_path);
                 const bool xasset = packaged_xasset_extension(source_path);
-                if ((!source_text && !database_component && !xasset) ||
+                if ((!source_text && !query_file && !database_component && !xasset) ||
                     (source_text && verified_source_texts.contains(
                         copperfin::platform::path_to_utf8_string(source_path))) ||
-                    ((database_component || xasset) && verified_file_bytes.contains(
+                    ((query_file || database_component || xasset) && verified_file_bytes.contains(
                         copperfin::platform::path_to_utf8_string(source_path)))) {
                     continue;
                 }
@@ -3423,7 +3428,7 @@ int run_runtime_host_main(int argc, char** argv) {
                         startup_source,
                         source_snapshot.bytes);
                 }
-                if (database_component) {
+                if (query_file || database_component) {
                     add_verified_deployment_bytes(
                         verified_file_bytes,
                         source_path,

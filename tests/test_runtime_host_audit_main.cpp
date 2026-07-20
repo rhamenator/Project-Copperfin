@@ -7,6 +7,7 @@
 // Safety-relevant coverage: these tests exercise immutable audit-chain and integrity contracts.
 
 void test_security_enabled_report_and_label_execute_verified_snapshots(const std::string& runtime_host_path);
+void test_security_enabled_query_file_uses_verified_snapshot(const std::string& runtime_host_path);
 void test_security_enabled_form_class_and_menu_companion_integrity(const std::string& runtime_host_path);
 void test_runtime_host_preserves_logical_identity_across_nested_directory_aliases(const std::string& runtime_host_path);
 void test_app_cfdebug_preserves_external_xasset_source_compatibility(const std::string& runtime_host_path);
@@ -38,6 +39,7 @@ int main(int argc, char** argv) {
 
     const std::string runtime_host_path = argv[1];
     run_runtime_host_test("verified report and label snapshots", runtime_host_path, test_security_enabled_report_and_label_execute_verified_snapshots);
+    run_runtime_host_test("verified query-file snapshot", runtime_host_path, test_security_enabled_query_file_uses_verified_snapshot);
     run_runtime_host_test("verified xAsset companions", runtime_host_path, test_security_enabled_form_class_and_menu_companion_integrity);
     run_runtime_host_test("nested directory alias identity", runtime_host_path, test_runtime_host_preserves_logical_identity_across_nested_directory_aliases);
     run_runtime_host_test("external xAsset debug source", runtime_host_path, test_app_cfdebug_preserves_external_xasset_source_compatibility);

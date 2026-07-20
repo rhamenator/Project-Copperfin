@@ -1616,9 +1616,10 @@ private:
         const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
         const std::filesystem::path pinned_target = pinned_path(path);
         const std::filesystem::path temporary_path =
-            copperfin::platform::path_to_utf8_string(pinned_target) + ".tmp." +
-            std::to_string(timestamp) + "." +
-            std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
+            copperfin::platform::path_from_utf8_string(
+                copperfin::platform::path_to_utf8_string(pinned_target) + ".tmp." +
+                std::to_string(timestamp) + "." +
+                std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed)));
 
         std::error_code filesystem_error;
         if (directory_entry_exists(temporary_path, filesystem_error) || filesystem_error) {
