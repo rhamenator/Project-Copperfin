@@ -10,7 +10,7 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_manifest_version_contracts";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_manifest_version_contracts");
     const fs::path locale_root = temp_root / "locales";
     const fs::path startup_path = temp_root / "main.prg";
     const fs::path supported_v3_manifest_path = temp_root / "supported_v3.cfmanifest";
@@ -106,7 +106,7 @@ void test_runtime_host_debug_privileges_require_debug_document_contract(
     namespace fs = std::filesystem;
 
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_debug_document_contract";
+        runtime_host_audit_temp_root("copperfin_runtime_host_debug_document_contract");
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path content_root = deployed_root / "content";
     const fs::path external_root = temp_root / "external";
@@ -327,7 +327,7 @@ void test_runtime_host_debug_privileges_require_debug_document_contract(
 void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_federation_ai_permission_tests";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_federation_ai_permission_tests");
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);

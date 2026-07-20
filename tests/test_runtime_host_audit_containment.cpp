@@ -12,7 +12,7 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
     namespace fs = std::filesystem;
 
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_audit_path_containment";
+        runtime_host_audit_temp_root("copperfin_runtime_host_audit_path_containment");
     const fs::path packages_root = temp_root / "packages";
     const fs::path external_root = temp_root / "external";
     const fs::path external_audit_path = external_root / "security_audit.log";
@@ -245,7 +245,7 @@ void test_runtime_host_rejects_malformed_security_enabled_before_startup(
     namespace fs = std::filesystem;
 
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_malformed_security_enabled";
+        runtime_host_audit_temp_root("copperfin_runtime_host_malformed_security_enabled");
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
@@ -339,7 +339,7 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_security_denial_audit_localization";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_security_denial_audit_localization");
     const fs::path locale_root = temp_root / "locales";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);

@@ -10,7 +10,7 @@ void test_security_enabled_writable_package_data_contract(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
     const int failures_before_test = failures;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_writable_package_data";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_writable_package_data");
     const fs::path recorded_package_root = temp_root / "builder" / "WritableDataApp";
     const fs::path recorded_content_root = recorded_package_root / "content";
     const fs::path deployed_root = temp_root / "deployed";
@@ -367,7 +367,7 @@ void test_security_enabled_writable_package_data_contract(
 void test_runtime_host_rejects_extension_payload_basename_fallback(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_payload_path_fidelity";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_payload_path_fidelity");
     const fs::path builder_root = temp_root / "builder" / "DemoApp";
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path content_root = deployed_root / "content";
@@ -474,7 +474,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
 void test_runtime_host_accepts_escaped_manifest_pipe_fields(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_escaped_manifest_pipe";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_escaped_manifest_pipe");
     const fs::path builder_root = temp_root / "builder" / "PipeFieldApp";
     const fs::path builder_content_root = builder_root / "content";
     const fs::path deployed_root = temp_root / "deployed";
@@ -552,7 +552,7 @@ void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std
 #else
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_direct_manifest_pipe";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_direct_manifest_pipe");
     const fs::path deployed_root = temp_root / "deployed|package\\literal";
     const fs::path content_root = deployed_root / "content|root\\literal";
     const fs::path startup_path = content_root / "main.prg";
@@ -647,7 +647,7 @@ void test_runtime_host_manifest_verification_errors_localize_without_changing_co
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_manifest_error_localization";
+    const fs::path temp_root = runtime_host_audit_temp_root("copperfin_runtime_host_manifest_error_localization");
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path content_root = deployed_root / "content";
     const fs::path locale_root = temp_root / "locales";

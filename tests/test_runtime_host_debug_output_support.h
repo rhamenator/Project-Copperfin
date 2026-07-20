@@ -11,6 +11,7 @@
 #include "test_environment_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <cwctype>
 #include <filesystem>
@@ -22,6 +23,9 @@
 
 #if !defined(_WIN32)
 #include <sys/wait.h>
+#include <unistd.h>
+#else
+#include <process.h>
 #endif
 
 inline int failures = 0;
@@ -30,6 +34,18 @@ namespace {
 
 using copperfin::test_support::ScopedEnvironmentValue;
 using copperfin::test_support::ScopedEnvironmentPath;
+
+[[maybe_unused]] std::filesystem::path runtime_host_audit_temp_root(const char* stem) {
+    static std::atomic_uint sequence{0U};
+#if defined(_WIN32)
+    const unsigned long process_id = static_cast<unsigned long>(::_getpid());
+#else
+    const unsigned long process_id = static_cast<unsigned long>(::getpid());
+#endif
+    const unsigned int run_id = sequence.fetch_add(1U, std::memory_order_relaxed);
+    return std::filesystem::temp_directory_path() /
+        (std::string(stem) + "_" + std::to_string(process_id) + "_" + std::to_string(run_id));
+}
 
 [[maybe_unused]] void expect(bool condition, const std::string& message) {
     if (!condition) {

@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-20: Shipped #4315 test-fixture isolation. `runtime_host_audit_temp_root(...)` namespaces audit temporary roots by process ID and per-translation-unit run sequence across POSIX and Windows, so concurrent audit executables cannot reuse fixed `/tmp/copperfin_runtime_host_*` paths. The full audit suite remains long-running; use focused targets and avoid claiming a full pass from bounded runs.
+
 - 2026-07-20: Shipped #4314 on the #110 portability lane. `portable_manifest_path(...)` preserves decoded literal backslashes on POSIX, but continues to normalize decoded Windows drive-rooted and UNC paths for cross-platform manifests. The direct manifest-path regression now exercises both `|` and literal `\\` components; keep `backslash-v1` writer/host round trips aligned.
 
 - 2026-07-20: Shipped the remaining #4274 manifest-escaping correction. `unescape_manifest_value(...)` now decodes `\\|` for direct manifest values as well as compound pipe-delimited records, so generated `backslash-v1` manifests preserve POSIX/macOS paths containing literal pipes. Keep the writer/host encoding contract aligned and retain the focused direct-path regression; Windows skips the path-component fixture because `|` is invalid there.

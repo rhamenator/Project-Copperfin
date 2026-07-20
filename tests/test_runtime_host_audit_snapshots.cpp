@@ -11,7 +11,7 @@ void test_security_enabled_query_file_uses_verified_snapshot(
     namespace fs = std::filesystem;
     const int failures_before_test = failures;
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_verified_query_snapshot";
+        runtime_host_audit_temp_root("copperfin_runtime_host_verified_query_snapshot");
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path content_root = deployed_root / "content";
     const fs::path startup_path = content_root / "main.prg";
@@ -141,8 +141,8 @@ void test_security_enabled_report_and_label_execute_verified_snapshots(
     for (const auto& layout_case : cases) {
 
     const fs::path temp_root =
-        fs::temp_directory_path() /
-        (std::string("copperfin_runtime_host_verified_") + layout_case.fixture_suffix + "_snapshot");
+        runtime_host_audit_temp_root(
+            (std::string("copperfin_runtime_host_verified_") + layout_case.fixture_suffix + "_snapshot").c_str());
     const fs::path content_root = temp_root / "content";
     const fs::path asset_path = content_root / layout_case.file_name;
     const fs::path manifest_path = temp_root / "app.cfmanifest";
@@ -266,8 +266,8 @@ void test_security_enabled_form_class_and_menu_companion_integrity(
     for (const auto& xasset_case : cases) {
         const int failures_before_case = failures;
         const fs::path temp_root =
-            fs::temp_directory_path() /
-            (std::string("copperfin_runtime_host_verified_") + xasset_case.fixture_suffix + "_companion");
+            runtime_host_audit_temp_root(
+                (std::string("copperfin_runtime_host_verified_") + xasset_case.fixture_suffix + "_companion").c_str());
         const fs::path recorded_package_root = temp_root / "builder" / "DemoApp";
         const fs::path deployed_root = temp_root / "deployed";
         const fs::path content_root = deployed_root / "content";
@@ -480,7 +480,7 @@ void test_runtime_host_preserves_logical_identity_across_nested_directory_aliase
 
     const int failures_before_test = failures;
     const fs::path test_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_nested_alias_identity";
+        runtime_host_audit_temp_root("copperfin_runtime_host_nested_alias_identity");
     const fs::path physical_namespace = test_root / "physical";
     const fs::path logical_namespace = test_root / "logical";
     const fs::path physical_package = physical_namespace / "deployed";
@@ -744,7 +744,7 @@ void test_app_cfdebug_preserves_external_xasset_source_compatibility(
     namespace fs = std::filesystem;
     const int failures_before_test = failures;
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_external_xasset_debug";
+        runtime_host_audit_temp_root("copperfin_runtime_host_external_xasset_debug");
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path source_root = temp_root / "source";
     const fs::path asset_path = source_root / "external.scx";
@@ -814,7 +814,7 @@ void test_app_cfdebug_rejects_file_valued_working_directory(
     namespace fs = std::filesystem;
 
     const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_runtime_host_file_working_directory";
+        runtime_host_audit_temp_root("copperfin_runtime_host_file_working_directory");
     const fs::path deployed_root = temp_root / "deployed";
     const fs::path content_root = deployed_root / "content";
     const fs::path startup_path = content_root / "main.prg";
