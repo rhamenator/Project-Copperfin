@@ -69,20 +69,20 @@ void test_security_enabled_query_file_uses_verified_snapshot(
         manifest_path,
         "manifest_version=1\n"
         "project_title=QuerySnapshotApp\n"
-        "package_root=" + recorded_package_root.string() + "\n"
-        "content_root=" + recorded_content_root.string() + "\n"
-        "working_directory=" + recorded_content_root.string() + "\n"
+        "package_root=" + quote_manifest_value(recorded_package_root.string()) + "\n"
+        "content_root=" + quote_manifest_value(recorded_content_root.string()) + "\n"
+        "working_directory=" + quote_manifest_value(recorded_content_root.string()) + "\n"
         "startup_item=main.prg\n"
-        "startup_source=" + (recorded_content_root / "main.prg").string() + "\n"
+        "startup_source=" + quote_manifest_value((recorded_content_root / "main.prg").string()) + "\n"
         "security_enabled=true\n"
         "security_role=runtime-operator\n"
         "security_mode=native\n"
         "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
-        "asset=1|main.prg|" + (recorded_content_root / "main.prg").string() +
+        "asset=1|main.prg|" + quote_manifest_value((recorded_content_root / "main.prg").string()) +
             "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
-        "asset=2|customers.dbf|" + (recorded_content_root / "customers.dbf").string() +
+        "asset=2|customers.dbf|" + quote_manifest_value((recorded_content_root / "customers.dbf").string()) +
             "|Table|false|true|" + table_hash.hex_digest + "|true\n"
-        "asset=3|names.qpr|" + (recorded_content_root / "names.qpr").string() +
+        "asset=3|names.qpr|" + quote_manifest_value((recorded_content_root / "names.qpr").string()) +
             "|Query|false|true|" + query_hash.hex_digest + "|true\n"
         "dotnet_story=none\n");
 
