@@ -127,6 +127,7 @@ struct RealObjectSample {
     std::string updated_width;
     std::string preserved_expr;
     bool is_label = false;
+    bool exercise_raw_picture_round_trip = false;
 };
 
 void exercise_real_sample_object_round_trip(
@@ -165,6 +166,19 @@ void exercise_real_sample_object_round_trip(
     });
     expect(original_expr.ok && original_expr.exists && original_expr.value == sample.preserved_expr,
            "#3527: real sample object should expose the expected original EXPR");
+
+    const auto preserved_picture_object = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 10U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "PICTURE"
+    });
+    if (sample.exercise_raw_picture_round_trip) {
+        expect(preserved_picture_object.ok && preserved_picture_object.exists &&
+                   preserved_picture_object.value == "\"logo.bmp\"",
+               "#4291: real LBX picture-object PICTURE should expose its original memo text");
+    }
 
     const std::string original_primary_bytes = read_binary(copied_primary);
     const std::string original_sidecar_bytes = read_binary(copied_sidecar);
@@ -290,6 +304,112 @@ void exercise_real_sample_object_round_trip(
                         "\"isLabel\": false",
                         "#3527: report sample object reopen should preserve report identity");
     }
+
+    if (sample.exercise_raw_picture_round_trip) {
+        const auto picture_set_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", copied_primary.string(),
+                "--set-property",
+                "--record", std::to_string(sample.record_index),
+                "--property-name", "PICTURE",
+                "--property-value", "@I",
+                "--json"
+            },
+            temp_root);
+        expect(picture_set_process.exit_code == 0,
+               "#4291: real LBX PICTURE set should succeed for the selected field object");
+        expect_contains(
+            picture_set_process.stdout_text,
+            "\"name\": \"PICTURE\", \"type\": \"M\", \"isNull\": false, \"value\": \"@I\", \"fieldIndex\": 12, \"memoBlockNumber\": ",
+            "#4291: real LBX PICTURE set should expose field and memo provenance");
+        expect_contains(
+            picture_set_process.stdout_text,
+            "\"objectKind\": \"field\"",
+            "#4291: real LBX PICTURE set should preserve the field object kind");
+        expect_contains(
+            picture_set_process.stdout_text,
+            "\"picture\": \"\",\n      \"pictureFieldIndex\": null,\n      \"pictureMemoBlockNumber\": 0",
+            "#4291: field-object PICTURE should not be reinterpreted as label alignment metadata");
+
+        const auto updated_picture = copperfin::vfp::query_visual_object_property({
+            .path = copied_primary.string(),
+            .record_index = sample.record_index,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "PICTURE"
+        });
+        expect(updated_picture.ok && updated_picture.exists && updated_picture.value == "@I",
+               "#4291: real LBX PICTURE set should persist the raw memo value");
+        expect(read_binary(copied_sidecar) != original_sidecar_bytes,
+               "#4291: real LBX PICTURE set should update the memo sidecar");
+        expect(copperfin::vfp::query_visual_object_property({
+                   .path = copied_primary.string(),
+                   .record_index = 10U,
+                   .object_name = {},
+                   .unique_id = {},
+                   .property_name = "PICTURE"
+               }).value == preserved_picture_object.value,
+               "#4291: real LBX PICTURE set should preserve the unrelated image-object PICTURE");
+
+        const auto picture_clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", copied_primary.string(),
+                "--clear-property",
+                "--record", std::to_string(sample.record_index),
+                "--property-name", "PICTURE",
+                "--json"
+            },
+            temp_root);
+        expect(picture_clear_process.exit_code == 0,
+               "#4291: real LBX PICTURE clear should succeed for the selected field object");
+        expect_contains(
+            picture_clear_process.stdout_text,
+            "\"name\": \"PICTURE\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 12, \"memoBlockNumber\": ",
+            "#4291: real LBX PICTURE clear should retain field and memo provenance");
+        expect_contains(
+            picture_clear_process.stdout_text,
+            "\"picture\": \"\",\n      \"pictureFieldIndex\": null,\n      \"pictureMemoBlockNumber\": 0",
+            "#4291: cleared field-object PICTURE should remain outside label alignment metadata");
+
+        const auto cleared_picture = copperfin::vfp::query_visual_object_property({
+            .path = copied_primary.string(),
+            .record_index = sample.record_index,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "PICTURE"
+        });
+        expect(cleared_picture.ok && cleared_picture.exists && cleared_picture.value.empty(),
+               "#4291: real LBX PICTURE clear should persist an empty raw memo value");
+        expect(copperfin::vfp::query_visual_object_property({
+                   .path = copied_primary.string(),
+                   .record_index = sample.record_index,
+                   .object_name = {},
+                   .unique_id = {},
+                   .property_name = "EXPR"
+               }).value == sample.preserved_expr,
+               "#4291: real LBX PICTURE round trip should preserve the selected expression");
+        expect(copperfin::vfp::query_visual_object_property({
+                   .path = copied_primary.string(),
+                   .record_index = 10U,
+                   .object_name = {},
+                   .unique_id = {},
+                   .property_name = "PICTURE"
+               }).value == preserved_picture_object.value,
+               "#4291: real LBX PICTURE clear should preserve the unrelated image-object PICTURE");
+
+        const auto picture_reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", copied_primary.string(), "--record", std::to_string(sample.record_index), "--json"},
+            temp_root);
+        expect(picture_reopen_process.exit_code == 0,
+               "#4291: real LBX PICTURE clear reopen should succeed");
+        expect_contains(
+            picture_reopen_process.stdout_text,
+            "\"name\": \"PICTURE\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 12, \"memoBlockNumber\": ",
+            "#4291: reopened real LBX PICTURE clear should preserve raw-field provenance");
+    }
 }
 
 void test_real_vfp9_report_and_label_sample_object_round_trip(const std::string& studio_host_path) {
@@ -335,7 +455,8 @@ void test_real_vfp9_report_and_label_sample_object_round_trip(const std::string&
             .original_width = "31562.500",
             .updated_width = "32000.000",
             .preserved_expr = "customer.company",
-            .is_label = true
+            .is_label = true,
+            .exercise_raw_picture_round_trip = true
         });
 
     if (failures == 0) {
