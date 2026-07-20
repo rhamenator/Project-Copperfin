@@ -137,6 +137,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Current State
 
+- Current head `74741e94` has green hosted Linux/macOS native, VSIX, installer, executable-path, environment-path, DECLARE ABI, and supply-chain validation. Hosted Windows Native Validation completed after a 44-minute measured validation phase, with the same seven pre-existing failures as the prior Windows run: `test_build_host_utf8_launcher_paths`, `test_vfp_assets`, `test_studio_host`, `test_visual_asset_editor`, `test_runtime_pipeline`, `test_prg_engine_verified_dbf_security`, and `test_prg_engine_path_functions`. `test_build_host_output` and the changed audit-containment target passed; do not attribute this baseline to #4287, #4289, or #4290. Keep those issues open until a full Windows lane is green.
+
 - Native manifest-pair slice #4257 is pushed in `e887a31c`: POSIX `/proc/self/fd/N/...` and `/dev/fd/N/...` roots are opened by duplicated descriptor and no-follow `openat` walking before manifest/debug pair publication. Keep descriptor-backed roots on descriptor-relative operations; do not reintroduce high-level path reopening on macOS. Focused `test_runtime_pipeline` passes locally; hosted exact-head macOS evidence is pending.
 
 - Standalone Studio now forwards a later `--object-name` or `--unique-id` request to an already-open SCX/VCX editor instead of dropping the selector; ordinary same-path revisits preserve the existing selection.
