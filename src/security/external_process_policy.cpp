@@ -4,6 +4,7 @@
 
 #include "copperfin/security/external_process_policy.h"
 
+#include "copperfin/platform/path.h"
 #include "localized_text.h"
 
 #ifdef _WIN32
@@ -55,6 +56,12 @@ std::string narrow(const std::wstring& value) {
     return result;
 }
 
+std::string path_to_utf8_generic_string(const std::filesystem::path& path) {
+    std::string result = copperfin::platform::path_to_utf8_string(path);
+    std::replace(result.begin(), result.end(), '\\', '/');
+    return result;
+}
+
 std::string resolve_executable_from_path(const std::string& executable_name) {
     std::wstring executable = widen(executable_name);
     if (executable.empty()) {
@@ -73,11 +80,11 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
         return {};
     }
 
-    return canonical.string();
+    return copperfin::platform::path_to_utf8_string(canonical);
 }
 
 bool has_trusted_signature(const std::string& path) {
-    const std::wstring wide_path = std::filesystem::path(path).wstring();
+    const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
 
     WINTRUST_FILE_INFO file_info{};
     file_info.cbStruct = sizeof(file_info);
@@ -102,7 +109,7 @@ bool has_trusted_signature(const std::string& path) {
 }
 
 std::string get_company_name(const std::string& path) {
-    const std::wstring wide_path = std::filesystem::path(path).wstring();
+    const std::wstring wide_path = copperfin::platform::path_from_utf8_string(path).wstring();
     DWORD handle = 0;
     const DWORD size = GetFileVersionInfoSizeW(wide_path.c_str(), &handle);
     if (size == 0) {
@@ -152,13 +159,13 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
         return false;
     }
 
-    const auto path_string = canonical_path.generic_string();
-    std::string root_string = canonical_root.generic_string();
+    const auto path_string = path_to_utf8_generic_string(canonical_path);
+    std::string root_string = path_to_utf8_generic_string(canonical_root);
     if (!root_string.empty() && root_string.back() != '/') {
         root_string.push_back('/');
     }
 
-    return path_string == canonical_root.generic_string() || path_string.rfind(root_string, 0) == 0;
+    return path_string == root_string || path_string.rfind(root_string, 0) == 0;
 }
 #endif
 
@@ -175,10 +182,13 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                     {{"executableName", policy.executable_name}})};
     }
 
-    const std::filesystem::path executable_path(resolved_path);
+    const std::filesystem::path executable_path =
+        copperfin::platform::path_from_utf8_string(resolved_path);
     bool root_match = policy.allowed_path_roots.empty();
     for (const auto& root : policy.allowed_path_roots) {
-        if (path_under_root(executable_path, std::filesystem::path(root))) {
+        if (path_under_root(
+                executable_path,
+                copperfin::platform::path_from_utf8_string(root))) {
             root_match = true;
             break;
         }

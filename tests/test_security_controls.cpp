@@ -681,6 +681,78 @@ void test_external_process_and_process_hardening_diagnostics() {
 #endif
 }
 
+#ifdef _WIN32
+void test_external_process_policy_preserves_unicode_paths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string("copperfin_security_policy_\xC3\xA9");
+    const fs::path fixture_directory = temp_root / "bin";
+    const fs::path fixture_path = fixture_directory / "copperfin-policy-fixture.exe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(fixture_directory);
+
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length =
+        GetSystemDirectoryW(system_directory, MAX_PATH);
+    const fs::path system_command = system_directory_length == 0U
+        ? fs::path{}
+        : fs::path(std::wstring(system_directory, system_directory_length)) / L"cmd.exe";
+    if (system_command.empty() || !fs::exists(system_command, ignored)) {
+        expect(false, "#4277: Windows Unicode external-process fixture should find cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    fs::copy_file(system_command, fixture_path, fs::copy_options::overwrite_existing, ignored);
+    if (ignored) {
+        expect(false, "#4277: Windows Unicode external-process fixture should copy cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const DWORD path_length = GetEnvironmentVariableW(L"PATH", nullptr, 0U);
+    std::wstring original_path;
+    if (path_length > 0U) {
+        original_path.resize(static_cast<std::size_t>(path_length));
+        const DWORD copied_length = GetEnvironmentVariableW(
+            L"PATH",
+            original_path.data(),
+            path_length);
+        original_path.resize(static_cast<std::size_t>(copied_length));
+    }
+    const std::wstring fixture_path_value = fixture_directory.wstring() + L";" + original_path;
+    const bool path_set = SetEnvironmentVariableW(L"PATH", fixture_path_value.c_str()) != FALSE;
+    if (!path_set) {
+        expect(false, "#4277: Windows Unicode external-process fixture should update PATH");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "copperfin-policy-fixture.exe",
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    const auto resolved_path = copperfin::platform::path_from_utf8_string(authorization.resolved_path);
+    expect(authorization.allowed,
+           "#4277: Windows external-process policy should authorize a Unicode executable inside its allowed root");
+    expect(authorization.resolved_path.find(
+               copperfin::platform::path_to_utf8_string(temp_root)) != std::string::npos,
+           "#4277: Windows external-process policy should preserve the Unicode allowed-root path in its result");
+    expect(fs::equivalent(resolved_path, fixture_path, ignored),
+           "#4277: Windows external-process policy should resolve the Unicode fixture to the copied executable");
+
+    if (original_path.empty()) {
+        SetEnvironmentVariableW(L"PATH", nullptr);
+    } else {
+        SetEnvironmentVariableW(L"PATH", original_path.c_str());
+    }
+    fs::remove_all(temp_root, ignored);
+}
+#endif
+
 // #252 [gap-06e]
 void test_audit_stream_append_to_readonly_path_fails_gracefully() {
     namespace fs = std::filesystem;
@@ -954,6 +1026,9 @@ int main() {
     test_contained_audit_append_serializes_concurrent_writers();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();
+#ifdef _WIN32
+    test_external_process_policy_preserves_unicode_paths();
+#endif
     test_physical_path_containment_rejects_indirection();
 
     if (failures != 0) {
