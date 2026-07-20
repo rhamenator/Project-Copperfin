@@ -85,6 +85,14 @@ internal sealed class StudioMainForm : Form
         var normalizedPath = CopperfinDocumentPathIdentity.Normalize(path);
         if (openDocuments.TryGetValue(normalizedPath, out var existingPage))
         {
+            if (objectName is not null || uniqueId is not null)
+            {
+                var existingEditor = existingPage.Controls
+                    .OfType<CopperfinAssetEditorControl>()
+                    .SingleOrDefault();
+                existingEditor?.LoadDocument(normalizedPath, objectName, uniqueId);
+            }
+
             documentTabs.SelectedTab = existingPage;
             UpdateStatus(existingPage.Text);
             return;

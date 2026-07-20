@@ -250,6 +250,82 @@ internal static partial class Program
         }
     }
 
+    private static void SmokeStandaloneStudioRevisitingDocumentPreservesSelectors()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-selector-revisit",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var assetPath = Path.Combine(root, "selector.scx");
+        try
+        {
+            File.WriteAllText(assetPath, string.Empty);
+
+            using var form = new StudioMainForm
+            {
+                Width = 1500,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            form.OpenDocument(assetPath);
+            form.Show();
+            Application.DoEvents();
+
+            var normalizedPath = CopperfinDocumentPathIdentity.Normalize(assetPath);
+            var tabControl = FindTabControls(form)
+                .First(tab => tab.TabPages.Cast<TabPage>()
+                    .Any(page => string.Equals(page.ToolTipText, normalizedPath, StringComparison.Ordinal)));
+            var page = tabControl.TabPages.Cast<TabPage>()
+                .Single(page => string.Equals(page.ToolTipText, normalizedPath, StringComparison.Ordinal));
+            var editor = page.Controls.OfType<CopperfinAssetEditorControl>().Single();
+
+            form.OpenDocument(assetPath, objectName: "targetControl");
+            Application.DoEvents();
+            Expect(tabControl.TabPages.Count == 1,
+                "revisiting a standalone Studio document should not duplicate its tab");
+            Expect(ReadPrivateStringField(editor, "currentStartupObjectName") == "targetControl",
+                "revisiting a standalone Studio document should apply a requested object-name selector");
+
+            form.OpenDocument(assetPath);
+            Application.DoEvents();
+            Expect(ReadPrivateStringField(editor, "currentStartupObjectName") == "targetControl",
+                "an unselected standalone Studio revisit should preserve the current object-name selector");
+
+            form.OpenDocument(assetPath, uniqueId: "target-id");
+            Application.DoEvents();
+            var startupObjectNameField = typeof(CopperfinAssetEditorControl)
+                .GetField("currentStartupObjectName", BindingFlags.Instance | BindingFlags.NonPublic);
+            Expect(startupObjectNameField?.GetValue(editor) is null,
+                "a unique-id selector should replace the prior object-name selector");
+            Expect(ReadPrivateStringField(editor, "currentStartupUniqueId") == "target-id",
+                "revisiting a standalone Studio document should apply a requested unique-id selector");
+
+            TearDownForm(form);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeStandaloneStudioWithMultipleAssets(string? firstPath, string? secondPath)
     {
         if (string.IsNullOrWhiteSpace(firstPath) ||
