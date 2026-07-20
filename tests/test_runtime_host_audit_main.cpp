@@ -15,6 +15,7 @@ void test_app_cfdebug_rejects_file_valued_working_directory(const std::string& r
 void test_security_enabled_writable_package_data_contract(const std::string& runtime_host_path);
 void test_runtime_host_rejects_extension_payload_basename_fallback(const std::string& runtime_host_path);
 void test_runtime_host_accepts_escaped_manifest_pipe_fields(const std::string& runtime_host_path);
+void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std::string& runtime_host_path);
 void test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(const std::string& runtime_host_path);
 void test_runtime_host_rejects_audit_paths_outside_the_direct_package(const std::string& runtime_host_path);
 void test_runtime_host_rejects_malformed_security_enabled_before_startup(const std::string& runtime_host_path);
@@ -47,6 +48,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("writable package data", runtime_host_path, test_security_enabled_writable_package_data_contract);
     run_runtime_host_test("extension payload basename fallback", runtime_host_path, test_runtime_host_rejects_extension_payload_basename_fallback);
     run_runtime_host_test("escaped manifest pipe fields", runtime_host_path, test_runtime_host_accepts_escaped_manifest_pipe_fields);
+    run_runtime_host_test("escaped direct manifest paths", runtime_host_path, test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths);
     run_runtime_host_test("manifest versions", runtime_host_path, test_runtime_host_validates_manifest_versions_without_changing_error_contracts);
     run_runtime_host_test("debug privilege document", runtime_host_path, test_runtime_host_debug_privileges_require_debug_document_contract);
     run_runtime_host_test("manifest verification localization", runtime_host_path, test_runtime_host_manifest_verification_errors_localize_without_changing_contracts);

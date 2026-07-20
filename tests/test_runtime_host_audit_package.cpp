@@ -545,6 +545,102 @@ void test_runtime_host_accepts_escaped_manifest_pipe_fields(const std::string& r
     }
 }
 
+void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std::string& runtime_host_path) {
+#if defined(_WIN32)
+    (void)runtime_host_path;
+    return;
+#else
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_direct_manifest_pipe";
+    const fs::path deployed_root = temp_root / "deployed|package";
+    const fs::path content_root = deployed_root / "content|root";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(startup_path, "RETURN\n");
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+    expect(runtime_host_hash.ok && startup_hash.ok,
+           "direct escaped-pipe fixture should hash the runtime host and startup asset");
+    if (!runtime_host_hash.ok || !startup_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto quote_manifest_path = [](std::string value) {
+        std::string escaped;
+        escaped.reserve(value.size());
+        for (const char ch : value) {
+            if (ch == '|') {
+                escaped += "\\|";
+            } else {
+                escaped.push_back(ch);
+            }
+        }
+        return escaped;
+    };
+    const std::string quoted_package_root = quote_manifest_path(deployed_root.string());
+    const std::string quoted_content_root = quote_manifest_path(content_root.string());
+    const std::string quoted_startup_path = quote_manifest_path(startup_path.string());
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "manifest_value_encoding=backslash-v1\n"
+        "project_title=DirectEscapedManifestPipe\n"
+        "project_path=" + quote_manifest_path((temp_root / "demo.pjx").string()) + "\n"
+        "package_root=" + quoted_package_root + "\n"
+        "content_root=" + quoted_content_root + "\n"
+        "working_directory=" + quoted_content_root + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + quoted_startup_path + "\n"
+        "configuration=debug\n"
+        "security_enabled=true\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|main.prg|" + quoted_startup_path +
+            "|Program\\|Preview|false|true|" + startup_hash.hex_digest + "|true\n"
+        "dotnet_story=none\n");
+
+    const std::string manifest_text = read_text(manifest_path);
+    expect(manifest_text.find("deployed\\|package") != std::string::npos,
+           "direct escaped-pipe fixture should write a backslash-escaped package path");
+    expect(manifest_text.find("content\\|root") != std::string::npos,
+           "direct escaped-pipe fixture should write a backslash-escaped content path");
+
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    if (process.exit_code != 0) {
+        std::cerr << "direct escaped manifest pipe stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "direct escaped manifest pipe stderr:\n" << process.stderr_text << "\n";
+    }
+    expect(process.exit_code == 0,
+           "runtime host should resolve direct manifest paths containing an escaped pipe");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "direct escaped manifest pipe success should preserve the machine-readable status contract");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+#endif
+}
+
 void test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;

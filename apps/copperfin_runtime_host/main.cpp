@@ -1011,6 +1011,11 @@ std::string unescape_manifest_value(std::string value) {
                 ++index;
                 continue;
             }
+            if (next == '|') {
+                result.push_back('|');
+                ++index;
+                continue;
+            }
             if (next == '\\') {
                 result.push_back('\\');
                 ++index;
@@ -1048,6 +1053,13 @@ bool path_exists_without_error(const std::filesystem::path& path) {
     return std::filesystem::exists(path, error) && !error;
 }
 
+bool manifest_value_uses_pipe_delimiters(const std::string& key) {
+    return key == "asset" ||
+        key == "data_asset" ||
+        key == "data_payload" ||
+        key == "extension_payload";
+}
+
 ManifestMap load_manifest(const std::string& path) {
     ManifestMap values;
     std::ifstream input(path_from_utf8(path), std::ios::binary);
@@ -1059,7 +1071,11 @@ ManifestMap load_manifest(const std::string& path) {
         }
 
         const std::string key = trim_copy(line.substr(0U, delimiter));
-        const std::string value = trim_copy(unescape_manifest_value(line.substr(delimiter + 1U)));
+        const std::string raw_value = line.substr(delimiter + 1U);
+        const std::string value = trim_copy(
+            manifest_value_uses_pipe_delimiters(key)
+                ? raw_value
+                : unescape_manifest_value(raw_value));
         values.emplace(key, value);
     }
     return values;
@@ -1217,6 +1233,16 @@ std::vector<std::string> split_pipe(const std::string& value) {
         const char ch = value[index];
         if (ch == '\\' && (index + 1U) < value.size()) {
             const char next = value[index + 1U];
+            if (next == 'n') {
+                current.push_back('\n');
+                ++index;
+                continue;
+            }
+            if (next == 'r') {
+                current.push_back('\r');
+                ++index;
+                continue;
+            }
             if (next == '\\' || next == '|') {
                 current.push_back(next);
                 ++index;
