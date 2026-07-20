@@ -318,6 +318,7 @@ int main(int argc, char** argv) {
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_reorders_visual_methods);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_reorders_visual_method_batches);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_visual_object_list);
+    RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_selects_form_and_class_objects_on_open);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_visual_object_children);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_visual_object_descendants);
     RUN_STUDIO_HOST_JSON_TEST(test_studio_host_json_exposes_visual_object_ancestors);

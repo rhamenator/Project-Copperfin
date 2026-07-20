@@ -271,6 +271,10 @@ bool supports_unique_id_record_selection(StudioAssetKind kind) {
     return kind == StudioAssetKind::report || kind == StudioAssetKind::label;
 }
 
+bool supports_initial_visual_object_selection(StudioAssetKind kind) {
+    return kind == StudioAssetKind::form || kind == StudioAssetKind::class_library;
+}
+
 std::optional<std::size_t> find_preview_record_index_by_unique_id(
     const StudioDocumentModel& document,
     std::string_view unique_id) {
@@ -295,6 +299,45 @@ std::optional<std::size_t> find_preview_record_index_by_unique_id(
     }
 
     return matched_record_index;
+}
+
+std::optional<std::size_t> find_preview_record_index_by_object_name(
+    const StudioDocumentModel& document,
+    std::string_view object_name) {
+    if (!document.table_preview_available) {
+        return std::nullopt;
+    }
+
+    const std::string requested_object_name = lowercase_ascii(trim_copy(std::string(object_name)));
+    if (requested_object_name.empty()) {
+        return std::nullopt;
+    }
+
+    const auto find_matches = [&](std::string_view field_name) {
+        std::vector<std::size_t> matches;
+        for (const auto& record : document.table_preview.records) {
+            const std::string candidate_object_name =
+                lowercase_ascii(trim_copy(value_or_empty(record, field_name)));
+            if (candidate_object_name != requested_object_name) {
+                continue;
+            }
+            matches.push_back(record.record_index);
+        }
+        return matches;
+    };
+
+    const auto object_name_matches = find_matches("OBJNAME");
+    if (object_name_matches.size() > 1U) {
+        return std::nullopt;
+    }
+    if (object_name_matches.size() == 1U) {
+        return object_name_matches.front();
+    }
+    const auto name_matches = find_matches("NAME");
+    if (name_matches.size() != 1U) {
+        return std::nullopt;
+    }
+    return name_matches.front();
 }
 
 template <typename Predicate>
@@ -987,10 +1030,14 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
 
         const bool unique_id_selection_requested =
             supports_unique_id_record_selection(document.kind) && !trim_copy(request.unique_id).empty();
+        const bool initial_visual_object_selection_requested =
+            supports_initial_visual_object_selection(document.kind) &&
+            (!trim_copy(request.object_name).empty() || !trim_copy(request.unique_id).empty());
         const std::size_t record_count = inspection.header.record_count;
         std::size_t max_records = 8U;
         if (request.load_full_table ||
             unique_id_selection_requested ||
+            initial_visual_object_selection_requested ||
             requires_full_table_preview(document.kind)) {
             max_records = record_count;
         } else if (request.selection_record_available) {
@@ -1034,6 +1081,15 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             if (request.selection_record_available &&
                 find_preview_record(document, request.record_index) == nullptr) {
                 document.selection_record_available = false;
+            }
+            if (initial_visual_object_selection_requested) {
+                const auto selection_record_index = !trim_copy(request.unique_id).empty()
+                    ? find_preview_record_index_by_unique_id(document, request.unique_id)
+                    : find_preview_record_index_by_object_name(document, request.object_name);
+                if (selection_record_index.has_value()) {
+                    document.selection_record_available = true;
+                    document.selection_record_index = *selection_record_index;
+                }
             }
         }
     }

@@ -601,6 +601,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_visual_editor_json_methods.cpp
     test_studio_host_json_visual_editor_json_objects.cpp
     test_studio_host_json_visual_editor_json_properties.cpp
+    test_studio_host_json_form_class_startup_selection.cpp
 )
 target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_json PRIVATE

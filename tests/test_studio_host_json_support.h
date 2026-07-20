@@ -1558,6 +1558,7 @@ void test_studio_host_json_reorders_visual_method_batches(const std::string& stu
 
 // ==== Visual asset editor JSON exposure tests: objects ====
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path);
+void test_studio_host_json_selects_form_and_class_objects_on_open(const std::string& studio_host_path);
 void test_studio_host_json_exposes_visual_object_children(const std::string& studio_host_path);
 void test_studio_host_json_exposes_visual_object_descendants(const std::string& studio_host_path);
 void test_studio_host_json_exposes_visual_object_ancestors(const std::string& studio_host_path);
