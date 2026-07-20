@@ -3,6 +3,65 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 // Kept separate from the driver because this cohesive DLL/FLL scenario is intentionally large.
+void run_direct_library_bridge_shell_safety_smoke(
+    const std::filesystem::path& package_directory,
+    const std::filesystem::path& library_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path sentinel_path = fs::current_path() / "copperfin_generated_bridge_shell_sentinel";
+    std::error_code ignored;
+    fs::remove(sentinel_path, ignored);
+    const fs::path injected_package_directory =
+        package_directory.parent_path() / "LibraryDemo_$(touch${IFS}copperfin_generated_bridge_shell_sentinel)";
+    fs::remove_all(injected_package_directory, ignored);
+    std::error_code copy_error;
+    fs::copy(
+        package_directory,
+        injected_package_directory,
+        fs::copy_options::recursive | fs::copy_options::overwrite_existing,
+        copy_error);
+    expect(!copy_error, "native library bridge shell-safety fixture should copy the complete package");
+    if (copy_error) {
+        return;
+    }
+
+    const fs::path injected_library_path = injected_package_directory / library_path.filename();
+#if defined(_WIN32)
+#if defined(_M_IX86)
+    using LibraryFunction = int (__stdcall *)(int);
+#else
+    using LibraryFunction = int (*)(int);
+#endif
+    HMODULE module = LoadLibraryW(injected_library_path.wstring().c_str());
+    expect(module != nullptr, "native library bridge shell-safety fixture should load the copied DLL");
+    if (module != nullptr) {
+        const auto function = reinterpret_cast<LibraryFunction>(GetProcAddress(module, "InitLibrary"));
+        expect(function != nullptr, "native library bridge shell-safety fixture should resolve InitLibrary");
+        if (function != nullptr) {
+            (void)function(0);
+        }
+        FreeLibrary(module);
+    }
+#else
+    void* module = dlopen(injected_library_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    expect(module != nullptr, "native library bridge shell-safety fixture should load the copied shared library");
+    if (module != nullptr) {
+        using LibraryFunction = int (*)(int);
+        const auto function = reinterpret_cast<LibraryFunction>(dlsym(module, "InitLibrary"));
+        expect(function != nullptr, "native library bridge shell-safety fixture should resolve InitLibrary");
+        if (function != nullptr) {
+            (void)function(0);
+        }
+        dlclose(module);
+    }
+    expect(!fs::exists(sentinel_path),
+           "native library bridge should not evaluate shell syntax from a package path");
+#endif
+
+    fs::remove_all(injected_package_directory, ignored);
+    fs::remove(sentinel_path, ignored);
+}
+
 void run_library_build_host_smoke(
     const std::string& build_host_path,
     const std::string& extension) {
@@ -465,19 +524,24 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                    "build host DLL wrapper should declare a shared process-launch helper.");
-            expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
-                   "build host DLL wrapper should include standard process-launch support.");
-            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
-                   "build host DLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("#include <windows.h>") != std::string::npos &&
+                       wrapper_source.find("#include <unistd.h>") != std::string::npos,
+                   "build host DLL wrapper should include native process-launch support.");
+            expect(wrapper_source.find("static std::vector<std::wstring> copperfin_runtime_bridge_windows_environment(") != std::string::npos &&
+                       wrapper_source.find("static std::vector<std::string> copperfin_runtime_bridge_posix_environment(") != std::string::npos,
+                   "build host DLL wrapper should build native environment blocks for both supported process APIs.");
             expect(wrapper_source.find("launch_plan.environment") != std::string::npos,
                    "build host DLL wrapper should carry launch environment entries into dispatch execution.");
-            expect(wrapper_source.find("for (const auto& environment_variable : dispatch_execution.environment)") != std::string::npos,
-                   "build host DLL wrapper should apply launch environment entries during command construction.");
-            expect(wrapper_source.find("environment_variable.name + \"=\" + environment_variable.value") != std::string::npos,
-                   "build host DLL wrapper should construct environment assignments from launch environment entries.");
-            expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
-                   "build host DLL wrapper should execute the runtime-host command line.");
-            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+            expect(wrapper_source.find("const auto environment_entries = copperfin_runtime_bridge_windows_environment(dispatch_execution.environment);") != std::string::npos &&
+                       wrapper_source.find("const auto environment_values = copperfin_runtime_bridge_posix_environment(dispatch_execution.environment);") != std::string::npos,
+                   "build host DLL wrapper should apply launch environment entries through native process APIs.");
+            expect(wrapper_source.find("CreateProcessW(") != std::string::npos &&
+                       wrapper_source.find("execve(") != std::string::npos,
+                   "build host DLL wrapper should launch the runtime host without a shell.");
+            expect(wrapper_source.find("std::system(") == std::string::npos &&
+                       wrapper_source.find("copperfin_runtime_bridge_build_process_command(") == std::string::npos,
+                   "build host DLL wrapper should not execute a generated shell command.");
+            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && process_created && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
                    "build host DLL wrapper should compare runtime-host exit code with the expected exit code.");
             expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
                    "build host DLL wrapper should not keep the deterministic process-launch failure placeholder.");
@@ -1502,19 +1566,24 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should declare a shared dispatch-execution helper.");
             expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                    "build host FLL wrapper should declare a shared process-launch helper.");
-            expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
-                   "build host FLL wrapper should include standard process-launch support.");
-            expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
-                   "build host FLL wrapper should build a runtime-host command line from dispatch execution.");
+            expect(wrapper_source.find("#include <windows.h>") != std::string::npos &&
+                       wrapper_source.find("#include <unistd.h>") != std::string::npos,
+                   "build host FLL wrapper should include native process-launch support.");
+            expect(wrapper_source.find("static std::vector<std::wstring> copperfin_runtime_bridge_windows_environment(") != std::string::npos &&
+                       wrapper_source.find("static std::vector<std::string> copperfin_runtime_bridge_posix_environment(") != std::string::npos,
+                   "build host FLL wrapper should build native environment blocks for both supported process APIs.");
             expect(wrapper_source.find("launch_plan.environment") != std::string::npos,
                    "build host FLL wrapper should carry launch environment entries into dispatch execution.");
-            expect(wrapper_source.find("for (const auto& environment_variable : dispatch_execution.environment)") != std::string::npos,
-                   "build host FLL wrapper should apply launch environment entries during command construction.");
-            expect(wrapper_source.find("environment_variable.name + \"=\" + environment_variable.value") != std::string::npos,
-                   "build host FLL wrapper should construct environment assignments from launch environment entries.");
-            expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
-                   "build host FLL wrapper should execute the runtime-host command line.");
-            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+            expect(wrapper_source.find("const auto environment_entries = copperfin_runtime_bridge_windows_environment(dispatch_execution.environment);") != std::string::npos &&
+                       wrapper_source.find("const auto environment_values = copperfin_runtime_bridge_posix_environment(dispatch_execution.environment);") != std::string::npos,
+                   "build host FLL wrapper should apply launch environment entries through native process APIs.");
+            expect(wrapper_source.find("CreateProcessW(") != std::string::npos &&
+                       wrapper_source.find("execve(") != std::string::npos,
+                   "build host FLL wrapper should launch the runtime host without a shell.");
+            expect(wrapper_source.find("std::system(") == std::string::npos &&
+                       wrapper_source.find("copperfin_runtime_bridge_build_process_command(") == std::string::npos,
+                   "build host FLL wrapper should not execute a generated shell command.");
+            expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && process_created && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
                    "build host FLL wrapper should compare runtime-host exit code with the expected exit code.");
             expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
                    "build host FLL wrapper should not keep the deterministic process-launch failure placeholder.");
@@ -2414,6 +2483,10 @@ void run_library_build_host_smoke(
             expect(api_manifest.find("function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers callable surface");
         }
+    }
+
+    if (extension == "dll" && fs::exists(expected_output)) {
+        run_direct_library_bridge_shell_safety_smoke(expected_output.parent_path(), expected_output);
     }
 
     fs::remove_all(temp_root, ignored);

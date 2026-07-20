@@ -448,7 +448,7 @@ add_test(
 add_executable(test_build_host_output
     test_build_host_output.cpp
 )
-target_link_libraries(test_build_host_output PRIVATE cf_vfp_assets)
+target_link_libraries(test_build_host_output PRIVATE cf_vfp_assets ${CMAKE_DL_LIBS})
 add_dependencies(test_build_host_output copperfin_build_host copperfin_runtime_host)
 target_compile_definitions(
     test_build_host_output

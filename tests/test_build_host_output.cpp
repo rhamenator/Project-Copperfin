@@ -18,9 +18,11 @@
 #include <vector>
 
 #if !defined(_WIN32)
+#include <dlfcn.h>
 #include <sys/wait.h>
 #else
 #include <process.h>
+#include <windows.h>
 #endif
 
 namespace {

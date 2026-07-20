@@ -260,19 +260,20 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "library-output wrapper source should declare a shared process-launch helper.");
-        expect(wrapper_source.find("#include <cstdlib>") != std::string::npos,
-               "library-output wrapper source should include standard process-launch support.");
-        expect(wrapper_source.find("static std::string copperfin_runtime_bridge_build_process_command(") != std::string::npos,
-               "library-output wrapper source should build a runtime-host command line from dispatch execution.");
+        expect(wrapper_source.find("#include <windows.h>") != std::string::npos &&
+                   wrapper_source.find("#include <unistd.h>") != std::string::npos,
+               "library-output wrapper source should include native process-launch support.");
         expect(wrapper_source.find("launch_plan.environment") != std::string::npos,
                "library-output wrapper source should carry launch environment entries into dispatch execution.");
-        expect(wrapper_source.find("for (const auto& environment_variable : dispatch_execution.environment)") != std::string::npos,
-               "library-output wrapper source should apply launch environment entries during command construction.");
-        expect(wrapper_source.find("environment_variable.name + \"=\" + environment_variable.value") != std::string::npos,
-               "library-output wrapper source should construct environment assignments from launch environment entries.");
-        expect(wrapper_source.find("std::system(command_line.c_str())") != std::string::npos,
-               "library-output wrapper source should execute the runtime-host command line.");
-        expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
+        expect(wrapper_source.find("const auto environment_entries = copperfin_runtime_bridge_windows_environment(dispatch_execution.environment);") != std::string::npos &&
+                   wrapper_source.find("const auto environment_values = copperfin_runtime_bridge_posix_environment(dispatch_execution.environment);") != std::string::npos,
+               "library-output wrapper source should apply launch environment entries through native process APIs.");
+        expect(wrapper_source.find("CreateProcessW(") != std::string::npos &&
+                   wrapper_source.find("execve(") != std::string::npos &&
+                   wrapper_source.find("std::system(") == std::string::npos &&
+                   wrapper_source.find("copperfin_runtime_bridge_build_process_command(") == std::string::npos,
+               "library-output wrapper source should launch without shell command construction.");
+        expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && process_created && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
                "library-output wrapper source should compare runtime-host exit code with the expected exit code.");
         expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
                "library-output wrapper source should not keep the deterministic process-launch failure placeholder.");
