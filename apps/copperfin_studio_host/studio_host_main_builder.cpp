@@ -414,6 +414,9 @@ void print_json_builder_launch_plan_result(
     std::cout << "    \"vfp9Equivalent\": ";
     print_json_string_view(builder.vfp9_equivalent);
     std::cout << ",\n";
+    std::cout << "    \"vfp9EquivalentDisplay\": ";
+    print_json_string_view(builder.vfp9_equivalent_display);
+    std::cout << ",\n";
     std::cout << "    \"copperfinComponent\": ";
     print_json_string_view(builder.copperfin_component);
     std::cout << ",\n";
@@ -478,6 +481,9 @@ void print_json_builder_launch_catalog_entry(
     std::cout << ",\n";
     std::cout << indent << "  \"vfp9Equivalent\": ";
     print_json_string_view(builder.vfp9_equivalent);
+    std::cout << ",\n";
+    std::cout << indent << "  \"vfp9EquivalentDisplay\": ";
+    print_json_string_view(builder.vfp9_equivalent_display);
     std::cout << ",\n";
     std::cout << indent << "  \"copperfinComponent\": ";
     print_json_string_view(builder.copperfin_component);
@@ -1197,7 +1203,7 @@ void print_text_builder_launch_plan_result(
                   << copperfin::studio::studio_editor_selection_context_name(*selection_context) << "\n";
     }
     std::cout << "context: " << copperfin::studio::studio_builder_context_name(plan.context) << "\n";
-    std::cout << "vfp9_equivalent: " << plan.builder.vfp9_equivalent << "\n";
+    std::cout << "vfp9_equivalent: " << plan.builder.vfp9_equivalent_display << "\n";
     std::cout << "copperfin_component: " << plan.builder.copperfin_component << "\n";
     std::cout << "entry_point: " << plan.entry_point << "\n";
     std::cout << "asset_path: " << plan.asset_path << "\n";

@@ -40,6 +40,7 @@ struct StudioBuilderDescriptor {
     std::string_view copperfin_component;
     std::string_view entry_point;
     std::string_view description;
+    std::string_view vfp9_equivalent_display;
 };
 
 struct StudioBuilderLaunchRequest {

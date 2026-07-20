@@ -948,6 +948,13 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"vfp9EquivalentDisplay\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->builder.vfp9_equivalent_display);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
         std::cout << "        \"copperfinComponent\": ";
         if (plan != nullptr) {
             print_json_string_view(plan->builder.copperfin_component);
@@ -2081,6 +2088,9 @@ void print_json_designer_contexts(const std::vector<copperfin::studio::StudioDes
             std::cout << ",\n";
             std::cout << "            \"vfp9Equivalent\": ";
             print_json_string_view(builder.vfp9_equivalent);
+            std::cout << ",\n";
+            std::cout << "            \"vfp9EquivalentDisplay\": ";
+            print_json_string_view(builder.vfp9_equivalent_display);
             std::cout << ",\n";
             std::cout << "            \"copperfinComponent\": ";
             print_json_string_view(builder.copperfin_component);

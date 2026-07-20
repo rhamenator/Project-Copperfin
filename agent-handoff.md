@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Studio builder localization slice `#4303` under `#2348`: keep `StudioBuilderDescriptor.vfp9_equivalent` invariant for VFP identity and machine contracts, and use `vfp9_equivalent_display` for catalog-backed human-facing text. Host JSON preserves `vfp9Equivalent` and adds optional `vfp9EquivalentDisplay`; plain builder output uses the display value. Keep all nine `Studio.Builder.*.Vfp9Equivalent` keys aligned in en-US, es-419, pt-BR, and qps-ploc, and do not translate builder IDs, entry points, component IDs, or other parser/runtime tokens.
+
 - License-path hardening slice `#4302`: `load_license_status()` reads `COPPERFIN_LICENSE_PATH` with `platform::read_environment_path(...)` and serializes every `LicenseStatus.source_path` through `platform::path_to_utf8_string(...)`, preserving Unicode Windows filenames and reported paths. Keep explicit license overrides ahead of the environment path, preserve license state/diagnostic contracts, and retain the focused non-ASCII licensing regression before closing the issue.
 
 - Windows package-root rebinding and physical containment under #4301 must use the shared `path_component_equal_for_platform` helper. It compares with `CompareStringOrdinal` first, then invariant `LCMapStringEx`, retaining the `CharLowerBuffW` fallback because hosted Windows validation demonstrated that the invariant mapping API can return no usable result on a supported environment. Do not change POSIX case sensitivity or package/audit path contracts.

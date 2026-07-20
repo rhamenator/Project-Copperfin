@@ -38,6 +38,8 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
         "#1204: builder launch-plan JSON should expose selected builder contexts");
     expect_contains(valid_process.stdout_text, "\"vfp9Equivalent\": \"builder.app grid builder\"",
         "#1204: builder launch-plan JSON should preserve VFP 9 equivalent metadata");
+    expect_contains(valid_process.stdout_text, "\"vfp9EquivalentDisplay\": \"builder.app grid builder\"",
+        "#4303: builder launch-plan JSON should expose localized VFP equivalent display metadata");
     expect_contains(valid_process.stdout_text, "\"copperfinComponent\": \"cf_form_surface\"",
         "#1204: builder launch-plan JSON should preserve Copperfin component metadata");
     expect_contains(valid_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
@@ -308,6 +310,8 @@ void test_studio_host_json_exposes_builder_launch_catalog(const std::string& stu
         "#1269: builder launch catalog JSON should expose launch validation state");
     expect_contains(control_process.stdout_text, "\"vfp9Equivalent\": \"builder.app grid builder\"",
         "#1269: builder launch catalog JSON should preserve VFP 9 equivalent metadata");
+    expect_contains(control_process.stdout_text, "\"vfp9EquivalentDisplay\": \"builder.app grid builder\"",
+        "#4303: builder launch catalog JSON should expose localized VFP equivalent display metadata");
     expect_contains(control_process.stdout_text, "\"copperfinComponent\": \"cf_form_surface\"",
         "#1269: builder launch catalog JSON should preserve Copperfin component metadata");
     expect_contains(control_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",

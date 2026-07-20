@@ -146,6 +146,8 @@ int main() {
                "#956: each builder descriptor should name the Copperfin component");
         expect(!std::string(builder.entry_point).empty(), "#956: each builder descriptor should name an entry point");
         expect(!std::string(builder.description).empty(), "#956: each builder descriptor should describe the action");
+        expect(!std::string(builder.vfp9_equivalent_display).empty(),
+               "#4303: each builder descriptor should expose localized VFP equivalent display text");
         if (builder.kind == StudioBuilderKind::builder) {
             found_builder = true;
         }
@@ -180,6 +182,7 @@ int main() {
                english_report_builder->kind == StudioBuilderKind::builder &&
                english_report_builder->context == StudioBuilderContext::report &&
                english_report_builder->vfp9_equivalent == "ReportBuilder.app" &&
+               english_report_builder->vfp9_equivalent_display == "ReportBuilder.app" &&
                english_report_builder->copperfin_component == "cf_report_surface" &&
                english_report_builder->entry_point == "cf_builders.report_builder",
            "#2367: en-US builder registry should localize report builder text and preserve invariant metadata");
@@ -193,6 +196,7 @@ int main() {
                pseudo_label_wizard->kind == StudioBuilderKind::wizard &&
                pseudo_label_wizard->context == StudioBuilderContext::label &&
                pseudo_label_wizard->vfp9_equivalent == "Wizards label templates" &&
+               pseudo_label_wizard->vfp9_equivalent_display.starts_with("[!! ") &&
                pseudo_label_wizard->copperfin_component == "cf_wizards" &&
                pseudo_label_wizard->entry_point == "cf_wizards.label_wizard",
            "#2367: pseudo-localized builder registry should decorate display text and preserve invariant wizard metadata");
@@ -227,6 +231,16 @@ int main() {
         "Studio.Builder.ApplicationWizard.Title",
         "Studio.Builder.ClassBuilder.Description",
         "Studio.Builder.ClassBuilder.Title"};
+    const std::vector<std::string_view> builder_vfp9_display_keys = {
+        "Studio.Builder.ApplicationWizard.Vfp9Equivalent",
+        "Studio.Builder.ClassBuilder.Vfp9Equivalent",
+        "Studio.Builder.ControlBuilder.Vfp9Equivalent",
+        "Studio.Builder.DataEnvironmentBuilder.Vfp9Equivalent",
+        "Studio.Builder.FormBuilder.Vfp9Equivalent",
+        "Studio.Builder.GridBuilder.Vfp9Equivalent",
+        "Studio.Builder.LabelWizard.Vfp9Equivalent",
+        "Studio.Builder.MenuDesigner.Vfp9Equivalent",
+        "Studio.Builder.ReportBuilder.Vfp9Equivalent"};
     const auto* spanish_application_wizard = find_builder(spanish_builders, "application-wizard");
     const auto* portuguese_class_builder = find_builder(portuguese_builders, "class-builder");
     expect(
@@ -238,6 +252,7 @@ int main() {
             spanish_application_wizard->kind == StudioBuilderKind::wizard &&
             spanish_application_wizard->context == StudioBuilderContext::project &&
             spanish_application_wizard->vfp9_equivalent == "Wizards application templates" &&
+            spanish_application_wizard->vfp9_equivalent_display == "Wizards de plantillas de aplicaciones" &&
             spanish_application_wizard->copperfin_component == "cf_wizards" &&
             spanish_application_wizard->entry_point == "cf_wizards.application_wizard",
         "#2632: es-419 application wizard metadata should localize through the builder registry without changing invariant fields");
@@ -250,6 +265,7 @@ int main() {
             portuguese_class_builder->kind == StudioBuilderKind::builder &&
             portuguese_class_builder->context == StudioBuilderContext::class_designer &&
             portuguese_class_builder->vfp9_equivalent == "builder.app class builder" &&
+            portuguese_class_builder->vfp9_equivalent_display == "builder.app builder de classes" &&
             portuguese_class_builder->copperfin_component == "cf_class_surface" &&
             portuguese_class_builder->entry_point == "cf_builders.class_builder",
         "#2632: pt-BR class builder metadata should localize through the builder registry without changing invariant fields");
@@ -267,6 +283,15 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_metadata_keys) == 0U,
         "#2632: qps-ploc should define every remaining Studio.Builder application/class metadata key");
+    expect(
+        count_missing_locale_keys(english_catalog, "en-US", builder_vfp9_display_keys) == 0U &&
+            count_missing_locale_keys(spanish_catalog, "es-419", builder_vfp9_display_keys) == 0U &&
+            count_missing_locale_keys(portuguese_catalog, "pt-BR", builder_vfp9_display_keys) == 0U &&
+            count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_vfp9_display_keys) == 0U,
+        "#4303: all supported locales should define every builder VFP equivalent display key");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.ReportBuilder.Vfp9Equivalent").starts_with("[!! "),
+        "#4303: pseudo-localized builder VFP equivalent display text should be decorated");
     const std::vector<std::string_view> control_grid_builder_keys = {
         "Studio.Builder.ControlBuilder.Description",
         "Studio.Builder.ControlBuilder.Title",

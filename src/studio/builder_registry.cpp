@@ -55,7 +55,16 @@ const std::vector<std::string>& builder_registry_display_text(
             catalog.translate("Studio.Builder.ApplicationWizard.Title"),
             catalog.translate("Studio.Builder.ApplicationWizard.Description"),
             catalog.translate("Studio.Builder.DataEnvironmentBuilder.Title"),
-            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Description")
+            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Description"),
+            catalog.translate("Studio.Builder.FormBuilder.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.ClassBuilder.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.ControlBuilder.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.GridBuilder.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.ReportBuilder.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.LabelWizard.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.MenuDesigner.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.ApplicationWizard.Vfp9Equivalent"),
+            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Vfp9Equivalent")
         };
     }
     return entry->second;
@@ -107,7 +116,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "builder.app form builder",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.form_builder",
-            .description = text[1]
+            .description = text[1],
+            .vfp9_equivalent_display = text[18]
         },
         {
             .id = "class-builder",
@@ -117,7 +127,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "builder.app class builder",
             .copperfin_component = "cf_class_surface",
             .entry_point = "cf_builders.class_builder",
-            .description = text[3]
+            .description = text[3],
+            .vfp9_equivalent_display = text[19]
         },
         {
             .id = "control-builder",
@@ -127,7 +138,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "builder.app control builders",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.control_builder",
-            .description = text[5]
+            .description = text[5],
+            .vfp9_equivalent_display = text[20]
         },
         {
             .id = "grid-builder",
@@ -137,7 +149,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "builder.app grid builder",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.grid_builder",
-            .description = text[7]
+            .description = text[7],
+            .vfp9_equivalent_display = text[21]
         },
         {
             .id = "report-builder",
@@ -147,7 +160,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "ReportBuilder.app",
             .copperfin_component = "cf_report_surface",
             .entry_point = "cf_builders.report_builder",
-            .description = text[9]
+            .description = text[9],
+            .vfp9_equivalent_display = text[22]
         },
         {
             .id = "label-wizard",
@@ -157,7 +171,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "Wizards label templates",
             .copperfin_component = "cf_wizards",
             .entry_point = "cf_wizards.label_wizard",
-            .description = text[11]
+            .description = text[11],
+            .vfp9_equivalent_display = text[23]
         },
         {
             .id = "menu-designer",
@@ -167,7 +182,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "Menu Designer",
             .copperfin_component = "cf_menu_surface",
             .entry_point = "cf_builders.menu_designer",
-            .description = text[13]
+            .description = text[13],
+            .vfp9_equivalent_display = text[24]
         },
         {
             .id = "application-wizard",
@@ -177,7 +193,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "Wizards application templates",
             .copperfin_component = "cf_wizards",
             .entry_point = "cf_wizards.application_wizard",
-            .description = text[15]
+            .description = text[15],
+            .vfp9_equivalent_display = text[25]
         },
         {
             .id = "data-environment-builder",
@@ -187,7 +204,8 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
             .vfp9_equivalent = "data environment builder",
             .copperfin_component = "cf_data_explorer",
             .entry_point = "cf_builders.data_environment_builder",
-            .description = text[17]
+            .description = text[17],
+            .vfp9_equivalent_display = text[26]
         }
     };
 }
