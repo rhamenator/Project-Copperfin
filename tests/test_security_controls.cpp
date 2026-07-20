@@ -736,11 +736,13 @@ void test_external_process_policy_preserves_unicode_paths() {
     };
     const auto authorization = copperfin::security::authorize_external_process(policy);
     const auto resolved_path = copperfin::platform::path_from_utf8_string(authorization.resolved_path);
+    const auto canonical_fixture_path = fs::weakly_canonical(fixture_path, ignored);
     expect(authorization.allowed,
            "#4277: Windows external-process policy should authorize a Unicode executable inside its allowed root");
-    expect(authorization.resolved_path.find(
-               copperfin::platform::path_to_utf8_string(temp_root)) != std::string::npos,
-           "#4277: Windows external-process policy should preserve the Unicode allowed-root path in its result");
+    expect(authorization.resolved_path.find("\xC3\xA9") != std::string::npos,
+           "#4277: Windows external-process policy should preserve the non-ASCII path component in its result");
+    expect(resolved_path == canonical_fixture_path,
+           "#4277: Windows external-process policy should preserve canonical filesystem identity in its result");
     expect(fs::equivalent(resolved_path, fixture_path, ignored),
            "#4277: Windows external-process policy should resolve the Unicode fixture to the copied executable");
 
