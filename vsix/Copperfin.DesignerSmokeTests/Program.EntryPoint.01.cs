@@ -51,6 +51,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeLocalizedLaunchWorkflowDialogText), SmokeLocalizedLaunchWorkflowDialogText);
         runner.Run(nameof(SmokeReportSectionGroupingExplorerTitles), SmokeReportSectionGroupingExplorerTitles);
         runner.Run(nameof(SmokeReportSectionScopedObjectFiltering), SmokeReportSectionScopedObjectFiltering);
+        runner.Run(nameof(SmokeHostShapedUnplacedReportObjectDeserialization), SmokeHostShapedUnplacedReportObjectDeserialization);
         runner.Run(nameof(SmokeReportSectionPropertyGridSelection), SmokeReportSectionPropertyGridSelection);
         runner.Run(nameof(SmokeReportGroupingExplorerSelection), SmokeReportGroupingExplorerSelection);
         runner.Run(nameof(SmokeReportSettingsExplorerSelection), SmokeReportSettingsExplorerSelection);

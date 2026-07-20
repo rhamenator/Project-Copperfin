@@ -13,6 +13,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -161,6 +162,55 @@ internal static partial class Program
         var pseudoSectionListView = GetPrivateListView(pseudoControl, "sectionListView");
         Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, pseudoLocalization.Text("AssetEditor.ReportSection.UnplacedObjects"), StringComparison.Ordinal)),
             "Pseudo-localized report explorer should route the unplaced-object row through the shared catalog");
+    }
+
+    private static void SmokeHostShapedUnplacedReportObjectDeserialization()
+    {
+        const string json =
+            "{\"AssetFamily\":\"report\",\"Objects\":[" +
+            "{\"RecordIndex\":10,\"Title\":\"detail.line\"}," +
+            "{\"RecordIndex\":12,\"Title\":\"orphan.note\"}]," +
+            "\"ReportLayout\":{\"Sections\":[{\"Id\":\"detail\",\"Title\":\"Detail\",\"Objects\":[" +
+            "{\"RecordIndex\":10,\"Title\":\"detail.line\",\"SectionObjectIndex\":0,\"SectionObjectCount\":1}]}]," +
+            "\"UnplacedObjects\":[{\"RecordIndex\":12,\"Title\":\"orphan.note\",\"SectionObjectIndex\":null,\"SectionObjectCount\":0}]}}";
+        var snapshot = JsonSerializer.Deserialize<CopperfinStudioSnapshotDocument>(
+            json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Expect(snapshot?.ReportLayout?.UnplacedObjects.Count == 1 &&
+               snapshot.ReportLayout.UnplacedObjects[0].SectionObjectIndex is null,
+            "host-shaped report JSON should deserialize its unplaced object with a null section index");
+        if (snapshot?.ReportLayout is null)
+        {
+            return;
+        }
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var unplacedItem = sectionListView.Items.Cast<ListViewItem>()
+            .SingleOrDefault(item => string.Equals(
+                item.Text,
+                new CopperfinLocalization("en-US").Text("AssetEditor.ReportSection.UnplacedObjects"),
+                StringComparison.Ordinal));
+        Expect(unplacedItem is not null,
+            "host-shaped report JSON should expose an unplaced-object explorer row");
+        if (unplacedItem is null)
+        {
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = false;
+        }
+        unplacedItem.Selected = true;
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var unplacedRows = objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).ToList();
+        Expect(unplacedRows.SequenceEqual(new[] { "orphan.note" }),
+            "host-shaped report JSON should route its unplaced object to the unplaced explorer surface");
     }
 
     private static void SmokeReportSectionPropertyGridSelection()
