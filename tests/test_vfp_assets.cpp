@@ -774,10 +774,10 @@ void test_inspect_asset_collects_companion_indexes() {
         copperfin::platform::path_from_utf8_string("copperfin_vfp_assets_\xC3\xA9_tests");
     fs::create_directories(temp_dir);
 
-    const fs::path table_path = temp_dir / "sample.dbf";
-    const fs::path cdx_path = temp_dir / "sample.cdx";
-    const fs::path ndx_path = temp_dir / "sample.ndx";
-    const fs::path mdx_path = temp_dir / "sample.mdx";
+    const fs::path table_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.dbf");
+    const fs::path cdx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.cdx");
+    const fs::path ndx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.ndx");
+    const fs::path mdx_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.mdx");
 
     {
         auto bytes = make_vfp_header();
@@ -1837,7 +1837,7 @@ void test_export_database_as_json_decodes_properties_blob() {
     fs::remove_all(temp_dir, ignored);
     fs::create_directories(temp_dir);
 
-    const fs::path dbc_path = temp_dir / "sample.dbc";
+    const fs::path dbc_path = temp_dir / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.dbc");
 
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
@@ -1891,6 +1891,8 @@ void test_export_database_as_json_decodes_properties_blob() {
                "export JSON should contain decoded Comment property name");
         expect(result.json.find("\"Test table\"") != std::string::npos,
                "export JSON should contain decoded Comment value");
+        expect(result.json.find("caf\xC3\xA9.dbc") != std::string::npos,
+               "export JSON should preserve the UTF-8 DBC basename");
     }
 
     fs::remove_all(temp_dir, ignored);

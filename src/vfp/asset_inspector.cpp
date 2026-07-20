@@ -1448,7 +1448,7 @@ DatabaseExportResult export_database_as_json(
         };
     }
 
-    const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(dbc_path);
+    const SidecarPathResolution dct_resolution = resolve_vfp_memo_sidecar_path(dbc_fs_path);
     if (dct_resolution.ambiguous) {
         return {
             .ok = false,
