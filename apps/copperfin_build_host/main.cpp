@@ -224,6 +224,7 @@ std::wstring quote_windows_spawn_argument(const std::wstring& value) {
 bool run_dotnet_publish(
     const copperfin::runtime::RuntimePackagePlan& plan,
     const copperfin::localization::LocalizedCatalog& catalog,
+    const std::filesystem::path& running_executable_path,
     std::string& error) {
     const std::filesystem::path project_path =
         copperfin::platform::path_from_utf8_string(plan.launcher_project_path);
@@ -319,21 +320,40 @@ bool run_dotnet_publish(
         output_dir /
         copperfin::platform::path_from_utf8_string(
             copperfin::platform::path_to_utf8_string(project_path.stem()) + ".exe");
+    const std::filesystem::path internal_apphost =
+        output_dir /
+        copperfin::platform::path_from_utf8_string(
+            copperfin::platform::path_to_utf8_string(project_path.stem()) + ".apphost.exe");
     const std::filesystem::path configured_launcher =
         copperfin::platform::path_from_utf8_string(plan.launcher_output_path);
+    const std::filesystem::path guard_source =
+        running_executable_path.parent_path() /
+        "copperfin_launcher_guard.exe";
     if (!std::filesystem::exists(published_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
-    if (published_launcher != configured_launcher) {
+    if (published_launcher != internal_apphost) {
         std::error_code rename_error;
-        std::filesystem::rename(published_launcher, configured_launcher, rename_error);
+        std::filesystem::rename(published_launcher, internal_apphost, rename_error);
         if (rename_error) {
             error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
             return false;
         }
     }
-    if (!std::filesystem::exists(configured_launcher)) {
+    if (!std::filesystem::is_regular_file(internal_apphost) ||
+        !std::filesystem::is_regular_file(guard_source)) {
+        error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+        return false;
+    }
+
+    std::error_code copy_error;
+    std::filesystem::copy_file(
+        guard_source,
+        configured_launcher,
+        std::filesystem::copy_options::overwrite_existing,
+        copy_error);
+    if (copy_error || !std::filesystem::is_regular_file(configured_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
@@ -613,7 +633,7 @@ int run_build_host_main(int argc, char** argv) {
 
     if (final_plan.emit_dotnet_launcher) {
         std::string publish_error;
-        if (!run_dotnet_publish(final_plan, catalog, publish_error)) {
+        if (!run_dotnet_publish(final_plan, catalog, running_executable_path, publish_error)) {
             const auto rollback_result = copperfin::runtime::abort_runtime_package_transaction(final_plan);
             if (!rollback_result.ok) {
                 publish_error += "\n" + rollback_result.error;

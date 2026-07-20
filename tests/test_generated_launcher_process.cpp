@@ -142,6 +142,9 @@ void expect_launcher_artifact_inventory(
     const std::string& public_apphost_name,
     const std::string& context) {
     const std::vector<std::string> required_sidecars{
+#if defined(_WIN32)
+        "Copperfin.GeneratedLauncher.apphost.exe",
+#endif
         "Copperfin.GeneratedLauncher.dll",
         "Copperfin.GeneratedLauncher.deps.json",
         "Copperfin.GeneratedLauncher.runtimeconfig.json"
@@ -157,8 +160,13 @@ void expect_launcher_artifact_inventory(
         manifest_lines_with_prefix(debug_manifest, "launcher_artifact=");
     expect(runtime_inventory == debug_inventory,
            context + " should preserve identical runtime/debug launcher provenance");
-    expect(runtime_inventory.size() == 4U || runtime_inventory.size() == 5U,
-           context + " should inventory one apphost, three required sidecars, and at most one optional PDB");
+    expect(
+#if defined(_WIN32)
+               5U <= runtime_inventory.size() && runtime_inventory.size() <= 6U,
+#else
+               4U <= runtime_inventory.size() && runtime_inventory.size() <= 5U,
+#endif
+        context + " should inventory the public launcher, required runtime artifacts, and at most one optional PDB");
 
     const auto contains = [&](const std::string& marker) {
         return std::any_of(runtime_inventory.begin(), runtime_inventory.end(), [&](const std::string& line) {
@@ -573,11 +581,30 @@ int run_generated_launcher_test(
         publish.exit_code == 0,
         "dotnet publish should build the generated launcher\nstdout:\n" +
             publish.stdout_text + "\nstderr:\n" + publish.stderr_text);
+#if defined(_WIN32)
+    const fs::path internal_apphost = package_root / "Copperfin.GeneratedLauncher.apphost.exe";
+    const fs::path launcher_guard = build_host_path.parent_path() / "copperfin_launcher_guard.exe";
+    const fs::path published_apphost = package_root / direct_launcher_name;
+    expect(fs::is_regular_file(launcher_guard),
+           "generated launcher process test should have the native launcher guard beside the build host");
+    ignored.clear();
+    fs::rename(published_apphost, internal_apphost, ignored);
+    expect(!ignored && fs::is_regular_file(internal_apphost),
+           "direct SDK publication should move the managed apphost to its stable internal identity");
+    ignored.clear();
+    fs::copy_file(
+        launcher_guard,
+        materialized.plan.launcher_output_path,
+        fs::copy_options::overwrite_existing,
+        ignored);
+    expect(!ignored && fs::is_regular_file(materialized.plan.launcher_output_path),
+           "direct SDK publication should materialize the configured native launcher guard");
+#endif
     expect(fs::exists(materialized.plan.launcher_output_path),
            "dotnet publish should materialize the planned launcher executable");
     expect(
         fs::path(materialized.plan.launcher_output_path).filename() == direct_launcher_name,
-        "direct dotnet publish should materialize the stable internal launcher filename");
+        "direct dotnet publish should preserve the configured public launcher filename");
     expect(!fs::exists(package_root / "Generated_Launcher_Project.exe"),
            "dotnet publish should not leave a title-derived alternate launcher");
     if (failures != 0) {
@@ -615,18 +642,92 @@ int run_generated_launcher_test(
         return 1;
     }
 
+    const fs::path launcher = materialized.plan.launcher_output_path;
+    const fs::path launcher_dll = package_root / "Copperfin.GeneratedLauncher.dll";
+    const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
+    const std::string original_launcher_dll = read_text(launcher_dll);
+    const fs::path missing_launcher_deps = launcher_deps.string() + ".missing";
+    write_text(launcher_dll, "tampered launcher sidecar\n");
+    const ProcessResult tampered_sidecar = run_process_capture(
+        launcher,
+        {},
+        caller_dir,
+        temp_root,
+        "tampered-launcher-sidecar",
+        30000U);
+    expect(tampered_sidecar.start_error == 0U && !tampered_sidecar.timed_out,
+           "tampered launcher sidecar verification should start and finish");
+    expect(tampered_sidecar.exit_code == 4 && tampered_sidecar.stdout_text.empty(),
+           "tampered launcher sidecar should be rejected before the managed apphost starts");
+    write_text(launcher_dll, original_launcher_dll);
+
+    ignored.clear();
+    fs::rename(launcher_deps, missing_launcher_deps, ignored);
+    expect(!ignored, "generated launcher process fixture should temporarily remove a required sidecar");
+    if (!ignored) {
+        const ProcessResult missing_sidecar = run_process_capture(
+            launcher,
+            {},
+            caller_dir,
+            temp_root,
+            "missing-launcher-sidecar",
+            30000U);
+        expect(missing_sidecar.start_error == 0U && !missing_sidecar.timed_out,
+               "missing launcher sidecar verification should start and finish");
+        expect(missing_sidecar.exit_code == 4 && missing_sidecar.stdout_text.empty(),
+               "missing launcher sidecar should be rejected before the managed apphost starts");
+        ignored.clear();
+        fs::rename(missing_launcher_deps, launcher_deps, ignored);
+        expect(!ignored, "generated launcher process fixture should restore its required sidecar");
+    }
+
+    const fs::path redirected_sidecar = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
+    const fs::path redirected_target = temp_root / "redirected-runtimeconfig.json";
+    const std::string original_runtime_config = read_text(redirected_sidecar);
+    write_text(redirected_target, original_runtime_config);
+    ignored.clear();
+    fs::remove(redirected_sidecar, ignored);
+    ignored.clear();
+    fs::create_symlink(redirected_target, redirected_sidecar, ignored);
+    if (!ignored) {
+        const ProcessResult redirected = run_process_capture(
+            launcher,
+            {},
+            caller_dir,
+            temp_root,
+            "redirected-launcher-sidecar",
+            30000U);
+        expect(redirected.start_error == 0U && !redirected.timed_out,
+               "redirected launcher sidecar verification should start and finish");
+        expect(redirected.exit_code == 4 && redirected.stdout_text.empty(),
+               "redirected launcher sidecar should be rejected before the managed apphost starts");
+        fs::remove(redirected_sidecar, ignored);
+        write_text(redirected_sidecar, original_runtime_config);
+    } else {
+        write_text(redirected_sidecar, original_runtime_config);
+    }
+
+    const auto finalized_launcher_inventory =
+        manifest_lines_with_prefix(release_manifest, "launcher_artifact=");
+    std::string launcher_inventory_suffix;
+    for (const auto& line : finalized_launcher_inventory) {
+        launcher_inventory_suffix += line;
+        launcher_inventory_suffix.push_back('\n');
+    }
     write_text(
         release_manifest,
         "manifest_version=1\n"
         "project_title=Generated Launcher Release\n"
         "startup_item=release startup.prg\n"
-        "startup_source=release source path with spaces.prg\n");
+        "startup_source=release source path with spaces.prg\n" +
+            launcher_inventory_suffix);
     write_text(
         debug_manifest,
         "debug_manifest_version=2\n"
         "project_title=Generated Launcher Debug\n"
         "startup_item=debug startup.prg\n"
-        "startup_source=debug source path with spaces.prg\n");
+        "startup_source=debug source path with spaces.prg\n" +
+            launcher_inventory_suffix);
 
     copperfin::test_support::ScopedEnvironmentValue fixture_mode{
         std::string(fixture_environment)};
@@ -727,7 +828,6 @@ int run_generated_launcher_test(
         build_host_package_root,
         "build-host generated custom launcher invocation");
 
-    const fs::path launcher = materialized.plan.launcher_output_path;
     const ProcessResult ordinary = run_process_capture(
         launcher,
         {},

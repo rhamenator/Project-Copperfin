@@ -488,6 +488,21 @@ add_executable(copperfin_build_host
 
 target_link_libraries(copperfin_build_host PRIVATE cf_runtime_pipeline cf_localization)
 
+if(WIN32)
+    add_executable(copperfin_launcher_guard
+        apps/copperfin_launcher_guard/main.cpp
+    )
+    target_link_libraries(copperfin_launcher_guard PRIVATE cf_security cf_localization cf_platform_support)
+    copperfin_apply_windows_stack_reserve(copperfin_launcher_guard)
+    if(MSVC)
+        target_compile_options(copperfin_launcher_guard PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(copperfin_launcher_guard PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    add_dependencies(copperfin_build_host copperfin_launcher_guard)
+    install(TARGETS copperfin_launcher_guard RUNTIME DESTINATION bin)
+endif()
+
 if(MSVC)
     target_compile_options(copperfin_build_host PRIVATE /W4 /permissive-)
 else()

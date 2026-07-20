@@ -15,6 +15,9 @@ namespace copperfin::runtime::runtime_pipeline_detail {
 namespace {
 
 constexpr std::string_view kGeneratedLauncherInternalPrefix = "Copperfin.GeneratedLauncher.";
+#if defined(_WIN32)
+constexpr std::string_view kGeneratedLauncherAppHost = "Copperfin.GeneratedLauncher.apphost.exe";
+#endif
 constexpr std::string_view kGeneratedLauncherDll = "Copperfin.GeneratedLauncher.dll";
 constexpr std::string_view kGeneratedLauncherDeps = "Copperfin.GeneratedLauncher.deps.json";
 constexpr std::string_view kGeneratedLauncherRuntimeConfig = "Copperfin.GeneratedLauncher.runtimeconfig.json";
@@ -224,6 +227,9 @@ bool validate_public_output_artifact_name(
             copperfin::platform::path_from_utf8_string(plan.runtime_host_destination_path));
     }
     if (plan.emit_dotnet_launcher) {
+#if defined(_WIN32)
+        reserved_names.emplace_back(kGeneratedLauncherAppHost);
+#endif
         reserved_names.emplace_back(kGeneratedLauncherDll);
         reserved_names.emplace_back(kGeneratedLauncherDeps);
         reserved_names.emplace_back(kGeneratedLauncherRuntimeConfig);
@@ -257,6 +263,13 @@ bool inventory_generated_launcher_artifacts(
             .role = RuntimeLauncherArtifactRole::public_apphost,
             .required = true
         },
+#if defined(_WIN32)
+        {
+            .path = package_root / kGeneratedLauncherAppHost,
+            .role = RuntimeLauncherArtifactRole::runtime_required,
+            .required = true
+        },
+#endif
         {
             .path = package_root / kGeneratedLauncherDll,
             .role = RuntimeLauncherArtifactRole::runtime_required,
