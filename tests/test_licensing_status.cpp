@@ -521,6 +521,9 @@ void test_env_var_preserves_non_ascii_license_path() {
     expect(
         status.state == LicenseState::perpetual_current,
         "#4302: COPPERFIN_LICENSE_PATH should preserve a non-ASCII Windows path through license loading");
+    expect(
+        status.source_path == copperfin::test_support::path_to_utf8_string(env_path),
+        "#4302: license status should report the configured path as UTF-8 rather than a Windows code-page string");
 }
 
 void test_explicit_override_takes_priority_over_env_var() {

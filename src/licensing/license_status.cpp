@@ -5,6 +5,7 @@
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/ed25519_public_key.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/path.h"
 
 #include <array>
 #include <ctime>
@@ -96,7 +97,7 @@ LicenseStatus load_license_status(
         if (path_was_explicit) {
             status.state = LicenseState::file_unreadable;
             status.diagnostic = "license file not found at explicitly configured path";
-            status.source_path = resolved_path.string();
+            status.source_path = platform::path_to_utf8_string(resolved_path);
         } else {
             status.state = LicenseState::free;
         }
@@ -107,14 +108,14 @@ LicenseStatus load_license_status(
     if (!input) {
         status.state = LicenseState::file_unreadable;
         status.diagnostic = "license file exists but could not be opened";
-        status.source_path = resolved_path.string();
+        status.source_path = platform::path_to_utf8_string(resolved_path);
         return status;
     }
 
     std::ostringstream buffer;
     buffer << input.rdbuf();
     const std::string contents = buffer.str();
-    status.source_path = resolved_path.string();
+    status.source_path = platform::path_to_utf8_string(resolved_path);
 
     const ParsedLicenseFile parsed = parse_license_file(contents);
     if (!parsed.ok) {
