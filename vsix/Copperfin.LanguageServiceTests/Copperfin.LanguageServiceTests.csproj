@@ -15,6 +15,7 @@
     <Compile Include="CopperfinDocumentPathIdentityTests.cs" />
     <Compile Include="CopperfinStudioTargetSelectionTests.cs" />
     <Compile Include="VsixCommandLocalizationTests.cs" />
+    <Compile Include="VsixCommandWindowTests.cs" />
     <Compile Include="VsixEditorPaneLocalizationTests.cs" />
     <Compile Include="VsixSnapshotModelTests.cs" />
     <Compile Include="..\Copperfin.Studio\CopperfinStudioStartupArguments.cs" Link="Shared\CopperfinStudioStartupArguments.cs" />

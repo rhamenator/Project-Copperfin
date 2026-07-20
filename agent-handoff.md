@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- VSIX shell slice #2996: `CopperfinPackage` registers `CopperfinCommandWindowPane` with `VsDockStyle.Tabbed`, `ToolWindowOrientation.Bottom`, and a 240-pixel initial docked height. `ShowCopperfinCommandWindowCommand` opens it through `ShowToolWindowAsync`; `CopperfinCommandWindowControl` is a system-theme-aware transcript surface, not a PRG evaluator. Keep build/debug output routing and richer VS 2022 chrome in follow-up slices. Preserve the shared designer model, invariant command IDs, and localized catalogs (`VSIX.CommandWindow.*`) across en-US, es-419, pt-BR, and qps-ploc.
+
 - Windows UTF-8 validation fixtures under #3873/#4293/#4299 must copy `copperfin_launcher_guard.exe` beside any copied build/runtime hosts because the build host resolves that trusted companion from its own directory. Unicode `app.cfdebug` assertions must search the versioned backslash-v1 escaped value, not a raw Windows path. These are test-fixture contracts; product path and package schemas remain unchanged.
 
 - String parity slice `#4307` under `#3217`: `GETWORDNUM()` must return an empty string for zero or negative word indexes; do not clamp those values to one. Preserve positive-index, out-of-range, delimiter, flag, localization, and stack-frugal runtime behavior. Keep focused zero, negative, and out-of-range regressions.

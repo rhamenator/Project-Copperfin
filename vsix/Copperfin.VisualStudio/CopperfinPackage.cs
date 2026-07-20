@@ -16,6 +16,11 @@ namespace Copperfin.VisualStudio;
     "#112",
     "0.1.0")]
 [ProvideMenuResource("Menus.ctmenu", 1)]
+[ProvideToolWindow(
+    typeof(CopperfinCommandWindowPane),
+    Style = VsDockStyle.Tabbed,
+    Orientation = ToolWindowOrientation.Bottom,
+    DockedHeight = 240)]
 [ProvideEditorFactory(typeof(CopperfinAssetEditorFactory), 200)]
 [ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".pjx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
 [ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".scx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
@@ -32,5 +37,6 @@ public sealed class CopperfinPackage : AsyncPackage
         RegisterEditorFactory(new CopperfinAssetEditorFactory(this));
         await OpenInCopperfinStudioCommand.InitializeAsync(this);
         await CopperfinProjectCommands.InitializeAsync(this);
+        await ShowCopperfinCommandWindowCommand.InitializeAsync(this);
     }
 }
