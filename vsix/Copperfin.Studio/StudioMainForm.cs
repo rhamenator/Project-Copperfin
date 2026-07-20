@@ -129,7 +129,7 @@ internal sealed class StudioMainForm : Form
         using var dialog = new OpenFileDialog
         {
             Title = localization.Text("Studio.OpenDialogTitle"),
-            Filter = localization.Text("Studio.OpenDialogFilter"),
+            Filter = CopperfinStudioOpenDialogFilter.Build(localization),
             Multiselect = false,
             RestoreDirectory = true
         };

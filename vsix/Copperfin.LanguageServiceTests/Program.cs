@@ -34,6 +34,7 @@ internal static partial class Program
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
+        TestStudioOpenDialogFilterPreservesInvariantPatterns();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
@@ -332,6 +333,33 @@ internal static partial class Program
             "localized formatting should preserve asset kind arguments");
         Expect(status.Contains("Abas abertas: 3", StringComparison.Ordinal),
             "localized formatting should preserve numeric arguments with invariant formatting");
+    }
+
+    private static void TestStudioOpenDialogFilterPreservesInvariantPatterns()
+    {
+        var english = new CopperfinLocalization("en-US");
+        var spanish = new CopperfinLocalization("es-419");
+        var portuguese = new CopperfinLocalization("pt-BR");
+        var pseudo = new CopperfinLocalization("qps-ploc");
+
+        foreach (var localization in new[] { english, spanish, portuguese, pseudo })
+        {
+            var filter = CopperfinStudioOpenDialogFilter.Build(localization);
+            var segments = filter.Split('|');
+            Expect(segments.Length == 4,
+                $"{localization.Locale} Studio open filter should retain WinForms description/pattern pairs");
+            Expect(segments[1] == CopperfinStudioOpenDialogFilter.AssetPatterns &&
+                   segments[3] == CopperfinStudioOpenDialogFilter.AllFilesPattern,
+                $"{localization.Locale} Studio open filter patterns must remain invariant");
+        }
+
+        var pseudoFilter = CopperfinStudioOpenDialogFilter.Build(pseudo);
+        var pseudoSegments = pseudoFilter.Split('|');
+        Expect(pseudoSegments[0].StartsWith("[!! ", StringComparison.Ordinal) &&
+               pseudoSegments[0].EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoSegments[2].StartsWith("[!! ", StringComparison.Ordinal) &&
+               pseudoSegments[2].EndsWith(" !!]", StringComparison.Ordinal),
+            "qps-ploc Studio open filter descriptions should remain pseudo-localized");
     }
 
     private static void TestLocalizationCatalogLocalizesCommandBootstrapErrors()
