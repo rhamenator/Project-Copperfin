@@ -952,6 +952,17 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return TryGetSelectedSnapshotObject()?.RecordIndex ?? -1;
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && currentDebugSession is not null)
+        {
+            CopperfinRuntimeDebugClient.Stop(currentDebugSession);
+            currentDebugSession = null;
+        }
+
+        base.Dispose(disposing);
+    }
+
     public void LoadDocument(string path, string? objectName = null, string? uniqueId = null)
     {
         loadGeneration++;
