@@ -210,6 +210,24 @@ void exercise_real_sample_round_trip(
         expect_contains(no_op_write_process.stdout_text,
                         "\"gridVertical\": " + original_gridv.value,
                         "#4253: real sample no-op GRIDV write should return the existing value");
+        expect_contains(no_op_write_process.stdout_text,
+                        "\"documentTitle\": \"" + sample.title + "\"",
+                        "#4253: real sample no-op GRIDV write should preserve document identity");
+        expect_contains(
+            no_op_write_process.stdout_text,
+            sample.is_label ? "\"isLabel\": true" : "\"isLabel\": false",
+            "#4253: real sample no-op GRIDV write should preserve report/label identity");
+        expect_contains(no_op_write_process.stdout_text,
+                        "\"selectedReportSelectionKind\": \"settings\"",
+                        "#4253: real sample no-op GRIDV write should preserve settings selection kind");
+        const std::string no_op_selected_settings =
+            selected_settings_segment(no_op_write_process.stdout_text);
+        expect_contains(no_op_selected_settings,
+                        "\"name\": \"GRIDV\"",
+                        "#4253: real sample no-op GRIDV write should preserve selected-property provenance");
+        expect_contains(no_op_selected_settings,
+                        "\"value\": \"" + original_gridv.value + "\"",
+                        "#4253: real sample no-op GRIDV write should preserve selected-property value");
         expect(read_binary(copied_primary) == original_primary_bytes,
                "#4253: real sample no-op GRIDV write should preserve primary asset bytes");
         expect(read_binary(copied_sidecar) == original_sidecar_bytes,
