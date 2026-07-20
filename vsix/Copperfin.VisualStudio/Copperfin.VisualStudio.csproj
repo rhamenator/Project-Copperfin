@@ -25,6 +25,7 @@
     <CreateVsixContainerDependsOn>$(CreateVsixContainerDependsOn);GeneratePkgDef</CreateVsixContainerDependsOn>
     <RootNamespace>Copperfin.VisualStudio</RootNamespace>
     <AssemblyName>Copperfin.VisualStudio</AssemblyName>
+    <DefineConstants>$(DefineConstants);COPPERFIN_VISUAL_STUDIO</DefineConstants>
     <RespectAlreadyAssignedItemCulture>true</RespectAlreadyAssignedItemCulture>
   </PropertyGroup>
 

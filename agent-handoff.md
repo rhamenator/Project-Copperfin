@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-20: Shipped #4317. `CopperfinAssetEditorControl.cs` now wraps Visual Studio theme imports and the host-theme implementation in `COPPERFIN_VISUAL_STUDIO`; `Copperfin.VisualStudio.csproj` defines that symbol, while standalone Studio and DesignerSmokeTests compile the shared control without VSSDK references. Exact-head `test_managed_compile` passes 1/1, standalone Studio Release build passes, and `SmokeStandaloneStudioDocumentIdentity` passes under Mono. The full POSIX run's first managed check started before this edit; its 300 native tests passed and the post-fix managed check is the authoritative result.
+
 - 2026-07-20: Independent focused validation for #4315 passed: `ctest --test-dir build --output-on-failure -R '^test_runtime_host_audit_stream$'` completed 1/1 in 160.70 seconds, including writable package data, xAsset companions, escaped manifest fields, versioning, debug privilege, localization, containment, malformed security metadata, and federation permission cases. The fixture-isolation fix is effective locally; hosted Windows evidence remains required.
 
 - 2026-07-20: Shipped #4316 on the #2348 localization lane. `CopperfinStudioOpenDialogFilter.Build(...)` localizes the two WinForms filter descriptions independently and assembles invariant wildcard patterns for PJX, SCX, VCX, FRX, LBX, MNX, PRG, and `*.*`. This avoids qps-ploc pseudo wrappers reaching pattern segments. Keep `Studio.OpenDialogFilter.Assets` and `.AllFiles` aligned across embedded and JSON catalogs, and retain the focused language-service regression.

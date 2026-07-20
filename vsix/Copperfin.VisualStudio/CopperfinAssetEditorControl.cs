@@ -12,8 +12,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+#if COPPERFIN_VISUAL_STUDIO
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
+#endif
 
 namespace Copperfin.VisualStudio;
 
@@ -2453,6 +2455,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             : this.localization.Text("AssetEditor.Subtitle");
     }
 
+#if COPPERFIN_VISUAL_STUDIO
     private void ApplyVisualStudioHostTheme()
     {
         Color background;
@@ -2501,6 +2504,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ApplyVisualStudioHostThemeToChildren(child, background, foreground);
         }
     }
+#else
+    private void ApplyVisualStudioHostTheme()
+    {
+        // The standalone shell owns its styling and does not reference the VSSDK.
+    }
+#endif
 
     private void QueueUiAction(Func<Task> action)
     {
