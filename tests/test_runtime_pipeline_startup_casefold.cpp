@@ -767,7 +767,8 @@ void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts()
         expect(runtime_manifest.find(copperfin::platform::path_to_utf8_string(source_path.filename())) !=
                    std::string::npos,
                "#3873: runtime manifest should retain the Unicode source name");
-        expect(debug_manifest.find(copperfin::platform::path_to_utf8_string(source_path)) !=
+        expect(debug_manifest.find(quote_manifest_value(
+                   copperfin::platform::path_to_utf8_string(source_path))) !=
                    std::string::npos,
                "#3873: debug manifest should retain the Unicode source path");
         expect(fs::exists(copperfin::platform::path_from_utf8_string(result.plan.startup_source_path)),

@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Windows UTF-8 validation fixtures under #3873/#4293/#4299 must copy `copperfin_launcher_guard.exe` beside any copied build/runtime hosts because the build host resolves that trusted companion from its own directory. Unicode `app.cfdebug` assertions must search the versioned backslash-v1 escaped value, not a raw Windows path. These are test-fixture contracts; product path and package schemas remain unchanged.
+
 - String parity slice `#4307` under `#3217`: `GETWORDNUM()` must return an empty string for zero or negative word indexes; do not clamp those values to one. Preserve positive-index, out-of-range, delimiter, flag, localization, and stack-frugal runtime behavior. Keep focused zero, negative, and out-of-range regressions.
 
 - String parity slice `#4306` under `#3217`: `STRTRAN()` must dispatch with two or more arguments; when the optional replacement is omitted, use an empty replacement to remove matches. Preserve existing start-occurrence, count, flags, no-match, localization, and stack-frugal runtime behavior. Keep regression coverage for removal and no-match cases.

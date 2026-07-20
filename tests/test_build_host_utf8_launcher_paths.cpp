@@ -100,8 +100,11 @@ int main(int argc, char** argv) {
         copperfin::platform::path_from_utf8_string(argv[1]);
     const fs::path source_runtime_host_path = source_build_host_path.parent_path() /
         "copperfin_runtime_host.exe";
+    const fs::path source_launcher_guard_path = source_build_host_path.parent_path() /
+        "copperfin_launcher_guard.exe";
     const fs::path build_host_path = tool_dir / "copperfin_build_host.exe";
     const fs::path runtime_host_path = tool_dir / "copperfin_runtime_host.exe";
+    const fs::path launcher_guard_path = tool_dir / "copperfin_launcher_guard.exe";
     std::error_code copy_error;
     fs::copy_file(source_build_host_path, build_host_path,
                   fs::copy_options::overwrite_existing, copy_error);
@@ -110,6 +113,10 @@ int main(int argc, char** argv) {
     fs::copy_file(source_runtime_host_path, runtime_host_path,
                   fs::copy_options::overwrite_existing, copy_error);
     expect(!copy_error, "UTF-8 launcher test should copy the runtime host beside the build host");
+    copy_error.clear();
+    fs::copy_file(source_launcher_guard_path, launcher_guard_path,
+                  fs::copy_options::overwrite_existing, copy_error);
+    expect(!copy_error, "UTF-8 launcher test should copy the launcher guard beside the build host");
 
     std::ofstream source(project_dir / "main.prg", std::ios::binary | std::ios::trunc);
     source << "RETURN\n";
