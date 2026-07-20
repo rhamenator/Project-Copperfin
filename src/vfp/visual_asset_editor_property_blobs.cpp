@@ -4,6 +4,7 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "copperfin/platform/path.h"
 #include "copperfin/vfp/report_layout_records.h"
 
 #include <limits>
@@ -13,7 +14,8 @@ namespace copperfin::vfp {
 namespace {
 
 bool is_report_layout_asset_path(const std::string& path) {
-    std::string ext = std::filesystem::path(path).extension().string();
+    std::string ext = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).extension());
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });
@@ -1083,7 +1085,8 @@ std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssig
 }
 
 bool is_property_blob_asset_path(const std::string& path) {
-    std::string ext = std::filesystem::path(path).extension().string();
+    std::string ext = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).extension());
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });

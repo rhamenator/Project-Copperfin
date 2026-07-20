@@ -4,6 +4,8 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "copperfin/platform/path.h"
+
 #include <new>
 #include <stdexcept>
 
@@ -83,7 +85,8 @@ bool undo_change_targets_asset(
 }  // namespace
 
 std::filesystem::path visual_asset_undo_root_directory(const std::string& path) {
-    const auto normalized = std::filesystem::absolute(std::filesystem::path(path)).string();
+    const auto normalized = copperfin::platform::path_to_utf8_string(
+        std::filesystem::absolute(copperfin::platform::path_from_utf8_string(path)));
     const auto hash = static_cast<unsigned long long>(std::hash<std::string>{}(normalized));
     std::ostringstream stream;
     stream << "asset_" << std::hex << std::setw(16) << std::setfill('0') << hash;

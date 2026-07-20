@@ -4,6 +4,8 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "copperfin/platform/path.h"
+
 namespace copperfin::vfp {
 namespace {
 
@@ -3098,7 +3100,8 @@ VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObject
 namespace {
 
 bool should_group_report_batch_undo(const std::string& path) {
-    auto extension = std::filesystem::path(path).extension().string();
+    auto extension = copperfin::platform::path_to_utf8_string(
+        copperfin::platform::path_from_utf8_string(path).extension());
     std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
     });

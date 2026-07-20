@@ -173,10 +173,11 @@ std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t 
 
 std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     std::error_code ignored;
-    if (!std::filesystem::is_regular_file(path, ignored)) {
+    const std::filesystem::path native_path = platform::path_from_utf8_string(path);
+    if (!std::filesystem::is_regular_file(native_path, ignored)) {
         return {};
     }
-    std::ifstream input(platform::path_from_utf8_string(path), std::ios::binary);
+    std::ifstream input(native_path, std::ios::binary);
     if (!input) {
         return {};
     }

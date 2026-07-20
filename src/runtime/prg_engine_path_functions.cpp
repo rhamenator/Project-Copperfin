@@ -35,8 +35,39 @@ bool is_posix_absolute_path(const std::string& value) {
 
 std::string normalize_posix_absolute_path(std::string value) {
     std::replace(value.begin(), value.end(), '\\', '/');
-    return copperfin::platform::path_to_utf8_string(
-        copperfin::platform::path_from_utf8_string(value).lexically_normal());
+
+    // POSIX-rooted VFP paths are a portable syntax contract. Do not pass
+    // them through the host path parser, which treats a leading slash as a
+    // root-relative Windows path when this code runs on Windows.
+    std::vector<std::string> components;
+    std::size_t start = 0U;
+    while (start < value.size()) {
+        const std::size_t separator = value.find('/', start);
+        const std::size_t end = separator == std::string::npos ? value.size() : separator;
+        const std::string component = value.substr(start, end - start);
+        if (!component.empty() && component != ".") {
+            if (component == "..") {
+                if (!components.empty()) {
+                    components.pop_back();
+                }
+            } else {
+                components.push_back(component);
+            }
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        start = separator + 1U;
+    }
+
+    std::string normalized = "/";
+    for (std::size_t index = 0U; index < components.size(); ++index) {
+        if (index != 0U) {
+            normalized.push_back('/');
+        }
+        normalized += components[index];
+    }
+    return normalized;
 }
 
 std::vector<std::string> split_windows_path_components(const std::string& value, std::size_t start) {

@@ -455,7 +455,8 @@ bool append_runtime_artifact_digest(
     std::vector<RuntimeArtifactDigest>& digests,
     const std::string& path,
     std::string& error) {
-    if (trim_copy(path).empty() || !std::filesystem::exists(path)) {
+    const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
+    if (trim_copy(path).empty() || !std::filesystem::exists(native_path)) {
         return true;
     }
 
@@ -500,7 +501,8 @@ std::string runtime_host_file_name() {
 }
 
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
-    const std::filesystem::path configured_output(workspace.build_plan.output_path);
+    const std::filesystem::path configured_output = copperfin::platform::path_from_utf8_string(
+        workspace.build_plan.output_path);
     const std::string file_name = copperfin::platform::path_to_utf8_string(configured_output.filename());
     if (!trim_copy(file_name).empty()) {
         return file_name;
@@ -777,7 +779,8 @@ std::string resolve_working_directory(
     if (!workspace.home_directory.empty()) {
         const std::string normalized_home_directory =
             normalize_vfp_separators(workspace.home_directory);
-        const std::filesystem::path normalized_home_path(normalized_home_directory);
+        const std::filesystem::path normalized_home_path =
+            copperfin::platform::path_from_utf8_string(normalized_home_directory);
         const bool is_project_relative =
             !is_vfp_absolute_path(normalized_home_directory) &&
             !has_windows_drive_designator(normalized_home_directory) &&
@@ -892,8 +895,9 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
     const std::filesystem::path& content_root,
     std::vector<std::string>& warnings) {
     RuntimeCompanionCopyResult result;
-    const std::filesystem::path source(asset.source_path);
-    const std::filesystem::path staged_relative(asset.relative_path);
+    const std::filesystem::path source = copperfin::platform::path_from_utf8_string(asset.source_path);
+    const std::filesystem::path staged_relative = copperfin::platform::path_from_utf8_string(
+        asset.relative_path);
     for (const auto& companion_source : infer_companion_source_paths(source)) {
         bool ambiguous = false;
         const auto resolved_companion_source = resolve_existing_path_casefold(companion_source, ambiguous);
