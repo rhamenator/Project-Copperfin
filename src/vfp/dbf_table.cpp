@@ -290,11 +290,15 @@ bool primary_always_requires_memo_sidecar(const std::string& path) {
            extension == ".dbc";
 }
 
+SidecarPathResolution resolve_memo_sidecar_path(const std::string& path) {
+    return resolve_vfp_memo_sidecar_path(platform::path_from_utf8_string(path));
+}
+
 std::optional<std::string> ambiguous_required_sidecar_error_for_path(const std::string& path) {
     if (!primary_always_requires_memo_sidecar(path)) {
         return std::nullopt;
     }
-    const SidecarPathResolution resolution = resolve_vfp_memo_sidecar_path(path);
+    const SidecarPathResolution resolution = resolve_memo_sidecar_path(path);
     if (!resolution.ambiguous) {
         return std::nullopt;
     }
@@ -387,7 +391,7 @@ std::optional<std::string> ambiguous_table_sidecar_error(
     if (!table_uses_memo_sidecar(header, fields)) {
         return std::nullopt;
     }
-    const SidecarPathResolution resolution = resolve_vfp_memo_sidecar_path(path);
+    const SidecarPathResolution resolution = resolve_memo_sidecar_path(path);
     if (!resolution.ambiguous) {
         return std::nullopt;
     }
@@ -1260,7 +1264,7 @@ DbfTableParseResult parse_dbf_table_from_file(
     SidecarPathResolution memo_resolution;
     std::string resolved_memo_sidecar_path = memo_sidecar_path;
     if (resolved_memo_sidecar_path.empty() && primary_always_requires_memo_sidecar(path)) {
-        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        memo_resolution = resolve_memo_sidecar_path(path);
         if (memo_resolution.ambiguous) {
             return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
         }
@@ -1306,7 +1310,7 @@ DbfTableParseResult parse_dbf_table_from_file(
 
     if (resolved_memo_sidecar_path.empty() &&
         table_uses_memo_sidecar(table.header, table.fields)) {
-        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        memo_resolution = resolve_memo_sidecar_path(path);
         if (memo_resolution.ambiguous) {
             return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
         }
@@ -1406,7 +1410,7 @@ static DbfRewriteRowsResult collect_dbf_rewrite_rows(
     const bool source_uses_memo_sidecar = primary_always_requires_memo_sidecar(path) ||
         table_uses_memo_sidecar(table.header, table.fields);
     const SidecarPathResolution memo_resolution = source_uses_memo_sidecar
-        ? resolve_vfp_memo_sidecar_path(path)
+        ? resolve_memo_sidecar_path(path)
         : SidecarPathResolution{};
     if (memo_resolution.ambiguous) {
         result.error = ambiguous_sidecar_error(memo_resolution);
@@ -1712,7 +1716,7 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
 
     const bool requires_sidecar = primary_always_requires_memo_sidecar(path) || has_memo_fields;
     const SidecarPathResolution memo_resolution = requires_sidecar
-        ? resolve_vfp_memo_sidecar_path(path)
+        ? resolve_memo_sidecar_path(path)
         : SidecarPathResolution{};
     if (memo_resolution.ambiguous) {
         return {
@@ -1736,15 +1740,16 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
             write_binary_file(path, original_table_bytes);
         } else {
             std::error_code ignored;
-            std::filesystem::remove(path, ignored);
+            std::filesystem::remove(platform::path_from_utf8_string(path), ignored);
         }
 
         if (had_memo_file) {
             write_binary_file(memo_path, original_memo_bytes);
         } else {
             std::error_code ignored;
-            if (std::filesystem::is_regular_file(memo_path, ignored)) {
-                std::filesystem::remove(memo_path, ignored);
+            const std::filesystem::path native_memo_path = platform::path_from_utf8_string(memo_path);
+            if (std::filesystem::is_regular_file(native_memo_path, ignored)) {
+                std::filesystem::remove(native_memo_path, ignored);
             }
         }
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = records.size()};
@@ -1911,7 +1916,7 @@ bool load_raw_dbf_mutation_state(
         return true;
     }
 
-    const SidecarPathResolution memo_resolution = resolve_vfp_memo_sidecar_path(path);
+    const SidecarPathResolution memo_resolution = resolve_memo_sidecar_path(path);
     if (memo_resolution.ambiguous) {
         failure = failed_raw_record_mutation(
             ambiguous_sidecar_error(memo_resolution),
@@ -2464,7 +2469,7 @@ static DbfWriteResult replace_record_field_value_impl(
     bool additive) {
     SidecarPathResolution memo_resolution;
     if (primary_always_requires_memo_sidecar(path)) {
-        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        memo_resolution = resolve_memo_sidecar_path(path);
         if (memo_resolution.ambiguous) {
             return {.ok = false, .error = ambiguous_sidecar_error(memo_resolution)};
         }
@@ -2493,7 +2498,7 @@ static DbfWriteResult replace_record_field_value_impl(
     }
     if (memo_resolution.requested_path.empty() &&
         table_uses_memo_sidecar(header_result.header, fields)) {
-        memo_resolution = resolve_vfp_memo_sidecar_path(path);
+        memo_resolution = resolve_memo_sidecar_path(path);
     }
     const auto field = find_raw_field(fields, field_name);
     if (!field.has_value()) {
@@ -2510,7 +2515,7 @@ static DbfWriteResult replace_record_field_value_impl(
     bool had_memo_file = false;
     if (is_memo_pointer_field(field->type)) {
         if (memo_resolution.requested_path.empty()) {
-            memo_resolution = resolve_vfp_memo_sidecar_path(path);
+            memo_resolution = resolve_memo_sidecar_path(path);
             if (memo_resolution.ambiguous) {
                 return {
                     .ok = false,
@@ -2592,8 +2597,9 @@ static DbfWriteResult replace_record_field_value_impl(
             write_binary_file(memo_path, original_memo_bytes);
         } else {
             std::error_code ignored;
-            if (std::filesystem::is_regular_file(memo_path, ignored)) {
-                std::filesystem::remove(memo_path, ignored);
+            const std::filesystem::path native_memo_path = platform::path_from_utf8_string(memo_path);
+            if (std::filesystem::is_regular_file(native_memo_path, ignored)) {
+                std::filesystem::remove(native_memo_path, ignored);
             }
         }
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = header_result.header.record_count};
