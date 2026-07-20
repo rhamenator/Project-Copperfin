@@ -389,7 +389,7 @@ add_executable(test_runtime_host_audit_containment
     test_runtime_host_audit_containment.cpp
     test_runtime_host_audit_containment_main.cpp
 )
-target_link_libraries(test_runtime_host_audit_containment PRIVATE cf_security cf_platform_support)
+target_link_libraries(test_runtime_host_audit_containment PRIVATE cf_security cf_platform_support cf_vfp_assets)
 add_dependencies(test_runtime_host_audit_containment copperfin_runtime_host)
 
 if(MSVC)
