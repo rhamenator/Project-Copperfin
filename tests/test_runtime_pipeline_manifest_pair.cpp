@@ -9,6 +9,11 @@
 #include "runtime_pipeline_test_hooks.h"
 #include "runtime_pipeline_manifest_pair_io.h"
 
+#if !defined(_WIN32)
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 #include <thread>
 
 namespace cf_test_runtime_pipeline {
@@ -267,6 +272,44 @@ void test_manifest_pair_directory_stays_pinned_and_never_overwrites() {
     fs::remove_all(external_root, error);
     fs::create_directories(root);
     fs::create_directories(external_root);
+
+#if !defined(_WIN32)
+    const int parent_descriptor = ::open(
+        root.parent_path().c_str(),
+        O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    expect(parent_descriptor >= 0,
+           "#4257: descriptor-backed manifest-pair fixture should open its parent");
+    if (parent_descriptor >= 0) {
+        const fs::path fd_root = fs::path("/dev/fd") /
+            std::to_string(parent_descriptor) /
+            root.filename();
+        {
+            copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory directory;
+            const bool acquired = directory.acquire(fd_root, "fd-backed-pinned-root-regression");
+            expect(acquired,
+                   "#4257: manifest-pair acquisition should walk a descriptor-backed package path");
+            if (acquired) {
+                fs::rename(root, moved_root, error);
+                expect(!error,
+                       "#4257: descriptor-backed fixture should rename its visible package path");
+                fs::create_directory_symlink(external_root, root, error);
+                expect(!error,
+                       "#4257: descriptor-backed fixture should replace its visible path");
+                expect(
+                    directory.create_direct_file_and_flush("fd-source", "fd-generation") &&
+                        read_text(moved_root / "fd-source") == "fd-generation" &&
+                        !fs::exists(external_root / "fd-source"),
+                    "#4257: descriptor-backed manifest-pair writes must stay in the admitted package root");
+            }
+        }
+        (void)::close(parent_descriptor);
+        fs::remove_all(root, error);
+        fs::remove_all(moved_root, error);
+        fs::remove_all(external_root, error);
+        fs::create_directories(root);
+        fs::create_directories(external_root);
+    }
+#endif
 
     {
         copperfin::runtime::runtime_pipeline_detail::ManifestPairDirectory directory;

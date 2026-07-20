@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstring>
 #include <limits>
+#include <string_view>
 #include <vector>
 
 #if defined(_WIN32)
@@ -32,6 +33,107 @@
 
 namespace copperfin::runtime::runtime_pipeline_detail {
 namespace {
+
+#if !defined(_WIN32)
+struct FdBackedPath {
+    bool matched = false;
+    int descriptor = -1;
+    std::string relative_path;
+};
+
+FdBackedPath parse_fd_backed_path(const std::filesystem::path& path) {
+    const std::string value = path.string();
+    constexpr std::string_view proc_prefix = "/proc/self/fd/";
+    constexpr std::string_view dev_prefix = "/dev/fd/";
+    const std::string_view prefix = value.rfind(proc_prefix, 0U) == 0U
+        ? proc_prefix
+        : value.rfind(dev_prefix, 0U) == 0U
+            ? dev_prefix
+            : std::string_view();
+    if (prefix.empty()) {
+        return {};
+    }
+
+    const std::size_t number_begin = prefix.size();
+    const std::size_t separator = value.find('/', number_begin);
+    const std::size_t number_end = separator == std::string::npos
+        ? value.size()
+        : separator;
+    if (number_end == number_begin) {
+        return {.matched = true, .descriptor = -1, .relative_path = {}};
+    }
+
+    unsigned long long descriptor_value = 0U;
+    for (std::size_t index = number_begin; index < number_end; ++index) {
+        const unsigned char character = static_cast<unsigned char>(value[index]);
+        if (character < '0' || character > '9') {
+            return {.matched = true, .descriptor = -1, .relative_path = {}};
+        }
+        const unsigned digit = character - '0';
+        if (descriptor_value >
+            (std::numeric_limits<unsigned long long>::max() - digit) / 10U) {
+            return {.matched = true, .descriptor = -1, .relative_path = {}};
+        }
+        descriptor_value = descriptor_value * 10U + digit;
+        if (descriptor_value > static_cast<unsigned long long>(std::numeric_limits<int>::max())) {
+            return {.matched = true, .descriptor = -1, .relative_path = {}};
+        }
+    }
+
+    return {
+        .matched = true,
+        .descriptor = static_cast<int>(descriptor_value),
+        .relative_path = separator == std::string::npos
+            ? std::string()
+            : value.substr(separator + 1U)
+    };
+}
+
+bool open_fd_backed_directory(
+    const std::filesystem::path& path,
+    int& descriptor) {
+    const FdBackedPath parsed = parse_fd_backed_path(path);
+    if (!parsed.matched || parsed.descriptor < 0) {
+        return false;
+    }
+
+    int current = ::fcntl(parsed.descriptor, F_DUPFD_CLOEXEC, 0);
+    if (current < 0) {
+        return false;
+    }
+    if (!parsed.relative_path.empty()) {
+        const std::filesystem::path relative_path(parsed.relative_path);
+        for (const auto& component : relative_path) {
+            const std::string name = component.string();
+            if (name.empty() || name == ".") {
+                continue;
+            }
+            if (name == "..") {
+                (void)::close(current);
+                return false;
+            }
+
+            const int child = ::openat(
+                current,
+                name.c_str(),
+                O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+            (void)::close(current);
+            if (child < 0) {
+                return false;
+            }
+            current = child;
+        }
+    }
+
+    struct stat information{};
+    if (::fstat(current, &information) != 0 || !S_ISDIR(information.st_mode)) {
+        (void)::close(current);
+        return false;
+    }
+    descriptor = current;
+    return true;
+}
+#endif
 
 #if defined(_WIN32)
 HANDLE as_handle(void* value) {
@@ -130,9 +232,17 @@ bool ManifestPairDirectory::acquire(
     volume_id_ = information.dwVolumeSerialNumber;
 #else
     (void)transaction_identity;
-    descriptor_ = ::open(
-        root_.c_str(),
-        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    const FdBackedPath fd_path = parse_fd_backed_path(root_);
+    if (fd_path.matched) {
+        if (!open_fd_backed_directory(root_, descriptor_)) {
+            acquire_failure_ = ManifestPairDirectoryAcquireFailure::path_rejected;
+            return false;
+        }
+    } else {
+        descriptor_ = ::open(
+            root_.c_str(),
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    }
     struct stat information{};
     if (descriptor_ < 0 || ::fstat(descriptor_, &information) != 0 ||
         !S_ISDIR(information.st_mode)) {
