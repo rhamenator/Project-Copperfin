@@ -667,12 +667,18 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
         return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.PathExtensionUnknown")};
     }
 
-    std::ifstream input(copperfin::platform::path_from_utf8_string(path), std::ios::binary);
+    const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
+    std::ifstream input(native_path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
     }
 
-    const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
+    std::error_code file_size_error;
+    const std::uint64_t file_size = static_cast<std::uint64_t>(
+        std::filesystem::file_size(native_path, file_size_error));
+    if (file_size_error) {
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
+    }
     std::size_t probe_size = 512U;
     if (kind == IndexKind::cdx || kind == IndexKind::dcx || kind == IndexKind::mdx) {
         probe_size = static_cast<std::size_t>(file_size);
