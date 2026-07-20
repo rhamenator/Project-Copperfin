@@ -449,6 +449,41 @@ bool copy_to_pinned_windows_parent(
         return false;
     }
 
+    const HANDLE existing_handle = ::CreateFileW(
+        destination.c_str(),
+        FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (existing_handle != INVALID_HANDLE_VALUE) {
+        BY_HANDLE_FILE_INFORMATION existing_information{};
+        const bool read_existing =
+            ::GetFileInformationByHandle(existing_handle, &existing_information) != 0;
+        (void)::CloseHandle(existing_handle);
+        if (!read_existing) {
+            (void)::CloseHandle(parent_handle);
+            error = copy_file_failed(destination);
+            return false;
+        }
+        if ((existing_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U ||
+            (existing_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U ||
+            existing_information.nNumberOfLinks != 1U) {
+            (void)::CloseHandle(parent_handle);
+            error = rejected_destination(destination);
+            return false;
+        }
+    } else {
+        const DWORD existing_error = ::GetLastError();
+        if (existing_error != ERROR_FILE_NOT_FOUND &&
+            existing_error != ERROR_PATH_NOT_FOUND) {
+            (void)::CloseHandle(parent_handle);
+            error = copy_file_failed(destination);
+            return false;
+        }
+    }
+
     const std::filesystem::path temporary = parent / unique_temporary_name();
     const HANDLE temporary_handle = ::CreateFileW(
         temporary.c_str(),
@@ -723,14 +758,24 @@ bool copy_file_to_package_content(
         error = directory_creation_failed(content_root);
         return false;
     }
-    if (!use_pinned_write &&
-        !prepare_direct_parent(
-                absolute_root,
-                admitted->parent_path(),
-                content_root / *admitted,
-                error)) {
+#if defined(_WIN32)
+    if (!prepare_direct_parent(
+            absolute_root,
+            admitted->parent_path(),
+            content_root / *admitted,
+            error)) {
         return false;
     }
+#else
+    if (!use_pinned_write &&
+        !prepare_direct_parent(
+            absolute_root,
+            admitted->parent_path(),
+            content_root / *admitted,
+            error)) {
+        return false;
+    }
+#endif
     destination = (content_root / *admitted).lexically_normal();
     const std::filesystem::path write_destination =
         (absolute_root / *admitted).lexically_normal();

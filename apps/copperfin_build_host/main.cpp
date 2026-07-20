@@ -357,7 +357,7 @@ bool supports_dotnet_launcher_publish() {
 
 }  // namespace
 
-int main(int argc, char** argv) {
+int run_build_host_main(int argc, char** argv) {
     const std::filesystem::path invocation_path =
         argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
     const std::filesystem::path running_executable_path =
@@ -671,3 +671,22 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+#if defined(_WIN32)
+int wmain(int argc, wchar_t* argv[]) {
+    std::vector<std::string> utf8_arguments;
+    std::vector<char*> narrow_arguments;
+    utf8_arguments.reserve(static_cast<std::size_t>(argc));
+    narrow_arguments.reserve(static_cast<std::size_t>(argc));
+    for (int index = 0; index < argc; ++index) {
+        utf8_arguments.push_back(copperfin::platform::path_to_utf8_string(
+            std::filesystem::path(argv[index])));
+        narrow_arguments.push_back(utf8_arguments.back().data());
+    }
+    return run_build_host_main(argc, narrow_arguments.data());
+}
+#else
+int main(int argc, char** argv) {
+    return run_build_host_main(argc, argv);
+}
+#endif
