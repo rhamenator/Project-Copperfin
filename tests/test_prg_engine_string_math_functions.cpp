@@ -137,6 +137,8 @@ namespace
             "strtran_start = STRTRAN('abcabcabc', 'abc', 'X', 2)\n"
             "strtran_count = STRTRAN('abcabcabc', 'abc', 'X', 2, 1)\n"
             "strtran_none = STRTRAN('abcabcabc', 'abc', 'X', 5, 1)\n"
+            "strtran_remove = STRTRAN('a-b-c', '-')\n"
+            "strtran_remove_no_match = STRTRAN('abc', '-')\n"
             "strtran_flags_sensitive = STRTRAN('Hello World', 'WORLD', 'There', 1, 1, 0)\n"
             "strtran_flags_insensitive = STRTRAN('Hello World', 'WORLD', 'There', 1, 1, 1)\n"
             "strtran_flags_start_count = STRTRAN('aBc ABC abc', 'abc', 'X', 2, 1, 1)\n"
@@ -410,6 +412,8 @@ namespace
         check("strtran_start", "abcXX");
         check("strtran_count", "abcXabc");
         check("strtran_none", "abcabcabc");
+        check("strtran_remove", "abc");
+        check("strtran_remove_no_match", "abc");
         check("strtran_flags_sensitive", "Hello World");
         check("strtran_flags_insensitive", "Hello There");
         check("strtran_flags_start_count", "aBc X abc");

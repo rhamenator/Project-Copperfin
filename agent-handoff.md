@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- String parity slice `#4306` under `#3217`: `STRTRAN()` must dispatch with two or more arguments; when the optional replacement is omitted, use an empty replacement to remove matches. Preserve existing start-occurrence, count, flags, no-match, localization, and stack-frugal runtime behavior. Keep regression coverage for removal and no-match cases.
+
 - Numeric parity slice `#4305` under `#3217`: `MOD()` must treat only an exact zero divisor as zero. Do not use a magnitude cutoff that discards valid sub-micro remainders; preserve the existing divisor-sign adjustment and stack-frugal runtime path. The PRG string/math regression checks tiny positive and negative-divisor results through `value_as_number()` because the generic display formatter intentionally rounds near-zero values for text output.
 
 - Runtime package text-write slice `#4304` under `#110`: `write_text_file()` must check the stream after content insertion, explicit `flush()`, and explicit `close()` before publishing success. Preserve the existing localized `Runtime.Package.Error.WriteFileFailed` diagnostic, UTF-8 path handling, package/manifest schemas, and rollback behavior. The POSIX fd-relative writer remains syscall-based with `fsync`/close checks. Keep the Linux `/dev/full` close-time regression and do not broaden this into a format change.

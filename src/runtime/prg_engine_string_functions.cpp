@@ -107,10 +107,10 @@ std::optional<PrgValue> evaluate_string_function(
         }
         return make_string_value(std::move(result));
     }
-    if (function == "strtran" && arguments.size() >= 3U) {
+    if (function == "strtran" && arguments.size() >= 2U) {
         std::string src = value_as_string(arguments[0]);
         const std::string find = value_as_string(arguments[1]);
-        const std::string repl = value_as_string(arguments[2]);
+        const std::string repl = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
         const std::size_t start_occurrence = arguments.size() >= 4U
                                                  ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[3])))
                                                  : 1U;
