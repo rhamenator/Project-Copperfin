@@ -5369,6 +5369,16 @@ namespace copperfin::runtime
                 query_path = copperfin::platform::path_from_utf8_string(resolved_query_path);
             }
 
+            if (options.require_verified_file_byte_overrides)
+            {
+                const auto verified_query = find_verified_file_byte_override(query_path);
+                if (verified_query != options.verified_file_byte_overrides.end() &&
+                    !verified_query->second.empty())
+                {
+                    return verified_query->second;
+                }
+            }
+
             std::filesystem::path snapshot_root;
             const auto query_snapshot = materialize_verified_file_snapshot(
                 query_path,

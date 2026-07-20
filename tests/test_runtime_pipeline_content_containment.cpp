@@ -641,14 +641,14 @@ void test_package_content_copy_rejects_indirect_parent() {
         for (const std::string& rejected_path : rejected_paths) {
             fs::path rejected_destination;
             std::string error;
-            const bool copied =
-                copperfin::runtime::runtime_pipeline_detail::copy_file_to_package_content(
-                    source,
-                    temp_root / "package",
-                    content_root,
-                    rejected_path,
-                    rejected_destination,
-                    error);
+                const bool copied =
+                    copperfin::runtime::runtime_pipeline_detail::copy_file_to_package_content(
+                        source,
+                        temp_root / "package",
+                        content_root,
+                        copperfin::platform::path_from_utf8_string(rejected_path),
+                        rejected_destination,
+                        error);
             expect(!copied && rejected_destination.empty(),
                    "#4065: package content admission should reject Windows path aliases");
         }
