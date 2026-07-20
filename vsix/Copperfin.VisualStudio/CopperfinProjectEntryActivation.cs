@@ -36,7 +36,8 @@ internal static class CopperfinProjectEntryActivation
         var relativePath = entry.RelativePath.Trim()
             .Replace('\\', Path.DirectorySeparatorChar)
             .Replace('/', Path.DirectorySeparatorChar);
-        if (Path.IsPathRooted(relativePath) || LooksWindowsRooted(relativePath))
+        if (Path.IsPathRooted(relativePath) ||
+            CopperfinDocumentPathIdentity.LooksWindowsRooted(relativePath))
         {
             return false;
         }
@@ -55,15 +56,7 @@ internal static class CopperfinProjectEntryActivation
             return false;
         }
 
-        var normalizedRoot = CopperfinDocumentPathIdentity.Normalize(projectDirectory);
-        var comparison = Path.DirectorySeparatorChar == '\\'
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        var rootWithSeparator = normalizedRoot.TrimEnd(
-            Path.DirectorySeparatorChar,
-            Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        if (!candidate.Equals(normalizedRoot, comparison) &&
-            !candidate.StartsWith(rootWithSeparator, comparison))
+        if (!CopperfinDocumentPathIdentity.IsWithinRoot(projectDirectory, candidate))
         {
             return false;
         }
@@ -78,10 +71,4 @@ internal static class CopperfinProjectEntryActivation
         return true;
     }
 
-    private static bool LooksWindowsRooted(string path)
-    {
-        return path.StartsWith("\\\\", StringComparison.Ordinal) ||
-               path.StartsWith("//", StringComparison.Ordinal) ||
-               (path.Length >= 2 && char.IsLetter(path[0]) && path[1] == ':');
-    }
 }

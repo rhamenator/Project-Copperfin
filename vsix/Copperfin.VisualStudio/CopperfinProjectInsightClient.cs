@@ -525,17 +525,60 @@ internal static class CopperfinProjectInsightClient
     {
         if (!string.IsNullOrWhiteSpace(entry.Name) && Path.IsPathRooted(entry.Name))
         {
-            return entry.Name;
+            return string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(entry.Name) &&
+            CopperfinDocumentPathIdentity.LooksWindowsRooted(entry.Name))
+        {
+            return string.Empty;
         }
 
         if (!string.IsNullOrWhiteSpace(entry.RelativePath))
         {
-            return Path.GetFullPath(Path.Combine(projectRoot, entry.RelativePath));
+            var relativePath = entry.RelativePath.Trim()
+                .Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
+            if (Path.IsPathRooted(relativePath) ||
+                CopperfinDocumentPathIdentity.LooksWindowsRooted(relativePath))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                var candidate = Path.GetFullPath(Path.Combine(projectRoot, relativePath));
+                return CopperfinDocumentPathIdentity.IsWithinRoot(projectRoot, candidate)
+                    ? candidate
+                    : string.Empty;
+            }
+            catch (ArgumentException)
+            {
+                return string.Empty;
+            }
+            catch (NotSupportedException)
+            {
+                return string.Empty;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(entry.Name))
         {
-            return Path.GetFullPath(Path.Combine(projectRoot, Path.GetFileName(entry.Name) ?? string.Empty));
+            try
+            {
+                var candidate = Path.GetFullPath(Path.Combine(projectRoot, Path.GetFileName(entry.Name) ?? string.Empty));
+                return CopperfinDocumentPathIdentity.IsWithinRoot(projectRoot, candidate)
+                    ? candidate
+                    : string.Empty;
+            }
+            catch (ArgumentException)
+            {
+                return string.Empty;
+            }
+            catch (NotSupportedException)
+            {
+                return string.Empty;
+            }
         }
 
         return string.Empty;

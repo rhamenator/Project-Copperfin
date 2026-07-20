@@ -57,6 +57,7 @@ internal static partial class Program
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
+        TestProjectInsightsRejectPathsOutsideProjectRoot();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
         TestProjectInsightsCollectQualifiedAndInstanceStyleMethodCallReferences();
         TestRenamePreviewCollectsProjectMethodDefinitionAndReferences();
@@ -1421,6 +1422,76 @@ internal static partial class Program
         finally
         {
             TryDelete(root);
+        }
+    }
+
+    private static void TestProjectInsightsRejectPathsOutsideProjectRoot()
+    {
+        var root = CreateProjectRoot("project_insight_path_containment");
+        var outsidePath = Path.Combine(Path.GetDirectoryName(root)!, "outside-insight.prg");
+        try
+        {
+            var insidePath = Path.Combine(root, "inside.prg");
+            File.WriteAllText(
+                insidePath,
+                "PROCEDURE InsideSymbol" + Environment.NewLine +
+                "* TODO: keep in-project insight coverage" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+            File.WriteAllText(
+                outsidePath,
+                "PROCEDURE OutsideSymbol" + Environment.NewLine +
+                "* TODO: must not be inspected" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "inside.prg",
+                            RelativePath = "inside.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        },
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "outside-traversal.prg",
+                            RelativePath = "..\\outside-insight.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        },
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = outsidePath,
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            Expect(insights.DefinedSymbols.Exists(symbol => symbol.Name == "InsideSymbol"),
+                "project insights should continue reading valid in-root PRG entries");
+            Expect(!insights.DefinedSymbols.Exists(symbol => symbol.Name == "OutsideSymbol"),
+                "project insights should not read PRG entries through parent traversal or rooted names");
+            Expect(insights.TaskItems.All(task => task.FilePath == insidePath),
+                "project insights should keep task items inside the normalized PJX root");
+            Expect(insights.Warnings.Count >= 2,
+                "project insights should report unresolved traversal and rooted entries without reading them");
+        }
+        finally
+        {
+            TryDelete(root);
+            TryDelete(outsidePath);
         }
     }
 

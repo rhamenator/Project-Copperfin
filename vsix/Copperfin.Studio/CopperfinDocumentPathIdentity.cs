@@ -25,6 +25,30 @@ internal static class CopperfinDocumentPathIdentity
             : CanonicalizeExistingPathSpelling(fullPath);
     }
 
+    internal static bool IsWithinRoot(
+        string root,
+        string candidate,
+        bool? isWindowsOverride = null)
+    {
+        var normalizedRoot = Normalize(root, isWindowsOverride).TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
+        var normalizedCandidate = Normalize(candidate, isWindowsOverride);
+        var comparison = IsWindows(isWindowsOverride)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        var rootWithSeparator = normalizedRoot + Path.DirectorySeparatorChar;
+        return normalizedCandidate.Equals(normalizedRoot, comparison) ||
+               normalizedCandidate.StartsWith(rootWithSeparator, comparison);
+    }
+
+    internal static bool LooksWindowsRooted(string path)
+    {
+        return path.StartsWith("\\\\", StringComparison.Ordinal) ||
+               path.StartsWith("//", StringComparison.Ordinal) ||
+               (path.Length >= 2 && char.IsLetter(path[0]) && path[1] == ':');
+    }
+
     private static bool IsWindows(bool? isWindowsOverride)
     {
         return isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
