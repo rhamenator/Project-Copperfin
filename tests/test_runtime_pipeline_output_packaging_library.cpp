@@ -268,6 +268,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         expect(wrapper_source.find("const auto environment_entries = copperfin_runtime_bridge_windows_environment(dispatch_execution.environment);") != std::string::npos &&
                    wrapper_source.find("const auto environment_values = copperfin_runtime_bridge_posix_environment(dispatch_execution.environment);") != std::string::npos,
                "library-output wrapper source should apply launch environment entries through native process APIs.");
+        expect(wrapper_source.find("#include <mutex>") != std::string::npos &&
+                   wrapper_source.find("static std::mutex environment_mutex;") != std::string::npos &&
+                   wrapper_source.find("const std::lock_guard<std::mutex> environment_lock(environment_mutex);") != std::string::npos,
+               "library-output POSIX environment snapshots should use a bounded synchronization boundary.");
         expect(wrapper_source.find("CreateProcessW(") != std::string::npos &&
                    wrapper_source.find("execve(") != std::string::npos &&
                    wrapper_source.find("std::system(") == std::string::npos &&

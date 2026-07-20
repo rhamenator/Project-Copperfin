@@ -312,6 +312,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "#include <cwchar>\n";
     stream << "#include <filesystem>\n";
     stream << "#include <fstream>\n";
+    stream << "#include <mutex>\n";
     stream << "#include <sstream>\n";
     stream << "#include <string>\n";
     stream << "#include <utility>\n";
@@ -1283,6 +1284,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "#else\n";
     stream << "static std::vector<std::string> copperfin_runtime_bridge_posix_environment(\n";
     stream << "    const std::vector<CopperfinRuntimeBridgeEnvironmentVariable>& overrides) {\n";
+    stream << "    // Direct environ mutation must use the same external process-wide serialization contract.\n";
+    stream << "    static std::mutex environment_mutex;\n";
+    stream << "    const std::lock_guard<std::mutex> environment_lock(environment_mutex);\n";
     stream << "    std::vector<std::string> entries;\n";
     stream << "    for (char** current = environ; current != nullptr && *current != nullptr; ++current) {\n";
     stream << "        entries.emplace_back(*current);\n";
