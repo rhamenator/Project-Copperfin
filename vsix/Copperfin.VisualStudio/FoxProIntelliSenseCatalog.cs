@@ -187,7 +187,7 @@ internal static class FoxProIntelliSenseCatalog
 
     public static IReadOnlyList<FoxProCompletionEntry> BuildEntries(string? filePath, string linePrefix, string tokenPrefix)
     {
-        var localization = CopperfinLocalization.FromEnvironment();
+        var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         var prefix = tokenPrefix ?? string.Empty;
         var completions = new Dictionary<string, FoxProCompletionEntry>(StringComparer.OrdinalIgnoreCase);
         AddEntries(completions, Keywords, "keyword", priority: 200, localization);
@@ -234,7 +234,7 @@ internal static class FoxProIntelliSenseCatalog
             return string.Empty;
         }
 
-        var localization = CopperfinLocalization.FromEnvironment();
+        var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         var key = NormalizeLookupToken(token);
         foreach (var item in Keywords)
         {
@@ -327,7 +327,7 @@ internal static class FoxProIntelliSenseCatalog
 
     public static IReadOnlyList<FoxProSignatureEntry> GetSignatures(string? filePath, string invocationName)
     {
-        var localization = CopperfinLocalization.FromEnvironment();
+        var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         var key = NormalizeLookupToken(invocationName);
         if (SignatureTemplateLookup.TryGetValue(key, out var signatureTemplates))
         {
@@ -462,7 +462,7 @@ internal static class FoxProIntelliSenseCatalog
         var separator = qualifiedMethodName.LastIndexOf('.');
         return separator >= 0
             ? qualifiedMethodName.Substring(0, separator)
-            : CopperfinLocalization.FromEnvironment().Text("LanguageService.IntelliSense.Project.ActiveProject");
+            : CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.ActiveProject");
     }
 
     private static void AddEntries(
@@ -509,7 +509,7 @@ internal static class FoxProIntelliSenseCatalog
     private static ProjectSymbolIndex GetProjectIndex(string filePath)
     {
         var root = ResolveProjectRoot(filePath);
-        var localization = CopperfinLocalization.FromEnvironment();
+        var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         var cacheKey = root + "|" + localization.Locale;
         return Cache.AddOrUpdate(
             cacheKey,

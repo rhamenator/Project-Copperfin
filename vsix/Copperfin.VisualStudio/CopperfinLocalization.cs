@@ -2013,6 +2013,19 @@ internal sealed class CopperfinLocalization
         return new CopperfinLocalization(CultureInfo.CurrentUICulture.Name);
     }
 
+    public static CopperfinLocalization FromVisualStudioUiCulture()
+    {
+        var environmentLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        if (string.IsNullOrWhiteSpace(environmentLocale))
+        {
+            environmentLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        }
+
+        return string.IsNullOrWhiteSpace(environmentLocale)
+            ? FromCurrentUiCulture()
+            : new CopperfinLocalization(environmentLocale);
+    }
+
     internal static IReadOnlyDictionary<string, string> CatalogEntries(string? requestedLocale = null)
     {
         var locale = NormalizeLocale(requestedLocale);

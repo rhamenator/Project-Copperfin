@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -27,6 +28,7 @@ internal static partial class Program
         TestReportLayoutObjectPreservesNullableSectionIndex();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
+        TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
@@ -242,6 +244,40 @@ internal static partial class Program
             "qps-ploc FoxPro completion-set display name should be pseudo-localized");
         Expect(pseudoText != FoxProCompletionSetContract.GetDisplayName(english),
             "qps-ploc FoxPro completion-set display name should not fall back to English");
+    }
+
+    private static void TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset()
+    {
+        var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        var previousCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", null);
+            CultureInfo.CurrentUICulture = new CultureInfo("es-419");
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(null, string.Empty, "SEL");
+            var selectCompletion = completions.Single(entry => entry.DisplayText == "SELECT");
+            Expect(selectCompletion.Description == "Comando: selecciona un área de trabajo o evalúa una llamada a SELECT() según el contexto.",
+                "Visual Studio IntelliSense completions should follow CurrentUICulture when no explicit locale override exists");
+
+            Expect(FoxProIntelliSenseCatalog.DescribeToken("SELECT") == selectCompletion.Description,
+                "Visual Studio quick info should use the same CurrentUICulture as completion descriptions");
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(null, "MESSAGEBOX");
+            Expect(signatures.Count == 1 &&
+                   signatures[0].Documentation == "Muestra un cuadro de diálogo modal y devuelve el botón presionado.",
+                "Visual Studio signature help should follow CurrentUICulture when no explicit locale override exists");
+            Expect(selectCompletion.InsertionText == "SELECT" && selectCompletion.Kind == "keyword",
+                "Visual Studio IntelliSense syntax identity must remain invariant across UI cultures");
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previousCulture;
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+        }
     }
 
     private static IReadOnlyList<string> CompositeFormatPlaceholders(string text)
