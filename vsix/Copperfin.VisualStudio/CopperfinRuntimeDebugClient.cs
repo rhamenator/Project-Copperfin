@@ -45,14 +45,14 @@ internal static class CopperfinRuntimeDebugClient
             };
         }
 
-        return await ReplayAsync(new CopperfinRuntimeDebugSession
+        return await StartPersistentAsync(new CopperfinRuntimeDebugSession
         {
             Success = true,
             ManifestPath = buildResult.ManifestPath,
             DebugManifestPath = buildResult.DebugManifestPath,
             BuildWarningCount = buildResult.WarningCount,
             BuildWarnings = buildResult.Warnings.ToList(),
-            Commands = new List<string> { "continue" },
+            Commands = new List<string>(),
             StopOnEntry = true
         }, localization);
     }
@@ -61,6 +61,11 @@ internal static class CopperfinRuntimeDebugClient
         CopperfinRuntimeDebugSession session,
         CopperfinLocalization? localization = null)
     {
+        if (session.Transport is not null)
+        {
+            return AdvanceLiveAsync(session, "continue", localization);
+        }
+
         return ReplayWithCommandAsync(session, "continue", localization);
     }
 
@@ -68,6 +73,11 @@ internal static class CopperfinRuntimeDebugClient
         CopperfinRuntimeDebugSession session,
         CopperfinLocalization? localization = null)
     {
+        if (session.Transport is not null)
+        {
+            return AdvanceLiveAsync(session, "step", localization);
+        }
+
         return ReplayWithCommandAsync(session, "step", localization);
     }
 
@@ -75,6 +85,11 @@ internal static class CopperfinRuntimeDebugClient
         CopperfinRuntimeDebugSession session,
         CopperfinLocalization? localization = null)
     {
+        if (session.Transport is not null)
+        {
+            return AdvanceLiveAsync(session, "next", localization);
+        }
+
         return ReplayWithCommandAsync(session, "next", localization);
     }
 
@@ -82,7 +97,99 @@ internal static class CopperfinRuntimeDebugClient
         CopperfinRuntimeDebugSession session,
         CopperfinLocalization? localization = null)
     {
+        if (session.Transport is not null)
+        {
+            return AdvanceLiveAsync(session, "out", localization);
+        }
+
         return ReplayWithCommandAsync(session, "out", localization);
+    }
+
+    internal static void Stop(CopperfinRuntimeDebugSession session)
+    {
+        session.Transport?.Dispose();
+        session.Transport = null;
+        TryDeleteReplayManifest(session.DebugManifestPath, session.TransportManifestPath);
+        session.TransportManifestPath = string.Empty;
+    }
+
+    private static async Task<CopperfinRuntimeDebugSession> StartPersistentAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization localization)
+    {
+        var runtimeHostPath = CopperfinProjectWorkflow.ResolveRuntimeHostPath();
+        if (string.IsNullOrWhiteSpace(runtimeHostPath) || !File.Exists(runtimeHostPath))
+        {
+            session.Success = false;
+            session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostMissing");
+            return session;
+        }
+
+        var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
+        var arguments = BuildPersistentArguments(effectiveDebugManifestPath, localization.Locale);
+        var startInfo = CreatePersistentProcessStartInfo(runtimeHostPath!, arguments, localization);
+        var transport = await Task.Run(() => CopperfinRuntimeDebugTransport.Start(
+            startInfo,
+            timeoutMilliseconds: 30000,
+            out _));
+        if (transport is null)
+        {
+            TryDeleteReplayManifest(session.DebugManifestPath, effectiveDebugManifestPath);
+            session.Commands = new List<string> { "continue" };
+            return await ReplayAsync(session, localization);
+        }
+
+        session.Transport = transport;
+        session.TransportManifestPath = effectiveDebugManifestPath;
+        try
+        {
+            return await AdvanceLiveAsync(session, "continue", localization);
+        }
+        catch
+        {
+            Stop(session);
+            TryDeleteReplayManifest(session.DebugManifestPath, effectiveDebugManifestPath);
+            throw;
+        }
+    }
+
+    private static Task<CopperfinRuntimeDebugSession> AdvanceLiveAsync(
+        CopperfinRuntimeDebugSession session,
+        string command,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        return Task.Run(() =>
+        {
+            var transport = session.Transport;
+            if (transport is null)
+            {
+                return ReplayWithCommandAsync(session, command, localization).GetAwaiter().GetResult();
+            }
+
+            var response = transport.Send(command, timeoutMilliseconds: 30000);
+            if (!response.Success)
+            {
+                session.Success = false;
+                session.Error = string.IsNullOrWhiteSpace(response.Error)
+                    ? localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut")
+                    : response.Error;
+                Stop(session);
+                return session;
+            }
+
+            session.Success = true;
+            session.Error = string.Empty;
+            session.State = response.State;
+            session.Commands.Add(command);
+            if (string.Equals(session.State.Reason, "completed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(session.State.Reason, "error", StringComparison.OrdinalIgnoreCase))
+            {
+                Stop(session);
+            }
+
+            return session;
+        });
     }
 
     private static Task<CopperfinRuntimeDebugSession> ReplayWithCommandAsync(
@@ -90,6 +197,12 @@ internal static class CopperfinRuntimeDebugClient
         string command,
         CopperfinLocalization? localization = null)
     {
+        if (string.Equals(session.State.Reason, "completed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(session.State.Reason, "error", StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(session);
+        }
+
         localization ??= CopperfinLocalization.FromEnvironment();
         var commands = session.Commands.ToList();
         commands.Add(command);
@@ -196,6 +309,33 @@ internal static class CopperfinRuntimeDebugClient
             isWindowsOverride);
     }
 
+    internal static ProcessStartInfo CreatePersistentProcessStartInfo(
+        string runtimeHostPath,
+        string arguments,
+        CopperfinLocalization? localization = null,
+        bool? isWindowsOverride = null)
+    {
+        var startInfo = CreateReplayProcessStartInfo(
+            runtimeHostPath,
+            arguments,
+            localization,
+            isWindowsOverride);
+        startInfo.RedirectStandardInput = true;
+        startInfo.StandardOutputEncoding = Encoding.UTF8;
+        startInfo.StandardErrorEncoding = Encoding.UTF8;
+        return startInfo;
+    }
+
+    internal static string BuildPersistentArguments(string debugManifestPath, string locale)
+    {
+        return BuildReplayArguments(
+                   debugManifestPath,
+                   locale,
+                   Array.Empty<string>(),
+                   stopOnEntry: true) +
+               " --debug-server";
+    }
+
     internal static string BuildReplayArguments(
         string debugManifestPath,
         string locale,
@@ -217,7 +357,7 @@ internal static class CopperfinRuntimeDebugClient
         return arguments.ToString();
     }
 
-    private static CopperfinRuntimePauseState ParsePauseState(string stdout)
+    internal static CopperfinRuntimePauseState ParsePauseState(string stdout)
     {
         var states = new List<CopperfinRuntimePauseState>();
         var current = new CopperfinRuntimePauseState();

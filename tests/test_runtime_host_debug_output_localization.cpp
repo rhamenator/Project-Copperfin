@@ -669,6 +669,35 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
     }
 
     {
+        write_text(startup_path, "STRTOFILE('live', 'live-session-marker.txt')\nRETURN\n");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-server"
+            },
+            temp_root,
+            std::string("continue\nstep\nexit\n"));
+        expect(process.exit_code == 0,
+               "#4296: persistent debug server should preserve a successful exit code after an explicit exit");
+        expect(process.stdout_text.find("debug.server.ready: true") != std::string::npos,
+               "#4296: persistent debug server should publish an invariant readiness marker");
+        expect(process.stdout_text.find("debug.response.begin") != std::string::npos &&
+                   process.stdout_text.find("debug.response.end") != std::string::npos,
+               "#4296: persistent debug server should frame each command response");
+        expect(process.stdout_text.find("debug.command[0]: continue") != std::string::npos &&
+                   process.stdout_text.find("debug.reason: entry") != std::string::npos,
+               "#4296: persistent debug server should execute continue in the initialized session");
+        expect(process.stdout_text.find("debug.command[2]: exit") != std::string::npos &&
+                   process.stdout_text.find("debug.exit: true") != std::string::npos,
+               "#4296: persistent debug server should support deterministic session shutdown");
+        expect(fs::exists(temp_root / "live-session-marker.txt"),
+               "#4296: persistent debug server should execute startup side effects in the live process");
+    }
+
+    {
         write_text(
             startup_path,
             "LOCAL nValue\n"

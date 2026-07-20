@@ -972,6 +972,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         revealButton.Enabled = true;
         refreshButton.Enabled = true;
         currentSnapshot = null;
+        if (currentDebugSession is not null)
+        {
+            CopperfinRuntimeDebugClient.Stop(currentDebugSession);
+        }
         currentDebugSession = null;
         currentProjectWorkflowResult = null;
         currentProjectInsights = null;
@@ -2507,6 +2511,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.StartingStatus");
         SetDebuggerButtonsEnabled(false);
+        if (currentDebugSession is not null)
+        {
+            CopperfinRuntimeDebugClient.Stop(currentDebugSession);
+        }
         var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!, localization);
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
         {

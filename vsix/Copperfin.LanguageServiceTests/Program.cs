@@ -992,12 +992,38 @@ internal static partial class Program
                 $"printf '%s\\n' \"$@\" > \"{runtimeArgsPath}\"",
                 $"printf 'COPPERFIN_UI_LOCALE=%s\\n' \"${{COPPERFIN_UI_LOCALE:-}}\" > \"{runtimeEnvPath}\"",
                 $"printf 'COPPERFIN_LOCALE=%s\\n' \"${{COPPERFIN_LOCALE:-}}\" >> \"{runtimeEnvPath}\"",
-                "printf 'debug.command[0]: continue\\n'",
-                "printf 'debug.reason: entry\\n'",
-                "printf 'debug.location: app/main.prg:12\\n'",
-                "printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
-                "printf 'debug.stack.depth: 1\\n'",
-                "printf 'debug.executed.statements: 1\\n'"
+                "server=false",
+                "for arg in \"$@\"; do",
+                "  if [ \"$arg\" = '--debug-server' ]; then server=true; fi",
+                "done",
+                "if [ \"$server\" = true ]; then",
+                "  printf 'debug.server.protocol: 1\\n'",
+                "  printf 'debug.server.ready: true\\n'",
+                "  while IFS= read -r command; do",
+                "    printf 'debug.response.begin\\n'",
+                "    if [ \"$command\" = 'exit' ]; then",
+                "      printf 'debug.command[1]: exit\\n'",
+                "      printf 'debug.exit: true\\n'",
+                "      printf 'debug.response.end\\n'",
+                "      exit 0",
+                "    fi",
+                "    if [ \"$command\" = 'step' ]; then reason=step; else reason=entry; fi",
+                "    printf 'debug.command[0]: %s\\n' \"$command\"",
+                "    printf 'debug.reason: %s\\n' \"$reason\"",
+                "    printf 'debug.location: app/main.prg:12\\n'",
+                "    printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
+                "    printf 'debug.stack.depth: 1\\n'",
+                "    printf 'debug.executed.statements: 1\\n'",
+                "    printf 'debug.response.end\\n'",
+                "  done",
+                "else",
+                "  printf 'debug.command[0]: continue\\n'",
+                "  printf 'debug.reason: entry\\n'",
+                "  printf 'debug.location: app/main.prg:12\\n'",
+                "  printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
+                "  printf 'debug.stack.depth: 1\\n'",
+                "  printf 'debug.executed.statements: 1\\n'",
+                "fi"
             ]);
         File.WriteAllText(manifestPath, string.Empty);
         File.WriteAllText(debugManifestPath, "security_enabled=false\n");
@@ -1022,6 +1048,18 @@ internal static partial class Program
             Expect(session.Success, "runtime debug client should succeed against the fake runtime host");
             Expect(string.Equals(session.State.Reason, "entry", StringComparison.Ordinal),
                 "runtime debug client should stop the initial session at entry");
+
+            var steppedSession = CopperfinRuntimeDebugClient.StepIntoAsync(
+                session,
+                new CopperfinLocalization("pt-BR")).GetAwaiter().GetResult();
+            Expect(steppedSession.Success &&
+                   string.Equals(steppedSession.State.Reason, "step", StringComparison.Ordinal),
+                "runtime debug client should advance the live runtime process without replaying the project");
+            Expect(steppedSession.Commands.Count == 2 &&
+                   string.Equals(steppedSession.Commands[0], "continue", StringComparison.Ordinal) &&
+                   string.Equals(steppedSession.Commands[1], "step", StringComparison.Ordinal),
+                "runtime debug client should preserve live command history without adding an exit handshake");
+            CopperfinRuntimeDebugClient.Stop(steppedSession);
 
             var capturedArgs = File.ReadAllText(runtimeArgsPath);
             var capturedEnv = File.ReadAllText(runtimeEnvPath);

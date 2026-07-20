@@ -2937,6 +2937,7 @@ int run_runtime_host_main(int argc, char** argv) {
     bool federation_policy_audit = true;
     bool debug_mode = false;
     bool debug_stop_on_entry = false;
+    bool debug_server_mode = false;
     bool license_status_requested = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
@@ -2988,6 +2989,9 @@ int run_runtime_host_main(int argc, char** argv) {
             debug_mode = true;
         } else if (arg == "--debug-stop-on-entry") {
             debug_stop_on_entry = true;
+        } else if (arg == "--debug-server") {
+            debug_mode = true;
+            debug_server_mode = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {
             breakpoint_args.emplace_back(argv[++index]);
         } else if (arg == "--debug-command" && (index + 1) < argc) {
@@ -3622,7 +3626,7 @@ int run_runtime_host_main(int argc, char** argv) {
             startup_source);
     }
     session_options.working_directory = working_directory;
-    session_options.stop_on_entry = debug_mode && debug_stop_on_entry;
+    session_options.stop_on_entry = debug_mode && (debug_stop_on_entry || debug_server_mode);
     const std::string quit_confirm_prompt = localized_message_or_default(
         catalog,
         "RuntimeHost.Prompt.QuitConfirm",
@@ -3672,7 +3676,183 @@ int run_runtime_host_main(int argc, char** argv) {
     std::cout << "debug.step_support: true\n";
 
     copperfin::runtime::RuntimePauseState state;
-    if (!debug_mode) {
+    if (debug_server_mode) {
+        if (!debug_commands.empty()) {
+            std::cout << "status: error\n";
+            print_error_line(catalog, localized_message(catalog, "RuntimeHost.Debug.Error.InvalidCommand", {{"command", "--debug-command"}}));
+            return 2;
+        }
+
+        std::cout << "debug.server.protocol: 1\n";
+        std::cout << "debug.server.ready: true\n";
+        std::cout.flush();
+
+        std::size_t server_command_index = 0;
+        int server_exit_code = 0;
+        bool server_requested_exit = false;
+        std::string server_command;
+        while (std::getline(std::cin, server_command)) {
+            server_command = trim_copy(server_command);
+            std::cout << "debug.response.begin\n";
+
+            bool command_completed = false;
+            bool response_has_state_output = false;
+            if (equals_insensitive(server_command, "exit") ||
+                equals_insensitive(server_command, "quit") ||
+                equals_insensitive(server_command, "stop")) {
+                std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                std::cout << "debug.exit: true\n";
+                server_requested_exit = true;
+                command_completed = true;
+            } else if (security_enabled && !copperfin::security::role_has_permission(security_profile, security_role, "runtime.admin")) {
+                if (!audit_log_path.empty()) {
+                    (void)append_audit_event(
+                        "policy.denied",
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Error.SecurityPolicyDenied",
+                            {{"permission", "runtime.admin"}, {"role", security_role}}));
+                }
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.SecurityPolicyDenied",
+                        {{"permission", "runtime.admin"}, {"role", security_role}}));
+                std::cout << "debug.response.error: true\n";
+                server_exit_code = 9;
+            } else if (starts_with_insensitive(server_command, "select:") || starts_with_insensitive(server_command, "invoke:")) {
+                const auto action_routine = resolve_action_routine_name(xasset_model, server_command);
+                if (!action_routine.has_value()) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownXAssetAction",
+                            {{"command", server_command}}));
+                    std::cout << "debug.response.error: true\n";
+                } else if (!session.dispatch_event_handler(*action_routine)) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+                            {{"command", server_command}}));
+                    std::cout << "debug.response.error: true\n";
+                } else {
+                    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+                    command_completed = true;
+                }
+            } else if (starts_with_insensitive(server_command, "watch:")) {
+                if (!state.paused || state.completed) {
+                    std::cout << "status: error\n";
+                    print_error_line(catalog, localized_message(catalog, "RuntimeHost.Debug.Error.WatchRequiresPausedState"));
+                    std::cout << "debug.response.error: true\n";
+                } else {
+                    const auto watch = session.evaluate_watch_expression(server_command.substr(6U));
+                    std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                    std::cout << "debug.watch.expression: " << watch.expression << "\n";
+                    std::cout << "debug.watch.ok: " << (watch.ok ? "true" : "false") << "\n";
+                    if (watch.ok) {
+                        std::cout << "debug.watch.value: " << copperfin::runtime::format_value(watch.value) << "\n";
+                    } else {
+                        std::cout << "debug.watch.error: " << watch.message << "\n";
+                    }
+                    const auto breakpoints = session.list_breakpoints();
+                    print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
+                    response_has_state_output = true;
+                    command_completed = true;
+                }
+            } else if (starts_with_insensitive(server_command, "break:add:")) {
+                const auto breakpoint = parse_breakpoint(server_command.substr(10U), effective_startup_source);
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                            {{"command", server_command}}));
+                    std::cout << "debug.response.error: true\n";
+                } else {
+                    session.add_breakpoint(*breakpoint);
+                    std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                    print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
+                    response_has_state_output = true;
+                    command_completed = true;
+                }
+            } else if (starts_with_insensitive(server_command, "break:remove:")) {
+                const auto breakpoint = parse_breakpoint(server_command.substr(13U), effective_startup_source);
+                if (!breakpoint.has_value()) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                            {{"command", server_command}}));
+                    std::cout << "debug.response.error: true\n";
+                } else if (!session.remove_breakpoint(*breakpoint)) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownBreakpoint",
+                            {{"path", breakpoint->file_path}, {"line", std::to_string(breakpoint->line)}}));
+                    std::cout << "debug.response.error: true\n";
+                } else {
+                    std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                    print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
+                    response_has_state_output = true;
+                    command_completed = true;
+                }
+            } else if (lowercase_copy(server_command) == "break:clear" || lowercase_copy(server_command) == "break:list") {
+                if (lowercase_copy(server_command) == "break:clear") {
+                    session.clear_breakpoints();
+                }
+                std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                print_breakpoint_inventory(session, &xasset_model, effective_startup_source, xasset_bootstrap_source);
+                response_has_state_output = true;
+                command_completed = true;
+            } else {
+                const auto action = parse_resume_action(server_command);
+                if (!action.has_value()) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidCommand",
+                            {{"command", server_command}}));
+                    std::cout << "debug.response.error: true\n";
+                } else {
+                    state = session.run(*action);
+                    command_completed = true;
+                }
+            }
+
+            if (command_completed && !server_requested_exit && !response_has_state_output) {
+                std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
+                const auto breakpoints = session.list_breakpoints();
+                print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
+            }
+            std::cout << "debug.response.end\n";
+            std::cout.flush();
+            ++server_command_index;
+            if (server_requested_exit || server_exit_code != 0) {
+                break;
+            }
+        }
+
+        if (server_exit_code != 0) {
+            return server_exit_code;
+        }
+        return 0;
+    } else if (!debug_mode) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     } else if (debug_commands.empty()) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
