@@ -992,7 +992,7 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
             expect(wrapper_source.find("(void)dispatch_execution;") == std::string::npos,
                    "build host DLL wrapper should consume dispatch execution when launching the process.");
-            expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
+            expect(wrapper_source.find("const auto process_launch = request_write_execution\n        ? copperfin_runtime_bridge_launch_process(dispatch_execution)") != std::string::npos,
                    "build host DLL wrapper should route dispatch execution through the shared process-launch helper.");
             expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
                    "build host DLL wrapper should consume process launch when evaluating host failure.");
@@ -1220,9 +1220,9 @@ void run_library_build_host_smoke(
                    "build host DLL wrapper should preserve the runtime-host executable path in the execution plan");
             expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                    "build host DLL wrapper should preserve the bridge invocation arguments in the execution plan");
-            expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+            expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
                    "build host DLL wrapper should derive request transport paths");
-            expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+            expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
                    "build host DLL wrapper should derive response transport paths");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                    "build host DLL wrapper should declare a shared request serialization media-type helper");
@@ -2052,7 +2052,7 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should route the dispatch plan through the shared dispatch-execution helper.");
             expect(wrapper_source.find("(void)dispatch_execution;") == std::string::npos,
                    "build host FLL wrapper should consume dispatch execution when launching the process.");
-            expect(wrapper_source.find("const auto process_launch = copperfin_runtime_bridge_launch_process(dispatch_execution);") != std::string::npos,
+            expect(wrapper_source.find("const auto process_launch = request_write_execution\n        ? copperfin_runtime_bridge_launch_process(dispatch_execution)") != std::string::npos,
                    "build host FLL wrapper should route dispatch execution through the shared process-launch helper.");
             expect(wrapper_source.find("(void)process_launch;") == std::string::npos,
                    "build host FLL wrapper should consume process launch when evaluating host failure.");
@@ -2280,9 +2280,9 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should preserve the runtime-host executable path in the execution plan");
             expect(wrapper_source.find("observation_plan.launch_plan.result.call.invocation.arguments") != std::string::npos,
                    "build host FLL wrapper should preserve the bridge invocation arguments in the execution plan");
-            expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
+            expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_request_artifact_suffix()") != std::string::npos,
                    "build host FLL wrapper should derive request transport paths");
-            expect(wrapper_source.find("std::string(export_name) + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
+            expect(wrapper_source.find("artifact_stem + copperfin_runtime_bridge_response_artifact_suffix()") != std::string::npos,
                    "build host FLL wrapper should derive response transport paths");
             expect(wrapper_source.find("static std::string copperfin_build_runtime_bridge_request_media_type_value()") != std::string::npos,
                    "build host FLL wrapper should declare a shared request serialization media-type helper");
