@@ -388,7 +388,8 @@ SidecarPathResolution memo_sidecar_resolution_for(
     const std::string& explicit_memo_sidecar_path) {
     return explicit_memo_sidecar_path.empty()
         ? resolve_vfp_memo_sidecar_path(path)
-        : resolve_unique_casefold_path(explicit_memo_sidecar_path);
+        : resolve_unique_casefold_path(
+              copperfin::platform::path_from_utf8_string(explicit_memo_sidecar_path));
 }
 
 bool asset_expects_memo_sidecar(AssetFamily family, const DbfHeader& header) {
@@ -1590,10 +1591,13 @@ DatabaseExportResult export_database_as_json(
             continue;
         }
         const std::string& tname = obj.object_name;
+        const auto make_table_path = [&](const std::string& name) {
+            return dbc_dir / copperfin::platform::path_from_utf8_string(name);
+        };
         const auto resolved_table_path = resolve_first_existing_path({
-            dbc_dir / (tname + ".dbf"),
-            dbc_dir / (lowercase_copy(tname) + ".dbf"),
-            dbc_dir / (uppercase_copy(tname) + ".dbf")
+            make_table_path(tname + ".dbf"),
+            make_table_path(lowercase_copy(tname) + ".dbf"),
+            make_table_path(uppercase_copy(tname) + ".dbf")
         });
         if (!resolved_table_path.has_value()) {
             continue;

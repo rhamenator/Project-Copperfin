@@ -1099,6 +1099,82 @@ void test_inspect_database_container_extracts_first_pass_catalog_metadata() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_inspect_asset_resolves_explicit_unicode_memo_sidecar() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string("copperfin_vfp_explicit_memo_caf\xC3\xA9_tests");
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "explicit_sidecar.scx";
+    const fs::path sidecar_path = temp_dir /
+        copperfin::platform::path_from_utf8_string("memo_caf\xC3\xA9.sct");
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+    {
+        std::ofstream output(sidecar_path, std::ios::binary);
+        output << "memo";
+    }
+
+    const auto result = copperfin::vfp::inspect_asset(
+        copperfin::platform::path_to_utf8_string(form_path),
+        copperfin::platform::path_to_utf8_string(sidecar_path));
+    expect(result.ok, "inspect_asset should accept an explicit Unicode memo sidecar path");
+    expect(
+        !has_validation_issue(result, "memo.sidecar_missing", "memo_caf\xC3\xA9.sct"),
+        "inspect_asset should resolve an explicit Unicode memo sidecar path");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_export_database_as_json_resolves_unicode_catalog_table_path() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_unicode_table_export_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path dbc_path = temp_dir / "container.dbc";
+    const fs::path table_path = temp_dir /
+        copperfin::platform::path_from_utf8_string("caf\xC3\xA9table.dbf");
+    const std::string table_name = "caf\xC3\xA9table";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dbc_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U},
+        {.name = "OBJECTNAME", .type = 'C', .offset = 17U, .length = 32U, .decimal_count = 0U},
+        {.name = "PARENTNAME", .type = 'C', .offset = 49U, .length = 32U, .decimal_count = 0U},
+        {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> dbc_records{
+        {"DATABASE", "UnicodeRuntime", "", ""},
+        {"TABLE", table_name, "UnicodeRuntime", ""}
+    };
+    const auto dbc_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(dbc_path), dbc_fields, dbc_records);
+    expect(dbc_create.ok, "Unicode table export test: DBC fixture should be created");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> table_fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 16U, .decimal_count = 0U}
+    };
+    const auto table_create = copperfin::vfp::create_dbf_table_file(
+        copperfin::platform::path_to_utf8_string(table_path), table_fields, {{"ALICE"}});
+    expect(table_create.ok, "Unicode table export test: DBF fixture should be created");
+
+    const auto result = copperfin::vfp::export_database_as_json(
+        copperfin::platform::path_to_utf8_string(dbc_path));
+    expect(result.ok, "export_database_as_json should resolve a Unicode catalog table filename");
+    if (result.ok) {
+        expect(
+            result.json.find("\"ALICE\"") != std::string::npos,
+            "export JSON should include rows from a Unicode catalog table filename");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_parse_real_vfp_cdx_when_available() {
     const std::filesystem::path sample_path =
         "C:\\Program Files (x86)\\Microsoft Visual FoxPro 9\\Samples\\Tastrade\\Data\\customer.cdx";
@@ -2032,6 +2108,8 @@ int main() {
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
+    test_inspect_asset_resolves_explicit_unicode_memo_sidecar();
+    test_export_database_as_json_resolves_unicode_catalog_table_path();
     test_parse_real_vfp_cdx_when_available();
     test_parse_additional_real_vfp_cdx_samples_when_available();
     test_parse_real_vfp_dcx_samples_when_available();
