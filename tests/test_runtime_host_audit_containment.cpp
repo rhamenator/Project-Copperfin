@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_runtime_host_debug_output_support.h"
+#include "copperfin/platform/path.h"
 
 // Safety-relevant coverage: these tests exercise immutable audit-chain and integrity contracts.
 
@@ -34,10 +35,10 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
             "manifest_version=1\n"
             "project_title=AuditPathContainment\n"
             "package_root=" + package_root + "\n"
-            "content_root=" + content_root.string() + "\n"
-            "working_directory=" + content_root.string() + "\n"
+            "content_root=" + copperfin::platform::path_to_utf8_string(content_root) + "\n"
+            "working_directory=" + copperfin::platform::path_to_utf8_string(content_root) + "\n"
             "startup_item=main.prg\n"
-            "startup_source=" + (content_root / "main.prg").string() + "\n"
+            "startup_source=" + copperfin::platform::path_to_utf8_string(content_root / "main.prg") + "\n"
             "security_enabled=true\n"
             "security_role=guest\n"
             "security_mode=native\n"
@@ -67,6 +68,32 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
         expect(!fs::exists(case_root / "security_audit.log"),
                "#4015: a valid custom package-local audit path should not be replaced by the default leaf");
     }
+
+#if defined(_WIN32)
+    {
+        const fs::path case_root = copperfin::platform::path_from_utf8_string(
+            copperfin::platform::path_to_utf8_string(packages_root) + "/unicode-\xC3\xA9");
+        const fs::path differently_cased_root = copperfin::platform::path_from_utf8_string(
+            copperfin::platform::path_to_utf8_string(packages_root) + "/unicode-\xC3\x89");
+        const fs::path local_audit_path = case_root / "logs" / "unicode-case.log";
+        write_denial_manifest(
+            case_root,
+            copperfin::platform::path_to_utf8_string(differently_cased_root),
+            copperfin::platform::path_to_utf8_string(local_audit_path));
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", copperfin::platform::path_to_utf8_string(case_root / "app.cfmanifest")},
+            temp_root);
+
+        expect(process.exit_code == 7,
+               "#4301: Windows package rebinding should use invariant Unicode case comparison");
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
+            copperfin::platform::path_to_utf8_string(local_audit_path));
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#4301: invariant Unicode case rebinding should preserve the package-local audit leaf");
+    }
+#endif
 
 #if defined(_WIN32)
     {

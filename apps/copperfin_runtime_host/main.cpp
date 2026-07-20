@@ -23,7 +23,6 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
-#include <cwctype>
 #include <cstdint>
 #include <exception>
 #include <filesystem>
@@ -40,6 +39,11 @@
 #include <vector>
 
 #if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <process.h>
 #else
 #include <unistd.h>
@@ -1245,14 +1249,12 @@ bool package_path_component_equal(
 #if defined(_WIN32)
     const std::wstring left_value = left.native();
     const std::wstring right_value = right.native();
-    return left_value.size() == right_value.size() &&
-           std::equal(
-               left_value.begin(),
-               left_value.end(),
-               right_value.begin(),
-               [](const wchar_t left_ch, const wchar_t right_ch) {
-                   return std::towlower(left_ch) == std::towlower(right_ch);
-               });
+    return ::CompareStringOrdinal(
+               left_value.c_str(),
+               static_cast<int>(left_value.size()),
+               right_value.c_str(),
+               static_cast<int>(right_value.size()),
+               TRUE) == CSTR_EQUAL;
 #else
     return left == right;
 #endif
