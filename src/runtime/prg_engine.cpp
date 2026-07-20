@@ -8705,7 +8705,12 @@ namespace copperfin::runtime
         const std::filesystem::path library_file =
             copperfin::platform::path_from_utf8_string(resolved_path);
         std::error_code filesystem_error;
-        if (!std::filesystem::is_regular_file(library_file, filesystem_error))
+        const auto verified_library = find_verified_file_byte_override(library_file);
+        const bool has_verified_library =
+            verified_library != options.verified_file_byte_overrides.end() &&
+            !verified_library->second.empty();
+        if (!std::filesystem::is_regular_file(library_file, filesystem_error) &&
+            !(options.require_verified_file_byte_overrides && has_verified_library))
         {
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
@@ -8714,11 +8719,30 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        std::filesystem::path snapshot_root;
+        const auto open_library_path = materialize_verified_xasset_snapshot(
+            library_file,
+            snapshot_root);
+        if (!open_library_path.has_value())
+        {
+            const std::string verified_error = last_error_message;
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
+                {{"classLibraryPath", trimmed_library_path},
+                 {"errorMessage", verified_error}});
+            return std::nullopt;
+        }
+
         const auto open_result = studio::open_document({
-            .path = resolved_path,
+            .path = copperfin::platform::path_to_utf8_string(*open_library_path),
             .read_only = true,
             .load_full_table = true
         });
+        if (!snapshot_root.empty())
+        {
+            std::error_code snapshot_error;
+            std::filesystem::remove_all(snapshot_root, snapshot_error);
+        }
         if (!open_result.ok)
         {
             last_error_message = runtime_text(

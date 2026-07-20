@@ -287,6 +287,80 @@ void test_newobject_local_vcx_materializes_native_class() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_newobject_local_vcx_uses_verified_snapshot() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_verified";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path class_library_path = temp_root / "myclasslib.vcx";
+    write_synthetic_vcx_class_library(class_library_path);
+    fs::path memo_path = class_library_path;
+    memo_path.replace_extension(".vct");
+    const std::string verified_library_bytes = read_text(class_library_path);
+    const std::string verified_memo_bytes = read_text(memo_path);
+    const fs::path main_path = temp_root / "newobject_local_vcx_verified.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MyWidget', 'myclasslib.vcx', 40)\n"
+        "nAnswer = oWidget.Answer()\n"
+        "cCaption = oWidget.Caption\n"
+        "RETURN\n");
+
+    auto options = make_runtime_session_options(main_path, temp_root);
+    options.verified_file_byte_overrides.emplace(class_library_path.string(), verified_library_bytes);
+    options.verified_file_byte_overrides.emplace(memo_path.string(), verified_memo_bytes);
+    options.require_verified_file_byte_overrides = true;
+
+    write_text(class_library_path, "tampered VCX bytes");
+    fs::remove(memo_path, ignored);
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("strict local VCX NEWOBJECT should use admitted bytes: ") + state.message);
+    const auto answer = state.globals.find("nanswer");
+    expect(answer != state.globals.end() && copperfin::runtime::format_value(answer->second) == "41",
+           "strict local VCX NEWOBJECT should preserve the admitted Init and method source");
+    const auto caption = state.globals.find("ccaption");
+    expect(caption != state.globals.end() && copperfin::runtime::format_value(caption->second) == "vcx-default",
+           "strict local VCX NEWOBJECT should preserve admitted memo-backed properties");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_newobject_local_vcx_requires_verified_snapshot() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_unverified";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path class_library_path = temp_root / "myclasslib.vcx";
+    write_synthetic_vcx_class_library(class_library_path);
+    const fs::path main_path = temp_root / "newobject_local_vcx_unverified.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MyWidget', 'myclasslib.vcx')\n"
+        "RETURN\n");
+
+    auto options = make_runtime_session_options(main_path, temp_root);
+    options.require_verified_file_byte_overrides = true;
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed,
+           "strict local VCX NEWOBJECT should fail without admitted bytes");
+    expect(state.message.find("Verified package bytes are unavailable") != std::string::npos,
+           "strict local VCX NEWOBJECT should report the localized verified-byte diagnostic");
+    expect(state.ole_objects.empty(),
+           "unverified local VCX NEWOBJECT should not register a runtime object");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_newobject_local_vcx_rejects_missing_class() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_missing_class";
@@ -489,6 +563,8 @@ void test_scope_exit_releases_unreferenced_objects_and_preserves_returns() {
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
     test_newobject_local_vcx_materializes_native_class();
+    test_newobject_local_vcx_uses_verified_snapshot();
+    test_newobject_local_vcx_requires_verified_snapshot();
     test_newobject_local_vcx_rejects_missing_class();
     test_newobject_local_vcx_rejects_missing_library();
     test_release_object_alias_waits_for_last_variable_reference();

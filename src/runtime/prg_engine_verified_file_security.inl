@@ -32,9 +32,12 @@
             }
 
             std::optional<std::pair<std::filesystem::path, std::string>> sidecar;
-            if (sidecar_resolution.path.has_value())
+            const std::filesystem::path sidecar_candidate = sidecar_resolution.path.value_or(
+                sidecar_resolution.requested_path);
+            if (sidecar_resolution.path.has_value() ||
+                (options.require_verified_file_byte_overrides && !sidecar_candidate.empty()))
             {
-                const auto verified_sidecar = find_verified_file_byte_override(*sidecar_resolution.path);
+                const auto verified_sidecar = find_verified_file_byte_override(sidecar_candidate);
                 if (verified_sidecar == options.verified_file_byte_overrides.end() ||
                     verified_sidecar->second.empty())
                 {
@@ -42,13 +45,13 @@
                     {
                         last_error_message = runtime_text(
                             diagnostic_key,
-                            {{"path", copperfin::platform::path_to_utf8_string(*sidecar_resolution.path)}});
+                            {{"path", copperfin::platform::path_to_utf8_string(sidecar_candidate)}});
                         return std::nullopt;
                     }
                 }
                 else
                 {
-                    sidecar = std::make_pair(*sidecar_resolution.path, verified_sidecar->second);
+                    sidecar = std::make_pair(sidecar_candidate, verified_sidecar->second);
                 }
             }
 
