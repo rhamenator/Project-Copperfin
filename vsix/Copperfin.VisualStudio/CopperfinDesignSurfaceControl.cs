@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -752,7 +753,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             return null;
         }
 
-        if (double.TryParse(property.Value, out var floating))
+        if (double.TryParse(
+                property.Value,
+                NumberStyles.Float,
+                CultureInfo.InvariantCulture,
+                out var floating))
         {
             return (int)Math.Round(floating);
         }

@@ -29,6 +29,7 @@ internal static partial class Program
         }
 
         runner.Run(nameof(SmokeDesignSurfaceWithSyntheticReportLayout), SmokeDesignSurfaceWithSyntheticReportLayout);
+        runner.Run(nameof(SmokeInvariantReportGeometryParsing), SmokeInvariantReportGeometryParsing);
         runner.Run(nameof(SmokeLocalizedReportDesignSurfaceContext), SmokeLocalizedReportDesignSurfaceContext);
         runner.Run(nameof(SmokeLocalizedAssetEditorChrome), SmokeLocalizedAssetEditorChrome);
         runner.Run(nameof(SmokePseudoLocalizedAssetEditorChrome), SmokePseudoLocalizedAssetEditorChrome);

@@ -113,6 +113,44 @@ internal static partial class Program
         Expect(CountNonWhitePixels(bitmap) > 5000, "synthetic report layout should render visible UI content");
     }
 
+    private static void SmokeInvariantReportGeometryParsing()
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("pt-BR");
+            var snapshotObject = new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 7,
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "100.750" },
+                    new() { Name = "VPOS", Value = "200.250" },
+                    new() { Name = "WIDTH", Value = "6666.667" },
+                    new() { Name = "HEIGHT", Value = "300.125" }
+                }
+            };
+            var method = typeof(CopperfinDesignSurfaceControl).GetMethod(
+                "TryBuildBounds",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Expect(method is not null, "shared design surface should retain its geometry parsing hook");
+            if (method is null)
+            {
+                return;
+            }
+
+            var arguments = new object?[] { "report", snapshotObject, null };
+            var parsed = method.Invoke(null, arguments) is true;
+            var bounds = arguments[2] is RectangleF value ? value : RectangleF.Empty;
+            Expect(parsed && bounds.Left == 101 && bounds.Top == 200 && bounds.Width == 6667 && bounds.Height == 300,
+                "FRX/LBX geometry should parse invariant decimal text under pt-BR without culture-scaled dimensions");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
+    }
+
     private static void SmokeLocalizedReportDesignSurfaceContext()
     {
         using var spanishSurface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("es-419"));
