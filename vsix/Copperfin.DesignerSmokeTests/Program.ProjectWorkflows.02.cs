@@ -61,10 +61,38 @@ internal static partial class Program
         var outsidePath = Path.Combine(root, "..", "outside.prg");
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(childPath)!);
             File.WriteAllText(projectPath, "project");
-            File.WriteAllText(childPath, "form");
+            var supportedRelativePaths = new[]
+            {
+                "code\\main.prg",
+                "forms\\orders.scx",
+                "classes\\shared.vcx",
+                "reports\\invoice.frx",
+                "labels\\customer.lbx",
+                "menus\\main.mnx"
+            };
+            foreach (var relativePath in supportedRelativePaths)
+            {
+                var supportedPath = Path.Combine(
+                    root,
+                    relativePath.Replace('\\', Path.DirectorySeparatorChar));
+                Directory.CreateDirectory(Path.GetDirectoryName(supportedPath)!);
+                File.WriteAllText(supportedPath, "asset");
+            }
             File.WriteAllText(Path.GetFullPath(outsidePath), "outside");
+
+            foreach (var relativePath in supportedRelativePaths)
+            {
+                var expectedPath = CopperfinDocumentPathIdentity.Normalize(
+                    Path.Combine(root, relativePath.Replace('\\', Path.DirectorySeparatorChar)));
+                Expect(
+                    CopperfinProjectEntryActivation.TryResolve(
+                        projectPath,
+                        new CopperfinStudioProjectEntry { RelativePath = relativePath },
+                        out var resolvedSupportedPath) &&
+                    string.Equals(resolvedSupportedPath, expectedPath, StringComparison.Ordinal),
+                    $"project workspace activation should resolve supported {Path.GetExtension(relativePath)} child assets");
+            }
 
             var entry = new CopperfinStudioProjectEntry
             {
@@ -150,6 +178,18 @@ internal static partial class Program
                     CopperfinDocumentPathIdentity.Normalize(childPath),
                     StringComparison.Ordinal),
                 "project workspace activation should invoke the host callback with the normalized child path");
+
+            foreach (var relativePath in supportedRelativePaths)
+            {
+                projectEntry.RelativePath = relativePath;
+                requestedPath = null;
+                var expectedPath = CopperfinDocumentPathIdentity.Normalize(
+                    Path.Combine(root, relativePath.Replace('\\', Path.DirectorySeparatorChar)));
+                Expect(
+                    control.TryActivateSelectedProjectEntry() &&
+                    string.Equals(requestedPath, expectedPath, StringComparison.Ordinal),
+                    $"project workspace activation should open supported {Path.GetExtension(relativePath)} child assets");
+            }
 
             requestedPath = null;
             snapshotObject.Deleted = true;

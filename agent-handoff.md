@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- PJX activation coverage under #25/#4265/#4309 now exercises the shared resolver and callback for `.prg`, `.scx`, `.vcx`, `.frx`, `.lbx`, and `.mnx`. Preserve the allowlist, normalized project-relative paths, traversal/missing/unsupported rejection, and the stale `Deleted`/`Excluded` guards without changing host contracts.
+
 - PJX child activation under #25/#4265/#4308 fails closed for stale entries: `CopperfinAssetEditorControl.TryActivateSelectedProjectEntry()` must reject a selected `CopperfinStudioSnapshotObject` with `Deleted` or a matching `CopperfinStudioProjectEntry` with `Excluded` before path resolution or `OpenDocumentRequested`. Preserve valid supported-child activation, containment, localized UI, and machine contracts; keep the focused designer smoke regression proving neither stale case invokes the host callback.
 
 - E3 `#4273` now has end-to-end managed evidence: full host-shaped report and label JSON fixtures preserve `sectionObjectIndex: null` for unplaced objects and numeric indexes for placed objects, while the focused designer smoke deserializes the report payload and routes its object to the localized unplaced explorer row. Keep `CopperfinStudioReportLayoutObject.SectionObjectIndex` nullable and do not replace the additive host `null` contract with a sentinel integer.
