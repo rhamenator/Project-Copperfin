@@ -3344,9 +3344,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var key = normalizedId switch
         {
             "forms" => "AssetEditor.Summary.GroupTitle.Forms",
-            "classes" => string.Equals(normalizedTitle, "Class Libraries", StringComparison.Ordinal)
-                ? "AssetEditor.Summary.GroupTitle.ClassLibraries"
-                : "AssetEditor.Summary.GroupTitle.Classes",
+            "classes" => "AssetEditor.Summary.GroupTitle.ClassLibraries",
             "project_items" => "AssetEditor.Summary.GroupTitle.ProjectItems",
             "reports" => "AssetEditor.Summary.GroupTitle.Reports",
             "labels" => "AssetEditor.Summary.GroupTitle.Labels",

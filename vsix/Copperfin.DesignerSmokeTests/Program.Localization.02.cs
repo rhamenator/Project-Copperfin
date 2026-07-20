@@ -160,6 +160,7 @@ internal static partial class Program
             }
         };
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Bibliotecas de clases";
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
         var spanishWorkspaceSummary = InvokeAssetEditorString(spanishControl, "BuildProjectWorkspaceSummary", snapshot);
         var spanishToolboxSummary = InvokeAssetEditorString(spanishControl, "BuildToolboxSummary", snapshot, insights);
@@ -173,6 +174,7 @@ internal static partial class Program
                spanishObjectSummary.IndexOf("Programas [excluido]", StringComparison.Ordinal) >= 0,
             "Spanish project summaries should localize workspace group titles and excluded suffixes without changing machine-readable project metadata");
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Bibliotecas de classes";
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         var portugueseWorkspaceSummary = InvokeAssetEditorString(portugueseControl, "BuildProjectWorkspaceSummary", snapshot);
         var portugueseToolboxSummary = InvokeAssetEditorString(portugueseControl, "BuildToolboxSummary", snapshot, insights);
@@ -186,6 +188,7 @@ internal static partial class Program
                portugueseObjectSummary.IndexOf("Programas [excluído]", StringComparison.Ordinal) >= 0,
             "Portuguese project summaries should localize workspace group titles and excluded suffixes without changing machine-readable project metadata");
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Class Libraries";
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
         var pseudoWorkspaceSummary = InvokeAssetEditorString(pseudoControl, "BuildProjectWorkspaceSummary", snapshot);
@@ -283,6 +286,7 @@ internal static partial class Program
             }
         };
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Bibliotecas de clases";
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
         ApplyProjectSnapshotForExplorerGroupTitleSmoke(spanishControl, snapshot);
         AssertProjectWorkspaceGroupTitles(
@@ -291,6 +295,7 @@ internal static partial class Program
             "Programas",
             "Spanish project explorer rows and project object-list subtitles should localize workspace group titles");
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Bibliotecas de classes";
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         ApplyProjectSnapshotForExplorerGroupTitleSmoke(portugueseControl, snapshot);
         AssertProjectWorkspaceGroupTitles(
@@ -299,6 +304,7 @@ internal static partial class Program
             "Programas",
             "Portuguese project explorer rows and project object-list subtitles should localize workspace group titles");
 
+        snapshot.ProjectWorkspace.Groups[2].Title = "Class Libraries";
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
         ApplyProjectSnapshotForExplorerGroupTitleSmoke(pseudoControl, snapshot);
