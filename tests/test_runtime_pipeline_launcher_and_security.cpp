@@ -518,6 +518,9 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
             retry_package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
         write_text(retry_launcher_output, "published-launcher");
 
+#if defined(_WIN32)
+        write_text(retry_package_root / "Copperfin.GeneratedLauncher.apphost.exe", "launcher-apphost");
+#endif
         write_text(retry_launcher_dll, "launcher-dll");
         write_text(retry_launcher_deps, "launcher-deps");
         write_text(retry_launcher_runtimeconfig, "launcher-runtimeconfig");
@@ -548,9 +551,15 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
 
             const std::vector<std::string> launcher_artifacts =
                 lines_with_prefix(debug_manifest, "launcher_artifact=");
-            expect(finalize_result.plan.launcher_artifacts.size() == 4U,
+            const std::size_t expected_required_launcher_artifacts =
+#if defined(_WIN32)
+                5U;
+#else
+                4U;
+#endif
+            expect(finalize_result.plan.launcher_artifacts.size() == expected_required_launcher_artifacts,
                    "#4052: finalized package plans should retain the exact admitted launcher inventory");
-            if (finalize_result.plan.launcher_artifacts.size() == 4U) {
+            if (finalize_result.plan.launcher_artifacts.size() == expected_required_launcher_artifacts) {
                 expect(finalize_result.plan.launcher_artifacts[0].package_relative_path ==
                            launcher_output.filename().generic_string() &&
                            finalize_result.plan.launcher_artifacts[0].role ==
@@ -567,7 +576,7 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
             }
             expect(lines_with_prefix(runtime_manifest, "launcher_artifact=") == launcher_artifacts,
                    "#4052: runtime and debug manifests should expose the same provenance-only launcher inventory");
-            expect(launcher_artifacts.size() == 4U,
+            expect(launcher_artifacts.size() == expected_required_launcher_artifacts,
                    "#4052: debug provenance should inventory one apphost and three required internal sidecars");
             expect(debug_manifest.find(
                        "launcher_artifact=" + quote_manifest_value(launcher_output.filename().generic_string()) +
@@ -603,7 +612,12 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                    "#4052: repeated finalization should admit an optional launcher PDB");
             if (with_optional_debug.ok) {
                 const std::string optional_debug_manifest = read_text(with_optional_debug.plan.debug_manifest_path);
-                expect(lines_with_prefix(optional_debug_manifest, "launcher_artifact=").size() == 5U &&
+                expect(lines_with_prefix(optional_debug_manifest, "launcher_artifact=").size() ==
+#if defined(_WIN32)
+                           6U &&
+#else
+                           5U &&
+#endif
                            optional_debug_manifest.find(
                                "launcher_artifact=Copperfin.GeneratedLauncher.pdb|debug_optional|") != std::string::npos,
                        "#4052: optional debug artifacts should be classified separately and exactly once");
@@ -620,8 +634,13 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                 if (without_optional_debug.ok) {
                     const std::string no_optional_debug_manifest =
                         read_text(without_optional_debug.plan.debug_manifest_path);
-                    expect(lines_with_prefix(no_optional_debug_manifest, "launcher_artifact=").size() == 4U &&
-                               no_optional_debug_manifest.find("Copperfin.GeneratedLauncher.pdb") == std::string::npos,
+                    expect(lines_with_prefix(no_optional_debug_manifest, "launcher_artifact=").size() ==
+#if defined(_WIN32)
+                               5U &&
+#else
+                               4U &&
+#endif
+                           no_optional_debug_manifest.find("Copperfin.GeneratedLauncher.pdb") == std::string::npos,
                            "#4052: repeated finalization should not retain stale optional-debug inventory");
                 }
             }
@@ -796,6 +815,11 @@ void test_deferred_package_transaction_rolls_back_failed_second_build() {
         }
         const fs::path package_root(materialized.plan.package_root);
         write_text(materialized.plan.launcher_output_path, "published-" + suffix);
+#if defined(_WIN32)
+        write_text(
+            package_root / "Copperfin.GeneratedLauncher.apphost.exe",
+            "launcher-apphost-" + suffix);
+#endif
         write_text(package_root / "Copperfin.GeneratedLauncher.dll", "launcher-dll-" + suffix);
         write_text(package_root / "Copperfin.GeneratedLauncher.deps.json", "launcher-deps-" + suffix);
         write_text(

@@ -259,6 +259,7 @@ bool run_dotnet_publish(
         "win-x64",
         "--self-contained",
         "false",
+        "-p:UseAppHost=true",
         "-o",
         copperfin::platform::path_to_utf8_string(output_dir)
     };

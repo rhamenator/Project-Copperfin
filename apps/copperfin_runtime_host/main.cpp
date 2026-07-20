@@ -1249,12 +1249,54 @@ bool package_path_component_equal(
 #if defined(_WIN32)
     const std::wstring left_value = left.native();
     const std::wstring right_value = right.native();
-    return ::CompareStringOrdinal(
+    if (::CompareStringOrdinal(
                left_value.c_str(),
                static_cast<int>(left_value.size()),
                right_value.c_str(),
                static_cast<int>(right_value.size()),
-               TRUE) == CSTR_EQUAL;
+               TRUE) == CSTR_EQUAL) {
+        return true;
+    }
+
+    // CompareStringOrdinal does not provide the same invariant simple-case
+    // mapping for every Unicode code point on all supported Windows builds.
+    // Normalize both components through the invariant locale before deciding
+    // that a package-root spelling is different.
+    const auto invariant_lowercase = [](const std::wstring& value) {
+        if (value.empty()) {
+            return std::wstring{};
+        }
+        const int required = ::LCMapStringEx(
+            LOCALE_NAME_INVARIANT,
+            LCMAP_LOWERCASE,
+            value.c_str(),
+            static_cast<int>(value.size()),
+            nullptr,
+            0,
+            nullptr,
+            nullptr,
+            0);
+        if (required <= 0) {
+            return std::wstring{};
+        }
+        std::wstring mapped(static_cast<std::size_t>(required), L'\0');
+        if (::LCMapStringEx(
+                LOCALE_NAME_INVARIANT,
+                LCMAP_LOWERCASE,
+                value.c_str(),
+                static_cast<int>(value.size()),
+                mapped.data(),
+                required,
+                nullptr,
+                nullptr,
+                0) <= 0) {
+            return std::wstring{};
+        }
+        return mapped;
+    };
+    const std::wstring left_lower = invariant_lowercase(left_value);
+    const std::wstring right_lower = invariant_lowercase(right_value);
+    return !left_lower.empty() && left_lower == right_lower;
 #else
     return left == right;
 #endif
