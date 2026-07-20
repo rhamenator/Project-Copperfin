@@ -1203,6 +1203,11 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             }
             expect(compiled,
                    "library-output wrapper scaffold should compile under the host C++ toolchain");
+#if !defined(_WIN32)
+            if (compiled) {
+                test_generated_posix_bridge_environment_launch(compiled_wrapper_path);
+            }
+#endif
             if (compiled && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);

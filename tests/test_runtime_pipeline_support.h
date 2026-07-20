@@ -118,6 +118,7 @@ bool compile_native_wrapper_scaffold(
     const std::filesystem::path& source_path,
     std::filesystem::path& output_path,
     std::string& error);
+void test_generated_posix_bridge_environment_launch(const std::filesystem::path& wrapper_path);
 bool build_native_wrapper_with_cmake(
     const std::filesystem::path& cmake_lists_path,
     const std::filesystem::path& expected_output_path,

@@ -17,6 +17,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winioctl.h>
+#else
+#include <dlfcn.h>
+extern char** environ;
 #endif
 
 namespace cf_test_runtime_pipeline {
@@ -397,6 +400,7 @@ bool compile_native_wrapper_scaffold(
         "-std=c++20",
         "-shared",
 #if !defined(_WIN32)
+        "-DCOPPERFIN_RUNTIME_BRIDGE_TEST_HOOKS=1",
         "-fPIC",
         "-fvisibility=hidden",
         "-fvisibility-inlines-hidden",
@@ -462,6 +466,78 @@ bool compile_native_wrapper_scaffold(
     }
 
     return true;
+}
+
+void test_generated_posix_bridge_environment_launch(const std::filesystem::path& wrapper_path) {
+#if defined(_WIN32)
+    (void)wrapper_path;
+#else
+    namespace fs = std::filesystem;
+    using TestLaunch = int (*)(const char*, const char*, const char*, const char*, const char*, const char*);
+    void* module = dlopen(wrapper_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    expect(module != nullptr, "generated POSIX bridge test seam should load the compiled wrapper");
+    if (module == nullptr) {
+        return;
+    }
+    const auto launch = reinterpret_cast<TestLaunch>(dlsym(module, "copperfin_runtime_bridge_test_launch_environment"));
+    expect(launch != nullptr, "generated POSIX bridge test seam should export the environment launcher");
+    if (launch == nullptr) {
+        dlclose(module);
+        return;
+    }
+
+    const fs::path output_path = wrapper_path.parent_path() / "environment-test.bin";
+    const std::string inherited_value = "inherited-\xC3\xA9";
+    std::vector<std::string> inherited_entries = {
+        "COPPERFIN_TEST_INHERITED=" + inherited_value,
+        "COPPERFIN_TEST_DUPLICATE=first",
+        "COPPERFIN_TEST_DUPLICATE=second"};
+    std::vector<char*> inherited_pointers;
+    inherited_pointers.reserve(inherited_entries.size() + 1U);
+    for (auto& entry : inherited_entries) {
+        inherited_pointers.push_back(entry.data());
+    }
+    inherited_pointers.push_back(nullptr);
+    char** original_environment = environ;
+    environ = inherited_pointers.data();
+    const int exit_code = launch(
+        "/usr/bin/env",
+        output_path.c_str(),
+        "/tmp",
+        "COPPERFIN_TEST_DUPLICATE",
+        "override",
+        "-0");
+    environ = original_environment;
+
+    expect(exit_code == 0, "generated POSIX bridge test seam should report the execve child exit code");
+    const std::string output = read_text(output_path);
+    const std::string expected_inherited = "COPPERFIN_TEST_INHERITED=" + inherited_value;
+    expect(output.find(expected_inherited + '\0') != std::string::npos,
+           "generated POSIX bridge should preserve UTF-8 inherited environment values");
+    expect(output.find("COPPERFIN_TEST_DUPLICATE=override\0") != std::string::npos,
+           "generated POSIX bridge should apply the last override value");
+    expect(output.find("COPPERFIN_TEST_DUPLICATE=first\0") == std::string::npos &&
+               output.find("COPPERFIN_TEST_DUPLICATE=second\0") == std::string::npos,
+           "generated POSIX bridge should collapse duplicate inherited keys deterministically");
+    const fs::path working_directory = fs::temp_directory_path();
+    const fs::path working_directory_output = wrapper_path.parent_path() / "working-directory-test.txt";
+    const int working_directory_exit_code = launch(
+        "/bin/pwd",
+        working_directory_output.c_str(),
+        working_directory.c_str(),
+        "",
+        "",
+        "");
+    expect(working_directory_exit_code == 0,
+           "generated POSIX bridge test seam should preserve the child working directory launch contract");
+    const std::string expected_working_directory = fs::weakly_canonical(working_directory).string() + "\n";
+    expect(read_text(working_directory_output) == expected_working_directory,
+           "generated POSIX bridge should launch the child in the requested working directory");
+    std::error_code ignored;
+    fs::remove(output_path, ignored);
+    fs::remove(working_directory_output, ignored);
+    dlclose(module);
+#endif
 }
 
 bool build_native_wrapper_with_cmake(
@@ -648,6 +724,9 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
         }
         const std::string& symbol = tokens.back();
 #endif
+        if (symbol == "copperfin_runtime_bridge_test_launch_environment") {
+            continue;
+        }
         symbols.insert(symbol);
     }
     return symbols;
