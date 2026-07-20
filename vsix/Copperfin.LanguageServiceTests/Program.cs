@@ -26,6 +26,7 @@ internal static partial class Program
         TestVsixEditorPaneUsesCurrentUiCulture();
         TestReportLayoutObjectPreservesNullableSectionIndex();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
+        TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
@@ -217,6 +218,30 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
         }
+    }
+
+    private static void TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity()
+    {
+        var english = new CopperfinLocalization("en-US");
+        var spanish = new CopperfinLocalization("es-419");
+        var portuguese = new CopperfinLocalization("pt-BR");
+        var pseudo = new CopperfinLocalization("qps-ploc");
+
+        Expect(FoxProCompletionSetContract.Identity == "CopperfinFoxPro",
+            "FoxPro completion-set identity must remain machine-invariant");
+        Expect(FoxProCompletionSetContract.GetDisplayName(english) == "Copperfin FoxPro",
+            "English FoxPro completion-set display name should remain unchanged");
+        Expect(FoxProCompletionSetContract.GetDisplayName(spanish) == "FoxPro de Copperfin",
+            "es-419 FoxPro completion-set display name should use the catalog");
+        Expect(FoxProCompletionSetContract.GetDisplayName(portuguese) == "FoxPro do Copperfin",
+            "pt-BR FoxPro completion-set display name should use the catalog");
+
+        var pseudoText = FoxProCompletionSetContract.GetDisplayName(pseudo);
+        Expect(pseudoText.StartsWith("[!! ", StringComparison.Ordinal) &&
+               pseudoText.EndsWith(" !!]", StringComparison.Ordinal),
+            "qps-ploc FoxPro completion-set display name should be pseudo-localized");
+        Expect(pseudoText != FoxProCompletionSetContract.GetDisplayName(english),
+            "qps-ploc FoxPro completion-set display name should not fall back to English");
     }
 
     private static IReadOnlyList<string> CompositeFormatPlaceholders(string text)

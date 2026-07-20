@@ -2033,6 +2033,7 @@
   "AssetEditor.Debugger.UnavailableStatus": "Debugger unavailable.",
   "AssetEditor.Debugger.StartSessionFirstMessage": "Start a Copperfin debug session first.",
   "LanguageService.IntelliSense.Keyword.Select": "Command: selects a work area or evaluates a SELECT() call depending on context.",
+  "LanguageService.IntelliSense.CompletionSet.FoxPro": "Copperfin FoxPro",
   "LanguageService.IntelliSense.Keyword.Use": "Command: opens a table, free table, cursor, or closes one with USE IN.",
   "LanguageService.IntelliSense.Keyword.In": "Keyword: targets a work area or alias in commands like USE IN and GO ... IN.",
   "LanguageService.IntelliSense.Keyword.Alias": "Keyword: assigns or references a work-area alias.",

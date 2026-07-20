@@ -73,8 +73,8 @@ internal sealed class FoxProCompletionSource : ICompletionSource
 
         var applicableTo = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
         completionSets.Add(new CompletionSet(
-            "CopperfinFoxPro",
-            "Copperfin FoxPro",
+            FoxProCompletionSetContract.Identity,
+            FoxProCompletionSetContract.GetDisplayName(CopperfinLocalization.FromCurrentUiCulture()),
             applicableTo,
             completions,
             Enumerable.Empty<Completion>()));

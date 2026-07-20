@@ -2032,6 +2032,7 @@
   "AssetEditor.Debugger.UnavailableStatus": "Depurador no disponible.",
   "AssetEditor.Debugger.StartSessionFirstMessage": "Inicie primero una sesi\u00F3n de depuraci\u00F3n de Copperfin.",
   "LanguageService.IntelliSense.Keyword.Select": "Comando: selecciona un \u00E1rea de trabajo o eval\u00FAa una llamada a SELECT() seg\u00FAn el contexto.",
+  "LanguageService.IntelliSense.CompletionSet.FoxPro": "FoxPro de Copperfin",
   "LanguageService.IntelliSense.Keyword.Use": "Command: opens a table, free table, cursor, or closes one with USE IN.",
   "LanguageService.IntelliSense.Keyword.In": "Keyword: targets a work area or alias in commands like USE IN and GO ... IN.",
   "LanguageService.IntelliSense.Keyword.Alias": "Keyword: assigns or references a work-area alias.",
