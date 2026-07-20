@@ -128,18 +128,19 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "VPOS", .type = 'N', .length = 10U},
         {.name = "WIDTH", .type = 'N', .length = 10U},
         {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "PICTURE", .type = 'M', .length = 4U},
         {.name = "FONTFACE", .type = 'M', .length = 4U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
-        {"9", "1", "", "", "0", "", "2000", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
-        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
-        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
-        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "", "10", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "", "Segoe UI", "", "field-guid"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "", "label-guid"},
+        {"6", "", "", "50", "8000", "100", "100", "", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -227,10 +228,35 @@ void test_studio_host_json_preserves_selected_label_objects(const std::string& s
                     "#1506: selected label objects should serialize null selected settings");
     expect_contains(object_process.stdout_text, "\"objectKind\": \"field\"",
                     "#1481: selected label objects should preserve report object kinds");
+    expect_contains(object_process.stdout_text, "\"picture\": \"\"",
+                    "#4291: label layout JSON should expose the selected object's PICTURE value");
     expect_contains(object_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
                     "#1481: selected label objects should expose containing section ids");
     expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                     "#1481: selected label objects should expose containing section availability");
+
+    const auto picture_set_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "4", "--set-property", "--property-name", "PICTURE",
+         "--property-value", "@I", "--json"},
+        temp_root);
+    expect(picture_set_process.exit_code == 0,
+           "#4291: label-object PICTURE alignment should be writable through the shared host");
+    expect_contains(picture_set_process.stdout_text, "\"picture\": \"@I\"",
+                    "#4291: label-object PICTURE set should refresh host JSON");
+    expect_contains(picture_set_process.stdout_text, "\"pictureAlignment\": \"center\"",
+                    "#4291: @I should map to the invariant centered alignment value");
+
+    const auto picture_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "4", "--clear-property", "--property-name", "PICTURE", "--json"},
+        temp_root);
+    expect(picture_clear_process.exit_code == 0,
+           "#4291: label-object PICTURE alignment should be clearable through the shared host");
+    expect_contains(picture_clear_process.stdout_text, "\"picture\": \"\"",
+                    "#4291: label-object PICTURE clear should blank the direct field");
+    expect_contains(picture_clear_process.stdout_text, "\"pictureAlignment\": \"left\"",
+                    "#4291: clearing PICTURE should restore the documented left/default alignment");
 
     const auto page_header_object_process = run_process_capture(
         studio_host_path,

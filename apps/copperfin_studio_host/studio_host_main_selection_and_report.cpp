@@ -2708,6 +2708,18 @@ std::vector<copperfin::studio::StudioNamedValue> find_selected_report_settings(
 void print_json_report_layout_object(
     const copperfin::studio::StudioLayoutObjectSnapshot& object,
     const std::string& indent) {
+    const std::string picture_alignment = [&]() {
+        if (object.objtype_code != 5 || object.picture.empty()) {
+            return std::string("left");
+        }
+        if (object.picture == "@I") {
+            return std::string("center");
+        }
+        if (object.picture == "@J") {
+            return std::string("right");
+        }
+        return std::string("other");
+    }();
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
     std::cout << indent << "  \"deleted\": " << (object.deleted ? "true" : "false") << ",\n";
@@ -2754,6 +2766,16 @@ void print_json_report_layout_object(
     print_json_report_field_index_or_null(object.expression_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"expressionMemoBlockNumber\": " << object.expression_memo_block_number << ",\n";
+    std::cout << indent << "  \"picture\": ";
+    print_json_string(object.picture);
+    std::cout << ",\n";
+    std::cout << indent << "  \"pictureFieldIndex\": ";
+    print_json_report_field_index_or_null(object.picture_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"pictureMemoBlockNumber\": " << object.picture_memo_block_number << ",\n";
+    std::cout << indent << "  \"pictureAlignment\": ";
+    print_json_string(picture_alignment);
+    std::cout << ",\n";
     std::cout << indent << "  \"left\": " << object.left << ",\n";
     std::cout << indent << "  \"leftFieldIndex\": ";
     print_json_report_field_index_or_null(object.left_field_index);

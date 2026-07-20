@@ -66,6 +66,7 @@ void test_build_report_layout_groups_band_objects() {
             .values = {
                 value("OBJTYPE", "5"),
                 value("EXPR", "\"Invoice\"", 32U),
+                value("PICTURE", "@I", 37U),
                 value("HPOS", "900.000"),
                 value("VPOS", "100.000"),
                 value("WIDTH", "1800.000"),
@@ -169,6 +170,12 @@ void test_build_report_layout_groups_band_objects() {
             "#675: report layout object title provenance should retain selected EXPR field ordinal");
         expect(layout.sections[0].objects[0].title_memo_block_number == 32U,
             "#716: report layout object titles should inherit selected EXPR memo block provenance");
+        expect(layout.sections[0].objects[0].picture == "@I",
+            "#4291: label objects should preserve PICTURE alignment values");
+        expect(layout.sections[0].objects[0].picture_field_index == 2U,
+            "#4291: label object PICTURE should preserve field provenance");
+        expect(layout.sections[0].objects[0].picture_memo_block_number == 37U,
+            "#4291: label object PICTURE should preserve memo provenance");
     }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
