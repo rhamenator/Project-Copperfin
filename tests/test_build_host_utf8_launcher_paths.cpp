@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
         copperfin::platform::path_from_utf8_string("proyecto-\xE6\x97\xA5");
     const fs::path output_root = temp_root /
         copperfin::platform::path_from_utf8_string("paquete-\xD0\x9F\xD1\x83\xD1\x82\xD1\x8C");
-    const fs::path project_path = project_dir / "launcher.prjx";
+    const fs::path project_path = project_dir / "launcher.pjx";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
