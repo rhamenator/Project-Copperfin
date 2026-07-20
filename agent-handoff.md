@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-20: Shipped #4314 on the #110 portability lane. `portable_manifest_path(...)` preserves decoded literal backslashes on POSIX, but continues to normalize decoded Windows drive-rooted and UNC paths for cross-platform manifests. The direct manifest-path regression now exercises both `|` and literal `\\` components; keep `backslash-v1` writer/host round trips aligned.
+
 - 2026-07-20: Shipped the remaining #4274 manifest-escaping correction. `unescape_manifest_value(...)` now decodes `\\|` for direct manifest values as well as compound pipe-delimited records, so generated `backslash-v1` manifests preserve POSIX/macOS paths containing literal pipes. Keep the writer/host encoding contract aligned and retain the focused direct-path regression; Windows skips the path-component fixture because `|` is invalid there.
 
 - 2026-07-20: Shipped #4313 on the #2348 localization lane. `BuildProjectWorkspaceGroupTitleDisplayText(...)` now uses the stable `classes` group ID to select `AssetEditor.Summary.GroupTitle.ClassLibraries`, so localized native titles such as Spanish `Bibliotecas de clases` and Portuguese `Bibliotecas de classes` cannot be misclassified as ordinary classes. Managed WinForms smoke coverage exercises workspace and explorer summaries for es-419, pt-BR, and qps-ploc; group IDs and machine contracts remain unchanged.

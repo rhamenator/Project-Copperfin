@@ -553,8 +553,8 @@ void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std
     namespace fs = std::filesystem;
 
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_direct_manifest_pipe";
-    const fs::path deployed_root = temp_root / "deployed|package";
-    const fs::path content_root = deployed_root / "content|root";
+    const fs::path deployed_root = temp_root / "deployed|package\\literal";
+    const fs::path content_root = deployed_root / "content|root\\literal";
     const fs::path startup_path = content_root / "main.prg";
     const fs::path manifest_path = deployed_root / "app.cfmanifest";
     const fs::path locale_root = temp_root / "locales";
@@ -584,7 +584,9 @@ void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std
         std::string escaped;
         escaped.reserve(value.size());
         for (const char ch : value) {
-            if (ch == '|') {
+            if (ch == '\\') {
+                escaped += "\\\\";
+            } else if (ch == '|') {
                 escaped += "\\|";
             } else {
                 escaped.push_back(ch);
@@ -616,9 +618,9 @@ void test_runtime_host_preserves_escaped_pipe_in_direct_manifest_paths(const std
         "dotnet_story=none\n");
 
     const std::string manifest_text = read_text(manifest_path);
-    expect(manifest_text.find("deployed\\|package") != std::string::npos,
+    expect(manifest_text.find("deployed\\|package\\\\literal") != std::string::npos,
            "direct escaped-pipe fixture should write a backslash-escaped package path");
-    expect(manifest_text.find("content\\|root") != std::string::npos,
+    expect(manifest_text.find("content\\|root\\\\literal") != std::string::npos,
            "direct escaped-pipe fixture should write a backslash-escaped content path");
 
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());

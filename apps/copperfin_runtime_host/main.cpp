@@ -1296,7 +1296,15 @@ std::optional<std::filesystem::path> package_relative_path(
 
 std::filesystem::path portable_manifest_path(std::string value) {
 #if !defined(_WIN32)
-    std::replace(value.begin(), value.end(), '\\', '/');
+    const bool has_windows_drive_prefix =
+        value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+    const bool has_windows_unc_prefix = value.rfind("\\\\", 0U) == 0U;
+    if (has_windows_drive_prefix || has_windows_unc_prefix) {
+        std::replace(value.begin(), value.end(), '\\', '/');
+    }
 #endif
     return path_from_utf8(value).lexically_normal();
 }
