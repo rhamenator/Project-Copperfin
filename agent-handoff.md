@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4327 on the #110 runtime hardening lane. `validate_runtime_host_source_path()` now uses error-code overloads for both existence and regular-file checks, preserving the localized `RuntimeHostSourcePathNotRegularFile` contract instead of allowing filesystem status failures to throw. Missing, directory, and file-parent source fixtures pass through the existing fail-fast-before-staging path; hosted Windows validation remains required.
+
 - 2026-07-21: Implemented #4326 on the #110 release-readiness lane. `test_studio_host_utf8_arguments` now has an explicit `CopperfinTestIsolation.cmake` contract, so its generated inventory no longer carries unverified axes or `audit=pending`. The full POSIX validation reached 302 tests with 301 passed and two expected platform skips; after reconfiguration, `test_native_test_isolation_contract` and the Unicode-argument test pass together. Hosted Windows validation remains required.
 
 - 2026-07-21: Implemented #4324 on the #110 security lane. Windows external-process authorization now resizes `SearchPathW()` storage when a result exceeds `MAX_PATH`, then preserves the existing canonical-root, signature, publisher, diagnostic, and machine-policy checks. `test_security_controls` adds a long-path executable fixture with a capability-only skip when the host cannot create it. Hosted Windows validation remains required.

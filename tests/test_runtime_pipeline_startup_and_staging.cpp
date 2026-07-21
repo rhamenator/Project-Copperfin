@@ -1373,8 +1373,37 @@ void test_materialize_fails_before_asset_staging_when_runtime_host_source_is_inv
         invalid_runtime_host.string());
 
     expect(!result.ok, "invalid runtime host source should fail materialization");
+    expect(result.error == "Runtime host source path does not point to a regular file.",
+           "missing runtime host source should preserve the localized non-regular-file diagnostic; observed: " +
+               result.error);
     expect(!fs::exists(fs::path(plan.content_root) / "main.prg"),
            "invalid runtime host source should fail before staging startup assets");
+
+    const fs::path non_regular_runtime_host = temp_root / "directory_runtime_host.exe";
+    fs::create_directories(non_regular_runtime_host);
+    const auto non_regular_result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        non_regular_runtime_host.string());
+    expect(!non_regular_result.ok,
+           "directory runtime host source should fail materialization without throwing");
+    expect(non_regular_result.error == "Runtime host source path does not point to a regular file.",
+           "directory runtime host source should preserve the localized non-regular-file diagnostic; observed: " +
+               non_regular_result.error);
+
+    const fs::path unstatable_parent = temp_root / "unstatable_parent";
+    write_text(unstatable_parent, "not a directory\n");
+    const auto unstatable_result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        (unstatable_parent / "runtime_host.exe").string());
+    expect(!unstatable_result.ok,
+           "unstatable runtime host source should fail materialization without throwing");
+    expect(unstatable_result.error == "Runtime host source path does not point to a regular file.",
+           "unstatable runtime host source should preserve the localized non-regular-file diagnostic; observed: " +
+               unstatable_result.error);
 
     fs::remove_all(temp_root, ignored);
 }

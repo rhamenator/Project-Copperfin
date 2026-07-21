@@ -638,7 +638,13 @@ bool validate_runtime_host_source_path(
         return false;
     }
 
-    if (!std::filesystem::exists(source) || !std::filesystem::is_regular_file(source)) {
+    std::error_code source_status_error;
+    if (!std::filesystem::exists(source, source_status_error) || source_status_error) {
+        error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile");
+        return false;
+    }
+    source_status_error.clear();
+    if (!std::filesystem::is_regular_file(source, source_status_error) || source_status_error) {
         error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile");
         return false;
     }
