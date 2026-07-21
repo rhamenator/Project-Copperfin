@@ -297,12 +297,27 @@ This project is not pursuing formal DO-178C certification. However, the followin
 
 ## 7. Traceability
 
-This gap analysis was produced against commit state as of 2026-05-03. It should be re-run after any significant addition to the test suite or after a hazard register update changes the severity of an active hazard.
+This section was refreshed against the current main tree on 2026-07-21. The original gap descriptions remain useful as hazard-oriented test intent, but the old checklist was stale: focused regressions have since been added across the DBF, PRG, security, and runtime-host targets.
 
-Re-run checklist:
+### Current focused evidence
 
-- [ ] All GAP-01 through GAP-03 tests implemented
-- [ ] GAP-04 through GAP-06 tests implemented
+| Gap | Current evidence | Status and limitation |
+| --- | --- | --- |
+| GAP-01 | `tests/test_dbf_table.cpp` covers currency and NaN/INF boundaries; `tests/test_prg_engine_control_flow_error_handling_and_faults.cpp` covers divide-by-zero recovery and numeric-field overflow. | Focused regression coverage is present. This is not a formal numeric-boundary completeness claim. |
+| GAP-02 | `tests/test_dbf_table.cpp` covers adversarial record counts, descriptor/header bounds, record-width mismatches, malformed memo metadata, and full-width field names. | Focused malformed-input coverage is present. Fuzzing and exhaustive format coverage remain out of scope. |
+| GAP-03 | `tests/test_dbf_table.cpp` covers injected DBF promotion failures, memo-sidecar failures, rollback, and staged-artifact cleanup. | Deterministic failure-injection coverage is present; physical disk-full and power-loss simulation are not claimed. |
+| GAP-04 | `tests/test_prg_engine_control_flow.cpp` and the aggregate/table-mutation test sources cover empty-table navigation, scans, aggregates, and zero-record copy/append paths. | Focused empty/degenerate cases are present; the full command surface is not exhaustive. |
+| GAP-05 | `tests/test_dbf_table.cpp` covers character-width, memo, currency, and numeric field boundaries; PRG string and replacement tests cover runtime string boundaries. | Representative persistence and runtime coverage is present; broader code-page combinations remain a future parity slice. |
+| GAP-06 | `tests/test_security_controls.cpp` covers secret, audit, and external-process policy boundaries; `tests/test_runtime_host_audit_stream.cpp` and `tests/test_runtime_host_audit_containment.cpp` cover runtime audit containment and malformed security metadata. | Focused security-boundary evidence is present; hosted Windows ACL and process-policy validation remains a release gate. |
+| GAP-07 | `tests/test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp` covers the configured call-depth boundary and failure path. | The stack-frugal iterative frame-machine contract is tested at the guardrail, not formally proven for every nested feature. |
+| GAP-08 | `tests/test_prg_engine_work_areas.cpp` covers multi-alias/session visibility and mutation persistence. | Representative work-area isolation coverage is present; broader concurrent-session analysis remains advisory. |
+| GAP-09 | PRG error-handling, runtime-host debug-output, localization, and audit tests cover stable diagnostic identity, localized prose, and recovery output. | Diagnostic contracts are covered for shipped surfaces; no claim is made that every future diagnostic has been inventoried. |
+
+The focused evidence above does not replace the required cross-platform validation matrix or the safety traceability workflow. Before a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive its report.
+
+Remaining checklist:
+
+- [x] GAP-01 through GAP-09 have current focused evidence references
 - [ ] Coverage measurement baseline established (GCOV or equivalent)
-- [ ] This document updated to reflect closed gaps
-- [ ] Hazard register reviewed for any new hazards introduced by runtime additions since this analysis
+- [x] This document refreshed to reflect current focused evidence
+- [ ] Hazard register reviewed for any new hazards introduced by runtime additions since this refresh

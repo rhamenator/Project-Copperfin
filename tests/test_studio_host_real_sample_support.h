@@ -17,12 +17,15 @@ inline std::filesystem::path find_vfp9_reports_root() {
     namespace fs = std::filesystem;
 
     const auto contains_report_samples = [](const fs::path& candidate) {
-        std::error_code error;
-        if (!fs::exists(candidate / "invoice.frx", error) || error) {
-            return false;
-        }
-        error.clear();
-        return fs::exists(candidate / "cust.lbx", error) && !error;
+        const auto contains_regular_file = [](const fs::path& path) {
+            std::error_code error;
+            return fs::is_regular_file(path, error) && !error;
+        };
+
+        return contains_regular_file(candidate / "invoice.frx") &&
+               contains_regular_file(candidate / "invoice.frt") &&
+               contains_regular_file(candidate / "cust.lbx") &&
+               contains_regular_file(candidate / "cust.lbt");
     };
 
     if (const std::string override_root = getenv_value("COPPERFIN_VFP9_REPORTS_ROOT");

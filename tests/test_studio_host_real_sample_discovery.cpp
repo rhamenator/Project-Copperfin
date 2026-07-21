@@ -42,8 +42,29 @@ int main() {
         std::ofstream(temp_root / "invoice.frx").put('\n');
         std::ofstream(temp_root / "cust.lbx").put('\n');
         expect(
+            copperfin::test_support::find_vfp9_reports_root().empty(),
+            "primary report and label files are incomplete without memo sidecars");
+
+        std::ofstream(temp_root / "invoice.frt").put('\n');
+        expect(
+            copperfin::test_support::find_vfp9_reports_root().empty(),
+            "a report memo sidecar alone does not make the sample complete");
+
+        std::ofstream(temp_root / "cust.lbt").put('\n');
+        expect(
             copperfin::test_support::find_vfp9_reports_root() == temp_root,
-            "complete override is selected");
+            "report, label, and both memo sidecars select the complete override");
+
+        fs::remove(temp_root / "invoice.frt", error);
+        expect(
+            copperfin::test_support::find_vfp9_reports_root().empty(),
+            "missing report memo sidecar rejects the sample root");
+        std::ofstream(temp_root / "invoice.frt").put('\n');
+
+        fs::remove(temp_root / "cust.lbt", error);
+        expect(
+            copperfin::test_support::find_vfp9_reports_root().empty(),
+            "missing label memo sidecar rejects the sample root");
     }
 
     const fs::path invalid_override = temp_root / "not-a-directory";
