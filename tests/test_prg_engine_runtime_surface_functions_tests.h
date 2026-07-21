@@ -14,6 +14,7 @@ namespace copperfin::runtime_surface_tests
     void test_recsize_reclength_expression_functions();
     void test_environment_and_sys_introspection_functions();
     void test_object_reflection_runtime_surface_functions();
+    void test_native_prg_amembers_visibility_filters();
     void test_common_native_oop_function_abbreviations();
     void test_cursor_xml_round_trip_runtime_surface_functions();
     void test_cursor_xml_verified_file_bytes_are_enforced();

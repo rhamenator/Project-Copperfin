@@ -179,7 +179,10 @@ std::optional<RuntimeSurfaceCursorSnapshot> parse_cursor_snapshot_xml(const std:
     return snapshot;
 }
 
-std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState& runtime_object, int flags) {
+std::vector<std::string> collect_object_member_names(
+    const RuntimeOleObjectState& runtime_object,
+    int flags,
+    const std::optional<NativeMemberVisibility>& visibility_filter = std::nullopt) {
     const bool include_all = flags == 0;
     const bool include_properties = include_all || ((flags & 1) != 0);
     const bool include_methods = include_all || ((flags & 2) != 0);
@@ -288,6 +291,16 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
     std::vector<std::string> members;
     members.reserve(unique_members.size());
     for (const std::string& member_name : unique_members) {
+        if (visibility_filter.has_value()) {
+            const auto visibility = runtime_object.member_visibility.find(normalize_identifier(member_name));
+            const NativeMemberVisibility effective_visibility =
+                visibility == runtime_object.member_visibility.end()
+                    ? NativeMemberVisibility::public_member
+                    : visibility->second;
+            if (effective_visibility != *visibility_filter) {
+                continue;
+            }
+        }
         members.push_back(uppercase_copy(member_name));
     }
 

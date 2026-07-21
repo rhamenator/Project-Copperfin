@@ -10,6 +10,7 @@ int main()
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
     test_object_reflection_runtime_surface_functions();
+    test_native_prg_amembers_visibility_filters();
     test_common_native_oop_function_abbreviations();
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_verified_file_bytes_are_enforced();

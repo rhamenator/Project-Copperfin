@@ -27,6 +27,17 @@
         const std::string array_name = trim_copy(raw_arguments[0]);
         try {
             const int flags = safe_int_argument(2U, 0);
+            std::optional<NativeMemberVisibility> visibility_filter;
+            if (arguments.size() >= 4U) {
+                const std::string raw_visibility_filter = uppercase_copy(trim_copy(value_as_string(arguments[3])));
+                if (raw_visibility_filter == "P") {
+                    visibility_filter = NativeMemberVisibility::protected_member;
+                } else if (raw_visibility_filter == "H") {
+                    visibility_filter = NativeMemberVisibility::hidden_member;
+                } else if (raw_visibility_filter == "G") {
+                    visibility_filter = NativeMemberVisibility::public_member;
+                }
+            }
             if (!resolve_object_callback || !assign_array_callback) {
                 record_runtime_warning(runtime_text(
                     "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
@@ -49,13 +60,14 @@
             }
 
             std::vector<PrgValue> member_names;
-            std::vector<std::string> member_tokens = collect_object_member_names(*runtime_object, flags);
+            std::vector<std::string> member_tokens =
+                collect_object_member_names(*runtime_object, flags, visibility_filter);
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
                 object_surface != nullptr) {
                 member_tokens = merge_member_tokens(
                     member_tokens,
-                    collect_object_member_names(*object_surface, flags));
+                    collect_object_member_names(*object_surface, flags, visibility_filter));
             }
             member_names.reserve(member_tokens.size());
             for (const std::string& member_name : member_tokens) {

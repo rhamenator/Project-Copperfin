@@ -627,6 +627,86 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_amembers_visibility_filters()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_amembers_visibility";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_prg_amembers_visibility.prg";
+        write_text(
+            main_path,
+            "oDemo = CREATEOBJECT('VisibilityDemo')\n"
+            "nAll = AMEMBERS(aAll, oDemo, 0)\n"
+            "nProtected = AMEMBERS(aProtected, oDemo, 0, 'P')\n"
+            "nHidden = AMEMBERS(aHidden, oDemo, 0, 'H')\n"
+            "nPublic = AMEMBERS(aPublic, oDemo, 0, 'G')\n"
+            "nProtectedProperties = AMEMBERS(aProtectedProperties, oDemo, 1, 'P')\n"
+            "nHiddenProperties = AMEMBERS(aHiddenProperties, oDemo, 1, 'H')\n"
+            "nPublicProperties = AMEMBERS(aPublicProperties, oDemo, 1, 'G')\n"
+            "nProtectedMethods = AMEMBERS(aProtectedMethods, oDemo, 2, 'P')\n"
+            "nHiddenMethods = AMEMBERS(aHiddenMethods, oDemo, 2, 'H')\n"
+            "nPublicMethods = AMEMBERS(aPublicMethods, oDemo, 2, 'G')\n"
+            "lAllHasProtected = ASCAN(aAll, 'PROTECTEDVALUE') > 0 AND ASCAN(aAll, 'PROTECTEDMETHOD') > 0\n"
+            "lAllHasHidden = ASCAN(aAll, 'HIDDENVALUE') > 0 AND ASCAN(aAll, 'HIDDENMETHOD') > 0\n"
+            "lAllHasPublic = ASCAN(aAll, 'PUBLICVALUE') > 0 AND ASCAN(aAll, 'PUBLICMETHOD') > 0\n"
+            "lProtectedOnly = ASCAN(aProtected, 'PROTECTEDVALUE') > 0 AND ASCAN(aProtected, 'PROTECTEDMETHOD') > 0 AND ASCAN(aProtected, 'PUBLICVALUE') = 0 AND ASCAN(aProtected, 'HIDDENVALUE') = 0\n"
+            "lHiddenOnly = ASCAN(aHidden, 'HIDDENVALUE') > 0 AND ASCAN(aHidden, 'HIDDENMETHOD') > 0 AND ASCAN(aHidden, 'PUBLICVALUE') = 0 AND ASCAN(aHidden, 'PROTECTEDVALUE') = 0\n"
+            "lPublicOnly = ASCAN(aPublic, 'PUBLICVALUE') > 0 AND ASCAN(aPublic, 'PUBLICMETHOD') > 0 AND ASCAN(aPublic, 'PROTECTEDVALUE') = 0 AND ASCAN(aPublic, 'HIDDENVALUE') = 0\n"
+            "lAllCount = nAll >= 6\n"
+            "lPropertyModes = nProtectedProperties >= 1 AND nHiddenProperties >= 1 AND nPublicProperties >= 1 AND ASCAN(aProtectedProperties, 'PROTECTEDVALUE') > 0 AND ASCAN(aHiddenProperties, 'HIDDENVALUE') > 0 AND ASCAN(aPublicProperties, 'PUBLICVALUE') > 0\n"
+            "lMethodModes = nProtectedMethods >= 1 AND nHiddenMethods >= 1 AND nPublicMethods >= 1 AND ASCAN(aProtectedMethods, 'PROTECTEDMETHOD') > 0 AND ASCAN(aHiddenMethods, 'HIDDENMETHOD') > 0 AND ASCAN(aPublicMethods, 'PUBLICMETHOD') > 0\n"
+            "RETURN\n"
+            "DEFINE CLASS VisibilityDemo AS Custom\n"
+            "    PROTECTED ProtectedValue\n"
+            "    HIDDEN HiddenValue\n"
+            "    ProtectedValue = 1\n"
+            "    HiddenValue = 2\n"
+            "    PublicValue = 3\n"
+            "    PROTECTED PROCEDURE ProtectedMethod\n"
+            "        RETURN THIS.ProtectedValue\n"
+            "    ENDPROC\n"
+            "    HIDDEN FUNCTION HiddenMethod\n"
+            "        RETURN THIS.HiddenValue\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE PublicMethod\n"
+            "        RETURN THIS.PublicValue\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AMEMBERS visibility script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " variable should be present");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lallcount", "true");
+        check("lallhasprotected", "true");
+        check("lallhashidden", "true");
+        check("lallhaspublic", "true");
+        check("lprotectedonly", "true");
+        check("lhiddenonly", "true");
+        check("lpubliconly", "true");
+        check("lpropertymodes", "true");
+        check("lmethodmodes", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_common_native_oop_function_abbreviations()
     {
         namespace fs = std::filesystem;
