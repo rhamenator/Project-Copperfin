@@ -2723,12 +2723,10 @@ std::optional<std::filesystem::path> admit_direct_packaged_output_path(
     const std::filesystem::path& candidate,
     const std::filesystem::path& manifest_directory) {
     const std::filesystem::path normalized_candidate = candidate.lexically_normal();
-    const std::filesystem::path relative =
-        normalized_candidate.lexically_relative(manifest_directory);
-    if (relative.empty() ||
-        relative == normalized_candidate ||
-        relative_path_escapes_root(relative) ||
-        manifest_path_is_absolute(relative) ||
+    const auto relative = package_relative_path(normalized_candidate, manifest_directory);
+    if (!relative.has_value() ||
+        relative_path_escapes_root(*relative) ||
+        manifest_path_is_absolute(*relative) ||
         normalized_candidate.filename().empty()) {
         return std::nullopt;
     }
@@ -2788,14 +2786,13 @@ std::optional<std::filesystem::path> admit_direct_packaged_output_path(
             !is_existing_directory(parent_containment.canonical_path)) {
             return std::nullopt;
         }
-        const std::filesystem::path missing_suffix =
-            normalized_candidate.lexically_relative(existing_parent);
-        if (missing_suffix.empty() ||
-            missing_suffix == normalized_candidate ||
-            relative_path_escapes_root(missing_suffix)) {
+        const auto missing_suffix =
+            package_relative_path(normalized_candidate, existing_parent);
+        if (!missing_suffix.has_value() ||
+            relative_path_escapes_root(*missing_suffix)) {
             return std::nullopt;
         }
-        return (parent_containment.canonical_path / missing_suffix).lexically_normal();
+        return (parent_containment.canonical_path / *missing_suffix).lexically_normal();
     }
     return std::nullopt;
 }
