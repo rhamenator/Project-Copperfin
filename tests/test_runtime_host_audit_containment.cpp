@@ -76,6 +76,27 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
         const fs::path differently_cased_root = copperfin::platform::path_from_utf8_string(
             copperfin::platform::path_to_utf8_string(packages_root) + "/unicode-\xC3\x89");
         const fs::path local_audit_path = case_root / "logs" / "unicode-case.log";
+        const bool unicode_component_equal =
+            copperfin::platform::path_component_equal_for_platform(
+                case_root.filename(),
+                differently_cased_root.filename());
+        std::error_code unicode_identity_error;
+        const bool unicode_roots_equivalent = fs::equivalent(
+            case_root,
+            differently_cased_root,
+            unicode_identity_error);
+        if (!unicode_component_equal || !unicode_roots_equivalent) {
+            std::cerr << "#4301 diagnostic: lower-root="
+                      << copperfin::platform::path_to_utf8_string(case_root)
+                      << " upper-root="
+                      << copperfin::platform::path_to_utf8_string(differently_cased_root)
+                      << " component-equal=" << (unicode_component_equal ? "true" : "false")
+                      << " filesystem-equivalent=" << (unicode_roots_equivalent ? "true" : "false")
+                      << " identity-error=" << unicode_identity_error.value()
+                      << " (" << unicode_identity_error.message() << ")\n";
+        }
+        expect(unicode_component_equal,
+               "#4301: shared Windows path comparison should equate the Unicode case-variant component");
         write_denial_manifest(
             case_root,
             copperfin::platform::path_to_utf8_string(differently_cased_root),
