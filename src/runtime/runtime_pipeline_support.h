@@ -95,6 +95,7 @@ bool copy_file_if_exists(
     const std::string& utf8_destination,
     std::string& error);
 #if !defined(_WIN32)
+bool is_fd_backed_runtime_path(const std::filesystem::path& path);
 bool try_copy_file_if_exists_fd_backed(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,

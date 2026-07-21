@@ -2798,7 +2798,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             (std::filesystem::perms::owner_exec |
              std::filesystem::perms::group_exec |
              std::filesystem::perms::others_exec);
-        if (executable_permissions != std::filesystem::perms::none) {
+        if (executable_permissions != std::filesystem::perms::none &&
+            !is_fd_backed_runtime_path(copperfin::platform::path_from_utf8_string(
+                filesystem_plan.runtime_host_destination_path))) {
             std::filesystem::permissions(
                 copperfin::platform::path_from_utf8_string(
                     filesystem_plan.runtime_host_destination_path),
@@ -3037,7 +3039,9 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             (std::filesystem::perms::owner_exec |
              std::filesystem::perms::group_exec |
              std::filesystem::perms::others_exec);
-        if (executable_permissions != std::filesystem::perms::none) {
+        if (executable_permissions != std::filesystem::perms::none &&
+            !is_fd_backed_runtime_path(copperfin::platform::path_from_utf8_string(
+                filesystem_plan.runtime_host_destination_path))) {
             std::filesystem::permissions(
                 copperfin::platform::path_from_utf8_string(
                     filesystem_plan.runtime_host_destination_path),

@@ -103,6 +103,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- macOS descriptor-backed runtime-host staging under #4221/#4225: preserve executable bits with `fchmod()` on the descriptor-relative temporary copy, and keep pathname-based `std::filesystem::permissions` limited to ordinary destinations because macOS `/dev/fd` permission calls can fail after a successful descriptor-relative copy. The generated-launcher POSIX test asserts staged runtime-host executability; exact-head macOS validation is required before closing the materialization issues.
 - Asset-inspector localization slice #4355 under #2348: `asset_inspector_text()` must refresh its catalog when the effective locale or catalog root changes, using the established synchronized cache pattern. Preserve asset families, validation codes, paths, placeholders, and machine-readable results; retain in-process en-US/es-419/qps-ploc coverage and all four catalog parity.
 
 - Malformed security manifest regression under #110/#4241: retain the combined audit case where an originally hashed secure startup source is tampered and `security_enabled` is replaced with an invalid token. The runtime must reject with the localized boolean diagnostic, exit 4, and no startup execution before any source/hash verification; keep valid secure-package behavior unchanged.

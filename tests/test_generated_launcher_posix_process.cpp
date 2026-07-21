@@ -307,6 +307,15 @@ int main(int argc, char** argv) {
     expect(manifest_value(debug_manifest, "debug_manifest_version") == "3",
            "POSIX generated launcher should retain the versioned debug manifest");
     expect_launcher_inventory(package_root, manifest, debug_manifest, public_launcher_name);
+    error.clear();
+    const auto staged_runtime_host_status = fs::status(
+        package_root / "copperfin_runtime_host", error);
+    expect(!error &&
+               (staged_runtime_host_status.permissions() &
+                (fs::perms::owner_exec |
+                 fs::perms::group_exec |
+                 fs::perms::others_exec)) != fs::perms::none,
+           "POSIX launcher package should preserve executable runtime-host permissions");
 
     const auto launched = copperfin::test_support::run_process_capture(
         launcher,

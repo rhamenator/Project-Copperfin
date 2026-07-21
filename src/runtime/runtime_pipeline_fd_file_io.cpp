@@ -218,6 +218,10 @@ void trace_fd_copy_failure(
 
 }  // namespace
 
+bool is_fd_backed_runtime_path(const std::filesystem::path& path) {
+    return parse_fd_backed_path(path).has_value();
+}
+
 bool try_copy_file_if_exists_fd_backed(
     const std::filesystem::path& source,
     const std::filesystem::path& destination,
@@ -272,6 +276,25 @@ bool try_copy_file_if_exists_fd_backed(
         0600);
     if (temporary_descriptor < 0) {
         trace_fd_copy_failure("temporary-open", destination, errno);
+        (void)::close(parent_descriptor);
+        error = runtime_text(
+            "Runtime.Package.Error.CopyFileFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+        return false;
+    }
+    struct stat source_status{};
+    const bool source_status_available = ::stat(source.c_str(), &source_status) == 0;
+    const mode_t executable_bits = source_status_available
+        ? source_status.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)
+        : 0;
+    if (executable_bits != 0 &&
+        ::fchmod(
+            temporary_descriptor,
+            S_IRUSR | S_IWUSR | executable_bits) != 0) {
+        const int saved_errno = errno;
+        trace_fd_copy_failure("temporary-permissions", destination, saved_errno);
+        (void)::close(temporary_descriptor);
+        (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
         (void)::close(parent_descriptor);
         error = runtime_text(
             "Runtime.Package.Error.CopyFileFailed",
