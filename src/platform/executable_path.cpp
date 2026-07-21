@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -52,6 +53,29 @@ void append_unique(
     if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
         values.push_back(value);
     }
+}
+#endif
+
+#if !defined(_WIN32)
+std::optional<std::string> default_posix_search_path() {
+#if defined(_CS_PATH)
+    const std::size_t required_size = confstr(_CS_PATH, nullptr, 0U);
+    if (required_size <= 1U) {
+        return std::nullopt;
+    }
+    std::string value(required_size, '\0');
+    if (confstr(_CS_PATH, value.data(), value.size()) == 0U) {
+        return std::nullopt;
+    }
+    const std::size_t terminator = value.find('\0');
+    if (terminator == std::string::npos) {
+        return std::nullopt;
+    }
+    value.resize(terminator);
+    return value;
+#else
+    return std::string("/bin:/usr/bin");
+#endif
 }
 #endif
 
@@ -176,8 +200,13 @@ std::filesystem::path resolve_executable_invocation_path(
         path_value.has_value() ? path_value->native() : std::wstring();
     const auto search_roots = split_search_path_list<wchar_t>(native_path, L';');
 #else
-    const std::string path_value = read_environment_variable_or_empty("PATH");
-    const auto search_roots = split_search_path_list<char>(path_value, ':');
+    const auto path_value = read_environment_variable("PATH");
+    std::vector<std::string> search_roots;
+    if (path_value.has_value()) {
+        search_roots = split_search_path_list<char>(*path_value, ':');
+    } else if (const auto default_path = default_posix_search_path(); default_path.has_value()) {
+        search_roots = split_search_path_list<char>(*default_path, ':');
+    }
 #endif
     const std::vector<fs::path> suffixes = executable_search_suffixes(invocation_path);
     for (const auto& raw_root : search_roots) {
@@ -193,7 +222,13 @@ std::filesystem::path resolve_executable_invocation_path(
         }
     }
 
+#if defined(_WIN32)
     return normalize_executable_path(invocation_path);
+#else
+    return path_value.has_value()
+        ? normalize_executable_path(invocation_path)
+        : invocation_path;
+#endif
 }
 
 std::filesystem::path resolve_running_executable_path(

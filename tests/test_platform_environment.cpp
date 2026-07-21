@@ -265,6 +265,46 @@ struct ScopedCurrentPath {
     }
 };
 
+#if !defined(_WIN32)
+void test_posix_path_unset_and_empty_components() {
+    namespace fs = std::filesystem;
+
+    const fs::path root = fs::temp_directory_path() /
+        ("copperfin_path_search_" +
+         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const std::string probe_name = "copperfin_path_probe_" +
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path probe_path = root / probe_name;
+    std::error_code fixture_error;
+    fs::create_directories(root, fixture_error);
+    expect(!fixture_error, "#4338: POSIX PATH fixture directory should be created");
+    std::ofstream(probe_path) << "#!/bin/sh\nexit 0\n";
+    fs::permissions(
+        probe_path,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        fixture_error);
+    expect(!fixture_error, "#4338: POSIX PATH fixture should be executable");
+
+    {
+        ScopedCurrentPath current_path(root);
+        copperfin::test_support::ScopedEnvironmentValue path("PATH");
+        const fs::path unset_result =
+            copperfin::platform::resolve_executable_invocation_path(probe_name);
+        expect(unset_result == fs::path(probe_name),
+               "#4338: an unset POSIX PATH should not resolve a bare invocation from the current directory");
+
+        path.set("");
+        const fs::path empty_result =
+            copperfin::platform::resolve_executable_invocation_path(probe_name);
+        expect(paths_are_filesystem_equivalent(empty_result, probe_path),
+               "#4338: an explicit empty POSIX PATH component should search the current directory");
+    }
+
+    fs::remove_all(root, fixture_error);
+}
+#endif
+
 void test_default_locale_environment_preserves_valid_override_and_restores_values() {
     namespace fs = std::filesystem;
 
@@ -453,6 +493,9 @@ int main(int argc, char** argv) {
     test_platform_environment_round_trips_unicode_values();
     test_platform_environment_rejects_empty_names();
     test_running_executable_path_resolves_current_process(argc > 0 ? argv[0] : nullptr);
+#if !defined(_WIN32)
+    test_posix_path_unset_and_empty_components();
+#endif
     test_scoped_environment_support_uses_shared_platform_helpers();
     test_platform_environment_serializes_concurrent_access();
     test_shell_command_preparation_preserves_platform_quoting_contract();
