@@ -216,8 +216,25 @@ std::optional<ContainedAuditPath> resolve_contained_audit_path(
     if (error) {
         return std::nullopt;
     }
-    const std::filesystem::path relative_path =
-        normalized_log_path.lexically_relative(canonical_root);
+    std::filesystem::path relative_path;
+#if defined(_WIN32)
+    auto log_part = normalized_log_path.begin();
+    bool root_matches = true;
+    for (auto root_part = canonical_root.begin(); root_part != canonical_root.end(); ++root_part, ++log_part) {
+        if (log_part == normalized_log_path.end() ||
+            !copperfin::platform::path_component_equal_for_platform(*log_part, *root_part)) {
+            root_matches = false;
+            break;
+        }
+    }
+    if (root_matches) {
+        for (; log_part != normalized_log_path.end(); ++log_part) {
+            relative_path /= *log_part;
+        }
+    }
+#else
+    relative_path = normalized_log_path.lexically_relative(canonical_root);
+#endif
     if (!relative_path_is_contained(relative_path) || relative_path.filename().empty()) {
         return std::nullopt;
     }

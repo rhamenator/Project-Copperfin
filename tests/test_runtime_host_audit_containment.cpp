@@ -80,27 +80,28 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
             copperfin::platform::path_component_equal_for_platform(
                 case_root.filename(),
                 differently_cased_root.filename());
-        std::error_code unicode_identity_error;
-        const bool unicode_roots_equivalent = fs::equivalent(
-            case_root,
-            differently_cased_root,
-            unicode_identity_error);
-        if (!unicode_component_equal || !unicode_roots_equivalent) {
-            std::cerr << "#4301 diagnostic: lower-root="
-                      << copperfin::platform::path_to_utf8_string(case_root)
-                      << " upper-root="
-                      << copperfin::platform::path_to_utf8_string(differently_cased_root)
-                      << " component-equal=" << (unicode_component_equal ? "true" : "false")
-                      << " filesystem-equivalent=" << (unicode_roots_equivalent ? "true" : "false")
-                      << " identity-error=" << unicode_identity_error.value()
-                      << " (" << unicode_identity_error.message() << ")\n";
-        }
         expect(unicode_component_equal,
                "#4301: shared Windows path comparison should equate the Unicode case-variant component");
         write_denial_manifest(
             case_root,
             copperfin::platform::path_to_utf8_string(differently_cased_root),
             copperfin::platform::path_to_utf8_string(local_audit_path));
+
+        std::error_code unicode_identity_error;
+        const bool unicode_roots_equivalent = fs::equivalent(
+            case_root,
+            differently_cased_root,
+            unicode_identity_error);
+        if (!unicode_roots_equivalent) {
+            std::cerr << "#4301 diagnostic: lower-root="
+                      << copperfin::platform::path_to_utf8_string(case_root)
+                      << " upper-root="
+                      << copperfin::platform::path_to_utf8_string(differently_cased_root)
+                      << " component-equal=" << (unicode_component_equal ? "true" : "false")
+                      << " filesystem-equivalent=false"
+                      << " identity-error=" << unicode_identity_error.value()
+                      << " (" << unicode_identity_error.message() << ")\n";
+        }
 
         const auto process = run_process_capture(
             runtime_host_path,
