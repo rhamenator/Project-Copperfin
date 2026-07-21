@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -195,6 +196,253 @@ struct RushmoreRemotePlanningDecision {
 
     friend bool operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&) = default;
 };
+
+enum class RushmoreBitmapCombination : std::uint8_t {
+    conjunction = 0,
+    disjunction = 1
+};
+
+struct RushmoreBitmapOrderCandidate {
+    std::string order_name;
+    std::string order_signature;
+    RushmorePredicateDescriptor predicate{};
+    RushmorePlanCost single_index_cost{};
+    bool usable = true;
+
+    friend bool operator==(const RushmoreBitmapOrderCandidate&, const RushmoreBitmapOrderCandidate&) = default;
+};
+
+struct RushmoreBitmapCostOptions {
+    std::uint64_t merge_base_cpu_units = 4;
+    std::uint64_t merge_row_cpu_units = 1;
+    std::uint64_t bitmap_row_memory_units = 1;
+
+    friend bool operator==(const RushmoreBitmapCostOptions&, const RushmoreBitmapCostOptions&) = default;
+};
+
+struct RushmoreBitmapPlanningInput {
+    RushmoreCursorMetadata cursor{};
+    RushmoreBitmapCombination combination = RushmoreBitmapCombination::conjunction;
+    std::vector<RushmoreBitmapOrderCandidate> order_candidates;
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
+    std::optional<std::uint64_t> memory_budget_units;
+    RushmoreBitmapCostOptions cost_options{};
+
+    friend bool operator==(const RushmoreBitmapPlanningInput&, const RushmoreBitmapPlanningInput&) = default;
+};
+
+struct RushmoreBitmapPlanCandidate {
+    RushmoreBitmapCombination combination = RushmoreBitmapCombination::conjunction;
+    std::vector<RushmoreBitmapOrderCandidate> components;
+    RushmorePlanCost cost{};
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
+
+    friend bool operator==(const RushmoreBitmapPlanCandidate&, const RushmoreBitmapPlanCandidate&) = default;
+    friend bool operator<(const RushmoreBitmapPlanCandidate& left, const RushmoreBitmapPlanCandidate& right) noexcept {
+        if (left.cost != right.cost) {
+            return left.cost < right.cost;
+        }
+        if (left.combination != right.combination) {
+            return left.combination < right.combination;
+        }
+        const auto component_count = std::min(left.components.size(), right.components.size());
+        for (std::size_t index = 0; index < component_count; ++index) {
+            const auto& left_component = left.components[index];
+            const auto& right_component = right.components[index];
+            const auto left_key = std::tie(
+                left_component.order_name,
+                left_component.order_signature,
+                left_component.predicate.normalized_expression);
+            const auto right_key = std::tie(
+                right_component.order_name,
+                right_component.order_signature,
+                right_component.predicate.normalized_expression);
+            if (left_key != right_key) {
+                return left_key < right_key;
+            }
+        }
+        return left.components.size() < right.components.size();
+    }
+};
+
+enum class RushmoreBitmapFallbackReason : std::uint8_t {
+    none = 0,
+    insufficient_candidates = 1,
+    unsupported_predicate = 2,
+    duplicate_order = 3,
+    incompatible_predicates = 4,
+    memory_risk_unknown = 5,
+    memory_limit = 6
+};
+
+struct RushmoreBitmapPlanningDecision {
+    bool allowed = false;
+    RushmoreBitmapCombination combination = RushmoreBitmapCombination::conjunction;
+    std::vector<RushmoreBitmapPlanCandidate> candidates;
+    std::optional<RushmoreBitmapPlanCandidate> selected_candidate;
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
+    RushmoreBitmapFallbackReason fallback_reason = RushmoreBitmapFallbackReason::none;
+
+    friend bool operator==(const RushmoreBitmapPlanningDecision&, const RushmoreBitmapPlanningDecision&) = default;
+};
+
+[[nodiscard]] constexpr std::uint64_t rushmore_saturating_add(
+    std::uint64_t left,
+    std::uint64_t right) noexcept;
+
+[[nodiscard]] constexpr std::uint64_t rushmore_saturating_multiply(
+    std::uint64_t left,
+    std::uint64_t right) noexcept;
+
+[[nodiscard]] constexpr std::uint64_t rushmore_at_least_one(std::uint64_t value) noexcept;
+
+[[nodiscard]] constexpr std::uint64_t rushmore_ceil_divide(
+    std::uint64_t numerator,
+    std::uint64_t denominator) noexcept;
+
+[[nodiscard]] constexpr bool rushmore_bitmap_operation_is_supported(
+    const std::string& operation) noexcept {
+    return operation == "=" || operation == "==" || operation == "<" || operation == "<=" ||
+        operation == ">" || operation == ">=" || operation == "LIKE";
+}
+
+[[nodiscard]] constexpr std::uint64_t rushmore_bitmap_component_rows(
+    const RushmoreBitmapOrderCandidate& candidate,
+    const RushmoreCursorMetadata& cursor) noexcept {
+    return candidate.single_index_cost.estimated_rows != 0U
+        ? candidate.single_index_cost.estimated_rows
+        : rushmore_at_least_one(cursor.row_count);
+}
+
+[[nodiscard]] inline RushmorePlanCost rushmore_estimate_bitmap_cost(
+    const RushmoreBitmapPlanningInput& input,
+    const std::vector<RushmoreBitmapOrderCandidate>& components) noexcept {
+    if (components.size() < 2U) {
+        return {};
+    }
+    const auto row_count = rushmore_at_least_one(input.cursor.row_count);
+    const auto left_rows = rushmore_bitmap_component_rows(components[0], input.cursor);
+    const auto right_rows = rushmore_bitmap_component_rows(components[1], input.cursor);
+    std::uint64_t estimated_rows = 0;
+    if (input.combination == RushmoreBitmapCombination::conjunction) {
+        estimated_rows = rushmore_ceil_divide(
+            rushmore_saturating_multiply(left_rows, right_rows), row_count);
+    }
+    else {
+        estimated_rows = std::min(
+            row_count,
+            rushmore_saturating_add(left_rows, right_rows));
+    }
+    estimated_rows = rushmore_at_least_one(estimated_rows);
+    const auto component_cpu_units = rushmore_saturating_add(
+        components[0].single_index_cost.cpu_units,
+        components[1].single_index_cost.cpu_units);
+    const auto merge_cpu_units = rushmore_saturating_add(
+        input.cost_options.merge_base_cpu_units,
+        rushmore_saturating_multiply(estimated_rows, input.cost_options.merge_row_cpu_units));
+    const auto memory_units = rushmore_saturating_add(
+        rushmore_saturating_add(
+            components[0].single_index_cost.memory_units,
+            components[1].single_index_cost.memory_units),
+        rushmore_saturating_multiply(estimated_rows, input.cost_options.bitmap_row_memory_units));
+    const auto cpu_units = rushmore_saturating_add(component_cpu_units, merge_cpu_units);
+    return RushmorePlanCost{
+        estimated_rows,
+        cpu_units,
+        memory_units,
+        rushmore_saturating_add(cpu_units, memory_units)};
+}
+
+[[nodiscard]] inline RushmoreBitmapPlanningDecision rushmore_plan_bitmap_candidates(
+    const RushmoreBitmapPlanningInput& input) {
+    RushmoreBitmapPlanningDecision decision;
+    decision.combination = input.combination;
+    decision.residual_predicates = input.residual_predicates;
+    const auto preserve_all_predicates = [&]() {
+        for (const auto& candidate : input.order_candidates) {
+            decision.residual_predicates.push_back({
+                candidate.predicate.normalized_expression,
+                candidate.predicate.complexity_units});
+        }
+    };
+    if (input.combination != RushmoreBitmapCombination::conjunction &&
+        input.combination != RushmoreBitmapCombination::disjunction) {
+        decision.fallback_reason = RushmoreBitmapFallbackReason::incompatible_predicates;
+        preserve_all_predicates();
+        return decision;
+    }
+    if (input.order_candidates.size() < 2U) {
+        decision.fallback_reason = RushmoreBitmapFallbackReason::insufficient_candidates;
+        preserve_all_predicates();
+        return decision;
+    }
+    for (const auto& candidate : input.order_candidates) {
+        if (!candidate.usable || candidate.order_name.empty() || candidate.order_signature.empty()) {
+            decision.fallback_reason = RushmoreBitmapFallbackReason::unsupported_predicate;
+            preserve_all_predicates();
+            return decision;
+        }
+        if (!rushmore_bitmap_operation_is_supported(candidate.predicate.operation) ||
+            candidate.predicate.field_name.empty() || candidate.predicate.normalized_expression.empty()) {
+            decision.fallback_reason = RushmoreBitmapFallbackReason::unsupported_predicate;
+            preserve_all_predicates();
+            return decision;
+        }
+        for (const auto& prior : input.order_candidates) {
+            if (&prior != &candidate && prior.order_name == candidate.order_name) {
+                decision.fallback_reason = RushmoreBitmapFallbackReason::duplicate_order;
+                preserve_all_predicates();
+                return decision;
+            }
+        }
+    }
+    for (std::size_t left = 0; left < input.order_candidates.size(); ++left) {
+        for (std::size_t right = left + 1U; right < input.order_candidates.size(); ++right) {
+            const auto& left_candidate = input.order_candidates[left];
+            const auto& right_candidate = input.order_candidates[right];
+            if (left_candidate.predicate.normalized_expression ==
+                right_candidate.predicate.normalized_expression) {
+                continue;
+            }
+            if (input.combination == RushmoreBitmapCombination::conjunction &&
+                left_candidate.predicate.field_name == right_candidate.predicate.field_name) {
+                continue;
+            }
+            std::vector<RushmoreBitmapOrderCandidate> components{left_candidate, right_candidate};
+            const auto cost = rushmore_estimate_bitmap_cost(input, components);
+            decision.candidates.push_back({
+                input.combination,
+                components,
+                cost,
+                input.residual_predicates});
+        }
+    }
+    if (decision.candidates.empty()) {
+        decision.fallback_reason = RushmoreBitmapFallbackReason::incompatible_predicates;
+        preserve_all_predicates();
+        return decision;
+    }
+    std::sort(decision.candidates.begin(), decision.candidates.end());
+    if (!input.memory_budget_units.has_value()) {
+        decision.fallback_reason = RushmoreBitmapFallbackReason::memory_risk_unknown;
+        preserve_all_predicates();
+        return decision;
+    }
+    const auto candidate = std::find_if(
+        decision.candidates.begin(),
+        decision.candidates.end(),
+        [&](const RushmoreBitmapPlanCandidate& plan) {
+            return plan.cost.memory_units <= input.memory_budget_units.value();
+        });
+    if (candidate == decision.candidates.end()) {
+        decision.fallback_reason = RushmoreBitmapFallbackReason::memory_limit;
+        preserve_all_predicates();
+        return decision;
+    }
+    decision.allowed = true;
+    decision.selected_candidate = *candidate;
+    return decision;
+}
 
 [[nodiscard]] constexpr bool rushmore_remote_operation_is_pushdown_safe(
     const RushmorePredicateDescriptor& predicate,
@@ -564,6 +812,48 @@ struct RushmorePlanningOptions {
         return "elevated";
     }
     return "unknown";
+}
+
+[[nodiscard]] constexpr const char* rushmore_bitmap_fallback_reason_name(
+    RushmoreBitmapFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreBitmapFallbackReason::none:
+        return "none";
+    case RushmoreBitmapFallbackReason::insufficient_candidates:
+        return "insufficient_candidates";
+    case RushmoreBitmapFallbackReason::unsupported_predicate:
+        return "unsupported_predicate";
+    case RushmoreBitmapFallbackReason::duplicate_order:
+        return "duplicate_order";
+    case RushmoreBitmapFallbackReason::incompatible_predicates:
+        return "incompatible_predicates";
+    case RushmoreBitmapFallbackReason::memory_risk_unknown:
+        return "memory_risk_unknown";
+    case RushmoreBitmapFallbackReason::memory_limit:
+        return "memory_limit";
+    }
+    return "memory_limit";
+}
+
+[[nodiscard]] constexpr const char* rushmore_bitmap_fallback_reason_catalog_key(
+    RushmoreBitmapFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreBitmapFallbackReason::none:
+        return "Runtime.IndexSeek.Bitmap.Fallback.None";
+    case RushmoreBitmapFallbackReason::insufficient_candidates:
+        return "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates";
+    case RushmoreBitmapFallbackReason::unsupported_predicate:
+        return "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate";
+    case RushmoreBitmapFallbackReason::duplicate_order:
+        return "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder";
+    case RushmoreBitmapFallbackReason::incompatible_predicates:
+        return "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates";
+    case RushmoreBitmapFallbackReason::memory_risk_unknown:
+        return "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown";
+    case RushmoreBitmapFallbackReason::memory_limit:
+        return "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit";
+    }
+    return "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit";
 }
 
 }  // namespace copperfin::runtime

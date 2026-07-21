@@ -318,6 +318,13 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
         "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
         "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
         "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
+        "Runtime.IndexSeek.Bitmap.Fallback.None",
+        "Runtime.IndexSeek.Bitmap.Fallback.InsufficientCandidates",
+        "Runtime.IndexSeek.Bitmap.Fallback.UnsupportedPredicate",
+        "Runtime.IndexSeek.Bitmap.Fallback.DuplicateOrder",
+        "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+        "Runtime.IndexSeek.Bitmap.Fallback.MemoryRiskUnknown",
+        "Runtime.IndexSeek.Bitmap.Fallback.MemoryLimit",
         "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
         "Runtime.IndexSeek.PlanDecision.PatternNotRecognized"};
 

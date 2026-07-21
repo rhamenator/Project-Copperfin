@@ -31,6 +31,10 @@ using copperfin::runtime::RushmoreRemoteCapabilityState;
 using copperfin::runtime::RushmoreRemoteFallbackReason;
 using copperfin::runtime::RushmoreRemotePlanningInput;
 using copperfin::runtime::RushmoreRemoteRoundTripRisk;
+using copperfin::runtime::RushmoreBitmapCombination;
+using copperfin::runtime::RushmoreBitmapFallbackReason;
+using copperfin::runtime::RushmoreBitmapOrderCandidate;
+using copperfin::runtime::RushmoreBitmapPlanningInput;
 
 void test_rushmore_planning_contracts() {
     const RushmorePlanningOptions defaults{};
@@ -266,4 +270,103 @@ void test_rushmore_planning_contracts() {
             std::string(copperfin::runtime::rushmore_remote_round_trip_risk_name(
                 RushmoreRemoteRoundTripRisk::elevated)) == "elevated",
         "Remote planning reason and round-trip risk identities must remain stable and localizable");
+
+    const RushmoreBitmapOrderCandidate name_candidate{
+        "NAME_TAG",
+        "NAME:UPPER",
+        {"NAME = 'BRAVO'", "NAME", "=", 1, true},
+        {10, 4, 1, 5},
+        true};
+    const RushmoreBitmapOrderCandidate age_candidate{
+        "AGE_TAG",
+        "AGE",
+        {"AGE > 18", "AGE", ">", 1, false},
+        {20, 5, 2, 7},
+        true};
+    const RushmoreBitmapOrderCandidate city_candidate{
+        "CITY_TAG",
+        "CITY:UPPER",
+        {"CITY = 'DETROIT'", "CITY", "=", 1, true},
+        {5, 3, 1, 4},
+        true};
+    RushmoreBitmapPlanningInput bitmap_input{
+        {"people", "name:upper(name)", 100, refreshed.version, refreshed},
+        RushmoreBitmapCombination::conjunction,
+        {name_candidate, age_candidate, city_candidate},
+        {RushmoreResidualPredicateDescriptor{"DELETED()", 1}},
+        5,
+        {4, 1, 1}};
+    const auto bitmap_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(bitmap_input);
+    expect(bitmap_decision.allowed &&
+            bitmap_decision.candidates.size() == 3U &&
+            bitmap_decision.selected_candidate.has_value() &&
+            bitmap_decision.selected_candidate->components.size() == 2U &&
+            bitmap_decision.selected_candidate->cost.estimated_rows == 1U &&
+            bitmap_decision.selected_candidate->cost.memory_units <= 5U &&
+            bitmap_decision.selected_candidate->residual_predicates.size() == 1U,
+        "Bitmap planning must enumerate deterministic AND candidates with bounded cost and residual metadata");
+
+    RushmoreBitmapPlanningInput disjunction_input = bitmap_input;
+    disjunction_input.combination = RushmoreBitmapCombination::disjunction;
+    disjunction_input.memory_budget_units = 105;
+    const auto disjunction_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(disjunction_input);
+    expect(disjunction_decision.allowed &&
+            disjunction_decision.selected_candidate.has_value() &&
+            disjunction_decision.selected_candidate->combination == RushmoreBitmapCombination::disjunction &&
+            disjunction_decision.selected_candidate->cost.estimated_rows == 15U,
+        "Bitmap planning must support deterministic OR candidate scoring without execution changes");
+
+    RushmoreBitmapPlanningInput unknown_memory = bitmap_input;
+    unknown_memory.memory_budget_units.reset();
+    const auto unknown_memory_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(unknown_memory);
+    expect(!unknown_memory_decision.allowed &&
+            unknown_memory_decision.candidates.size() == 3U &&
+            unknown_memory_decision.fallback_reason == RushmoreBitmapFallbackReason::memory_risk_unknown &&
+            unknown_memory_decision.residual_predicates.size() == 4U,
+        "Bitmap planning must preserve local evaluation when memory risk is unbounded");
+
+    RushmoreBitmapPlanningInput incompatible_input = bitmap_input;
+    incompatible_input.order_candidates.resize(2U);
+    incompatible_input.order_candidates[1].predicate.field_name = "NAME";
+    const auto incompatible_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(incompatible_input);
+    expect(!incompatible_decision.allowed &&
+            incompatible_decision.candidates.empty() &&
+            incompatible_decision.fallback_reason == RushmoreBitmapFallbackReason::incompatible_predicates,
+        "AND bitmap planning must reject same-field combinations conservatively");
+
+    RushmoreBitmapPlanningInput memory_limited = bitmap_input;
+    memory_limited.memory_budget_units = 0;
+    const auto memory_limited_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(memory_limited);
+    expect(!memory_limited_decision.allowed &&
+            memory_limited_decision.fallback_reason == RushmoreBitmapFallbackReason::memory_limit,
+        "Bitmap planning must reject candidates that exceed the explicit memory budget");
+
+    RushmoreBitmapPlanningInput duplicate_order = bitmap_input;
+    duplicate_order.order_candidates.resize(2U);
+    duplicate_order.order_candidates[1].order_name = duplicate_order.order_candidates[0].order_name;
+    const auto duplicate_order_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(duplicate_order);
+    expect(!duplicate_order_decision.allowed &&
+            duplicate_order_decision.fallback_reason == RushmoreBitmapFallbackReason::duplicate_order,
+        "Bitmap planning must reject duplicate order identities");
+
+    RushmoreBitmapPlanningInput unsupported_predicate = bitmap_input;
+    unsupported_predicate.order_candidates.resize(2U);
+    unsupported_predicate.order_candidates[1].predicate.operation = "IN";
+    const auto unsupported_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(unsupported_predicate);
+    expect(!unsupported_decision.allowed &&
+            unsupported_decision.fallback_reason == RushmoreBitmapFallbackReason::unsupported_predicate,
+        "Bitmap planning must preserve local evaluation for unsupported predicates");
+
+    RushmoreBitmapPlanningInput insufficient = bitmap_input;
+    insufficient.order_candidates.resize(1U);
+    const auto insufficient_decision = copperfin::runtime::rushmore_plan_bitmap_candidates(insufficient);
+    expect(!insufficient_decision.allowed &&
+            insufficient_decision.fallback_reason == RushmoreBitmapFallbackReason::insufficient_candidates,
+        "Bitmap planning must require at least two usable order candidates");
+    expect(std::string(copperfin::runtime::rushmore_bitmap_fallback_reason_name(
+                RushmoreBitmapFallbackReason::memory_limit)) == "memory_limit" &&
+            std::string(copperfin::runtime::rushmore_bitmap_fallback_reason_catalog_key(
+                RushmoreBitmapFallbackReason::incompatible_predicates)) ==
+                "Runtime.IndexSeek.Bitmap.Fallback.IncompatiblePredicates",
+        "Bitmap fallback identities must remain stable and localizable");
 }
