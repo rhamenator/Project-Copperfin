@@ -753,6 +753,88 @@ void test_external_process_policy_preserves_unicode_paths() {
     }
     fs::remove_all(temp_root, ignored);
 }
+
+void test_external_process_policy_handles_long_paths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / L"copperfin_security_policy_long_path";
+    fs::path fixture_directory = temp_root;
+    while (fixture_directory.wstring().size() <= static_cast<std::size_t>(MAX_PATH) + 32U) {
+        fixture_directory /= L"long-process-policy-component-0123456789";
+    }
+    const fs::path fixture_path = fixture_directory / L"copperfin-policy-fixture.exe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(fixture_directory, ignored);
+    if (ignored) {
+        std::cerr << "SKIP: #4324 Windows long-path fixture directory is unavailable.\n";
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length = GetSystemDirectoryW(system_directory, MAX_PATH);
+    const fs::path system_command = system_directory_length == 0U
+        ? fs::path{}
+        : fs::path(std::wstring(system_directory, system_directory_length)) / L"cmd.exe";
+    if (system_command.empty() || !fs::exists(system_command, ignored)) {
+        expect(false, "#4324: Windows long-path fixture should find cmd.exe");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    fs::copy_file(system_command, fixture_path, fs::copy_options::overwrite_existing, ignored);
+    if (ignored) {
+        std::cerr << "SKIP: #4324 Windows long-path file creation is unavailable.\n";
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::wstring original_path;
+    const DWORD path_length = GetEnvironmentVariableW(L"PATH", nullptr, 0U);
+    if (path_length != 0U) {
+        original_path.resize(static_cast<std::size_t>(path_length));
+        DWORD copied_length = GetEnvironmentVariableW(
+            L"PATH",
+            original_path.data(),
+            path_length);
+        if (copied_length >= path_length) {
+            original_path.resize(static_cast<std::size_t>(copied_length) + 1U);
+            copied_length = GetEnvironmentVariableW(
+                L"PATH",
+                original_path.data(),
+                static_cast<DWORD>(original_path.size()));
+        }
+        original_path.resize(static_cast<std::size_t>(copied_length));
+    }
+    const std::wstring fixture_path_value = fixture_directory.wstring() + L";" + original_path;
+    const bool path_set = SetEnvironmentVariableW(L"PATH", fixture_path_value.c_str()) != FALSE;
+    if (!path_set) {
+        expect(false, "#4324: Windows long-path fixture should update PATH");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "copperfin-policy-fixture.exe",
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(temp_root)},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    const auto resolved_path = copperfin::platform::path_from_utf8_string(authorization.resolved_path);
+    expect(authorization.allowed,
+           "#4324: Windows external-process policy should authorize an executable beyond MAX_PATH");
+    expect(resolved_path == fs::weakly_canonical(fixture_path, ignored),
+           "#4324: Windows external-process policy should preserve the canonical long executable path");
+    expect(fs::equivalent(resolved_path, fixture_path, ignored),
+           "#4324: Windows external-process policy should resolve the long fixture to the copied executable");
+
+    if (original_path.empty()) {
+        SetEnvironmentVariableW(L"PATH", nullptr);
+    } else {
+        SetEnvironmentVariableW(L"PATH", original_path.c_str());
+    }
+    fs::remove_all(temp_root, ignored);
+}
 #endif
 
 // #252 [gap-06e]
@@ -1030,6 +1112,7 @@ int main() {
     test_external_process_and_process_hardening_diagnostics();
 #ifdef _WIN32
     test_external_process_policy_preserves_unicode_paths();
+    test_external_process_policy_handles_long_paths();
 #endif
     test_physical_path_containment_rejects_indirection();
 

@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -68,19 +69,34 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
         return {};
     }
 
-    wchar_t buffer[MAX_PATH]{};
-    const DWORD result = SearchPathW(nullptr, executable.c_str(), nullptr, MAX_PATH, buffer, nullptr);
-    if (result == 0 || result >= MAX_PATH) {
-        return {};
-    }
+    DWORD capacity = MAX_PATH;
+    for (;;) {
+        std::vector<wchar_t> buffer(capacity, L'\0');
+        const DWORD result = SearchPathW(
+            nullptr,
+            executable.c_str(),
+            nullptr,
+            capacity,
+            buffer.data(),
+            nullptr);
+        if (result == 0) {
+            return {};
+        }
+        if (result < capacity) {
+            std::error_code error;
+            const std::filesystem::path canonical =
+                std::filesystem::weakly_canonical(std::filesystem::path(buffer.data()), error);
+            if (error) {
+                return {};
+            }
 
-    std::error_code error;
-    const std::filesystem::path canonical = std::filesystem::weakly_canonical(std::filesystem::path(buffer), error);
-    if (error) {
-        return {};
+            return copperfin::platform::path_to_utf8_string(canonical);
+        }
+        if (result == std::numeric_limits<DWORD>::max()) {
+            return {};
+        }
+        capacity = result + 1U;
     }
-
-    return copperfin::platform::path_to_utf8_string(canonical);
 }
 
 bool has_trusted_signature(const std::string& path) {
