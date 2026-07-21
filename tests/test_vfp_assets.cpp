@@ -9,6 +9,7 @@
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <array>
@@ -445,6 +446,18 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
         "#2386: export_database_as_json should preserve the default localized missing-DBC error");
     expect(export_result.json.empty(),
            "#3988: failed database exports should leave the JSON result empty");
+
+    copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto english_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
+    locale.set("es-419");
+    const auto spanish_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
+    locale.set("qps-ploc");
+    const auto pseudo_inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
+    expect(
+        english_inspect_result.error == "Path does not exist." &&
+            spanish_inspect_result.error == "La ruta no existe." &&
+            pseudo_inspect_result.error == copperfin::localization::pseudo_localize("Path does not exist."),
+        "#4355: asset inspector diagnostics should refresh after in-process locale changes");
 }
 
 void test_parse_index_probe_for_cdx() {
