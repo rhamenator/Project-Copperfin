@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4342 under the #4041 Windows launcher-trust lane. The native launcher guard now carries the verified internal apphost `PhysicalPathIdentity` from inventory verification into `run_target()`, opens that exact path with `FILE_SHARE_READ` and `FILE_FLAG_OPEN_REPARSE_POINT`, rejects identity/reparse/directory changes, and retains the handle through `CreateProcessW` and child completion to prevent pathname replacement during launch. Native POSIX validation remains unaffected; hosted Windows race/launcher validation is required.
+
 - 2026-07-21: Implemented #4341 under the #110 runtime-debug lane. `CopperfinRuntimeDebugClient.ParsePauseState()` now applies `TrimStart()` only to protocol-line indentation, preserving significant leading/trailing spaces in escaped global and frame-local VFP values while retaining framing detection, unencoded path handling, and invariant debug fields. Managed build and language-service coverage pass; hosted Windows/VSIX debug validation remains required.
 
 - 2026-07-21: Implemented #4336 under the #2348 managed localization lane. `CopperfinExternalLocaleCatalog` now discovers the packaged shared catalog root two levels above installed `bin/studio`, and its installed-layout regression uses a temporary `bin/studio` plus `share/copperfin/locales` tree without environment-root overrides. Preserve explicit locale/environment precedence and hosted installer/Studio validation remains required.

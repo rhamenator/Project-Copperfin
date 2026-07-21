@@ -11,6 +11,7 @@
 #include <windows.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -208,7 +209,8 @@ bool verify_artifacts(
     const std::filesystem::path& manifest,
     const std::filesystem::path& guard_path,
     std::string& error,
-    const copperfin::localization::LocalizedCatalog& catalog) {
+    const copperfin::localization::LocalizedCatalog& catalog,
+    copperfin::security::PhysicalPathIdentity& verified_target_identity) {
     const auto records = launcher_artifacts(manifest);
     if (records.empty()) {
         error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.InventoryMissing");
@@ -216,6 +218,7 @@ bool verify_artifacts(
     }
 
     bool saw_public = false;
+    bool saw_internal_target = false;
     std::vector<std::string> seen_paths;
     std::size_t required_count = 0U;
     for (const auto& record : records) {
@@ -248,6 +251,14 @@ bool verify_artifacts(
             error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.DigestMismatch", record.relative_path);
             return false;
         }
+        if (same_name(record.relative_path, kInternalAppHostName)) {
+            if (saw_internal_target || !same_name(record.role, "runtime_required")) {
+                error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.InventoryInvalid", record.relative_path);
+                return false;
+            }
+            saw_internal_target = true;
+            verified_target_identity = snapshot.containment.identity;
+        }
         if (same_name(record.role, "public_apphost")) {
             if (saw_public) {
                 error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.InventoryIncomplete");
@@ -270,14 +281,53 @@ bool verify_artifacts(
         }
     }
 
-    if (!saw_public || required_count != 4U) {
+    if (!saw_public || !saw_internal_target || required_count != 4U) {
         error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.InventoryIncomplete");
         return false;
     }
     return true;
 }
 
-int run_target(const std::filesystem::path& target, int argc, wchar_t** argv) {
+int run_target(
+    const std::filesystem::path& target,
+    const copperfin::security::PhysicalPathIdentity& verified_identity,
+    int argc,
+    wchar_t** argv) {
+    const HANDLE target_lock = ::CreateFileW(
+        target.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (target_lock == INVALID_HANDLE_VALUE) {
+        return kTargetStartFailedExitCode;
+    }
+
+    BY_HANDLE_FILE_INFORMATION target_information{};
+    const bool target_read = ::GetFileInformationByHandle(target_lock, &target_information) != 0;
+    const auto target_identity = copperfin::security::PhysicalPathIdentity{
+        .storage_id = target_information.dwVolumeSerialNumber,
+        .file_id =
+            (static_cast<std::uint64_t>(target_information.nFileIndexHigh) << 32U) |
+            target_information.nFileIndexLow,
+        .file_size =
+            (static_cast<std::uint64_t>(target_information.nFileSizeHigh) << 32U) |
+            target_information.nFileSizeLow,
+        .modified_ticks =
+            (static_cast<std::uint64_t>(target_information.ftLastWriteTime.dwHighDateTime) << 32U) |
+            target_information.ftLastWriteTime.dwLowDateTime,
+        .link_count = target_information.nNumberOfLinks
+    };
+    if (!target_read ||
+        (target_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U ||
+        (target_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U ||
+        target_identity != verified_identity) {
+        ::CloseHandle(target_lock);
+        return kTargetStartFailedExitCode;
+    }
+
     std::wstring command_line = quote_windows_argument(target.wstring());
     for (int index = 1; index < argc; ++index) {
         command_line.push_back(L' ');
@@ -301,6 +351,7 @@ int run_target(const std::filesystem::path& target, int argc, wchar_t** argv) {
         &startup_info,
         &process_info);
     if (!started) {
+        ::CloseHandle(target_lock);
         return kTargetStartFailedExitCode;
     }
     WaitForSingleObject(process_info.hProcess, INFINITE);
@@ -308,6 +359,7 @@ int run_target(const std::filesystem::path& target, int argc, wchar_t** argv) {
     (void)GetExitCodeProcess(process_info.hProcess, &exit_code);
     CloseHandle(process_info.hThread);
     CloseHandle(process_info.hProcess);
+    ::CloseHandle(target_lock);
     return static_cast<int>(exit_code);
 }
 
@@ -340,10 +392,17 @@ int wmain(int argc, wchar_t** argv) {
         return kManifestMissingExitCode;
     }
     std::string error;
-    if (!verify_artifacts(package_root, verification_manifest, guard, error, catalog)) {
+    copperfin::security::PhysicalPathIdentity verified_target_identity{};
+    if (!verify_artifacts(
+            package_root,
+            verification_manifest,
+            guard,
+            error,
+            catalog,
+            verified_target_identity)) {
         std::cerr << error << "\n";
         return kVerificationFailedExitCode;
     }
     const std::filesystem::path target = package_root / std::string(kInternalAppHostName);
-    return run_target(target, argc, argv);
+    return run_target(target, verified_target_identity, argc, argv);
 }
