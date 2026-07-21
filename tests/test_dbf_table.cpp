@@ -712,6 +712,52 @@ void test_missing_field_diagnostic_uses_active_locale() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_table_default_catalog_refreshes_when_locale_changes() {
+    namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_locale_refresh_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "localized_refresh.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               table_path.string(), fields, {{"ALPHA"}}).ok,
+           "#4360: locale-refresh fixture should create its DBF table");
+
+    const auto english_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "missing", "BRAVO");
+    locale_override.set("es-419");
+    const auto spanish_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "missing", "BRAVO");
+    locale_override.set("qps-ploc");
+    const auto pseudo_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "missing", "BRAVO");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    constexpr std::string_view key = "Vfp.DbfTable.Error.TargetFieldNotFoundInTable";
+    expect(!english_result.ok && english_result.error == english_catalog.translate(key),
+           "#4360: default DBF-table diagnostics should begin in en-US");
+    expect(!spanish_result.ok && spanish_result.error == spanish_catalog.translate(key),
+           "#4360: default DBF-table diagnostics should refresh to es-419");
+    expect(!pseudo_result.ok && pseudo_result.error == pseudo_catalog.translate(key),
+           "#4360: default DBF-table diagnostics should refresh to qps-ploc");
+    expect(english_result.error != spanish_result.error &&
+               spanish_result.error != pseudo_result.error,
+           "#4360: locale refresh should not reuse the prior DBF-table diagnostic text");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_field_create_replace_and_append_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2874,6 +2920,7 @@ int main(int argc, char* argv[]) {
     test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();
     test_dbf_record_width_mismatch_field_sum_is_rejected();
     test_dbf_table_record_value_errors_resolve_through_localization_catalog();
+    test_dbf_table_default_catalog_refreshes_when_locale_changes();
     test_dbf_table_creation_errors_resolve_through_localization_catalog();
     test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog();
     test_dbf_table_record_replacement_errors_resolve_through_localization_catalog();
