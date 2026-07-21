@@ -288,6 +288,78 @@ void test_runtime_host_rejects_malformed_security_enabled_before_startup(
                "#4241: malformed security_enabled must not execute the startup PRG");
     }
 
+    {
+        const fs::path package_root = temp_root / "tampered_secure_package";
+        const fs::path content_root = package_root / "content";
+        const fs::path packaged_startup = content_root / "main.prg";
+        const fs::path packaged_manifest = package_root / "app.cfmanifest";
+        const fs::path deployed_runtime_host = deployed_runtime_host_path(
+            package_root,
+            runtime_host_path);
+        const fs::path tampered_marker = package_root / "tampered.marker";
+        fs::create_directories(content_root);
+        std::error_code copy_error;
+        fs::copy_file(
+            runtime_host_path,
+            deployed_runtime_host,
+            fs::copy_options::overwrite_existing,
+            copy_error);
+        expect(!copy_error,
+               "#4241: secure malformed-boolean fixture should copy the runtime host");
+#if defined(__unix__) || defined(__APPLE__)
+        fs::permissions(
+            deployed_runtime_host,
+            fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+            fs::perm_options::add,
+            ignored);
+#endif
+        write_text(
+            packaged_startup,
+            "RETURN\n");
+        const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(
+            deployed_runtime_host.string());
+        const auto startup_hash = copperfin::security::sha256_hex_for_file(
+            packaged_startup.string());
+        expect(runtime_host_hash.ok && startup_hash.ok,
+               "#4241: secure malformed-boolean fixture should hash its admitted files");
+        write_text(
+            packaged_startup,
+            "STRTOFILE('tampered', 'tampered.marker')\nRETURN\n");
+        write_text(
+            packaged_manifest,
+            "manifest_version=1\n"
+            "project_title=TamperedSecurityEnabled\n"
+            "package_root=" + package_root.string() + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + content_root.string() + "\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + packaged_startup.string() + "\n"
+            "security_enabled=garbage\n"
+            "security_role=developer\n"
+            "security_mode=native\n"
+            "audit_log_path=security_audit.log\n"
+            "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+            "asset=1|main.prg|" + packaged_startup.string() +
+                "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
+            "dotnet_story=none\n");
+
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", packaged_manifest.string()},
+            package_root);
+        expect(process.exit_code == 4,
+               "#4241: a tampered secure package with malformed security_enabled should fail before verification or execution");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#4241: tampered secure malformed security_enabled should preserve machine-readable error status");
+        expect(process.stdout_text.find("The security_enabled value must be true or false.") !=
+                   std::string::npos,
+               "#4241: tampered secure malformed security_enabled should preserve the boolean diagnostic");
+        expect(!fs::exists(tampered_marker),
+               "#4241: tampered secure startup source must not execute when security_enabled is malformed");
+    }
+
     write_text(
         manifest_path,
         "manifest_version=1\n"
