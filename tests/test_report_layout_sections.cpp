@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_report_layout_support.h"
+#include "test_environment_support.h"
 
 namespace cf_test_report_layout {
 
@@ -426,6 +427,56 @@ void test_build_report_layout_localizes_section_titles_without_localizing_band_k
         expect(layout.sections[1].title.find("Other Band") == std::string::npos,
             "#2489: pseudo-localized other-band title should not fall back to raw English prose");
     }
+}
+
+void test_report_layout_default_catalog_refreshes_when_locale_changes() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "locale-refresh.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "10"),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto english_layout = copperfin::studio::build_report_layout(document);
+    locale_override.set("es-419");
+    const auto spanish_layout = copperfin::studio::build_report_layout(document);
+    locale_override.set("qps-ploc");
+    const auto pseudo_layout = copperfin::studio::build_report_layout(document);
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    constexpr std::string_view title_key = "Studio.ReportLayout.Section.DetailFooter";
+    expect(english_layout.sections.size() == 1U &&
+               english_layout.sections[0].title == english_catalog.translate(title_key),
+           "#4362: default report-layout titles should begin in en-US");
+    expect(spanish_layout.sections.size() == 1U &&
+               spanish_layout.sections[0].title == spanish_catalog.translate(title_key),
+           "#4362: default report-layout titles should refresh to es-419");
+    expect(pseudo_layout.sections.size() == 1U &&
+               pseudo_layout.sections[0].title == pseudo_catalog.translate(title_key),
+           "#4362: default report-layout titles should refresh to qps-ploc");
+    expect(english_layout.sections.size() == 1U &&
+               spanish_layout.sections.size() == 1U &&
+               pseudo_layout.sections.size() == 1U &&
+               english_layout.sections[0].band_kind == "detail_footer" &&
+               spanish_layout.sections[0].band_kind == "detail_footer" &&
+               pseudo_layout.sections[0].band_kind == "detail_footer",
+           "#4362: locale refresh should preserve the invariant report band kind");
 }
 
 void test_report_layout_section_catalog_entries_cover_placeholder_locales() {
