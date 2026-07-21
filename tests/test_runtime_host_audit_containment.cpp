@@ -108,6 +108,12 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
             {"--manifest", copperfin::platform::path_to_utf8_string(case_root / "app.cfmanifest")},
             temp_root);
 
+        if (process.exit_code != 7) {
+            std::cerr << "#4301 process diagnostic: exit=" << process.exit_code
+                      << " stdout=" << process.stdout_text
+                      << " stderr=" << process.stderr_text << "\n";
+        }
+
         expect(process.exit_code == 7,
                "#4301: Windows package rebinding should use invariant Unicode case comparison");
         const auto audit_chain = copperfin::security::verify_immutable_audit_chain(
