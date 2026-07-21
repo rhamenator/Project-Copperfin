@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 namespace {
@@ -28,6 +29,11 @@ constexpr std::string_view kRequiredSidecarDll = "Copperfin.GeneratedLauncher.dl
 constexpr std::string_view kRequiredSidecarDeps = "Copperfin.GeneratedLauncher.deps.json";
 constexpr std::string_view kRequiredSidecarRuntimeConfig =
     "Copperfin.GeneratedLauncher.runtimeconfig.json";
+
+bool regular_file_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::is_regular_file(path, error) && !error;
+}
 
 std::string unquote_manifest_value(std::string_view value) {
     std::string result;
@@ -328,8 +334,8 @@ int wmain(int argc, wchar_t** argv) {
         copperfin::localization::resolve_catalog_root(guard),
         requested_locale);
     const std::filesystem::path verification_manifest =
-        std::filesystem::is_regular_file(debug_manifest) ? debug_manifest : runtime_manifest;
-    if (!std::filesystem::is_regular_file(verification_manifest)) {
+        regular_file_exists_without_error(debug_manifest) ? debug_manifest : runtime_manifest;
+    if (!regular_file_exists_without_error(verification_manifest)) {
         std::cerr << localized_message(catalog, "Runtime.Package.LauncherGuard.Error.ManifestMissing") << "\n";
         return kManifestMissingExitCode;
     }
