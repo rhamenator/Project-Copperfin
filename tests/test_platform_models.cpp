@@ -312,6 +312,48 @@ void test_default_extensibility_profile() {
     expect(
         !pseudo_profile.guardrails.empty() && pseudo_profile.guardrails[0].find("[!! ") != std::string::npos,
         "#2492: pseudo-localized extensibility guardrails should route through the catalog");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto live_english_profile =
+        copperfin::platform::default_extensibility_profile();
+    locale_override.set("es-419");
+    const auto live_spanish_profile =
+        copperfin::platform::default_extensibility_profile();
+    locale_override.set("qps-ploc");
+    const auto live_pseudo_profile =
+        copperfin::platform::default_extensibility_profile();
+    const auto find_xbase = [](const auto& profile) {
+        return std::find_if(
+            profile.languages.begin(),
+            profile.languages.end(),
+            [](const auto& language) { return language.id == "xbase"; });
+    };
+    const auto live_english_xbase = find_xbase(live_english_profile);
+    const auto live_spanish_xbase = find_xbase(live_spanish_profile);
+    const auto live_pseudo_xbase = find_xbase(live_pseudo_profile);
+    expect(live_english_xbase != live_english_profile.languages.end() &&
+               live_spanish_xbase != live_spanish_profile.languages.end() &&
+               live_pseudo_xbase != live_pseudo_profile.languages.end(),
+           "#4359: default extensibility profile refresh should preserve language identity");
+    if (live_english_xbase != live_english_profile.languages.end() &&
+        live_spanish_xbase != live_spanish_profile.languages.end() &&
+        live_pseudo_xbase != live_pseudo_profile.languages.end()) {
+        expect(live_english_xbase->id == "xbase" &&
+                   live_spanish_xbase->id == "xbase" &&
+                   live_pseudo_xbase->id == "xbase",
+               "#4359: extensibility language ids must remain invariant across locale refresh");
+        expect(live_english_xbase->title == "Native Copperfin/xBase Runtime",
+               "#4359: default extensibility profile should begin in en-US");
+        expect(live_spanish_xbase->title == "Runtime nativo Copperfin/xBase",
+               "#4359: default extensibility profile should refresh to es-419");
+        expect(live_pseudo_xbase->title.find("[!! ") != std::string::npos,
+               "#4359: default extensibility profile should refresh to qps-ploc");
+    }
+    expect(!live_pseudo_profile.ai_features.empty() &&
+               live_pseudo_profile.ai_features[0].id == "mcp-host" &&
+               live_pseudo_profile.ai_features[0].title.find("[!! ") != std::string::npos,
+           "#4359: refreshed pseudo-locale should preserve AI ids and localize display text");
 }
 
 void test_dotnet_interop_policy_gateway() {

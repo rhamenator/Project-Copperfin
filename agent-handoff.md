@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Default extensibility-profile localization under #2348/#4359: `default_extensibility_profile()` must refresh its cached catalog when `select_locale()` or `resolve_catalog_root()` changes and return a snapshot profile. Preserve explicit catalogs, language/AI/parity IDs, reason tags, policy booleans, enum values, and machine contracts; keep the en-US/es-419/qps-ploc regression and all four catalog parity.
+
 - 2026-07-21: Implemented #4338 in the POSIX executable-discovery lane. `resolve_executable_invocation_path()` now distinguishes an absent `PATH` from an explicit empty component, uses `confstr(_CS_PATH)` for the POSIX default search, preserves `.` lookup for `PATH=""`, and returns an unresolved bare invocation without rebinding it to the current directory. Added a POSIX platform regression; Windows behavior remains unchanged.
 
 - 2026-07-21: Implemented #4344 in the generated Windows bridge lane. Runtime children now receive duplicated standard-stream handles through `STARTUPINFOEXW` and `PROC_THREAD_ATTRIBUTE_HANDLE_LIST`; unrelated inheritable host handles are excluded, and all temporary duplicates/attribute storage are released after launch. `test_runtime_pipeline` adds a Windows inheritable-sentinel regression and both DLL/FLL source-contract checks; Linux focused/full validation cannot execute the Windows branch, so hosted Windows bridge/package evidence remains required.
