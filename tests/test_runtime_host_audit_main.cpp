@@ -11,6 +11,7 @@ void test_security_enabled_query_file_uses_verified_snapshot(const std::string& 
 void test_security_enabled_form_class_and_menu_companion_integrity(const std::string& runtime_host_path);
 void test_runtime_host_preserves_logical_identity_across_nested_directory_aliases(const std::string& runtime_host_path);
 void test_app_cfdebug_preserves_external_xasset_source_compatibility(const std::string& runtime_host_path);
+void test_app_cfdebug_rejects_inaccessible_external_startup_source(const std::string& runtime_host_path);
 void test_app_cfdebug_rejects_file_valued_working_directory(const std::string& runtime_host_path);
 void test_security_enabled_writable_package_data_contract(const std::string& runtime_host_path);
 void test_runtime_host_rejects_extension_payload_basename_fallback(const std::string& runtime_host_path);
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("verified xAsset companions", runtime_host_path, test_security_enabled_form_class_and_menu_companion_integrity);
     run_runtime_host_test("nested directory alias identity", runtime_host_path, test_runtime_host_preserves_logical_identity_across_nested_directory_aliases);
     run_runtime_host_test("external xAsset debug source", runtime_host_path, test_app_cfdebug_preserves_external_xasset_source_compatibility);
+    run_runtime_host_test("inaccessible external debug source", runtime_host_path, test_app_cfdebug_rejects_inaccessible_external_startup_source);
     run_runtime_host_test("file-valued working directory", runtime_host_path, test_app_cfdebug_rejects_file_valued_working_directory);
     run_runtime_host_test("writable package data", runtime_host_path, test_security_enabled_writable_package_data_contract);
     run_runtime_host_test("extension payload basename fallback", runtime_host_path, test_runtime_host_rejects_extension_payload_basename_fallback);

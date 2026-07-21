@@ -809,6 +809,75 @@ void test_app_cfdebug_preserves_external_xasset_source_compatibility(
     }
 }
 
+void test_app_cfdebug_rejects_inaccessible_external_startup_source(
+    const std::string& runtime_host_path) {
+#if defined(_WIN32)
+    (void)runtime_host_path;
+    return;
+#else
+    namespace fs = std::filesystem;
+    const int failures_before_test = failures;
+    const fs::path temp_root =
+        runtime_host_audit_temp_root("copperfin_runtime_host_inaccessible_external_debug");
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path inaccessible_parent = temp_root / "inaccessible";
+    const fs::path external_source = inaccessible_parent / "startup.prg";
+    const fs::path debug_manifest_path = deployed_root / "app.cfdebug";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(deployed_root);
+    fs::create_directories(inaccessible_parent);
+    write_text(external_source, "RETURN\n");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+    fs::permissions(inaccessible_parent, fs::perms::none, fs::perm_options::replace, ignored);
+
+    std::error_code inaccessible_probe_error;
+    (void)fs::status(external_source, inaccessible_probe_error);
+    if (!inaccessible_probe_error) {
+        fs::permissions(inaccessible_parent, fs::perms::owner_all, fs::perm_options::replace, ignored);
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        debug_manifest_path,
+        "debug_manifest_version=2\n"
+        "project_title=InaccessibleExternalStartupSource\n"
+        "package_root=" + deployed_root.string() + "\n"
+        "content_root=" + (deployed_root / "content").string() + "\n"
+        "working_directory=" + deployed_root.string() + "\n"
+        "startup_item=startup.prg\n"
+        "startup_source=" + external_source.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", debug_manifest_path.string(), "--debug"},
+        deployed_root);
+
+    expect(process.exit_code == 4,
+           "#4331: inaccessible external startup source should use the documented startup failure exit code");
+    expect(process.stdout_text.find("status: error") != std::string::npos,
+           "#4331: inaccessible external startup source should return the normal error status");
+    expect(process.stderr_text.find("filesystem_error") == std::string::npos &&
+               process.stderr_text.find("filesystem error") == std::string::npos,
+           "#4331: inaccessible external startup source should not escape a filesystem exception");
+
+    fs::permissions(inaccessible_parent, fs::perms::owner_all, fs::perm_options::replace, ignored);
+    if (failures == failures_before_test) {
+        fs::remove_all(temp_root, ignored);
+    }
+#endif
+}
+
 void test_app_cfdebug_rejects_file_valued_working_directory(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;

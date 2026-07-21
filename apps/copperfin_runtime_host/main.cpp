@@ -2892,7 +2892,7 @@ std::optional<std::string> resolve_startup_source(
     const std::filesystem::path normalized_startup_source = portable_manifest_path(startup_source);
     if (allow_external_debug_source &&
         manifest_path_is_absolute(normalized_startup_source) &&
-        std::filesystem::exists(normalized_startup_source)) {
+        path_exists_without_error(normalized_startup_source)) {
         return copperfin::platform::path_to_utf8_string(normalized_startup_source);
     }
     const std::filesystem::path native_startup_source =
