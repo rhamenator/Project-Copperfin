@@ -283,6 +283,11 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                    wrapper_source.find("std::system(") == std::string::npos &&
                    wrapper_source.find("copperfin_runtime_bridge_build_process_command(") == std::string::npos,
                "library-output wrapper source should launch without shell command construction.");
+        expect(wrapper_source.find("STARTUPINFOEXW startup_info{};") != std::string::npos &&
+                   wrapper_source.find("PROC_THREAD_ATTRIBUTE_HANDLE_LIST") != std::string::npos &&
+                   wrapper_source.find("UpdateProcThreadAttribute(") != std::string::npos &&
+                   wrapper_source.find("DuplicateHandle(") != std::string::npos,
+               "library-output Windows bridge should restrict child handle inheritance to duplicated standard streams.");
         expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && process_created && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
                "library-output wrapper source should compare runtime-host exit code with the expected exit code.");
         expect(wrapper_source.find("        false,\n        false,\n        dispatch_execution.expected_exit_code,\n        dispatch_execution.expected_exit_code") == std::string::npos,
@@ -1224,11 +1229,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             }
             expect(compiled,
                    "library-output wrapper scaffold should compile under the host C++ toolchain");
-#if !defined(_WIN32)
             if (compiled) {
                 test_generated_posix_bridge_environment_launch(compiled_wrapper_path);
             }
-#endif
             if (compiled && native_symbol_dump_is_available()) {
                 std::string symbol_error;
                 const std::set<std::string> exported_symbols = read_native_exported_symbols(compiled_wrapper_path, symbol_error);

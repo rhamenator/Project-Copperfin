@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 
@@ -399,8 +400,8 @@ bool compile_native_wrapper_scaffold(
         native_cxx_command(),
         "-std=c++20",
         "-shared",
-#if !defined(_WIN32)
         "-DCOPPERFIN_RUNTIME_BRIDGE_TEST_HOOKS=1",
+#if !defined(_WIN32)
         "-fPIC",
         "-fvisibility=hidden",
         "-fvisibility-inlines-hidden",
@@ -470,7 +471,96 @@ bool compile_native_wrapper_scaffold(
 
 void test_generated_posix_bridge_environment_launch(const std::filesystem::path& wrapper_path) {
 #if defined(_WIN32)
-    (void)wrapper_path;
+    namespace fs = std::filesystem;
+    using TestLaunch = int (*)(const char*, const char*, const char*, const char*, const char*, const char*);
+    HMODULE module = ::LoadLibraryW(wrapper_path.c_str());
+    expect(module != nullptr, "generated Windows bridge test seam should load the compiled wrapper");
+    if (module == nullptr) {
+        return;
+    }
+    const auto launch = reinterpret_cast<TestLaunch>(
+        ::GetProcAddress(module, "copperfin_runtime_bridge_test_launch_environment"));
+    expect(launch != nullptr, "generated Windows bridge test seam should export the environment launcher");
+    if (launch == nullptr) {
+        (void)::FreeLibrary(module);
+        return;
+    }
+
+    const fs::path temp_root = fs::temp_directory_path();
+    const fs::path sentinel_path =
+        temp_root / ("copperfin-inherited-handle-" + std::to_string(::GetCurrentProcessId()) + ".txt");
+    const fs::path output_path =
+        temp_root / ("copperfin-inherited-handle-" + std::to_string(::GetCurrentProcessId()) + ".out");
+    SECURITY_ATTRIBUTES security_attributes{};
+    security_attributes.nLength = sizeof(security_attributes);
+    security_attributes.bInheritHandle = TRUE;
+    const HANDLE sentinel = ::CreateFileW(
+        sentinel_path.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        &security_attributes,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+    expect(sentinel != INVALID_HANDLE_VALUE,
+           "#4344: Windows handle-inheritance regression should create an inheritable sentinel");
+    if (sentinel == INVALID_HANDLE_VALUE) {
+        (void)::FreeLibrary(module);
+        return;
+    }
+    BY_HANDLE_FILE_INFORMATION sentinel_information{};
+    const bool sentinel_inspected =
+        ::GetFileInformationByHandle(sentinel, &sentinel_information) != 0;
+    expect(sentinel_inspected,
+           "#4344: Windows handle-inheritance regression should inspect the sentinel identity");
+    if (!sentinel_inspected) {
+        (void)::CloseHandle(sentinel);
+        (void)::DeleteFileW(sentinel_path.c_str());
+        (void)::FreeLibrary(module);
+        return;
+    }
+
+    wchar_t executable_buffer[32768]{};
+    const DWORD executable_length = ::GetModuleFileNameW(
+        nullptr,
+        executable_buffer,
+        static_cast<DWORD>(std::size(executable_buffer)));
+    expect(executable_length > 0U && executable_length < std::size(executable_buffer),
+           "#4344: Windows handle-inheritance regression should resolve its test executable");
+    if (executable_length == 0U || executable_length >= std::size(executable_buffer)) {
+        (void)::CloseHandle(sentinel);
+        (void)::DeleteFileW(sentinel_path.c_str());
+        (void)::FreeLibrary(module);
+        return;
+    }
+
+    const std::string probe_value =
+        std::to_string(reinterpret_cast<std::uintptr_t>(sentinel)) + "," +
+        std::to_string(sentinel_information.dwVolumeSerialNumber) + "," +
+        std::to_string(sentinel_information.nFileIndexHigh) + "," +
+        std::to_string(sentinel_information.nFileIndexLow);
+    const std::string executable_path = copperfin::platform::path_to_utf8_string(
+        fs::path(std::wstring(executable_buffer, executable_length)));
+    const std::string output_path_string = output_path.string();
+    const std::string working_directory = temp_root.string();
+    const int exit_code = launch(
+        executable_path.c_str(),
+        output_path_string.c_str(),
+        working_directory.c_str(),
+        "COPPERFIN_INHERITED_HANDLE_PROBE",
+        probe_value.c_str(),
+        "--copperfin-inherited-handle-probe");
+    expect(exit_code == 0,
+           "#4344: Windows generated bridge should launch the handle probe without inheriting the sentinel");
+    expect(read_text(output_path) == "not-inherited\n",
+           "#4344: Windows generated bridge child should not observe an unrelated inheritable handle");
+
+    (void)::CloseHandle(sentinel);
+    expect(::DeleteFileW(sentinel_path.c_str()) != 0,
+           "#4344: Windows handle-inheritance regression should release the sentinel after the child exits");
+    std::error_code ignored;
+    fs::remove(output_path, ignored);
+    (void)::FreeLibrary(module);
 #else
     namespace fs = std::filesystem;
     using TestLaunch = int (*)(const char*, const char*, const char*, const char*, const char*, const char*);

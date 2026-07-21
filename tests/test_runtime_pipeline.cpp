@@ -4,6 +4,18 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
+
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 namespace cf_test_runtime_pipeline {
 void test_absolute_project_item_paths_never_rebind_to_project_decoys();
 void test_file_valued_home_directory_falls_back_to_project_directory();
@@ -13,6 +25,32 @@ void test_relative_home_directory_resolves_from_project_directory();
 using namespace cf_test_runtime_pipeline;
 
 namespace {
+#if defined(_WIN32)
+int run_inherited_handle_probe() {
+    char value[256]{};
+    const DWORD length = ::GetEnvironmentVariableA(
+        "COPPERFIN_INHERITED_HANDLE_PROBE",
+        value,
+        static_cast<DWORD>(sizeof(value)));
+    unsigned long long raw_handle = 0U;
+    unsigned long volume = 0U;
+    unsigned long index_high = 0U;
+    unsigned long index_low = 0U;
+    const bool parsed = length > 0U &&
+        std::sscanf_s(value, "%llu,%lu,%lu,%lu", &raw_handle, &volume, &index_high, &index_low) == 4;
+    BY_HANDLE_FILE_INFORMATION information{};
+    const bool matches = parsed &&
+        ::GetFileInformationByHandle(
+            reinterpret_cast<HANDLE>(static_cast<std::uintptr_t>(raw_handle)),
+            &information) != 0 &&
+        information.dwVolumeSerialNumber == volume &&
+        information.nFileIndexHigh == index_high &&
+        information.nFileIndexLow == index_low;
+    std::cout << (matches ? "inherited\n" : "not-inherited\n");
+    return matches ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+#endif
+
 int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     const ScopedRuntimePipelineFixtureNamespace fixture_namespace;
     const ScopedEnvironmentVariable locale_root(
@@ -104,6 +142,9 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
 
 #if defined(_WIN32)
 int wmain(int argc, wchar_t* argv[]) {
+    if (argc == 2 && std::wstring(argv[1]) == L"--copperfin-inherited-handle-probe") {
+        return run_inherited_handle_probe();
+    }
     if (argc == 6 && std::wstring(argv[1]) == L"--fixture-isolation-probe") {
         std::string probe_id;
         for (const wchar_t character : std::wstring(argv[2])) {
@@ -119,6 +160,9 @@ int wmain(int argc, wchar_t* argv[]) {
 }
 #else
 int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string(argv[1]) == "--copperfin-inherited-handle-probe") {
+        return EXIT_FAILURE;
+    }
     if (argc == 6 && std::string(argv[1]) == "--fixture-isolation-probe") {
         return run_runtime_pipeline_fixture_isolation_probe(
             argv[2],
