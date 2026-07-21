@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <mutex>
 #include <string>
 #include <string_view>
 
@@ -17,12 +18,28 @@ bool supports_context(const StudioEditorActionDescriptor& action, StudioEditorSe
     return std::find(action.contexts.begin(), action.contexts.end(), context) != action.contexts.end();
 }
 
-const copperfin::localization::LocalizedCatalog& editor_action_catalog() {
-    static const copperfin::localization::LocalizedCatalog catalog =
+copperfin::localization::LocalizedCatalog editor_action_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        copperfin::localization::LocalizedCatalog catalog;
+    };
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
         copperfin::localization::load_catalogs(
             copperfin::localization::resolve_catalog_root(),
-            copperfin::localization::select_locale());
-    return catalog;
+            copperfin::localization::default_locale)};
+    const auto locale_root = copperfin::localization::resolve_catalog_root();
+    const auto locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = copperfin::localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string editor_action_text(std::string_view key) {
@@ -184,9 +201,22 @@ std::vector<StudioEditorActionDescriptor> studio_editor_action_registry_for_cata
 }
 
 const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry() {
-    static const std::vector<StudioEditorActionDescriptor> actions =
-        studio_editor_action_registry_for_catalog(editor_action_catalog());
-    return actions;
+    struct RegistryCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        std::vector<StudioEditorActionDescriptor> actions;
+    };
+    static std::mutex cache_mutex;
+    static RegistryCache cache;
+    const auto locale_root = copperfin::localization::resolve_catalog_root();
+    const auto locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.actions = studio_editor_action_registry_for_catalog(editor_action_catalog());
+    }
+    return cache.actions;
 }
 
 std::vector<StudioEditorActionDescriptor> studio_editor_actions_for_context(StudioEditorSelectionContext context) {

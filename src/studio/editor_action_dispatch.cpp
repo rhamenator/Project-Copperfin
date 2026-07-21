@@ -8,6 +8,7 @@
 
 #include <string>
 #include <string_view>
+#include <mutex>
 #include <utility>
 
 namespace copperfin::studio {
@@ -19,12 +20,28 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
     arguments.push_back(std::move(value));
 }
 
-const copperfin::localization::LocalizedCatalog& editor_action_dispatch_catalog() {
-    static const copperfin::localization::LocalizedCatalog catalog =
+copperfin::localization::LocalizedCatalog editor_action_dispatch_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        copperfin::localization::LocalizedCatalog catalog;
+    };
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
         copperfin::localization::load_catalogs(
             copperfin::localization::resolve_catalog_root(),
-            copperfin::localization::select_locale());
-    return catalog;
+            copperfin::localization::default_locale)};
+    const auto locale_root = copperfin::localization::resolve_catalog_root();
+    const auto locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = copperfin::localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string editor_action_dispatch_text(std::string_view key) {

@@ -6,6 +6,7 @@
 
 #include "copperfin/localization/localization.h"
 
+#include <mutex>
 #include <string_view>
 #include <utility>
 
@@ -13,12 +14,28 @@ namespace copperfin::studio {
 
 namespace {
 
-const copperfin::localization::LocalizedCatalog& designer_invocation_catalog() {
-    static const copperfin::localization::LocalizedCatalog catalog =
+copperfin::localization::LocalizedCatalog designer_invocation_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        copperfin::localization::LocalizedCatalog catalog;
+    };
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
         copperfin::localization::load_catalogs(
             copperfin::localization::resolve_catalog_root(),
-            copperfin::localization::select_locale());
-    return catalog;
+            copperfin::localization::default_locale)};
+    const auto locale_root = copperfin::localization::resolve_catalog_root();
+    const auto locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = copperfin::localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string designer_invocation_text(std::string_view key) {
