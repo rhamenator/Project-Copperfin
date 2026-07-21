@@ -1394,6 +1394,9 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        environment_block.push_back(L'\\0');\n";
     stream << "    }\n";
     stream << "    environment_block.push_back(L'\\0');\n";
+    stream << "    if (environment_entries.empty()) {\n";
+    stream << "        environment_block.push_back(L'\\0');\n";
+    stream << "    }\n";
     stream << "    SECURITY_ATTRIBUTES security_attributes{};\n";
     stream << "    security_attributes.nLength = sizeof(security_attributes);\n";
     stream << "    security_attributes.bInheritHandle = TRUE;\n";

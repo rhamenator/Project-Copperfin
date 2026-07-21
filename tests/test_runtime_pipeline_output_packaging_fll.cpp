@@ -233,6 +233,12 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         expect(wrapper_source.find("const auto environment_entries = copperfin_runtime_bridge_windows_environment(dispatch_execution.environment);") != std::string::npos &&
                    wrapper_source.find("const auto environment_values = copperfin_runtime_bridge_posix_environment(dispatch_execution.environment);") != std::string::npos,
                "fll-output wrapper source should apply launch environment entries through native process APIs.");
+        expect(wrapper_source.find(
+                   "    environment_block.push_back(L'\\0');\n"
+                   "    if (environment_entries.empty()) {\n"
+                   "        environment_block.push_back(L'\\0');\n"
+                   "    }\n") != std::string::npos,
+               "fll-output Windows environment blocks should double-terminate the empty-environment case.");
         expect(wrapper_source.find("#include <mutex>") != std::string::npos &&
                    wrapper_source.find("static std::mutex environment_mutex;") != std::string::npos &&
                    wrapper_source.find("const std::lock_guard<std::mutex> environment_lock(environment_mutex);") != std::string::npos,
