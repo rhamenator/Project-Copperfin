@@ -62,12 +62,6 @@ std::string narrow(const std::wstring& value) {
     return result;
 }
 
-std::string path_to_utf8_generic_string(const std::filesystem::path& path) {
-    std::string result = copperfin::platform::path_to_utf8_string(path);
-    std::replace(result.begin(), result.end(), '\\', '/');
-    return result;
-}
-
 std::string resolve_executable_from_path(const std::string& executable_name) {
     std::wstring executable = widen(executable_name);
     if (executable.empty()) {
@@ -180,13 +174,17 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
         return false;
     }
 
-    const auto path_string = path_to_utf8_generic_string(canonical_path);
-    std::string root_string = path_to_utf8_generic_string(canonical_root);
-    if (!root_string.empty() && root_string.back() != '/') {
-        root_string.push_back('/');
+    auto path_component = canonical_path.begin();
+    auto root_component = canonical_root.begin();
+    for (; root_component != canonical_root.end(); ++root_component, ++path_component) {
+        if (path_component == canonical_path.end() ||
+            !copperfin::platform::path_component_equal_for_platform(
+                *path_component,
+                *root_component)) {
+            return false;
+        }
     }
-
-    return path_string == root_string || path_string.rfind(root_string, 0) == 0;
+    return true;
 }
 #else
 std::string resolve_executable_from_path(const std::string& executable_name) {

@@ -746,6 +746,48 @@ void test_external_process_policy_preserves_unicode_paths() {
     expect(fs::equivalent(resolved_path, fixture_path, ignored),
            "#4277: Windows external-process policy should resolve the Unicode fixture to the copied executable");
 
+    std::string case_variant_root = copperfin::platform::path_to_utf8_string(temp_root);
+    const std::string root_marker = "copperfin_security_policy_";
+    const std::size_t root_marker_start = case_variant_root.find(root_marker);
+    expect(root_marker_start != std::string::npos,
+           "#4329: Windows external-process fixture should retain its ASCII root marker");
+    if (root_marker_start != std::string::npos) {
+        std::string uppercase_marker = root_marker;
+        std::transform(
+            uppercase_marker.begin(),
+            uppercase_marker.end(),
+            uppercase_marker.begin(),
+            [](const char ch) {
+                return ch >= 'a' && ch <= 'z'
+                    ? static_cast<char>(ch - 'a' + 'A')
+                    : ch;
+            });
+        case_variant_root.replace(root_marker_start, root_marker.size(), uppercase_marker);
+        const copperfin::security::ExternalProcessPolicy case_variant_policy{
+            .executable_name = "copperfin-policy-fixture.exe",
+            .allowed_path_roots = {case_variant_root},
+            .allowed_publishers = {},
+            .require_trusted_signature = false
+        };
+        const auto case_variant_authorization =
+            copperfin::security::authorize_external_process(case_variant_policy);
+        expect(case_variant_authorization.allowed,
+               "#4329: Windows external-process policy should accept case-equivalent allowed roots");
+    }
+
+    const fs::path sibling_root = temp_root.parent_path() /
+        (temp_root.filename().wstring() + L"-sibling");
+    const copperfin::security::ExternalProcessPolicy sibling_policy{
+        .executable_name = "copperfin-policy-fixture.exe",
+        .allowed_path_roots = {copperfin::platform::path_to_utf8_string(sibling_root)},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    const auto sibling_authorization =
+        copperfin::security::authorize_external_process(sibling_policy);
+    expect(!sibling_authorization.allowed,
+           "#4329: Windows external-process policy should reject sibling-prefix roots");
+
     if (original_path.empty()) {
         SetEnvironmentVariableW(L"PATH", nullptr);
     } else {
