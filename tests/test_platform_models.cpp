@@ -682,6 +682,15 @@ void test_default_database_profile() {
         "foxsql-relational");
     expect(live_pseudo_path != nullptr && live_pseudo_path->id == "foxsql-relational",
            "#2348: default database query-path identity must remain invariant across locale refresh");
+    const auto live_spanish_path = copperfin::platform::query_translation_path_by_id(
+        live_spanish_profile,
+        "foxsql-relational");
+    expect(live_spanish_path != nullptr &&
+               live_spanish_path->title == "Fox SQL a SQL relacional",
+           "#2348: default database query-path display should refresh to es-419");
+    expect(live_pseudo_path != nullptr &&
+               live_pseudo_path->title.find("[!! ") != std::string::npos,
+           "#2348: default database query-path display should refresh to qps-ploc");
 }
 
 void test_document_and_vector_mapping_paths() {
