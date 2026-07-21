@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4341 under the #110 runtime-debug lane. `CopperfinRuntimeDebugClient.ParsePauseState()` now applies `TrimStart()` only to protocol-line indentation, preserving significant leading/trailing spaces in escaped global and frame-local VFP values while retaining framing detection, unencoded path handling, and invariant debug fields. Managed build and language-service coverage pass; hosted Windows/VSIX debug validation remains required.
+
 - 2026-07-21: Implemented #4336 under the #2348 managed localization lane. `CopperfinExternalLocaleCatalog` now discovers the packaged shared catalog root two levels above installed `bin/studio`, and its installed-layout regression uses a temporary `bin/studio` plus `share/copperfin/locales` tree without environment-root overrides. Preserve explicit locale/environment precedence and hosted installer/Studio validation remains required.
 
 - 2026-07-21: Implemented #4335 under the #110 runtime asset/package lane. Case-insensitive project-asset search, runtime artifact digest collection, and source-file admission now use an error-code existence helper, preserving localized missing/ambiguous diagnostics, containment, fd-backed behavior, and package/debug contracts for inaccessible source paths. Focused runtime-pipeline validation and hosted Windows path-status validation remain required.

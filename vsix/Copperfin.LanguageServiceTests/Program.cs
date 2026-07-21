@@ -1052,15 +1052,22 @@ internal static partial class Program
         var state = CopperfinRuntimeDebugClient.ParsePauseState(
             "debug.command[0]: continue\n" +
             "debug.global.cGlobal: line1\\r\\n\\t\\\\tail\n" +
+            "debug.global.cSpaced:   abcd   \n" +
             "debug.frame[0].local.cLocal: line1\\r\\n\\t\\\\tail\n" +
+            "debug.frame[0].local.cSpaced:   local   \n" +
             "debug.location: C:\\notes\\nfile.prg:3\n");
         const string expected = "line1\r\n\t\\tail";
 
-        Expect(state.Globals.Count == 1 && state.Globals[0].Value == expected,
+        Expect(state.Globals.Count >= 1 && state.Globals[0].Value == expected,
             "runtime debug parser should decode escaped multiline global values");
-        Expect(state.Frames.Count == 1 && state.Frames[0].Locals.Count == 1 &&
+        Expect(state.Globals.Count == 2 && state.Globals[1].Value == "  abcd   ",
+            "runtime debug parser should preserve leading and trailing global value spaces");
+        Expect(state.Frames.Count == 1 && state.Frames[0].Locals.Count >= 1 &&
                state.Frames[0].Locals[0].Value == expected,
             "runtime debug parser should decode escaped multiline local values");
+        Expect(state.Frames.Count == 1 && state.Frames[0].Locals.Count == 2 &&
+               state.Frames[0].Locals[1].Value == "  local   ",
+            "runtime debug parser should preserve leading and trailing local value spaces");
         Expect(state.Location == @"C:\notes\nfile.prg:3",
             "runtime debug parser should preserve unencoded path fields containing escape-like text");
     }

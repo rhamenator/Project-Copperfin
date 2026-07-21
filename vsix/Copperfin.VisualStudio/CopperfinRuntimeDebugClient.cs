@@ -368,7 +368,8 @@ internal static class CopperfinRuntimeDebugClient
         string? rawLine;
         while ((rawLine = reader.ReadLine()) is not null)
         {
-            var line = rawLine.Trim();
+            // Protocol framing may be indented, but whitespace after the value separator is payload.
+            var line = rawLine.TrimStart();
             if (line.Length == 0)
             {
                 continue;
