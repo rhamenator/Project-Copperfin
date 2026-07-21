@@ -23,6 +23,10 @@ using copperfin::runtime::RushmoreStatisticsState;
 using copperfin::runtime::RushmoreCostModelInput;
 using copperfin::runtime::RushmoreCostModelOptions;
 using copperfin::runtime::RushmorePredicateDescriptor;
+using copperfin::runtime::RushmoreExplainFallbackReason;
+using copperfin::runtime::RushmoreExplainPlan;
+using copperfin::runtime::RushmoreExplainRecord;
+using copperfin::runtime::RushmoreResidualPredicateDescriptor;
 
 void test_rushmore_planning_contracts() {
     const RushmorePlanningOptions defaults{};
@@ -151,4 +155,54 @@ void test_rushmore_planning_contracts() {
     expect(overflow_cost.cpu_units == std::numeric_limits<std::uint64_t>::max() &&
             overflow_cost.total_units == std::numeric_limits<std::uint64_t>::max(),
         "Rushmore cost model must saturate arithmetic instead of wrapping costs");
+
+    const RushmoreExplainRecord selected_record{
+        "people",
+        RushmorePlanKind::index_seek,
+        "NAME",
+        seek_cost_estimate,
+        true};
+    const RushmoreExplainRecord fallback_record{
+        "people",
+        RushmorePlanKind::table_scan,
+        {},
+        table_scan_cost,
+        false};
+    RushmoreExplainPlan optimized_explain{
+        metadata,
+        "NAME = 'BRAVO'",
+        {RushmorePredicateDescriptor{"NAME = 'BRAVO'", "NAME", "=", 1, true}},
+        {},
+        {fallback_record, selected_record},
+        selected_record,
+        RushmoreExplainFallbackReason::none,
+        2};
+    expect(optimized_explain.selected_candidate.has_value() &&
+            optimized_explain.selected_candidate->kind == RushmorePlanKind::index_seek &&
+            optimized_explain.selected_candidate->selected &&
+            optimized_explain.cursor.statistics.has_value(),
+        "Rushmore explain plans must expose the selected kind, candidate, cost, and statistics metadata");
+    expect(optimized_explain.indexable_predicates.size() == 1U &&
+            optimized_explain.residual_predicates.empty() &&
+            optimized_explain.options_version == 2U,
+        "Rushmore explain plans must preserve structured predicates and options version without localized keys");
+
+    RushmoreExplainPlan ambiguous_explain{
+        RushmoreCursorMetadata{"people", {}, 100, 0, std::nullopt},
+        "NAME LIKE '%BR%'",
+        {},
+        {RushmoreResidualPredicateDescriptor{"NAME LIKE '%BR%'", 1}},
+        {},
+        std::nullopt,
+        RushmoreExplainFallbackReason::ambiguous_expression,
+        2};
+    expect(!ambiguous_explain.selected_candidate.has_value() &&
+            ambiguous_explain.cursor.statistics.has_value() == false &&
+            std::string(copperfin::runtime::rushmore_explain_fallback_reason_name(
+                ambiguous_explain.fallback_reason)) == "ambiguous_expression",
+        "Rushmore explain fallback output must preserve ambiguous expressions and missing statistics structurally");
+    expect(std::string(copperfin::runtime::rushmore_explain_fallback_reason_catalog_key(
+                RushmoreExplainFallbackReason::cost_rejected)) ==
+            "Runtime.IndexSeek.Explain.Fallback.CostRejected",
+        "Rushmore explain fallback reasons must map to stable localized catalog keys");
 }

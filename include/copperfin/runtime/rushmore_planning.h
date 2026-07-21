@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <vector>
 
 namespace copperfin::runtime {
 
@@ -285,6 +286,30 @@ struct RushmoreExplainRecord {
     friend bool operator==(const RushmoreExplainRecord&, const RushmoreExplainRecord&) = default;
 };
 
+enum class RushmoreExplainFallbackReason : std::uint8_t {
+    none = 0,
+    planning_disabled = 1,
+    unsupported_expression = 2,
+    ambiguous_expression = 3,
+    no_matching_index = 4,
+    metadata_insufficient = 5,
+    cost_rejected = 6,
+    execution_fallback = 7
+};
+
+struct RushmoreExplainPlan {
+    RushmoreCursorMetadata cursor{};
+    std::string normalized_expression;
+    std::vector<RushmorePredicateDescriptor> indexable_predicates;
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
+    std::vector<RushmoreExplainRecord> candidates;
+    std::optional<RushmoreExplainRecord> selected_candidate;
+    RushmoreExplainFallbackReason fallback_reason = RushmoreExplainFallbackReason::none;
+    std::uint64_t options_version = 0;
+
+    friend bool operator==(const RushmoreExplainPlan&, const RushmoreExplainPlan&) = default;
+};
+
 struct RushmorePlanningOptions {
     bool enabled = false;
     bool allow_legacy_fallback = true;
@@ -304,6 +329,52 @@ struct RushmorePlanningOptions {
         return "index_range_scan";
     }
     return "table_scan";
+}
+
+[[nodiscard]] constexpr const char* rushmore_explain_fallback_reason_name(
+    RushmoreExplainFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreExplainFallbackReason::none:
+        return "none";
+    case RushmoreExplainFallbackReason::planning_disabled:
+        return "planning_disabled";
+    case RushmoreExplainFallbackReason::unsupported_expression:
+        return "unsupported_expression";
+    case RushmoreExplainFallbackReason::ambiguous_expression:
+        return "ambiguous_expression";
+    case RushmoreExplainFallbackReason::no_matching_index:
+        return "no_matching_index";
+    case RushmoreExplainFallbackReason::metadata_insufficient:
+        return "metadata_insufficient";
+    case RushmoreExplainFallbackReason::cost_rejected:
+        return "cost_rejected";
+    case RushmoreExplainFallbackReason::execution_fallback:
+        return "execution_fallback";
+    }
+    return "execution_fallback";
+}
+
+[[nodiscard]] constexpr const char* rushmore_explain_fallback_reason_catalog_key(
+    RushmoreExplainFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreExplainFallbackReason::none:
+        return "Runtime.IndexSeek.Explain.Fallback.None";
+    case RushmoreExplainFallbackReason::planning_disabled:
+        return "Runtime.IndexSeek.Explain.Fallback.PlanningDisabled";
+    case RushmoreExplainFallbackReason::unsupported_expression:
+        return "Runtime.IndexSeek.Explain.Fallback.UnsupportedExpression";
+    case RushmoreExplainFallbackReason::ambiguous_expression:
+        return "Runtime.IndexSeek.Explain.Fallback.AmbiguousExpression";
+    case RushmoreExplainFallbackReason::no_matching_index:
+        return "Runtime.IndexSeek.Explain.Fallback.NoMatchingIndex";
+    case RushmoreExplainFallbackReason::metadata_insufficient:
+        return "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient";
+    case RushmoreExplainFallbackReason::cost_rejected:
+        return "Runtime.IndexSeek.Explain.Fallback.CostRejected";
+    case RushmoreExplainFallbackReason::execution_fallback:
+        return "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback";
+    }
+    return "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback";
 }
 
 }  // namespace copperfin::runtime
