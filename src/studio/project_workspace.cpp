@@ -20,10 +20,10 @@ bool is_ascii_space(unsigned char ch) {
     return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v';
 }
 
-const localization::LocalizedCatalog& project_workspace_catalog() {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog;
+localization::LocalizedCatalog project_workspace_catalog() {
+    return localization::load_catalogs(
+        localization::resolve_catalog_root(),
+        localization::select_locale());
 }
 
 std::string project_workspace_text(

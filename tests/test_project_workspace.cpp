@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/studio/project_workspace.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -530,6 +531,41 @@ void test_project_workspace_group_order_is_locale_invariant() {
     }
 }
 
+void test_project_workspace_default_catalog_refreshes_after_locale_switch() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\locale-switch.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LOCALE_SWITCH"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\customer.scx"}
+        })
+    };
+
+    copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto english_workspace = copperfin::studio::build_project_workspace(document);
+    expect(!english_workspace.groups.empty() && english_workspace.groups[0].title == "Project",
+           "#4353: default project workspace should use the selected English catalog");
+    locale.set("es-419");
+    const auto spanish_workspace = copperfin::studio::build_project_workspace(document);
+    expect(!spanish_workspace.groups.empty() && spanish_workspace.groups[0].title == "Proyecto",
+           "#4353: default project workspace should refresh to Spanish after an in-process locale switch");
+    expect(spanish_workspace.entries.size() > 1U && spanish_workspace.entries[1].type_title == "Formulario",
+           "#4353: default project workspace entry labels should refresh after an in-process locale switch");
+    locale.set("qps-ploc");
+    const auto pseudo_workspace = copperfin::studio::build_project_workspace(document);
+    expect(!pseudo_workspace.groups.empty() && pseudo_workspace.groups[0].title.find("[!! ") != std::string::npos,
+           "#4353: default project workspace should refresh to pseudo-localization after an in-process locale switch");
+    expect(!pseudo_workspace.groups.empty() && pseudo_workspace.groups[0].id == "project" &&
+               pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].group_id == "forms",
+           "#4353: locale refresh should preserve invariant workspace group identifiers");
+}
+
 void test_build_project_workspace_with_excluded_assets() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\legacy.pjx)";
@@ -1049,6 +1085,7 @@ int main() {
     test_project_workspace_catalog_entries_cover_placeholder_locales();
     test_build_project_workspace_localizes_titles_without_changing_ids();
     test_project_workspace_group_order_is_locale_invariant();
+    test_project_workspace_default_catalog_refreshes_after_locale_switch();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
