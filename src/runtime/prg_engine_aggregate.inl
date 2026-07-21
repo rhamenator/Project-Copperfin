@@ -980,6 +980,90 @@
                 return false;
             }
 
+            std::string rushmore_seek_detail;
+            if (options.rushmore_planning.enabled &&
+                trim_copy(order_designator).empty() &&
+                !cursor.remote &&
+                !cursor.active_order_path.empty() &&
+                cursor.active_order_for_expression.empty())
+            {
+                const std::string normalized_order_expression =
+                    collapse_identifier(unquote_identifier(trim_copy(cursor.active_order_expression)));
+                const auto fields = cursor_field_descriptors(cursor);
+                std::optional<std::string> matched_field;
+                for (const auto &field : fields)
+                {
+                    const std::string normalized_field = collapse_identifier(field.name);
+                    if (normalized_field.empty())
+                    {
+                        continue;
+                    }
+                    const bool direct_match = normalized_order_expression == normalized_field;
+                    const bool normalized_match =
+                        normalized_order_expression == "UPPER" + normalized_field ||
+                        normalized_order_expression == "LOWER" + normalized_field ||
+                        normalized_order_expression == "ALLTRIM" + normalized_field ||
+                        normalized_order_expression == "LTRIM" + normalized_field ||
+                        normalized_order_expression == "RTRIM" + normalized_field;
+                    if (direct_match || normalized_match)
+                    {
+                        if (matched_field.has_value())
+                        {
+                            matched_field.reset();
+                            break;
+                        }
+                        matched_field = field.name;
+                    }
+                }
+
+                if (matched_field.has_value())
+                {
+                    const RushmoreCursorMetadata metadata{
+                        cursor.alias,
+                        cursor.active_order_expression,
+                        static_cast<std::uint64_t>(cursor.record_count),
+                        0,
+                        std::nullopt};
+                    const RushmorePredicateDescriptor predicate{
+                        .normalized_expression = *matched_field + " =",
+                        .field_name = *matched_field,
+                        .operation = "=",
+                        .complexity_units = 1U,
+                        .exact_match = is_set_enabled("exact")};
+                    const RushmoreCostModelInput table_scan_input{
+                        RushmorePlanKind::table_scan,
+                        metadata,
+                        predicate,
+                        0};
+                    const RushmoreCostModelInput index_seek_input{
+                        RushmorePlanKind::index_seek,
+                        metadata,
+                        predicate,
+                        0};
+                    const auto table_scan_cost = rushmore_estimate_plan_cost(
+                        table_scan_input,
+                        options.rushmore_planning.cost_model);
+                    const auto index_seek_cost = rushmore_estimate_plan_cost(
+                        index_seek_input,
+                        options.rushmore_planning.cost_model);
+                    if (index_seek_cost < table_scan_cost)
+                    {
+                        rushmore_seek_detail = "SEEK -> index_seek via " + cursor.active_order_name + " (" +
+                            runtime_text("Runtime.IndexSeek.PlanDecision.SeekCostModelSelected") + ")";
+                    }
+                    else
+                    {
+                        rushmore_seek_detail = "SEEK -> fallback (" +
+                            runtime_text("Runtime.IndexSeek.PlanDecision.SeekCostModelRejected") + ")";
+                    }
+                }
+                else
+                {
+                    rushmore_seek_detail = "SEEK -> fallback (" +
+                        runtime_text("Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable") + ")";
+                }
+            }
+
             bool found = false;
             try
             {
@@ -991,6 +1075,10 @@
                 throw;
             }
             const std::string runtime_error = last_error_message;
+            if (!rushmore_seek_detail.empty())
+            {
+                events.push_back({.category = "runtime.rushmore", .detail = rushmore_seek_detail});
+            }
             if (used_order_name != nullptr)
             {
                 *used_order_name = cursor.active_order_name;

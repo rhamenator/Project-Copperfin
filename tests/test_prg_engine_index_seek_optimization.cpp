@@ -302,6 +302,9 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
         "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
         "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
         "Runtime.IndexSeek.PlanDecision.CostModelRejected",
+        "Runtime.IndexSeek.PlanDecision.SeekCostModelSelected",
+        "Runtime.IndexSeek.PlanDecision.SeekCostModelRejected",
+        "Runtime.IndexSeek.PlanDecision.SeekMetadataUnavailable",
         "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
         "Runtime.IndexSeek.PlanDecision.PatternNotRecognized"};
 
