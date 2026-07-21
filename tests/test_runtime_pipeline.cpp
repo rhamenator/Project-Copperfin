@@ -4,9 +4,11 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include <charconv>
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <string_view>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -26,6 +28,23 @@ using namespace cf_test_runtime_pipeline;
 
 namespace {
 #if defined(_WIN32)
+template <typename T>
+bool parse_unsigned_probe_field(std::string_view input, std::size_t& offset, T& value) {
+    const std::size_t delimiter = input.find(',', offset);
+    const std::size_t end = delimiter == std::string_view::npos ? input.size() : delimiter;
+    if (end == offset) {
+        return false;
+    }
+
+    const auto parsed = std::from_chars(input.data() + offset, input.data() + end, value);
+    if (parsed.ec != std::errc{} || parsed.ptr != input.data() + end) {
+        return false;
+    }
+
+    offset = delimiter == std::string_view::npos ? end : delimiter + 1U;
+    return true;
+}
+
 int run_inherited_handle_probe() {
     char value[256]{};
     const DWORD length = ::GetEnvironmentVariableA(
@@ -36,8 +55,14 @@ int run_inherited_handle_probe() {
     unsigned long volume = 0U;
     unsigned long index_high = 0U;
     unsigned long index_low = 0U;
+    const std::string_view input(value, length);
+    std::size_t offset = 0U;
     const bool parsed = length > 0U &&
-        std::sscanf(value, "%llu,%lu,%lu,%lu", &raw_handle, &volume, &index_high, &index_low) == 4;
+        parse_unsigned_probe_field(input, offset, raw_handle) &&
+        parse_unsigned_probe_field(input, offset, volume) &&
+        parse_unsigned_probe_field(input, offset, index_high) &&
+        parse_unsigned_probe_field(input, offset, index_low) &&
+        offset == input.size();
     BY_HANDLE_FILE_INFORMATION information{};
     const bool matches = parsed &&
         ::GetFileInformationByHandle(
