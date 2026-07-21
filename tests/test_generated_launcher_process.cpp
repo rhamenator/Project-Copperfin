@@ -645,7 +645,10 @@ int run_generated_launcher_test(
     const fs::path launcher = materialized.plan.launcher_output_path;
     const fs::path launcher_dll = package_root / "Copperfin.GeneratedLauncher.dll";
     const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
+    const fs::path launcher_runtime_config = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
     const std::string original_launcher_dll = read_text(launcher_dll);
+    const std::string original_launcher_deps = read_text(launcher_deps);
+    const std::string original_runtime_config = read_text(launcher_runtime_config);
     const fs::path missing_launcher_deps = launcher_deps.string() + ".missing";
     write_text(launcher_dll, "tampered launcher sidecar\n");
     const ProcessResult tampered_sidecar = run_process_capture(
@@ -660,6 +663,34 @@ int run_generated_launcher_test(
     expect(tampered_sidecar.exit_code == 4 && tampered_sidecar.stdout_text.empty(),
            "tampered launcher sidecar should be rejected before the managed apphost starts");
     write_text(launcher_dll, original_launcher_dll);
+
+    write_text(launcher_deps, "tampered launcher dependency manifest\n");
+    const ProcessResult tampered_deps = run_process_capture(
+        launcher,
+        {},
+        caller_dir,
+        temp_root,
+        "tampered-launcher-deps",
+        30000U);
+    expect(tampered_deps.start_error == 0U && !tampered_deps.timed_out,
+           "tampered launcher dependency manifest verification should start and finish");
+    expect(tampered_deps.exit_code == 4 && tampered_deps.stdout_text.empty(),
+           "tampered launcher dependency manifest should be rejected before the managed apphost starts");
+    write_text(launcher_deps, original_launcher_deps);
+
+    write_text(launcher_runtime_config, "tampered launcher runtime configuration\n");
+    const ProcessResult tampered_runtime_config = run_process_capture(
+        launcher,
+        {},
+        caller_dir,
+        temp_root,
+        "tampered-launcher-runtimeconfig",
+        30000U);
+    expect(tampered_runtime_config.start_error == 0U && !tampered_runtime_config.timed_out,
+           "tampered launcher runtime configuration verification should start and finish");
+    expect(tampered_runtime_config.exit_code == 4 && tampered_runtime_config.stdout_text.empty(),
+           "tampered launcher runtime configuration should be rejected before the managed apphost starts");
+    write_text(launcher_runtime_config, original_runtime_config);
 
     ignored.clear();
     fs::rename(launcher_deps, missing_launcher_deps, ignored);
@@ -681,9 +712,8 @@ int run_generated_launcher_test(
         expect(!ignored, "generated launcher process fixture should restore its required sidecar");
     }
 
-    const fs::path redirected_sidecar = package_root / "Copperfin.GeneratedLauncher.runtimeconfig.json";
+    const fs::path redirected_sidecar = launcher_runtime_config;
     const fs::path redirected_target = temp_root / "redirected-runtimeconfig.json";
-    const std::string original_runtime_config = read_text(redirected_sidecar);
     write_text(redirected_target, original_runtime_config);
     ignored.clear();
     fs::remove(redirected_sidecar, ignored);
