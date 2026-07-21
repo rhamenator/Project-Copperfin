@@ -27,6 +27,10 @@ using copperfin::runtime::RushmoreExplainFallbackReason;
 using copperfin::runtime::RushmoreExplainPlan;
 using copperfin::runtime::RushmoreExplainRecord;
 using copperfin::runtime::RushmoreResidualPredicateDescriptor;
+using copperfin::runtime::RushmoreRemoteCapabilityState;
+using copperfin::runtime::RushmoreRemoteFallbackReason;
+using copperfin::runtime::RushmoreRemotePlanningInput;
+using copperfin::runtime::RushmoreRemoteRoundTripRisk;
 
 void test_rushmore_planning_contracts() {
     const RushmorePlanningOptions defaults{};
@@ -205,4 +209,61 @@ void test_rushmore_planning_contracts() {
                 RushmoreExplainFallbackReason::cost_rejected)) ==
             "Runtime.IndexSeek.Explain.Fallback.CostRejected",
         "Rushmore explain fallback reasons must map to stable localized catalog keys");
+
+    const RushmorePredicateDescriptor equality_predicate{
+        "NAME = 'BRAVO'", "NAME", "=", 1, true};
+    const RushmorePredicateDescriptor range_predicate{
+        "AGE > 18", "AGE", ">", 1, false};
+    RushmoreRemotePlanningInput unknown_remote{
+        true,
+        "provider:northwind",
+        {"sqlcust", "NAME", 100, 0, std::nullopt},
+        {},
+        {equality_predicate},
+        {RushmoreResidualPredicateDescriptor{"DELETED()", 1}}};
+    const auto unknown_decision = copperfin::runtime::rushmore_plan_remote_predicates(unknown_remote);
+    expect(!unknown_decision.provider_pushdown_allowed &&
+            unknown_decision.pushdown_predicates.empty() &&
+            unknown_decision.local_residual_predicates.size() == 2U &&
+            unknown_decision.fallback_reason == RushmoreRemoteFallbackReason::unknown_capabilities &&
+            unknown_decision.round_trip_risk == RushmoreRemoteRoundTripRisk::unknown,
+        "Unknown remote provider capabilities must preserve all predicates for local evaluation");
+
+    RushmoreRemotePlanningInput limited_remote = unknown_remote;
+    limited_remote.capabilities = {
+        RushmoreRemoteCapabilityState::limited,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        1};
+    limited_remote.predicates = {equality_predicate, range_predicate};
+    const auto limited_decision = copperfin::runtime::rushmore_plan_remote_predicates(limited_remote);
+    expect(limited_decision.provider_pushdown_allowed &&
+            limited_decision.pushdown_predicates.size() == 1U &&
+            limited_decision.pushdown_predicates.front().field_name == "NAME" &&
+            limited_decision.local_residual_predicates.size() == 2U &&
+            limited_decision.fallback_reason == RushmoreRemoteFallbackReason::local_residual_required &&
+            limited_decision.round_trip_risk == RushmoreRemoteRoundTripRisk::elevated,
+        "Limited remote capabilities must push down only safe predicates and preserve residuals");
+
+    RushmoreRemotePlanningInput local_input = limited_remote;
+    local_input.remote_cursor = false;
+    const auto local_decision = copperfin::runtime::rushmore_plan_remote_predicates(local_input);
+    expect(!local_decision.provider_pushdown_allowed &&
+            local_decision.pushdown_predicates.empty() &&
+            local_decision.local_residual_predicates.size() == 3U &&
+            local_decision.fallback_reason == RushmoreRemoteFallbackReason::not_remote_cursor &&
+            local_decision.round_trip_risk == RushmoreRemoteRoundTripRisk::none,
+        "Local cursors must not receive remote pushdown decisions");
+    expect(std::string(copperfin::runtime::rushmore_remote_fallback_reason_name(
+                RushmoreRemoteFallbackReason::unknown_capabilities)) == "unknown_capabilities" &&
+            std::string(copperfin::runtime::rushmore_remote_fallback_reason_catalog_key(
+                RushmoreRemoteFallbackReason::local_residual_required)) ==
+                "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired" &&
+            std::string(copperfin::runtime::rushmore_remote_round_trip_risk_name(
+                RushmoreRemoteRoundTripRisk::elevated)) == "elevated",
+        "Remote planning reason and round-trip risk identities must remain stable and localizable");
 }

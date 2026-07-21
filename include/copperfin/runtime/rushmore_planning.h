@@ -138,6 +138,148 @@ struct RushmoreCostModelInput {
     friend bool operator==(const RushmoreCostModelInput&, const RushmoreCostModelInput&) = default;
 };
 
+enum class RushmoreRemoteCapabilityState : std::uint8_t {
+    unknown = 0,
+    limited = 1,
+    known = 2,
+    unsupported = 3
+};
+
+struct RushmoreRemoteProviderCapabilities {
+    RushmoreRemoteCapabilityState state = RushmoreRemoteCapabilityState::unknown;
+    bool predicate_pushdown = false;
+    bool equality_pushdown = false;
+    bool range_pushdown = false;
+    bool like_pushdown = false;
+    bool order_pushdown = false;
+    bool collation_preservation = false;
+    std::uint32_t maximum_predicate_complexity = 0;
+
+    friend bool operator==(
+        const RushmoreRemoteProviderCapabilities&,
+        const RushmoreRemoteProviderCapabilities&) = default;
+};
+
+enum class RushmoreRemoteRoundTripRisk : std::uint8_t {
+    none = 0,
+    unknown = 1,
+    elevated = 2
+};
+
+enum class RushmoreRemoteFallbackReason : std::uint8_t {
+    none = 0,
+    not_remote_cursor = 1,
+    unknown_capabilities = 2,
+    unsupported_capability = 3,
+    local_residual_required = 4
+};
+
+struct RushmoreRemotePlanningInput {
+    bool remote_cursor = true;
+    std::string provider_identity;
+    RushmoreCursorMetadata cursor{};
+    RushmoreRemoteProviderCapabilities capabilities{};
+    std::vector<RushmorePredicateDescriptor> predicates;
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
+
+    friend bool operator==(const RushmoreRemotePlanningInput&, const RushmoreRemotePlanningInput&) = default;
+};
+
+struct RushmoreRemotePlanningDecision {
+    bool provider_pushdown_allowed = false;
+    std::string provider_identity;
+    std::vector<RushmorePredicateDescriptor> pushdown_predicates;
+    std::vector<RushmoreResidualPredicateDescriptor> local_residual_predicates;
+    RushmoreRemoteFallbackReason fallback_reason = RushmoreRemoteFallbackReason::none;
+    RushmoreRemoteRoundTripRisk round_trip_risk = RushmoreRemoteRoundTripRisk::none;
+
+    friend bool operator==(const RushmoreRemotePlanningDecision&, const RushmoreRemotePlanningDecision&) = default;
+};
+
+[[nodiscard]] constexpr bool rushmore_remote_operation_is_pushdown_safe(
+    const RushmorePredicateDescriptor& predicate,
+    const RushmoreRemoteProviderCapabilities& capabilities) noexcept {
+    if (!capabilities.predicate_pushdown ||
+        (capabilities.maximum_predicate_complexity != 0U &&
+         predicate.complexity_units > capabilities.maximum_predicate_complexity)) {
+        return false;
+    }
+    if (predicate.operation == "=" || predicate.operation == "==") {
+        return capabilities.equality_pushdown;
+    }
+    if (predicate.operation == "<" || predicate.operation == "<=" ||
+        predicate.operation == ">" || predicate.operation == ">=") {
+        return capabilities.range_pushdown;
+    }
+    if (predicate.operation == "LIKE") {
+        return capabilities.like_pushdown;
+    }
+    return false;
+}
+
+[[nodiscard]] inline RushmoreRemotePlanningDecision rushmore_plan_remote_predicates(
+    const RushmoreRemotePlanningInput& input) {
+    RushmoreRemotePlanningDecision decision;
+    decision.provider_identity = input.provider_identity;
+    decision.local_residual_predicates = input.residual_predicates;
+    if (!input.remote_cursor) {
+        decision.fallback_reason = RushmoreRemoteFallbackReason::not_remote_cursor;
+        decision.local_residual_predicates.reserve(
+            decision.local_residual_predicates.size() + input.predicates.size());
+    }
+
+    const auto preserve_as_residual = [&](const RushmorePredicateDescriptor& predicate) {
+        decision.local_residual_predicates.push_back({
+            predicate.normalized_expression,
+            predicate.complexity_units});
+    };
+    if (!input.remote_cursor) {
+        for (const auto& predicate : input.predicates) {
+            preserve_as_residual(predicate);
+        }
+        return decision;
+    }
+
+    if (input.capabilities.state == RushmoreRemoteCapabilityState::unknown) {
+        decision.fallback_reason = RushmoreRemoteFallbackReason::unknown_capabilities;
+        decision.round_trip_risk = RushmoreRemoteRoundTripRisk::unknown;
+        for (const auto& predicate : input.predicates) {
+            preserve_as_residual(predicate);
+        }
+        return decision;
+    }
+    if (input.capabilities.state == RushmoreRemoteCapabilityState::unsupported) {
+        decision.fallback_reason = RushmoreRemoteFallbackReason::unsupported_capability;
+        decision.round_trip_risk = RushmoreRemoteRoundTripRisk::elevated;
+        for (const auto& predicate : input.predicates) {
+            preserve_as_residual(predicate);
+        }
+        return decision;
+    }
+
+    for (const auto& predicate : input.predicates) {
+        if (rushmore_remote_operation_is_pushdown_safe(predicate, input.capabilities)) {
+            decision.pushdown_predicates.push_back(predicate);
+        }
+        else {
+            preserve_as_residual(predicate);
+        }
+    }
+    decision.provider_pushdown_allowed = !decision.pushdown_predicates.empty();
+    if (!decision.provider_pushdown_allowed) {
+        decision.fallback_reason = RushmoreRemoteFallbackReason::unsupported_capability;
+        decision.round_trip_risk = RushmoreRemoteRoundTripRisk::elevated;
+    }
+    else if (!decision.local_residual_predicates.empty()) {
+        decision.fallback_reason = RushmoreRemoteFallbackReason::local_residual_required;
+        decision.round_trip_risk = RushmoreRemoteRoundTripRisk::elevated;
+    }
+    else if (!input.capabilities.order_pushdown || !input.capabilities.collation_preservation) {
+        decision.round_trip_risk = RushmoreRemoteRoundTripRisk::elevated;
+    }
+    return decision;
+}
+
 [[nodiscard]] constexpr std::uint64_t rushmore_saturating_add(
     std::uint64_t left,
     std::uint64_t right) noexcept {
@@ -375,6 +517,53 @@ struct RushmorePlanningOptions {
         return "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback";
     }
     return "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback";
+}
+
+[[nodiscard]] constexpr const char* rushmore_remote_fallback_reason_name(
+    RushmoreRemoteFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreRemoteFallbackReason::none:
+        return "none";
+    case RushmoreRemoteFallbackReason::not_remote_cursor:
+        return "not_remote_cursor";
+    case RushmoreRemoteFallbackReason::unknown_capabilities:
+        return "unknown_capabilities";
+    case RushmoreRemoteFallbackReason::unsupported_capability:
+        return "unsupported_capability";
+    case RushmoreRemoteFallbackReason::local_residual_required:
+        return "local_residual_required";
+    }
+    return "unsupported_capability";
+}
+
+[[nodiscard]] constexpr const char* rushmore_remote_fallback_reason_catalog_key(
+    RushmoreRemoteFallbackReason reason) noexcept {
+    switch (reason) {
+    case RushmoreRemoteFallbackReason::none:
+        return "Runtime.IndexSeek.RemotePlan.Reason.None";
+    case RushmoreRemoteFallbackReason::not_remote_cursor:
+        return "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor";
+    case RushmoreRemoteFallbackReason::unknown_capabilities:
+        return "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities";
+    case RushmoreRemoteFallbackReason::unsupported_capability:
+        return "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability";
+    case RushmoreRemoteFallbackReason::local_residual_required:
+        return "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired";
+    }
+    return "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability";
+}
+
+[[nodiscard]] constexpr const char* rushmore_remote_round_trip_risk_name(
+    RushmoreRemoteRoundTripRisk risk) noexcept {
+    switch (risk) {
+    case RushmoreRemoteRoundTripRisk::none:
+        return "none";
+    case RushmoreRemoteRoundTripRisk::unknown:
+        return "unknown";
+    case RushmoreRemoteRoundTripRisk::elevated:
+        return "elevated";
+    }
+    return "unknown";
 }
 
 }  // namespace copperfin::runtime

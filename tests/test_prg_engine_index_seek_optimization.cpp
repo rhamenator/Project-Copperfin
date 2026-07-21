@@ -313,6 +313,11 @@ void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
         "Runtime.IndexSeek.Explain.Fallback.MetadataInsufficient",
         "Runtime.IndexSeek.Explain.Fallback.CostRejected",
         "Runtime.IndexSeek.Explain.Fallback.ExecutionFallback",
+        "Runtime.IndexSeek.RemotePlan.Reason.None",
+        "Runtime.IndexSeek.RemotePlan.Reason.NotRemoteCursor",
+        "Runtime.IndexSeek.RemotePlan.Reason.UnknownCapabilities",
+        "Runtime.IndexSeek.RemotePlan.Reason.UnsupportedCapability",
+        "Runtime.IndexSeek.RemotePlan.Reason.LocalResidualRequired",
         "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
         "Runtime.IndexSeek.PlanDecision.PatternNotRecognized"};
 
