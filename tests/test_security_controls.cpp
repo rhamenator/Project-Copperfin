@@ -804,8 +804,15 @@ void test_external_process_authorization_rejects_replacement() {
         copperfin::security::revalidate_external_process_authorization(authorization),
         "#4376: unchanged authorized executable should pass revalidation");
 
-    fs::remove(fixture_path, ignored);
-    fs::copy_file("/bin/true", fixture_path, fs::copy_options::overwrite_existing, ignored);
+    const fs::path original_path = temp_root / "authorized-tool.original";
+    const fs::path replacement_path = temp_root / "authorized-tool.replacement";
+    fs::copy_file(fixture_path, replacement_path, fs::copy_options::overwrite_existing, ignored);
+    if (!ignored) {
+        fs::rename(fixture_path, original_path, ignored);
+    }
+    if (!ignored) {
+        fs::rename(replacement_path, fixture_path, ignored);
+    }
     expect(!ignored, "#4376: POSIX revalidation fixture should be replaceable");
     if (!ignored) {
         expect(
