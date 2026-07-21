@@ -987,6 +987,35 @@ int run_generated_launcher_test(
     expect(portuguese_failure.stderr_text.find("Exception") == std::string::npos,
            "unstartable runtime-host launch should not leak an unhandled .NET exception");
 
+    const ProcessResult portuguese_posix_argument_failure = run_process_capture(
+        launcher,
+        {"--locale", "pt_BR.UTF-8"},
+        caller_dir,
+        temp_root,
+        "unstartable-host-portuguese-posix-argument",
+        30000U);
+    expect(
+        portuguese_posix_argument_failure.exit_code == 5 &&
+            portuguese_posix_argument_failure.stderr_text.find(portuguese_start_failure) != std::string::npos,
+        "generated launcher should normalize pt_BR.UTF-8 from an explicit locale argument");
+
+    {
+        copperfin::test_support::ScopedEnvironmentValue locale(
+            "COPPERFIN_LOCALE",
+            "pt_BR@modifier");
+        const ProcessResult portuguese_posix_environment_failure = run_process_capture(
+            launcher,
+            {},
+            caller_dir,
+            temp_root,
+            "unstartable-host-portuguese-posix-environment",
+            30000U);
+        expect(
+            portuguese_posix_environment_failure.exit_code == 5 &&
+                portuguese_posix_environment_failure.stderr_text.find(portuguese_start_failure) != std::string::npos,
+            "generated launcher should normalize pt_BR@modifier from COPPERFIN_LOCALE");
+    }
+
     const ProcessResult pseudo_failure = run_process_capture(
         launcher,
         {"/locale", "qps-ploc"},

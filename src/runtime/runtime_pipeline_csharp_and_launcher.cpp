@@ -72,6 +72,15 @@ void append_generated_launcher_localization_helpers(std::ostringstream& stream) 
     stream << "        {\n";
     stream << "            return \"en-US\";\n";
     stream << "        }\n\n";
+    stream << "        var dotSuffix = value.IndexOf('.');\n";
+    stream << "        var modifierSuffix = value.IndexOf('@');\n";
+    stream << "        var suffix = dotSuffix >= 0 && modifierSuffix >= 0\n";
+    stream << "            ? Math.Min(dotSuffix, modifierSuffix)\n";
+    stream << "            : Math.Max(dotSuffix, modifierSuffix);\n";
+    stream << "        if (suffix >= 0)\n";
+    stream << "        {\n";
+    stream << "            value = value.Substring(0, suffix).Trim();\n";
+    stream << "        }\n\n";
     stream << "        var parts = value.Trim().Replace('_', '-').Split('-', StringSplitOptions.RemoveEmptyEntries);\n";
     stream << "        if (parts.Length == 0)\n";
     stream << "        {\n";

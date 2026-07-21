@@ -79,6 +79,11 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\")") != std::string::npos,
             "generated launcher should resolve locale from forwarded arguments and COPPERFIN_LOCALE");
         expect(
+            launcher_source.find("var dotSuffix = value.IndexOf('.')") != std::string::npos &&
+            launcher_source.find("var modifierSuffix = value.IndexOf('@')") != std::string::npos &&
+            launcher_source.find("value = value.Substring(0, suffix).Trim()") != std::string::npos,
+            "generated launcher should strip POSIX encoding and modifier suffixes before locale fallback");
+        expect(
             launcher_source.find("forwarded.Add(arg);") != std::string::npos &&
             launcher_source.find("startInfo.ArgumentList.Add(argument);") != std::string::npos &&
             launcher_source.find("Arguments = string.Join") == std::string::npos,
