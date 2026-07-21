@@ -73,6 +73,7 @@ internal static partial class Program
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
+        TestSignatureInvocationParserIgnoresCommentsAndStrings();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
         TestProjectInsightsRejectPathsOutsideProjectRoot();
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
@@ -1680,6 +1681,38 @@ internal static partial class Program
         {
             TryDelete(root);
         }
+    }
+
+    private static void TestSignatureInvocationParserIgnoresCommentsAndStrings()
+    {
+        var quoted = "MESSAGEBOX(\"text, with (punctuation)\", 2, ";
+        Expect(FoxProInvocationParser.TryParse(quoted, quoted.Length, out var quotedResult) &&
+               quotedResult.InvocationName == "MESSAGEBOX" &&
+               quotedResult.ParameterIndex == 2,
+               "signature invocation parsing should ignore commas and parentheses inside quoted strings");
+
+        var nested = "MESSAGEBOX(Other(1, 2), 3, ";
+        Expect(FoxProInvocationParser.TryParse(nested, nested.Length, out var nestedResult) &&
+               nestedResult.ParameterIndex == 2,
+               "signature invocation parsing should count only top-level commas in nested calls");
+
+        var inlineComment = "MESSAGEBOX(1 && ignored(2, 3)";
+        var beforeComment = inlineComment.IndexOf("&&", StringComparison.Ordinal);
+        Expect(beforeComment > 0 &&
+               FoxProInvocationParser.TryParse(inlineComment, beforeComment, out var inlineCommentResult) &&
+               inlineCommentResult.InvocationName == "MESSAGEBOX" &&
+               inlineCommentResult.ParameterIndex == 0,
+               "signature invocation parsing should ignore FoxPro inline comments");
+
+        var commentLine = "* MESSAGEBOX(fake(1, 2)" + Environment.NewLine + "MESSAGEBOX(1, ";
+        Expect(FoxProInvocationParser.TryParse(commentLine, commentLine.Length, out var commentLineResult) &&
+               commentLineResult.InvocationName == "MESSAGEBOX" &&
+               commentLineResult.ParameterIndex == 1,
+               "signature invocation parsing should ignore star comment lines");
+
+        var insideString = "MESSAGEBOX(\"still typing";
+        Expect(!FoxProInvocationParser.TryParse(insideString, insideString.Length, out _),
+               "signature invocation parsing should not activate inside a quoted string");
     }
 
     private static void TestProjectInsightsCollectDirectAndDottedProcedureCallReferences()

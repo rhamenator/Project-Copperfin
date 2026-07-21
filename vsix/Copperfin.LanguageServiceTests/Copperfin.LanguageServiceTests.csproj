@@ -37,5 +37,6 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioTargetSelection.cs" Link="Shared\CopperfinStudioTargetSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioSnapshotModels.cs" Link="Shared\CopperfinStudioSnapshotModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\FoxProIntelliSenseCatalog.cs" Link="Shared\FoxProIntelliSenseCatalog.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\FoxProInvocationParser.cs" Link="Shared\FoxProInvocationParser.cs" />
   </ItemGroup>
 </Project>

@@ -79,60 +79,16 @@ internal static class FoxProTextUtilities
             return false;
         }
 
-        var scanPosition = Math.Max(0, Math.Min(position, snapshot.Length));
-        var depth = 0;
-        var openParen = -1;
-        for (var index = scanPosition - 1; index >= 0; index--)
-        {
-            var value = snapshot[index];
-            if (value == ')')
-            {
-                depth++;
-                continue;
-            }
-
-            if (value == '(')
-            {
-                if (depth == 0)
-                {
-                    openParen = index;
-                    break;
-                }
-
-                depth--;
-            }
-        }
-
-        if (openParen < 1)
+        var text = snapshot.GetText();
+        if (!FoxProInvocationParser.TryParse(text, position, out var parsed))
         {
             return false;
         }
 
-        var end = openParen;
-        while (end > 0 && char.IsWhiteSpace(snapshot[end - 1]))
-        {
-            end--;
-        }
-
-        var start = end;
-        while (start > 0 && IsTokenCharacter(snapshot[start - 1]))
-        {
-            start--;
-        }
-
-        if (start == end)
-        {
-            return false;
-        }
-
-        var rawName = snapshot.GetText(Span.FromBounds(start, end));
-        if (string.IsNullOrWhiteSpace(rawName))
-        {
-            return false;
-        }
-
-        var parameterIndex = CountParameters(snapshot, openParen + 1, scanPosition);
-        context = new FoxProInvocationContext(rawName, Span.FromBounds(start, end), parameterIndex);
+        context = new FoxProInvocationContext(
+            parsed.InvocationName,
+            new Span(parsed.InvocationStart, parsed.InvocationLength),
+            parsed.ParameterIndex);
         return true;
     }
 
@@ -141,35 +97,4 @@ internal static class FoxProTextUtilities
         return char.IsLetterOrDigit(value) || value == '_' || value == '.' || value == '#';
     }
 
-    private static int CountParameters(ITextSnapshot snapshot, int start, int end)
-    {
-        var parameterIndex = 0;
-        var depth = 0;
-        for (var index = start; index < end && index < snapshot.Length; index++)
-        {
-            var value = snapshot[index];
-            if (value == '(')
-            {
-                depth++;
-                continue;
-            }
-
-            if (value == ')')
-            {
-                if (depth > 0)
-                {
-                    depth--;
-                }
-
-                continue;
-            }
-
-            if (value == ',' && depth == 0)
-            {
-                parameterIndex++;
-            }
-        }
-
-        return parameterIndex;
-    }
 }
