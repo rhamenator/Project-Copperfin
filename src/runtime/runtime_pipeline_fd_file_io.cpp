@@ -14,8 +14,13 @@
 #include <fstream>
 #include <limits>
 #include <string>
+#include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+#include <iostream>
+#endif
 
 namespace copperfin::runtime::runtime_pipeline_detail {
 namespace {
@@ -193,6 +198,24 @@ std::string temporary_name() {
         "." + std::to_string(static_cast<unsigned long long>(::getpid()));
 }
 
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+void trace_fd_copy_failure(
+    const std::string_view stage,
+    const std::filesystem::path& destination,
+    const int saved_errno) {
+    std::cerr << "RUNTIME_PIPELINE_FD_COPY_FAILURE stage=" << stage
+              << " errno=" << saved_errno
+              << " path=" << copperfin::platform::path_to_utf8_string(destination)
+              << "\n";
+}
+#else
+void trace_fd_copy_failure(
+    const std::string_view,
+    const std::filesystem::path&,
+    const int) {
+}
+#endif
+
 }  // namespace
 
 bool try_copy_file_if_exists_fd_backed(
@@ -209,6 +232,7 @@ bool try_copy_file_if_exists_fd_backed(
 
     std::string contents;
     if (!read_file_bytes(source, contents)) {
+        trace_fd_copy_failure("source-read", destination, errno);
         error = runtime_text(
             "Runtime.Package.Error.CopyFileFailed",
             {{"path", copperfin::platform::path_to_utf8_string(destination)}});
@@ -217,6 +241,7 @@ bool try_copy_file_if_exists_fd_backed(
 
     int parent_descriptor = -1;
     if (!open_destination_parent(*parsed_destination, parent_descriptor)) {
+        trace_fd_copy_failure("destination-parent", destination, errno);
         error = runtime_text(
             "Runtime.Package.Error.CreateDirectoryFailed",
             {{"path", copperfin::platform::path_to_utf8_string(destination.parent_path())}});
@@ -231,6 +256,7 @@ bool try_copy_file_if_exists_fd_backed(
             &existing,
             AT_SYMLINK_NOFOLLOW) == 0 &&
         (!S_ISREG(existing.st_mode) || existing.st_nlink != 1)) {
+        trace_fd_copy_failure("existing-destination", destination, errno);
         (void)::close(parent_descriptor);
         error = runtime_text(
             "Runtime.Package.Error.CopyFileFailed",
@@ -245,6 +271,7 @@ bool try_copy_file_if_exists_fd_backed(
         O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
         0600);
     if (temporary_descriptor < 0) {
+        trace_fd_copy_failure("temporary-open", destination, errno);
         (void)::close(parent_descriptor);
         error = runtime_text(
             "Runtime.Package.Error.CopyFileFailed",
@@ -261,6 +288,8 @@ bool try_copy_file_if_exists_fd_backed(
             continue;
         }
         if (count <= 0) {
+            const int saved_errno = count < 0 ? errno : 0;
+            trace_fd_copy_failure("temporary-write", destination, saved_errno);
             (void)::close(temporary_descriptor);
             (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
             (void)::close(parent_descriptor);
@@ -271,13 +300,34 @@ bool try_copy_file_if_exists_fd_backed(
         }
         offset += static_cast<std::size_t>(count);
     }
-    if (::fsync(temporary_descriptor) != 0 ||
-        ::close(temporary_descriptor) != 0 ||
-        ::renameat(
+    if (::fsync(temporary_descriptor) != 0) {
+        const int saved_errno = errno;
+        trace_fd_copy_failure("temporary-fsync", destination, saved_errno);
+        (void)::close(temporary_descriptor);
+        (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
+        (void)::close(parent_descriptor);
+        error = runtime_text(
+            "Runtime.Package.Error.CopyFileFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+        return false;
+    }
+    if (::close(temporary_descriptor) != 0) {
+        const int saved_errno = errno;
+        trace_fd_copy_failure("temporary-close", destination, saved_errno);
+        (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
+        (void)::close(parent_descriptor);
+        error = runtime_text(
+            "Runtime.Package.Error.CopyFileFailed",
+            {{"path", copperfin::platform::path_to_utf8_string(destination)}});
+        return false;
+    }
+    if (::renameat(
             parent_descriptor,
             temporary.c_str(),
             parent_descriptor,
             file_name.c_str()) != 0) {
+        const int saved_errno = errno;
+        trace_fd_copy_failure("destination-rename", destination, saved_errno);
         (void)::unlinkat(parent_descriptor, temporary.c_str(), 0);
         (void)::close(parent_descriptor);
         error = runtime_text(
@@ -295,6 +345,7 @@ bool try_copy_file_if_exists_fd_backed(
     (void)::fsync(parent_descriptor);
     (void)::close(parent_descriptor);
     if (!valid) {
+        trace_fd_copy_failure("destination-identity", destination, errno);
         error = runtime_text(
             "Runtime.Package.Error.CopyFileFailed",
             {{"path", copperfin::platform::path_to_utf8_string(destination)}});
