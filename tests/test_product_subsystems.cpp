@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/studio/product_subsystems.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -254,6 +255,32 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", product_subsystem_keys) == 0U,
         "#2648: qps-ploc should define every remaining Studio.ProductSubsystem localization key");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto live_english = copperfin::studio::product_subsystems();
+    locale_override.set("es-419");
+    const auto live_spanish = copperfin::studio::product_subsystems();
+    locale_override.set("qps-ploc");
+    const auto live_pseudo = copperfin::studio::product_subsystems();
+    const auto* live_english_report = find_subsystem(live_english, "report-designer");
+    const auto* live_spanish_report = find_subsystem(live_spanish, "report-designer");
+    const auto* live_pseudo_report = find_subsystem(live_pseudo, "report-designer");
+    expect(live_english_report != nullptr && live_spanish_report != nullptr && live_pseudo_report != nullptr,
+           "#4364: default product subsystem locale refresh should preserve lookup identity");
+    if (live_english_report != nullptr && live_spanish_report != nullptr && live_pseudo_report != nullptr) {
+        expect(live_english_report->title == english_report->title,
+               "#4364: default product subsystem projection should begin in en-US");
+        expect(live_spanish_report->title == spanish_report->title,
+               "#4364: default product subsystem projection should refresh to es-419");
+        expect(live_pseudo_report->title == pseudo_report->title,
+               "#4364: default product subsystem projection should refresh to qps-ploc");
+        expect(live_english_report->vfp9_equivalent == live_spanish_report->vfp9_equivalent &&
+                   live_spanish_report->vfp9_equivalent == live_pseudo_report->vfp9_equivalent &&
+                   live_english_report->id == live_spanish_report->id &&
+                   live_spanish_report->id == live_pseudo_report->id,
+               "#4364: locale refresh should preserve product subsystem identifiers");
+    }
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

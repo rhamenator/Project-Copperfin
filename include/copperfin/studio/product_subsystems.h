@@ -33,7 +33,7 @@ struct ProductSubsystemDescriptor {
 };
 
 [[nodiscard]] const char* product_host_kind_name(ProductHostKind kind);
-[[nodiscard]] const std::vector<ProductSubsystemDescriptor>& product_subsystems();
+[[nodiscard]] std::vector<ProductSubsystemDescriptor> product_subsystems();
 [[nodiscard]] std::vector<ProductSubsystemDescriptor> product_subsystems_for_catalog(
     const copperfin::localization::LocalizedCatalog& catalog);
 

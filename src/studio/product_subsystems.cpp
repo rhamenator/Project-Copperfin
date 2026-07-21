@@ -6,6 +6,8 @@
 
 #include "copperfin/localization/localization.h"
 
+#include <filesystem>
+#include <mutex>
 #include <string_view>
 
 namespace copperfin::studio {
@@ -185,12 +187,6 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
     return subsystems;
 }
 
-copperfin::localization::LocalizedCatalog default_product_subsystem_catalog() {
-    return copperfin::localization::load_catalogs(
-        copperfin::localization::resolve_catalog_root(),
-        copperfin::localization::select_locale());
-}
-
 }  // namespace
 
 const char* product_host_kind_name(ProductHostKind kind) {
@@ -226,10 +222,25 @@ std::vector<ProductSubsystemDescriptor> product_subsystems_for_catalog(
     return subsystems;
 }
 
-const std::vector<ProductSubsystemDescriptor>& product_subsystems() {
-    static const copperfin::localization::LocalizedCatalog catalog = default_product_subsystem_catalog();
-    static const std::vector<ProductSubsystemDescriptor> subsystems = product_subsystems_for_catalog(catalog);
-    return subsystems;
+std::vector<ProductSubsystemDescriptor> product_subsystems() {
+    struct SubsystemCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        std::vector<ProductSubsystemDescriptor> subsystems;
+    };
+
+    static std::mutex cache_mutex;
+    static SubsystemCache cache{};
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root();
+    const std::string locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.subsystems = product_subsystems_for_catalog(
+            copperfin::localization::load_catalogs(locale_root, locale));
+    }
+    return cache.subsystems;
 }
 
 }  // namespace copperfin::studio
