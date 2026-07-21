@@ -1279,19 +1279,56 @@ std::optional<std::filesystem::path> package_relative_path(
     const std::filesystem::path& path,
     const std::filesystem::path& root) {
     auto path_part = path.begin();
+    bool components_match = true;
     for (auto root_part = root.begin(); root_part != root.end(); ++root_part, ++path_part) {
         if (path_part == path.end() || !package_path_component_equal(*path_part, *root_part)) {
-            return std::nullopt;
+            components_match = false;
+            break;
         }
     }
 
-    std::filesystem::path relative;
-    for (; path_part != path.end(); ++path_part) {
-        relative /= *path_part;
+    if (components_match) {
+        std::filesystem::path relative;
+        for (; path_part != path.end(); ++path_part) {
+            relative /= *path_part;
+        }
+        if (!relative.empty()) {
+            return relative;
+        }
     }
-    return relative.empty()
-        ? std::nullopt
-        : std::optional<std::filesystem::path>(relative);
+
+#if defined(_WIN32)
+    // A supported Windows installation can expose an accented case variant
+    // that the Win32 text-comparison APIs do not fold consistently. When the
+    // recorded package root exists, use filesystem identity for the root
+    // prefix and retain the recorded suffix exactly. Physical containment is
+    // still applied to the rebound path before it is admitted.
+    std::size_t root_component_count = 0U;
+    for (auto root_part = root.begin(); root_part != root.end(); ++root_part) {
+        ++root_component_count;
+    }
+    auto prefix_part = path.begin();
+    std::filesystem::path path_prefix;
+    for (std::size_t index = 0U; index < root_component_count && prefix_part != path.end(); ++index) {
+        path_prefix /= *prefix_part;
+        ++prefix_part;
+    }
+    if (prefix_part != path.end()) {
+        std::error_code identity_error;
+        if (std::filesystem::equivalent(path_prefix, root, identity_error) &&
+            !identity_error) {
+            std::filesystem::path identity_relative;
+            for (; prefix_part != path.end(); ++prefix_part) {
+                identity_relative /= *prefix_part;
+            }
+            if (!identity_relative.empty()) {
+                return identity_relative;
+            }
+        }
+    }
+#endif
+
+    return std::nullopt;
 }
 
 std::filesystem::path portable_manifest_path(std::string value) {
