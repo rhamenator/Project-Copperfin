@@ -520,7 +520,7 @@ StudioProjectWorkspace build_project_workspace(
         if (right.id == "project") {
             return false;
         }
-        return left.title < right.title;
+        return left.id < right.id;
     });
     workspace.groups = std::move(groups);
 

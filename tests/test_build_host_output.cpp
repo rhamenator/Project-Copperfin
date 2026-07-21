@@ -843,6 +843,9 @@ void run_emit_dotnet_launcher_fallback_smoke(const std::string& build_host_path)
     fs::create_directories(project_dir);
     fs::create_directories(output_dir);
 
+    // Keep the fallback assertion independent of whichever dotnet installation owns the test host.
+    ScopedEnvironmentValue unavailable_dotnet_path("PATH", temp_root.string());
+
     write_text(project_dir / "main.prg", "WAIT WINDOW 'dotnet-fallback'\nRETURN\n");
     write_synthetic_executable_project(project_path, project_dir, expected_output, "DotNetFallback");
 

@@ -479,6 +479,57 @@ void test_build_project_workspace_localizes_titles_without_changing_ids() {
     }
 }
 
+void test_project_workspace_group_order_is_locale_invariant() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\group-order.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "GROUPORDER"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "assets\\library.dll"}
+        }),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "reports\\labels.lbx"}
+        })
+    };
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const std::vector<std::string_view> locales = {"en-US", "es-419", "pt-BR", "qps-ploc"};
+    const std::vector<std::string> expected_group_ids = {"project", "labels", "libraries"};
+    for (const auto locale : locales) {
+        const auto catalog = copperfin::localization::load_catalogs(catalog_root, locale);
+        const auto workspace = copperfin::studio::build_project_workspace(document, catalog);
+        std::vector<std::string> group_ids;
+        for (const auto& group : workspace.groups) {
+            group_ids.push_back(group.id);
+        }
+        expect(group_ids == expected_group_ids,
+               "#4328: workspace group IDs should have invariant project-first ordering under " +
+                   std::string(locale));
+
+        const auto labels_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
+            return group.id == "labels";
+        });
+        const auto libraries_group = std::find_if(workspace.groups.begin(), workspace.groups.end(), [](const auto& group) {
+            return group.id == "libraries";
+        });
+        expect(labels_group != workspace.groups.end() && libraries_group != workspace.groups.end(),
+               "#4328: workspace should retain labels and libraries groups under " + std::string(locale));
+        if (labels_group != workspace.groups.end() && libraries_group != workspace.groups.end()) {
+            expect(labels_group->title == catalog.translate("Studio.ProjectWorkspace.Group.Labels"),
+                   "#4328: labels display title should remain catalog-backed under " + std::string(locale));
+            expect(libraries_group->title == catalog.translate("Studio.ProjectWorkspace.Group.Libraries"),
+                   "#4328: libraries display title should remain catalog-backed under " + std::string(locale));
+        }
+    }
+}
+
 void test_build_project_workspace_with_excluded_assets() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\legacy.pjx)";
@@ -997,6 +1048,7 @@ int main() {
     test_build_project_workspace();
     test_project_workspace_catalog_entries_cover_placeholder_locales();
     test_build_project_workspace_localizes_titles_without_changing_ids();
+    test_project_workspace_group_order_is_locale_invariant();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
