@@ -103,6 +103,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Managed runtime-debug localization slice #4352 under #2348: `CopperfinRuntimeDebugTransport.ResolveResponseError()` must recognize the active catalog's `RuntimeHost.Prefix.Error` and retain the invariant English `error: ` fallback for hosts that do not receive locale propagation. Keep stderr precedence, diagnostic bodies, `debug.response.*` framing, machine keys, and command identities unchanged; retain en-US, es-419, pt-BR, and qps-ploc parser regressions.
+
 - Project-workspace localization slice #4353 under #2348: the no-argument `build_project_workspace(document)` path must call `select_locale()`/`load_catalogs()` per request. Do not restore a process-lifetime static catalog; long-lived Studio hosts need in-process locale changes to refresh group/type display text. Keep the explicit-catalog overload authoritative and preserve invariant group IDs, entry kinds, paths, JSON keys, provenance, and ordering.
 
 - Standalone Studio terminal slice #4351 under #2997/#3051: `StudioMainForm` owns a localized Terminal tab beside Command. `StudioTerminalWindowControl` selects `COMSPEC`/`cmd.exe` with `/Q` on Windows and `SHELL`/`/bin/sh` with `-i` on POSIX, wraps redirected input in an explicit UTF-8 writer for net472 compatibility, streams UTF-8 stdout/stderr, and kills/disposes the child during control disposal. Keep PTY/profile/persistent-layout work and VSIX terminal hosting separate; preserve the Command pane and document tabs.

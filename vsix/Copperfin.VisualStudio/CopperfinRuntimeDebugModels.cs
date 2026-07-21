@@ -297,12 +297,22 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
         }
 
         using var reader = new StringReader(responseText);
+        var errorPrefix = localization.Text("RuntimeHost.Prefix.Error");
+        var invariantErrorPrefix = "error: ";
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
-            if (line.StartsWith("error: ", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(errorPrefix) &&
+                line.StartsWith(errorPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                return line.Substring("error: ".Length).Trim();
+                return line.Substring(errorPrefix.Length).Trim();
+            }
+
+            // Locale propagation can be unavailable for a host started outside Copperfin.
+            if (!string.Equals(errorPrefix, invariantErrorPrefix, StringComparison.Ordinal) &&
+                line.StartsWith(invariantErrorPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return line.Substring(invariantErrorPrefix.Length).Trim();
             }
         }
 

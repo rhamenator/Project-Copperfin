@@ -1101,6 +1101,17 @@ internal static partial class Program
 
         var localizationForPrecedence =
             new CopperfinLocalization(CopperfinLocalization.PortugueseBrazilLocale);
+        foreach (var locale in locales)
+        {
+            var localization = new CopperfinLocalization(locale);
+            var prefix = localization.Text("RuntimeHost.Prefix.Error");
+            Expect(
+                CopperfinRuntimeDebugTransport.ResolveResponseError(
+                    $"debug.response.error: true\n{prefix}localized protocol failure\n",
+                    string.Empty,
+                    localization) == "localized protocol failure",
+                $"runtime debug should parse the localized {locale} error prefix without changing the diagnostic body");
+        }
         Expect(
             CopperfinRuntimeDebugTransport.ResolveResponseError(
                 "debug.response.error: true\nerror: protocol failure\n",
