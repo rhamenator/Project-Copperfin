@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -68,6 +69,158 @@ void trace_transaction_begin_failure(
     const std::filesystem::path&) {
 }
 #endif
+
+struct NativeWrapperProcessResult {
+    bool started = false;
+    int exit_code = -1;
+};
+
+std::atomic<unsigned long long> native_wrapper_build_sequence{0};
+
+#if defined(_WIN32)
+std::wstring native_wrapper_utf8_to_wide(std::string_view value) {
+    return copperfin::platform::path_from_utf8_string(value).native();
+}
+
+std::wstring quote_native_wrapper_windows_argument(const std::wstring& argument) {
+    const bool needs_quotes = argument.empty() ||
+        argument.find_first_of(L" \t\r\n\"") != std::wstring::npos;
+    if (!needs_quotes) {
+        return argument;
+    }
+
+    std::wstring quoted(1U, L'"');
+    std::size_t backslashes = 0U;
+    for (const wchar_t ch : argument) {
+        if (ch == L'\\') {
+            ++backslashes;
+            continue;
+        }
+        if (ch == L'"') {
+            quoted.append(backslashes * 2U + 1U, L'\\');
+        } else {
+            quoted.append(backslashes, L'\\');
+        }
+        quoted.push_back(ch);
+        backslashes = 0U;
+    }
+    quoted.append(backslashes * 2U, L'\\');
+    quoted.push_back(L'"');
+    return quoted;
+}
+#endif
+
+NativeWrapperProcessResult run_native_wrapper_process(
+    const std::string& executable,
+    const std::vector<std::string>& arguments,
+    const std::filesystem::path& output_log_path) {
+#if defined(_WIN32)
+    std::wstring command_line = quote_native_wrapper_windows_argument(
+        native_wrapper_utf8_to_wide(executable));
+    for (const auto& argument : arguments) {
+        command_line.push_back(L' ');
+        command_line += quote_native_wrapper_windows_argument(
+            native_wrapper_utf8_to_wide(argument));
+    }
+    std::vector<wchar_t> mutable_command_line(command_line.begin(), command_line.end());
+    mutable_command_line.push_back(L'\0');
+
+    SECURITY_ATTRIBUTES security_attributes{};
+    security_attributes.nLength = sizeof(security_attributes);
+    security_attributes.bInheritHandle = TRUE;
+    HANDLE output_handle = ::CreateFileW(
+        output_log_path.c_str(),
+        GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        &security_attributes,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+    if (output_handle == INVALID_HANDLE_VALUE) {
+        return {};
+    }
+
+    STARTUPINFOW startup_info{};
+    startup_info.cb = sizeof(startup_info);
+    startup_info.dwFlags = STARTF_USESTDHANDLES;
+    startup_info.hStdInput = ::GetStdHandle(STD_INPUT_HANDLE);
+    startup_info.hStdOutput = output_handle;
+    startup_info.hStdError = output_handle;
+    PROCESS_INFORMATION process_info{};
+    const BOOL process_created = ::CreateProcessW(
+        nullptr,
+        mutable_command_line.data(),
+        nullptr,
+        nullptr,
+        TRUE,
+        CREATE_UNICODE_ENVIRONMENT,
+        nullptr,
+        nullptr,
+        &startup_info,
+        &process_info);
+    if (process_created == FALSE) {
+        (void)::CloseHandle(output_handle);
+        return {};
+    }
+
+    (void)::WaitForSingleObject(process_info.hProcess, INFINITE);
+    DWORD process_exit_code = static_cast<DWORD>(-1);
+    (void)::GetExitCodeProcess(process_info.hProcess, &process_exit_code);
+    (void)::CloseHandle(process_info.hThread);
+    (void)::CloseHandle(process_info.hProcess);
+    (void)::CloseHandle(output_handle);
+    return {true, static_cast<int>(process_exit_code)};
+#else
+    std::vector<std::string> argument_values;
+    argument_values.reserve(arguments.size() + 1U);
+    argument_values.push_back(executable);
+    argument_values.insert(argument_values.end(), arguments.begin(), arguments.end());
+    std::vector<char*> argument_pointers;
+    argument_pointers.reserve(argument_values.size() + 1U);
+    for (auto& argument : argument_values) {
+        argument_pointers.push_back(argument.data());
+    }
+    argument_pointers.push_back(nullptr);
+
+    const pid_t child_process = ::fork();
+    if (child_process < 0) {
+        return {};
+    }
+    if (child_process == 0) {
+        const int output_descriptor = ::open(
+            output_log_path.c_str(),
+            O_WRONLY | O_CREAT | O_TRUNC,
+            0666);
+        if (output_descriptor < 0 ||
+            ::dup2(output_descriptor, STDOUT_FILENO) < 0 ||
+            ::dup2(output_descriptor, STDERR_FILENO) < 0) {
+            if (output_descriptor >= 0) {
+                (void)::close(output_descriptor);
+            }
+            ::_exit(126);
+        }
+        (void)::close(output_descriptor);
+        ::execvp(argument_pointers[0], argument_pointers.data());
+        ::_exit(127);
+    }
+
+    int child_status = 0;
+    pid_t waited_process = 0;
+    do {
+        waited_process = ::waitpid(child_process, &child_status, 0);
+    } while (waited_process < 0 && errno == EINTR);
+    if (waited_process != child_process) {
+        return {};
+    }
+    if (WIFEXITED(child_status)) {
+        return {true, WEXITSTATUS(child_status)};
+    }
+    if (WIFSIGNALED(child_status)) {
+        return {true, 128 + WTERMSIG(child_status)};
+    }
+    return {true, -1};
+#endif
+}
 
 #if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
 std::atomic_bool force_package_backup_cleanup_warning{false};
@@ -3157,44 +3310,111 @@ RuntimeBuildResult build_runtime_package_primary_output(
     RuntimePackagePlan built_plan = plan;
     const std::filesystem::path source_root =
         copperfin::platform::path_from_utf8_string(plan.native_wrapper_cmake_path).parent_path();
-    const std::filesystem::path build_root = source_root / "cmake_pipeline_build";
+    const std::filesystem::path original_build_root = source_root / "cmake_pipeline_build";
+    const std::filesystem::path staging_root =
+        std::filesystem::temp_directory_path() /
+        ("copperfin-native-wrapper-" +
+#if defined(_WIN32)
+            std::to_string(static_cast<unsigned long long>(::GetCurrentProcessId())) +
+#else
+            std::to_string(static_cast<unsigned long long>(::getpid())) +
+#endif
+            "-" +
+            std::to_string(++native_wrapper_build_sequence));
+    const std::filesystem::path staging_package_root = staging_root / "package";
+    const std::filesystem::path staging_source_root = staging_package_root / "wrapper";
+    const std::filesystem::path build_root = staging_source_root / "cmake_pipeline_build";
     const std::filesystem::path configure_log_path = build_root / "cmake-configure.log";
     const std::filesystem::path build_log_path = build_root / "cmake-build.log";
+    const std::filesystem::path staged_output_path = staging_package_root /
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path).filename();
+    // CMake-generated Makefiles interpret shell-like path text; build from a
+    // private safe-path copy and publish only the requested primary artifact.
     std::error_code ignored;
-    std::filesystem::remove_all(build_root, ignored);
+    std::filesystem::remove_all(original_build_root, ignored);
+    std::filesystem::remove_all(staging_root, ignored);
     std::filesystem::remove(
         copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
         ignored);
-    std::filesystem::create_directories(build_root, ignored);
+    std::filesystem::create_directories(staging_package_root, ignored);
+    std::filesystem::copy(
+        source_root,
+        staging_source_root,
+        std::filesystem::copy_options::recursive |
+            std::filesystem::copy_options::overwrite_existing,
+        ignored);
+    if (!ignored) {
+        std::filesystem::create_directories(build_root, ignored);
+    }
+    if (!ignored) {
+        const std::filesystem::path module_definition_path =
+            copperfin::platform::path_from_utf8_string(plan.module_definition_path);
+        if (std::filesystem::exists(module_definition_path)) {
+            std::filesystem::copy_file(
+                module_definition_path,
+                staging_package_root / module_definition_path.filename(),
+                std::filesystem::copy_options::overwrite_existing,
+                ignored);
+        }
+    }
     if (ignored) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed")};
     }
 
-    const std::string configure_command =
-        "cmake -S \"" + copperfin::platform::path_to_utf8_string(source_root) + "\" -B \"" +
-        copperfin::platform::path_to_utf8_string(build_root) + "\" > \"" +
-        copperfin::platform::path_to_utf8_string(configure_log_path) + "\" 2>&1";
-    if (std::system(configure_command.c_str()) != 0) {
+    const NativeWrapperProcessResult configure_result = run_native_wrapper_process(
+#if defined(_WIN32)
+        "cmake.exe",
+#else
+        "cmake",
+#endif
+        {
+            "-S",
+            copperfin::platform::path_to_utf8_string(staging_source_root),
+            "-B",
+            copperfin::platform::path_to_utf8_string(build_root)},
+        configure_log_path);
+    if (!configure_result.started || configure_result.exit_code != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed");
         if (std::filesystem::exists(configure_log_path)) {
             error += ":\n" + read_text_file(configure_log_path);
         }
+        std::filesystem::remove_all(staging_root, ignored);
         return {.ok = false, .error = error};
     }
 
-    const std::string build_command =
-        "cmake --build \"" + copperfin::platform::path_to_utf8_string(build_root) + "\" > \"" +
-        copperfin::platform::path_to_utf8_string(build_log_path) + "\" 2>&1";
-    if (std::system(build_command.c_str()) != 0) {
+    const NativeWrapperProcessResult build_result = run_native_wrapper_process(
+#if defined(_WIN32)
+        "cmake.exe",
+#else
+        "cmake",
+#endif
+        {
+            "--build",
+            copperfin::platform::path_to_utf8_string(build_root)},
+        build_log_path);
+    if (!build_result.started || build_result.exit_code != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed");
         if (std::filesystem::exists(build_log_path)) {
             error += ":\n" + read_text_file(build_log_path);
         }
+        std::filesystem::remove_all(staging_root, ignored);
         return {.ok = false, .error = error};
     }
 
-    if (!std::filesystem::exists(
-            copperfin::platform::path_from_utf8_string(plan.launcher_output_path))) {
+    if (!std::filesystem::exists(staged_output_path)) {
+        std::filesystem::remove_all(staging_root, ignored);
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
+    }
+
+    std::error_code copy_error;
+    std::filesystem::copy_file(
+        staged_output_path,
+        copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
+        std::filesystem::copy_options::overwrite_existing,
+        copy_error);
+    std::error_code cleanup_error;
+    std::filesystem::remove_all(staging_root, cleanup_error);
+    if (copy_error) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
     }
 

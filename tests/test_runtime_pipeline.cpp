@@ -64,6 +64,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_relative_output_root_preserves_plan_path_contract();
     test_library_manifest_source_location_escaping();
     test_library_output_package_emits_module_definition_from_prg_routines();
+    test_native_wrapper_primary_output_handles_literal_shell_paths();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_library_output_warning_lines_are_mirrored_into_debug_manifest();
     test_fxp_output_package_emits_token_manifest_from_prg_statements();

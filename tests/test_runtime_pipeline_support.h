@@ -157,6 +157,7 @@ struct ScopedEnvironmentVariable {
 
 // ==== Output-package manifest tests (app/library/FLL/FXP, AST/IR manifests, C# transpilation, compiler-contract digests) ====
 void test_library_output_package_emits_module_definition_from_prg_routines();
+void test_native_wrapper_primary_output_handles_literal_shell_paths();
 void test_library_manifest_source_location_escaping();
 void test_fll_output_package_emits_api_manifest_from_prg_routines();
 void test_fxp_output_package_emits_token_manifest_from_prg_statements();
