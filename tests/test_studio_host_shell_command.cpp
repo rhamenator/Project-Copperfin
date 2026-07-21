@@ -12,6 +12,9 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#else
+#include <csignal>
+#include <unistd.h>
 #endif
 
 namespace {
@@ -80,6 +83,30 @@ void test_execute_launch_command_handles_paths_and_arguments_with_spaces() {
 
     fs::remove_all(temp_dir, ignored);
 }
+
+volatile std::sig_atomic_t alarm_signal_count = 0;
+
+void record_alarm_signal(int) {
+    alarm_signal_count = 1;
+}
+
+void test_execute_launch_command_retries_interrupted_wait() {
+    const auto previous_handler = std::signal(SIGALRM, record_alarm_signal);
+    alarm_signal_count = 0;
+    (void)ualarm(100000U, 0U);
+
+    const int exit_code = cf_studio_host_main_detail::execute_launch_command(
+        "/bin/sh",
+        {"-c", "sleep 1"});
+
+    (void)ualarm(0U, 0U);
+    std::signal(SIGALRM, previous_handler);
+
+    expect(alarm_signal_count != 0,
+           "#4325: POSIX Studio-host wait regression should interrupt the parent wait");
+    expect(exit_code == 0,
+           "#4325: POSIX Studio-host should retry an EINTR wait and reap the child successfully");
+}
 #else
 void test_execute_launch_command_preserves_unicode_paths_and_percent_arguments() {
     namespace fs = std::filesystem;
@@ -140,6 +167,7 @@ int main(int argc, char** argv) {
     test_build_shell_command_uses_platform_quoting();
 #if !defined(_WIN32)
     test_execute_launch_command_handles_paths_and_arguments_with_spaces();
+    test_execute_launch_command_retries_interrupted_wait();
 #else
     test_execute_launch_command_preserves_unicode_paths_and_percent_arguments();
 #endif

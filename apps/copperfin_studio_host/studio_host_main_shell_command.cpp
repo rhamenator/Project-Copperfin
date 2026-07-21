@@ -193,7 +193,11 @@ int execute_launch_command(const std::string& launch_command, const std::vector<
     }
 
     int status = 0;
-    if (waitpid(child, &status, 0) != child) {
+    pid_t wait_result = 0;
+    do {
+        wait_result = waitpid(child, &status, 0);
+    } while (wait_result < 0 && errno == EINTR);
+    if (wait_result != child) {
         return -1;
     }
     if (WIFEXITED(status)) {

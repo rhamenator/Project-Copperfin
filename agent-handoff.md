@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4325 on the #26 portability lane. POSIX/macOS Studio-host `execute_launch_command()` now retries `waitpid()` after `EINTR`, preserving ordinary exit/signal mappings and reaping the launched child after an interrupted wait. The focused shell-command test uses a real delayed child and `SIGALRM`; Windows launch behavior and machine contracts are unchanged. Hosted macOS/Windows validation remains required.
+
 - 2026-07-21: Implemented #4323 on the #2348 localization lane. Managed runtime-debug fallback errors now use `AssetEditor.Debugger.CommandFailed` from the active shared catalog when stderr and protocol error lines are absent; stderr and protocol error precedence remain unchanged. Embedded and installed en-US, es-419, pt-BR, and qps-ploc catalogs are aligned, and the full language-service harness plus catalog parity check pass. Hosted Windows/VSIX validation remains required.
 
 - 2026-07-21: Implemented #4322 on the #110 package-security lane. Runtime-host writable `data_asset` and `data_payload` admission now rejects physical identities whose link count exceeds one, and the final writable asset verification repeats the check at the consumed snapshot boundary. The existing localized physical-containment diagnostic and machine contracts are preserved; `test_runtime_host_audit` adds a hard-linked DBF regression where the filesystem supports hard links. Hosted Windows validation remains required.
