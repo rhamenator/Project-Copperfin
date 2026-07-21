@@ -72,6 +72,7 @@ internal sealed class CopperfinRuntimeTransportResponse
 
 internal sealed class CopperfinRuntimeDebugTransport : IDisposable
 {
+    private readonly CopperfinLocalization localization;
     private readonly Process process;
     private readonly StreamReader output;
     private readonly StreamWriter input;
@@ -80,8 +81,9 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
     private readonly SemaphoreSlim commandGate = new(1, 1);
     private bool disposed;
 
-    private CopperfinRuntimeDebugTransport(Process process)
+    private CopperfinRuntimeDebugTransport(Process process, CopperfinLocalization localization)
     {
+        this.localization = localization;
         this.process = process;
         output = process.StandardOutput;
         input = new StreamWriter(process.StandardInput.BaseStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
@@ -103,6 +105,7 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
     public static CopperfinRuntimeDebugTransport? Start(
         ProcessStartInfo startInfo,
         int timeoutMilliseconds,
+        CopperfinLocalization localization,
         out string error)
     {
         error = string.Empty;
@@ -117,7 +120,7 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
                 return null;
             }
 
-            var transport = new CopperfinRuntimeDebugTransport(process);
+            var transport = new CopperfinRuntimeDebugTransport(process, localization);
             if (!transport.WaitForReady(timeoutMilliseconds))
             {
                 error = transport.ReadStandardError();
@@ -280,7 +283,14 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
 
     private string ReadResponseError(string responseText)
     {
-        var standardErrorText = ReadStandardError();
+        return ResolveResponseError(responseText, ReadStandardError(), localization);
+    }
+
+    internal static string ResolveResponseError(
+        string responseText,
+        string standardErrorText,
+        CopperfinLocalization localization)
+    {
         if (!string.IsNullOrWhiteSpace(standardErrorText))
         {
             return standardErrorText;
@@ -296,7 +306,7 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
             }
         }
 
-        return "Runtime debug command failed.";
+        return localization.Text("AssetEditor.Debugger.CommandFailed");
     }
 
     private static CopperfinRuntimeTransportResponse Failure(string error)

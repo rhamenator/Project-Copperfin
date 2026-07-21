@@ -2052,6 +2052,7 @@
   "AssetEditor.Debugger.StartingStatus": "Building project and starting Copperfin debugger...",
   "AssetEditor.Debugger.UpdatingStatus": "Updating debugger state...",
   "AssetEditor.Debugger.UnavailableStatus": "Debugger unavailable.",
+  "AssetEditor.Debugger.CommandFailed": "Runtime debug command failed.",
   "AssetEditor.Debugger.StartSessionFirstMessage": "Start a Copperfin debug session first.",
   "LanguageService.IntelliSense.Keyword.Select": "Command: selects a work area or evaluates a SELECT() call depending on context.",
   "LanguageService.IntelliSense.CompletionSet.FoxPro": "Copperfin FoxPro",

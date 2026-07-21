@@ -64,6 +64,7 @@ internal static partial class Program
         TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix();
         TestRuntimeDebugClientCleansTransientReplayManifestOnPosix();
         TestRuntimeDebugParserUnescapesEscapedLineValues();
+        TestRuntimeDebugFallbackErrorLocalizesWithoutChangingPrecedence();
         TestProcessRunnerCapturesLargeConcurrentOutput();
         TestProcessRunnerPreservesSuccessfulExitWhenDescendantHoldsPipe();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
@@ -1060,6 +1061,49 @@ internal static partial class Program
             "runtime debug parser should decode escaped multiline local values");
         Expect(state.Location == @"C:\notes\nfile.prg:3",
             "runtime debug parser should preserve unencoded path fields containing escape-like text");
+    }
+
+    private static void TestRuntimeDebugFallbackErrorLocalizesWithoutChangingPrecedence()
+    {
+        var locales = new[]
+        {
+            CopperfinLocalization.DefaultLocale,
+            CopperfinLocalization.SpanishLatinAmericaLocale,
+            CopperfinLocalization.PortugueseBrazilLocale,
+            CopperfinLocalization.PseudoLocale
+        };
+        foreach (var locale in locales)
+        {
+            var localization = new CopperfinLocalization(locale);
+            var fallback = CopperfinRuntimeDebugTransport.ResolveResponseError(
+                "debug.response.error: true\n",
+                string.Empty,
+                localization);
+            Expect(
+                fallback == localization.Text("AssetEditor.Debugger.CommandFailed"),
+                $"runtime debug fallback should use the active {locale} catalog");
+            if (locale == CopperfinLocalization.PseudoLocale)
+            {
+                Expect(
+                    fallback.StartsWith("[!! ", StringComparison.Ordinal),
+                    "runtime debug fallback should remain visible in the pseudo-locale");
+            }
+        }
+
+        var localizationForPrecedence =
+            new CopperfinLocalization(CopperfinLocalization.PortugueseBrazilLocale);
+        Expect(
+            CopperfinRuntimeDebugTransport.ResolveResponseError(
+                "debug.response.error: true\nerror: protocol failure\n",
+                "stderr failure",
+                localizationForPrecedence) == "stderr failure",
+            "runtime debug stderr should retain precedence over protocol error lines and fallback text");
+        Expect(
+            CopperfinRuntimeDebugTransport.ResolveResponseError(
+                "debug.response.error: true\nerror: protocol failure\n",
+                string.Empty,
+                localizationForPrecedence) == "protocol failure",
+            "runtime debug protocol error lines should retain precedence over localized fallback text");
     }
 
     private static void TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix()

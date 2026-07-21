@@ -2051,6 +2051,7 @@
   "AssetEditor.Debugger.StartingStatus": "Compilando el proyecto e iniciando el depurador de Copperfin...",
   "AssetEditor.Debugger.UpdatingStatus": "Actualizando estado del depurador...",
   "AssetEditor.Debugger.UnavailableStatus": "Depurador no disponible.",
+  "AssetEditor.Debugger.CommandFailed": "El comando de depuraci\u00F3n en tiempo de ejecuci\u00F3n fall\u00F3.",
   "AssetEditor.Debugger.StartSessionFirstMessage": "Inicie primero una sesi\u00F3n de depuraci\u00F3n de Copperfin.",
   "LanguageService.IntelliSense.Keyword.Select": "Comando: selecciona un \u00E1rea de trabajo o eval\u00FAa una llamada a SELECT() seg\u00FAn el contexto.",
   "LanguageService.IntelliSense.CompletionSet.FoxPro": "FoxPro de Copperfin",

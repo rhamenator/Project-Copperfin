@@ -131,6 +131,7 @@ internal static class CopperfinRuntimeDebugClient
         var transport = await Task.Run(() => CopperfinRuntimeDebugTransport.Start(
             startInfo,
             timeoutMilliseconds: 30000,
+            localization,
             out _));
         if (transport is null)
         {
