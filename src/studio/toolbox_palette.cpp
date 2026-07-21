@@ -6,7 +6,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 #include <iterator>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -35,12 +37,29 @@ bool contains_case_insensitive(std::string_view value, const std::string& lowere
     return lowercase_copy(value).find(lowered_needle) != std::string::npos;
 }
 
-const copperfin::localization::LocalizedCatalog& toolbox_palette_catalog() {
-    static const copperfin::localization::LocalizedCatalog catalog =
+copperfin::localization::LocalizedCatalog toolbox_palette_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        copperfin::localization::LocalizedCatalog catalog;
+    };
+
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
         copperfin::localization::load_catalogs(
             copperfin::localization::resolve_catalog_root(),
-            copperfin::localization::select_locale());
-    return catalog;
+            copperfin::localization::default_locale)};
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root();
+    const std::string locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = copperfin::localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string toolbox_palette_text(
@@ -279,10 +298,25 @@ std::vector<StudioToolboxItemDescriptor> studio_toolbox_palette_for_catalog(
     };
 }
 
-const std::vector<StudioToolboxItemDescriptor>& studio_toolbox_palette() {
-    static const std::vector<StudioToolboxItemDescriptor> items =
-        studio_toolbox_palette_for_catalog(toolbox_palette_catalog());
-    return items;
+std::vector<StudioToolboxItemDescriptor> studio_toolbox_palette() {
+    struct PaletteCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        std::vector<StudioToolboxItemDescriptor> items;
+    };
+
+    const auto catalog = toolbox_palette_catalog();
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root();
+    const std::string locale = copperfin::localization::select_locale();
+    static std::mutex cache_mutex;
+    static PaletteCache cache{};
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.items = studio_toolbox_palette_for_catalog(catalog);
+    }
+    return cache.items;
 }
 
 std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(StudioToolboxContext context) {

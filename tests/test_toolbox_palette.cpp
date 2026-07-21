@@ -6,6 +6,7 @@
 #include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/studio/toolbox_dispatch.h"
 #include "copperfin/studio/toolbox_invocation_admission.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -1413,6 +1414,61 @@ int main() {
             inconsistent_invocation.error ==
                 "A toolbox invocation admission request requires consistent toolbox item metadata.",
         "#1219: toolbox invocation admission should reject inconsistent item metadata");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto english_items = copperfin::studio::studio_toolbox_palette();
+    const auto english_error = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = {},
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}});
+    locale_override.set("es-419");
+    const auto spanish_items = copperfin::studio::studio_toolbox_palette();
+    const auto spanish_error = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = {},
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}});
+    locale_override.set("qps-ploc");
+    const auto pseudo_items = copperfin::studio::studio_toolbox_palette();
+    const auto pseudo_error = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = {},
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}});
+
+    const auto refresh_catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto refresh_english_catalog = copperfin::localization::load_catalogs(refresh_catalog_root, "en-US");
+    const auto refresh_spanish_catalog = copperfin::localization::load_catalogs(refresh_catalog_root, "es-419");
+    const auto refresh_pseudo_catalog = copperfin::localization::load_catalogs(refresh_catalog_root, "qps-ploc");
+    const auto* english_label = find_toolbox_item(english_items, "label");
+    const auto* refresh_spanish_label = find_toolbox_item(spanish_items, "label");
+    const auto* refresh_pseudo_label = find_toolbox_item(pseudo_items, "label");
+    expect(english_label != nullptr &&
+               english_label->title == refresh_english_catalog.translate("Studio.Toolbox.Item.Label.Title"),
+           "#4363: default toolbox display text should begin in en-US");
+    expect(refresh_spanish_label != nullptr &&
+               refresh_spanish_label->title == refresh_spanish_catalog.translate("Studio.Toolbox.Item.Label.Title"),
+           "#4363: default toolbox display text should refresh to es-419");
+    expect(refresh_pseudo_label != nullptr &&
+               refresh_pseudo_label->title == refresh_pseudo_catalog.translate("Studio.Toolbox.Item.Label.Title"),
+           "#4363: default toolbox display text should refresh to qps-ploc");
+    expect(!english_error.ok &&
+               english_error.error == refresh_english_catalog.translate("Studio.ToolboxPalette.Error.ContextUnavailable") &&
+               !spanish_error.ok &&
+               spanish_error.error == refresh_spanish_catalog.translate("Studio.ToolboxPalette.Error.ContextUnavailable") &&
+               !pseudo_error.ok &&
+               pseudo_error.error == refresh_pseudo_catalog.translate("Studio.ToolboxPalette.Error.ContextUnavailable"),
+           "#4363: default toolbox diagnostics should refresh with the active locale");
+    expect(english_label != nullptr && refresh_spanish_label != nullptr && refresh_pseudo_label != nullptr &&
+               english_label->id == refresh_spanish_label->id && refresh_spanish_label->id == refresh_pseudo_label->id &&
+               english_label->vfp_class == refresh_spanish_label->vfp_class &&
+               refresh_spanish_label->vfp_class == refresh_pseudo_label->vfp_class,
+           "#4363: locale refresh should preserve toolbox item identity and VFP class");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

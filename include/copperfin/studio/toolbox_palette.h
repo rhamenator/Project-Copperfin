@@ -105,7 +105,7 @@ struct StudioToolboxPaletteLaunchCatalogResult {
 [[nodiscard]] const char* studio_toolbox_context_name(StudioToolboxContext context);
 [[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_palette_for_catalog(
     const localization::LocalizedCatalog& catalog);
-[[nodiscard]] const std::vector<StudioToolboxItemDescriptor>& studio_toolbox_palette();
+[[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_palette();
 [[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(StudioToolboxContext context);
 [[nodiscard]] StudioToolboxPaletteQueryResult query_studio_toolbox_palette(
     const StudioToolboxPaletteQueryRequest& request);
