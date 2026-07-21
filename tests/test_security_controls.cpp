@@ -648,6 +648,51 @@ void test_contained_audit_append_rechecks_open_file_identity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_direct_audit_append_rejects_linked_leaf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_direct_audit_link_tests";
+    const fs::path outside_root = temp_root / "outside";
+    const fs::path outside_log = outside_root / "events.log";
+    const fs::path audit_root = temp_root / "audit";
+    const fs::path hard_link_log = audit_root / "hard-linked.log";
+    const fs::path symlink_log = audit_root / "symlinked.log";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(outside_root);
+    fs::create_directories(audit_root);
+    write_file_bytes(outside_log, {});
+
+    std::error_code hard_link_error;
+    fs::create_hard_link(outside_log, hard_link_log, hard_link_error);
+    if (!hard_link_error) {
+        const auto rejected = copperfin::security::append_immutable_audit_event(
+            hard_link_log.string(),
+            "build.rejected",
+            "hard-link");
+        expect(!rejected.ok,
+               "#4375: direct audit append should reject a multiply linked leaf");
+        expect(read_file_bytes(outside_log).empty(),
+               "#4375: direct hard-link rejection should preserve the external file");
+        fs::remove(hard_link_log, ignored);
+    }
+
+    std::error_code symlink_error;
+    fs::create_symlink(outside_log, symlink_log, symlink_error);
+    if (!symlink_error) {
+        const auto rejected = copperfin::security::append_immutable_audit_event(
+            symlink_log.string(),
+            "build.rejected",
+            "symlink");
+        expect(!rejected.ok,
+               "#4375: direct audit append should reject a symlinked leaf");
+        expect(read_file_bytes(outside_log).empty(),
+               "#4375: direct symlink rejection should preserve the external file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_contained_audit_append_serializes_concurrent_writers() {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -1194,6 +1239,7 @@ int main() {
     test_audit_stream_append_rejects_invalid_existing_tail();
     test_audit_stream_localized_malformed_line_diagnostic();
     test_contained_audit_append_rechecks_open_file_identity();
+    test_direct_audit_append_rejects_linked_leaf();
     test_contained_audit_append_serializes_concurrent_writers();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();

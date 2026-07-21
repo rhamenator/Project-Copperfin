@@ -131,47 +131,6 @@ AuditTailReadResult read_last_hash_from_text(const std::string& text) {
         .error = {}};
 }
 
-AuditTailReadResult read_last_hash(const std::string& log_path) {
-    const std::filesystem::path native_log_path = copperfin::platform::path_from_utf8_string(log_path);
-    std::error_code type_error;
-    const std::filesystem::file_status status =
-        std::filesystem::status(native_log_path, type_error);
-    if (!type_error &&
-        status.type() != std::filesystem::file_type::not_found &&
-        !std::filesystem::is_regular_file(status)) {
-        return {
-            .ok = false,
-            .hash = {},
-            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
-    }
-
-    std::ifstream input(native_log_path, std::ios::binary);
-    if (!input) {
-        std::error_code status_error;
-        const bool exists = std::filesystem::exists(native_log_path, status_error);
-        if (!exists && !status_error) {
-            return {
-                .ok = true,
-                .hash = "GENESIS",
-                .error = {}};
-        }
-        return {
-            .ok = false,
-            .hash = {},
-            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
-    }
-
-    std::ostringstream content;
-    content << input.rdbuf();
-    if (input.bad()) {
-        return {
-            .ok = false,
-            .hash = {},
-            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
-    }
-    return read_last_hash_from_text(content.str());
-}
-
 std::string compute_entry_hash(const std::string& timestamp,
                               const std::string& event_name,
                               const std::string& detail,
@@ -723,54 +682,21 @@ AuditAppendResult append_immutable_audit_event(
     if (error) {
         return {.ok = false, .error = security_text("Security.Audit.Error.CreateLogDirectoryFailed"), .entry_hash = {}};
     }
-
-#if defined(_WIN32)
-    const auto mutex_name = audit_mutex_name(native_log_path);
-    if (!mutex_name.has_value()) {
-        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
-    }
-    ScopedNamedMutex audit_mutex(*mutex_name);
-    if (!audit_mutex.locked()) {
-        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
-    }
-#else
-    const std::filesystem::path lock_directory_path = native_log_path.parent_path().empty()
+    const std::filesystem::path audit_root = native_log_path.parent_path().empty()
         ? std::filesystem::path(".")
         : native_log_path.parent_path();
-    ScopedFileDescriptor audit_lock(::open(
-        lock_directory_path.c_str(),
-        O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-    if (!audit_lock.valid() || ::flock(audit_lock.get(), LOCK_EX) != 0) {
+    std::error_code leaf_status_error;
+    const auto leaf_status = std::filesystem::symlink_status(native_log_path, leaf_status_error);
+    if (!leaf_status_error && std::filesystem::is_directory(leaf_status)) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.ReadExistingLogFailed"), .entry_hash = {}};
+    }
+    const auto contained_path = resolve_contained_audit_path(
+        log_path,
+        copperfin::platform::path_to_utf8_string(audit_root));
+    if (!contained_path.has_value()) {
         return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
     }
-#endif
-
-    const auto tail = read_last_hash(log_path);
-    if (!tail.ok) {
-        return {.ok = false, .error = tail.error, .entry_hash = {}};
-    }
-    const std::string& previous_hash = tail.hash;
-    const std::string timestamp = now_utc_compact();
-    const std::string safe_event = escape_field(event_name);
-    const std::string safe_detail = escape_field(detail);
-
-    const std::string signed_payload = timestamp + "|" + safe_event + "|" + safe_detail + "|" + previous_hash;
-    const auto hash = sha256_hex_for_text(signed_payload);
-    if (!hash.ok) {
-        return {.ok = false, .error = hash.error, .entry_hash = {}};
-    }
-
-    std::ofstream output(native_log_path, std::ios::app | std::ios::binary);
-    if (!output) {
-        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
-    }
-
-    output << signed_payload << "|" << hash.hex_digest << "\n";
-    if (!output.good()) {
-        return {.ok = false, .error = security_text("Security.Audit.Error.AppendLogEntryFailed"), .entry_hash = {}};
-    }
-
-    return {.ok = true, .error = {}, .entry_hash = hash.hex_digest};
+    return append_contained_audit_event(*contained_path, event_name, detail);
 }
 
 AuditAppendResult append_immutable_audit_event_to_contained_file(
