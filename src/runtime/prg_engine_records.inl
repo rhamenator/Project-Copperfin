@@ -907,9 +907,11 @@
                              pattern.operator_kind == IndexOperatorKind::less_than_or_equal ||
                              pattern.operator_kind == IndexOperatorKind::greater_than ||
                              pattern.operator_kind == IndexOperatorKind::greater_than_or_equal);
+                        bool cost_model_considered = false;
                         bool cost_model_selected = false;
                         if (plan.can_optimize && plan.selected_order && is_single_comparison)
                         {
+                            cost_model_considered = true;
                             std::optional<RushmorePredicateDescriptor> predicate =
                                 pattern.recognized_predicates.front();
                             const RushmoreCursorMetadata metadata{
@@ -937,7 +939,7 @@
                             cost_model_selected = index_seek_cost < table_scan_cost;
                         }
 
-                        if (!cost_model_selected)
+                        if (cost_model_considered && !cost_model_selected)
                         {
                             plan.can_optimize = false;
                             plan.selected_order.reset();
