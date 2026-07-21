@@ -648,6 +648,40 @@ void test_default_database_profile() {
     expect(
         !pseudo_profile.guardrails.empty() && pseudo_profile.guardrails[0].find("[!! ") != std::string::npos,
         "#2491: pseudo-localized guardrails should route through the catalog");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto live_english_profile =
+        copperfin::platform::default_database_federation_profile();
+    locale_override.set("es-419");
+    const auto live_spanish_profile =
+        copperfin::platform::default_database_federation_profile();
+    locale_override.set("qps-ploc");
+    const auto live_pseudo_profile =
+        copperfin::platform::default_database_federation_profile();
+    const auto live_english_dbf =
+        copperfin::platform::database_connector_by_id(live_english_profile, "dbf");
+    const auto live_spanish_dbf =
+        copperfin::platform::database_connector_by_id(live_spanish_profile, "dbf");
+    const auto live_pseudo_dbf =
+        copperfin::platform::database_connector_by_id(live_pseudo_profile, "dbf");
+    expect(live_english_dbf != nullptr && live_spanish_dbf != nullptr && live_pseudo_dbf != nullptr,
+           "#2348: default database profile locale refresh should preserve connector identity");
+    if (live_english_dbf != nullptr && live_spanish_dbf != nullptr && live_pseudo_dbf != nullptr) {
+        expect(live_english_dbf->id == "dbf" && live_spanish_dbf->id == "dbf" && live_pseudo_dbf->id == "dbf",
+               "#2348: database connector ids must remain invariant across locale refresh");
+        expect(live_english_dbf->title == "DBF/CDX/FPT Native Storage",
+               "#2348: default database profile should begin in en-US");
+        expect(live_spanish_dbf->title == "Almacenamiento nativo DBF/CDX/FPT",
+               "#2348: default database profile should refresh to es-419");
+        expect(live_pseudo_dbf->title.find("[!! ") != std::string::npos,
+               "#2348: default database profile should refresh to qps-ploc");
+    }
+    const auto live_pseudo_path = copperfin::platform::query_translation_path_by_id(
+        live_pseudo_profile,
+        "foxsql-relational");
+    expect(live_pseudo_path != nullptr && live_pseudo_path->id == "foxsql-relational",
+           "#2348: default database query-path identity must remain invariant across locale refresh");
 }
 
 void test_document_and_vector_mapping_paths() {
