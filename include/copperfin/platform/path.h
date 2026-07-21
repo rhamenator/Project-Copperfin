@@ -111,6 +111,23 @@ inline bool path_component_equal_for_platform(
         return true;
     }
 
+    // Some Windows builds do not apply the complete Unicode simple-case
+    // table through CompareStringOrdinal. The invariant locale comparison
+    // supplies the Windows filesystem's case-insensitive behavior for those
+    // code points without consulting the user's active locale.
+    if (::CompareStringEx(
+            LOCALE_NAME_INVARIANT,
+            NORM_IGNORECASE,
+            left_value.c_str(),
+            static_cast<int>(left_value.size()),
+            right_value.c_str(),
+            static_cast<int>(right_value.size()),
+            nullptr,
+            nullptr,
+            0) == CSTR_EQUAL) {
+        return true;
+    }
+
     // Some supported Windows environments do not provide complete Unicode
     // simple-case behavior through CompareStringOrdinal alone. Prefer the
     // invariant mapping API, with a native fallback when it is unavailable.
