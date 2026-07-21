@@ -21,6 +21,11 @@ namespace runtime_pipeline_detail {
 
 namespace {
 
+bool path_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::exists(path, error) && !error;
+}
+
 std::string normalize_vfp_separators(std::string value) {
     std::replace(value.begin(), value.end(), '\\', '/');
     return value;
@@ -242,7 +247,7 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
     bool require_unique,
     bool& ambiguous) {
     ambiguous = false;
-    if (trim_copy(value).empty() || !std::filesystem::exists(search_root)) {
+    if (trim_copy(value).empty() || !path_exists_without_error(search_root)) {
         return std::nullopt;
     }
 
@@ -471,7 +476,7 @@ bool append_runtime_artifact_digest(
     const std::string& path,
     std::string& error) {
     const std::filesystem::path native_path = copperfin::platform::path_from_utf8_string(path);
-    if (trim_copy(path).empty() || !std::filesystem::exists(native_path)) {
+    if (trim_copy(path).empty() || !path_exists_without_error(native_path)) {
         return true;
     }
 
@@ -562,9 +567,9 @@ bool copy_file_if_exists(
         fd_source_handled,
         fd_source_contents);
     if ((fd_source_handled && !fd_source_readable) ||
-        (!fd_source_handled && !std::filesystem::exists(source))) {
+        (!fd_source_handled && !path_exists_without_error(source))) {
 #else
-    if (!std::filesystem::exists(source)) {
+    if (!path_exists_without_error(source)) {
 #endif
         error = runtime_text("Runtime.Package.Error.SourceFileMissing", {{"path", copperfin::platform::path_to_utf8_string(source)}});
         return false;

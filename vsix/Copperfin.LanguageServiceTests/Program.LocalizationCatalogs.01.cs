@@ -52,4 +52,34 @@ internal static partial class Program
             Directory.Delete(temporaryRoot, recursive: true);
         }
     }
+
+    private static void TestLocalizationCatalogDiscoversInstalledStudioLayout()
+    {
+        var temporaryRoot = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-installed-layout-catalog-test-" + Guid.NewGuid().ToString("N"));
+        var studioDirectory = Path.Combine(temporaryRoot, "bin", "studio");
+        var localeDirectory = Path.Combine(temporaryRoot, "share", "copperfin", "locales", "es-419");
+        Directory.CreateDirectory(studioDirectory);
+        Directory.CreateDirectory(localeDirectory);
+
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(localeDirectory, "strings.json"),
+                "{\"Studio.OpenDialogTitle\":\"Installed package catalog\"}");
+            var catalog = CopperfinExternalLocaleCatalog.LoadFromBaseDirectory(
+                "es-419",
+                null,
+                studioDirectory);
+            Expect(catalog is not null &&
+                       catalog.TryGetValue("Studio.OpenDialogTitle", out var title) &&
+                       title == "Installed package catalog",
+                "standalone Studio should discover catalogs from the installed bin/studio layout");
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
+    }
 }

@@ -1,5 +1,9 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4336 under the #2348 managed localization lane. `CopperfinExternalLocaleCatalog` now discovers the packaged shared catalog root two levels above installed `bin/studio`, and its installed-layout regression uses a temporary `bin/studio` plus `share/copperfin/locales` tree without environment-root overrides. Preserve explicit locale/environment precedence and hosted installer/Studio validation remains required.
+
+- 2026-07-21: Implemented #4335 under the #110 runtime asset/package lane. Case-insensitive project-asset search, runtime artifact digest collection, and source-file admission now use an error-code existence helper, preserving localized missing/ambiguous diagnostics, containment, fd-backed behavior, and package/debug contracts for inaccessible source paths. Focused runtime-pipeline validation and hosted Windows path-status validation remain required.
+
 - 2026-07-21: Implemented #4334 under the #110 Windows launcher trust lane. The launcher guard now uses an error-code regular-file helper when preferring `app.cfdebug` and validating the selected manifest, preserving debug precedence, localized missing-manifest diagnostics, exit codes, and sidecar verification when package status checks fail. Hosted Windows launcher validation remains required.
 
 - 2026-07-21: Implemented #4333 under the #110 runtime package hardening lane. Native-wrapper CMake input, module-definition, configure/build log, staged-output, and materialized-artifact digest probes now use a local error-code existence helper, preserving existing localized diagnostics, rollback, package manifests, debug manifests, and successful library/FLL/OCX publication when filesystem status fails. Focused runtime-pipeline validation and hosted Windows ACL validation remain required.

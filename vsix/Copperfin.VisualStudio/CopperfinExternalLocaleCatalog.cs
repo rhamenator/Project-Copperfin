@@ -15,7 +15,15 @@ internal static class CopperfinExternalLocaleCatalog
 {
     public static IReadOnlyDictionary<string, string>? Load(string locale, string? configuredRoot)
     {
-        foreach (var root in CandidateRoots(configuredRoot))
+        return LoadFromBaseDirectory(locale, configuredRoot, AppContext.BaseDirectory);
+    }
+
+    internal static IReadOnlyDictionary<string, string>? LoadFromBaseDirectory(
+        string locale,
+        string? configuredRoot,
+        string baseDirectory)
+    {
+        foreach (var root in CandidateRoots(configuredRoot, baseDirectory))
         {
             var catalogPath = FindCatalogPath(root, locale);
             if (catalogPath is null)
@@ -59,7 +67,7 @@ internal static class CopperfinExternalLocaleCatalog
         return null;
     }
 
-    private static IEnumerable<string> CandidateRoots(string? configuredRoot)
+    private static IEnumerable<string> CandidateRoots(string? configuredRoot, string baseDirectory)
     {
         if (configuredRoot is { } root && !string.IsNullOrWhiteSpace(root))
         {
@@ -67,11 +75,12 @@ internal static class CopperfinExternalLocaleCatalog
             yield break;
         }
 
-        var executableDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+        var executableDirectory = new DirectoryInfo(baseDirectory);
         yield return Path.Combine(executableDirectory.FullName, "..", "share", "copperfin", "locales");
         yield return Path.Combine(executableDirectory.FullName, "share", "copperfin", "locales");
         yield return Path.Combine(executableDirectory.FullName, "..", "resources", "locales");
         yield return Path.Combine(executableDirectory.FullName, "..", "..", "resources", "locales");
+        yield return Path.Combine(executableDirectory.FullName, "..", "..", "share", "copperfin", "locales");
 
         var ancestor = new DirectoryInfo(Environment.CurrentDirectory);
         while (ancestor is not null)

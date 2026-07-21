@@ -37,6 +37,7 @@ internal static partial class Program
         TestStudioOpenDialogFilterPreservesInvariantPatterns();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
+        TestLocalizationCatalogDiscoversInstalledStudioLayout();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestReportLayoutObjectPreservesPictureMetadata();
         TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects();
