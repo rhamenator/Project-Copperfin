@@ -14,6 +14,14 @@ using System.Threading;
 
 namespace Copperfin.VisualStudio;
 
+internal enum CopperfinRuntimeDebugTransportFailure
+{
+    ProcessDidNotStart,
+    ProcessExited,
+    ProcessTimedOut,
+    ProcessClosedOutput
+}
+
 internal sealed class CopperfinRuntimeDebugSession
 {
     public bool Success { get; set; }
@@ -115,7 +123,9 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
             process = new Process { StartInfo = startInfo };
             if (!process.Start())
             {
-                error = "Runtime debug process did not start.";
+                error = TransportFailureMessage(
+                    localization,
+                    CopperfinRuntimeDebugTransportFailure.ProcessDidNotStart);
                 process.Dispose();
                 return null;
             }
@@ -152,7 +162,9 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
         {
             if (disposed || process.HasExited)
             {
-                return Failure("Runtime debug process has exited.");
+                return Failure(TransportFailureMessage(
+                    localization,
+                    CopperfinRuntimeDebugTransportFailure.ProcessExited));
             }
 
             input.WriteLine(command);
@@ -165,14 +177,18 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
                 var lineTask = output.ReadLineAsync();
                 if (!lineTask.Wait(timeoutMilliseconds))
                 {
-                    return Failure("Runtime debug process timed out.");
+                    return Failure(TransportFailureMessage(
+                        localization,
+                        CopperfinRuntimeDebugTransportFailure.ProcessTimedOut));
                 }
 
                 var line = lineTask.Result;
                 if (line is null)
                 {
                     return Failure(string.IsNullOrWhiteSpace(ReadStandardError())
-                        ? "Runtime debug process closed its output."
+                        ? TransportFailureMessage(
+                            localization,
+                            CopperfinRuntimeDebugTransportFailure.ProcessClosedOutput)
                         : ReadStandardError());
                 }
 
@@ -326,6 +342,25 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
             Success = false,
             Error = error
         };
+    }
+
+    internal static string TransportFailureMessage(
+        CopperfinLocalization localization,
+        CopperfinRuntimeDebugTransportFailure failure)
+    {
+        var key = failure switch
+        {
+            CopperfinRuntimeDebugTransportFailure.ProcessDidNotStart =>
+                "AssetEditor.Debugger.Transport.ProcessDidNotStart",
+            CopperfinRuntimeDebugTransportFailure.ProcessExited =>
+                "AssetEditor.Debugger.Transport.ProcessExited",
+            CopperfinRuntimeDebugTransportFailure.ProcessTimedOut =>
+                "AssetEditor.Debugger.Transport.ProcessTimedOut",
+            CopperfinRuntimeDebugTransportFailure.ProcessClosedOutput =>
+                "AssetEditor.Debugger.Transport.ProcessClosedOutput",
+            _ => "AssetEditor.Debugger.CommandFailed"
+        };
+        return localization.Text(key);
     }
 
     private void DisposeWithoutHandshake()

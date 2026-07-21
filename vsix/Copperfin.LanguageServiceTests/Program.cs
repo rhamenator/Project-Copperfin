@@ -67,6 +67,7 @@ internal static partial class Program
         TestRuntimeDebugClientCleansTransientReplayManifestOnPosix();
         TestRuntimeDebugParserUnescapesEscapedLineValues();
         TestRuntimeDebugFallbackErrorLocalizesWithoutChangingPrecedence();
+        TestRuntimeDebugTransportFailuresLocalizeAcrossSupportedLocales();
         TestProcessRunnerCapturesLargeConcurrentOutput();
         TestProcessRunnerPreservesSuccessfulExitWhenDescendantHoldsPipe();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
@@ -1181,6 +1182,34 @@ internal static partial class Program
                 string.Empty,
                 localizationForPrecedence) == "protocol failure",
             "runtime debug protocol error lines should retain precedence over localized fallback text");
+    }
+
+    private static void TestRuntimeDebugTransportFailuresLocalizeAcrossSupportedLocales()
+    {
+        var failuresToCheck = new[]
+        {
+            CopperfinRuntimeDebugTransportFailure.ProcessDidNotStart,
+            CopperfinRuntimeDebugTransportFailure.ProcessExited,
+            CopperfinRuntimeDebugTransportFailure.ProcessTimedOut,
+            CopperfinRuntimeDebugTransportFailure.ProcessClosedOutput
+        };
+
+        foreach (var locale in CopperfinLocalization.SupportedLocales)
+        {
+            var localization = new CopperfinLocalization(locale);
+            foreach (var failure in failuresToCheck)
+            {
+                var message = CopperfinRuntimeDebugTransport.TransportFailureMessage(localization, failure);
+                Expect(!string.IsNullOrWhiteSpace(message),
+                    $"runtime debug transport failure {failure} should be nonblank in {locale}");
+                if (locale == CopperfinLocalization.PseudoLocale)
+                {
+                    Expect(message.StartsWith("[!! ", StringComparison.Ordinal) &&
+                           message.EndsWith(" !!]", StringComparison.Ordinal),
+                        $"runtime debug transport failure {failure} should be pseudo-localized");
+                }
+            }
+        }
     }
 
     private static void TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix()
