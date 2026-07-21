@@ -111,6 +111,19 @@ inline bool path_component_equal_for_platform(
         return true;
     }
 
+    // Retain the older invariant-locale entry point for Windows environments
+    // where the ordinal and extended comparison APIs do not share the same
+    // Unicode case table.
+    if (::CompareStringW(
+            LOCALE_INVARIANT,
+            NORM_IGNORECASE,
+            left_value.c_str(),
+            static_cast<int>(left_value.size()),
+            right_value.c_str(),
+            static_cast<int>(right_value.size())) == CSTR_EQUAL) {
+        return true;
+    }
+
     // Some Windows builds do not apply the complete Unicode simple-case
     // table through CompareStringOrdinal. The invariant locale comparison
     // supplies the Windows filesystem's case-insensitive behavior for those
