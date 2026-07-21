@@ -4566,6 +4566,10 @@ copperfin_add_test(test_security_controls cf_security
     test_security_controls.cpp
 )
 
+copperfin_add_test(test_security_audit_concurrency "cf_security;cf_test_process_capture_support"
+    test_security_audit_concurrency.cpp
+)
+
 copperfin_add_test(test_prg_engine cf_xbase_runtime
     test_prg_engine.cpp
     test_prg_engine_verified_source_localization.cpp

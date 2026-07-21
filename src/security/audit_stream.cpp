@@ -707,6 +707,27 @@ AuditAppendResult append_immutable_audit_event(
         return {.ok = false, .error = security_text("Security.Audit.Error.CreateLogDirectoryFailed"), .entry_hash = {}};
     }
 
+#if defined(_WIN32)
+    const auto mutex_name = audit_mutex_name(native_log_path);
+    if (!mutex_name.has_value()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
+    }
+    ScopedNamedMutex audit_mutex(*mutex_name);
+    if (!audit_mutex.locked()) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
+    }
+#else
+    const std::filesystem::path lock_directory_path = native_log_path.parent_path().empty()
+        ? std::filesystem::path(".")
+        : native_log_path.parent_path();
+    ScopedFileDescriptor audit_lock(::open(
+        lock_directory_path.c_str(),
+        O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+    if (!audit_lock.valid() || ::flock(audit_lock.get(), LOCK_EX) != 0) {
+        return {.ok = false, .error = security_text("Security.Audit.Error.OpenLogForAppendFailed"), .entry_hash = {}};
+    }
+#endif
+
     const auto tail = read_last_hash(log_path);
     if (!tail.ok) {
         return {.ok = false, .error = tail.error, .entry_hash = {}};
