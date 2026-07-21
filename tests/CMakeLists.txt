@@ -264,6 +264,16 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_build_parallelism_contract_check.cmake
 )
 
+if(UNIX)
+    add_test(
+        NAME test_validate_posix_build_type
+        COMMAND ${CMAKE_COMMAND}
+            -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -DBINARY_DIR=${CMAKE_BINARY_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_validate_posix_build_type_check.cmake
+    )
+endif()
+
 add_test(
     NAME test_native_platform_workflow_contract
     COMMAND ${CMAKE_COMMAND}

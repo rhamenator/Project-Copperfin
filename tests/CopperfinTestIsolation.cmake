@@ -169,6 +169,17 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    copperfin_set_test_isolation(test_validate_posix_build_type
+        PARALLEL_SAFE
+        FILESYSTEM fixed-build-tree
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM configured
+        AUDIT complete
+    )
+
     foreach(test_name IN ITEMS
             test_vfp_sidecar_path
             test_toolbox_creation)
