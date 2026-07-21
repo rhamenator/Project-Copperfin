@@ -269,6 +269,12 @@ struct ScopedCurrentPath {
 void test_posix_path_unset_and_empty_components() {
     namespace fs = std::filesystem;
 
+    const auto default_path = copperfin::platform::default_posix_search_path();
+    expect(default_path.has_value() &&
+               (default_path->find("/bin") != std::string::npos ||
+                default_path->find("/usr/bin") != std::string::npos),
+           "#4372: POSIX default search path should remain available when PATH is unset");
+
     const fs::path root = fs::temp_directory_path() /
         ("copperfin_path_search_" +
          std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));

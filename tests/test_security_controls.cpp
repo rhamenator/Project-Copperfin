@@ -703,6 +703,20 @@ void test_external_process_and_process_hardening_diagnostics() {
         authorization.error == "External process policy authorization is implemented for Windows only.",
         "#2388: external process policy should preserve the default localized non-Windows diagnostic");
 
+    {
+        ScopedEnvironmentValue unavailable_path("PATH");
+        const copperfin::security::ExternalProcessPolicy default_path_policy{
+            .executable_name = "sh",
+            .allowed_path_roots = {"/bin", "/usr/bin"},
+            .allowed_publishers = {},
+            .require_trusted_signature = false
+        };
+        const auto default_path_authorization =
+            copperfin::security::authorize_external_process(default_path_policy);
+        expect(default_path_authorization.allowed,
+               "#4372: unset POSIX PATH should retain default authorized executable discovery");
+    }
+
     const auto hardening = copperfin::security::apply_default_process_hardening();
     expect(hardening.applied, "process hardening should be a no-op success outside Windows");
     expect(

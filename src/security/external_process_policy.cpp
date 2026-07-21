@@ -5,6 +5,7 @@
 #include "copperfin/security/external_process_policy.h"
 
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/executable_path.h"
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 
@@ -198,8 +199,10 @@ std::string resolve_executable_from_path(const std::string& executable_name) {
     if (requested.has_parent_path()) {
         candidates.push_back(requested);
     } else {
-        const std::string path_value =
-            copperfin::platform::read_environment_variable_or_empty("PATH");
+        const auto configured_path = copperfin::platform::read_environment_variable("PATH");
+        const std::string path_value = configured_path.has_value()
+            ? *configured_path
+            : copperfin::platform::default_posix_search_path().value_or(std::string{});
         std::size_t start = 0U;
         for (;;) {
             const std::size_t separator = path_value.find(':', start);

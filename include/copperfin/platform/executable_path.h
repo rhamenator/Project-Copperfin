@@ -5,8 +5,14 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
+#include <string>
 
 namespace copperfin::platform {
+
+#if !defined(_WIN32)
+[[nodiscard]] std::optional<std::string> default_posix_search_path();
+#endif
 
 [[nodiscard]] std::filesystem::path resolve_executable_invocation_path(
     const std::filesystem::path& invocation_path);

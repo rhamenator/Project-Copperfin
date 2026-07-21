@@ -57,7 +57,7 @@ void append_unique(
 #endif
 
 #if !defined(_WIN32)
-std::optional<std::string> default_posix_search_path() {
+std::optional<std::string> default_posix_search_path_value() {
 #if defined(_CS_PATH)
     const std::size_t required_size = confstr(_CS_PATH, nullptr, 0U);
     if (required_size <= 1U) {
@@ -183,6 +183,12 @@ std::filesystem::path query_running_executable_path() {
 
 }  // namespace
 
+#if !defined(_WIN32)
+std::optional<std::string> default_posix_search_path() {
+    return default_posix_search_path_value();
+}
+#endif
+
 std::filesystem::path resolve_executable_invocation_path(
     const std::filesystem::path& invocation_path) {
     namespace fs = std::filesystem;
@@ -204,7 +210,7 @@ std::filesystem::path resolve_executable_invocation_path(
     std::vector<std::string> search_roots;
     if (path_value.has_value()) {
         search_roots = split_search_path_list<char>(*path_value, ':');
-    } else if (const auto default_path = default_posix_search_path(); default_path.has_value()) {
+    } else if (const auto default_path = default_posix_search_path_value(); default_path.has_value()) {
         search_roots = split_search_path_list<char>(*default_path, ':');
     }
 #endif
