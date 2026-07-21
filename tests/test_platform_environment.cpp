@@ -66,6 +66,21 @@ void test_platform_environment_round_trips_values() {
            "#3214: cleared environment variables should not report stale values");
 }
 
+void test_platform_environment_round_trips_unicode_values() {
+    const std::string key = "COPPERFIN_TEST_PLATFORM_ENVIRONMENT_UNICODE";
+    const std::string value = "caf\xC3\xA9-\xE7\x8C\xAB";
+    copperfin::test_support::ScopedEnvironmentValue scoped(key);
+
+    expect(copperfin::platform::write_environment_variable(key, value),
+           "#4318: shared environment helper should accept UTF-8 values");
+    const auto assigned = copperfin::platform::read_environment_variable(key);
+    expect(assigned.has_value() && *assigned == value,
+           "#4318: shared environment helper should round-trip UTF-8 values exactly");
+
+    expect(copperfin::platform::clear_environment_variable(key),
+           "#4318: Unicode environment fixture should clear through the shared helper");
+}
+
 void test_platform_environment_rejects_empty_names() {
     expect(!copperfin::platform::read_environment_variable("").has_value(),
            "#3214: shared platform environment helper should reject empty read keys");
@@ -435,6 +450,7 @@ void test_locale_catalog_root_preserves_non_ascii_environment_paths(
 
 int main(int argc, char** argv) {
     test_platform_environment_round_trips_values();
+    test_platform_environment_round_trips_unicode_values();
     test_platform_environment_rejects_empty_names();
     test_running_executable_path_resolves_current_process(argc > 0 ? argv[0] : nullptr);
     test_scoped_environment_support_uses_shared_platform_helpers();

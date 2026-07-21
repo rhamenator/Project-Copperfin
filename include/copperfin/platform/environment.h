@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "copperfin/platform/path.h"
+
 #include <cstdlib>
 #include <filesystem>
 #include <mutex>
@@ -31,6 +33,27 @@ inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view
     }
     return wide_name;
 }
+
+inline std::optional<std::wstring> widen_utf8_environment_value(std::string_view value) {
+    if (value.empty()) {
+        return std::wstring{};
+    }
+
+    const std::wstring native = path_from_utf8_string(value).native();
+    return native.empty() ? std::nullopt : std::optional<std::wstring>(native);
+}
+
+inline std::optional<std::string> narrow_utf8_environment_value(const wchar_t* value) {
+    if (value == nullptr) {
+        return std::nullopt;
+    }
+    if (*value == L'\0') {
+        return std::string{};
+    }
+
+    const std::string utf8 = path_to_utf8_string(std::filesystem::path(value));
+    return utf8.empty() ? std::nullopt : std::optional<std::string>(utf8);
+}
 #else
 // This boundary coordinates only callers that use these helpers. Code that calls
 // getenv, setenv, unsetenv, or putenv directly must provide the same external
@@ -48,17 +71,22 @@ inline std::optional<std::string> read_environment_variable(std::string_view nam
         return std::nullopt;
     }
 
-    const std::string key(name);
 #if defined(_WIN32)
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, key.c_str()) != 0 || raw == nullptr) {
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    if (!wide_name.has_value()) {
         return std::nullopt;
     }
-    std::string value(raw);
+
+    wchar_t* raw = nullptr;
+    std::size_t length = 0;
+    if (_wdupenv_s(&raw, &length, wide_name->c_str()) != 0 || raw == nullptr) {
+        return std::nullopt;
+    }
+    const auto value = detail::narrow_utf8_environment_value(raw);
     std::free(raw);
     return value;
 #else
+    const std::string key(name);
     const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     if (const char* raw = std::getenv(key.c_str()); raw != nullptr) {
         return std::string(raw);
@@ -100,11 +128,14 @@ inline bool write_environment_variable(std::string_view name, std::string_view v
         return false;
     }
 
+#if defined(_WIN32)
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    const auto wide_value = detail::widen_utf8_environment_value(value);
+    return wide_name.has_value() && wide_value.has_value() &&
+        _wputenv_s(wide_name->c_str(), wide_value->c_str()) == 0;
+#else
     const std::string key(name);
     const std::string assigned_value(value);
-#if defined(_WIN32)
-    return _putenv_s(key.c_str(), assigned_value.c_str()) == 0;
-#else
     const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     return setenv(key.c_str(), assigned_value.c_str(), 1) == 0;
 #endif
@@ -124,10 +155,11 @@ inline bool clear_environment_variable(std::string_view name) {
         return false;
     }
 
-    const std::string key(name);
 #if defined(_WIN32)
-    return _putenv_s(key.c_str(), "") == 0;
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    return wide_name.has_value() && _wputenv_s(wide_name->c_str(), L"") == 0;
 #else
+    const std::string key(name);
     const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     return unsetenv(key.c_str()) == 0;
 #endif

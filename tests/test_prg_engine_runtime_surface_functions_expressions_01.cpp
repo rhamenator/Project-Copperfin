@@ -459,6 +459,8 @@ namespace copperfin::runtime_surface_tests
         fs::create_directories(temp_root);
 
         const std::string env_name = "COPPERFIN_RUNTIME_SURFACE_ENV_HELPER";
+        const std::string unicode_env_name = "COPPERFIN_RUNTIME_SURFACE_ENV_UNICODE";
+        const std::string unicode_env_value = "caf\xC3\xA9-\xE7\x8C\xAB";
         const fs::path main_path = temp_root / "env_and_sys_introspection.prg";
         write_text(
             main_path,
@@ -467,6 +469,8 @@ namespace copperfin::runtime_surface_tests
             "DO pcount_helper WITH 10, 'x', .T.\n"
             "lPutEnvSet = PUTENV('" + env_name + "', 'runtime-surface-value')\n"
             "cGetEnvSet = GETENV('" + env_name + "')\n"
+            "lPutEnvUnicode = PUTENV('" + unicode_env_name + "', '" + unicode_env_value + "')\n"
+            "cGetEnvUnicode = GETENV('" + unicode_env_name + "')\n"
             "lPutEnvClear = PUTENV('" + env_name + "', '')\n"
             "cGetEnvCleared = GETENV('" + env_name + "')\n"
             "cSys3 = SYS(3)\n"
@@ -502,6 +506,8 @@ namespace copperfin::runtime_surface_tests
         check("npcountroutine", "3");
         check("lputenvset", "true");
         check("cgetenvset", "runtime-surface-value");
+        check("lputenvunicode", "true");
+        check("cgetenvunicode", unicode_env_value);
         check("lputenvclear", "true");
         check("cgetenvcleared", "");
         check("csys11", "0");
