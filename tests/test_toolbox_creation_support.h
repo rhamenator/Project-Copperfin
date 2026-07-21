@@ -9,6 +9,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <cstdlib>

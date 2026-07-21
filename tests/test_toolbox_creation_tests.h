@@ -47,4 +47,5 @@ void test_toolbox_creation_respects_explicit_object_name();
 void test_toolbox_creation_rejects_unknown_toolbox_without_mutation();
 void test_toolbox_creation_enforces_optional_context_filters();
 void test_toolbox_creation_errors_resolve_through_localization_catalog();
+void test_toolbox_creation_default_catalog_refreshes_when_locale_changes();
 }

@@ -5,6 +5,7 @@ int main()
 {
     using namespace copperfin::toolbox_creation_tests;
     test_toolbox_creation_errors_resolve_through_localization_catalog();
+    test_toolbox_creation_default_catalog_refreshes_when_locale_changes();
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_selection_planner_resolves_contexts_without_mutation();

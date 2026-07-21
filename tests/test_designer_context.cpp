@@ -7,6 +7,7 @@
 #include "copperfin/studio/designer_dispatch.h"
 #include "copperfin/studio/designer_invocation_admission.h"
 #include "copperfin/studio/designer_launch_surfaces.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -51,6 +52,25 @@ bool has_id(const std::vector<Descriptor>& descriptors, std::string_view id) {
         }
     }
     return false;
+}
+
+void test_designer_context_default_catalog_refreshes_when_locale_changes() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    locale_override.set("en-US");
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto english_result = copperfin::studio::plan_studio_builder_launch_for_selection({});
+    locale_override.set("es-419");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto spanish_result = copperfin::studio::plan_studio_builder_launch_for_selection({});
+    locale_override.set("qps-ploc");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto pseudo_result = copperfin::studio::plan_studio_builder_launch_for_selection({});
+    constexpr std::string_view key = "Studio.SelectionBuilderLaunch.Error.BuilderIdRequired";
+    expect(!english_result.ok && english_result.error == english_catalog.translate(key) &&
+               !spanish_result.ok && spanish_result.error == spanish_catalog.translate(key) &&
+               !pseudo_result.ok && pseudo_result.error == pseudo_catalog.translate(key),
+           "#4369: designer-context diagnostics should refresh across locales");
 }
 
 bool has_action_launch_plan(
@@ -235,6 +255,7 @@ find_dispatch_execution_catalog_entry(
 }  // namespace
 
 int main() {
+    test_designer_context_default_catalog_refreshes_when_locale_changes();
     using copperfin::studio::StudioDesignerContextRequest;
     using copperfin::studio::StudioEditorSelectionContext;
 

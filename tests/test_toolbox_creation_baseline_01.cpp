@@ -438,5 +438,24 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
         "#2651: qps-ploc should define every remaining Studio.ToolboxCreation batch/catalog/selection localization key");
 }
 
+void test_toolbox_creation_default_catalog_refreshes_when_locale_changes() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    locale_override.set("en-US");
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto english_result = copperfin::studio::plan_visual_object_from_toolbox_item({});
+    locale_override.set("es-419");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto spanish_result = copperfin::studio::plan_visual_object_from_toolbox_item({});
+    locale_override.set("qps-ploc");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto pseudo_result = copperfin::studio::plan_visual_object_from_toolbox_item({});
+    constexpr std::string_view key = "Studio.ToolboxCreation.Error.AssetPathRequired";
+    expect(!english_result.ok && english_result.error == english_catalog.translate(key) &&
+               !spanish_result.ok && spanish_result.error == spanish_catalog.translate(key) &&
+               !pseudo_result.ok && pseudo_result.error == pseudo_catalog.translate(key),
+           "#4369: toolbox-creation diagnostics should refresh across locales");
+}
+
 
 }
