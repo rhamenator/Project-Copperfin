@@ -233,6 +233,22 @@
             return find_loaded_procedure_routine_lookup(identifier, program.path);
         }
 
+        std::optional<RoutineLookup> find_event_handler_routine_lookup(
+            const std::string &identifier)
+        {
+            for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
+            {
+                Program &program = load_program(iterator->file_path);
+                const auto found = program.routines.find(normalize_identifier(identifier));
+                if (found != program.routines.end())
+                {
+                    return RoutineLookup{.program = &program, .routine = &found->second};
+                }
+            }
+
+            return find_loaded_procedure_routine_lookup(identifier);
+        }
+
         std::optional<NativeClassLookup> find_loaded_procedure_class_lookup(
             const std::string &class_name,
             const std::string &exclude_program_path = {})

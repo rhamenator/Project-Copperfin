@@ -8873,15 +8873,8 @@ namespace copperfin::runtime
         }
 
         const std::string normalized_target = normalize_identifier(routine_name);
-        for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
+        if (const auto found = find_event_handler_routine_lookup(normalized_target); found.has_value())
         {
-            Program &program = load_program(iterator->file_path);
-            const auto found = program.routines.find(normalized_target);
-            if (found == program.routines.end())
-            {
-                continue;
-            }
-
             waiting_for_events = false;
             event_dispatch_return_depth = stack.size();
             restore_event_loop_after_dispatch = true;
@@ -8896,9 +8889,9 @@ namespace copperfin::runtime
                                   .location = {}});
                 return false;
             }
-            push_routine_frame(program.path, found->second);
+            push_routine_frame(found->program->path, *found->routine);
             events.push_back({.category = "runtime.dispatch",
-                              .detail = found->second.name,
+                              .detail = found->routine->name,
                               .location = {}});
             return true;
         }
@@ -9150,14 +9143,8 @@ namespace copperfin::runtime
             }
         }
 
-        for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)
+        if (const auto found = find_event_handler_routine_lookup(handler); found.has_value())
         {
-            Program &program = load_program(iterator->file_path);
-            const auto found = program.routines.find(normalize_identifier(handler));
-            if (found == program.routines.end())
-            {
-                continue;
-            }
             if (!can_push_frame())
             {
                 return false;
@@ -9171,11 +9158,11 @@ namespace copperfin::runtime
             fault_statement_index = error_frame.pc > 0U ? error_frame.pc - 1U : 0U;
             fault_pc_valid = true;
             error_handler_return_depth = stack.size();
-            push_routine_frame(program.path, found->second, handler_arguments);
+            push_routine_frame(found->program->path, *found->routine, handler_arguments);
             events.push_back({.category = "runtime.error_handler",
                               .detail = handler_arguments.empty()
-                                            ? found->second.name
-                                            : found->second.name + " WITH " + std::to_string(handler_arguments.size()) + " argument(s)",
+                                            ? found->routine->name
+                                            : found->routine->name + " WITH " + std::to_string(handler_arguments.size()) + " argument(s)",
                               .location = {}});
             return true;
         }

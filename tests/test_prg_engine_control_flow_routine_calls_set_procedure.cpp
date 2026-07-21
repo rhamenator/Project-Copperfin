@@ -113,6 +113,86 @@ void test_set_procedure_registers_external_procedure_for_do_calls() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_procedure_registers_external_event_handler() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_event";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "helpers.prg",
+        "PROCEDURE AppShutdown\n"
+        "x = 7\n"
+        "RETURN\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO helpers\n"
+        "PUBLIC x\n"
+        "ACTIVATE POPUP Shortcut\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "SET PROCEDURE event-handler script should pause in the event loop");
+    expect(session.dispatch_event_handler("AppShutdown"),
+           "event dispatch should resolve a handler from an external SET PROCEDURE file");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "external event handler should return to the event loop");
+    const auto x = state.globals.find("x");
+    expect(x != state.globals.end(), "external event handler should be able to set a public variable");
+    if (x != state.globals.end()) {
+        expect(copperfin::runtime::format_value(x->second) == "7",
+               "external event handler should update the caller-visible public variable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_procedure_registers_external_error_handler() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_error";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "helpers.prg",
+        "PROCEDURE HandleError\n"
+        "handled = handled + 1\n"
+        "RETURN\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO helpers\n"
+        "PUBLIC handled\n"
+        "handled = 0\n"
+        "ON ERROR DO HandleError\n"
+        "result = 1 / 0\n"
+        "after_error = 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET PROCEDURE external ON ERROR script should complete: " + state.message);
+
+    const auto handled = state.globals.find("handled");
+    expect(handled != state.globals.end(), "external ON ERROR handler should update its public counter");
+    if (handled != state.globals.end()) {
+        expect(copperfin::runtime::format_value(handled->second) == "1",
+               "external ON ERROR handler should run once");
+    }
+    expect(state.globals.find("after_error") != state.globals.end(),
+           "external ON ERROR handler should allow execution to continue");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_procedure_additive_uses_first_opened_precedence_and_replace_resets_lookup() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_additive";

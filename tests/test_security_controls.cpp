@@ -262,6 +262,36 @@ void test_security_diagnostics_follow_selected_locale() {
     }
 }
 
+void test_security_profile_follows_selected_locale() {
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    const auto english_profile = copperfin::security::default_native_security_profile();
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_profile = copperfin::security::default_native_security_profile();
+
+    const auto english_project_open = std::find_if(
+        english_profile.permissions.begin(),
+        english_profile.permissions.end(),
+        [](const auto& permission) { return permission.id == "project.open"; });
+    const auto spanish_project_open = std::find_if(
+        spanish_profile.permissions.begin(),
+        spanish_profile.permissions.end(),
+        [](const auto& permission) { return permission.id == "project.open"; });
+    expect(english_project_open != english_profile.permissions.end(),
+           "en-US security profile should expose project.open");
+    expect(spanish_project_open != spanish_profile.permissions.end(),
+           "es-419 security profile should expose project.open");
+    if (english_project_open != english_profile.permissions.end() &&
+        spanish_project_open != spanish_profile.permissions.end()) {
+        expect(english_project_open->title == "Open Project",
+               "initial security profile should use the selected en-US catalog");
+        expect(spanish_project_open->title == "Abrir proyecto",
+               "subsequent security profile should follow an in-process locale change");
+    }
+}
+
 // #247 [gap-06a]
 void test_authorization_unknown_role_returns_false() {
     const auto profile = copperfin::security::default_native_security_profile();
@@ -1140,6 +1170,7 @@ int main() {
     test_sha256_helpers();
     test_security_diagnostics_resolve_through_localization_catalog();
     test_security_diagnostics_follow_selected_locale();
+    test_security_profile_follows_selected_locale();
     test_authorization_unknown_role_returns_false();
     test_authorization_empty_permission_returns_false();
     test_secret_provider_missing_env_var_returns_not_ok();

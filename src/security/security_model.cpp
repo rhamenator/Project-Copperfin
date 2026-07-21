@@ -10,12 +10,6 @@ namespace copperfin::security {
 
 namespace {
 
-const localization::LocalizedCatalog& security_profile_catalog() {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog;
-}
-
 std::string profile_text(
     const localization::LocalizedCatalog& catalog,
     std::string_view key) {
@@ -94,7 +88,10 @@ NativeSecurityProfile default_native_security_profile(const localization::Locali
 }
 
 NativeSecurityProfile default_native_security_profile() {
-    return default_native_security_profile(security_profile_catalog());
+    const auto catalog = localization::load_catalogs(
+        localization::resolve_catalog_root(),
+        localization::select_locale());
+    return default_native_security_profile(catalog);
 }
 
 }  // namespace copperfin::security
