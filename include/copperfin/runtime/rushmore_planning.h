@@ -85,6 +85,36 @@ struct RushmoreCursorMetadata {
     return state == RushmoreStatisticsState::fresh;
 }
 
+[[nodiscard]] constexpr const char* rushmore_statistics_state_name(
+    RushmoreStatisticsState state) noexcept {
+    switch (state) {
+    case RushmoreStatisticsState::absent:
+        return "absent";
+    case RushmoreStatisticsState::fresh:
+        return "fresh";
+    case RushmoreStatisticsState::stale:
+        return "stale";
+    case RushmoreStatisticsState::corrupted:
+        return "corrupted";
+    }
+    return "corrupted";
+}
+
+[[nodiscard]] constexpr const char* rushmore_statistics_state_catalog_key(
+    RushmoreStatisticsState state) noexcept {
+    switch (state) {
+    case RushmoreStatisticsState::absent:
+        return "Runtime.IndexSeek.Explain.Statistics.Absent";
+    case RushmoreStatisticsState::fresh:
+        return "Runtime.IndexSeek.Explain.Statistics.Fresh";
+    case RushmoreStatisticsState::stale:
+        return "Runtime.IndexSeek.Explain.Statistics.Stale";
+    case RushmoreStatisticsState::corrupted:
+        return "Runtime.IndexSeek.Explain.Statistics.Corrupted";
+    }
+    return "Runtime.IndexSeek.Explain.Statistics.Corrupted";
+}
+
 [[nodiscard]] constexpr bool rushmore_statistics_are_structurally_valid(
     const RushmoreCursorStatisticsDescriptor& statistics) noexcept {
     if (statistics.state == RushmoreStatisticsState::absent) {
@@ -719,6 +749,19 @@ struct RushmorePlanningOptions {
         return "index_range_scan";
     }
     return "table_scan";
+}
+
+[[nodiscard]] constexpr const char* rushmore_plan_kind_catalog_key(
+    RushmorePlanKind kind) noexcept {
+    switch (kind) {
+    case RushmorePlanKind::table_scan:
+        return "Runtime.IndexSeek.Explain.PlanKind.TableScan";
+    case RushmorePlanKind::index_seek:
+        return "Runtime.IndexSeek.Explain.PlanKind.IndexSeek";
+    case RushmorePlanKind::index_range_scan:
+        return "Runtime.IndexSeek.Explain.PlanKind.IndexRangeScan";
+    }
+    return "Runtime.IndexSeek.Explain.PlanKind.TableScan";
 }
 
 [[nodiscard]] constexpr const char* rushmore_explain_fallback_reason_name(

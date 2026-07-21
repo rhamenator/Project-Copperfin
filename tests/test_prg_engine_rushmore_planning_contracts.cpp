@@ -67,6 +67,13 @@ void test_rushmore_planning_contracts() {
     expect(std::string(copperfin::runtime::rushmore_plan_kind_name(RushmorePlanKind::index_range_scan)) ==
             "index_range_scan",
         "Rushmore plan kind names must remain stable machine-readable identities");
+    expect(std::string(copperfin::runtime::rushmore_plan_kind_catalog_key(RushmorePlanKind::index_seek)) ==
+            "Runtime.IndexSeek.Explain.PlanKind.IndexSeek" &&
+            std::string(copperfin::runtime::rushmore_statistics_state_name(RushmoreStatisticsState::fresh)) ==
+            "fresh" &&
+            std::string(copperfin::runtime::rushmore_statistics_state_catalog_key(
+                RushmoreStatisticsState::stale)) == "Runtime.IndexSeek.Explain.Statistics.Stale",
+        "Rushmore explain plan and statistics display identities must remain stable and localizable");
 
     copperfin::runtime::RuntimeSessionOptions session_options;
     expect(session_options.rushmore_planning == defaults,

@@ -604,6 +604,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_dispatch_toolbox_object_creation_plans.cpp
     test_studio_host_json_dispatch_builder.cpp
     test_studio_host_json_dispatch_designer.cpp
+    test_studio_host_json_rushmore_explain.cpp
     test_studio_host_json_dispatch_editor_action.cpp
     test_studio_host_json_object_lifecycle.cpp
     test_studio_host_json_behavior_window_chrome_01.cpp

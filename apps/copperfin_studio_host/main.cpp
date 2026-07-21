@@ -26,6 +26,9 @@ int run_studio_host_main(int argc, char** argv) {
     if (const auto handled = try_handle_list_subsystems(catalog, args)) {
         return *handled;
     }
+    if (const auto handled = try_handle_rushmore_explain(catalog, args)) {
+        return *handled;
+    }
     if (const auto handled = try_handle_builder_launch(catalog, args)) {
         return *handled;
     }

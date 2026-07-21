@@ -29,6 +29,7 @@
 #include "copperfin/studio/toolbox_invocation_admission.h"
 #include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/studio/vs_launch_contract.h"
+#include "copperfin/runtime/rushmore_planning.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <algorithm>
@@ -155,6 +156,7 @@ struct DesignerLaunchSurfaceCatalogParseResult;
 struct DesignerInvocationAdmissionCatalogParseResult;
 struct DesignerDispatchCatalogParseResult;
 struct DesignerDispatchExecutionCatalogParseResult;
+struct RushmoreExplainParseResult;
 
 // ==== Shared CLI infrastructure (usage/help text, JSON scalar printing, localization, exit codes) ====
 
@@ -197,6 +199,18 @@ std::string build_shell_command(const std::string& launch_command, const std::ve
 int execute_launch_command(const std::string& launch_command, const std::vector<std::string>& arguments);
 bool parse_size_t_token(const std::string& token, std::size_t& value);
 std::string lowercase_copy(std::string text);
+RushmoreExplainParseResult parse_rushmore_explain_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args);
+void print_json_rushmore_explain_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const RushmoreExplainParseResult& result);
+void print_rushmore_explain_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const RushmoreExplainParseResult& result);
+std::optional<int> try_handle_rushmore_explain(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args);
 bool parse_bool_token(std::string token, bool& value);
 bool parse_builder_context_token(
     const std::string& token,
@@ -296,6 +310,14 @@ void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog);
 std::optional<int> try_handle_list_subsystems(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args);
+
+struct RushmoreExplainParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    std::string error;
+    copperfin::runtime::RushmoreExplainPlan plan{};
+};
 struct ToolboxCreateParseResult {
     bool requested = false;
     bool ok = true;
