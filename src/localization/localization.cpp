@@ -642,6 +642,10 @@ std::string format_named_placeholders(std::string_view pattern, const Placeholde
 }
 
 std::string pseudo_localize(std::string_view pattern) {
+    if (pattern.starts_with("[!! ") && pattern.ends_with(" !!]")) {
+        return std::string(pattern);
+    }
+
     std::string result = "[!! ";
     std::size_t offset = 0U;
     while (offset < pattern.size()) {

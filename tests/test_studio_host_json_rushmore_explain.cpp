@@ -85,7 +85,7 @@ void test_studio_host_json_exposes_rushmore_explain_plan(const std::string& stud
            "#3237: pseudo-locale Rushmore explain JSON should exit successfully");
     expect_contains(pseudo_locale_process.stdout_text, "\"kind\": \"index_seek\"",
                     "#3237: pseudo-locale must preserve machine plan identities");
-    expect_contains(pseudo_locale_process.stdout_text, "\"kindDisplay\": \"[!! [!! Îñðëx šëëƙ !!] !!]\"",
+    expect_contains(pseudo_locale_process.stdout_text, "\"kindDisplay\": \"[!! Îñðëx šëëƙ !!]\"",
         "#3237: pseudo-locale must route plan-kind display through the catalog");
 
     const auto pseudo_text_process = run_process_capture(
@@ -94,8 +94,11 @@ void test_studio_host_json_exposes_rushmore_explain_plan(const std::string& stud
         std::filesystem::current_path());
     expect(pseudo_text_process.exit_code == 0,
            "#3237: pseudo-locale human-readable explain output should exit successfully");
-    expect_contains(pseudo_text_process.stdout_text, "[!! [!! šţåţµš: øƙ !!] !!]",
-                    "#3237: pseudo-locale must route human-readable explain labels through the catalog");
+    expect_contains(pseudo_text_process.stdout_text, "[!! šţåţµš: øƙ !!]",
+                    "#4378: pseudo-locale must route human-readable explain labels through the catalog");
+    expect(
+        pseudo_text_process.stdout_text.find("[!! [!!") == std::string::npos,
+        "#4378: pseudo-locale human-readable explain output should not nest pseudo markers");
 }
 
 }  // namespace cf_test_studio_host_json

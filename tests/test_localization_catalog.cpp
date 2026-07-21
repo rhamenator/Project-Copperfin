@@ -245,6 +245,10 @@ void test_placeholders_pseudo_locale_and_unicode() {
             pseudo_message.find("ENDIF") != std::string::npos &&
             pseudo_message.find("{expectedToken}") == std::string::npos,
         "#1779: pseudo-localization should decorate prose while preserving placeholder replacement values");
+    expect(
+        copperfin::localization::pseudo_localize("[!! already pseudo-localized !!]") ==
+            "[!! already pseudo-localized !!]",
+        "#4378: pseudo-localization should not wrap an already decorated catalog value twice");
 
     expect(
         english.translate("Test.Unicode", {{"name", "Zo\xC3\xAB"}}) ==
@@ -387,6 +391,12 @@ void test_product_locale_catalogs_have_key_parity() {
     }
 
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::string rushmore_status =
+        pseudo.translate("StudioHost.RushmoreExplain.Status.Ok");
+    expect(
+        rushmore_status == "[!! šţåţµš: øƙ !!]" &&
+            rushmore_status.find("[!! ", 4U) == std::string::npos,
+        "#4378: pre-decorated qps-ploc Rushmore entries should not receive nested markers");
     for (const auto& entry : english.entries) {
         copperfin::localization::PlaceholderMap placeholders;
         for (const std::string& name : placeholder_names(entry.second)) {
