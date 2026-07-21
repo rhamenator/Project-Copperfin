@@ -143,6 +143,14 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should capture both operands for a simple comparison");
     expect(equality.reason == "Simple field-to-literal comparison",
         "analyzer should route equality rationale through the default locale catalog");
+    expect(equality.recognized_predicates.size() == 1U && equality.residual_predicates.empty(),
+        "analyzer should expose equality as one recognized predicate without residuals");
+    if (equality.recognized_predicates.size() == 1U) {
+        expect(equality.recognized_predicates.front().normalized_expression == "NAME = 'BRAVO'",
+            "analyzer should normalize equality fields and preserve literal operands");
+        expect(equality.recognized_predicates.front().exact_match,
+            "analyzer should mark equality descriptors as exact matches");
+    }
 
     const auto between = analyzer.analyze_expression("AGE BETWEEN 10 AND 20", fields);
     expect(between.operator_kind == copperfin::runtime::IndexOperatorKind::between,
@@ -155,6 +163,18 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should capture all BETWEEN operands");
     expect(between.reason == "Field BETWEEN lower AND upper range comparison",
         "analyzer should route BETWEEN rationale through the default locale catalog");
+    expect(between.recognized_predicates.size() == 1U && between.residual_predicates.empty(),
+        "analyzer should expose BETWEEN as one recognized predicate without residuals");
+
+    const auto like = analyzer.analyze_expression("NAME LIKE 'BR*'", fields);
+    expect(like.recognized_predicates.size() == 1U &&
+            like.recognized_predicates.front().operation == "LIKE",
+        "analyzer should expose safe LIKE candidates as normalized predicates");
+
+    const auto in_list = analyzer.analyze_expression("NAME IN ('ALPHA','BRAVO')", fields);
+    expect(in_list.recognized_predicates.size() == 1U &&
+            in_list.recognized_predicates.front().operation == "IN",
+        "analyzer should expose IN-list candidates as normalized predicates");
 
     const auto and_chain = analyzer.analyze_expression("NAME = 'BRAVO' AND AGE > 20", fields);
     expect(and_chain.operator_kind == copperfin::runtime::IndexOperatorKind::and_chain,
@@ -169,6 +189,8 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "second AND-chain branch should remain a range pattern");
     expect(and_chain.reason == "Top-level AND chain with recognized sub-patterns",
         "analyzer should route AND-chain rationale through the default locale catalog");
+    expect(and_chain.recognized_predicates.size() == 2U && and_chain.residual_predicates.empty(),
+        "analyzer should flatten recognized AND branches into predicate descriptors");
 
     const auto not_pattern = analyzer.analyze_expression(".NOT. NAME = 'BRAVO'", fields);
     expect(not_pattern.operator_kind == copperfin::runtime::IndexOperatorKind::not_pattern,
@@ -185,6 +207,12 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should leave unsupported expressions unsupported");
     expect(unsupported.reason == "Expression does not match recognized optimization patterns",
         "analyzer should route unsupported-expression rationale through the default locale catalog");
+    expect(unsupported.recognized_predicates.empty() && unsupported.residual_predicates.size() == 1U,
+        "analyzer should preserve unsupported expressions as residual predicates");
+    if (unsupported.residual_predicates.size() == 1U) {
+        expect(unsupported.residual_predicates.front().normalized_expression == "RECNO() > 10",
+            "analyzer should preserve the unsupported residual expression text");
+    }
 }
 
 void test_index_seek_matcher_ranks_and_limits_candidate_orders() {

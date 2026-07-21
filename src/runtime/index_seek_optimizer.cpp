@@ -271,6 +271,81 @@ OptimizationConfidence min_confidence(OptimizationConfidence left, OptimizationC
     return static_cast<int>(left) <= static_cast<int>(right) ? left : right;
 }
 
+const char* descriptor_operator_name(IndexOperatorKind kind) {
+    switch (kind) {
+    case IndexOperatorKind::equal:
+        return "=";
+    case IndexOperatorKind::not_equal:
+        return "<>";
+    case IndexOperatorKind::less_than:
+        return "<";
+    case IndexOperatorKind::less_than_or_equal:
+        return "<=";
+    case IndexOperatorKind::greater_than:
+        return ">";
+    case IndexOperatorKind::greater_than_or_equal:
+        return ">=";
+    case IndexOperatorKind::between:
+        return "BETWEEN";
+    case IndexOperatorKind::in_list:
+        return "IN";
+    case IndexOperatorKind::like:
+        return "LIKE";
+    case IndexOperatorKind::and_chain:
+        return "AND";
+    case IndexOperatorKind::or_chain:
+        return "OR";
+    case IndexOperatorKind::not_pattern:
+        return "NOT";
+    case IndexOperatorKind::unsupported:
+        return "UNSUPPORTED";
+    }
+    return "UNSUPPORTED";
+}
+
+void append_predicate_descriptors(
+    const IndexExpressionPattern& pattern,
+    std::vector<RushmorePredicateDescriptor>& recognized,
+    std::vector<RushmoreResidualPredicateDescriptor>& residual) {
+    if (pattern.operator_kind == IndexOperatorKind::and_chain) {
+        for (const auto& child : pattern.sub_patterns) {
+            append_predicate_descriptors(child, recognized, residual);
+        }
+        return;
+    }
+
+    const bool has_direct_predicate =
+        pattern.field.has_value() && pattern.operands.size() >= 2U &&
+        pattern.operator_kind != IndexOperatorKind::unsupported &&
+        pattern.operator_kind != IndexOperatorKind::not_pattern;
+    if (has_direct_predicate) {
+        RushmorePredicateDescriptor descriptor;
+        descriptor.field_name = pattern.field->field_name;
+        descriptor.operation = descriptor_operator_name(pattern.operator_kind);
+        descriptor.complexity_units = static_cast<std::uint32_t>(pattern.operands.size());
+        descriptor.exact_match = pattern.operator_kind == IndexOperatorKind::equal;
+        descriptor.normalized_expression = descriptor.field_name + " " + descriptor.operation;
+        for (std::size_t index = 1U; index < pattern.operands.size(); ++index) {
+            descriptor.normalized_expression += " " + trim_copy(pattern.operands[index].raw_text);
+        }
+        recognized.push_back(std::move(descriptor));
+        return;
+    }
+
+    const std::string expression = trim_copy(pattern.raw_expression);
+    if (!expression.empty() && expression != ".T." && expression != ".F.") {
+        residual.push_back(RushmoreResidualPredicateDescriptor{
+            .normalized_expression = expression,
+            .complexity_units = 1U});
+    }
+}
+
+void populate_predicate_descriptors(IndexExpressionPattern& pattern) {
+    pattern.recognized_predicates.clear();
+    pattern.residual_predicates.clear();
+    append_predicate_descriptors(pattern, pattern.recognized_predicates, pattern.residual_predicates);
+}
+
 }  // namespace
 
 bool IndexExpressionAnalyzer::recognize_simple_comparison(
@@ -401,11 +476,16 @@ IndexExpressionPattern IndexExpressionAnalyzer::analyze_expression(
     IndexExpressionPattern result;
     result.raw_expression = expression_text;
 
+    const auto finalize = [&]() {
+        populate_predicate_descriptors(result);
+        return result;
+    };
+
     std::string trimmed = trim_copy(expression_text);
     if (trimmed.empty() || trimmed == ".T." || trimmed == ".F.") {
         result.confidence = OptimizationConfidence::not_applicable;
         result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant");
-        return result;
+        return finalize();
     }
 
     while (trimmed.size() >= 2U && trimmed.front() == '(' && trimmed.back() == ')') {
@@ -426,27 +506,27 @@ IndexExpressionPattern IndexExpressionAnalyzer::analyze_expression(
                 result.confidence = result.sub_patterns.front().confidence;
                 result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.TopLevelNotPattern");
                 result.is_dnf_compatible = false;
-                return result;
+                return finalize();
             }
         }
     }
 
     if (recognize_between_pattern(trimmed, available_fields, result)) {
-        return result;
+        return finalize();
     }
 
     if (recognize_and_chain(trimmed, available_fields, result)) {
-        return result;
+        return finalize();
     }
 
     if (recognize_simple_comparison(trimmed, available_fields, result)) {
-        return result;
+        return finalize();
     }
 
     result.operator_kind = IndexOperatorKind::unsupported;
     result.confidence = OptimizationConfidence::not_applicable;
     result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern");
-    return result;
+    return finalize();
 }
 
 int IndexSeekMatcher::score_order_match(

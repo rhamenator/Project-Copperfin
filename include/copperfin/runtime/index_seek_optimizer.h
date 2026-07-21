@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "copperfin/runtime/rushmore_planning.h"
+
 #include <string>
 #include <vector>
 #include <optional>
@@ -69,6 +71,8 @@ struct IndexExpressionPattern {
     std::string raw_expression;
     std::string reason;                          // why pattern is this confidence level
     bool is_dnf_compatible = false;              // can be part of disjunctive normal form (useful for compound queries)
+    std::vector<RushmorePredicateDescriptor> recognized_predicates;
+    std::vector<RushmoreResidualPredicateDescriptor> residual_predicates;
 };
 
 struct IndexOrderCandidate {
