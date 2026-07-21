@@ -2956,13 +2956,13 @@ std::string resolve_implicit_manifest_path(
 
     if (debug_mode) {
         const std::filesystem::path debug_manifest_path = deployed_path("app.cfdebug");
-        if (std::filesystem::exists(debug_manifest_path)) {
+        if (path_exists_without_error(debug_manifest_path)) {
             return copperfin::platform::path_to_utf8_string(debug_manifest_path.lexically_normal());
         }
     }
 
     const std::filesystem::path manifest_path = deployed_path("app.cfmanifest");
-    if (!std::filesystem::exists(manifest_path)) {
+    if (!path_exists_without_error(manifest_path)) {
         return {};
     }
     return copperfin::platform::path_to_utf8_string(manifest_path.lexically_normal());
@@ -3188,7 +3188,7 @@ int run_runtime_host_main(int argc, char** argv) {
         }
     }
 
-    if (!std::filesystem::exists(path_from_utf8(manifest_path))) {
+    if (!path_exists_without_error(path_from_utf8(manifest_path))) {
         std::cout << "status: error\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestNotFound"));
         return 3;

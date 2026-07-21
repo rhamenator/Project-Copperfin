@@ -202,6 +202,30 @@ if(audit_log_path_position EQUAL -1)
         "stdout:\n${run_output}")
 endif()
 
+if(UNIX)
+    set(restricted_manifest_root "${test_root}/restricted-manifest")
+    set(restricted_manifest_path "${restricted_manifest_root}/app.cfmanifest")
+    file(MAKE_DIRECTORY "${restricted_manifest_root}")
+    file(WRITE "${restricted_manifest_path}" "manifest_version=1\n")
+    file(CHMOD "${restricted_manifest_root}" PERMISSIONS OWNER_READ OWNER_WRITE)
+    execute_process(
+        COMMAND "${packaged_entrypoint}" --manifest "${restricted_manifest_path}"
+        WORKING_DIRECTORY "${test_root}"
+        RESULT_VARIABLE restricted_manifest_result
+        OUTPUT_VARIABLE restricted_manifest_output
+        ERROR_VARIABLE restricted_manifest_error
+    )
+    file(CHMOD "${restricted_manifest_root}" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+    if(NOT restricted_manifest_result EQUAL 3 OR
+       NOT restricted_manifest_output MATCHES "status: error")
+        message(FATAL_ERROR
+            "Runtime host should convert manifest existence I/O errors into its documented failure contract.\n"
+            "result: ${restricted_manifest_result}\n"
+            "stdout:\n${restricted_manifest_output}\n"
+            "stderr:\n${restricted_manifest_error}")
+    endif()
+endif()
+
 set(separator_root "${test_root}/separator-deployed")
 set(separator_content_root "${separator_root}/content")
 file(MAKE_DIRECTORY "${separator_content_root}")
