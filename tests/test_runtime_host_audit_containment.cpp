@@ -105,8 +105,8 @@ void test_runtime_host_rejects_audit_paths_outside_the_direct_package(
 
         const auto process = run_process_capture(
             runtime_host_path,
-            {"--manifest", copperfin::platform::path_to_utf8_string(case_root / "app.cfmanifest")},
-            temp_root);
+            {"--manifest", "app.cfmanifest"},
+            case_root);
 
         if (process.exit_code != 7) {
             std::cerr << "#4301 process diagnostic: exit=" << process.exit_code
