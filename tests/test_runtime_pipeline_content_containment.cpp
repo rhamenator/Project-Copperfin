@@ -4,8 +4,10 @@
 
 #include "test_runtime_pipeline_support.h"
 #include "runtime_pipeline_support.h"
+#include "../src/runtime/runtime_pipeline_test_hooks.h"
 
 #include <cerrno>
+#include <thread>
 
 #if defined(_WIN32)
 #include <direct.h>
@@ -741,6 +743,66 @@ void test_package_content_copy_rejects_hard_link_destination() {
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_windows_nested_package_parent_rebind_fails_closed() {
+#if defined(_WIN32)
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_nested_package_parent_rebind";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    const fs::path nested_parent = content_root / "safe" / "nested";
+    const fs::path moved_parent = temp_root / "safe-moved";
+    const fs::path external_root = temp_root / "external";
+    const fs::path external_sentinel = external_root / "sentinel.txt";
+    const fs::path source = temp_root / "source.prg";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(nested_parent);
+    fs::create_directories(external_root);
+    write_text(external_sentinel, "external-sentinel");
+    write_text(source, "package-source");
+
+    copperfin::runtime::test_hooks::arm_package_content_parent_open_pause();
+    bool copied = false;
+    fs::path destination;
+    std::string error;
+    std::thread writer([&] {
+        copied = copperfin::runtime::runtime_pipeline_detail::copy_file_to_package_content(
+            source,
+            package_root,
+            content_root,
+            fs::path("safe") / "nested" / "payload.prg",
+            destination,
+            error);
+    });
+    const bool pause_entered =
+        copperfin::runtime::test_hooks::wait_for_package_content_parent_open_pause();
+    expect(pause_entered,
+           "#4340: nested-parent race fixture should reach the post-validation barrier");
+    if (pause_entered) {
+        fs::rename(content_root / "safe", moved_parent, ignored);
+        expect(!ignored,
+               "#4340: nested-parent race fixture should move the validated parent");
+        if (!ignored) {
+            const bool junction_created = create_windows_junction(
+                content_root / "safe",
+                external_root);
+            expect(junction_created,
+                   "#4340: nested-parent race fixture should install a replacement junction");
+        }
+    }
+    copperfin::runtime::test_hooks::release_package_content_parent_open_pause();
+    writer.join();
+    expect(!copied,
+           "#4340: a replaced nested package parent should fail closed");
+    expect(read_text(external_sentinel) == "external-sentinel" &&
+               !fs::exists(external_root / "nested" / "payload.prg"),
+           "#4340: nested-parent replacement must not modify external files");
+    fs::remove_all(temp_root, ignored);
+#else
+    return;
+#endif
 }
 
 void test_relative_output_root_preserves_plan_path_contract() {

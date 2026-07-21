@@ -239,6 +239,11 @@ std::condition_variable package_content_materialization_pause_condition;
 bool package_content_materialization_pause_requested = false;
 bool package_content_materialization_pause_entered = false;
 bool package_content_materialization_pause_released = false;
+std::mutex package_content_parent_open_pause_mutex;
+std::condition_variable package_content_parent_open_pause_condition;
+bool package_content_parent_open_pause_requested = false;
+bool package_content_parent_open_pause_entered = false;
+bool package_content_parent_open_pause_released = false;
 #endif
 
 class PackageRootTransactionLock {
@@ -1954,6 +1959,48 @@ void release_package_content_materialization_pause() {
         package_content_materialization_pause_released = true;
     }
     package_content_materialization_pause_condition.notify_all();
+}
+
+void pause_before_package_content_parent_open() {
+    std::unique_lock<std::mutex> lock(package_content_parent_open_pause_mutex);
+    if (!package_content_parent_open_pause_requested) {
+        return;
+    }
+    package_content_parent_open_pause_entered = true;
+    package_content_parent_open_pause_condition.notify_all();
+    package_content_parent_open_pause_condition.wait(
+        lock,
+        [] {
+            return package_content_parent_open_pause_released;
+        });
+    package_content_parent_open_pause_requested = false;
+    package_content_parent_open_pause_entered = false;
+    package_content_parent_open_pause_released = false;
+}
+
+void arm_package_content_parent_open_pause() {
+    std::lock_guard<std::mutex> lock(package_content_parent_open_pause_mutex);
+    package_content_parent_open_pause_requested = true;
+    package_content_parent_open_pause_entered = false;
+    package_content_parent_open_pause_released = false;
+}
+
+bool wait_for_package_content_parent_open_pause() {
+    std::unique_lock<std::mutex> lock(package_content_parent_open_pause_mutex);
+    return package_content_parent_open_pause_condition.wait_for(
+        lock,
+        std::chrono::seconds(10),
+        [] {
+            return package_content_parent_open_pause_entered;
+        });
+}
+
+void release_package_content_parent_open_pause() {
+    {
+        std::lock_guard<std::mutex> lock(package_content_parent_open_pause_mutex);
+        package_content_parent_open_pause_released = true;
+    }
+    package_content_parent_open_pause_condition.notify_all();
 }
 
 }  // namespace test_hooks

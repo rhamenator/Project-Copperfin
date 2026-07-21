@@ -30,6 +30,10 @@ void release_package_materialization_pause();
 void arm_package_content_materialization_pause_before_first_asset();
 bool wait_for_package_content_materialization_pause();
 void release_package_content_materialization_pause();
+void pause_before_package_content_parent_open();
+void arm_package_content_parent_open_pause();
+bool wait_for_package_content_parent_open_pause();
+void release_package_content_parent_open_pause();
 
 bool seed_stale_manifest_pair_transaction(
     const RuntimePackagePlan& plan,

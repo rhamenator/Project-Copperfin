@@ -5,6 +5,9 @@
 #include "runtime_pipeline_support.h"
 
 #include "copperfin/security/physical_path_containment.h"
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+#include "runtime_pipeline_test_hooks.h"
+#endif
 
 #include <atomic>
 #include <array>
@@ -13,6 +16,7 @@
 #include <iostream>
 #include <limits>
 #include <string_view>
+#include <vector>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -417,6 +421,66 @@ bool write_source_to_handle(
     return input.eof();
 }
 
+class WindowsPinnedDirectoryChain {
+public:
+    WindowsPinnedDirectoryChain() = default;
+    WindowsPinnedDirectoryChain(const WindowsPinnedDirectoryChain&) = delete;
+    WindowsPinnedDirectoryChain& operator=(const WindowsPinnedDirectoryChain&) = delete;
+
+    ~WindowsPinnedDirectoryChain() {
+        for (const HANDLE handle : handles_) {
+            (void)::CloseHandle(handle);
+        }
+    }
+
+    bool open(
+        const std::filesystem::path& content_root,
+        const std::filesystem::path& relative_parent) {
+        if (!open_direct_directory(content_root)) {
+            return false;
+        }
+        std::filesystem::path current = content_root;
+        for (const auto& component : relative_parent) {
+            if (component == ".") {
+                continue;
+            }
+            current /= component;
+            if (!open_direct_directory(current)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+private:
+    bool open_direct_directory(const std::filesystem::path& path) {
+        const HANDLE handle = ::CreateFileW(
+            path.c_str(),
+            FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+            nullptr);
+        if (handle == INVALID_HANDLE_VALUE) {
+            return false;
+        }
+        BY_HANDLE_FILE_INFORMATION information{};
+        const bool direct_directory =
+            ::GetFileInformationByHandle(handle, &information) != 0 &&
+            (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U &&
+            (information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U;
+        if (!direct_directory) {
+            (void)::CloseHandle(handle);
+            return false;
+        }
+        handles_.push_back(handle);
+        return true;
+    }
+
+    std::vector<HANDLE> handles_;
+};
+
 bool copy_to_pinned_windows_parent(
     const std::filesystem::path& source,
     const std::filesystem::path& content_root,
@@ -426,29 +490,14 @@ bool copy_to_pinned_windows_parent(
     destination = (content_root / relative_path).lexically_normal();
     const std::filesystem::path parent =
         (content_root / relative_path.parent_path()).lexically_normal();
-    const HANDLE parent_handle = ::CreateFileW(
-        parent.c_str(),
-        FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES,
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
-        nullptr,
-        OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
-        nullptr);
-    if (parent_handle == INVALID_HANDLE_VALUE) {
+#if defined(COPPERFIN_ENABLE_RUNTIME_PIPELINE_TEST_HOOKS)
+    test_hooks::pause_before_package_content_parent_open();
+#endif
+    WindowsPinnedDirectoryChain parent_chain;
+    if (!parent_chain.open(content_root, relative_path.parent_path())) {
         error = copy_file_failed(destination);
         return false;
     }
-    BY_HANDLE_FILE_INFORMATION parent_information{};
-    const bool direct_parent =
-        ::GetFileInformationByHandle(parent_handle, &parent_information) != 0 &&
-        (parent_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U &&
-        (parent_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0U;
-    if (!direct_parent) {
-        (void)::CloseHandle(parent_handle);
-        error = copy_file_failed(destination);
-        return false;
-    }
-
     const HANDLE existing_handle = ::CreateFileW(
         destination.c_str(),
         FILE_READ_ATTRIBUTES,
@@ -463,14 +512,12 @@ bool copy_to_pinned_windows_parent(
             ::GetFileInformationByHandle(existing_handle, &existing_information) != 0;
         (void)::CloseHandle(existing_handle);
         if (!read_existing) {
-            (void)::CloseHandle(parent_handle);
             error = copy_file_failed(destination);
             return false;
         }
         if ((existing_information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U ||
             (existing_information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U ||
             existing_information.nNumberOfLinks != 1U) {
-            (void)::CloseHandle(parent_handle);
             error = rejected_destination(destination);
             return false;
         }
@@ -478,7 +525,6 @@ bool copy_to_pinned_windows_parent(
         const DWORD existing_error = ::GetLastError();
         if (existing_error != ERROR_FILE_NOT_FOUND &&
             existing_error != ERROR_PATH_NOT_FOUND) {
-            (void)::CloseHandle(parent_handle);
             error = copy_file_failed(destination);
             return false;
         }
@@ -500,7 +546,6 @@ bool copy_to_pinned_windows_parent(
             (void)::CloseHandle(temporary_handle);
         }
         (void)::DeleteFileW(temporary.c_str());
-        (void)::CloseHandle(parent_handle);
         error = copy_file_failed(destination);
         return false;
     }
@@ -512,11 +557,9 @@ bool copy_to_pinned_windows_parent(
             MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
     if (!moved) {
         (void)::DeleteFileW(temporary.c_str());
-        (void)::CloseHandle(parent_handle);
         error = copy_file_failed(destination);
         return false;
     }
-    (void)::CloseHandle(parent_handle);
     return true;
 }
 #endif
