@@ -8,9 +8,11 @@ namespace cf_studio_host_main_detail {
 const copperfin::localization::LocalizedCatalog* g_active_catalog = nullptr;
 std::string g_executable_path;
 
-copperfin::localization::LocalizedCatalog load_localization(const char* executable_path) {
+copperfin::localization::LocalizedCatalog load_localization(std::string_view executable_path) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(
-        executable_path == nullptr ? std::filesystem::path{} : std::filesystem::path(executable_path));
+        executable_path.empty()
+            ? std::filesystem::path{}
+            : copperfin::platform::path_from_utf8_string(executable_path));
     return copperfin::localization::load_catalogs(
         locale_root,
         copperfin::localization::select_locale());

@@ -6,8 +6,8 @@
 
 using namespace cf_studio_host_main_detail;
 
-int main(int argc, char** argv) {
-    const auto catalog = load_localization(argc > 0 ? argv[0] : nullptr);
+int run_studio_host_main(int argc, char** argv) {
+    const auto catalog = load_localization(argc > 0 ? std::string_view(argv[0]) : std::string_view{});
     g_active_catalog = &catalog;
     g_executable_path = argc > 0 ? argv[0] : "";
     const auto hardening = copperfin::security::apply_default_process_hardening();
@@ -4543,3 +4543,25 @@ int main(int argc, char** argv) {
     print_document(open_result.document);
     return 0;
 }
+
+#if defined(_WIN32)
+int wmain(int argc, wchar_t** argv) {
+    std::vector<std::string> utf8_arguments;
+    std::vector<char*> narrow_arguments;
+    utf8_arguments.reserve(static_cast<std::size_t>(argc));
+    narrow_arguments.reserve(static_cast<std::size_t>(argc) + 1U);
+    for (int index = 0; index < argc; ++index) {
+        utf8_arguments.push_back(
+            copperfin::platform::path_to_utf8_string(std::filesystem::path(argv[index])));
+    }
+    for (auto& argument : utf8_arguments) {
+        narrow_arguments.push_back(argument.data());
+    }
+    narrow_arguments.push_back(nullptr);
+    return run_studio_host_main(argc, narrow_arguments.data());
+}
+#else
+int main(int argc, char** argv) {
+    return run_studio_host_main(argc, argv);
+}
+#endif

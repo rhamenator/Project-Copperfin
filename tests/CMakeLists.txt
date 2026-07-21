@@ -522,6 +522,28 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_shell_command>
 )
 
+add_executable(test_studio_host_utf8_arguments
+    test_studio_host_utf8_arguments.cpp
+)
+target_link_libraries(test_studio_host_utf8_arguments PRIVATE
+    cf_platform_support
+    cf_test_process_capture_support
+)
+add_dependencies(test_studio_host_utf8_arguments copperfin_studio_host)
+
+if(MSVC)
+    target_compile_options(test_studio_host_utf8_arguments PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_utf8_arguments PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_utf8_arguments
+    COMMAND
+        $<TARGET_FILE:test_studio_host_utf8_arguments>
+        $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_licensing_status
     test_licensing_status.cpp
 )

@@ -7,6 +7,7 @@
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/path.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
@@ -159,7 +160,7 @@ struct DesignerDispatchExecutionCatalogParseResult;
 
 extern const copperfin::localization::LocalizedCatalog* g_active_catalog;
 extern std::string g_executable_path;
-copperfin::localization::LocalizedCatalog load_localization(const char* executable_path);
+copperfin::localization::LocalizedCatalog load_localization(std::string_view executable_path);
 std::optional<int> try_handle_license_status(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args);
