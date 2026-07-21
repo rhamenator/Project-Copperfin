@@ -360,6 +360,51 @@ void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
         "#2379: parse_cdx_header should preserve the default localized short-probe error");
 }
 
+void test_vfp_header_and_index_default_catalog_refresh() {
+    const copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+
+    const auto english_dbf = copperfin::vfp::parse_dbf_header({0x30U, 0x00U});
+    const auto english_cdx = copperfin::vfp::parse_cdx_header({0x00U, 0x04U}, 2U);
+    const auto english_idx = copperfin::vfp::parse_index_probe(
+        {0x00U},
+        1U,
+        copperfin::vfp::IndexKind::idx);
+    expect(english_dbf.error.find("File is smaller") != std::string::npos,
+           "#4358: DBF header default diagnostic should begin in en-US");
+    expect(english_cdx.error.find("File is smaller") != std::string::npos,
+           "#4358: CDX header default diagnostic should begin in en-US");
+    expect(english_idx.error.find("File is smaller") != std::string::npos,
+           "#4358: index probe default diagnostic should begin in en-US");
+
+    locale.set("es-419");
+    const auto spanish_dbf = copperfin::vfp::parse_dbf_header({0x30U, 0x00U});
+    const auto spanish_cdx = copperfin::vfp::parse_cdx_header({0x00U, 0x04U}, 2U);
+    const auto spanish_idx = copperfin::vfp::parse_index_probe(
+        {0x00U},
+        1U,
+        copperfin::vfp::IndexKind::idx);
+    expect(spanish_dbf.error != english_dbf.error,
+           "#4358: DBF header diagnostics should refresh to es-419");
+    expect(spanish_cdx.error != english_cdx.error,
+           "#4358: CDX header diagnostics should refresh to es-419");
+    expect(spanish_idx.error != english_idx.error,
+           "#4358: index probe diagnostics should refresh to es-419");
+
+    locale.set("qps-ploc");
+    const auto pseudo_dbf = copperfin::vfp::parse_dbf_header({0x30U, 0x00U});
+    const auto pseudo_cdx = copperfin::vfp::parse_cdx_header({0x00U, 0x04U}, 2U);
+    const auto pseudo_idx = copperfin::vfp::parse_index_probe(
+        {0x00U},
+        1U,
+        copperfin::vfp::IndexKind::idx);
+    expect(pseudo_dbf.error.find("[!! ") != std::string::npos,
+           "#4358: DBF header diagnostics should refresh to qps-ploc");
+    expect(pseudo_cdx.error.find("[!! ") != std::string::npos,
+           "#4358: CDX header diagnostics should refresh to qps-ploc");
+    expect(pseudo_idx.error.find("[!! ") != std::string::npos,
+           "#4358: index probe diagnostics should refresh to qps-ploc");
+}
+
 void test_asset_family_detection() {
     using copperfin::vfp::AssetFamily;
     using copperfin::vfp::asset_family_from_path;
@@ -2106,6 +2151,7 @@ int main() {
     test_parse_dbf_header();
     test_parse_dbf_header_rejects_short_input();
     test_dbf_cdx_header_errors_resolve_through_localization_catalog();
+    test_vfp_header_and_index_default_catalog_refresh();
     test_asset_family_detection();
     test_asset_inspector_errors_resolve_through_localization_catalog();
     test_parse_index_probe_for_cdx();

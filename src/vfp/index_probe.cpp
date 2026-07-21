@@ -12,6 +12,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
 #include <string_view>
 
 namespace copperfin::vfp {
@@ -30,10 +31,29 @@ std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
            (static_cast<std::uint32_t>(bytes[offset + 3]) << 24U);
 }
 
-const localization::LocalizedCatalog& index_probe_catalog() {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog;
+localization::LocalizedCatalog index_probe_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        localization::LocalizedCatalog catalog;
+    };
+
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
+        localization::load_catalogs(
+            localization::resolve_catalog_root(),
+            localization::default_locale)};
+    const std::filesystem::path locale_root = localization::resolve_catalog_root();
+    const std::string locale = localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string index_probe_text(std::string_view key) {
