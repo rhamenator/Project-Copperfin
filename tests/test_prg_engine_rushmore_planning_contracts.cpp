@@ -6,6 +6,7 @@
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -19,6 +20,9 @@ using copperfin::runtime::RushmorePlanningOptions;
 using copperfin::runtime::RushmoreCursorStatisticsDescriptor;
 using copperfin::runtime::RushmoreCursorMetadata;
 using copperfin::runtime::RushmoreStatisticsState;
+using copperfin::runtime::RushmoreCostModelInput;
+using copperfin::runtime::RushmoreCostModelOptions;
+using copperfin::runtime::RushmorePredicateDescriptor;
 
 void test_rushmore_planning_contracts() {
     const RushmorePlanningOptions defaults{};
@@ -109,4 +113,42 @@ void test_rushmore_planning_contracts() {
         refreshed};
     expect(metadata.statistics.has_value() && metadata.statistics->version == metadata.stats_version,
         "Cursor metadata must carry optional statistics without changing its stable identity fields");
+
+    RushmoreCostModelInput table_scan_input{
+        RushmorePlanKind::table_scan,
+        {"people", "name:upper(name)", 100, 0, std::nullopt},
+        std::nullopt,
+        0};
+    RushmoreCostModelInput seek_input{
+        RushmorePlanKind::index_seek,
+        {"people", "name:upper(name)", 100, refreshed.version, refreshed},
+        RushmorePredicateDescriptor{"NAME = 'BRAVO'", "NAME", "=", 1, true},
+        0};
+    const auto table_scan_cost = copperfin::runtime::rushmore_estimate_plan_cost(table_scan_input);
+    const auto seek_cost_estimate = copperfin::runtime::rushmore_estimate_plan_cost(seek_input);
+    expect(table_scan_cost.estimated_rows == 100 && seek_cost_estimate.estimated_rows == 2,
+        "Rushmore cost model must use conservative fallback and fresh distinct-count estimates");
+    expect(seek_cost_estimate < table_scan_cost,
+        "Rushmore cost model must prefer a clearly cheaper single-index seek");
+
+    RushmoreCostModelOptions tuned_options{};
+    tuned_options.predicate_cpu_units = 100;
+    const auto tuned_seek_cost = copperfin::runtime::rushmore_estimate_plan_cost(seek_input, tuned_options);
+    expect(tuned_seek_cost.cpu_units > seek_cost_estimate.cpu_units,
+        "Rushmore cost model options must deterministically tune predicate CPU cost");
+
+    RushmoreCostModelInput stale_input = seek_input;
+    stale_input.cursor.statistics->state = RushmoreStatisticsState::stale;
+    const auto stale_cost = copperfin::runtime::rushmore_estimate_plan_cost(stale_input);
+    expect(stale_cost.estimated_rows == 10,
+        "Rushmore cost model must use conservative estimates for stale statistics");
+
+    RushmoreCostModelInput overflow_input = table_scan_input;
+    overflow_input.cursor.row_count = std::numeric_limits<std::uint64_t>::max();
+    RushmoreCostModelOptions overflow_options{};
+    overflow_options.row_cpu_units = std::numeric_limits<std::uint64_t>::max();
+    const auto overflow_cost = copperfin::runtime::rushmore_estimate_plan_cost(overflow_input, overflow_options);
+    expect(overflow_cost.cpu_units == std::numeric_limits<std::uint64_t>::max() &&
+            overflow_cost.total_units == std::numeric_limits<std::uint64_t>::max(),
+        "Rushmore cost model must saturate arithmetic instead of wrapping costs");
 }
