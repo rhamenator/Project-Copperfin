@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
@@ -18,18 +19,18 @@ internal static class CopperfinProjectSelection
         var activeDocument = dte?.ActiveDocument;
         var activeDocumentPath = activeDocument?.FullName;
         var containingProjectPath = activeDocument?.ProjectItem?.ContainingProject?.FullName;
-        var activeProjectPath = CopperfinProjectPathResolver.ResolveActiveDocumentProjectPath(
+        return CopperfinProjectPathResolver.ResolveProjectWorkflowPath(
             activeDocumentPath,
-            containingProjectPath);
-        if (activeProjectPath is not null)
-        {
-            return activeProjectPath;
-        }
+            containingProjectPath,
+            EnumerateSelectedProjectPaths(dte));
+    }
 
+    private static IEnumerable<string?> EnumerateSelectedProjectPaths(DTE? dte)
+    {
         var selectedItems = dte?.SelectedItems;
         if (selectedItems is null || selectedItems.Count <= 0)
         {
-            return null;
+            yield break;
         }
 
         for (var index = 1; index <= selectedItems.Count; ++index)
@@ -37,6 +38,8 @@ internal static class CopperfinProjectSelection
             var selectedItem = selectedItems.Item(index);
             if (selectedItem?.ProjectItem is ProjectItem projectItem)
             {
+                string? selectedProjectPath = null;
+                string? containingProjectPath = null;
                 try
                 {
                     for (short fileIndex = 1; fileIndex <= projectItem.FileCount; ++fileIndex)
@@ -44,22 +47,26 @@ internal static class CopperfinProjectSelection
                         var candidate = projectItem.FileNames[fileIndex];
                         if (CopperfinProjectWorkflow.IsCopperfinProjectPath(candidate) && File.Exists(candidate))
                         {
-                            return candidate;
+                            selectedProjectPath = candidate;
+                            break;
                         }
                     }
+
+                    containingProjectPath = projectItem.ContainingProject?.FullName;
                 }
                 catch (ArgumentException)
                 {
                 }
+
+                if (selectedProjectPath is not null)
+                {
+                    yield return selectedProjectPath;
+                }
+
+                yield return containingProjectPath;
             }
 
-            var projectPath = selectedItem?.Project?.FullName;
-            if (CopperfinProjectWorkflow.IsCopperfinProjectPath(projectPath) && File.Exists(projectPath))
-            {
-                return projectPath;
-            }
+            yield return selectedItem?.Project?.FullName;
         }
-
-        return null;
     }
 }

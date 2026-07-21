@@ -45,6 +45,50 @@ internal static partial class Program
                 Path.Combine(root, "missing.pjx"));
             Expect(missingContainingProject is null,
                 "a missing containing PJX should not enable project workflows");
+
+            var activeProject = Path.Combine(root, "active-project.pjx");
+            var selectedProject = Path.Combine(root, "selected-project.pjx");
+            File.WriteAllText(activeProject, "active project");
+            File.WriteAllText(selectedProject, "selected project");
+            var selectedProjectResolution = CopperfinProjectPathResolver.ResolveProjectWorkflowPath(
+                Path.Combine(root, "active.prg"),
+                activeProject,
+                new[] { selectedProject });
+            Expect(selectedProjectResolution == selectedProject,
+                "project workflow commands should prefer an explicitly selected project over the active document project");
+
+            var activeProjectResolution = CopperfinProjectPathResolver.ResolveProjectWorkflowPath(
+                Path.Combine(root, "active.prg"),
+                activeProject,
+                Array.Empty<string?>());
+            Expect(activeProjectResolution == activeProject,
+                "project workflow commands should retain active-document project fallback without a selected project");
+
+            var invalidSelectionResolution = CopperfinProjectPathResolver.ResolveProjectWorkflowPath(
+                Path.Combine(root, "active.prg"),
+                activeProject,
+                new[] { Path.Combine(root, "missing-selected.pjx") });
+            Expect(invalidSelectionResolution == activeProject,
+                "project workflow commands should ignore missing selected projects before active-document fallback");
+
+            var repositoryRoot = FindStudioTargetSelectionRepositoryRoot();
+            Expect(repositoryRoot is not null,
+                "project selection tests should locate the repository root for command wiring checks");
+            if (repositoryRoot is not null)
+            {
+                var commandSource = File.ReadAllText(Path.Combine(
+                    repositoryRoot,
+                    "vsix",
+                    "Copperfin.VisualStudio",
+                    "CopperfinProjectCommands.cs"));
+                const string resolverCall = "CopperfinProjectSelection.ResolveProjectPath(dte)";
+                var firstCall = commandSource.IndexOf(resolverCall, StringComparison.Ordinal);
+                var secondCall = firstCall < 0
+                    ? -1
+                    : commandSource.IndexOf(resolverCall, firstCall + resolverCall.Length, StringComparison.Ordinal);
+                Expect(firstCall >= 0 && secondCall >= 0,
+                    "project workflow command status and execution should share the same project resolver");
+            }
         }
         finally
         {

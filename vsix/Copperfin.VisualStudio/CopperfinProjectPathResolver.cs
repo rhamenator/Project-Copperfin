@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+using System.Collections.Generic;
 using System.IO;
 
 namespace Copperfin.VisualStudio;
@@ -20,6 +21,22 @@ internal static class CopperfinProjectPathResolver
         return IsExistingProjectPath(containingProjectPath)
             ? containingProjectPath
             : null;
+    }
+
+    public static string? ResolveProjectWorkflowPath(
+        string? activeDocumentPath,
+        string? containingProjectPath,
+        IEnumerable<string?> selectedProjectPaths)
+    {
+        foreach (var selectedProjectPath in selectedProjectPaths)
+        {
+            if (IsExistingProjectPath(selectedProjectPath))
+            {
+                return selectedProjectPath;
+            }
+        }
+
+        return ResolveActiveDocumentProjectPath(activeDocumentPath, containingProjectPath);
     }
 
     private static bool IsExistingProjectPath(string? path)

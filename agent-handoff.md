@@ -103,6 +103,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- VSIX project workflow targeting slice #4349 under #23/#4312: `CopperfinProjectSelection` must feed selected Solution Explorer project candidates into the pure `CopperfinProjectPathResolver.ResolveProjectWorkflowPath()` before active-document fallback. Keep Build/Run/Debug status and execution on the same resolver, preserve command IDs, project paths, host JSON, localization, and active-document behavior, and retain tests for active Project A plus selected Project B and invalid-selection fallback.
+
 - Generated launcher localization slice #4350 under #2348: `runtime_pipeline_csharp_and_launcher.cpp` must emit managed `NormalizeLocale()` logic that strips the earliest POSIX `.` encoding or `@` modifier suffix before normalizing separators and case. Keep explicit `--locale`/`/locale`, `COPPERFIN_LOCALE`, Windows-style forms, fallback buckets, invariant forwarded arguments, status fields, and exit codes unchanged; retain source-contract coverage and hosted Windows process evidence for `pt_BR.UTF-8` and `pt_BR@modifier`.
 
 - Managed runtime-debug localization slice #4352 under #2348: `CopperfinRuntimeDebugTransport.ResolveResponseError()` must recognize the active catalog's `RuntimeHost.Prefix.Error` and retain the invariant English `error: ` fallback for hosts that do not receive locale propagation. Keep stderr precedence, diagnostic bodies, `debug.response.*` framing, machine keys, and command identities unchanged; retain en-US, es-419, pt-BR, and qps-ploc parser regressions.
