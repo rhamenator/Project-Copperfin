@@ -7,8 +7,11 @@
 #include "copperfin/localization/localization.h"
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
 #include <iterator>
 #include <map>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -17,12 +20,29 @@ namespace copperfin::studio {
 
 namespace {
 
-const copperfin::localization::LocalizedCatalog& builder_registry_catalog() {
-    static const copperfin::localization::LocalizedCatalog catalog =
+copperfin::localization::LocalizedCatalog builder_registry_catalog() {
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        copperfin::localization::LocalizedCatalog catalog;
+    };
+
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
         copperfin::localization::load_catalogs(
             copperfin::localization::resolve_catalog_root(),
-            copperfin::localization::select_locale());
-    return catalog;
+            copperfin::localization::default_locale)};
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root();
+    const std::string locale = copperfin::localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = copperfin::localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 std::string builder_registry_text(std::string_view key) {
@@ -31,41 +51,51 @@ std::string builder_registry_text(std::string_view key) {
 
 const std::vector<std::string>& builder_registry_display_text(
     const copperfin::localization::LocalizedCatalog& catalog) {
+    static const std::array<std::string_view, 27U> translation_keys = {
+        "Studio.Builder.FormBuilder.Title",
+        "Studio.Builder.FormBuilder.Description",
+        "Studio.Builder.ClassBuilder.Title",
+        "Studio.Builder.ClassBuilder.Description",
+        "Studio.Builder.ControlBuilder.Title",
+        "Studio.Builder.ControlBuilder.Description",
+        "Studio.Builder.GridBuilder.Title",
+        "Studio.Builder.GridBuilder.Description",
+        "Studio.Builder.ReportBuilder.Title",
+        "Studio.Builder.ReportBuilder.Description",
+        "Studio.Builder.LabelWizard.Title",
+        "Studio.Builder.LabelWizard.Description",
+        "Studio.Builder.MenuDesigner.Title",
+        "Studio.Builder.MenuDesigner.Description",
+        "Studio.Builder.ApplicationWizard.Title",
+        "Studio.Builder.ApplicationWizard.Description",
+        "Studio.Builder.DataEnvironmentBuilder.Title",
+        "Studio.Builder.DataEnvironmentBuilder.Description",
+        "Studio.Builder.FormBuilder.Vfp9Equivalent",
+        "Studio.Builder.ClassBuilder.Vfp9Equivalent",
+        "Studio.Builder.ControlBuilder.Vfp9Equivalent",
+        "Studio.Builder.GridBuilder.Vfp9Equivalent",
+        "Studio.Builder.ReportBuilder.Vfp9Equivalent",
+        "Studio.Builder.LabelWizard.Vfp9Equivalent",
+        "Studio.Builder.MenuDesigner.Vfp9Equivalent",
+        "Studio.Builder.ApplicationWizard.Vfp9Equivalent",
+        "Studio.Builder.DataEnvironmentBuilder.Vfp9Equivalent"
+    };
     static std::map<std::string, std::vector<std::string>> text_by_locale;
-    const auto cache_key = catalog.requested_locale.empty()
+    static std::mutex text_cache_mutex;
+    std::string cache_key = catalog.requested_locale.empty()
         ? std::string(copperfin::localization::default_locale)
         : catalog.requested_locale;
+    for (const auto key : translation_keys) {
+        cache_key.push_back('\0');
+        cache_key += catalog.translate(key);
+    }
+    std::lock_guard<std::mutex> lock(text_cache_mutex);
     const auto [entry, inserted] = text_by_locale.emplace(cache_key, std::vector<std::string>{});
     if (inserted) {
-        entry->second = {
-            catalog.translate("Studio.Builder.FormBuilder.Title"),
-            catalog.translate("Studio.Builder.FormBuilder.Description"),
-            catalog.translate("Studio.Builder.ClassBuilder.Title"),
-            catalog.translate("Studio.Builder.ClassBuilder.Description"),
-            catalog.translate("Studio.Builder.ControlBuilder.Title"),
-            catalog.translate("Studio.Builder.ControlBuilder.Description"),
-            catalog.translate("Studio.Builder.GridBuilder.Title"),
-            catalog.translate("Studio.Builder.GridBuilder.Description"),
-            catalog.translate("Studio.Builder.ReportBuilder.Title"),
-            catalog.translate("Studio.Builder.ReportBuilder.Description"),
-            catalog.translate("Studio.Builder.LabelWizard.Title"),
-            catalog.translate("Studio.Builder.LabelWizard.Description"),
-            catalog.translate("Studio.Builder.MenuDesigner.Title"),
-            catalog.translate("Studio.Builder.MenuDesigner.Description"),
-            catalog.translate("Studio.Builder.ApplicationWizard.Title"),
-            catalog.translate("Studio.Builder.ApplicationWizard.Description"),
-            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Title"),
-            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Description"),
-            catalog.translate("Studio.Builder.FormBuilder.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.ClassBuilder.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.ControlBuilder.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.GridBuilder.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.ReportBuilder.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.LabelWizard.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.MenuDesigner.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.ApplicationWizard.Vfp9Equivalent"),
-            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Vfp9Equivalent")
-        };
+        entry->second.reserve(translation_keys.size());
+        for (const auto key : translation_keys) {
+            entry->second.push_back(catalog.translate(key));
+        }
     }
     return entry->second;
 }
@@ -210,10 +240,25 @@ std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
     };
 }
 
-const std::vector<StudioBuilderDescriptor>& studio_builder_registry() {
-    static const std::vector<StudioBuilderDescriptor> builders =
-        studio_builder_registry_for_catalog(builder_registry_catalog());
-    return builders;
+std::vector<StudioBuilderDescriptor> studio_builder_registry() {
+    struct BuilderCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        std::vector<StudioBuilderDescriptor> builders;
+    };
+
+    const auto catalog = builder_registry_catalog();
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root();
+    const std::string locale = copperfin::localization::select_locale();
+    static std::mutex cache_mutex;
+    static BuilderCache cache{};
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.builders = studio_builder_registry_for_catalog(catalog);
+    }
+    return cache.builders;
 }
 
 std::vector<StudioBuilderDescriptor> studio_builders_for_context(StudioBuilderContext context) {

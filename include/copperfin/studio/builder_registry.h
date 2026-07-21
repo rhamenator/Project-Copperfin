@@ -97,7 +97,7 @@ struct StudioBuilderLaunchCatalogResult {
 [[nodiscard]] const char* studio_builder_context_name(StudioBuilderContext context);
 [[nodiscard]] std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
     const localization::LocalizedCatalog& catalog);
-[[nodiscard]] const std::vector<StudioBuilderDescriptor>& studio_builder_registry();
+[[nodiscard]] std::vector<StudioBuilderDescriptor> studio_builder_registry();
 [[nodiscard]] std::vector<StudioBuilderDescriptor> studio_builders_for_context(StudioBuilderContext context);
 [[nodiscard]] StudioBuilderLaunchPlanResult plan_studio_builder_launch(
     const StudioBuilderLaunchRequest& request);

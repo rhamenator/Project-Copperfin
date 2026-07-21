@@ -6,6 +6,7 @@
 #include "copperfin/studio/builder_dispatch.h"
 #include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -1380,6 +1381,40 @@ int main() {
         .unique_id = {}
     });
     expect(!missing_id_launch.ok, "#1203: builder launch plans should reject missing builder ids");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto live_english = copperfin::studio::studio_builder_registry();
+    locale_override.set("es-419");
+    const auto live_spanish = copperfin::studio::studio_builder_registry();
+    locale_override.set("qps-ploc");
+    const auto live_pseudo = copperfin::studio::studio_builder_registry();
+    const auto* live_english_report = find_builder(live_english, "report-builder");
+    const auto* live_spanish_report = find_builder(live_spanish, "report-builder");
+    const auto* live_pseudo_report = find_builder(live_pseudo, "report-builder");
+    const auto* expected_spanish_report = find_builder(spanish_builders, "report-builder");
+    const auto* expected_pseudo_report = find_builder(pseudo_builders, "report-builder");
+    expect(live_english_report != nullptr && live_spanish_report != nullptr && live_pseudo_report != nullptr &&
+               english_report_builder != nullptr && expected_spanish_report != nullptr && expected_pseudo_report != nullptr,
+           "#4365: default builder locale refresh should preserve registry lookup identity");
+    if (live_english_report != nullptr && live_spanish_report != nullptr && live_pseudo_report != nullptr &&
+        english_report_builder != nullptr && expected_spanish_report != nullptr && expected_pseudo_report != nullptr) {
+        expect(live_english_report->title == english_report_builder->title &&
+                   live_english_report->description == english_report_builder->description,
+               "#4365: default builder registry should begin in en-US");
+        expect(live_spanish_report->title == expected_spanish_report->title &&
+                   live_spanish_report->description == expected_spanish_report->description,
+               "#4365: default builder registry should refresh to es-419");
+        expect(live_pseudo_report->title == expected_pseudo_report->title &&
+                   live_pseudo_report->description == expected_pseudo_report->description,
+               "#4365: default builder registry should refresh to qps-ploc");
+        expect(live_english_report->id == live_spanish_report->id &&
+                   live_spanish_report->id == live_pseudo_report->id &&
+                   live_english_report->vfp9_equivalent == live_spanish_report->vfp9_equivalent &&
+                   live_spanish_report->vfp9_equivalent == live_pseudo_report->vfp9_equivalent &&
+                   live_english_report->entry_point == live_spanish_report->entry_point,
+               "#4365: locale refresh should preserve builder machine identifiers");
+    }
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
