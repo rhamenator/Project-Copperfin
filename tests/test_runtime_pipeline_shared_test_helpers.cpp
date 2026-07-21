@@ -630,6 +630,83 @@ void test_generated_posix_bridge_environment_launch(const std::filesystem::path&
 #endif
 }
 
+void test_generated_bridge_runtime_host_verification(const std::filesystem::path& wrapper_path) {
+    namespace fs = std::filesystem;
+    using TestVerify = int (*)(const char*, const char*, const char*, const char*, const char*, const char*);
+#if defined(_WIN32)
+    HMODULE module = ::LoadLibraryW(wrapper_path.c_str());
+    expect(module != nullptr, "generated Windows bridge verifier seam should load the compiled wrapper");
+    if (module == nullptr) {
+        return;
+    }
+    const auto verify = reinterpret_cast<TestVerify>(
+        ::GetProcAddress(module, "copperfin_runtime_bridge_test_launch_environment"));
+#else
+    void* module = dlopen(wrapper_path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    expect(module != nullptr, "generated POSIX bridge verifier seam should load the compiled wrapper");
+    if (module == nullptr) {
+        return;
+    }
+    const auto verify = reinterpret_cast<TestVerify>(
+        dlsym(module, "copperfin_runtime_bridge_test_launch_environment"));
+#endif
+    expect(verify != nullptr, "generated bridge verifier seam should expose the existing test hook");
+    if (verify == nullptr) {
+#if defined(_WIN32)
+        (void)::FreeLibrary(module);
+#else
+        dlclose(module);
+#endif
+        return;
+    }
+
+    const fs::path temp_root = wrapper_path.parent_path() / "runtime-host-verification-test";
+    const fs::path host_path = temp_root / "copperfin_runtime_host";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path outside_path = temp_root / "outside-host";
+    const fs::path redirected_path = temp_root / "redirected-host";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    write_text(host_path, "verified-runtime-host\n");
+    const auto digest = copperfin::security::sha256_hex_for_file(host_path.string());
+    expect(digest.ok, "generated bridge verification fixture should hash the runtime host");
+    write_text(manifest_path, "runtime_host_sha256=" + digest.hex_digest + "\n");
+    const std::string temp_root_string = temp_root.string();
+    const std::string host_path_string = host_path.string();
+    const std::string manifest_path_string = manifest_path.string();
+    const std::string verify_argument = "--copperfin-verify-runtime-host";
+    expect(verify(
+               host_path_string.c_str(), manifest_path_string.c_str(), temp_root_string.c_str(),
+               "", "", verify_argument.c_str()) == 0,
+           "generated bridge should accept an unchanged runtime host with a matching digest");
+
+    write_text(host_path, "tampered-runtime-host\n");
+    expect(verify(
+               host_path_string.c_str(), manifest_path_string.c_str(), temp_root_string.c_str(),
+               "", "", verify_argument.c_str()) != 0,
+           "generated bridge should reject a runtime host whose digest no longer matches");
+
+    write_text(outside_path, "outside-runtime-host\n");
+    const auto outside_digest = copperfin::security::sha256_hex_for_file(outside_path.string());
+    write_text(manifest_path, "runtime_host_sha256=" + outside_digest.hex_digest + "\n");
+    fs::create_symlink(outside_path, redirected_path, ignored);
+    if (!ignored) {
+        const std::string redirected_path_string = redirected_path.string();
+        expect(verify(
+                   redirected_path_string.c_str(), manifest_path_string.c_str(), temp_root_string.c_str(),
+                   "", "", verify_argument.c_str()) != 0,
+               "generated bridge should reject a redirected runtime-host path");
+    }
+
+    fs::remove_all(temp_root, ignored);
+#if defined(_WIN32)
+    (void)::FreeLibrary(module);
+#else
+    dlclose(module);
+#endif
+}
+
 bool build_native_wrapper_with_cmake(
     const std::filesystem::path& cmake_lists_path,
     const std::filesystem::path& expected_output_path,

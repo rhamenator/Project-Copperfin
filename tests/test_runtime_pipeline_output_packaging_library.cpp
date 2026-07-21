@@ -158,6 +158,18 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should derive a sibling manifest path");
         expect(wrapper_source.find("static std::filesystem::path copperfin_runtime_host_path(void* symbol_address)") != std::string::npos,
                "library-output wrapper source should derive a sibling runtime-host path");
+        expect(wrapper_source.find("runtime_host_sha256") != std::string::npos,
+               "library-output wrapper source should read the packaged runtime-host digest");
+        expect(wrapper_source.find("copperfin_runtime_bridge_sha256_bytes") != std::string::npos,
+               "library-output wrapper source should carry a self-contained runtime-host hash verifier");
+        expect(wrapper_source.find("copperfin_runtime_bridge_read_verified_host") != std::string::npos,
+               "library-output wrapper source should verify the sibling host before launch");
+        expect(wrapper_source.find("FILE_FLAG_OPEN_REPARSE_POINT") != std::string::npos,
+               "library-output wrapper source should reject Windows reparse-point host redirection");
+        expect(wrapper_source.find("O_NOFOLLOW") != std::string::npos,
+               "library-output wrapper source should reject POSIX symlink host redirection");
+        expect(wrapper_source.find("fexecve(verified_runtime_host") != std::string::npos,
+               "library-output wrapper source should execute the verified Linux host descriptor");
         expect(wrapper_source.find("struct CopperfinRuntimeBridgeDescriptor") != std::string::npos,
                "library-output wrapper source should declare a shared bridge-descriptor surface");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeDescriptor copperfin_build_runtime_bridge_descriptor(") != std::string::npos,
@@ -1231,6 +1243,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                    "library-output wrapper scaffold should compile under the host C++ toolchain");
             if (compiled) {
                 test_generated_posix_bridge_environment_launch(compiled_wrapper_path);
+                test_generated_bridge_runtime_host_verification(compiled_wrapper_path);
             }
             if (compiled && native_symbol_dump_is_available()) {
                 std::string symbol_error;

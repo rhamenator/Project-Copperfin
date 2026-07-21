@@ -306,6 +306,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "// Generated Copperfin native wrapper scaffold\n";
     stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
     stream << "#include <algorithm>\n";
+    stream << "#include <array>\n";
     stream << "#include <atomic>\n";
     stream << "#include <cerrno>\n";
     stream << "#include <cstdint>\n";
@@ -313,6 +314,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "#include <cwchar>\n";
     stream << "#include <filesystem>\n";
     stream << "#include <fstream>\n";
+    stream << "#include <iterator>\n";
     stream << "#include <mutex>\n";
     stream << "#include <sstream>\n";
     stream << "#include <string>\n";
@@ -324,12 +326,246 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "#else\n";
     stream << "#include <dlfcn.h>\n";
     stream << "#include <fcntl.h>\n";
+    stream << "#include <sys/stat.h>\n";
     stream << "#include <sys/types.h>\n";
     stream << "#include <sys/wait.h>\n";
     stream << "#include <unistd.h>\n";
     stream << "extern char** environ;\n";
     stream << "#define COPPERFIN_EXPORT extern \"C\" __attribute__((visibility(\"default\")))\n";
     stream << "#endif\n\n";
+    stream << R"CF(
+static std::uint32_t copperfin_runtime_bridge_rotr(
+    const std::uint32_t value,
+    const unsigned int bits) {
+    return (value >> bits) | (value << (32U - bits));
+}
+
+static std::string copperfin_runtime_bridge_sha256_bytes(
+    const std::vector<std::uint8_t>& input) {
+    static constexpr std::array<std::uint32_t, 64U> round_constants{
+        0x428a2f98U, 0x71374491U, 0xb5c0fbcfU, 0xe9b5dba5U,
+        0x3956c25bU, 0x59f111f1U, 0x923f82a4U, 0xab1c5ed5U,
+        0xd807aa98U, 0x12835b01U, 0x243185beU, 0x550c7dc3U,
+        0x72be5d74U, 0x80deb1feU, 0x9bdc06a7U, 0xc19bf174U,
+        0xe49b69c1U, 0xefbe4786U, 0x0fc19dc6U, 0x240ca1ccU,
+        0x2de92c6fU, 0x4a7484aaU, 0x5cb0a9dcU, 0x76f988daU,
+        0x983e5152U, 0xa831c66dU, 0xb00327c8U, 0xbf597fc7U,
+        0xc6e00bf3U, 0xd5a79147U, 0x06ca6351U, 0x14292967U,
+        0x27b70a85U, 0x2e1b2138U, 0x4d2c6dfcU, 0x53380d13U,
+        0x650a7354U, 0x766a0abbU, 0x81c2c92eU, 0x92722c85U,
+        0xa2bfe8a1U, 0xa81a664bU, 0xc24b8b70U, 0xc76c51a3U,
+        0xd192e819U, 0xd6990624U, 0xf40e3585U, 0x106aa070U,
+        0x19a4c116U, 0x1e376c08U, 0x2748774cU, 0x34b0bcb5U,
+        0x391c0cb3U, 0x4ed8aa4aU, 0x5b9cca4fU, 0x682e6ff3U,
+        0x748f82eeU, 0x78a5636fU, 0x84c87814U, 0x8cc70208U,
+        0x90befffaU, 0xa4506cebU, 0xbef9a3f7U, 0xc67178f2U};
+    std::vector<std::uint8_t> bytes = input;
+    const std::uint64_t bit_length = static_cast<std::uint64_t>(bytes.size()) * 8ULL;
+    bytes.push_back(0x80U);
+    while ((bytes.size() % 64U) != 56U) {
+        bytes.push_back(0U);
+    }
+    for (int shift = 56; shift >= 0; shift -= 8) {
+        bytes.push_back(static_cast<std::uint8_t>((bit_length >> shift) & 0xffU));
+    }
+
+    std::array<std::uint32_t, 8U> state{
+        0x6a09e667U, 0xbb67ae85U, 0x3c6ef372U, 0xa54ff53aU,
+        0x510e527fU, 0x9b05688cU, 0x1f83d9abU, 0x5be0cd19U};
+    for (std::size_t offset = 0; offset < bytes.size(); offset += 64U) {
+        std::array<std::uint32_t, 64U> words{};
+        for (std::size_t index = 0; index < 16U; ++index) {
+            const std::size_t base = offset + index * 4U;
+            words[index] = (static_cast<std::uint32_t>(bytes[base]) << 24U) |
+                (static_cast<std::uint32_t>(bytes[base + 1U]) << 16U) |
+                (static_cast<std::uint32_t>(bytes[base + 2U]) << 8U) |
+                static_cast<std::uint32_t>(bytes[base + 3U]);
+        }
+        for (std::size_t index = 16U; index < words.size(); ++index) {
+            const auto first = words[index - 15U];
+            const auto second = words[index - 2U];
+            const auto small_sigma_one = copperfin_runtime_bridge_rotr(second, 17U) ^
+                copperfin_runtime_bridge_rotr(second, 19U) ^ (second >> 10U);
+            const auto small_sigma_zero = copperfin_runtime_bridge_rotr(first, 7U) ^
+                copperfin_runtime_bridge_rotr(first, 18U) ^ (first >> 3U);
+            words[index] = words[index - 16U] + small_sigma_zero +
+                words[index - 7U] + small_sigma_one;
+        }
+
+        std::uint32_t a = state[0];
+        std::uint32_t b = state[1];
+        std::uint32_t c = state[2];
+        std::uint32_t d = state[3];
+        std::uint32_t e = state[4];
+        std::uint32_t f = state[5];
+        std::uint32_t g = state[6];
+        std::uint32_t h = state[7];
+        for (std::size_t index = 0; index < words.size(); ++index) {
+            const auto big_sigma_one = copperfin_runtime_bridge_rotr(e, 6U) ^
+                copperfin_runtime_bridge_rotr(e, 11U) ^ copperfin_runtime_bridge_rotr(e, 25U);
+            const auto choose = (e & f) ^ ((~e) & g);
+            const auto temporary_one = h + big_sigma_one + choose +
+                round_constants[index] + words[index];
+            const auto big_sigma_zero = copperfin_runtime_bridge_rotr(a, 2U) ^
+                copperfin_runtime_bridge_rotr(a, 13U) ^ copperfin_runtime_bridge_rotr(a, 22U);
+            const auto majority = (a & b) ^ (a & c) ^ (b & c);
+            const auto temporary_two = big_sigma_zero + majority;
+            h = g;
+            g = f;
+            f = e;
+            e = d + temporary_one;
+            d = c;
+            c = b;
+            b = a;
+            a = temporary_one + temporary_two;
+        }
+        state[0] += a;
+        state[1] += b;
+        state[2] += c;
+        state[3] += d;
+        state[4] += e;
+        state[5] += f;
+        state[6] += g;
+        state[7] += h;
+    }
+
+    static constexpr char hex[] = "0123456789abcdef";
+    std::string digest;
+    digest.reserve(64U);
+    for (const auto word : state) {
+        for (int shift = 28; shift >= 0; shift -= 4) {
+            digest.push_back(hex[(word >> shift) & 0x0fU]);
+        }
+    }
+    return digest;
+}
+
+static std::string copperfin_runtime_bridge_manifest_value(
+    const std::filesystem::path& manifest_path,
+    const std::string& key) {
+    std::ifstream input(manifest_path, std::ios::binary);
+    if (!input) {
+        return {};
+    }
+    const std::string prefix = key + "=";
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) == 0U) {
+            return line.substr(prefix.size());
+        }
+    }
+    return {};
+}
+
+static bool copperfin_runtime_bridge_digest_matches(
+    const std::filesystem::path& manifest_path,
+    const std::vector<std::uint8_t>& bytes) {
+    const auto expected = copperfin_runtime_bridge_manifest_value(
+        manifest_path,
+        "runtime_host_sha256");
+    return !expected.empty() &&
+        expected == copperfin_runtime_bridge_sha256_bytes(bytes);
+}
+
+#if defined(_WIN32)
+static bool copperfin_runtime_bridge_read_verified_host(
+    const std::filesystem::path& host_path,
+    const std::filesystem::path& manifest_path,
+    HANDLE& verified_host) {
+    verified_host = INVALID_HANDLE_VALUE;
+    const auto wide_path = host_path.wstring();
+    const HANDLE handle = CreateFileW(
+        wide_path.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    const DWORD attributes = GetFileAttributesW(wide_path.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES ||
+        (attributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)) != 0U) {
+        CloseHandle(handle);
+        return false;
+    }
+    std::vector<std::uint8_t> bytes;
+    std::array<std::uint8_t, 8192U> buffer{};
+    for (;;) {
+        DWORD read = 0U;
+        if (!ReadFile(handle, buffer.data(), static_cast<DWORD>(buffer.size()), &read, nullptr)) {
+            CloseHandle(handle);
+            return false;
+        }
+        bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + read);
+        if (read == 0U) {
+            break;
+        }
+    }
+    LARGE_INTEGER origin{};
+    if (!SetFilePointerEx(handle, origin, nullptr, FILE_BEGIN) ||
+        !copperfin_runtime_bridge_digest_matches(manifest_path, bytes)) {
+        CloseHandle(handle);
+        return false;
+    }
+    verified_host = handle;
+    return true;
+}
+#else
+static bool copperfin_runtime_bridge_read_verified_host(
+    const std::filesystem::path& host_path,
+    const std::filesystem::path& manifest_path,
+    int& verified_host) {
+    verified_host = -1;
+    std::error_code status_error;
+    const auto status = std::filesystem::symlink_status(host_path, status_error);
+    if (status_error || status.type() != std::filesystem::file_type::regular) {
+        return false;
+    }
+    const int descriptor = open(host_path.c_str(), O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (descriptor < 0) {
+        return false;
+    }
+    struct stat before{};
+    if (fstat(descriptor, &before) != 0 || !S_ISREG(before.st_mode) || before.st_nlink != 1) {
+        close(descriptor);
+        return false;
+    }
+    std::vector<std::uint8_t> bytes;
+    std::array<std::uint8_t, 8192U> buffer{};
+    for (;;) {
+        const ssize_t read = ::read(descriptor, buffer.data(), buffer.size());
+        if (read < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            close(descriptor);
+            return false;
+        }
+        if (read == 0) {
+            break;
+        }
+        bytes.insert(bytes.end(), buffer.begin(), buffer.begin() + read);
+    }
+    struct stat after{};
+    if (fstat(descriptor, &after) != 0 ||
+        before.st_dev != after.st_dev || before.st_ino != after.st_ino ||
+        before.st_size != after.st_size ||
+        !copperfin_runtime_bridge_digest_matches(manifest_path, bytes)) {
+        close(descriptor);
+        return false;
+    }
+    verified_host = descriptor;
+    return true;
+}
+#endif
+
+)CF";
     stream << "static std::string copperfin_runtime_bridge_path_to_utf8_string(const std::filesystem::path& path) {\n";
     stream << "    const auto utf8 = path.u8string();\n";
     stream << "    return std::string(reinterpret_cast<const char*>(utf8.data()), utf8.size());\n";
@@ -453,6 +689,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeDispatchExecution {\n";
     stream << "    std::filesystem::path executable_path;\n";
+    stream << "    std::filesystem::path manifest_path;\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "    std::filesystem::path working_directory;\n";
     stream << "    std::vector<CopperfinRuntimeBridgeEnvironmentVariable> environment;\n";
@@ -461,6 +698,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    bool capture_stdout = true;\n";
     stream << "    bool capture_stderr = true;\n";
     stream << "    int expected_exit_code = 0;\n";
+    stream << "    bool verify_runtime_host = true;\n";
     stream << "};\n\n";
     stream << "struct CopperfinRuntimeBridgeProcessLaunch {\n";
     stream << "    std::filesystem::path executable_path;\n";
@@ -1211,6 +1449,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const auto& launch_plan = observation_plan.launch_plan;\n";
     stream << "    return CopperfinRuntimeBridgeDispatchExecution{\n";
     stream << "        execution_plan.executable_path,\n";
+    stream << "        launch_plan.result.call.invocation.descriptor.manifest_path,\n";
     stream << "        plan.arguments,\n";
     stream << "        launch_plan.working_directory,\n";
     stream << "        launch_plan.environment,\n";
@@ -1218,7 +1457,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        observation_plan.stderr_log_path,\n";
     stream << "        execution_plan.capture_stdout,\n";
     stream << "        execution_plan.capture_stderr,\n";
-    stream << "        observation_plan.expected_exit_code};\n";
+    stream << "        observation_plan.expected_exit_code,\n";
+    stream << "        true};\n";
     stream << "}\n\n";
     stream << "#if defined(_WIN32)\n";
     stream << "static std::wstring copperfin_runtime_bridge_utf8_to_wide(const std::string& value) {\n";
@@ -1350,6 +1590,24 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        override_name == nullptr || override_value == nullptr || argument == nullptr) {\n";
     stream << "        return -1;\n";
     stream << "    }\n";
+    stream << "    if (std::string(argument) == \"--copperfin-verify-runtime-host\") {\n";
+#if defined(_WIN32)
+    stream << "        HANDLE verified_host = INVALID_HANDLE_VALUE;\n";
+    stream << "        const bool verified = copperfin_runtime_bridge_read_verified_host(\n";
+    stream << "            std::filesystem::path(executable_path), std::filesystem::path(output_path), verified_host);\n";
+    stream << "        if (verified_host != INVALID_HANDLE_VALUE) {\n";
+    stream << "            CloseHandle(verified_host);\n";
+    stream << "        }\n";
+#else
+    stream << "        int verified_host = -1;\n";
+    stream << "        const bool verified = copperfin_runtime_bridge_read_verified_host(\n";
+    stream << "            std::filesystem::path(executable_path), std::filesystem::path(output_path), verified_host);\n";
+    stream << "        if (verified_host >= 0) {\n";
+    stream << "            close(verified_host);\n";
+    stream << "        }\n";
+#endif
+    stream << "        return verified ? 0 : -1;\n";
+    stream << "    }\n";
     stream << "    std::vector<std::string> arguments;\n";
     stream << "    if (*argument != '\\0') {\n";
     stream << "        arguments.emplace_back(argument);\n";
@@ -1360,6 +1618,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    }\n";
     stream << "    const CopperfinRuntimeBridgeDispatchExecution dispatch_execution{\n";
     stream << "        std::filesystem::path(executable_path),\n";
+    stream << "        {},\n";
     stream << "        std::move(arguments),\n";
     stream << "        std::filesystem::path(working_directory),\n";
     stream << "        std::move(overrides),\n";
@@ -1367,7 +1626,8 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        {},\n";
     stream << "        true,\n";
     stream << "        false,\n";
-    stream << "        0};\n";
+    stream << "        0,\n";
+    stream << "        false};\n";
     stream << "    const auto launch = copperfin_runtime_bridge_launch_process(dispatch_execution);\n";
     stream << "    return launch.launch_succeeded ? launch.exit_code : -1;\n";
     stream << "}\n";
@@ -1379,6 +1639,12 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    int exit_code = -1;\n";
     stream << "    bool process_created = false;\n";
     stream << "#if defined(_WIN32)\n";
+    stream << "    HANDLE verified_runtime_host = INVALID_HANDLE_VALUE;\n";
+    stream << "    const bool runtime_host_verified = !dispatch_execution.verify_runtime_host ||\n";
+    stream << "        copperfin_runtime_bridge_read_verified_host(\n";
+    stream << "            dispatch_execution.executable_path,\n";
+    stream << "            dispatch_execution.manifest_path,\n";
+    stream << "            verified_runtime_host);\n";
     stream << "    const auto executable = copperfin_runtime_bridge_utf8_to_wide(copperfin_runtime_bridge_path_to_utf8_string(dispatch_execution.executable_path));\n";
     stream << "    std::wstring command_line = copperfin_runtime_bridge_quote_windows_argument(executable);\n";
     stream << "    for (const auto& argument : dispatch_execution.arguments) {\n";
@@ -1411,7 +1677,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    const bool log_handles_valid =\n";
     stream << "        (!dispatch_execution.capture_stdout || dispatch_execution.stdout_log_path.empty() || stdout_handle != INVALID_HANDLE_VALUE) &&\n";
     stream << "        (!dispatch_execution.capture_stderr || dispatch_execution.stderr_log_path.empty() || stderr_handle != INVALID_HANDLE_VALUE);\n";
-    stream << "    if (log_handles_valid && !executable.empty()) {\n";
+    stream << "    if (runtime_host_verified && log_handles_valid && !executable.empty()) {\n";
     stream << "        const auto is_real_handle = [](HANDLE handle) {\n";
     stream << "            return handle != nullptr && handle != INVALID_HANDLE_VALUE;\n";
     stream << "        };\n";
@@ -1511,7 +1777,16 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "    if (stderr_handle != nullptr && stderr_handle != INVALID_HANDLE_VALUE) {\n";
     stream << "        CloseHandle(stderr_handle);\n";
     stream << "    }\n";
+    stream << "    if (verified_runtime_host != INVALID_HANDLE_VALUE) {\n";
+    stream << "        CloseHandle(verified_runtime_host);\n";
+    stream << "    }\n";
     stream << "#else\n";
+    stream << "    int verified_runtime_host = -1;\n";
+    stream << "    const bool runtime_host_verified = !dispatch_execution.verify_runtime_host ||\n";
+    stream << "        copperfin_runtime_bridge_read_verified_host(\n";
+    stream << "            dispatch_execution.executable_path,\n";
+    stream << "            dispatch_execution.manifest_path,\n";
+    stream << "            verified_runtime_host);\n";
     stream << "    std::vector<std::string> argument_values;\n";
     stream << "    argument_values.reserve(dispatch_execution.arguments.size() + 1U);\n";
     stream << "    argument_values.push_back(copperfin_runtime_bridge_path_to_utf8_string(dispatch_execution.executable_path));\n";
@@ -1529,7 +1804,7 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "        environment_value_pointers.push_back(const_cast<char*>(environment_value.c_str()));\n";
     stream << "    }\n";
     stream << "    environment_value_pointers.push_back(nullptr);\n";
-    stream << "    const pid_t child_process = fork();\n";
+    stream << "    const pid_t child_process = runtime_host_verified ? fork() : static_cast<pid_t>(-1);\n";
     stream << "    if (child_process == 0) {\n";
     stream << "        if (!dispatch_execution.working_directory.empty() && chdir(dispatch_execution.working_directory.c_str()) != 0) {\n";
     stream << "            _exit(126);\n";
@@ -1552,8 +1827,19 @@ std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     stream << "            !redirect_output(dispatch_execution.stderr_log_path, dispatch_execution.capture_stderr, STDERR_FILENO)) {\n";
     stream << "            _exit(126);\n";
     stream << "        }\n";
+    stream << "#if defined(__linux__)\n";
+    stream << "        if (dispatch_execution.verify_runtime_host) {\n";
+    stream << "            fexecve(verified_runtime_host, argument_values_pointers.data(), environment_value_pointers.data());\n";
+    stream << "        } else {\n";
+    stream << "            execve(argument_values_pointers[0], argument_values_pointers.data(), environment_value_pointers.data());\n";
+    stream << "        }\n";
+    stream << "#else\n";
     stream << "        execve(argument_values_pointers[0], argument_values_pointers.data(), environment_value_pointers.data());\n";
+    stream << "#endif\n";
     stream << "        _exit(127);\n";
+    stream << "    }\n";
+    stream << "    if (verified_runtime_host >= 0) {\n";
+    stream << "        close(verified_runtime_host);\n";
     stream << "    }\n";
     stream << "    if (child_process > 0) {\n";
     stream << "        int child_status = 0;\n";
