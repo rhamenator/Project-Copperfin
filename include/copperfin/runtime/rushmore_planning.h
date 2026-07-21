@@ -5,6 +5,8 @@
 #pragma once
 
 #include <cstdint>
+#include <limits>
+#include <optional>
 #include <string>
 #include <tuple>
 
@@ -46,14 +48,71 @@ struct RushmoreResidualPredicateDescriptor {
     friend bool operator==(const RushmoreResidualPredicateDescriptor&, const RushmoreResidualPredicateDescriptor&) = default;
 };
 
+enum class RushmoreStatisticsState : std::uint8_t {
+    absent = 0,
+    fresh = 1,
+    stale = 2,
+    corrupted = 3
+};
+
+struct RushmoreCursorStatisticsDescriptor {
+    RushmoreStatisticsState state = RushmoreStatisticsState::absent;
+    std::uint64_t version = 0;
+    std::optional<std::uint64_t> record_count;
+    std::optional<std::uint32_t> record_length;
+    std::optional<std::uint64_t> approximate_distinct_count;
+    // Density is represented in parts per million to avoid platform-dependent floating point behavior.
+    std::optional<std::uint32_t> density_parts_per_million;
+
+    friend bool operator==(
+        const RushmoreCursorStatisticsDescriptor&,
+        const RushmoreCursorStatisticsDescriptor&) = default;
+};
+
 struct RushmoreCursorMetadata {
     std::string cursor_identity;
     std::string index_signature;
     std::uint64_t row_count = 0;
     std::uint64_t stats_version = 0;
+    std::optional<RushmoreCursorStatisticsDescriptor> statistics;
 
     friend bool operator==(const RushmoreCursorMetadata&, const RushmoreCursorMetadata&) = default;
 };
+
+[[nodiscard]] constexpr bool rushmore_statistics_state_is_usable(RushmoreStatisticsState state) noexcept {
+    return state == RushmoreStatisticsState::fresh;
+}
+
+[[nodiscard]] constexpr bool rushmore_statistics_are_structurally_valid(
+    const RushmoreCursorStatisticsDescriptor& statistics) noexcept {
+    if (statistics.state == RushmoreStatisticsState::absent) {
+        return statistics.version == 0 && !statistics.record_count.has_value() &&
+            !statistics.record_length.has_value() && !statistics.approximate_distinct_count.has_value() &&
+            !statistics.density_parts_per_million.has_value();
+    }
+    if (statistics.state == RushmoreStatisticsState::corrupted || statistics.version == 0) {
+        return false;
+    }
+    if (statistics.record_length.has_value() && statistics.record_length.value() == 0U) {
+        return false;
+    }
+    if (statistics.approximate_distinct_count.has_value() && statistics.record_count.has_value() &&
+        statistics.approximate_distinct_count.value() > statistics.record_count.value()) {
+        return false;
+    }
+    return !statistics.density_parts_per_million.has_value() ||
+        statistics.density_parts_per_million.value() <= 1'000'000U;
+}
+
+[[nodiscard]] constexpr std::uint64_t rushmore_next_statistics_version(
+    std::uint64_t current_version) noexcept {
+    return current_version == std::numeric_limits<std::uint64_t>::max() ? 1U : current_version + 1U;
+}
+
+constexpr void rushmore_invalidate_statistics(RushmoreCursorStatisticsDescriptor& statistics) noexcept {
+    statistics.state = RushmoreStatisticsState::stale;
+    statistics.version = rushmore_next_statistics_version(statistics.version);
+}
 
 struct RushmorePlanCacheKey {
     std::string cursor_identity;

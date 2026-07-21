@@ -16,6 +16,9 @@ using copperfin::runtime::RushmorePlanCacheKey;
 using copperfin::runtime::RushmorePlanCost;
 using copperfin::runtime::RushmorePlanKind;
 using copperfin::runtime::RushmorePlanningOptions;
+using copperfin::runtime::RushmoreCursorStatisticsDescriptor;
+using copperfin::runtime::RushmoreCursorMetadata;
+using copperfin::runtime::RushmoreStatisticsState;
 
 void test_rushmore_planning_contracts() {
     const RushmorePlanningOptions defaults{};
@@ -52,4 +55,58 @@ void test_rushmore_planning_contracts() {
     copperfin::runtime::RuntimeSessionOptions session_options;
     expect(session_options.rushmore_planning == defaults,
         "Runtime session options must preserve legacy Rushmore behavior by default");
+
+    RushmoreCursorStatisticsDescriptor missing{};
+    expect(!copperfin::runtime::rushmore_statistics_state_is_usable(missing.state),
+        "Missing cursor statistics must not be usable");
+    expect(copperfin::runtime::rushmore_statistics_are_structurally_valid(missing),
+        "Missing cursor statistics must be a valid absent descriptor");
+
+    RushmoreCursorStatisticsDescriptor stale{
+        RushmoreStatisticsState::stale,
+        4,
+        100,
+        64,
+        80,
+        250'000};
+    expect(!copperfin::runtime::rushmore_statistics_state_is_usable(stale.state),
+        "Stale cursor statistics must not be usable without refresh");
+    expect(copperfin::runtime::rushmore_statistics_are_structurally_valid(stale),
+        "Stale cursor statistics must remain structurally inspectable");
+
+    copperfin::runtime::rushmore_invalidate_statistics(stale);
+    expect(stale.state == RushmoreStatisticsState::stale && stale.version == 5,
+        "Cursor statistics invalidation must mark data stale and advance its version");
+
+    RushmoreCursorStatisticsDescriptor corrupted{
+        RushmoreStatisticsState::corrupted,
+        5,
+        100,
+        64,
+        101,
+        1'000'001};
+    expect(!copperfin::runtime::rushmore_statistics_are_structurally_valid(corrupted),
+        "Corrupted cursor statistics must be rejected");
+
+    RushmoreCursorStatisticsDescriptor refreshed{
+        RushmoreStatisticsState::fresh,
+        copperfin::runtime::rushmore_next_statistics_version(stale.version),
+        100,
+        64,
+        80,
+        250'000};
+    expect(refreshed.state == RushmoreStatisticsState::fresh && refreshed.version == 6,
+        "Refreshed cursor statistics must advance the version and become fresh");
+    expect(copperfin::runtime::rushmore_statistics_state_is_usable(refreshed.state) &&
+            copperfin::runtime::rushmore_statistics_are_structurally_valid(refreshed),
+        "Refreshed cursor statistics must be usable when structurally valid");
+
+    RushmoreCursorMetadata metadata{
+        "people",
+        "name:upper(name)",
+        100,
+        refreshed.version,
+        refreshed};
+    expect(metadata.statistics.has_value() && metadata.statistics->version == metadata.stats_version,
+        "Cursor metadata must carry optional statistics without changing its stable identity fields");
 }
