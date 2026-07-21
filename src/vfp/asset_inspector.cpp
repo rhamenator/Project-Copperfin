@@ -1019,7 +1019,8 @@ AssetInspectionResult inspect_asset(
     result.family = asset_family_from_path(path);
     const std::filesystem::path asset_path = copperfin::platform::path_from_utf8_string(path);
 
-    if (!std::filesystem::exists(asset_path)) {
+    std::error_code exists_error;
+    if (!std::filesystem::exists(asset_path, exists_error) || exists_error) {
         result.ok = false;
         result.error = asset_inspector_text("Vfp.AssetInspector.Error.PathMissing");
         return result;
@@ -1087,7 +1088,16 @@ AssetInspectionResult inspect_asset(
     result.ok = true;
     result.header_available = true;
     result.header = header_result.header;
-    const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(asset_path));
+    std::error_code file_size_error;
+    const std::uintmax_t file_size_value = std::filesystem::file_size(asset_path, file_size_error);
+    if (file_size_error) {
+        result.ok = false;
+        result.error = asset_inspector_text(
+            "Vfp.AssetInspector.Error.ReadFailed",
+            {{"path", path}});
+        return result;
+    }
+    const std::uint64_t file_size = static_cast<std::uint64_t>(file_size_value);
     const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
 
     if (result.family == AssetFamily::table &&

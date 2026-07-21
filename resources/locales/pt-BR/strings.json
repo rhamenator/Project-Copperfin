@@ -1563,6 +1563,7 @@
   "Vfp.AssetInspector.Error.DbcPathMissing": "O caminho DBC nao existe: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "Nao foi possivel ler o arquivo DBC: {path}",
   "Vfp.AssetInspector.Error.PathMissing": "O caminho nao existe.",
+  "Vfp.AssetInspector.Error.ReadFailed": "Nao foi possivel ler o ativo: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "O catalogo DBC foi carregado, mas nenhuma linha de metadados de objetos de primeira passagem foi detectada.",
   "Vfp.AssetInspector.Validation.DbcCatalogParseFailed": "O cabecalho DBC foi analisado, mas nao foi possivel carregar os metadados do catalogo de primeira passagem: {error}",
   "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned": "O intervalo de descritores de campos DBF nao esta alinhado a descritores completos de 32 bytes.",

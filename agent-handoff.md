@@ -103,6 +103,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Asset-inspection filesystem slice #4354 under #110: `src/vfp/asset_inspector.cpp` must use non-throwing filesystem status probes at the initial existence and post-header file-size boundaries. Missing/unstatable paths retain the structured missing-path result; file-size failures use the catalog-backed `Vfp.AssetInspector.Error.ReadFailed` message with the original path. Preserve asset families, validation codes, JSON fields, placeholders, and machine-readable results; retain focused asset tests and hosted Windows ACL validation where available.
+
 - VSIX project workflow targeting slice #4349 under #23/#4312: `CopperfinProjectSelection` must feed selected Solution Explorer project candidates into the pure `CopperfinProjectPathResolver.ResolveProjectWorkflowPath()` before active-document fallback. Keep Build/Run/Debug status and execution on the same resolver, preserve command IDs, project paths, host JSON, localization, and active-document behavior, and retain tests for active Project A plus selected Project B and invalid-selection fallback.
 
 - Generated launcher localization slice #4350 under #2348: `runtime_pipeline_csharp_and_launcher.cpp` must emit managed `NormalizeLocale()` logic that strips the earliest POSIX `.` encoding or `@` modifier suffix before normalizing separators and case. Keep explicit `--locale`/`/locale`, `COPPERFIN_LOCALE`, Windows-style forms, fallback buckets, invariant forwarded arguments, status fields, and exit codes unchanged; retain source-contract coverage and hosted Windows process evidence for `pt_BR.UTF-8` and `pt_BR@modifier`.

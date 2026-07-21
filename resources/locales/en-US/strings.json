@@ -1242,6 +1242,7 @@
   "Vfp.AssetInspector.Error.DbcPathMissing": "DBC path does not exist: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "Unable to read DBC file: {path}",
   "Vfp.AssetInspector.Error.PathMissing": "Path does not exist.",
+  "Vfp.AssetInspector.Error.ReadFailed": "Unable to read asset: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "The DBC catalog loaded but no first-pass object metadata rows were detected.",
   "Vfp.AssetInspector.Validation.DbcCatalogParseFailed": "The DBC header parsed, but first-pass catalog metadata could not be loaded: {error}",
   "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned": "The DBF field-descriptor span is not aligned to whole 32-byte descriptors.",

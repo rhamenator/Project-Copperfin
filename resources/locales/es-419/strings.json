@@ -1563,6 +1563,7 @@
   "Vfp.AssetInspector.Error.DbcPathMissing": "La ruta DBC no existe: {path}",
   "Vfp.AssetInspector.Error.DbcReadFailed": "No se pudo leer el archivo DBC: {path}",
   "Vfp.AssetInspector.Error.PathMissing": "La ruta no existe.",
+  "Vfp.AssetInspector.Error.ReadFailed": "No se pudo leer el activo: {path}",
   "Vfp.AssetInspector.Validation.DbcCatalogEmpty": "El catalogo DBC cargo, pero no se detectaron filas de metadatos de objetos de primera pasada.",
   "Vfp.AssetInspector.Validation.DbcCatalogParseFailed": "El encabezado DBC se analizo, pero no se pudieron cargar los metadatos del catalogo de primera pasada: {error}",
   "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned": "El tramo de descriptores de campos DBF no esta alineado a descriptores completos de 32 bytes.",

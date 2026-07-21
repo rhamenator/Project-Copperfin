@@ -392,6 +392,10 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
         english_catalog.translate("Vfp.AssetInspector.Error.PathMissing") == "Path does not exist.",
         "#2386: asset inspector missing-path error should resolve through the en-US catalog");
     expect(
+        english_catalog.translate("Vfp.AssetInspector.Error.ReadFailed", path_placeholder) ==
+            "Unable to read asset: missing.dbc",
+        "#4354: asset inspector read failures should resolve through the en-US catalog");
+    expect(
         english_catalog.translate("Vfp.AssetInspector.Error.DbcPathMissing", path_placeholder) ==
             "DBC path does not exist: missing.dbc",
         "#2386: DBC export missing-path error should preserve named placeholders");
@@ -939,6 +943,7 @@ void test_vfp_locale_catalog_parity() {
         "Vfp.AssetInspector.Error.DbcPathMissing",
         "Vfp.AssetInspector.Error.DbcReadFailed",
         "Vfp.AssetInspector.Error.PathMissing",
+        "Vfp.AssetInspector.Error.ReadFailed",
         "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
         "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
         "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned",
