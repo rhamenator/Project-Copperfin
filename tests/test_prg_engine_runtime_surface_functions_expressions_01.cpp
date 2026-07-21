@@ -651,13 +651,32 @@ namespace copperfin::runtime_surface_tests
             "nProtectedMethods = AMEMBERS(aProtectedMethods, oDemo, 2, 'P')\n"
             "nHiddenMethods = AMEMBERS(aHiddenMethods, oDemo, 2, 'H')\n"
             "nPublicMethods = AMEMBERS(aPublicMethods, oDemo, 2, 'G')\n"
+            "nUnknownFlag = AMEMBERS(aUnknownFlag, oDemo, 0, 'X')\n"
+            "nCompoundFlag = AMEMBERS(aCompoundFlag, oDemo, 0, 'PH')\n"
+            "cAllFirst = aAll[1]\n"
+            "cAllSecond = aAll[2]\n"
+            "cAllThird = aAll[3]\n"
+            "cAllFourth = aAll[4]\n"
+            "cAllFifth = aAll[5]\n"
+            "cAllSixth = aAll[6]\n"
+            "cAllSeventh = aAll[7]\n"
+            "cAllEighth = aAll[8]\n"
+            "cAllNinth = aAll[9]\n"
+            "cAllTenth = aAll[10]\n"
+            "cAllEleventh = aAll[11]\n"
+            "cAllTwelfth = aAll[12]\n"
+            "cAllThirteenth = aAll[13]\n"
+            "cAllFourteenth = aAll[14]\n"
+            "cAllFifteenth = aAll[15]\n"
+            "cAllSixteenth = aAll[16]\n"
             "lAllHasProtected = ASCAN(aAll, 'PROTECTEDVALUE') > 0 AND ASCAN(aAll, 'PROTECTEDMETHOD') > 0\n"
             "lAllHasHidden = ASCAN(aAll, 'HIDDENVALUE') > 0 AND ASCAN(aAll, 'HIDDENMETHOD') > 0\n"
             "lAllHasPublic = ASCAN(aAll, 'PUBLICVALUE') > 0 AND ASCAN(aAll, 'PUBLICMETHOD') > 0\n"
             "lProtectedOnly = ASCAN(aProtected, 'PROTECTEDVALUE') > 0 AND ASCAN(aProtected, 'PROTECTEDMETHOD') > 0 AND ASCAN(aProtected, 'PUBLICVALUE') = 0 AND ASCAN(aProtected, 'HIDDENVALUE') = 0\n"
             "lHiddenOnly = ASCAN(aHidden, 'HIDDENVALUE') > 0 AND ASCAN(aHidden, 'HIDDENMETHOD') > 0 AND ASCAN(aHidden, 'PUBLICVALUE') = 0 AND ASCAN(aHidden, 'PROTECTEDVALUE') = 0\n"
             "lPublicOnly = ASCAN(aPublic, 'PUBLICVALUE') > 0 AND ASCAN(aPublic, 'PUBLICMETHOD') > 0 AND ASCAN(aPublic, 'PROTECTEDVALUE') = 0 AND ASCAN(aPublic, 'HIDDENVALUE') = 0\n"
-            "lAllCount = nAll >= 6\n"
+            "lAllCount = nAll = 16 AND nProtected = 2 AND nHidden = 2 AND nPublic = 12\n"
+            "lFallbackFlags = nUnknownFlag = nAll AND nCompoundFlag = nAll AND aUnknownFlag[1] = aAll[1] AND aUnknownFlag[nUnknownFlag] = aAll[nAll] AND aCompoundFlag[1] = aAll[1] AND aCompoundFlag[nCompoundFlag] = aAll[nAll]\n"
             "lPropertyModes = nProtectedProperties >= 1 AND nHiddenProperties >= 1 AND nPublicProperties >= 1 AND ASCAN(aProtectedProperties, 'PROTECTEDVALUE') > 0 AND ASCAN(aHiddenProperties, 'HIDDENVALUE') > 0 AND ASCAN(aPublicProperties, 'PUBLICVALUE') > 0\n"
             "lMethodModes = nProtectedMethods >= 1 AND nHiddenMethods >= 1 AND nPublicMethods >= 1 AND ASCAN(aProtectedMethods, 'PROTECTEDMETHOD') > 0 AND ASCAN(aHiddenMethods, 'HIDDENMETHOD') > 0 AND ASCAN(aPublicMethods, 'PUBLICMETHOD') > 0\n"
             "RETURN\n"
@@ -705,6 +724,23 @@ namespace copperfin::runtime_surface_tests
         check("lpubliconly", "true");
         check("lpropertymodes", "true");
         check("lmethodmodes", "true");
+        check("lfallbackflags", "true");
+        check("callfirst", "BASECLASS");
+        check("callsecond", "CLASS");
+        check("callthird", "HIDDENMETHOD");
+        check("callfourth", "HIDDENVALUE");
+        check("callfifth", "PARENTCLASS");
+        check("callsixth", "PROTECTEDMETHOD");
+        check("callseventh", "PROTECTEDVALUE");
+        check("calleighth", "PUBLICMETHOD");
+        check("callninth", "PUBLICVALUE");
+        check("calltenth", "READEXPRESSION");
+        check("calleleventh", "READMETHOD");
+        check("calltwelfth", "REFRESH");
+        check("callthirteenth", "RELEASE");
+        check("callfourteenth", "RESETTODEFAULT");
+        check("callfifteenth", "WRITEEXPRESSION");
+        check("callsixteenth", "WRITEMETHOD");
 
         fs::remove_all(temp_root, ignored);
     }
