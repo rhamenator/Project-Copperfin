@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- 2026-07-21: Implemented #4333 under the #110 runtime package hardening lane. Native-wrapper CMake input, module-definition, configure/build log, staged-output, and materialized-artifact digest probes now use a local error-code existence helper, preserving existing localized diagnostics, rollback, package manifests, debug manifests, and successful library/FLL/OCX publication when filesystem status fails. Focused runtime-pipeline validation and hosted Windows ACL validation remain required.
+
 - 2026-07-21: Implemented #4332 under the #110 build/package hardening lane. Build-host automatic runtime-host discovery and generated-launcher verification now use local error-code filesystem helpers for existence and regular-file status, preserving localized missing-launcher/build failure behavior instead of allowing inaccessible or ACL-restricted paths to throw. Existing build-host output, sibling-resolution, override, and launcher smoke contracts remain unchanged; hosted Windows ACL validation remains required.
 
 - 2026-07-21: Implemented #4331 under the #110 runtime/debug hardening lane. `resolve_startup_source()` now uses `path_exists_without_error(...)` when an app.cfdebug manifest names an absolute external startup source, preserving successful external xAsset execution and packaged-source binding while converting inaccessible mounts or ACL paths into the existing localized startup failure/status contract. The runtime-host audit adds a POSIX blocked-parent regression; hosted Windows validation remains required.

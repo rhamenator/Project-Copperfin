@@ -77,6 +77,11 @@ struct NativeWrapperProcessResult {
 
 std::atomic<unsigned long long> native_wrapper_build_sequence{0};
 
+bool path_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::exists(path, error) && !error;
+}
+
 #if defined(_WIN32)
 std::wstring native_wrapper_utf8_to_wide(std::string_view value) {
     return copperfin::platform::path_from_utf8_string(value).native();
@@ -2600,11 +2605,11 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                     {{"path", copperfin::platform::path_to_utf8_string(physical_path)}});
                 return false;
             }
-            if (!fd_source_handled && !std::filesystem::exists(physical_path)) {
+            if (!fd_source_handled && !path_exists_without_error(physical_path)) {
                 return true;
             }
 #else
-            if (!std::filesystem::exists(physical_path)) {
+            if (!path_exists_without_error(physical_path)) {
                 return true;
             }
 #endif
@@ -3362,7 +3367,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     if (!is_library_output_kind(plan.output_kind)) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput")};
     }
-    if (!std::filesystem::exists(
+    if (!path_exists_without_error(
             copperfin::platform::path_from_utf8_string(plan.native_wrapper_cmake_path))) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperCMakeMissing")};
     }
@@ -3409,7 +3414,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     if (!ignored) {
         const std::filesystem::path module_definition_path =
             copperfin::platform::path_from_utf8_string(plan.module_definition_path);
-        if (std::filesystem::exists(module_definition_path)) {
+        if (path_exists_without_error(module_definition_path)) {
             std::filesystem::copy_file(
                 module_definition_path,
                 staging_package_root / module_definition_path.filename(),
@@ -3435,7 +3440,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
         configure_log_path);
     if (!configure_result.started || configure_result.exit_code != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed");
-        if (std::filesystem::exists(configure_log_path)) {
+        if (path_exists_without_error(configure_log_path)) {
             error += ":\n" + read_text_file(configure_log_path);
         }
         std::filesystem::remove_all(staging_root, ignored);
@@ -3454,14 +3459,14 @@ RuntimeBuildResult build_runtime_package_primary_output(
         build_log_path);
     if (!build_result.started || build_result.exit_code != 0) {
         error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed");
-        if (std::filesystem::exists(build_log_path)) {
+        if (path_exists_without_error(build_log_path)) {
             error += ":\n" + read_text_file(build_log_path);
         }
         std::filesystem::remove_all(staging_root, ignored);
         return {.ok = false, .error = error};
     }
 
-    if (!std::filesystem::exists(staged_output_path)) {
+    if (!path_exists_without_error(staged_output_path)) {
         std::filesystem::remove_all(staging_root, ignored);
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
     }
