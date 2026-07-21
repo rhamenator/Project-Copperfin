@@ -1,5 +1,6 @@
 # Agent Handoff
 
+- Shared Studio document localization under #2348/#4361: default document-open diagnostics and object-snapshot fallback titles must refresh when `select_locale()` or `resolve_catalog_root()` changes. Preserve explicit catalog callers, document/object identities, paths, placeholders, JSON keys, and machine contracts; keep the en-US/es-419/qps-ploc regression and all four catalog parity. Exact-head hosted validation is still required before closing the issue.
 - DBF-table diagnostic localization under #2348/#4360: the default table error path must refresh its cached catalog when `select_locale()` or `resolve_catalog_root()` changes. Preserve field names, paths, placeholders, error identities, and machine contracts; keep the en-US/es-419/qps-ploc in-process regression and all four catalog parity. Exact-head hosted validation is still required before closing the issue.
 - Default extensibility-profile localization under #2348/#4359: `default_extensibility_profile()` must refresh its cached catalog when `select_locale()` or `resolve_catalog_root()` changes and return a snapshot profile. Preserve explicit catalogs, language/AI/parity IDs, reason tags, policy booleans, enum values, and machine contracts; keep the en-US/es-419/qps-ploc regression and all four catalog parity.
 

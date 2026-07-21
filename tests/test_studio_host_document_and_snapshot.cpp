@@ -3,10 +3,61 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_studio_host_support.h"
+#include "test_environment_support.h"
 
 #include "copperfin/platform/path.h"
 
 namespace cf_test_studio_host {
+void test_document_default_catalog_refreshes_when_locale_changes() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.kind = copperfin::studio::StudioAssetKind::form;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        {.record_index = 7U, .deleted = false, .values = {}}
+    };
+
+    const auto english_open = copperfin::studio::open_document({});
+    const auto english_objects = copperfin::studio::build_object_snapshot(document);
+    locale_override.set("es-419");
+    const auto spanish_open = copperfin::studio::open_document({});
+    const auto spanish_objects = copperfin::studio::build_object_snapshot(document);
+    locale_override.set("qps-ploc");
+    const auto pseudo_open = copperfin::studio::open_document({});
+    const auto pseudo_objects = copperfin::studio::build_object_snapshot(document);
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    constexpr std::string_view open_key = "Studio.DocumentOpen.Error.PathRequired";
+    constexpr std::string_view title_key = "Studio.DocumentModel.Fallback.RecordTitle";
+    const auto expected_title = [](const auto& catalog) {
+        return catalog.translate(title_key, {{"recordIndex", "7"}});
+    };
+    expect(!english_open.ok && english_open.error == english_catalog.translate(open_key),
+           "#4361: document-open diagnostics should begin in en-US");
+    expect(!spanish_open.ok && spanish_open.error == spanish_catalog.translate(open_key),
+           "#4361: document-open diagnostics should refresh to es-419");
+    expect(!pseudo_open.ok && pseudo_open.error == pseudo_catalog.translate(open_key),
+           "#4361: document-open diagnostics should refresh to qps-ploc");
+    expect(english_objects.size() == 1U && spanish_objects.size() == 1U && pseudo_objects.size() == 1U,
+           "#4361: locale refresh should preserve object-snapshot cardinality");
+    if (english_objects.size() == 1U && spanish_objects.size() == 1U && pseudo_objects.size() == 1U) {
+        expect(english_objects[0].title == expected_title(english_catalog),
+               "#4361: object-snapshot fallback titles should begin in en-US");
+        expect(spanish_objects[0].title == expected_title(spanish_catalog),
+               "#4361: object-snapshot fallback titles should refresh to es-419");
+        expect(pseudo_objects[0].title == expected_title(pseudo_catalog),
+               "#4361: object-snapshot fallback titles should refresh to qps-ploc");
+        expect(english_objects[0].record_index == spanish_objects[0].record_index &&
+                   spanish_objects[0].record_index == pseudo_objects[0].record_index,
+               "#4361: locale refresh should preserve object record identity");
+    }
+}
+
 void test_open_document_path_error_resolves_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
