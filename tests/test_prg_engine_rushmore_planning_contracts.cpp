@@ -1,0 +1,55 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "copperfin/runtime/prg_engine.h"
+#include "prg_engine_test_support.h"
+
+#include <algorithm>
+#include <map>
+#include <string>
+#include <vector>
+
+using namespace copperfin::test_support;
+using copperfin::runtime::RushmorePlanCandidate;
+using copperfin::runtime::RushmorePlanCacheKey;
+using copperfin::runtime::RushmorePlanCost;
+using copperfin::runtime::RushmorePlanKind;
+using copperfin::runtime::RushmorePlanningOptions;
+
+void test_rushmore_planning_contracts() {
+    const RushmorePlanningOptions defaults{};
+    expect(!defaults.enabled, "Rushmore planning must remain disabled by default");
+    expect(defaults.allow_legacy_fallback, "Rushmore planning must preserve legacy fallback by default");
+    expect(defaults.options_version == 0, "Rushmore planning defaults must use the baseline options version");
+
+    RushmorePlanCacheKey first{
+        "people",
+        "name = 'BRAVO'",
+        "name:upper(name)",
+        7,
+        2};
+    RushmorePlanCacheKey second = first;
+    second.options_version = 3;
+    expect(first < second, "Rushmore cache keys must order by options version after shared identity fields");
+    std::map<RushmorePlanCacheKey, int> cache;
+    cache.emplace(first, 1);
+    cache.emplace(second, 2);
+    expect(cache.size() == 2, "Rushmore cache keys must distinguish stats and options versions");
+
+    const RushmorePlanCost seek_cost{2, 4, 1, 5};
+    const RushmorePlanCost scan_cost{3, 4, 1, 5};
+    RushmorePlanCandidate seek{RushmorePlanKind::index_seek, "name", seek_cost, {}};
+    RushmorePlanCandidate scan{RushmorePlanKind::table_scan, {}, scan_cost, {}};
+    std::vector<RushmorePlanCandidate> candidates{scan, seek};
+    std::sort(candidates.begin(), candidates.end());
+    expect(candidates.front().kind == RushmorePlanKind::index_seek,
+        "Rushmore candidate ordering must prefer the lower deterministic total cost");
+    expect(std::string(copperfin::runtime::rushmore_plan_kind_name(RushmorePlanKind::index_range_scan)) ==
+            "index_range_scan",
+        "Rushmore plan kind names must remain stable machine-readable identities");
+
+    copperfin::runtime::RuntimeSessionOptions session_options;
+    expect(session_options.rushmore_planning == defaults,
+        "Runtime session options must preserve legacy Rushmore behavior by default");
+}

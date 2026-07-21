@@ -11,6 +11,8 @@
 #include <iostream>
 #include <system_error>
 
+void test_rushmore_planning_contracts();
+
 namespace {
 
 using namespace copperfin::test_support;
@@ -240,6 +242,7 @@ void test_locate_with_greater_than_operator_does_not_match_equal_record() {
 }  // namespace
 
 int main() {
+    test_rushmore_planning_contracts();
     test_locate_uses_rushmore_seek_and_restores_order();
     test_scan_uses_rushmore_seek_and_restores_order();
     test_locate_with_double_equals_operator_uses_rushmore_seek();
