@@ -8,6 +8,7 @@ using namespace cf_test_visual_asset_editor;
 
 int main() {
     test_visual_asset_editor_errors_resolve_through_localization_catalog();
+    test_visual_asset_editor_default_catalog_refreshes_when_locale_changes();
     test_visual_asset_raw_reorder_preserves_frx_frt_and_lbx_lbt_bytes();
     test_visual_asset_raw_duplicate_preserves_frx_frt_and_lbx_lbt_bytes();
     test_visual_asset_raw_create_preserves_frx_frt_and_lbx_lbt_records();

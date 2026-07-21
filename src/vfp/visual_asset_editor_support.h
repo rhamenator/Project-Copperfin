@@ -77,7 +77,7 @@ struct VisualAssetRawRecordAppend {
 };
 
 // ==== Shared low-level helpers (byte I/O, text/name normalization, localized text) ====
-const copperfin::localization::LocalizedCatalog& visual_asset_editor_catalog();
+copperfin::localization::LocalizedCatalog visual_asset_editor_catalog();
 std::string visual_asset_text(std::string_view key);
 std::string visual_asset_text(
     std::string_view key,

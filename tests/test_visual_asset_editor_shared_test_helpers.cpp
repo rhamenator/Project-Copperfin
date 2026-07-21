@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_visual_asset_editor_support.h"
+#include "test_environment_support.h"
 
 namespace cf_test_visual_asset_editor {
 int failures = 0;
@@ -424,6 +425,28 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerNameMissing").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerUnavailable").starts_with("[!! "),
            "#2373/#2374/#2375/#2376/#2377/#2378: visual asset editor prose should resolve through localizable catalog keys");
+}
+
+void test_visual_asset_editor_default_catalog_refreshes_when_locale_changes() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto english_result = copperfin::vfp::list_visual_objects({});
+    locale_override.set("es-419");
+    const auto spanish_result = copperfin::vfp::list_visual_objects({});
+    locale_override.set("qps-ploc");
+    const auto pseudo_result = copperfin::vfp::list_visual_objects({});
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    constexpr std::string_view key = "VisualAssetEditor.Operation.AssetPathRequired";
+    expect(!english_result.ok && english_result.error == english_catalog.translate(key),
+           "#4366: visual-asset diagnostics should begin in en-US");
+    expect(!spanish_result.ok && spanish_result.error == spanish_catalog.translate(key),
+           "#4366: visual-asset diagnostics should refresh to es-419");
+    expect(!pseudo_result.ok && pseudo_result.error == pseudo_catalog.translate(key),
+           "#4366: visual-asset diagnostics should refresh to qps-ploc");
 }
 
 }  // namespace cf_test_visual_asset_editor

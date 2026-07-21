@@ -81,6 +81,7 @@ void write_synthetic_named_geometry_asset(
     const std::filesystem::path& memo_path);
 std::string vfp_string_literal_for_test(const std::string& value);
 void test_visual_asset_editor_errors_resolve_through_localization_catalog();
+void test_visual_asset_editor_default_catalog_refreshes_when_locale_changes();
 void test_visual_asset_raw_reorder_preserves_frx_frt_and_lbx_lbt_bytes();
 void test_visual_asset_raw_duplicate_preserves_frx_frt_and_lbx_lbt_bytes();
 void test_visual_asset_raw_create_preserves_frx_frt_and_lbx_lbt_records();
