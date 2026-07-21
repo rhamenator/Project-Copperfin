@@ -34,7 +34,7 @@ void test_document_default_catalog_refreshes_when_locale_changes() {
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     constexpr std::string_view open_key = "Studio.DocumentOpen.Error.PathRequired";
     constexpr std::string_view title_key = "Studio.DocumentModel.Fallback.RecordTitle";
-    const auto expected_title = [](const auto& catalog) {
+    const auto expected_title = [title_key](const auto& catalog) {
         return catalog.translate(title_key, {{"recordIndex", "7"}});
     };
     expect(!english_open.ok && english_open.error == english_catalog.translate(open_key),
