@@ -545,6 +545,7 @@ namespace copperfin::runtime_surface_tests
             "nMembersMethods = AMEMBERS(aMembersMethods, oOne, 2)\n"
             "nMembersEvents = AMEMBERS(aMembersEvents, oOne, 4)\n"
             "nMembersUnion = AMEMBERS(aMembersUnion, oOne, 3)\n"
+            "nMembersComFlagged = AMEMBERS(aMembersComFlagged, oOne, 0, 'G')\n"
             "cMemberAllFirst = aMembersOut[1]\n"
             "cMemberAllLast = aMembersOut[nMembersAll]\n"
             "cMemberMethodsFirst = aMembersMethods[1]\n"
@@ -608,6 +609,7 @@ namespace copperfin::runtime_surface_tests
         check("nmembersmethods", "11");
         check("nmembersevents", "0");
         check("nmembersunion", "13");
+        check("nmemberscomflagged", "13");
         check("cmemberallfirst", "ADD");
         check("cmemberalllast", "WRITEMETHOD");
         check("cmembermethodsfirst", "ADD");

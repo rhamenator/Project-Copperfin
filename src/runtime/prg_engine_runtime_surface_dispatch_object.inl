@@ -59,15 +59,17 @@
                 return make_number_value(0.0);
             }
 
+            const std::optional<NativeMemberVisibility> native_visibility_filter =
+                trim_copy(runtime_object->source).empty() ? std::nullopt : visibility_filter;
             std::vector<PrgValue> member_names;
             std::vector<std::string> member_tokens =
-                collect_object_member_names(*runtime_object, flags, visibility_filter);
+                collect_object_member_names(*runtime_object, flags, native_visibility_filter);
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
                 object_surface != nullptr) {
                 member_tokens = merge_member_tokens(
                     member_tokens,
-                    collect_object_member_names(*object_surface, flags, visibility_filter));
+                    collect_object_member_names(*object_surface, flags));
             }
             member_names.reserve(member_tokens.size());
             for (const std::string& member_name : member_tokens) {
