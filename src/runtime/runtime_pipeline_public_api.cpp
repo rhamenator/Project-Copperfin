@@ -2731,6 +2731,36 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                 error)) {
             return {.ok = false, .error = error};
         }
+#if !defined(_WIN32)
+        std::error_code runtime_host_permissions_error;
+        const auto runtime_host_source_status = std::filesystem::status(
+            runtime_host_source,
+            runtime_host_permissions_error);
+        if (runtime_host_permissions_error) {
+            return {.ok = false,
+                    .error = runtime_text(
+                        "Runtime.Package.Error.CopyFileFailed",
+                        {{"path", filesystem_plan.runtime_host_destination_path}})};
+        }
+        const auto executable_permissions = runtime_host_source_status.permissions() &
+            (std::filesystem::perms::owner_exec |
+             std::filesystem::perms::group_exec |
+             std::filesystem::perms::others_exec);
+        if (executable_permissions != std::filesystem::perms::none) {
+            std::filesystem::permissions(
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.runtime_host_destination_path),
+                executable_permissions,
+                std::filesystem::perm_options::add,
+                runtime_host_permissions_error);
+            if (runtime_host_permissions_error) {
+                return {.ok = false,
+                        .error = runtime_text(
+                            "Runtime.Package.Error.CopyFileFailed",
+                            {{"path", filesystem_plan.runtime_host_destination_path}})};
+            }
+        }
+#endif
         if (!append_pinned_digest(
                 materialized_plan.extension_payload_digests,
                 copperfin::platform::path_from_utf8_string(
@@ -2940,6 +2970,36 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
                 error)) {
             return {.ok = false, .error = error};
         }
+#if !defined(_WIN32)
+        std::error_code runtime_host_permissions_error;
+        const auto runtime_host_source_status = std::filesystem::status(
+            runtime_host_source,
+            runtime_host_permissions_error);
+        if (runtime_host_permissions_error) {
+            return {.ok = false,
+                    .error = runtime_text(
+                        "Runtime.Package.Error.CopyFileFailed",
+                        {{"path", filesystem_plan.runtime_host_destination_path}})};
+        }
+        const auto executable_permissions = runtime_host_source_status.permissions() &
+            (std::filesystem::perms::owner_exec |
+             std::filesystem::perms::group_exec |
+             std::filesystem::perms::others_exec);
+        if (executable_permissions != std::filesystem::perms::none) {
+            std::filesystem::permissions(
+                copperfin::platform::path_from_utf8_string(
+                    filesystem_plan.runtime_host_destination_path),
+                executable_permissions,
+                std::filesystem::perm_options::add,
+                runtime_host_permissions_error);
+            if (runtime_host_permissions_error) {
+                return {.ok = false,
+                        .error = runtime_text(
+                            "Runtime.Package.Error.CopyFileFailed",
+                            {{"path", filesystem_plan.runtime_host_destination_path}})};
+            }
+        }
+#endif
 
         const auto runtime_host_digest = sha256_for_materialized_file(
             copperfin::platform::path_from_utf8_string(

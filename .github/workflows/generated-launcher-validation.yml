@@ -13,6 +13,7 @@ on:
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_generated_launcher_process.cpp"
+      - "tests/test_generated_launcher_posix_process.cpp"
       - "tests/test_runtime_pipeline*.cpp"
       - "tests/test_runtime_pipeline*.h"
   pull_request:
@@ -27,6 +28,7 @@ on:
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_generated_launcher_process.cpp"
+      - "tests/test_generated_launcher_posix_process.cpp"
       - "tests/test_runtime_pipeline*.cpp"
       - "tests/test_runtime_pipeline*.h"
   workflow_dispatch:
@@ -61,3 +63,30 @@ jobs:
 
       - name: Run generated-launcher process test
         run: ctest --test-dir build -C Release --output-on-failure -R "^test_generated_launcher_process$"
+
+  posix-generated-launcher:
+    name: ${{ matrix.os }} generated launcher process
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Configure native build
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build POSIX generated-launcher process target
+        run: cmake --build build --config Release --target test_generated_launcher_posix_process --parallel 2
+
+      - name: Run POSIX generated-launcher process test
+        run: ctest --test-dir build -C Release --output-on-failure -R "^test_generated_launcher_posix_process$"

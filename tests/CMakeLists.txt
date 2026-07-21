@@ -4524,6 +4524,33 @@ set_tests_properties(test_generated_launcher_process PROPERTIES
     TIMEOUT 600
 )
 
+if(NOT WIN32 AND DOTNET_EXECUTABLE)
+    add_executable(test_generated_launcher_posix_process
+        test_generated_launcher_posix_process.cpp
+    )
+    target_link_libraries(test_generated_launcher_posix_process PRIVATE
+        cf_runtime_pipeline
+        cf_vfp_assets
+        cf_test_process_capture_support
+    )
+    add_dependencies(test_generated_launcher_posix_process copperfin_build_host copperfin_runtime_host)
+    if(MSVC)
+        target_compile_options(test_generated_launcher_posix_process PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(test_generated_launcher_posix_process PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+    add_test(
+        NAME test_generated_launcher_posix_process
+        COMMAND $<TARGET_FILE:test_generated_launcher_posix_process>
+            ${DOTNET_EXECUTABLE}
+            $<TARGET_FILE:copperfin_build_host>
+    )
+    set_tests_properties(test_generated_launcher_posix_process PROPERTIES
+        SKIP_RETURN_CODE 77
+        TIMEOUT 600
+    )
+endif()
+
 copperfin_add_test(test_security_controls cf_security
     test_security_controls.cpp
 )

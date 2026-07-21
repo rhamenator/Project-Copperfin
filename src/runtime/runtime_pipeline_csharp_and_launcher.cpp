@@ -531,7 +531,11 @@ std::string build_launcher_project_source(const RuntimePackagePlan& plan) {
     stream << "<Project Sdk=\"Microsoft.NET.Sdk\">\n";
     stream << "  <PropertyGroup>\n";
     stream << "    <OutputType>Exe</OutputType>\n";
+#if defined(_WIN32)
     stream << "    <TargetFramework>net8.0-windows</TargetFramework>\n";
+#else
+    stream << "    <TargetFramework>net8.0</TargetFramework>\n";
+#endif
     stream << "    <ImplicitUsings>enable</ImplicitUsings>\n";
     stream << "    <Nullable>enable</Nullable>\n";
     stream << "    <UseWindowsForms>false</UseWindowsForms>\n";

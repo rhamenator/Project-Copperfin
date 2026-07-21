@@ -4,6 +4,7 @@
 
 #include "copperfin/security/external_process_policy.h"
 
+#include "copperfin/platform/environment.h"
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 
@@ -21,6 +22,10 @@
 #include <limits>
 #include <string>
 #include <vector>
+
+#if !defined(_WIN32)
+#include <unistd.h>
+#endif
 
 namespace copperfin::security {
 
@@ -183,6 +188,82 @@ bool path_under_root(const std::filesystem::path& path, const std::filesystem::p
 
     return path_string == root_string || path_string.rfind(root_string, 0) == 0;
 }
+#else
+std::string resolve_executable_from_path(const std::string& executable_name) {
+    if (executable_name.empty()) {
+        return {};
+    }
+
+    const std::filesystem::path requested =
+        copperfin::platform::path_from_utf8_string(executable_name);
+    std::vector<std::filesystem::path> candidates;
+    if (requested.has_parent_path()) {
+        candidates.push_back(requested);
+    } else {
+        const std::string path_value =
+            copperfin::platform::read_environment_variable_or_empty("PATH");
+        std::size_t start = 0U;
+        for (;;) {
+            const std::size_t separator = path_value.find(':', start);
+            const std::string directory = path_value.substr(
+                start,
+                separator == std::string::npos ? std::string::npos : separator - start);
+            candidates.push_back(
+                (directory.empty()
+                     ? std::filesystem::path(".")
+                     : copperfin::platform::path_from_utf8_string(directory)) /
+                requested);
+            if (separator == std::string::npos) {
+                break;
+            }
+            start = separator + 1U;
+        }
+    }
+
+    for (const auto& candidate : candidates) {
+        std::error_code status_error;
+        if (!std::filesystem::is_regular_file(candidate, status_error) ||
+            status_error ||
+            ::access(candidate.c_str(), X_OK) != 0) {
+            continue;
+        }
+        std::error_code canonical_error;
+        const std::filesystem::path canonical =
+            std::filesystem::weakly_canonical(candidate, canonical_error);
+        if (canonical_error) {
+            continue;
+        }
+        return copperfin::platform::path_to_utf8_string(canonical);
+    }
+    return {};
+}
+
+std::string path_to_utf8_generic_string(const std::filesystem::path& path) {
+    std::string result = copperfin::platform::path_to_utf8_string(path);
+    std::replace(result.begin(), result.end(), '\\', '/');
+    return result;
+}
+
+bool path_under_root(const std::filesystem::path& path, const std::filesystem::path& root) {
+    std::error_code path_error;
+    const auto canonical_path = std::filesystem::weakly_canonical(path, path_error);
+    if (path_error) {
+        return false;
+    }
+
+    std::error_code root_error;
+    const auto canonical_root = std::filesystem::weakly_canonical(root, root_error);
+    if (root_error) {
+        return false;
+    }
+
+    const auto path_string = path_to_utf8_generic_string(canonical_path);
+    std::string root_string = path_to_utf8_generic_string(canonical_root);
+    if (!root_string.empty() && root_string.back() != '/') {
+        root_string.push_back('/');
+    }
+    return path_string == root_string || path_string.rfind(root_string, 0) == 0;
+}
 #endif
 
 }  // namespace
@@ -236,8 +317,41 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
 
     return {.allowed = true, .resolved_path = resolved_path, .error = {}};
 #else
-    (void)policy;
-    return {.allowed = false, .resolved_path = {}, .error = security_text("Security.ExternalProcessPolicy.Error.WindowsOnly")};
+    if (policy.require_trusted_signature) {
+        return {.allowed = false,
+                .resolved_path = {},
+                .error = security_text("Security.ExternalProcessPolicy.Error.WindowsOnly")};
+    }
+    const std::string resolved_path = resolve_executable_from_path(policy.executable_name);
+    if (resolved_path.empty()) {
+        return {.allowed = false,
+                .resolved_path = {},
+                .error = security_text(
+                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+                    {{"executableName", policy.executable_name}})};
+    }
+
+    const std::filesystem::path executable_path =
+        copperfin::platform::path_from_utf8_string(resolved_path);
+    if (policy.allowed_path_roots.empty()) {
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
+    }
+    const bool root_match = std::any_of(
+        policy.allowed_path_roots.begin(),
+        policy.allowed_path_roots.end(),
+        [&](const std::string& root) {
+            return path_under_root(
+                executable_path,
+                copperfin::platform::path_from_utf8_string(root));
+        });
+    if (!root_match) {
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
+    }
+    return {.allowed = true, .resolved_path = resolved_path, .error = {}};
 #endif
 }
 

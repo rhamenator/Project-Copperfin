@@ -192,6 +192,111 @@ std::string resolve_runtime_host_path(
     return copperfin::platform::path_to_utf8_string(host_root / host_name);
 }
 
+std::vector<std::string> dotnet_allowed_path_roots() {
+#if defined(_WIN32)
+    return {
+        R"(C:\Program Files\dotnet)",
+        R"(C:\Program Files (x86)\dotnet)"
+    };
+#else
+    std::vector<std::string> roots{
+        "/usr/bin",
+        "/usr/local/bin",
+        "/usr/share/dotnet",
+        "/usr/local/share/dotnet"
+    };
+    const std::string path_value =
+        copperfin::platform::read_environment_variable_or_empty("PATH");
+    std::size_t start = 0U;
+    for (;;) {
+        const std::size_t separator = path_value.find(':', start);
+        const std::string directory = path_value.substr(
+            start,
+            separator == std::string::npos ? std::string::npos : separator - start);
+        const std::filesystem::path candidate =
+            copperfin::platform::path_from_utf8_string(directory.empty() ? "." : directory) /
+            "dotnet";
+        std::error_code candidate_error;
+        if (std::filesystem::is_regular_file(candidate, candidate_error) && !candidate_error) {
+            const std::filesystem::path canonical =
+                std::filesystem::weakly_canonical(candidate, candidate_error);
+            if (!candidate_error) {
+                roots.push_back(copperfin::platform::path_to_utf8_string(canonical.parent_path()));
+            }
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        start = separator + 1U;
+    }
+    for (const char* name : {"DOTNET_ROOT", "DOTNET_ROOT_X64"}) {
+        const auto root = copperfin::platform::read_environment_path(name);
+        if (root.has_value()) {
+            roots.push_back(copperfin::platform::path_to_utf8_string(*root));
+        }
+    }
+    const auto home = copperfin::platform::read_environment_path("HOME");
+    if (home.has_value()) {
+        roots.push_back(copperfin::platform::path_to_utf8_string(*home / ".dotnet"));
+    }
+    return roots;
+#endif
+}
+
+copperfin::security::ExternalProcessPolicy dotnet_process_policy() {
+    return {
+#if defined(_WIN32)
+        .executable_name = "dotnet.exe",
+#else
+        .executable_name = "dotnet",
+#endif
+        .allowed_path_roots = dotnet_allowed_path_roots(),
+#if defined(_WIN32)
+        .allowed_publishers = {"Microsoft Corporation"},
+        .require_trusted_signature = true
+#else
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+#endif
+    };
+}
+
+std::string current_dotnet_runtime_identifier() {
+#if defined(_WIN32)
+#if defined(_M_ARM64) || defined(__aarch64__)
+    return "win-arm64";
+#elif defined(_M_IX86) || defined(__i386__)
+    return "win-x86";
+#elif defined(_M_X64) || defined(__x86_64__)
+    return "win-x64";
+#else
+    return {};
+#endif
+#elif defined(__APPLE__)
+#if defined(__aarch64__) || defined(__arm64__)
+    return "osx-arm64";
+#elif defined(__x86_64__)
+    return "osx-x64";
+#else
+    return {};
+#endif
+#elif defined(__linux__)
+#if defined(__aarch64__)
+    return "linux-arm64";
+#elif defined(__x86_64__)
+    return "linux-x64";
+#elif defined(__arm__)
+    return "linux-arm";
+#elif defined(__i386__)
+    return "linux-x86";
+#else
+    return {};
+#endif
+#else
+    return {};
+#endif
+}
+
 #if defined(_WIN32)
 std::wstring quote_windows_spawn_argument(const std::wstring& value) {
     if (!value.empty() && value.find_first_of(L" \t\n\v\"") == std::wstring::npos) {
@@ -232,15 +337,7 @@ bool run_dotnet_publish(
         copperfin::platform::path_from_utf8_string(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
 
-    const auto auth = copperfin::security::authorize_external_process({
-        .executable_name = "dotnet.exe",
-        .allowed_path_roots = {
-            R"(C:\Program Files\dotnet)",
-            R"(C:\Program Files (x86)\dotnet)"
-        },
-        .allowed_publishers = {"Microsoft Corporation"},
-        .require_trusted_signature = true
-    });
+    const auto auth = copperfin::security::authorize_external_process(dotnet_process_policy());
     if (!auth.allowed) {
         error = message(catalog, "BuildHost.Error.DotnetPublishDenied", {{"error", auth.error}});
         return false;
@@ -256,7 +353,7 @@ bool run_dotnet_publish(
         "-c",
         configuration,
         "-r",
-        "win-x64",
+        current_dotnet_runtime_identifier(),
         "--self-contained",
         "false",
         "-p:UseAppHost=true",
@@ -299,7 +396,11 @@ bool run_dotnet_publish(
     }
     if (child > 0) {
         int status = 0;
-        if (waitpid(child, &status, 0) == child && WIFEXITED(status)) {
+        pid_t waited = -1;
+        do {
+            waited = waitpid(child, &status, 0);
+        } while (waited < 0 && errno == EINTR);
+        if (waited == child && WIFEXITED(status)) {
             exit_code = WEXITSTATUS(status);
         }
     }
@@ -317,23 +418,31 @@ bool run_dotnet_publish(
         return false;
     }
 
+    const std::string project_stem =
+        copperfin::platform::path_to_utf8_string(project_path.stem());
+#if defined(_WIN32)
     const std::filesystem::path published_launcher =
-        output_dir /
-        copperfin::platform::path_from_utf8_string(
-            copperfin::platform::path_to_utf8_string(project_path.stem()) + ".exe");
+        output_dir / copperfin::platform::path_from_utf8_string(project_stem + ".exe");
     const std::filesystem::path internal_apphost =
-        output_dir /
-        copperfin::platform::path_from_utf8_string(
-            copperfin::platform::path_to_utf8_string(project_path.stem()) + ".apphost.exe");
+        output_dir / copperfin::platform::path_from_utf8_string(project_stem + ".apphost.exe");
+#else
+    const std::filesystem::path published_launcher =
+        output_dir / copperfin::platform::path_from_utf8_string(project_stem);
+#endif
     const std::filesystem::path configured_launcher =
         copperfin::platform::path_from_utf8_string(plan.launcher_output_path);
+#if defined(_WIN32)
     const std::filesystem::path guard_source =
         running_executable_path.parent_path() /
         "copperfin_launcher_guard.exe";
+#else
+    (void)running_executable_path;
+#endif
     if (!std::filesystem::exists(published_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
+#if defined(_WIN32)
     if (published_launcher != internal_apphost) {
         std::error_code rename_error;
         std::filesystem::rename(published_launcher, internal_apphost, rename_error);
@@ -358,6 +467,20 @@ bool run_dotnet_publish(
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
+#else
+    if (published_launcher != configured_launcher) {
+        std::error_code rename_error;
+        std::filesystem::rename(published_launcher, configured_launcher, rename_error);
+        if (rename_error) {
+            error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+            return false;
+        }
+    }
+    if (!std::filesystem::is_regular_file(configured_launcher)) {
+        error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
+        return false;
+    }
+#endif
 
     return true;
 }
@@ -369,11 +492,8 @@ bool is_library_output_kind(const copperfin::runtime::BuildOutputKind output_kin
 }
 
 bool supports_dotnet_launcher_publish() {
-#if defined(_WIN32)
-    return true;
-#else
-    return false;
-#endif
+    return !current_dotnet_runtime_identifier().empty() &&
+        copperfin::security::authorize_external_process(dotnet_process_policy()).allowed;
 }
 
 }  // namespace
