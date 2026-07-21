@@ -155,6 +155,16 @@ void print_warning_line(
     std::cout << message(catalog, "BuildHost.Prefix.Warning") << warning << "\n";
 }
 
+bool path_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::exists(path, error) && !error;
+}
+
+bool regular_file_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::is_regular_file(path, error) && !error;
+}
+
 std::string resolve_runtime_host_path(
     const std::string& override_path,
     const std::filesystem::path& running_executable_path) {
@@ -184,7 +194,7 @@ std::string resolve_runtime_host_path(
 #endif
     };
     for (const auto& candidate : candidate_paths) {
-        if (std::filesystem::exists(candidate)) {
+        if (path_exists_without_error(candidate)) {
             return copperfin::platform::path_to_utf8_string(candidate);
         }
     }
@@ -438,7 +448,7 @@ bool run_dotnet_publish(
 #else
     (void)running_executable_path;
 #endif
-    if (!std::filesystem::exists(published_launcher)) {
+    if (!path_exists_without_error(published_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
@@ -451,8 +461,8 @@ bool run_dotnet_publish(
             return false;
         }
     }
-    if (!std::filesystem::is_regular_file(internal_apphost) ||
-        !std::filesystem::is_regular_file(guard_source)) {
+    if (!regular_file_exists_without_error(internal_apphost) ||
+        !regular_file_exists_without_error(guard_source)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
@@ -463,7 +473,7 @@ bool run_dotnet_publish(
         configured_launcher,
         std::filesystem::copy_options::overwrite_existing,
         copy_error);
-    if (copy_error || !std::filesystem::is_regular_file(configured_launcher)) {
+    if (copy_error || !regular_file_exists_without_error(configured_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
@@ -476,7 +486,7 @@ bool run_dotnet_publish(
             return false;
         }
     }
-    if (!std::filesystem::is_regular_file(configured_launcher)) {
+    if (!regular_file_exists_without_error(configured_launcher)) {
         error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
         return false;
     }
