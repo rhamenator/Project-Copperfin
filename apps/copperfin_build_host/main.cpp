@@ -26,8 +26,10 @@
 #if defined(_WIN32)
 #include <process.h>
 #else
+#include <fcntl.h>
 #include <sys/wait.h>
 #include <unistd.h>
+extern char** environ;
 #endif
 #include <string>
 #include <system_error>
@@ -349,7 +351,7 @@ bool run_dotnet_publish(
         copperfin::platform::path_from_utf8_string(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
 
-    const auto auth = copperfin::security::authorize_external_process(dotnet_process_policy());
+    auto auth = copperfin::security::authorize_external_process(dotnet_process_policy());
     if (!auth.allowed) {
         error = message(catalog, "BuildHost.Error.DotnetPublishDenied", {{"error", auth.error}});
         return false;
@@ -375,6 +377,10 @@ bool run_dotnet_publish(
 
     intptr_t exit_code = -1;
 #if defined(_WIN32)
+    if (!copperfin::security::revalidate_external_process_authorization(auth)) {
+        error = message(catalog, "BuildHost.Error.DotnetPublishDenied", {{"error", auth.error}});
+        return false;
+    }
     std::vector<std::wstring> wide_args;
     wide_args.reserve(publish_args.size());
     wide_args.push_back(
@@ -395,6 +401,25 @@ bool run_dotnet_publish(
         copperfin::platform::path_from_utf8_string(auth.resolved_path).c_str(),
         argv.data());
 #else
+#if defined(__linux__)
+    // Keep the descriptor open across interpreter handoff for authorized
+    // shebang tools such as the POSIX dotnet shim.
+    const int verified_executable = ::open(auth.resolved_path.c_str(), O_RDONLY);
+    if (verified_executable < 0) {
+        error = message(
+            catalog,
+            "BuildHost.Error.DotnetPublishFailedToStart",
+            {{"error", std::error_code(errno, std::generic_category()).message()}});
+        return false;
+    }
+#endif
+    if (!copperfin::security::revalidate_external_process_authorization(auth)) {
+#if defined(__linux__)
+        ::close(verified_executable);
+#endif
+        error = message(catalog, "BuildHost.Error.DotnetPublishDenied", {{"error", auth.error}});
+        return false;
+    }
     std::vector<const char*> argv;
     argv.reserve(publish_args.size() + 1U);
     for (const auto& arg : publish_args) {
@@ -403,9 +428,16 @@ bool run_dotnet_publish(
     argv.push_back(nullptr);
     const pid_t child = fork();
     if (child == 0) {
+#if defined(__linux__)
+        fexecve(verified_executable, const_cast<char* const*>(argv.data()), environ);
+#else
         execvp(auth.resolved_path.c_str(), const_cast<char* const*>(argv.data()));
+#endif
         _exit(127);
     }
+#if defined(__linux__)
+    ::close(verified_executable);
+#endif
     if (child > 0) {
         int status = 0;
         pid_t waited = -1;

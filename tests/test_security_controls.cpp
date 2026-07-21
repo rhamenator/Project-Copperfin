@@ -770,6 +770,57 @@ void test_external_process_and_process_hardening_diagnostics() {
 #endif
 }
 
+#ifndef _WIN32
+void test_external_process_authorization_rejects_replacement() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_external_process_revalidation_tests";
+    const fs::path fixture_path = temp_root / "authorized-tool";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    fs::copy_file("/bin/sh", fixture_path, fs::copy_options::overwrite_existing, ignored);
+    if (ignored) {
+        expect(false, "#4376: POSIX revalidation fixture should be created");
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+    fs::permissions(
+        fixture_path,
+        fs::perms::owner_exec | fs::perms::owner_read,
+        fs::perm_options::add,
+        ignored);
+
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = fixture_path.string(),
+        .allowed_path_roots = {temp_root.string()},
+        .allowed_publishers = {},
+        .require_trusted_signature = false
+    };
+    auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(authorization.allowed,
+           "#4376: POSIX external-process authorization should accept the fixture");
+    expect(
+        copperfin::security::revalidate_external_process_authorization(authorization),
+        "#4376: unchanged authorized executable should pass revalidation");
+
+    fs::remove(fixture_path, ignored);
+    fs::copy_file("/bin/true", fixture_path, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored, "#4376: POSIX revalidation fixture should be replaceable");
+    if (!ignored) {
+        expect(
+            !copperfin::security::revalidate_external_process_authorization(authorization),
+            "#4376: replacing an authorized executable should fail revalidation");
+        expect(
+            authorization.error ==
+                "The authorized executable changed before launch.",
+            "#4376: replacement denial should use the localized diagnostic");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+#endif
+
 #ifdef _WIN32
 void test_external_process_policy_preserves_unicode_paths() {
     namespace fs = std::filesystem;
@@ -823,11 +874,14 @@ void test_external_process_policy_preserves_unicode_paths() {
         .allowed_publishers = {},
         .require_trusted_signature = false
     };
-    const auto authorization = copperfin::security::authorize_external_process(policy);
+    auto authorization = copperfin::security::authorize_external_process(policy);
     const auto resolved_path = copperfin::platform::path_from_utf8_string(authorization.resolved_path);
     const auto canonical_fixture_path = fs::weakly_canonical(fixture_path, ignored);
     expect(authorization.allowed,
            "#4277: Windows external-process policy should authorize a Unicode executable inside its allowed root");
+    expect(
+        copperfin::security::revalidate_external_process_authorization(authorization),
+        "#4376: Windows external-process authorization should remain current before launch");
     expect(authorization.resolved_path.find("\xC3\xA9") != std::string::npos,
            "#4277: Windows external-process policy should preserve the non-ASCII path component in its result");
     expect(resolved_path == canonical_fixture_path,
@@ -1243,6 +1297,9 @@ int main() {
     test_contained_audit_append_serializes_concurrent_writers();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();
+#ifndef _WIN32
+    test_external_process_authorization_rejects_replacement();
+#endif
 #ifdef _WIN32
     test_external_process_policy_preserves_unicode_paths();
     test_external_process_policy_handles_long_paths();

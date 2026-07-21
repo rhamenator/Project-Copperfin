@@ -24,13 +24,63 @@
 #include <string>
 #include <vector>
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <fileapi.h>
+#else
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
 namespace copperfin::security {
 
 namespace {
+
+bool read_file_identity(
+    const std::filesystem::path& path,
+    ExternalProcessFileIdentity& identity) {
+#ifdef _WIN32
+    const std::wstring wide_path = path.wstring();
+    const HANDLE handle = CreateFileW(
+        wide_path.c_str(),
+        FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    BY_HANDLE_FILE_INFORMATION information{};
+    const BOOL read = GetFileInformationByHandle(handle, &information);
+    CloseHandle(handle);
+    if (!read || (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        return false;
+    }
+
+    identity.first = information.dwVolumeSerialNumber;
+    identity.second = (static_cast<std::uint64_t>(information.nFileIndexHigh) << 32U) |
+        information.nFileIndexLow;
+    return true;
+#else
+    struct stat information{};
+    if (::stat(path.c_str(), &information) != 0 || !S_ISREG(information.st_mode) ||
+        ::access(path.c_str(), X_OK) != 0) {
+        return false;
+    }
+
+    identity.first = static_cast<std::uint64_t>(information.st_dev);
+    identity.second = static_cast<std::uint64_t>(information.st_ino);
+    return true;
+#endif
+}
+
+bool file_identities_equal(
+    const ExternalProcessFileIdentity& left,
+    const ExternalProcessFileIdentity& right) {
+    return left.first == right.first && left.second == right.second;
+}
 
 #ifdef _WIN32
 std::wstring widen(const std::string& value) {
@@ -277,7 +327,8 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .resolved_path = {},
                 .error = security_text(
                     "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
-                    {{"executableName", policy.executable_name}})};
+                    {{"executableName", policy.executable_name}}),
+                .file_identity = {}};
     }
 
     const std::filesystem::path executable_path =
@@ -294,13 +345,15 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (!root_match) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .file_identity = {}};
     }
 
     if (policy.require_trusted_signature && !has_trusted_signature(resolved_path)) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature")};
+                .error = security_text("Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature"),
+                .file_identity = {}};
     }
 
     if (!policy.allowed_publishers.empty()) {
@@ -312,16 +365,30 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
         if (match == policy.allowed_publishers.end()) {
             return {.allowed = false,
                     .resolved_path = resolved_path,
-                    .error = security_text("Security.ExternalProcessPolicy.Error.PublisherNotAllowed")};
+                    .error = security_text("Security.ExternalProcessPolicy.Error.PublisherNotAllowed"),
+                    .file_identity = {}};
         }
     }
 
-    return {.allowed = true, .resolved_path = resolved_path, .error = {}};
+    ExternalProcessFileIdentity identity;
+    if (!read_file_identity(executable_path, identity)) {
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text(
+                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+                    {{"executableName", policy.executable_name}}),
+                .file_identity = {}};
+    }
+    return {.allowed = true,
+            .resolved_path = resolved_path,
+            .error = {},
+            .file_identity = identity};
 #else
     if (policy.require_trusted_signature) {
         return {.allowed = false,
                 .resolved_path = {},
-                .error = security_text("Security.ExternalProcessPolicy.Error.WindowsOnly")};
+                .error = security_text("Security.ExternalProcessPolicy.Error.WindowsOnly"),
+                .file_identity = {}};
     }
     const std::string resolved_path = resolve_executable_from_path(policy.executable_name);
     if (resolved_path.empty()) {
@@ -329,7 +396,8 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
                 .resolved_path = {},
                 .error = security_text(
                     "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
-                    {{"executableName", policy.executable_name}})};
+                    {{"executableName", policy.executable_name}}),
+                .file_identity = {}};
     }
 
     const std::filesystem::path executable_path =
@@ -337,7 +405,8 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (policy.allowed_path_roots.empty()) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .file_identity = {}};
     }
     const bool root_match = std::any_of(
         policy.allowed_path_roots.begin(),
@@ -350,10 +419,42 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
     if (!root_match) {
         return {.allowed = false,
                 .resolved_path = resolved_path,
-                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots"),
+                .file_identity = {}};
     }
-    return {.allowed = true, .resolved_path = resolved_path, .error = {}};
+    ExternalProcessFileIdentity identity;
+    if (!read_file_identity(executable_path, identity)) {
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text(
+                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+                    {{"executableName", policy.executable_name}}),
+                .file_identity = {}};
+    }
+    return {.allowed = true,
+            .resolved_path = resolved_path,
+            .error = {},
+            .file_identity = identity};
 #endif
+}
+
+bool revalidate_external_process_authorization(
+    ExternalProcessAuthorizationResult& authorization) {
+    if (!authorization.allowed || authorization.resolved_path.empty()) {
+        return false;
+    }
+
+    ExternalProcessFileIdentity current_identity;
+    if (!read_file_identity(
+            copperfin::platform::path_from_utf8_string(authorization.resolved_path),
+            current_identity) ||
+        !file_identities_equal(current_identity, authorization.file_identity)) {
+        authorization.allowed = false;
+        authorization.error = security_text(
+            "Security.ExternalProcessPolicy.Error.ExecutableChangedAfterAuthorization");
+        return false;
+    }
+    return true;
 }
 
 }  // namespace copperfin::security

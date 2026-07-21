@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -16,13 +17,24 @@ struct ExternalProcessPolicy {
     bool require_trusted_signature = true;
 };
 
+struct ExternalProcessFileIdentity {
+    std::uint64_t first = 0;
+    std::uint64_t second = 0;
+};
+
 struct ExternalProcessAuthorizationResult {
     bool allowed = false;
     std::string resolved_path;
     std::string error;
+    ExternalProcessFileIdentity file_identity;
 };
 
 [[nodiscard]] ExternalProcessAuthorizationResult authorize_external_process(
     const ExternalProcessPolicy& policy);
+
+// Recheck the physical executable selected by authorization immediately before
+// launch. The result is marked denied when the selected file was replaced.
+[[nodiscard]] bool revalidate_external_process_authorization(
+    ExternalProcessAuthorizationResult& authorization);
 
 }  // namespace copperfin::security
