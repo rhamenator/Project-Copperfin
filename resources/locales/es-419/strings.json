@@ -1936,6 +1936,7 @@
   "Studio.AppTitle": "Copperfin Studio",
   "Studio.ViewMenu": "\u0026Ver",
   "Studio.CommandWindowMenu": "Ventana de comandos",
+  "Studio.TerminalWindowMenu": "Terminal",
   "Studio.FileMenu": "\u0026Archivo",
   "Studio.OpenMenu": "\u0026Abrir...",
   "Studio.ExitMenu": "\u0026Salir",
