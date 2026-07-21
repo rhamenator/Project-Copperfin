@@ -16,6 +16,9 @@ internal sealed class StudioMainForm : Form
     private readonly TabControl documentTabs;
     private readonly SplitContainer shellSplitContainer;
     private readonly TabControl toolWindowTabs;
+    private readonly TabPage commandWindowPage;
+    private readonly TabPage terminalWindowPage;
+    private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly CopperfinLocalization localization;
     private readonly Dictionary<string, TabPage> openDocuments =
@@ -46,7 +49,14 @@ internal sealed class StudioMainForm : Form
             Checked = true
         };
         commandWindowItem.CheckedChanged += (_, _) => SetCommandWindowVisible(commandWindowItem.Checked);
+        var terminalWindowItem = new ToolStripMenuItem(this.localization.Text("Studio.TerminalWindowMenu"))
+        {
+            CheckOnClick = true,
+            Checked = true
+        };
+        terminalWindowItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowItem.Checked);
         viewMenu.DropDownItems.Add(commandWindowItem);
+        viewMenu.DropDownItems.Add(terminalWindowItem);
         menuStrip.Items.Add(viewMenu);
         MainMenuStrip = menuStrip;
 
@@ -73,9 +83,20 @@ internal sealed class StudioMainForm : Form
             Alignment = TabAlignment.Top,
             Multiline = false
         };
-        var commandWindowPage = new TabPage(this.localization.Text("VSIX.CommandWindow.Title"));
+        commandWindowPage = new TabPage(this.localization.Text("VSIX.CommandWindow.Title"));
         commandWindowPage.Controls.Add(new StudioCommandWindowControl(this.localization));
         toolWindowTabs.TabPages.Add(commandWindowPage);
+        terminalWindowPage = new TabPage(this.localization.Text("VSIX.TerminalWindow.Title"));
+        terminalWindowControl = new StudioTerminalWindowControl(this.localization);
+        terminalWindowPage.Controls.Add(terminalWindowControl);
+        toolWindowTabs.TabPages.Add(terminalWindowPage);
+        toolWindowTabs.SelectedIndexChanged += (_, _) =>
+        {
+            if (toolWindowTabs.SelectedTab == terminalWindowPage)
+            {
+                terminalWindowControl.StartShell();
+            }
+        };
 
         shellSplitContainer = new SplitContainer
         {
@@ -103,13 +124,59 @@ internal sealed class StudioMainForm : Form
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
-    internal bool IsCommandWindowVisible => !shellSplitContainer.Panel2Collapsed;
+    internal bool IsCommandWindowVisible => toolWindowTabs.TabPages.Contains(commandWindowPage);
 
-    internal string CommandWindowTabTitle => toolWindowTabs.TabPages[0].Text;
+    internal bool IsTerminalWindowVisible => toolWindowTabs.TabPages.Contains(terminalWindowPage);
+
+    internal string CommandWindowTabTitle => commandWindowPage.Text;
+
+    internal string TerminalWindowTabTitle => terminalWindowPage.Text;
+
+    internal bool IsTerminalShellRunning => terminalWindowControl.IsShellRunning;
+
+    internal string TerminalTranscript => terminalWindowControl.TranscriptText;
 
     internal void SetCommandWindowVisible(bool visible)
     {
-        shellSplitContainer.Panel2Collapsed = !visible;
+        SetToolWindowVisible(commandWindowPage, visible);
+    }
+
+    internal void SetTerminalWindowVisible(bool visible)
+    {
+        SetToolWindowVisible(terminalWindowPage, visible);
+    }
+
+    internal void SelectTerminalWindow()
+    {
+        if (IsTerminalWindowVisible)
+        {
+            toolWindowTabs.SelectedTab = terminalWindowPage;
+        }
+    }
+
+    internal void StartTerminalShell()
+    {
+        terminalWindowControl.StartShell();
+    }
+
+    internal void SubmitTerminalCommandForTest(string command)
+    {
+        terminalWindowControl.SubmitCommandForTest(command);
+    }
+
+    private void SetToolWindowVisible(TabPage page, bool visible)
+    {
+        var isVisible = toolWindowTabs.TabPages.Contains(page);
+        if (visible && !isVisible)
+        {
+            toolWindowTabs.TabPages.Add(page);
+        }
+        else if (!visible && isVisible)
+        {
+            toolWindowTabs.TabPages.Remove(page);
+        }
+
+        shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
     }
 
     public void OpenDocument(string path, string? objectName = null, string? uniqueId = null)

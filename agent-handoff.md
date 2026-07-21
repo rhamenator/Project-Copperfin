@@ -103,6 +103,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Standalone Studio terminal slice #4351 under #2997/#3051: `StudioMainForm` owns a localized Terminal tab beside Command. `StudioTerminalWindowControl` selects `COMSPEC`/`cmd.exe` with `/Q` on Windows and `SHELL`/`/bin/sh` with `-i` on POSIX, wraps redirected input in an explicit UTF-8 writer for net472 compatibility, streams UTF-8 stdout/stderr, and kills/disposes the child during control disposal. Keep PTY/profile/persistent-layout work and VSIX terminal hosting separate; preserve the Command pane and document tabs.
+
 - Standalone Studio shell slice #4348 under #2997/#3051: `StudioMainForm` owns a resizable bottom-docked `SplitContainer` and tabbed Command pane. The pane uses `VSIX.CommandWindow.Title`/`Ready` and `Studio.ViewMenu`/`CommandWindowMenu` from the active catalog, and hide/show only collapses the tool-window panel. Do not add terminal process hosting or command evaluation to this slice; keep the shared designer/editor behavior unchanged and require hosted Windows UI validation.
 
 - PRG event and `ON ERROR` dispatch now preserve reverse active-stack precedence and then consult the registered `SET PROCEDURE` list through `find_event_handler_routine_lookup(...)`. Keep external helper handlers covered by both event-loop and recoverable-fault regressions; do not replace this with recursive dispatch or alter event/error machine identities. Native security profiles load the selected catalog per no-argument factory call so in-process locale changes are visible; explicit-catalog callers and stable security identifiers remain authoritative.

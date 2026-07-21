@@ -24,6 +24,7 @@
     <Compile Include="CopperfinStudioOpenDialogFilter.cs" />
     <Compile Include="CopperfinDocumentPathIdentity.cs" />
     <Compile Include="StudioCommandWindowControl.cs" />
+    <Compile Include="StudioTerminalWindowControl.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinFileManager.cs" Link="Shared\CopperfinFileManager.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectEntryActivation.cs" Link="Shared\CopperfinProjectEntryActivation.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinExternalLocaleCatalog.cs" Link="Shared\CopperfinExternalLocaleCatalog.cs" />
