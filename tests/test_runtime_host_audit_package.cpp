@@ -317,6 +317,28 @@ void test_security_enabled_writable_package_data_contract(
            "writable DBF companion seed provenance should require SHA-256 syntax");
 
     write_manifest(true, "package_writable");
+    const fs::path hard_link_target = content_root / "immutable-alias.dbf";
+    fs::copy_file(table_path, hard_link_target, fs::copy_options::overwrite_existing, ignored);
+    fs::remove(table_path, ignored);
+    std::error_code hard_link_error;
+    fs::create_hard_link(hard_link_target, table_path, hard_link_error);
+    if (!hard_link_error) {
+        const auto hard_link_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            deployed_root);
+        expect(hard_link_process.exit_code == 8,
+               "security verification should reject hard-linked package-writable DBF data");
+        expect(hard_link_process.stdout_text.find(
+                   "error: Package path failed physical containment validation: customers.dbf") !=
+                   std::string::npos,
+               "hard-linked package-writable DBF data should retain the physical-containment diagnostic");
+    }
+    fs::remove(table_path, ignored);
+    fs::copy_file(hard_link_target, table_path, fs::copy_options::overwrite_existing, ignored);
+    fs::remove(hard_link_target, ignored);
+
+    write_manifest(true, "package_writable");
     write_text(
         manifest_path,
         read_text(manifest_path) + "data_policy=package_writable\n");

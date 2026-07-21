@@ -1358,6 +1358,11 @@ bool physical_indirection_was_rejected(
            failure == copperfin::security::PhysicalPathContainmentFailure::cross_device_component;
 }
 
+bool physical_identity_has_multiple_links(
+    const copperfin::security::PhysicalPathContainmentResult& containment) {
+    return containment.allowed && containment.identity.link_count > 1U;
+}
+
 bool packaged_source_text_extension(const std::filesystem::path& path) {
     const std::string extension = lowercase_copy(copperfin::platform::path_to_utf8_string(path.extension()));
     return extension == ".prg" || extension == ".mpr" ||
@@ -1666,6 +1671,16 @@ bool verify_manifest_hashes(
             error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
             return false;
         }
+        const auto writable_containment = copperfin::security::inspect_physical_path_containment(
+            *bound_path,
+            manifest_directory);
+        if (!writable_containment.allowed || physical_identity_has_multiple_links(writable_containment)) {
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_path->filename())}});
+            return false;
+        }
         writable_data_paths.push_back(*bound_path);
     }
 
@@ -1714,6 +1729,13 @@ bool verify_manifest_hashes(
         const auto contained_payload = copperfin::security::inspect_physical_path_containment(
             *bound_path,
             manifest_directory);
+        if (!contained_payload.allowed || physical_identity_has_multiple_links(contained_payload)) {
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", copperfin::platform::path_to_utf8_string(bound_path->filename())}});
+            return false;
+        }
         const auto payload_snapshot = contained_payload.allowed
             ? copperfin::security::read_physically_contained_file_snapshot(
                   contained_payload,
@@ -1866,6 +1888,13 @@ bool verify_manifest_hashes(
                 writable_data_paths.begin(),
                 writable_data_paths.end(),
                 contained_asset.canonical_path) != writable_data_paths.end();
+        if (package_writable && physical_identity_has_multiple_links(contained_asset)) {
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", asset_file_name}});
+            return false;
+        }
         if (package_writable && !is_sha256_hex(parts[6])) {
             error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
             return false;
