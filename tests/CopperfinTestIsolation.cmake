@@ -706,6 +706,15 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+    copperfin_set_test_isolation(test_studio_host_utf8_arguments
+        FILESYSTEM process-owned
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_studio_host
         PARALLEL_SAFE
         FILESYSTEM test-owned-unique
