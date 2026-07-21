@@ -127,6 +127,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_manifest_asset_lines_include_copy_state_contract();
     test_debug_source_roots_are_unique_when_source_and_content_paths_match();
     test_debug_source_roots_preserve_source_first_and_content_second_order();
+    test_fd_backed_binary_reads_accept_direct_descriptor_paths();
     test_repeated_materialization_replaces_generated_package_transactionally();
     test_runtime_package_diagnostics_resolve_through_localization_catalog();
 

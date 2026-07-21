@@ -265,6 +265,44 @@ void run_windows_drive_relative_case(
 
 }  // namespace
 
+void test_fd_backed_binary_reads_accept_direct_descriptor_paths() {
+#if defined(_WIN32)
+    return;
+#else
+    namespace fs = std::filesystem;
+    const fs::path root = fs::temp_directory_path() /
+        ("copperfin_fd_backed_binary_read_" +
+         std::to_string(static_cast<long long>(::getpid())));
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path source = root / "payload.bin";
+    std::string expected;
+    expected.push_back('\0');
+    expected += "Copperfin";
+    expected.push_back(static_cast<char>(0xFF));
+    expected += "payload";
+    {
+        std::ofstream output(source, std::ios::binary);
+        output.write(expected.data(), static_cast<std::streamsize>(expected.size()));
+    }
+
+    const int descriptor = ::open(source.c_str(), O_RDONLY | O_CLOEXEC);
+    expect(descriptor >= 0, "#4371: direct FD fixture should open");
+    if (descriptor >= 0) {
+        const fs::path fd_path = fs::exists("/dev/fd")
+            ? fs::path("/dev/fd") / std::to_string(descriptor)
+            : fs::path("/proc/self/fd") / std::to_string(descriptor);
+        std::string error;
+        const std::string actual = copperfin::runtime::read_binary_file(fd_path, error);
+        expect(actual == expected && error.empty(),
+               "#4371: direct POSIX FD paths should support binary reads");
+        (void)::close(descriptor);
+    }
+    fs::remove_all(root, ignored);
+#endif
+}
+
 void test_drive_relative_asset_paths_use_contained_package_identity() {
 #if defined(_WIN32)
     const fs::path user_profile(getenv_value("USERPROFILE"));

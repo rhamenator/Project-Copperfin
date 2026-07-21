@@ -97,6 +97,14 @@ bool read_file_bytes(
             return false;
         }
         const std::filesystem::path relative = parsed->relative;
+        if (relative.empty()) {
+            const bool read_successfully = read_descriptor(parent_descriptor, contents);
+            (void)::close(parent_descriptor);
+            if (!read_successfully) {
+                contents.clear();
+            }
+            return read_successfully;
+        }
         for (const auto& component : relative.parent_path()) {
             if (component == ".") {
                 continue;

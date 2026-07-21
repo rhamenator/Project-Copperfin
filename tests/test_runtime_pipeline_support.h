@@ -73,6 +73,7 @@ void test_runtime_pipeline_fixtures_are_process_isolated(
     const std::filesystem::path& executable_path);
 void test_concurrent_materialization_is_serialized_per_package_root(
     const std::filesystem::path& executable_path);
+void test_fd_backed_binary_reads_accept_direct_descriptor_paths();
 void test_package_transaction_rejects_rebound_output_parent();
 void test_package_content_root_remains_pinned_during_asset_writes();
 void test_windows_nested_package_parent_rebind_fails_closed();
