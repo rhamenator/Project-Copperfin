@@ -37,7 +37,7 @@ int run_inherited_handle_probe() {
     unsigned long index_high = 0U;
     unsigned long index_low = 0U;
     const bool parsed = length > 0U &&
-        std::sscanf_s(value, "%llu,%lu,%lu,%lu", &raw_handle, &volume, &index_high, &index_low) == 4;
+        std::sscanf(value, "%llu,%lu,%lu,%lu", &raw_handle, &volume, &index_high, &index_low) == 4;
     BY_HANDLE_FILE_INFORMATION information{};
     const bool matches = parsed &&
         ::GetFileInformationByHandle(
