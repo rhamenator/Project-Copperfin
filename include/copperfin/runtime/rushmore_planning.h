@@ -289,6 +289,7 @@ struct RushmorePlanningOptions {
     bool enabled = false;
     bool allow_legacy_fallback = true;
     std::uint64_t options_version = 0;
+    RushmoreCostModelOptions cost_model{};
 
     friend bool operator==(const RushmorePlanningOptions&, const RushmorePlanningOptions&) = default;
 };

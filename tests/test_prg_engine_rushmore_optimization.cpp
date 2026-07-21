@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <system_error>
 
 void test_rushmore_planning_contracts();
@@ -48,8 +49,9 @@ void test_locate_uses_rushmore_seek_and_restores_order() {
         "nRecno = RECNO()\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-        make_runtime_session_options(main_path.string(), temp_root.string()));
+    auto runtime_options = make_runtime_session_options(main_path.string(), temp_root.string());
+    runtime_options.rushmore_planning.enabled = true;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(runtime_options);
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "Rushmore LOCATE script should complete");
@@ -239,6 +241,61 @@ void test_locate_with_greater_than_operator_does_not_match_equal_record() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_opt_in_cost_model_rejects_expensive_seek_and_preserves_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rushmore_cost_fallback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "rushmore_cost_fallback.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "cOrderAfter = ORDER()\n"
+        "lFound = FOUND()\n"
+        "nRecno = RECNO()\n"
+        "RETURN\n");
+
+    auto runtime_options = make_runtime_session_options(main_path.string(), temp_root.string());
+    runtime_options.rushmore_planning.enabled = true;
+    runtime_options.rushmore_planning.cost_model.index_seek_base_cpu_units =
+        std::numeric_limits<std::uint64_t>::max();
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(runtime_options);
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Cost-model fallback LOCATE should complete: " + state.message);
+
+    const auto order_after = state.globals.find("corderafter");
+    const auto found = state.globals.find("lfound");
+    const auto recno = state.globals.find("nrecno");
+    expect(order_after != state.globals.end() && found != state.globals.end() && recno != state.globals.end(),
+        "Cost-model fallback LOCATE should preserve observable cursor globals");
+    if (order_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(order_after->second).empty(),
+            "Cost-model fallback LOCATE should restore the original active order");
+    }
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true",
+            "Cost-model fallback LOCATE should still find the matching record");
+    }
+    if (recno != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno->second) == "2",
+            "Cost-model fallback LOCATE should preserve RECNO() semantics");
+    }
+    expect(has_rushmore_event_with_detail_fragment(state.events, "Cost model selected the fallback scan") &&
+            !has_rushmore_event_with_detail_fragment(state.events, "index_seek via NAME"),
+        "Cost-model fallback LOCATE should report a localized fallback rather than executing the seek");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -247,6 +304,7 @@ int main() {
     test_scan_uses_rushmore_seek_and_restores_order();
     test_locate_with_double_equals_operator_uses_rushmore_seek();
     test_locate_with_greater_than_operator_does_not_match_equal_record();
+    test_opt_in_cost_model_rejects_expensive_seek_and_preserves_state();
     const int failures = copperfin::test_support::test_failures();
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

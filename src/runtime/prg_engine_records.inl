@@ -896,6 +896,57 @@
 
                     auto plan = create_index_seek_plan(pattern, available_orders, cursor.active_order_name);
 
+                    if (options.rushmore_planning.enabled)
+                    {
+                        const bool is_single_comparison =
+                            pattern.recognized_predicates.size() == 1U &&
+                            pattern.residual_predicates.empty() &&
+                            (pattern.operator_kind == IndexOperatorKind::equal ||
+                             pattern.operator_kind == IndexOperatorKind::not_equal ||
+                             pattern.operator_kind == IndexOperatorKind::less_than ||
+                             pattern.operator_kind == IndexOperatorKind::less_than_or_equal ||
+                             pattern.operator_kind == IndexOperatorKind::greater_than ||
+                             pattern.operator_kind == IndexOperatorKind::greater_than_or_equal);
+                        bool cost_model_selected = false;
+                        if (plan.can_optimize && plan.selected_order && is_single_comparison)
+                        {
+                            std::optional<RushmorePredicateDescriptor> predicate =
+                                pattern.recognized_predicates.front();
+                            const RushmoreCursorMetadata metadata{
+                                cursor.alias,
+                                plan.selected_order->order_expression,
+                                static_cast<std::uint64_t>(cursor.record_count),
+                                0,
+                                std::nullopt};
+                            const RushmoreCostModelInput table_scan_input{
+                                RushmorePlanKind::table_scan,
+                                metadata,
+                                predicate,
+                                0};
+                            const RushmoreCostModelInput index_seek_input{
+                                RushmorePlanKind::index_seek,
+                                metadata,
+                                predicate,
+                                0};
+                            const auto table_scan_cost = rushmore_estimate_plan_cost(
+                                table_scan_input,
+                                options.rushmore_planning.cost_model);
+                            const auto index_seek_cost = rushmore_estimate_plan_cost(
+                                index_seek_input,
+                                options.rushmore_planning.cost_model);
+                            cost_model_selected = index_seek_cost < table_scan_cost;
+                        }
+
+                        if (!cost_model_selected)
+                        {
+                            plan.can_optimize = false;
+                            plan.selected_order.reset();
+                            plan.strategy = IndexSeekPlan::ExecutionStrategy::linear_scan;
+                            plan.decision_rationale = runtime_text(
+                                "Runtime.IndexSeek.PlanDecision.CostModelRejected");
+                        }
+                    }
+
                     if (!plan.decision_rationale.empty())
                     {
                         rushmore_detail = locate_detail + " -> linear_scan (" + plan.decision_rationale + ")";

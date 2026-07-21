@@ -1413,6 +1413,7 @@
   "Runtime.IndexSeek.PatternReason.TopLevelNotPattern": "Padrao NOT de nivel superior",
   "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern": "A expressao nao corresponde a padroes de otimizacao reconhecidos",
   "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes": "Nao ha indices disponiveis que correspondam aos campos do padrao",
+  "Runtime.IndexSeek.PlanDecision.CostModelRejected": "O modelo de custo selecionou a varredura alternativa",
   "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder": "O campo de padrao '{fieldName}' correspondeu a ordem '{orderName}'",
   "Runtime.IndexSeek.PlanDecision.PatternNotRecognized": "Padrao nao reconhecido para otimizacao",
   "Runtime.Prg.Core.Error.AsyncTaskCancelled": "Tarefa assincrona cancelada.",
