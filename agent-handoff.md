@@ -103,6 +103,8 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Active Directive
 
+- Standalone Studio shell slice #4348 under #2997/#3051: `StudioMainForm` owns a resizable bottom-docked `SplitContainer` and tabbed Command pane. The pane uses `VSIX.CommandWindow.Title`/`Ready` and `Studio.ViewMenu`/`CommandWindowMenu` from the active catalog, and hide/show only collapses the tool-window panel. Do not add terminal process hosting or command evaluation to this slice; keep the shared designer/editor behavior unchanged and require hosted Windows UI validation.
+
 - PRG event and `ON ERROR` dispatch now preserve reverse active-stack precedence and then consult the registered `SET PROCEDURE` list through `find_event_handler_routine_lookup(...)`. Keep external helper handlers covered by both event-loop and recoverable-fault regressions; do not replace this with recursive dispatch or alter event/error machine identities. Native security profiles load the selected catalog per no-argument factory call so in-process locale changes are visible; explicit-catalog callers and stable security identifiers remain authoritative.
 
 - Rushmore predicate extraction slice #3229: `IndexExpressionPattern` now carries additive `recognized_predicates` and `residual_predicates` using the #3228 descriptor contracts. Equality, inequality/range, BETWEEN, LIKE, IN, and fully recognized top-level AND chains are normalized with invariant field/operator text while raw literal operands remain intact; unsupported/NOT expressions remain residuals. This is analysis-only: preserve existing `IndexSeekPlan` confidence, execution, evaluation, localization, and stack-frugal behavior until a later integration child opts in.

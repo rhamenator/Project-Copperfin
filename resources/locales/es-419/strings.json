@@ -1928,6 +1928,8 @@
   "Studio.ToolboxCreation.Error.ObjectIdentityExists": "La identidad solicitada del objeto de la caja de herramientas ya existe en el asset.",
   "Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable": "No se pudo generar un nombre de objeto unico para el elemento solicitado de la caja de herramientas.",
   "Studio.AppTitle": "Copperfin Studio",
+  "Studio.ViewMenu": "\u0026Ver",
+  "Studio.CommandWindowMenu": "Ventana de comandos",
   "Studio.FileMenu": "\u0026Archivo",
   "Studio.OpenMenu": "\u0026Abrir...",
   "Studio.ExitMenu": "\u0026Salir",

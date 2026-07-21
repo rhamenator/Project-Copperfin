@@ -419,7 +419,9 @@ internal static partial class Program
         Expect(preHandleLoadFinished,
             "standalone Studio should finish an asset snapshot that started before the form handle was created");
 
-        var tabControl = FindTabControls(form).FirstOrDefault();
+        var tabControl = FindTabControls(form)
+            .FirstOrDefault(tab => tab.TabPages.Cast<TabPage>()
+                .Any(page => page.Controls.OfType<CopperfinAssetEditorControl>().Any()));
         Expect(tabControl is not null, "standalone Studio should surface a document tab control");
         if (tabControl is not null)
         {

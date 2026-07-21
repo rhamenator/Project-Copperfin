@@ -1928,6 +1928,8 @@
   "Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired": "A selection-context toolbox object creation dispatch catalog request requires a toolbox palette.",
   "Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired": "A selection-context toolbox object creation plan request requires a toolbox palette.",
   "Studio.AppTitle": "Copperfin Studio",
+  "Studio.ViewMenu": "\u0026View",
+  "Studio.CommandWindowMenu": "Command Window",
   "Studio.FileMenu": "\u0026File",
   "Studio.OpenMenu": "\u0026Open...",
   "Studio.ExitMenu": "E\u0026xit",

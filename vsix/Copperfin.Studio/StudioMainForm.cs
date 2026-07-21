@@ -14,6 +14,8 @@ namespace Copperfin.VisualStudio;
 internal sealed class StudioMainForm : Form
 {
     private readonly TabControl documentTabs;
+    private readonly SplitContainer shellSplitContainer;
+    private readonly TabControl toolWindowTabs;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly CopperfinLocalization localization;
     private readonly Dictionary<string, TabPage> openDocuments =
@@ -36,6 +38,16 @@ internal sealed class StudioMainForm : Form
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
         menuStrip.Items.Add(fileMenu);
+
+        var viewMenu = new ToolStripMenuItem(this.localization.Text("Studio.ViewMenu"));
+        var commandWindowItem = new ToolStripMenuItem(this.localization.Text("Studio.CommandWindowMenu"))
+        {
+            CheckOnClick = true,
+            Checked = true
+        };
+        commandWindowItem.CheckedChanged += (_, _) => SetCommandWindowVisible(commandWindowItem.Checked);
+        viewMenu.DropDownItems.Add(commandWindowItem);
+        menuStrip.Items.Add(viewMenu);
         MainMenuStrip = menuStrip;
 
         documentTabs = new TabControl
@@ -55,6 +67,28 @@ internal sealed class StudioMainForm : Form
             UpdateStatus(documentTabs.SelectedTab.ToolTipText ?? documentTabs.SelectedTab.Text);
         };
 
+        toolWindowTabs = new TabControl
+        {
+            Dock = DockStyle.Fill,
+            Alignment = TabAlignment.Top,
+            Multiline = false
+        };
+        var commandWindowPage = new TabPage(this.localization.Text("VSIX.CommandWindow.Title"));
+        commandWindowPage.Controls.Add(new StudioCommandWindowControl(this.localization));
+        toolWindowTabs.TabPages.Add(commandWindowPage);
+
+        shellSplitContainer = new SplitContainer
+        {
+            Dock = DockStyle.Fill,
+            Orientation = Orientation.Horizontal,
+            FixedPanel = FixedPanel.Panel2,
+            Panel2MinSize = 160,
+            SplitterDistance = 720,
+            IsSplitterFixed = false
+        };
+        shellSplitContainer.Panel1.Controls.Add(documentTabs);
+        shellSplitContainer.Panel2.Controls.Add(toolWindowTabs);
+
         var statusStrip = new StatusStrip();
         statusLabel = new ToolStripStatusLabel
         {
@@ -62,11 +96,20 @@ internal sealed class StudioMainForm : Form
         };
         statusStrip.Items.Add(statusLabel);
 
-        Controls.Add(documentTabs);
+        Controls.Add(shellSplitContainer);
         Controls.Add(statusStrip);
         Controls.Add(menuStrip);
 
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
+    }
+
+    internal bool IsCommandWindowVisible => !shellSplitContainer.Panel2Collapsed;
+
+    internal string CommandWindowTabTitle => toolWindowTabs.TabPages[0].Text;
+
+    internal void SetCommandWindowVisible(bool visible)
+    {
+        shellSplitContainer.Panel2Collapsed = !visible;
     }
 
     public void OpenDocument(string path, string? objectName = null, string? uniqueId = null)

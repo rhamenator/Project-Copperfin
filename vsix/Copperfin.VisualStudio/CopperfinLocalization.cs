@@ -30,6 +30,8 @@ internal sealed class CopperfinLocalization
             [DefaultLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Studio.AppTitle"] = "Copperfin Studio",
+                ["Studio.ViewMenu"] = "&View",
+                ["Studio.CommandWindowMenu"] = "Command Window",
                 ["Studio.FileMenu"] = "&File",
                 ["Studio.OpenMenu"] = "&Open...",
                 ["Studio.ExitMenu"] = "E&xit",
@@ -689,6 +691,8 @@ internal sealed class CopperfinLocalization
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Studio.AppTitle"] = "Copperfin Studio",
+                ["Studio.ViewMenu"] = "&Ver",
+                ["Studio.CommandWindowMenu"] = "Ventana de comandos",
                 ["Studio.FileMenu"] = "&Archivo",
                 ["Studio.OpenMenu"] = "&Abrir...",
                 ["Studio.ExitMenu"] = "&Salir",
@@ -1348,6 +1352,8 @@ internal sealed class CopperfinLocalization
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["Studio.AppTitle"] = "Copperfin Studio",
+                ["Studio.ViewMenu"] = "&Exibir",
+                ["Studio.CommandWindowMenu"] = "Janela de comandos",
                 ["Studio.FileMenu"] = "&Arquivo",
                 ["Studio.OpenMenu"] = "&Abrir...",
                 ["Studio.ExitMenu"] = "&Sair",
