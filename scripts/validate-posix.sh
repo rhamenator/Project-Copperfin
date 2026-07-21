@@ -49,7 +49,7 @@ if [ -f "$venv_dir/bin/activate" ]; then
 fi
 
 configure_build() {
-    if command -v ninja >/dev/null 2>&1; then
+    if [ "${1:-}" = "fresh" ] && command -v ninja >/dev/null 2>&1; then
         cmake -S "$repo_root" -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" -G Ninja
     else
         cmake -S "$repo_root" -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type"
@@ -62,7 +62,7 @@ if [ -f "$build_dir/CMakeCache.txt" ]; then
 fi
 
 if [ ! -f "$build_dir/CMakeCache.txt" ]; then
-    configure_build
+    configure_build fresh
 elif [ "$cached_build_type" != "$build_type" ]; then
     echo "validate-posix.sh: cached CMAKE_BUILD_TYPE=${cached_build_type:-<unset>} does not match requested ${build_type}; reconfiguring" >&2
     configure_build
