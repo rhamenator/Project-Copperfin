@@ -152,9 +152,45 @@
             return order;
         }
 
-        bool dispatch_query_unload_for_quit(const SourceLocation &location)
+        std::vector<int> collect_native_shutdown_order_for_window(int target_handle)
         {
+            std::set<int> target_handles;
+            std::vector<int> pending{target_handle};
+            while (!pending.empty())
+            {
+                const int handle = pending.back();
+                pending.pop_back();
+                if (!target_handles.insert(handle).second)
+                {
+                    continue;
+                }
+
+                const auto found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    continue;
+                }
+                const std::vector<int> child_handles =
+                    collect_native_owned_child_handles(found->second);
+                pending.insert(pending.end(), child_handles.begin(), child_handles.end());
+            }
+
+            std::vector<int> order;
             for (const int handle : collect_native_shutdown_order())
+            {
+                if (target_handles.contains(handle))
+                {
+                    order.push_back(handle);
+                }
+            }
+            return order;
+        }
+
+        bool dispatch_query_unload_for_objects(
+            const std::vector<int> &shutdown_order,
+            const SourceLocation &location)
+        {
+            for (const int handle : shutdown_order)
             {
                 auto found = ole_objects.find(handle);
                 if (found == ole_objects.end())
@@ -210,6 +246,11 @@
                 }
             }
             return true;
+        }
+
+        bool dispatch_query_unload_for_quit(const SourceLocation &location)
+        {
+            return dispatch_query_unload_for_objects(collect_native_shutdown_order(), location);
         }
 
         void release_native_objects_for_shutdown()

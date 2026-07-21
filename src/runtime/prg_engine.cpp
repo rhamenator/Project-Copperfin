@@ -84,6 +84,7 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinSyntheticWindowHwndBase = 100000;
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
+        constexpr std::uint32_t kCopperfinWindowCloseMessage = 0x0010U;
 
         class PrgCompatibilityError final : public std::runtime_error
         {
@@ -3316,6 +3317,7 @@ namespace copperfin::runtime
         const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
         const bool supports_runtime_window_handle =
             normalized_base_class == "form" ||
+            normalized_base_class == "formset" ||
             normalized_base_class == "olecontrol" ||
             normalized_base_class == "toolbar";
         if (!supports_runtime_window_handle)
@@ -8918,6 +8920,23 @@ namespace copperfin::runtime
         const int effective_hwnd = static_cast<int>(hwnd);
         const int effective_message = static_cast<int>(message);
 
+        std::optional<int> window_close_target;
+        if (message == kCopperfinWindowCloseMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                const std::string normalized_base_class =
+                    normalize_identifier(trim_copy(runtime_object.base_class_name));
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd &&
+                    (normalized_base_class == "form" || normalized_base_class == "formset"))
+                {
+                    window_close_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -8939,7 +8958,7 @@ namespace copperfin::runtime
                 }
             }
         }
-        if (bindings.empty())
+        if (bindings.empty() && !window_close_target.has_value())
         {
             return std::nullopt;
         }
@@ -9029,6 +9048,33 @@ namespace copperfin::runtime
                 result.has_value())
             {
                 last_result = result_to_intptr(*result);
+            }
+        }
+
+        if (window_close_target.has_value())
+        {
+            auto target_found = ole_objects.find(*window_close_target);
+            if (target_found != ole_objects.end())
+            {
+                const SourceLocation close_location = current_statement() == nullptr
+                    ? SourceLocation{}
+                    : current_statement()->location;
+                if (!dispatch_query_unload_for_objects(
+                        collect_native_shutdown_order_for_window(*window_close_target),
+                        close_location))
+                {
+                    events.push_back({.category = "prg.object.window_close_veto",
+                                      .detail = target_found->second.prog_id,
+                                      .location = close_location});
+                    return static_cast<std::intptr_t>(0);
+                }
+
+                const std::string target_prog_id = target_found->second.prog_id;
+                (void)release_native_object(target_found->second, "WM_CLOSE");
+                events.push_back({.category = "prg.object.window_close",
+                                  .detail = target_prog_id,
+                                  .location = close_location});
+                return static_cast<std::intptr_t>(0);
             }
         }
 
