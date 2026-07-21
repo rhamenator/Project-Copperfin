@@ -4,6 +4,8 @@
 
 #include "vs_launch_contract_internal.h"
 
+#include <mutex>
+
 namespace copperfin::studio {
 
 bool parse_size_value(const std::string& text, std::size_t& value) {
@@ -85,10 +87,27 @@ std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::s
 }
 
 const localization::LocalizedCatalog& default_launch_catalog() {
-    static const localization::LocalizedCatalog catalog = localization::load_catalogs(
-        localization::resolve_catalog_root(),
-        localization::default_locale);
-    return catalog;
+    struct CatalogCache {
+        std::filesystem::path locale_root;
+        std::string locale;
+        localization::LocalizedCatalog catalog;
+    };
+    static std::mutex cache_mutex;
+    static CatalogCache cache{
+        {},
+        {},
+        localization::load_catalogs(
+            localization::resolve_catalog_root(),
+            localization::default_locale)};
+    const auto locale_root = localization::resolve_catalog_root();
+    const auto locale = localization::select_locale();
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    if (cache.locale_root != locale_root || cache.locale != locale) {
+        cache.locale_root = locale_root;
+        cache.locale = locale;
+        cache.catalog = localization::load_catalogs(locale_root, locale);
+    }
+    return cache.catalog;
 }
 
 }  // namespace copperfin::studio

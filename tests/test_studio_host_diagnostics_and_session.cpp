@@ -104,6 +104,19 @@ void test_launch_parse_errors_resolve_through_localization_catalog() {
             "class_designer, report_expression, label_expression, menu_item, project_item, or "
             "data_environment.",
         "#2653: parse_launch_arguments should preserve selection-context diagnostics");
+
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("en-US");
+    const auto english_default_result = copperfin::studio::parse_launch_arguments({"--record"});
+    locale_override.set("es-419");
+    const auto spanish_default_result = copperfin::studio::parse_launch_arguments({"--record"});
+    locale_override.set("qps-ploc");
+    const auto pseudo_default_result = copperfin::studio::parse_launch_arguments({"--record"});
+    constexpr std::string_view missing_value_key = "StudioHost.LaunchParse.Error.MissingValueAfterOption";
+    expect(english_default_result.error == english_catalog.translate(missing_value_key, {{"option", "--record"}}) &&
+               spanish_default_result.error == spanish_catalog.translate(missing_value_key, {{"option", "--record"}}) &&
+               pseudo_default_result.error == pseudo_catalog.translate(missing_value_key, {{"option", "--record"}}),
+           "#4370: default launch-contract diagnostics should refresh across locales");
 }
 
 void test_parse_launch_arguments() {

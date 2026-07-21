@@ -9,6 +9,7 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <cstdint>
