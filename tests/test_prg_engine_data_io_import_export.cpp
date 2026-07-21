@@ -618,6 +618,9 @@ void test_append_from_rolls_back_matched_field_write_failure() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
     const fs::path source_path = temp_root / "source.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
         {.name = "NAME", .type = 'C', .length = 12U},
@@ -653,9 +656,13 @@ void test_append_from_rolls_back_matched_field_write_failure() {
            "matched APPEND FROM field-write failure should pause with an error");
     expect(state.location.line == 3U,
            "matched APPEND FROM field-write failure should highlight the command");
-    const std::string expected_writer_error =
-        "APPEND FROM: " + copperfin::localization::pseudo_localize(
-            "Character value is too large for the target field.");
+    const auto qps_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "qps-ploc");
+    const std::string expected_writer_error = qps_catalog.translate(
+        "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+        {{"errorMessage", copperfin::localization::pseudo_localize(
+            "Character value is too large for the target field.")}});
     expect(state.message == expected_writer_error,
            "failed APPEND FROM should preserve the localized matched-field writer diagnostic (got '" +
                state.message + "')");

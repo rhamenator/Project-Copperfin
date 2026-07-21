@@ -21,7 +21,11 @@ internal static class CopperfinStudioHostBridge
 
     public static string? ResolveStudioHostPath(string? baseDirectory = null)
     {
-        return ResolveHostPath("COPPERFIN_STUDIO_HOST_PATH", "copperfin_studio_host", baseDirectory);
+        return ResolveHostPath(
+            "COPPERFIN_STUDIO_HOST_PATH",
+            "copperfin_studio_host",
+            baseDirectory,
+            enforceConfiguredPosixExecutable: true);
     }
 
     public static string BuildArguments(
@@ -245,17 +249,21 @@ internal static class CopperfinStudioHostBridge
         string? baseDirectory = null,
         Func<string, bool>? fileExists = null,
         Func<string, bool>? fileIsExecutable = null,
-        bool? isWindowsOverride = null)
+        bool? isWindowsOverride = null,
+        bool enforceConfiguredPosixExecutable = false)
     {
         fileExists ??= File.Exists;
+        var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
+        fileIsExecutable ??= IsPosixExecutableFile;
         var configured = Environment.GetEnvironmentVariable(environmentVariableName);
         if (!string.IsNullOrWhiteSpace(configured))
         {
-            return fileExists(configured) ? configured : null;
+            return fileExists(configured) &&
+                   (isWindows || !enforceConfiguredPosixExecutable || fileIsExecutable(configured))
+                ? configured
+                : null;
         }
 
-        var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
-        fileIsExecutable ??= IsPosixExecutableFile;
         foreach (var candidate in EnumerateHostCandidatePaths(executableStem, baseDirectory, isWindows))
         {
             if (fileExists(candidate) && (isWindows || fileIsExecutable(candidate)))

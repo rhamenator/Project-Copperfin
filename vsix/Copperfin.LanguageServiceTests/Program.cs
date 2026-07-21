@@ -54,6 +54,7 @@ internal static partial class Program
         TestStudioTargetSelectionPrefersSelectedItemsForItemCommands();
         TestProjectSelectionResolvesContainingProjectForActiveAssets();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
+        TestManagedHostResolutionAppliesConfiguredPosixExecutePolicy();
         TestManagedHostResolutionUsesPlatformNativeCandidateRules();
         TestManagedHostResolutionChecksRealPosixExecutePermission();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
@@ -762,6 +763,14 @@ internal static partial class Program
         var configuredHostPath = Path.Combine(root, "configured", "copperfin_studio_host.cmd");
         Directory.CreateDirectory(Path.GetDirectoryName(configuredHostPath)!);
         File.WriteAllText(configuredHostPath, "@echo off");
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(
+                configuredHostPath,
+                UnixFileMode.UserRead |
+                UnixFileMode.UserWrite |
+                UnixFileMode.UserExecute);
+        }
         var automaticRoot = Path.Combine(root, "managed", "bin");
         Directory.CreateDirectory(automaticRoot);
         var automaticHostPath = Path.Combine(
@@ -782,6 +791,54 @@ internal static partial class Program
             resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(automaticRoot);
             Expect(resolved is null,
                 "a missing explicit COPPERFIN_STUDIO_HOST_PATH should fail closed instead of silently selecting an automatic host");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestManagedHostResolutionAppliesConfiguredPosixExecutePolicy()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_configured_execute", Guid.NewGuid().ToString("N"));
+        var automaticRoot = Path.Combine(root, "managed", "bin");
+        var configuredHostPath = Path.Combine(root, "configured", "copperfin_studio_host");
+        var automaticHostPath = Path.Combine(automaticRoot, "copperfin_studio_host");
+        Directory.CreateDirectory(Path.GetDirectoryName(configuredHostPath)!);
+        Directory.CreateDirectory(automaticRoot);
+
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", configuredHostPath);
+            bool Exists(string candidate) =>
+                string.Equals(candidate, configuredHostPath, StringComparison.Ordinal) ||
+                string.Equals(candidate, automaticHostPath, StringComparison.Ordinal);
+
+            var rejectedPosix = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_STUDIO_HOST_PATH",
+                "copperfin_studio_host",
+                automaticRoot,
+                fileExists: Exists,
+                fileIsExecutable: candidate =>
+                    string.Equals(candidate, automaticHostPath, StringComparison.Ordinal),
+                isWindowsOverride: false,
+                enforceConfiguredPosixExecutable: true);
+            Expect(rejectedPosix is null,
+                "a configured POSIX Studio host without execute permission should fail closed without falling through to automatic discovery");
+
+            var windowsResolved = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_STUDIO_HOST_PATH",
+                "copperfin_studio_host",
+                automaticRoot,
+                fileExists: Exists,
+                fileIsExecutable: candidate =>
+                    string.Equals(candidate, automaticHostPath, StringComparison.Ordinal),
+                isWindowsOverride: true,
+                enforceConfiguredPosixExecutable: true);
+            Expect(string.Equals(windowsResolved, configuredHostPath, StringComparison.Ordinal),
+                "Windows should preserve an existing configured Studio host without applying POSIX execute-bit policy");
         }
         finally
         {
