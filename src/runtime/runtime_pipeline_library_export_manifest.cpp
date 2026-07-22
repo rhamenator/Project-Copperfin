@@ -1578,6 +1578,7 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "}\n\n";
     stream << "static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(\n";
     stream << "    const CopperfinRuntimeBridgeDispatchExecution& dispatch_execution);\n\n";
+    stream << "#endif\n\n";
     stream << "#if defined(COPPERFIN_RUNTIME_BRIDGE_TEST_HOOKS)\n";
     stream << "COPPERFIN_EXPORT int copperfin_runtime_bridge_test_launch_environment(\n";
     stream << "    const char* executable_path,\n";
@@ -1632,7 +1633,6 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "    return launch.launch_succeeded ? launch.exit_code : -1;\n";
     stream << "}\n";
     stream << "#endif\n";
-    stream << "#endif\n\n";
     stream << "static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(\n";
     stream << "    const CopperfinRuntimeBridgeDispatchExecution& dispatch_execution) {\n";
     stream << "    const bool launch_attempted = !dispatch_execution.executable_path.empty();\n";
