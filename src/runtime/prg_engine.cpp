@@ -852,6 +852,26 @@ namespace copperfin::runtime
         };
 
 #include "prg_engine_free_functions.inl"
+
+        std::filesystem::path make_prg_engine_xasset_bootstrap_path(
+            const std::filesystem::path &runtime_temp_directory,
+            const std::filesystem::path &asset_file,
+            std::uint64_t runtime_instance_id)
+        {
+            static std::atomic<unsigned long long> bootstrap_nonce_counter{0ULL};
+            const auto now_ticks = static_cast<unsigned long long>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch())
+                    .count());
+            const auto nonce_counter = bootstrap_nonce_counter.fetch_add(1ULL, std::memory_order_relaxed);
+            return runtime_temp_directory /
+                (copperfin::platform::path_to_utf8_string(asset_file.stem()) +
+                 "_copperfin_bootstrap_" +
+                 std::to_string(now_ticks) + "_" +
+                 std::to_string(static_cast<unsigned long long>(current_process_id())) + "_" +
+                 std::to_string(static_cast<unsigned long long>(runtime_instance_id)) + "_" +
+                 std::to_string(nonce_counter) + ".prg");
+        }
     } // namespace
 
     struct PrgRuntimeSession::Impl
@@ -8663,9 +8683,10 @@ namespace copperfin::runtime
         }
 
         const std::filesystem::path asset_file = copperfin::platform::path_from_utf8_string(asset_path);
-        const std::filesystem::path bootstrap_path =
-            runtime_temp_directory /
-            (copperfin::platform::path_to_utf8_string(asset_file.stem()) + "_copperfin_bootstrap.prg");
+        const std::filesystem::path bootstrap_path = make_prg_engine_xasset_bootstrap_path(
+            runtime_temp_directory,
+            asset_file,
+            runtime_instance_id);
 
         const std::string bootstrap_source =
             build_xasset_bootstrap_source(model, include_read_events, asset_path);

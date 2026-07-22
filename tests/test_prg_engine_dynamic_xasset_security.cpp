@@ -28,7 +28,10 @@ void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
     bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
 }
 
-void write_form_fixture(const fs::path& form_path, const fs::path& memo_path) {
+void write_form_fixture(
+    const fs::path& form_path,
+    const fs::path& memo_path,
+    const std::string& method_source = "PROCEDURE Init\nRETURN\nENDPROC") {
     constexpr std::size_t field_count = 3U;
     constexpr std::size_t header_length = 32U + (field_count * 32U) + 1U;
     constexpr std::size_t record_length = 1U + (field_count * 4U);
@@ -64,7 +67,7 @@ void write_form_fixture(const fs::path& form_path, const fs::path& memo_path) {
     const std::vector<std::string> values{
         "frmDynamic",
         "form",
-        "PROCEDURE Init\nRETURN\nENDPROC"};
+        method_source};
     for (std::size_t index = 0U; index < values.size(); ++index) {
         const std::size_t block = (index + 1U) * 512U;
         write_be_u32(memo, block, 1U);
@@ -75,6 +78,15 @@ void write_form_fixture(const fs::path& form_path, const fs::path& memo_path) {
     }
     std::ofstream memo_output(memo_path, std::ios::binary | std::ios::trunc);
     memo_output.write(reinterpret_cast<const char*>(memo.data()), static_cast<std::streamsize>(memo.size()));
+}
+
+std::string find_xasset_bootstrap_path(const copperfin::runtime::RuntimePauseState& state) {
+    for (const auto& frame : state.call_stack) {
+        if (frame.file_path.find("_copperfin_bootstrap_") != std::string::npos) {
+            return frame.file_path;
+        }
+    }
+    return {};
 }
 
 void test_dynamic_xasset_uses_verified_snapshot() {
@@ -128,10 +140,79 @@ void test_dynamic_xasset_requires_verified_snapshot() {
     fs::remove_all(root, ignored);
 }
 
+void test_dynamic_xasset_bootstrap_paths_are_session_unique() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_session_unique";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path first_root = root / "first";
+    const fs::path second_root = root / "second";
+    const fs::path shared_temp = root / "shared-runtime-temp";
+    fs::create_directories(first_root);
+    fs::create_directories(second_root);
+
+    const fs::path first_form = first_root / "dynamic.scx";
+    const fs::path first_memo = first_root / "dynamic.sct";
+    const fs::path first_main = first_root / "main.prg";
+    const fs::path second_form = second_root / "dynamic.scx";
+    const fs::path second_memo = second_root / "dynamic.sct";
+    const fs::path second_main = second_root / "main.prg";
+    write_form_fixture(first_form, first_memo, "PROCEDURE Init\n? 'first-session'\nRETURN\nENDPROC");
+    write_form_fixture(second_form, second_memo, "PROCEDURE Init\n? 'second-session'\nRETURN\nENDPROC");
+    write_text(first_main, "DO FORM '" + first_form.string() + "'\n");
+    write_text(second_main, "DO FORM '" + second_form.string() + "'\n");
+
+    auto first_options = make_runtime_session_options(first_main, first_root);
+    first_options.temp_directory = shared_temp.string();
+    first_options.verified_file_byte_overrides.emplace(first_form.string(), read_text(first_form));
+    first_options.verified_file_byte_overrides.emplace(first_memo.string(), read_text(first_memo));
+    first_options.require_verified_file_byte_overrides = true;
+
+    auto second_options = make_runtime_session_options(second_main, second_root);
+    second_options.temp_directory = shared_temp.string();
+    second_options.verified_file_byte_overrides.emplace(second_form.string(), read_text(second_form));
+    second_options.verified_file_byte_overrides.emplace(second_memo.string(), read_text(second_memo));
+    second_options.require_verified_file_byte_overrides = true;
+
+    std::string first_bootstrap_path;
+    std::string second_bootstrap_path;
+    {
+        auto first_session = copperfin::runtime::PrgRuntimeSession::create(first_options);
+        auto second_session = copperfin::runtime::PrgRuntimeSession::create(second_options);
+        const auto first_state = first_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const auto second_state = second_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(first_state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               "first same-stem xAsset session should enter its event loop");
+        expect(second_state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               "second same-stem xAsset session should enter its event loop");
+
+        first_bootstrap_path = find_xasset_bootstrap_path(first_state);
+        second_bootstrap_path = find_xasset_bootstrap_path(second_state);
+        expect(!first_bootstrap_path.empty() && !second_bootstrap_path.empty(),
+               "same-stem xAsset sessions should expose generated bootstrap frames");
+        expect(first_bootstrap_path != second_bootstrap_path,
+               "same-stem xAsset sessions should use distinct bootstrap paths");
+        if (!first_bootstrap_path.empty() && !second_bootstrap_path.empty()) {
+            expect(fs::exists(first_bootstrap_path) && fs::exists(second_bootstrap_path),
+                   "active same-stem xAsset sessions should retain both generated sources");
+            const std::string first_source = read_text(first_bootstrap_path);
+            const std::string second_source = read_text(second_bootstrap_path);
+            expect(first_source.find("first-session") != std::string::npos &&
+                       second_source.find("second-session") != std::string::npos &&
+                       first_source != second_source,
+                   "same-stem xAsset sessions should retain independent generated source contents");
+        }
+    }
+
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_dynamic_xasset_uses_verified_snapshot();
     test_dynamic_xasset_requires_verified_snapshot();
+    test_dynamic_xasset_bootstrap_paths_are_session_unique();
     return test_failures() == 0 ? 0 : 1;
 }
