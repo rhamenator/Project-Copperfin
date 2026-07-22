@@ -47,6 +47,29 @@ option(COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING
     "Apply MSVC exception flags per target for generators that cannot reconcile /EHsc with /clr"
     OFF)
 
+option(COPPERFIN_ENFORCE_LAUNCHER_TRUST
+    "Require signed app.cftrust metadata in the Windows generated-launcher guard"
+    OFF)
+set(COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/copperfin/package/launcher_trust_registry_empty.h"
+    CACHE FILEPATH
+    "Out-of-tree public-key registry header for release launcher trust")
+
+if(NOT EXISTS "${COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER}")
+    message(FATAL_ERROR
+        "COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER does not exist: "
+        "${COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER}")
+endif()
+
+set(COPPERFIN_GENERATED_INCLUDE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/generated/include")
+set(COPPERFIN_GENERATED_PACKAGE_INCLUDE_DIR
+    "${COPPERFIN_GENERATED_INCLUDE_ROOT}/copperfin/package")
+file(MAKE_DIRECTORY "${COPPERFIN_GENERATED_PACKAGE_INCLUDE_DIR}")
+configure_file(
+    "${COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER}"
+    "${COPPERFIN_GENERATED_PACKAGE_INCLUDE_DIR}/launcher_trust_registry_generated.h"
+    COPYONLY)
+
 if(MSVC AND COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING)
     if(CMAKE_CXX_FLAGS MATCHES "(^|[ \\t])/EH")
         message(FATAL_ERROR
@@ -515,7 +538,17 @@ if(WIN32)
     add_executable(copperfin_launcher_guard
         apps/copperfin_launcher_guard/main.cpp
     )
-    target_link_libraries(copperfin_launcher_guard PRIVATE cf_security cf_localization cf_platform_support)
+    target_link_libraries(copperfin_launcher_guard PRIVATE
+        cf_security
+        cf_localization
+        cf_platform_support
+        cf_package_trust)
+    target_include_directories(copperfin_launcher_guard BEFORE PRIVATE
+        ${COPPERFIN_GENERATED_INCLUDE_ROOT})
+    if(COPPERFIN_ENFORCE_LAUNCHER_TRUST)
+        target_compile_definitions(copperfin_launcher_guard PRIVATE
+            COPPERFIN_ENFORCE_LAUNCHER_TRUST=1)
+    endif()
     copperfin_apply_windows_stack_reserve(copperfin_launcher_guard)
     if(MSVC)
         target_compile_options(copperfin_launcher_guard PRIVATE /W4 /permissive-)

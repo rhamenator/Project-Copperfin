@@ -737,6 +737,24 @@ int run_generated_launcher_test(
         write_text(redirected_sidecar, original_runtime_config);
     }
 
+    const fs::path trust_envelope = package_root / "app.cftrust";
+    const fs::path trust_signature = package_root / "app.cftrust.sig";
+    write_text(trust_envelope, "launcher_inventory_version=1\nmalformed=true\n");
+    write_text(trust_signature, "launcher_signature_version=1\n");
+    const ProcessResult malformed_trust = run_process_capture(
+        launcher,
+        {},
+        caller_dir,
+        temp_root,
+        "malformed-launcher-trust",
+        30000U);
+    expect(malformed_trust.start_error == 0U && !malformed_trust.timed_out,
+           "malformed launcher trust metadata should be rejected cleanly");
+    expect(malformed_trust.exit_code == 4 && malformed_trust.stdout_text.empty(),
+           "malformed launcher trust metadata should be rejected before the managed apphost starts");
+    fs::remove(trust_envelope, ignored);
+    fs::remove(trust_signature, ignored);
+
     const auto finalized_launcher_inventory =
         manifest_lines_with_prefix(release_manifest, "launcher_artifact=");
     std::string launcher_inventory_suffix;

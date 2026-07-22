@@ -41,7 +41,7 @@ Current package layout:
   - stable internal runtime sidecars `Copperfin.GeneratedLauncher.dll`, `Copperfin.GeneratedLauncher.deps.json`, and `Copperfin.GeneratedLauncher.runtimeconfig.json`
   - optional `Copperfin.GeneratedLauncher.pdb` classified separately as debug metadata
   - both manifests record package-relative `launcher_artifact` provenance and SHA-256 digests; these lines are inventory, not a claim that the post-launch runtime manifest protects files that execute before it is read
-  - the additive `app.cftrust`/`app.cftrust.sig` Windows trust contract is defined in `docs/29-package-trust-contract.md`; enforcement waits for the approved external signer and launcher trust-key provisioning slice
+  - the additive `app.cftrust`/`app.cftrust.sig` Windows trust contract is defined in `docs/29-package-trust-contract.md`; the launcher guard now verifies present trust sidecars before managed startup, and release builds must enable `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON` with an out-of-tree approved public-key registry before claiming the Windows fail-closed boundary
 
 Current CLI flow:
 

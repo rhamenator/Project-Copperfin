@@ -3,6 +3,8 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/package/launcher_inventory_trust.h"
+#include "copperfin/package/launcher_trust_registry_generated.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/security/physical_path_containment.h"
 #include "copperfin/security/sha256.h"
@@ -15,6 +17,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -30,6 +33,8 @@ constexpr std::string_view kRequiredSidecarDll = "Copperfin.GeneratedLauncher.dl
 constexpr std::string_view kRequiredSidecarDeps = "Copperfin.GeneratedLauncher.deps.json";
 constexpr std::string_view kRequiredSidecarRuntimeConfig =
     "Copperfin.GeneratedLauncher.runtimeconfig.json";
+constexpr std::string_view kTrustEnvelopeName = "app.cftrust";
+constexpr std::string_view kTrustSignatureName = "app.cftrust.sig";
 
 bool regular_file_exists_without_error(const std::filesystem::path& path) {
     std::error_code error;
@@ -202,6 +207,104 @@ std::string localized_message(
     std::string_view key,
     const std::string& path = {}) {
     return catalog.translate(key, { {"path", path} });
+}
+
+std::optional<std::string> read_trust_file(
+    const std::filesystem::path& package_root,
+    const std::filesystem::path& relative_path,
+    std::string& error,
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    const auto containment = copperfin::security::inspect_physical_path_containment(
+        package_root / relative_path,
+        package_root);
+    if (!containment.allowed) {
+        error = localized_message(
+            catalog,
+            "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+            copperfin::platform::path_to_utf8_string(relative_path));
+        return std::nullopt;
+    }
+    const auto snapshot = copperfin::security::read_physically_contained_file_snapshot(
+        containment,
+        package_root);
+    if (!snapshot.ok) {
+        error = localized_message(
+            catalog,
+            "Runtime.Package.LauncherGuard.Error.TrustFileRejected",
+            copperfin::platform::path_to_utf8_string(relative_path));
+        return std::nullopt;
+    }
+    return snapshot.bytes;
+}
+
+bool verify_launcher_trust(
+    const std::filesystem::path& package_root,
+    std::string& error,
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    const std::filesystem::path envelope_path = package_root / kTrustEnvelopeName;
+    const std::filesystem::path signature_path = package_root / kTrustSignatureName;
+    const bool envelope_present = regular_file_exists_without_error(envelope_path);
+    const bool signature_present = regular_file_exists_without_error(signature_path);
+
+    if (!envelope_present && !signature_present) {
+#if defined(COPPERFIN_ENFORCE_LAUNCHER_TRUST)
+        error = localized_message(
+            catalog,
+            "Runtime.Package.LauncherGuard.Error.TrustRequired");
+        return false;
+#else
+        return true;
+#endif
+    }
+    if (!envelope_present || !signature_present) {
+        error = localized_message(
+            catalog,
+            "Runtime.Package.LauncherGuard.Error.TrustRequired");
+        return false;
+    }
+
+    const auto envelope = read_trust_file(
+        package_root,
+        std::filesystem::path(kTrustEnvelopeName),
+        error,
+        catalog);
+    if (!envelope.has_value()) {
+        return false;
+    }
+    const auto signature = read_trust_file(
+        package_root,
+        std::filesystem::path(kTrustSignatureName),
+        error,
+        catalog);
+    if (!signature.has_value()) {
+        return false;
+    }
+
+    const auto result = copperfin::package_trust::verify_signed_launcher_inventory(
+        *envelope,
+        *signature,
+        copperfin::package_trust::kKnownLauncherInventoryTrustedKeys);
+    using VerificationStatus =
+        copperfin::package_trust::LauncherInventoryVerificationStatus;
+    switch (result.status) {
+        case VerificationStatus::valid:
+            return true;
+        case VerificationStatus::unknown_signer:
+            error = localized_message(
+                catalog,
+                "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner");
+            return false;
+        case VerificationStatus::malformed_envelope:
+        case VerificationStatus::invalid_signature:
+            error = localized_message(
+                catalog,
+                "Runtime.Package.LauncherGuard.Error.TrustInvalid");
+            return false;
+    }
+    error = localized_message(
+        catalog,
+        "Runtime.Package.LauncherGuard.Error.TrustInvalid");
+    return false;
 }
 
 bool verify_artifacts(
@@ -392,6 +495,10 @@ int wmain(int argc, wchar_t** argv) {
         return kManifestMissingExitCode;
     }
     std::string error;
+    if (!verify_launcher_trust(package_root, error, catalog)) {
+        std::cerr << error << "\n";
+        return kVerificationFailedExitCode;
+    }
     copperfin::security::PhysicalPathIdentity verified_target_identity{};
     if (!verify_artifacts(
             package_root,

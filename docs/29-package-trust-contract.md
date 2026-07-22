@@ -72,14 +72,14 @@ The verifier distinguishes:
 - `unknown_signer`: the signer ID is well-formed but absent from the launcher trust registry; and
 - `invalid_signature`: the approved key exists but the signature does not match the canonical bytes.
 
-The Windows launcher guard will keep exit code `4` for all trust or inventory failures. Human-readable explanations use the active catalog; status codes, signer IDs, envelope keys, role values, and package paths remain invariant.
+The Windows launcher guard now checks present trust sidecars before any managed apphost process starts and keeps exit code `4` for all trust or inventory failures. Human-readable explanations use the active catalog; status codes, signer IDs, envelope keys, role values, and package paths remain invariant. Development builds preserve unsigned fallback when neither sidecar is present. A release build must set `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON` and configure `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` with an approved public-key registry outside the checkout; an empty registry is fail-closed.
 
 ## Platform Policy
 
-When #4387 is implemented, Windows generated-launcher packages require both trust sidecars and reject unsigned or unknown-signer inventories before managed apphost startup. Existing containment, regular-file, physical-identity, and SHA-256 checks remain necessary after signature verification.
+For an enforced release build, Windows generated-launcher packages require both trust sidecars and reject unsigned or unknown-signer inventories before managed apphost startup. The guard retains the existing containment, regular-file, physical-identity, and SHA-256 checks after signature verification. Until an approved release signer and registry are provisioned, ordinary development packages intentionally use the unsigned fallback and must not be presented as meeting the Windows release trust boundary.
 
 POSIX and macOS do not claim this Windows trust boundary yet. Until platform-specific release signing and verification are approved, they retain the current unsigned inventory behavior and report the trust capability as unsupported rather than treating a recomputed unsigned inventory as authenticated.
 
 ## Fixture Evidence
 
-`test_package_launcher_inventory_trust` covers canonical ordering, traversal rejection, unknown signer IDs, invalid signatures, strict textual signature-sidecar parsing and signer matching, and an RFC 8032 Ed25519 public verification vector. No private or machine-specific key is embedded. A future release-signing integration test must add a detached signature over the canonical envelope using an external key reference and must exercise modified, removed, duplicate, and ambiguous artifacts through the Windows guard.
+`test_package_launcher_inventory_trust` covers canonical ordering, traversal rejection, unknown signer IDs, invalid signatures, strict textual signature-sidecar parsing and signer matching, and an RFC 8032 Ed25519 public verification vector. The Windows `test_generated_launcher_process` regression also proves malformed trust sidecars fail before managed startup. No private or machine-specific key is embedded. Release signing must add a detached signature over the canonical envelope using an external key reference and must exercise valid, modified, removed, duplicate, and ambiguous artifacts through the Windows guard with the approved registry enabled.
