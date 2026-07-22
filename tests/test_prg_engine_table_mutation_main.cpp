@@ -27,6 +27,7 @@ int main()
     test_memo_field_replace_with_empty_string();
     test_set_exclusive_controls_table_maintenance_guards();
     test_lock_functions_and_unlock_command_track_session_locks();
+    test_record_lock_argument_conversion_is_bounded();
     test_replacing_a_used_work_area_releases_prior_table_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_reprocess_table_lock_timeouts_are_localized();

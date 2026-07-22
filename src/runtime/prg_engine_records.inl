@@ -2578,10 +2578,35 @@
                 return make_boolean_value(concurrency_state->table_lock_owner_by_resource.contains(resource_key));
             }
 
+            const auto bounded_record_number = [](double requested) -> std::size_t
+            {
+                // Keep llround inside its defined domain and avoid converting its
+                // integral result back through double before checking size_t.
+                constexpr double first_out_of_range_record_number = 0x1p+63;
+                if (!std::isfinite(requested) || requested < 0.0 ||
+                    requested >= first_out_of_range_record_number)
+                {
+                    return 0U;
+                }
+
+                const long long rounded = std::llround(requested);
+                if (rounded <= 0LL)
+                {
+                    return 0U;
+                }
+
+                const std::uintmax_t unsigned_rounded = static_cast<std::uintmax_t>(rounded);
+                if (unsigned_rounded > static_cast<std::uintmax_t>(std::numeric_limits<std::size_t>::max()))
+                {
+                    return 0U;
+                }
+                return static_cast<std::size_t>(unsigned_rounded);
+            };
+
             std::size_t recno = cursor->recno;
             if (!arguments.empty() && arguments.front().kind != PrgValueKind::string)
             {
-                recno = static_cast<std::size_t>(std::max<double>(0.0, std::llround(value_as_number(arguments.front()))));
+                recno = bounded_record_number(value_as_number(arguments.front()));
             }
             if (recno == 0U || recno > cursor->record_count)
             {

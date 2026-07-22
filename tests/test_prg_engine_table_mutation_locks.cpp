@@ -130,6 +130,58 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_record_lock_argument_conversion_is_bounded() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lock_argument_bounds";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "lock_arguments.prg";
+    write_text(
+        main_path,
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "lNegative = RLOCK(-1)\n"
+        "lSmallFraction = RLOCK(0.4)\n"
+        "lRoundedDown = RLOCK(1.49)\n"
+        "UNLOCK ALL\n"
+        "lRoundedUp = RLOCK(1.5)\n"
+        "lRoundedUpLocked = ISRLOCKED(1.5)\n"
+        "UNLOCK ALL\n"
+        "lOversized = RLOCK(VAL('1e20'))\n"
+        "lNonFinite = RLOCK(EXP(1000))\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "bounded lock argument script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+            name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("lnegative", "false");
+    check("lsmallfraction", "false");
+    check("lroundeddown", "true");
+    check("lroundedup", "true");
+    check("lroundeduplocked", "true");
+    check("loversized", "false");
+    check("lnonfinite", "false");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_replacing_a_used_work_area_releases_prior_table_locks() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_use_unlock";
