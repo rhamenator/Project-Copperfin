@@ -238,6 +238,14 @@ std::string canonical_launcher_inventory_envelope(
     return output.str();
 }
 
+bool launcher_inventory_envelope_matches_artifacts(
+    const std::string_view envelope,
+    const std::string_view signer_key_id,
+    const std::span<const LauncherInventoryArtifact> artifacts) {
+    const std::string canonical = canonical_launcher_inventory_envelope(signer_key_id, artifacts);
+    return !canonical.empty() && canonical == envelope;
+}
+
 std::optional<LauncherInventorySignatureSidecar>
 parse_launcher_inventory_signature_sidecar(const std::string_view sidecar) {
     return parse_signature_sidecar(sidecar);

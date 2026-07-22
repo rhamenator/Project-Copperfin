@@ -112,6 +112,21 @@ int main() {
     expect(
         valid_sidecar.status == LauncherInventoryVerificationStatus::valid,
         "valid textual signature sidecar must verify");
+    expect(
+        copperfin::package_trust::launcher_inventory_envelope_matches_artifacts(
+            envelope,
+            "rfc8032",
+            artifacts),
+        "signed inventory must match the selected manifest artifact records");
+    auto replaced_manifest_artifacts = artifacts;
+    replaced_manifest_artifacts.front().sha256[0] =
+        replaced_manifest_artifacts.front().sha256[0] == 'a' ? 'e' : 'a';
+    expect(
+        !copperfin::package_trust::launcher_inventory_envelope_matches_artifacts(
+            envelope,
+            "rfc8032",
+            replaced_manifest_artifacts),
+        "a signed inventory must not authenticate replaced manifest artifact records");
     const auto unknown = copperfin::package_trust::verify_signed_launcher_inventory(
         envelope,
         kFixtureEmptyMessageSignature,

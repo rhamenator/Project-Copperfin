@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4387 trust verification must bind `app.cftrust` to the artifact records in the selected `app.cfdebug` or `app.cfmanifest`; verifying a valid sidecar alone is insufficient because a replaced manifest could otherwise supply a different unsigned inventory. `copperfin::package_trust::launcher_inventory_envelope_matches_artifacts()` provides the canonical comparison used by the Windows guard and its regression test.
+
 - The #4387 `test_package_signer_contract` is classified as a portable, read-only, parallel-safe test in `tests/CopperfinTestIsolation.cmake`; keep new release-tool contract tests in the isolation inventory when registering them with CTest.
 
 - 2026-07-22: Added `tools/package-signer/sign-launcher-inventory.sh` for #4387. It signs only an existing canonical `app.cftrust`, requires `--key-ref` to resolve outside the checkout, emits the versioned LF `app.cftrust.sig` sidecar atomically, and never embeds or publishes private keys. The external signer does not generate manifests or select trusted keys; release workflows must still provision the approved registry, verify the sidecar, and exercise enforced Windows cases.

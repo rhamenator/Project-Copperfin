@@ -239,6 +239,7 @@ std::optional<std::string> read_trust_file(
 
 bool verify_launcher_trust(
     const std::filesystem::path& package_root,
+    const std::filesystem::path& manifest,
     std::string& error,
     const copperfin::localization::LocalizedCatalog& catalog) {
     const std::filesystem::path envelope_path = package_root / kTrustEnvelopeName;
@@ -288,6 +289,23 @@ bool verify_launcher_trust(
         copperfin::package_trust::LauncherInventoryVerificationStatus;
     switch (result.status) {
         case VerificationStatus::valid:
+            {
+                const auto manifest_records = launcher_artifacts(manifest);
+                std::vector<copperfin::package_trust::LauncherInventoryArtifact> artifacts;
+                artifacts.reserve(manifest_records.size());
+                for (const auto& record : manifest_records) {
+                    artifacts.push_back({record.role, record.relative_path, record.digest});
+                }
+                if (!copperfin::package_trust::launcher_inventory_envelope_matches_artifacts(
+                        *envelope,
+                        result.signer_key_id,
+                        artifacts)) {
+                    error = localized_message(
+                        catalog,
+                        "Runtime.Package.LauncherGuard.Error.TrustInvalid");
+                    return false;
+                }
+            }
             return true;
         case VerificationStatus::unknown_signer:
             error = localized_message(
@@ -495,7 +513,7 @@ int wmain(int argc, wchar_t** argv) {
         return kManifestMissingExitCode;
     }
     std::string error;
-    if (!verify_launcher_trust(package_root, error, catalog)) {
+    if (!verify_launcher_trust(package_root, verification_manifest, error, catalog)) {
         std::cerr << error << "\n";
         return kVerificationFailedExitCode;
     }

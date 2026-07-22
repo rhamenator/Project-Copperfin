@@ -49,6 +49,14 @@ struct LauncherInventoryVerificationResult {
     std::string_view signer_key_id,
     std::span<const LauncherInventoryArtifact> artifacts);
 
+// Confirms that a signed envelope is the canonical inventory for the selected
+// package manifest records, rather than merely a valid signature for another
+// package.
+[[nodiscard]] bool launcher_inventory_envelope_matches_artifacts(
+    std::string_view envelope,
+    std::string_view signer_key_id,
+    std::span<const LauncherInventoryArtifact> artifacts);
+
 // Parses the exact UTF-8/LF textual app.cftrust.sig sidecar. The returned
 // signature is decoded only after the sidecar's version, algorithm, signer,
 // and line-ending contract have been validated.
