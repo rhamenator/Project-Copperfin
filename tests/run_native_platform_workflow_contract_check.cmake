@@ -534,7 +534,7 @@ require_text("${shared_action}"
     "-Name 'Run native test suite'"
     "measured Windows CTest phase")
 require_text("${shared_action}"
-    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--parallel', '2')"
+    "-CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--timeout', '180', '--parallel', '2')"
     "bounded full Windows CTest command")
 require_text("${shared_action}"
     "-Mode Finalize"
@@ -542,6 +542,9 @@ require_text("${shared_action}"
 require_text("scripts/validate-windows.ps1"
     [=[[int]$TestJobs = 2]=]
     "bounded local Windows CTest default")
+require_text("scripts/validate-windows.ps1"
+    [=["--timeout", "180",]=]
+    "bounded local Windows CTest timeout")
 require_text("scripts/validate-windows.ps1"
     [=["--parallel", "$TestJobs"]=]
     "bounded local Windows CTest command")

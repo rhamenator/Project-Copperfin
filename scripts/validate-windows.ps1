@@ -84,6 +84,7 @@ Invoke-Step -Name "Run native CTest suite" -Action {
         "--test-dir", $buildDir,
         "-C", "Release",
         "--output-on-failure",
+        "--timeout", "180",
         "--parallel", "$TestJobs"
     )
 }

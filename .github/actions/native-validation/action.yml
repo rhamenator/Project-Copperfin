@@ -83,7 +83,7 @@ runs:
         -Name 'Run native test suite'
         -Category native-test
         -FilePath ctest
-        -CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--parallel', '2')
+        -CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--timeout', '180', '--parallel', '2')
         -SampleResources
 
     - name: Finalize Windows validation metrics
