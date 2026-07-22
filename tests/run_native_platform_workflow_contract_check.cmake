@@ -438,8 +438,8 @@ require_text("scripts/run-windows-deep-smoke.ps1"
     "[ValidateSet(\"RuntimePackage\", \"PrgDebugger\", \"XAsset\", \"Report\", \"Menu\")]"
     "shared Windows deep-smoke stage inventory")
 require_text("scripts/run-required-designer-smoke.ps1"
-    "Designer smoke reported a skipped required test."
-    "fail-closed designer smoke launcher")
+    "fixture-dependent skip(s)"
+    "fixture-aware designer smoke launcher")
 require_text(".github/workflows/windows-x86-declare-validation.yml"
     "name: Windows DECLARE ABI Validation"
     "focused DECLARE workflow identity")
