@@ -26,7 +26,7 @@ internal static class Program
             return;
         }
 
-        using var form = new StudioMainForm(localization);
+        using var form = new StudioMainForm(localization, StudioShellLayoutFileStore.CreateDefault());
         foreach (var document in documents)
         {
             form.OpenDocument(document.Path, document.ObjectName, document.UniqueId);

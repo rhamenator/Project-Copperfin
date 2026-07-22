@@ -312,7 +312,8 @@ internal static partial class Program
         {
             File.WriteAllText(assetPath, string.Empty);
 
-            using var form = new StudioMainForm
+            using var form = new StudioMainForm(
+                shellLayoutStore: new InMemoryStudioShellLayoutStore())
             {
                 Width = 1500,
                 Height = 1000,
@@ -385,7 +386,8 @@ internal static partial class Program
             return;
         }
 
-        using var form = new StudioMainForm
+        using var form = new StudioMainForm(
+            shellLayoutStore: new InMemoryStudioShellLayoutStore())
         {
             Width = 1500,
             Height = 1000,

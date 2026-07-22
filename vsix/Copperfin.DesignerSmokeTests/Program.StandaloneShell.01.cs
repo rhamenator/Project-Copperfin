@@ -2,16 +2,35 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private sealed class InMemoryStudioShellLayoutStore : IStudioShellLayoutStore
+    {
+        internal StudioShellLayoutState? StoredState { get; set; }
+
+        public StudioShellLayoutState? Load()
+        {
+            return StoredState;
+        }
+
+        public void Save(StudioShellLayoutState state)
+        {
+            StoredState = state;
+        }
+    }
+
     private static void SmokeStandaloneStudioCommandWindowDocking()
     {
-        using var form = new StudioMainForm(new CopperfinLocalization("es-419"))
+        using var form = new StudioMainForm(
+            new CopperfinLocalization("es-419"),
+            new InMemoryStudioShellLayoutStore())
         {
             Width = 1200,
             Height = 800,
@@ -39,5 +58,133 @@ internal static partial class Program
             "standalone Command window should be restorable as a docked pane");
 
         TearDownForm(form);
+    }
+
+    private static void SmokeStandaloneStudioShellLayoutPersistence()
+    {
+        var store = new InMemoryStudioShellLayoutStore();
+        using (var firstForm = new StudioMainForm(
+                   new CopperfinLocalization("es-419"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            firstForm.Show();
+            Application.DoEvents();
+            firstForm.SetCommandWindowVisible(false);
+            firstForm.SetTerminalWindowVisible(true);
+            firstForm.SelectTerminalWindow();
+            firstForm.SetShellSplitterDistanceForTest(420);
+            firstForm.Close();
+        }
+
+        Expect(store.StoredState is not null &&
+               !store.StoredState.CommandWindowVisible &&
+               store.StoredState.TerminalWindowVisible &&
+               store.StoredState.SelectedToolWindow == StudioShellLayoutState.TerminalWindowKey &&
+               store.StoredState.SplitterDistance == 420,
+            "standalone Studio should save invariant shell layout state");
+
+        using (var restoredForm = new StudioMainForm(
+                   new CopperfinLocalization("pt-BR"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            restoredForm.Show();
+            Application.DoEvents();
+            Expect(!restoredForm.IsCommandWindowVisible &&
+                   restoredForm.IsTerminalWindowVisible &&
+                   restoredForm.SelectedToolWindowKey == StudioShellLayoutState.TerminalWindowKey &&
+                   restoredForm.ShellSplitterDistance == 420,
+                "standalone Studio should restore shell layout without localized contract keys");
+            restoredForm.Close();
+        }
+
+        store.StoredState = new StudioShellLayoutState
+        {
+            Version = StudioShellLayoutState.CurrentVersion + 1,
+            CommandWindowVisible = false,
+            TerminalWindowVisible = false,
+            SelectedToolWindow = "invalid",
+            SplitterDistance = int.MaxValue
+        };
+        using var fallbackForm = new StudioMainForm(
+            new CopperfinLocalization("en-US"),
+            store)
+        {
+            Width = 1200,
+            Height = 800,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+        fallbackForm.Show();
+        Application.DoEvents();
+        Expect(fallbackForm.IsCommandWindowVisible &&
+               fallbackForm.IsTerminalWindowVisible &&
+               fallbackForm.SelectedToolWindowKey == StudioShellLayoutState.CommandWindowKey &&
+               fallbackForm.ShellSplitterDistance >= 160 &&
+               fallbackForm.ShellSplitterDistance < int.MaxValue,
+            "standalone Studio should reject corrupt shell state and use bounded defaults");
+        fallbackForm.Close();
+    }
+
+    private static void SmokeStandaloneStudioFileLayoutStoreRoundTrip()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-shell-layout-store",
+            Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(root, "shell-layout.json");
+        try
+        {
+            var store = new StudioShellLayoutFileStore(path);
+            store.Save(new StudioShellLayoutState
+            {
+                CommandWindowVisible = false,
+                TerminalWindowVisible = true,
+                SelectedToolWindow = StudioShellLayoutState.TerminalWindowKey,
+                SplitterDistance = 420
+            });
+            var loaded = store.Load();
+            Expect(loaded is not null &&
+                   !loaded.CommandWindowVisible &&
+                   loaded.TerminalWindowVisible &&
+                   loaded.SelectedToolWindow == StudioShellLayoutState.TerminalWindowKey &&
+                   loaded.SplitterDistance == 420,
+                "standalone Studio should round-trip its versioned JSON layout store");
+
+            File.WriteAllText(path, "not-json");
+            Expect(store.Load() is null,
+                "standalone Studio should ignore corrupt persisted layout JSON");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
     }
 }

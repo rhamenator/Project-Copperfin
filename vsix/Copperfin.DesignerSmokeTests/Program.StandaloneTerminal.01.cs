@@ -29,7 +29,9 @@ internal static partial class Program
 
     private static void SmokeStandaloneStudioTerminalWindow()
     {
-        using var form = new StudioMainForm(new CopperfinLocalization("es-419"))
+        using var form = new StudioMainForm(
+            new CopperfinLocalization("es-419"),
+            new InMemoryStudioShellLayoutStore())
         {
             Width = 1200,
             Height = 800,

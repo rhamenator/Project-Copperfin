@@ -20,13 +20,21 @@ internal sealed class StudioMainForm : Form
     private readonly TabPage terminalWindowPage;
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
+    private readonly ToolStripMenuItem commandWindowMenuItem;
+    private readonly ToolStripMenuItem terminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
+    private readonly IStudioShellLayoutStore shellLayoutStore;
     private readonly Dictionary<string, TabPage> openDocuments =
         new(CopperfinDocumentPathIdentity.CreateComparer());
+    private const int DefaultSplitterDistance = 720;
+    private const int MinimumToolWindowHeight = 160;
 
-    public StudioMainForm(CopperfinLocalization? localization = null)
+    public StudioMainForm(
+        CopperfinLocalization? localization = null,
+        IStudioShellLayoutStore? shellLayoutStore = null)
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
+        this.shellLayoutStore = shellLayoutStore ?? StudioShellLayoutFileStore.CreateDefault();
 
         Text = this.localization.Text("Studio.AppTitle");
         Width = 1480;
@@ -43,20 +51,20 @@ internal sealed class StudioMainForm : Form
         menuStrip.Items.Add(fileMenu);
 
         var viewMenu = new ToolStripMenuItem(this.localization.Text("Studio.ViewMenu"));
-        var commandWindowItem = new ToolStripMenuItem(this.localization.Text("Studio.CommandWindowMenu"))
+        commandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.CommandWindowMenu"))
         {
             CheckOnClick = true,
             Checked = true
         };
-        commandWindowItem.CheckedChanged += (_, _) => SetCommandWindowVisible(commandWindowItem.Checked);
-        var terminalWindowItem = new ToolStripMenuItem(this.localization.Text("Studio.TerminalWindowMenu"))
+        commandWindowMenuItem.CheckedChanged += (_, _) => SetCommandWindowVisible(commandWindowMenuItem.Checked);
+        terminalWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.TerminalWindowMenu"))
         {
             CheckOnClick = true,
             Checked = true
         };
-        terminalWindowItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowItem.Checked);
-        viewMenu.DropDownItems.Add(commandWindowItem);
-        viewMenu.DropDownItems.Add(terminalWindowItem);
+        terminalWindowMenuItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowMenuItem.Checked);
+        viewMenu.DropDownItems.Add(commandWindowMenuItem);
+        viewMenu.DropDownItems.Add(terminalWindowMenuItem);
         menuStrip.Items.Add(viewMenu);
         MainMenuStrip = menuStrip;
 
@@ -121,6 +129,8 @@ internal sealed class StudioMainForm : Form
         Controls.Add(statusStrip);
         Controls.Add(menuStrip);
 
+        Load += (_, _) => RestoreShellLayout();
+        FormClosed += (_, _) => SaveShellLayout();
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
@@ -135,6 +145,12 @@ internal sealed class StudioMainForm : Form
     internal bool IsTerminalShellRunning => terminalWindowControl.IsShellRunning;
 
     internal string TerminalTranscript => terminalWindowControl.TranscriptText;
+
+    internal int ShellSplitterDistance => shellSplitContainer.SplitterDistance;
+
+    internal string SelectedToolWindowKey => toolWindowTabs.SelectedTab == terminalWindowPage
+        ? StudioShellLayoutState.TerminalWindowKey
+        : StudioShellLayoutState.CommandWindowKey;
 
     internal void SetCommandWindowVisible(bool visible)
     {
@@ -162,6 +178,89 @@ internal sealed class StudioMainForm : Form
     internal void SubmitTerminalCommandForTest(string command)
     {
         terminalWindowControl.SubmitCommandForTest(command);
+    }
+
+    internal void SetShellSplitterDistanceForTest(int distance)
+    {
+        shellSplitContainer.SplitterDistance = NormalizeSplitterDistance(distance);
+    }
+
+    private void RestoreShellLayout()
+    {
+        var state = shellLayoutStore.Load();
+        if (state is null || !IsValidShellLayout(state))
+        {
+            state = CreateDefaultShellLayout();
+        }
+
+        shellSplitContainer.SplitterDistance = NormalizeSplitterDistance(state.SplitterDistance);
+        commandWindowMenuItem.Checked = state.CommandWindowVisible;
+        terminalWindowMenuItem.Checked = state.TerminalWindowVisible;
+
+        if (state.SelectedToolWindow == StudioShellLayoutState.TerminalWindowKey &&
+            IsTerminalWindowVisible)
+        {
+            toolWindowTabs.SelectedTab = terminalWindowPage;
+        }
+        else if (IsCommandWindowVisible)
+        {
+            toolWindowTabs.SelectedTab = commandWindowPage;
+        }
+        else if (IsTerminalWindowVisible)
+        {
+            toolWindowTabs.SelectedTab = terminalWindowPage;
+        }
+    }
+
+    private void SaveShellLayout()
+    {
+        shellLayoutStore.Save(new StudioShellLayoutState
+        {
+            CommandWindowVisible = IsCommandWindowVisible,
+            TerminalWindowVisible = IsTerminalWindowVisible,
+            SelectedToolWindow = SelectedToolWindowKey,
+            SplitterDistance = NormalizeSplitterDistance(shellSplitContainer.SplitterDistance)
+        });
+    }
+
+    private bool IsValidShellLayout(StudioShellLayoutState state)
+    {
+        if (state.Version != StudioShellLayoutState.CurrentVersion ||
+            (state.SelectedToolWindow != StudioShellLayoutState.CommandWindowKey &&
+             state.SelectedToolWindow != StudioShellLayoutState.TerminalWindowKey) ||
+            state.SplitterDistance < MinimumToolWindowHeight ||
+            state.SplitterDistance > MaximumSplitterDistance)
+        {
+            return false;
+        }
+
+        return state.CommandWindowVisible || state.TerminalWindowVisible
+            ? state.SelectedToolWindow == StudioShellLayoutState.CommandWindowKey
+                ? state.CommandWindowVisible
+                : state.TerminalWindowVisible
+            : true;
+    }
+
+    private StudioShellLayoutState CreateDefaultShellLayout()
+    {
+        return new StudioShellLayoutState
+        {
+            CommandWindowVisible = true,
+            TerminalWindowVisible = true,
+            SelectedToolWindow = StudioShellLayoutState.CommandWindowKey,
+            SplitterDistance = NormalizeSplitterDistance(DefaultSplitterDistance)
+        };
+    }
+
+    private int MaximumSplitterDistance => Math.Max(
+        MinimumToolWindowHeight,
+        shellSplitContainer.Height - MinimumToolWindowHeight);
+
+    private int NormalizeSplitterDistance(int distance)
+    {
+        return Math.Max(
+            MinimumToolWindowHeight,
+            Math.Min(MaximumSplitterDistance, distance));
     }
 
     private void SetToolWindowVisible(TabPage page, bool visible)
