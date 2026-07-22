@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- The #4387 `test_package_signer_contract` is classified as a portable, read-only, parallel-safe test in `tests/CopperfinTestIsolation.cmake`; keep new release-tool contract tests in the isolation inventory when registering them with CTest.
+
 - 2026-07-22: Added `tools/package-signer/sign-launcher-inventory.sh` for #4387. It signs only an existing canonical `app.cftrust`, requires `--key-ref` to resolve outside the checkout, emits the versioned LF `app.cftrust.sig` sidecar atomically, and never embeds or publishes private keys. The external signer does not generate manifests or select trusted keys; release workflows must still provision the approved registry, verify the sidecar, and exercise enforced Windows cases.
 
 - 2026-07-22: Added a POSIX-only permission-denied fixture to `test_vfp_assets` for #4354. It removes traversal permissions from a temporary directory containing a DBF and verifies that `inspect_asset` returns the existing structured `Path does not exist.` failure rather than allowing a throwing filesystem status operation to escape. The fixture restores directory permissions before cleanup and is skipped at compile time on Windows, where ACL-specific validation belongs in the hosted Windows lane.
