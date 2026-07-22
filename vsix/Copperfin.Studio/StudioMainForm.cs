@@ -111,8 +111,6 @@ internal sealed class StudioMainForm : Form
             Dock = DockStyle.Fill,
             Orientation = Orientation.Horizontal,
             FixedPanel = FixedPanel.Panel2,
-            Panel2MinSize = 160,
-            SplitterDistance = 720,
             IsSplitterFixed = false
         };
         shellSplitContainer.Panel1.Controls.Add(documentTabs);
@@ -129,7 +127,13 @@ internal sealed class StudioMainForm : Form
         Controls.Add(statusStrip);
         Controls.Add(menuStrip);
 
-        Load += (_, _) => RestoreShellLayout();
+        Load += (_, _) =>
+        {
+            // WinForms validates Panel2MinSize against the current client height;
+            // defer size-sensitive initialization until the form has been laid out.
+            shellSplitContainer.Panel2MinSize = MinimumToolWindowHeight;
+            RestoreShellLayout();
+        };
         FormClosed += (_, _) => SaveShellLayout();
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
