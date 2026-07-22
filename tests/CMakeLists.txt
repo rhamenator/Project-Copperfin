@@ -264,6 +264,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_build_parallelism_contract_check.cmake
 )
 
+add_test(
+    NAME test_package_signer_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_signer_contract_check.cmake
+)
+
 if(UNIX)
     add_test(
         NAME test_validate_posix_build_type
