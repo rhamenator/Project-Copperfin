@@ -358,6 +358,26 @@ void test_runtime_report_output_errors_localize_without_changing_runtime_behavio
                "#2597: qps-ploc missing report asset error should pseudo-localize prose while preserving the path");
     }
 
+#if !defined(_WIN32)
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "en-US", true);
+        const fs::path loop_root = temp_root / "report_status_loop";
+        std::error_code loop_error;
+        fs::create_symlink(loop_root, loop_root, loop_error);
+        if (!loop_error) {
+            const auto state = run_script(
+                "report_status_error",
+                "REPORT FORM '" + (loop_root / "invoice.frx").string() + "' PREVIEW\n");
+            expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+                   "#4398: report asset filesystem status errors should become runtime faults");
+            expect(state.message == "Unable to resolve report asset: " +
+                       (loop_root / "invoice.frx").string(),
+                   "#4398: report asset filesystem status errors should use the localized resolve diagnostic");
+        }
+    }
+#endif
+
 #if defined(__linux__)
     {
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");

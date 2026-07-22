@@ -1467,7 +1467,8 @@
             const std::string display_asset_path = display_alias == options.source_path_display_aliases.end()
                 ? copperfin::platform::path_to_utf8_string(asset_path)
                 : display_alias->second;
-            if (!std::filesystem::exists(asset_path))
+            std::error_code asset_exists_error;
+            if (!std::filesystem::exists(asset_path, asset_exists_error) || asset_exists_error)
             {
                 last_error_message = report_asset_resolve_message(asset_path);
                 last_fault_location = statement.location;
