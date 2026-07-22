@@ -902,6 +902,40 @@ void test_deferred_package_transaction_rolls_back_failed_second_build() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_primary_output_status_errors_are_reported_as_missing() {
+#if !defined(_WIN32)
+    namespace fs = std::filesystem;
+    const ScopedEnvironmentVariable scoped_locale("COPPERFIN_LOCALE", "en-US");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_primary_output_status";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path primary_output = temp_root / "primary.fxp";
+    fs::create_symlink(primary_output, primary_output, ignored);
+    if (!ignored) {
+        copperfin::runtime::RuntimePackagePlan plan;
+        plan.ok = true;
+        plan.package_root = temp_root.string();
+        plan.launcher_output_path = primary_output.string();
+        plan.output_kind = copperfin::runtime::BuildOutputKind::fxp;
+        plan.emit_dotnet_launcher = false;
+
+        const auto result = copperfin::runtime::finalize_runtime_package_primary_output(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile());
+        expect(!result.ok,
+               "#4400: primary-output status errors should fail package finalization");
+        expect(result.error == runtime_pipeline_english_catalog().translate(
+                                  "Runtime.Package.Error.PrimaryOutputMissing"),
+               "#4400: primary-output status errors should preserve the localized missing-output diagnostic");
+    }
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_package_output_names_reject_reserved_artifacts() {
     namespace fs = std::filesystem;
     const ScopedEnvironmentVariable scoped_locale("COPPERFIN_LOCALE", "en-US");

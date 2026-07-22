@@ -3329,8 +3329,12 @@ RuntimeBuildResult finalize_runtime_package_primary_output(
     if (!plan.ok) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
-    if (!plan.emit_dotnet_launcher && !std::filesystem::exists(
-            copperfin::platform::path_from_utf8_string(plan.launcher_output_path))) {
+    std::error_code primary_output_exists_error;
+    if (!plan.emit_dotnet_launcher &&
+        (!std::filesystem::exists(
+             copperfin::platform::path_from_utf8_string(plan.launcher_output_path),
+             primary_output_exists_error) ||
+         primary_output_exists_error)) {
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputMissing")};
     }
 
