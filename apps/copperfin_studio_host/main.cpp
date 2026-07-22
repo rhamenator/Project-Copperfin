@@ -381,7 +381,7 @@ int run_studio_host_main(int argc, char** argv) {
             return 5;
         }
     }
-    bool asset_mutation_performed = false;
+    bool asset_mutation_performed = parse_result.mutates_asset;
     if (parse_result.request.apply_property_update) {
         const auto update_result = copperfin::vfp::update_visual_object_property({
             .path = parse_result.request.path,

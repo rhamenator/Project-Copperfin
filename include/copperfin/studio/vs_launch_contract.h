@@ -21,6 +21,7 @@ struct LaunchParseResult {
     bool ok = false;
     bool show_help = false;
     bool output_json = false;
+    bool mutates_asset = false;
     StudioOpenRequest request{};
     std::string error;
 };

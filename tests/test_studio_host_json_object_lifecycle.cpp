@@ -1592,6 +1592,10 @@ void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std:
         temp_root);
     expect(batch_process.exit_code == 0,
         "#1201: host deleted-states batch should exit successfully");
+    expect_contains(batch_process.stdout_text, "\"dryRun\": false",
+        "#4394: deleted-states success should expose mutation dry-run metadata");
+    expect_contains(batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#4394: deleted-states success should expose mutation metadata");
     expect_contains(batch_process.stdout_text, "\"launchedFromVisualStudio\": true",
         "#3985: VS-originated deleted-state batches should preserve host provenance in JSON");
     expect(visual_object_deleted(batch_path, "save-guid") &&

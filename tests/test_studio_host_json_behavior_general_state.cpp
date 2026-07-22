@@ -511,6 +511,10 @@ void test_studio_host_json_assigns_visibility_by_stable_selectors(const std::str
         temp_root);
     expect(visibility_process.exit_code == 0,
         "#1038: host object visibility assignment should exit successfully");
+    expect_contains(visibility_process.stdout_text, "\"dryRun\": false",
+        "#4394: visibility-object success should expose mutation dry-run metadata");
+    expect_contains(visibility_process.stdout_text, "\"mutatesAsset\": true",
+        "#4394: visibility-object success should expose mutation metadata");
     expect(visual_object_property(visibility_path, "one-guid", "VISIBLE") == ".F." &&
             visual_object_property(visibility_path, "two-guid", "VISIBLE") == ".F." &&
             visual_object_property(visibility_path, "three-guid", "VISIBLE") == ".F." &&

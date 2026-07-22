@@ -327,6 +327,10 @@ LaunchParseResult parse_launch_arguments(
         return {.ok = false, .error = catalog.translate("StudioHost.LaunchParse.Error.MixedObjectPropertyCommands")};
     }
 
+    result.mutates_asset =
+        property_command_count > 0 ||
+        object_command_count > 0 ||
+        result.request.undo_mode == StudioUndoMode::command;
     result.ok = true;
     return result;
 }
