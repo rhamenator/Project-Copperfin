@@ -70,6 +70,7 @@
   "Runtime.Package.Error.ContentDestinationRejected": "O destino do recurso do pacote deve ser um caminho direto dentro da raiz de conteudo: {path}",
   "Runtime.Package.Error.ContentRootRejected": "A raiz de conteudo do pacote deve ser o diretorio de conteudo direto dentro da raiz do pacote: {path}",
   "Runtime.Package.Error.AmbiguousProjectAssetPath": "Varios caminhos de recursos do projeto sem distincao de maiusculas correspondem a: {path}",
+  "Runtime.Package.Error.DuplicateStagedAssetPath": "Varios recursos do projeto resolvem para o mesmo destino do pacote: {path}",
   "Runtime.Package.Error.AmbiguousCompanionPath": "Varios arquivos complementares sem distincao de maiusculas correspondem a: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Nao foi possivel criar o diretorio raiz de conteudo do pacote.",
   "Runtime.Package.Error.CreateDirectoryFailed": "Nao foi possivel criar o diretorio: {path}",

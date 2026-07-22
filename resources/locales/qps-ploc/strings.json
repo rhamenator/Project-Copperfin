@@ -70,6 +70,7 @@
   "Runtime.Package.Error.ContentDestinationRejected": "Package asset destination must be a direct path inside the content root: {path}",
   "Runtime.Package.Error.ContentRootRejected": "Package content root must be the direct content directory inside the package root: {path}",
   "Runtime.Package.Error.AmbiguousProjectAssetPath": "Multiple case-insensitive project asset paths match: {path}",
+  "Runtime.Package.Error.DuplicateStagedAssetPath": "[!! Måñ¥ þŕøĵëçţ åššëţš ŕëšøľvë ţø ţhë šåmë þåçķåģë ðëšţïñåţïøñ: {path} !!]",
   "Runtime.Package.Error.AmbiguousCompanionPath": "Multiple case-insensitive companion files match: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Unable to create package content-root directory.",
   "Runtime.Package.Error.CreateDirectoryFailed": "Unable to create directory: {path}",

@@ -1037,6 +1037,114 @@ void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_staged_asset_destination_collisions_are_rejected() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_asset_destination_collisions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    write_text(project_dir / "shared.prg", "RETURN 1\n");
+#if !defined(_WIN32)
+    write_text(project_dir / "SHARED.PRG", "RETURN 2\n");
+#endif
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "collision_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "DestinationCollisionDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = (output_dir / "DestinationCollisionDemo.exe").string();
+    workspace.build_plan.startup_item = "shared.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "shared.prg", .relative_path = "shared.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "shared.prg", .relative_path = "shared.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(!plan.ok,
+           "duplicate staged asset destinations should invalidate the package plan");
+    expect(!plan.warnings.empty() &&
+               plan.warnings.back().find("shared.prg") != std::string::npos,
+           "duplicate staged asset diagnostics should preserve the invariant destination path");
+
+    write_text(project_dir / "shared.frx", "synthetic report");
+    write_text(project_dir / "shared.frt", "synthetic report memo");
+    workspace.build_plan.startup_item = "shared.frx";
+    workspace.build_plan.startup_record_index = 3U;
+    workspace.entries = {
+        {.record_index = 3U, .name = "shared.frx", .relative_path = "shared.frx", .type_title = "Report"},
+        {.record_index = 4U, .name = "shared.frt", .relative_path = "shared.frt", .type_title = "Report Memo"}
+    };
+    const auto companion_collision_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+    expect(!companion_collision_plan.ok,
+           "companion destinations colliding with declared assets should be rejected before copying");
+
+#if defined(_WIN32)
+    workspace.build_plan.startup_item = "shared.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "shared.prg", .relative_path = "shared.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "shared.prg", .relative_path = "SHARED.PRG", .type_title = "Program"}
+    };
+    const auto case_only_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+    expect(!case_only_plan.ok,
+           "Windows case-only staged destinations should be rejected before copying");
+#else
+    workspace.build_plan.startup_item = "shared.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "shared.prg", .relative_path = "shared.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "SHARED.PRG", .relative_path = "SHARED.PRG", .type_title = "Program"}
+    };
+    const auto case_distinct_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+    expect(case_distinct_plan.ok,
+           "POSIX case-distinct staged destinations should retain case-sensitive behavior");
+#endif
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";

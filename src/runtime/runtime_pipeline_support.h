@@ -154,6 +154,9 @@ bool is_prg_path(const std::string& value);
 bool is_xasset_path(const std::string& value);
 bool is_writable_package_data_path(const std::string& value);
 bool should_stage_asset(const RuntimePackageAsset& asset);
+std::optional<std::filesystem::path> resolve_existing_path_casefold(
+    const std::filesystem::path& candidate,
+    bool& ambiguous);
 std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source);
 struct RuntimeCompanionCopyResult {
     bool ok = true;

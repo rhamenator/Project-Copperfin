@@ -176,6 +176,7 @@ void test_runtime_package_license_fields_stay_debug_only();
 
 // ==== Runtime package materialization and asset-staging tests ====
 void test_materialize_runtime_package();
+void test_staged_asset_destination_collisions_are_rejected();
 void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families();
 void test_exact_startup_path_wins_over_casefold_siblings();
 void test_ambiguous_casefold_startup_path_fails_closed();

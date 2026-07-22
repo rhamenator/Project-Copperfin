@@ -2200,6 +2200,53 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.assets.push_back(std::move(asset));
     }
 
+    std::unordered_map<std::string, std::string> staged_asset_paths;
+    const auto duplicate_staged_path = [&](const std::filesystem::path& relative_path)
+        -> std::optional<std::string> {
+        const std::string relative = copperfin::platform::path_to_utf8_string(
+            relative_path.lexically_normal());
+        const std::string identity = canonical_casefolded_path_identity(relative_path);
+        const auto [existing, inserted] = staged_asset_paths.emplace(identity, relative);
+        return inserted ? std::nullopt : std::optional<std::string>(existing->second);
+    };
+    const auto reject_duplicate_staged_path = [&](const std::string& path) {
+        plan.ok = false;
+        plan.warnings.push_back(runtime_text(
+            "Runtime.Package.Error.DuplicateStagedAssetPath",
+            {{"path", path}}));
+        plan.planning_warning_count = plan.warnings.size();
+        plan.planning_warnings_captured = true;
+    };
+    for (const auto& asset : plan.assets) {
+        if (!should_stage_asset(asset)) {
+            continue;
+        }
+        if (const auto duplicate = duplicate_staged_path(
+                copperfin::platform::path_from_utf8_string(asset.relative_path));
+            duplicate.has_value()) {
+            reject_duplicate_staged_path(*duplicate);
+            return plan;
+        }
+
+        const std::filesystem::path staged_relative =
+            copperfin::platform::path_from_utf8_string(asset.relative_path);
+        for (const auto& companion_source : infer_companion_source_paths(
+                 copperfin::platform::path_from_utf8_string(asset.source_path))) {
+            bool ambiguous = false;
+            const auto resolved_companion_source = resolve_existing_path_casefold(
+                companion_source, ambiguous);
+            if (!resolved_companion_source.has_value()) {
+                continue;
+            }
+            if (const auto duplicate = duplicate_staged_path(
+                    staged_relative.parent_path() / resolved_companion_source->filename());
+                duplicate.has_value()) {
+                reject_duplicate_staged_path(*duplicate);
+                return plan;
+            }
+        }
+    }
+
     if (plan.startup_source_path.empty()) {
         plan.warnings.push_back(runtime_text("Runtime.Package.Warning.StartupSourceUnresolved"));
     }

@@ -171,7 +171,7 @@ bool has_parent_traversal_segment(const std::string& value) {
     });
 }
 
-std::optional<std::filesystem::path> resolve_existing_path_casefold(
+std::optional<std::filesystem::path> resolve_existing_path_casefold_impl(
     const std::filesystem::path& candidate,
     bool& ambiguous) {
     ambiguous = false;
@@ -343,6 +343,12 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
 }
 
 }  // namespace
+
+std::optional<std::filesystem::path> resolve_existing_path_casefold(
+    const std::filesystem::path& candidate,
+    bool& ambiguous) {
+    return resolve_existing_path_casefold_impl(candidate, ambiguous);
+}
 
 BuildOutputKind parse_build_output_kind(const std::string& value) {
     const std::string normalized = lowercase_copy(trim_copy(value));

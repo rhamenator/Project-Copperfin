@@ -142,6 +142,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_uppercase_dbf_companion_assets_are_staged();
     test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable();
     test_runtime_package_license_fields_stay_debug_only();
+    test_staged_asset_destination_collisions_are_rejected();
     test_security_enabled_runtime_host_name_validation();
     test_runtime_security_role_environment_fidelity();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

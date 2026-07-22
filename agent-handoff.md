@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Shipped #4390 under #110: package planning rejects duplicate staged asset destinations before materialization. Identity uses the existing Windows case-insensitive path helper and remains case-sensitive on POSIX; do not move this check after copying or let archive inventory map insertion collapse duplicates. Preserve source/debug paths, localized `Runtime.Package.Error.DuplicateStagedAssetPath`, and invariant plan/materialization contracts.
+
 - Shipped #4388 under #2997: standalone `StudioMainForm` persists only versioned shell state through `StudioShellLayoutFileStore`: Command/Terminal visibility, invariant `command`/`terminal` selected-tool keys, and splitter distance. Windows uses local application data; macOS uses Application Support; POSIX uses `XDG_CONFIG_HOME` or `~/.config`. Corrupt, incompatible, hidden-selected, and out-of-bounds state must fall back to bounded defaults. Keep `IStudioShellLayoutStore` injectable so UI tests never write a developer profile, and do not share this standalone persistence with the VSIX shell.
 
 - Shipped #4389 under #24: `CopperfinStudioReportSection` now carries nullable `SectionIndex` and `SectionCount`, preserving the native report/label section ordinal metadata in managed snapshots. Keep `null` section indexes and zero/null count semantics intact for deleted or legacy sections, and keep report and label host-shaped smoke payloads aligned; native JSON field names and machine contracts remain unchanged.
