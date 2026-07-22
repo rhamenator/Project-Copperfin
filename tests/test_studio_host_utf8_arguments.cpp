@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 namespace {
 
@@ -19,6 +20,18 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::string json_escape_for_search(std::string_view value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const char ch : value) {
+        if (ch == '\\' || ch == '"') {
+            escaped.push_back('\\');
+        }
+        escaped.push_back(ch);
+    }
+    return escaped;
 }
 
 }  // namespace
@@ -32,7 +45,8 @@ int main(int argc, char** argv) {
     const std::filesystem::path temp_root =
         std::filesystem::temp_directory_path() / "copperfin_studio_host_utf8_args";
     const std::string unicode_component = "copperfin_studio_\xC3\xA9_\xE6\xBC\xA2";
-    const std::filesystem::path project_root = temp_root / unicode_component;
+    const std::filesystem::path project_root = temp_root /
+        copperfin::platform::path_from_utf8_string(unicode_component);
     const std::filesystem::path source_path = project_root / "main.prg";
     std::error_code error;
     std::filesystem::remove_all(temp_root, error);
@@ -60,7 +74,7 @@ int main(int argc, char** argv) {
            "standalone Studio should open a PRG whose path contains non-ASCII characters");
     expect(process.stdout_text.find("\"status\": \"ok\"") != std::string::npos,
            "standalone Studio should return its normal JSON success contract for a UTF-8 path");
-    expect(process.stdout_text.find(source_text) != std::string::npos,
+    expect(process.stdout_text.find(json_escape_for_search(source_text)) != std::string::npos,
            "standalone Studio JSON should preserve the UTF-8 document path");
 
     std::filesystem::remove_all(temp_root, error);
