@@ -89,12 +89,15 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
     long long rounded_decimal_index = decimal_index;
 
     if (cut <= 0LL) {
-        rounded_digits = !digits.empty() && digits.front() >= '5' ? "1" : std::string{};
-        rounded_decimal_index = cut - decimal_places;
+        if (!digits.empty() && digits.front() >= '5') {
+            rounded_digits = "1";
+            rounded_decimal_index = 1LL - decimal_places;
+        }
     } else if (cut >= static_cast<long long>(digits.size())) {
         rounded_digits = digits;
     } else {
         rounded_digits = digits.substr(0U, static_cast<std::size_t>(cut));
+        bool carried = false;
         if (digits[static_cast<std::size_t>(cut)] >= '5') {
             bool carry = true;
             for (auto digit = rounded_digits.rbegin(); digit != rounded_digits.rend() && carry; ++digit) {
@@ -107,9 +110,10 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
             }
             if (carry) {
                 rounded_digits.insert(rounded_digits.begin(), '1');
+                carried = true;
             }
         }
-        rounded_decimal_index = cut - decimal_places;
+        rounded_decimal_index = cut - decimal_places + (carried ? 1LL : 0LL);
     }
 
     if (rounded_digits.empty() || rounded_digits.find_first_not_of('0') == std::string::npos) {

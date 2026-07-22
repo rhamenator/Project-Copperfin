@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Follow-up to #3957: decimal rounding must preserve the scale when a retained digit sequence carries into a new leading digit, and must derive the rounded unit correctly when VFP9 emits scientific notation for values below one. The focused string-math regression covers both cases plus negative-place ties; keep this path locale-independent and stack-frugal.
+
 - #3957 ROUND() compatibility is confirmed against a real VFP9 execution: `ROUND(1.005, 2)` returns `1.01` and `ROUND(0.145, 2)` returns `0.15`, with half-away-from-zero ties. The runtime uses locale-independent shortest-decimal rounding for ordinary decimal-place ranges and keeps the legacy arithmetic fallback only for extreme ranges; preserve negative decimal-place behavior, signed zero, and invariant machine contracts. Focused coverage is in `test_prg_engine_string_math_functions`; hosted cross-platform validation remains required.
 
 - #4409 now has a manually dispatched `Windows Launcher Trust Validation` workflow. It expects protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets, writes them only under `RUNNER_TEMP`, runs `scripts/prepare-windows-launcher-trust.ps1`, and configures `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON`. The preflight report contains no key material. Do not add push/PR triggers or reuse licensing keys; valid signed-launch and tamper-case execution still needs an approved registry and release evidence.

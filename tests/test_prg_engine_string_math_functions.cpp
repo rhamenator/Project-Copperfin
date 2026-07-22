@@ -943,6 +943,15 @@ namespace
             "nPositiveTie = ROUND(2.5, 0)\n"
             "nNegativeTie = ROUND(-2.5, 0)\n"
             "nNegativePlaces = ROUND(1234.5678, -2)\n"
+            "nThreePlaces = ROUND(1.2345, 3)\n"
+            "nCarry = ROUND(9.995, 2)\n"
+            "nNegativeCarry = ROUND(-9.995, 2)\n"
+            "nSmallTie = ROUND(0.0005, 3)\n"
+            "nBelowNegativePlace = ROUND(0.004, -2)\n"
+            "nBelowNegativeTie = ROUND(149, -2)\n"
+            "nNegativePlaceTie = ROUND(150, -2)\n"
+            "nNegativePlaceNegativeTie = ROUND(-150, -2)\n"
+            "nNegativePlaceCarry = ROUND(999, -2)\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -967,6 +976,15 @@ namespace
         check("npositivetie", "3");
         check("nnegativetie", "-3");
         check("nnegativeplaces", "1200");
+        check("nthreeplaces", "1.235");
+        check("ncarry", "10");
+        check("nnegativecarry", "-10");
+        check("nsmalltie", "0.001");
+        check("nbelownegativeplace", "0");
+        check("nbelownegativetie", "100");
+        check("nnegativeplacetie", "200");
+        check("nnegativeplacenegativetie", "-200");
+        check("nnegativeplacecarry", "1000");
 
         fs::remove_all(temp_root, ignored);
     }
