@@ -164,7 +164,8 @@ std::filesystem::path choose_runtime_temp_directory(const RuntimeSessionOptions&
             explicit_path = copperfin::platform::path_from_utf8_string(options.working_directory) / explicit_path;
         }
         std::filesystem::create_directories(explicit_path, ignored);
-        if (std::filesystem::exists(explicit_path)) {
+        std::error_code explicit_exists_error;
+        if (std::filesystem::exists(explicit_path, explicit_exists_error) && !explicit_exists_error) {
             return explicit_path.lexically_normal();
         }
     }

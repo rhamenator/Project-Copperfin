@@ -91,6 +91,30 @@ void test_runtime_session_options_contain_temporary_files() {
 
     expect(!fs::exists(simulated_process_directory / "runtime-temp"),
            "empty working directory should not create runtime-temp under the process working directory");
+
+#if !defined(_WIN32)
+    const fs::path temp_status_loop = fixture_root / "temp-status-loop";
+    std::error_code temp_status_error;
+    fs::create_symlink(temp_status_loop, temp_status_loop, temp_status_error);
+    if (!temp_status_error) {
+        auto status_options = implicit_options;
+        status_options.temp_directory = temp_status_loop.string();
+        auto status_session = copperfin::runtime::PrgRuntimeSession::create(status_options);
+        const auto status_state = status_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(status_state.completed,
+               "#4401: runtime session should fall back when explicit temp-directory status fails");
+        const auto config_event = std::find_if(
+            status_state.events.begin(),
+            status_state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent& event) {
+                return event.category == "runtime.config";
+            });
+        expect(config_event != status_state.events.end() &&
+                   config_event->detail.find(temp_status_loop.string()) == std::string::npos,
+               "#4401: runtime config should not retain a status-error temp-directory path");
+    }
+#endif
+
     fs::remove_all(fixture_root, ignored);
 }
 
