@@ -95,6 +95,55 @@ $env:COPPERFIN_ROOT = (Get-Location).Path
   --debug-command continue
 ```
 
+## MVP Recovery Walkthrough
+
+Use this walkthrough for the release evidence ledger before tagging an MVP build. It is intentionally based on the existing package, debug, localization, and native test contracts; it does not replace the full platform validation matrix.
+
+1. Build or select a release tree, then run the focused recovery contract set:
+
+   ```powershell
+   cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCOPPERFIN_BUILD_TESTS=ON
+   cmake --build build --parallel 2
+   ctest --test-dir build --output-on-failure --timeout 180 `
+     -R "^(test_runtime_pipeline|test_runtime_host_debug_output_formatting|test_prg_engine_debugger|test_localization)$"
+   ```
+
+   Record the commit, platform, test count, failures, and skipped tests in the release issue. A passing run must cover package finalization and cleanup, structured pause output, debugger recovery commands, and localized diagnostic routing.
+
+2. Inspect both package contracts before starting the runtime:
+
+   ```powershell
+   $package = "$env:COPPERFIN_ROOT\artifacts\runtime-smoke\SOLUTION"
+   $runtime = Get-Content "$package\app.cfmanifest" -Raw | ConvertFrom-Json
+   $debug = Get-Content "$package\app.cfdebug" -Raw | ConvertFrom-Json
+   $runtime | Select-Object schema, content_root, launcher_artifact
+   $debug | Select-Object schema, source_root, launcher_artifact
+   ```
+
+   Confirm that `app.cfmanifest` points only to staged package content and that `app.cfdebug` retains source-side paths. Do not copy source paths into the runtime manifest or treat localized display text as a contract field.
+
+3. Reproduce a paused runtime and recover it in order:
+
+   ```powershell
+   & "$package\copperfin_runtime_host.exe" `
+     --manifest "$package\app.cfmanifest" `
+     --debug `
+     --breakpoint 12 `
+     --debug-command continue `
+     --debug-command step `
+     --debug-command out
+   ```
+
+   Capture the pause state, call-stack/local-variable output, runtime event records, exit code, and final process state. A fault or rejected command must remain a structured runtime/debug result; the operator must not resume blindly after the runtime host has exited.
+
+4. Verify the recovery and localization boundaries independently:
+
+   - Confirm failed package publication removes only its owned temporary outputs and leaves unrelated `runtime-temp` content untouched.
+   - Repeat the focused test set with `COPPERFIN_LOCALE=es-419`, `pt-BR`, and `qps-ploc` where the host supports environment selection; record the human diagnostic language separately from invariant codes, JSON keys, and debugger command names.
+   - Archive the command transcript, manifest excerpts, test output, package/VSIX artifact names, and the reviewer sign-off with the DQ/DV/HZ issue ledger.
+
+This walkthrough is evidence for `DQ-MVP-release-4403-runtime-recovery`, `DQ-MVP-release-4403-localized-operator-guidance`, `DV-MVP-release-4403-cross-platform-validation`, and `DV-MVP-release-4403-recovery-walkthrough`; it does not satisfy `DV-MVP-release-4403-independent-review` by itself.
+
 Current behavior:
 
 - runtime packaging is `Windows-first`
