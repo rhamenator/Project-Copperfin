@@ -2130,7 +2130,11 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "static bool copperfin_runtime_bridge_execute_write_request(\n";
     stream << "    const CopperfinRuntimeBridgeRequestWritePlan& plan) {\n";
     stream << "    if (plan.ensure_parent_directory) {\n";
-    stream << "        std::filesystem::create_directories(plan.target_path.parent_path());\n";
+    stream << "        std::error_code parent_directory_error;\n";
+    stream << "        std::filesystem::create_directories(plan.target_path.parent_path(), parent_directory_error);\n";
+    stream << "        if (parent_directory_error) {\n";
+    stream << "            return false;\n";
+    stream << "        }\n";
     stream << "    }\n";
     stream << "    const auto remove_artifact = [](const std::filesystem::path& path) {\n";
     stream << "        if (path.empty()) {\n";
@@ -2200,7 +2204,9 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "    if (!plan.request_write_succeeded) {\n";
     stream << "        return copperfin_build_runtime_bridge_empty_response_document();\n";
     stream << "    }\n";
-    stream << "    if (plan.require_existing_response && !std::filesystem::exists(plan.source_path)) {\n";
+    stream << "    std::error_code response_exists_error;\n";
+    stream << "    if (plan.require_existing_response &&\n";
+    stream << "        (!std::filesystem::exists(plan.source_path, response_exists_error) || response_exists_error)) {\n";
     stream << "        return copperfin_build_runtime_bridge_empty_response_document();\n";
     stream << "    }\n";
     stream << "    std::ifstream input(plan.source_path, std::ios::binary);\n";

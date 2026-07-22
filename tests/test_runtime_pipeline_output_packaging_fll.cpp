@@ -537,6 +537,16 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should declare a shared ensure-parent-directory policy helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_ensure_parent_directory_policy()") != std::string::npos,
                "fll-output wrapper source should route ensure-parent-directory policy through the shared helper.");
+        expect(wrapper_source.find(
+                   "std::error_code parent_directory_error;\n"
+                   "        std::filesystem::create_directories(plan.target_path.parent_path(), parent_directory_error);\n"
+                   "        if (parent_directory_error) {") != std::string::npos,
+               "fll-output wrapper source should keep request-directory status failures in the bridge failure contract.");
+        expect(wrapper_source.find(
+                   "std::error_code response_exists_error;\n"
+                   "    if (plan.require_existing_response &&\n"
+                   "        (!std::filesystem::exists(plan.source_path, response_exists_error) || response_exists_error)) {") != std::string::npos,
+               "fll-output wrapper source should keep response-path status failures in the bridge fallback contract.");
         expect(wrapper_source.find("static bool copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
                "fll-output wrapper source should declare a shared require-existing-response policy helper.");
         expect(wrapper_source.find("copperfin_runtime_bridge_require_existing_response_policy()") != std::string::npos,
