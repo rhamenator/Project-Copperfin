@@ -2545,6 +2545,16 @@ void remove_xasset_bootstrap(const std::optional<std::string>& bootstrap_path) {
     std::filesystem::remove(path_from_utf8(*bootstrap_path), ignored);
 }
 
+bool xasset_bootstrap_write_failure_requested(const std::filesystem::path& path) {
+    const auto marker = copperfin::platform::read_environment_variable(
+        "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+    const auto stage = copperfin::platform::read_environment_variable(
+        "COPPERFIN_TEST_FAIL_WRITE_STAGE");
+    return marker.has_value() && stage.has_value() &&
+        !marker->empty() && *stage == "xasset-bootstrap" &&
+        copperfin::platform::path_to_utf8_string(path).find(*marker) != std::string::npos;
+}
+
 XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_read_path,
     const std::string& logical_startup_source,
@@ -2592,8 +2602,24 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
             include_read_events,
             logical_startup_source);
 
+    struct ScopedXAssetBootstrapFileCleanup {
+        std::filesystem::path path;
+        bool preserve = false;
+
+        ~ScopedXAssetBootstrapFileCleanup() {
+            if (preserve) {
+                return;
+            }
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+        }
+    } bootstrap_file_cleanup{bootstrap_path};
+
     std::ofstream output(bootstrap_path, std::ios::binary | std::ios::trunc);
     output << result.bootstrap_source;
+    if (xasset_bootstrap_write_failure_requested(bootstrap_path)) {
+        output.setstate(std::ios::badbit);
+    }
     output.close();
     if (!output.good()) {
         result.error = localized_message(catalog, "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed");
@@ -2601,6 +2627,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     }
 
     result.bootstrap_path = copperfin::platform::path_to_utf8_string(bootstrap_path);
+    bootstrap_file_cleanup.preserve = true;
     return result;
 }
 

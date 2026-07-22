@@ -718,3 +718,65 @@ void test_runtime_host_removes_xasset_bootstrap_after_execution(const std::strin
         fs::remove_all(temp_root, ignored);
     }
 }
+
+void test_runtime_host_cleans_failed_xasset_bootstrap_write(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_host_xasset_bootstrap_write_failure_tests";
+    const fs::path table_path = temp_root / "demo.scx";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    write_synthetic_form_asset(table_path);
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=DemoFormWriteFailure\n"
+        "startup_item=demo.scx\n"
+        "startup_source=" + table_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentValue tmpdir("TMPDIR", temp_root.string());
+        ScopedEnvironmentValue temp("TEMP", temp_root.string());
+        ScopedEnvironmentValue tmp("TMP", temp_root.string());
+        ScopedEnvironmentValue fail_marker(
+            "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS",
+            "demo_copperfin_host_bootstrap_");
+        ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "xasset-bootstrap");
+
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+        if (process.exit_code != 0) {
+            std::cerr << "xAsset write-failure stdout:\n" << process.stdout_text << "\n";
+            std::cerr << "xAsset write-failure stderr:\n" << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "failed xAsset bootstrap writes should use the compatibility-launcher fallback");
+        expect(process.stdout_text.find("runtime.mode: compatibility-launcher") != std::string::npos,
+               "failed xAsset bootstrap writes should report compatibility-launcher mode");
+    }
+
+    bool bootstrap_leaked = false;
+    for (fs::directory_iterator it(temp_root, ignored), end; !ignored && it != end; it.increment(ignored)) {
+        const std::string filename = it->path().filename().string();
+        if (filename.find("_copperfin_host_bootstrap_") != std::string::npos &&
+            it->path().extension() == ".prg") {
+            bootstrap_leaked = true;
+            break;
+        }
+    }
+    expect(!bootstrap_leaked,
+           "failed xAsset bootstrap writes should remove the partial temporary source");
+    fs::remove_all(temp_root, ignored);
+}

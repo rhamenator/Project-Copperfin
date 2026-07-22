@@ -12,6 +12,7 @@ void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_
 void test_runtime_host_supports_xasset_action_breakpoint_commands(const std::string& runtime_host_path);
 void test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(const std::string& runtime_host_path);
 void test_runtime_host_removes_xasset_bootstrap_after_execution(const std::string& runtime_host_path);
+void test_runtime_host_cleans_failed_xasset_bootstrap_write(const std::string& runtime_host_path);
 void test_runtime_host_writes_bridge_response_artifact(const std::string& runtime_host_path);
 void test_security_enabled_bridge_source_stays_inside_verified_package(const std::string& runtime_host_path);
 void test_runtime_host_invokes_zero_argument_bridge_export(const std::string& runtime_host_path);
@@ -59,6 +60,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("xAsset action breakpoints", runtime_host_path, test_runtime_host_supports_xasset_action_breakpoint_commands);
     run_runtime_host_test("xAsset breakpoint metadata", runtime_host_path, test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output);
     run_runtime_host_test("xAsset bootstrap cleanup", runtime_host_path, test_runtime_host_removes_xasset_bootstrap_after_execution);
+    run_runtime_host_test("xAsset failed-write cleanup", runtime_host_path, test_runtime_host_cleans_failed_xasset_bootstrap_write);
     run_runtime_host_test("bridge response", runtime_host_path, test_runtime_host_writes_bridge_response_artifact);
     run_runtime_host_test("verified bridge source", runtime_host_path, test_security_enabled_bridge_source_stays_inside_verified_package);
     run_runtime_host_test("zero-argument bridge export", runtime_host_path, test_runtime_host_invokes_zero_argument_bridge_export);
