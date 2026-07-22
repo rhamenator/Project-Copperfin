@@ -3,11 +3,13 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "../src/runtime/prg_engine_path_functions.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <system_error>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -639,12 +641,57 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+#if !defined(_WIN32)
+    void test_fullpath_handles_unavailable_current_directory()
+    {
+        namespace fs = std::filesystem;
+        const fs::path original_directory = fs::current_path();
+        const fs::path temporary_directory = fs::temp_directory_path() / "copperfin_fullpath_unavailable_cwd";
+        std::error_code ignored;
+        fs::remove_all(temporary_directory, ignored);
+        fs::create_directories(temporary_directory);
+        fs::current_path(temporary_directory);
+        fs::remove_all(temporary_directory, ignored);
+
+        copperfin::runtime::PrgValue argument;
+        argument.kind = copperfin::runtime::PrgValueKind::string;
+        argument.string_value = "forms/main.prg";
+
+        bool threw = false;
+        std::optional<copperfin::runtime::PrgValue> result;
+        try
+        {
+            result = copperfin::runtime::evaluate_path_function("fullpath", {argument}, {});
+        }
+        catch (...)
+        {
+            threw = true;
+        }
+
+        std::error_code restore_error;
+        fs::current_path(original_directory, restore_error);
+        expect(!restore_error, "FULLPATH unavailable-CWD regression should restore the original directory");
+        expect(!threw, "FULLPATH should not throw when absolute-path resolution cannot read the current directory");
+        expect(result.has_value(), "FULLPATH should return a controlled value when absolute-path resolution fails");
+        if (result.has_value())
+        {
+            expect(result->kind == copperfin::runtime::PrgValueKind::string,
+                   "FULLPATH unavailable-CWD fallback should remain a string");
+            expect(result->string_value == "forms/main.prg",
+                   "FULLPATH unavailable-CWD fallback should preserve the normalized relative path");
+        }
+    }
+#endif
+
 
 } // namespace
 
 int main()
 {
     test_portable_path_expression_functions();
+#if !defined(_WIN32)
+    test_fullpath_handles_unavailable_current_directory();
+#endif
 
     if (test_failures() != 0)
     {

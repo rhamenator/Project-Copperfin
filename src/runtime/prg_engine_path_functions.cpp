@@ -176,8 +176,12 @@ std::string portable_full_path(const std::string& raw_path, const std::string& d
     if (path.is_relative()) {
         path = copperfin::platform::path_from_utf8_string(default_directory) / path;
     }
-    return copperfin::platform::path_to_utf8_string(
-        std::filesystem::absolute(path).lexically_normal());
+    std::error_code absolute_error;
+    const std::filesystem::path absolute_path = std::filesystem::absolute(path, absolute_error);
+    if (absolute_error) {
+        return copperfin::platform::path_to_utf8_string(path.lexically_normal());
+    }
+    return copperfin::platform::path_to_utf8_string(absolute_path.lexically_normal());
 }
 
 }  // namespace
