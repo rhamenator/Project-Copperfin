@@ -1520,6 +1520,7 @@
   "Runtime.Prg.Records.Error.InsertRequiresTargetField": "{command} exige pelo menos um campo de destino",
   "Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed": "{command} nao conseguiu resolver os nomes dos campos de destino",
   "Runtime.Prg.Records.Error.LockRetryCancelled": "Tentativa de bloqueio cancelada.",
+  "Runtime.Prg.Records.Error.RecordLockTimeout": "{context} atingiu o tempo limite aguardando o bloqueio do registro ({reprocess})",
   "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound": "Campo nao encontrado no cursor SQL remoto: {fieldName}",
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "Este comando exige um registro local atual",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "Este comando exige um registro remoto atual",

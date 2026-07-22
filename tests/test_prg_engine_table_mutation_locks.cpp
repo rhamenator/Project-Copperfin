@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -263,6 +264,47 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
         expect(copperfin::runtime::format_value(replace_error->second).find("timed out waiting for record lock") != std::string::npos,
                "REPLACE contention error should report the record-lock timeout");
     }
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    for (const auto& [locale, expected_text] : std::vector<std::pair<std::string, std::string>>{
+             {"en-US", "REPLACE timed out waiting for record lock (2)"},
+             {"es-419", "REPLACE agotó el tiempo de espera mientras esperaba el bloqueo del registro (2)"},
+             {"pt-BR", "REPLACE atingiu o tempo limite aguardando o bloqueio do registro (2)"}}) {
+        set_env_value("COPPERFIN_LOCALE", locale, true);
+        auto localized_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto localized_state = localized_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(localized_state.completed, locale + " REPROCESS contention script should complete");
+        const auto localized_error = localized_state.globals.find("creplaceerror");
+        expect(localized_error != localized_state.globals.end(), locale + " should capture the localized timeout error");
+        if (localized_error != localized_state.globals.end()) {
+            expect(copperfin::runtime::format_value(localized_error->second) == expected_text,
+                   locale + " should localize the record-lock timeout while preserving placeholders");
+        }
+        expect(std::any_of(localized_state.events.begin(), localized_state.events.end(), [](const auto& event) {
+            return event.category == "runtime.lock_timeout" &&
+                   event.detail.find("REPLACE timeout recno=1 reprocess=2") != std::string::npos;
+        }), locale + " should preserve the invariant record-lock timeout telemetry");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    auto pseudo_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto pseudo_state = pseudo_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(pseudo_state.completed, "qps-ploc REPROCESS contention script should complete");
+    const auto pseudo_error = pseudo_state.globals.find("creplaceerror");
+    expect(pseudo_error != pseudo_state.globals.end(), "qps-ploc should capture the pseudo-localized timeout error");
+    if (pseudo_error != pseudo_state.globals.end()) {
+        const std::string message = copperfin::runtime::format_value(pseudo_error->second);
+        expect(message.starts_with("[!! ") && message.find("REPLACE") != std::string::npos &&
+                   message.find("(2)") != std::string::npos &&
+                   message != "REPLACE timed out waiting for record lock (2)",
+               "qps-ploc should decorate timeout prose while preserving placeholders");
+    }
+    expect(std::any_of(pseudo_state.events.begin(), pseudo_state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_timeout" &&
+               event.detail.find("REPLACE timeout recno=1 reprocess=2") != std::string::npos;
+    }), "qps-ploc should preserve invariant record-lock timeout telemetry");
 
     const auto count_retry_events = [&](const std::string& detail_fragment) {
         return static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [&](const auto& event) {

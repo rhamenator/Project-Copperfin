@@ -1114,6 +1114,7 @@
   "Runtime.Prg.Records.Error.InsertRequiresTargetField": "{command} requires at least one target field",
   "Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed": "{command} could not resolve target field names",
   "Runtime.Prg.Records.Error.LockRetryCancelled": "Lock retry cancelled.",
+  "Runtime.Prg.Records.Error.RecordLockTimeout": "{context} timed out waiting for record lock ({reprocess})",
   "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound": "Field not found on remote SQL cursor: {fieldName}",
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "This command requires a current local record",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "This command requires a current remote record",
