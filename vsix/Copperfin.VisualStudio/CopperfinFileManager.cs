@@ -42,7 +42,7 @@ internal static class CopperfinFileManager
             };
         }
 
-        var directory = Path.GetDirectoryName(path);
+        var directory = GetPosixContainingDirectory(path);
         return new ProcessStartInfo
         {
             FileName = "xdg-open",
@@ -88,5 +88,16 @@ internal static class CopperfinFileManager
     private static string QuoteArgument(string value)
     {
         return "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+    }
+
+    private static string GetPosixContainingDirectory(string path)
+    {
+        var separator = path.LastIndexOf('/');
+        if (separator < 0)
+        {
+            return path;
+        }
+
+        return separator == 0 ? "/" : path.Substring(0, separator);
     }
 }
