@@ -15,7 +15,8 @@ namespace Copperfin.VisualStudio;
 internal sealed class OpenInCopperfinStudioCommand
 {
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromVisualStudioUiCulture();
+    private static CopperfinLocalization Localization => CopperfinLocalization.FromVisualStudioUiCulture();
+    private const string CommandLabelKey = "VSIX.Command.OpenInStudio";
 
     private readonly AsyncPackage package;
 
@@ -40,8 +41,9 @@ internal sealed class OpenInCopperfinStudioCommand
             (_, _) => { _ = package.JoinableTaskFactory.RunAsync(() => ExecuteAsync(preference)); },
             menuCommandId)
         {
-            Text = Localization.Text("VSIX.Command.OpenInStudio")
+            Text = Localization.Text(CommandLabelKey)
         };
+        menuItem.BeforeQueryStatus += (_, _) => menuItem.Text = Localization.Text(CommandLabelKey);
         commandService.AddCommand(menuItem);
     }
 

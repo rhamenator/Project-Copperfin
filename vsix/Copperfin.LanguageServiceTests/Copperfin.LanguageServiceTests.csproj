@@ -18,6 +18,7 @@
     <Compile Include="VsixCommandLocalizationTests.cs" />
     <Compile Include="VsixCommandWindowTests.cs" />
     <Compile Include="VsixEditorPaneLocalizationTests.cs" />
+    <Compile Include="VsixLongLivedLocalizationTests.cs" />
     <Compile Include="VsixSnapshotModelTests.cs" />
     <Compile Include="..\Copperfin.Studio\CopperfinStudioStartupArguments.cs" Link="Shared\CopperfinStudioStartupArguments.cs" />
     <Compile Include="..\Copperfin.Studio\CopperfinStudioOpenDialogFilter.cs" Link="Shared\CopperfinStudioOpenDialogFilter.cs" />

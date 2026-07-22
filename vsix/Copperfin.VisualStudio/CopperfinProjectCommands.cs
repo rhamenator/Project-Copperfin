@@ -17,7 +17,7 @@ internal sealed class CopperfinProjectCommands
     private const int RunCommandId = 0x0201;
     private const int DebugCommandId = 0x0202;
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromVisualStudioUiCulture();
+    private static CopperfinLocalization Localization => CopperfinLocalization.FromVisualStudioUiCulture();
 
     private readonly AsyncPackage package;
 
@@ -26,9 +26,9 @@ internal sealed class CopperfinProjectCommands
         ThreadHelper.ThrowIfNotOnUIThread();
         this.package = package;
 
-        AddCommand(commandService, BuildCommandId, Localization.Text("VSIX.Command.BuildProject"), CopperfinProjectOperation.Build);
-        AddCommand(commandService, RunCommandId, Localization.Text("VSIX.Command.RunProject"), CopperfinProjectOperation.Run);
-        AddCommand(commandService, DebugCommandId, Localization.Text("VSIX.Command.DebugProject"), CopperfinProjectOperation.Debug);
+        AddCommand(commandService, BuildCommandId, "VSIX.Command.BuildProject", CopperfinProjectOperation.Build);
+        AddCommand(commandService, RunCommandId, "VSIX.Command.RunProject", CopperfinProjectOperation.Run);
+        AddCommand(commandService, DebugCommandId, "VSIX.Command.DebugProject", CopperfinProjectOperation.Debug);
     }
 
     public static async Task InitializeAsync(AsyncPackage package)
@@ -44,11 +44,15 @@ internal sealed class CopperfinProjectCommands
         _ = new CopperfinProjectCommands(package, commandService);
     }
 
-    private void AddCommand(OleMenuCommandService commandService, int commandId, string label, CopperfinProjectOperation operation)
+    private void AddCommand(OleMenuCommandService commandService, int commandId, string labelKey, CopperfinProjectOperation operation)
     {
         var menuCommand = new OleMenuCommand((_, _) => { _ = package.JoinableTaskFactory.RunAsync(() => ExecuteAsync(operation)); }, new CommandID(CommandSet, commandId));
-        menuCommand.Text = label;
-        menuCommand.BeforeQueryStatus += (_, _) => UpdateQueryStatus(menuCommand);
+        menuCommand.Text = Localization.Text(labelKey);
+        menuCommand.BeforeQueryStatus += (_, _) =>
+        {
+            menuCommand.Text = Localization.Text(labelKey);
+            UpdateQueryStatus(menuCommand);
+        };
         commandService.AddCommand(menuCommand);
     }
 
