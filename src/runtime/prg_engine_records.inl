@@ -2426,7 +2426,9 @@
                 return true;
             }
 
-            last_error_message = command_name + " requires exclusive use of the target cursor";
+            last_error_message = runtime_text(
+                "Runtime.Prg.Records.Error.RequiresExclusiveCursorForMaintenance",
+                {{"command", command_name}});
             return false;
         }
 

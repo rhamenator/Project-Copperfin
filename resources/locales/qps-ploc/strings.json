@@ -1524,6 +1524,7 @@
   "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound": "Field not found on remote SQL cursor: {fieldName}",
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "This command requires a current local record",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "This command requires a current remote record",
+  "Runtime.Prg.Records.Error.RequiresExclusiveCursorForMaintenance": "{command} requires exclusive use of the target cursor",
   "Runtime.Prg.Records.Error.TableLockTimeout": "{context} timed out waiting for table lock ({reprocess})",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "This command requires a local table-backed cursor",
   "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}",

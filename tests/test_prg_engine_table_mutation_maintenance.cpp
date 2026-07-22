@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -361,9 +362,12 @@ void test_set_exclusive_controls_table_maintenance_guards() {
     copperfin::runtime::PrgRuntimeSession shared_session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(shared_prg, temp_root));
 
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
     const auto shared_state = shared_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(shared_state.reason == copperfin::runtime::DebugPauseReason::error, "PACK on a shared local cursor should pause with an error");
-    expect(shared_state.message.find("exclusive use") != std::string::npos, "PACK shared-cursor failure should mention exclusive use");
+    expect(shared_state.message == "PACK requires exclusive use of the target cursor",
+           "en-US PACK shared-cursor failure should use the catalog message");
     expect(shared_state.globals.find("xafterpack") == shared_state.globals.end(), "PACK shared-cursor failure should stop before later statements");
 
     const auto default_exclusive = shared_state.globals.find("cdefaultexclusive");
@@ -380,6 +384,29 @@ void test_set_exclusive_controls_table_maintenance_guards() {
     const auto shared_parse = copperfin::vfp::parse_dbf_table_from_file(shared_path.string(), 5U);
     expect(shared_parse.ok, "shared PACK failure should leave the DBF readable");
     expect(shared_parse.table.records.size() == 3U, "shared PACK failure should not compact the DBF");
+
+    for (const auto& [locale, expected_text] : std::vector<std::pair<std::string, std::string>>{
+             {"es-419", "PACK requiere el uso exclusivo del cursor de destino"},
+             {"pt-BR", "PACK exige o uso exclusivo do cursor de destino"}}) {
+        set_env_value("COPPERFIN_LOCALE", locale, true);
+        auto localized_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(shared_prg, temp_root));
+        const auto localized_state = localized_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(localized_state.reason == copperfin::runtime::DebugPauseReason::error,
+               locale + " PACK shared-cursor failure should pause with an error");
+        expect(localized_state.message == expected_text,
+               locale + " PACK shared-cursor failure should use the localized catalog message");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    auto pseudo_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(shared_prg, temp_root));
+    const auto pseudo_state = pseudo_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(pseudo_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "qps-ploc PACK shared-cursor failure should pause with an error");
+    expect(pseudo_state.message.starts_with("[!! ") && pseudo_state.message.find("PACK") != std::string::npos &&
+               pseudo_state.message != "PACK requires exclusive use of the target cursor",
+           "qps-ploc PACK shared-cursor failure should pseudo-localize prose while preserving the command token");
 
     const fs::path exclusive_path = temp_root / "exclusive_people.dbf";
     write_people_dbf(exclusive_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
