@@ -114,13 +114,13 @@ Use this walkthrough for the release evidence ledger before tagging an MVP build
 
    ```powershell
    $package = "$env:COPPERFIN_ROOT\artifacts\runtime-smoke\SOLUTION"
-   $runtime = Get-Content "$package\app.cfmanifest" -Raw | ConvertFrom-Json
-   $debug = Get-Content "$package\app.cfdebug" -Raw | ConvertFrom-Json
-   $runtime | Select-Object schema, content_root, launcher_artifact
-   $debug | Select-Object schema, source_root, launcher_artifact
+   $runtime = Get-Content "$package\app.cfmanifest"
+   $debug = Get-Content "$package\app.cfdebug"
+   $runtime | Select-String '^(manifest_version|content_root|launcher_artifact)='
+   $debug | Select-String '^(debug_manifest_version|source_root|launcher_artifact)='
    ```
 
-   Confirm that `app.cfmanifest` points only to staged package content and that `app.cfdebug` retains source-side paths. Do not copy source paths into the runtime manifest or treat localized display text as a contract field.
+   These manifests are line-based `key=value` contracts, not JSON. Confirm that `app.cfmanifest` points only to staged package content and that `app.cfdebug` retains source-side paths. Do not copy source paths into the runtime manifest or treat localized display text as a contract field.
 
 3. Reproduce a paused runtime and recover it in order:
 
