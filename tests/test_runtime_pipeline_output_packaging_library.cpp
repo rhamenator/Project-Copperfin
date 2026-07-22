@@ -272,6 +272,15 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper source should declare a shared dispatch-execution helper.");
         expect(wrapper_source.find("static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(") != std::string::npos,
                "library-output wrapper source should declare a shared process-launch helper.");
+        const auto launch_declaration = wrapper_source.find(
+            "static CopperfinRuntimeBridgeProcessLaunch copperfin_runtime_bridge_launch_process(\n"
+            "    const CopperfinRuntimeBridgeDispatchExecution& dispatch_execution);\n");
+        const auto launch_test_hook = wrapper_source.find(
+            "COPPERFIN_EXPORT int copperfin_runtime_bridge_test_launch_environment(");
+        expect(launch_declaration != std::string::npos &&
+                   launch_test_hook != std::string::npos &&
+                   launch_declaration < launch_test_hook,
+               "library-output wrapper source should declare process launch before its test hook on every platform.");
         expect(wrapper_source.find("#include <windows.h>") != std::string::npos &&
                    wrapper_source.find("#include <unistd.h>") != std::string::npos,
                "library-output wrapper source should include native process-launch support.");
