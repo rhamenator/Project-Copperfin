@@ -48,6 +48,36 @@ internal static partial class Program
                "placed report objects should preserve numeric section indexes during managed deserialization");
     }
 
+    private static void TestReportSectionsPreserveNullableOrdinalMetadata()
+    {
+        const string liveJson =
+            "{\"id\":\"detail_4\",\"sectionIndex\":2,\"sectionCount\":5}";
+        const string deletedJson =
+            "{\"id\":\"deleted_detail\",\"deleted\":true,\"sectionIndex\":null,\"sectionCount\":0}";
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+        var live = JsonSerializer.Deserialize<CopperfinStudioReportSection>(liveJson, options);
+        Expect(live is not null &&
+               live.SectionIndex == 2 &&
+               live.SectionCount == 5,
+            "managed report sections should preserve native section ordinal metadata");
+
+        var deleted = JsonSerializer.Deserialize<CopperfinStudioReportSection>(deletedJson, options);
+        Expect(deleted is not null &&
+               deleted.Deleted &&
+               deleted.SectionIndex is null &&
+               deleted.SectionCount == 0,
+            "managed deleted report sections should preserve null section indexes and zero counts");
+
+        var missing = JsonSerializer.Deserialize<CopperfinStudioReportSection>(
+            "{\"id\":\"legacy\"}",
+            options);
+        Expect(missing is not null &&
+               missing.SectionIndex is null &&
+               missing.SectionCount is null,
+            "managed report sections should tolerate snapshots without ordinal metadata");
+    }
+
     private static void TestHostSnapshotPreservesUnplacedReportLayoutObjects()
     {
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };

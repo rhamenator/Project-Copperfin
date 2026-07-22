@@ -29,6 +29,7 @@ internal static partial class Program
         TestVsixEditorRegistrationLocalizesName();
         TestVsixEditorPaneUsesCurrentUiCulture();
         TestReportLayoutObjectPreservesNullableSectionIndex();
+        TestReportSectionsPreserveNullableOrdinalMetadata();
         TestHostSnapshotPreservesUnplacedReportLayoutObjects();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();

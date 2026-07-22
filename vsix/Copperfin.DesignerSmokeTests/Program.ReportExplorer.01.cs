@@ -213,6 +213,35 @@ internal static partial class Program
             "host-shaped report JSON should route its unplaced object to the unplaced explorer surface");
     }
 
+    private static void SmokeHostShapedReportAndLabelSectionOrdinals()
+    {
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        foreach (var assetFamily in new[] { "report", "label" })
+        {
+            var json =
+                "{\"AssetFamily\":\"" + assetFamily + "\",\"ReportLayout\":{" +
+                "\"IsLabel\":" + (assetFamily == "label" ? "true" : "false") +
+                ",\"Sections\":[{" +
+                "\"Id\":\"detail_4\",\"SectionIndex\":2,\"SectionCount\":5," +
+                "\"Title\":\"Detail\"}]," +
+                "\"DeletedSections\":[{" +
+                "\"Id\":\"deleted_detail\",\"Deleted\":true," +
+                "\"SectionIndex\":null,\"SectionCount\":0}]}}";
+
+            var document = JsonSerializer.Deserialize<CopperfinStudioSnapshotDocument>(json, options);
+            var layout = document?.ReportLayout;
+            var live = layout?.Sections.Count == 1 ? layout.Sections[0] : null;
+            var deleted = layout?.DeletedSections.Count == 1 ? layout.DeletedSections[0] : null;
+
+            Expect(document?.AssetFamily == assetFamily &&
+                   layout?.IsLabel == (assetFamily == "label") &&
+                   live is not null && live.SectionIndex == 2 && live.SectionCount == 5 &&
+                   deleted is not null && deleted.Deleted &&
+                   deleted.SectionIndex is null && deleted.SectionCount == 0,
+                $"host-shaped {assetFamily} snapshots should preserve live and deleted section ordinals");
+        }
+    }
+
     private static void SmokeReportSectionPropertyGridSelection()
     {
         var snapshot = new CopperfinStudioSnapshotDocument
