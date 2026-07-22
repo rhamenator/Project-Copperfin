@@ -355,6 +355,59 @@ void test_build_xasset_executable_model() {
     expect(bootstrap.find("DO __cf_Dataenvironment_CloseTables") != std::string::npos, "form bootstrap should call the data-environment close method after event-loop exit");
 }
 
+void test_xasset_routine_names_are_collision_resistant() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\collision.scx)";
+    document.kind = copperfin::studio::StudioAssetKind::form;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "foo-bar"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "custom"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Init\r\nRETURN 1\r\nENDPROC"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJNAME", .field_type = 'M', .display_value = "foo_bar"},
+            {.field_name = "BASECLASS", .field_type = 'M', .display_value = "custom"},
+            {.field_name = "METHODS", .field_type = 'M', .display_value = "PROCEDURE Init\r\nRETURN 2\r\nENDPROC"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "colliding xAsset method fixture should build successfully");
+    expect(model.methods.size() == 2U, "colliding xAsset method fixture should preserve both methods");
+    if (model.methods.size() == 2U) {
+        expect(model.methods[0].object_path == "foo-bar" && model.methods[1].object_path == "foo_bar",
+               "collision-resistant naming should preserve original object identities");
+        expect(model.methods[0].method_name == "Init" && model.methods[1].method_name == "Init",
+               "collision-resistant naming should preserve original method identities");
+        expect(model.methods[0].routine_name != model.methods[1].routine_name,
+               "sanitized xAsset routine names should be unique");
+        expect(model.methods[0].routine_name == "__cf_foo_bar_Init",
+               "the first sanitized xAsset routine should preserve its established name");
+        expect(model.methods[1].routine_name == "__cf_foo_bar_Init_2",
+               "a colliding sanitized xAsset routine should receive a deterministic suffix");
+
+        const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, false);
+        expect(bootstrap.find("PROCEDURE " + model.methods[0].routine_name) != std::string::npos,
+               "bootstrap should emit the first collision-resistant procedure");
+        expect(bootstrap.find("PROCEDURE " + model.methods[1].routine_name) != std::string::npos,
+               "bootstrap should emit the second collision-resistant procedure");
+    }
+    expect(model.actions.size() == 2U, "colliding xAsset methods should remain independently dispatchable");
+    for (const auto& action : model.actions) {
+        if (action.action_id == "foo-bar.init") {
+            expect(action.routine_name == "__cf_foo_bar_Init",
+                   "the first xAsset action should retain the established routine name");
+        } else if (action.action_id == "foo_bar.init") {
+            expect(action.routine_name == "__cf_foo_bar_Init_2",
+                   "the colliding xAsset action should follow its suffixed routine");
+        } else {
+            expect(false, "collision fixture should expose the original object/method action identity");
+        }
+    }
+}
+
 void test_build_class_library_xasset_executable_model() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\demo.vcx)";
@@ -972,6 +1025,7 @@ void test_build_real_menu_xasset_executable_model() {
 int main() {
     test_xasset_executable_model_errors_resolve_through_localization_catalog();
     test_build_xasset_executable_model();
+    test_xasset_routine_names_are_collision_resistant();
     test_build_class_library_xasset_executable_model();
     test_form_root_object_path_ignores_comments_and_data_environment();
     test_xasset_executable_model_suppresses_unresolved_memo_placeholders();

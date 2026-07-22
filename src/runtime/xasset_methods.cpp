@@ -10,6 +10,7 @@
 #include <optional>
 #include <sstream>
 #include <string_view>
+#include <unordered_set>
 
 namespace copperfin::runtime {
 
@@ -366,19 +367,6 @@ const XAssetMethod* find_method_by_object_method(
     return found == methods.end() ? nullptr : &*found;
 }
 
-bool has_method(
-    const std::vector<XAssetMethod>& methods,
-    const std::string& object_path,
-    const std::string& method_name,
-    std::string& routine_name) {
-    const auto* found = find_method_by_object_method(methods, object_path, method_name);
-    if (found == nullptr) {
-        return false;
-    }
-    routine_name = found->routine_name;
-    return true;
-}
-
 void append_unique_line(std::vector<std::string>& lines, std::string line) {
     line = trim_copy(std::move(line));
     if (line.empty()) {
@@ -481,12 +469,11 @@ std::optional<std::string> find_following_submenu_name(
     return std::nullopt;
 }
 
-std::optional<std::string> find_menu_action_routine(
+const XAssetMethod* find_menu_action_method(
     const std::vector<XAssetMethod>& methods,
     const std::string& object_path) {
-    std::string routine_name;
-    if (has_method(methods, object_path, "command", routine_name)) {
-        return routine_name;
+    if (const auto* command = find_method_by_object_method(methods, object_path, "command")) {
+        return command;
     }
 
     const std::string normalized_object = lowercase_copy(object_path);
@@ -497,19 +484,41 @@ std::optional<std::string> find_menu_action_routine(
         const std::string normalized_method = lowercase_copy(method.method_name);
         return normalized_method != "setup" && normalized_method != "cleanup";
     });
-    if (found == methods.end()) {
-        return std::nullopt;
-    }
-    return found->routine_name;
+    return found == methods.end() ? nullptr : &*found;
 }
 
-const XAssetMethod* find_method_by_routine_name(
-    const std::vector<XAssetMethod>& methods,
-    const std::string& routine_name) {
-    const auto found = std::find_if(methods.begin(), methods.end(), [&](const XAssetMethod& method) {
-        return method.routine_name == routine_name;
-    });
-    return found == methods.end() ? nullptr : &*found;
+void assign_collision_resistant_routine_names(std::vector<XAssetMethod>& methods) {
+    std::unordered_set<std::string> used_names;
+    used_names.reserve(methods.size());
+    for (auto& method : methods) {
+        const std::string base_name = method.routine_name;
+        std::string candidate = base_name;
+        std::size_t suffix = 2U;
+        while (!used_names.insert(lowercase_copy(candidate)).second) {
+            candidate = base_name + "_" + std::to_string(suffix++);
+        }
+        method.routine_name = std::move(candidate);
+    }
+}
+
+void refresh_menu_action_bindings(
+    std::vector<XAssetActionBinding>& actions,
+    const std::vector<XAssetMethod>& methods) {
+    for (auto& action : actions) {
+        const XAssetMethod* method = nullptr;
+        if (action.kind == "submenu") {
+            method = find_method_by_object_method(methods, action.action_id, "activate_popup");
+        } else {
+            method = find_menu_action_method(methods, action.action_id);
+        }
+        if (method == nullptr) {
+            continue;
+        }
+        action.routine_source_field_index = method->source_field_index;
+        action.routine_source_line_index = method->source_line_index;
+        action.routine_source_memo_block_number = method->source_memo_block_number;
+        action.routine_name = method->routine_name;
+    }
 }
 
 }  // namespace
@@ -554,9 +563,9 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 record.record_index, object_path, "cleanup", field_index_or_missing(record, "CLEANUP"), memo_block_number_or_zero(record, "CLEANUP"), value_or_empty(record, "CLEANUP")));
 
             if (is_menu_item_record(record)) {
-                std::optional<std::string> action_routine = find_menu_action_routine(model.methods, object_path);
+                const XAssetMethod* action_method = find_menu_action_method(model.methods, object_path);
                 std::string action_kind = "command";
-                if (!action_routine.has_value()) {
+                if (action_method == nullptr) {
                     if (const auto submenu_name = find_following_submenu_name(document, record_position)) {
                         const auto wrapped = make_wrapped_method(
                             record.record_index,
@@ -566,13 +575,13 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                             object_path,
                             "activate_popup",
                             "ACTIVATE POPUP " + *submenu_name);
-                        action_routine = wrapped.routine_name;
                         action_kind = "submenu";
                         model.methods.push_back(wrapped);
+                        action_method = &model.methods.back();
                     }
                 }
 
-                if (action_routine.has_value()) {
+                if (action_method != nullptr) {
                     std::string title = trim_copy(value_or_empty(record, "PROMPT"));
                     const std::size_t title_field_index = title.empty()
                         ? studio::StudioObjectMissingFieldIndex
@@ -583,18 +592,17 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                     if (title.empty()) {
                         title = object_path;
                     }
-                    const auto* routine_method = find_method_by_routine_name(model.methods, *action_routine);
                     model.actions.push_back(make_action_binding(
                         record.record_index,
                         title_field_index,
                         title_memo_block_number,
-                        routine_method == nullptr ? studio::StudioObjectMissingFieldIndex : routine_method->source_field_index,
-                        routine_method == nullptr ? studio::StudioObjectMissingLineIndex : routine_method->source_line_index,
-                        routine_method == nullptr ? 0U : routine_method->source_memo_block_number,
+                        action_method->source_field_index,
+                        action_method->source_line_index,
+                        action_method->source_memo_block_number,
                         object_path,
                         title,
                         action_kind,
-                        *action_routine));
+                        action_method->routine_name));
                 }
             }
         } else {
@@ -618,6 +626,11 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 model.root_object_path = object_path;
             }
         }
+    }
+
+    assign_collision_resistant_routine_names(model.methods);
+    if (document.kind == studio::StudioAssetKind::menu) {
+        refresh_menu_action_bindings(model.actions, model.methods);
     }
 
     if (document.kind == studio::StudioAssetKind::form || document.kind == studio::StudioAssetKind::class_library) {
