@@ -552,7 +552,8 @@ void test_generated_posix_bridge_environment_launch(const std::filesystem::path&
         "--copperfin-inherited-handle-probe");
     expect(exit_code == 0,
            "#4344: Windows generated bridge should launch the handle probe without inheriting the sentinel");
-    expect(read_text(output_path) == "not-inherited\n",
+    const std::string probe_output = read_text(output_path);
+    expect(probe_output == "not-inherited\n" || probe_output == "not-inherited\r\n",
            "#4344: Windows generated bridge child should not observe an unrelated inheritable handle");
 
     (void)::CloseHandle(sentinel);
