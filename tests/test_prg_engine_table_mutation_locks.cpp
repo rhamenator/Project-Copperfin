@@ -334,6 +334,84 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_reprocess_table_lock_timeouts_are_localized() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_lock_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_people_dbf(people_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const fs::path main_path = temp_root / "table_lock_localization.prg";
+    write_text(
+        main_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleOne SHARED IN 0\n"
+        "lHeldLock = FLOCK()\n"
+        "SET DATASESSION TO 2\n"
+        "SET MULTILOCKS ON\n"
+        "USE '" + people_path.string() + "' ALIAS PeopleTwo SHARED IN 0\n"
+        "SET REPROCESS TO 2\n"
+        "TRY\n"
+        "    APPEND BLANK\n"
+        "    lAppendBlocked = .F.\n"
+        "CATCH TO err_text\n"
+        "    lAppendBlocked = .T.\n"
+        "    cAppendError = err_text.Message\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    for (const auto& [locale, expected_text] : std::vector<std::pair<std::string, std::string>>{
+             {"en-US", "APPEND BLANK timed out waiting for table lock (2)"},
+             {"es-419", "APPEND BLANK agotó el tiempo de espera mientras esperaba el bloqueo de la tabla (2)"},
+             {"pt-BR", "APPEND BLANK atingiu o tempo limite aguardando o bloqueio da tabela (2)"}}) {
+        set_env_value("COPPERFIN_LOCALE", locale, true);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, locale + " table-lock contention script should complete");
+        const auto blocked = state.globals.find("lappendblocked");
+        const auto error = state.globals.find("cappenderror");
+        expect(blocked != state.globals.end(), locale + " should capture APPEND BLANK lock failure");
+        expect(error != state.globals.end(), locale + " should capture the table-lock timeout error");
+        if (blocked != state.globals.end()) {
+            expect(copperfin::runtime::format_value(blocked->second) == "true",
+                   locale + " APPEND BLANK should remain blocked by the held table lock");
+        }
+        if (error != state.globals.end()) {
+            expect(copperfin::runtime::format_value(error->second) == expected_text,
+                   locale + " should localize the table-lock timeout while preserving placeholders");
+        }
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.lock_timeout" &&
+                   event.detail.find("APPEND BLANK timeout reprocess=2") != std::string::npos;
+        }), locale + " should preserve invariant table-lock timeout telemetry");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    auto pseudo_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto pseudo_state = pseudo_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(pseudo_state.completed, "qps-ploc table-lock contention script should complete");
+    const auto pseudo_error = pseudo_state.globals.find("cappenderror");
+    expect(pseudo_error != pseudo_state.globals.end(), "qps-ploc should capture the pseudo-localized table-lock error");
+    if (pseudo_error != pseudo_state.globals.end()) {
+        const std::string message = copperfin::runtime::format_value(pseudo_error->second);
+        expect(message.starts_with("[!! ") && message.find("APPEND BLANK") != std::string::npos &&
+                   message.find("(2)") != std::string::npos &&
+                   message != "APPEND BLANK timed out waiting for table lock (2)",
+               "qps-ploc should decorate table-lock timeout prose while preserving placeholders");
+    }
+    expect(std::any_of(pseudo_state.events.begin(), pseudo_state.events.end(), [](const auto& event) {
+        return event.category == "runtime.lock_timeout" &&
+               event.detail.find("APPEND BLANK timeout reprocess=2") != std::string::npos;
+    }), "qps-ploc should preserve invariant table-lock timeout telemetry");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_lock_retry_blocking_is_rejected_inside_critical_section() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_lock_retry_critical_policy";

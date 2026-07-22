@@ -23,6 +23,7 @@ namespace copperfin::table_mutation_tests
     void test_lock_functions_and_unlock_command_track_session_locks();
     void test_replacing_a_used_work_area_releases_prior_table_locks();
     void test_reprocess_contention_retries_and_mutation_lock_timeouts();
+    void test_reprocess_table_lock_timeouts_are_localized();
     void test_lock_retry_blocking_is_rejected_inside_critical_section();
     void test_rlock_retry_blocking_is_rejected_inside_critical_section();
     void test_flock_retry_blocking_is_rejected_inside_critical_section();

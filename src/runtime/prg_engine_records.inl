@@ -1136,7 +1136,9 @@
                                       .location = location});
                     if (!explicit_lock_command)
                     {
-                        last_error_message = context + " timed out waiting for table lock (" + policy.display_value + ")";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Records.Error.TableLockTimeout",
+                            {{"context", context}, {"reprocess", policy.display_value}});
                     }
                     return false;
                 }

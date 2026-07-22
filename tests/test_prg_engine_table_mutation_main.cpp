@@ -29,6 +29,7 @@ int main()
     test_lock_functions_and_unlock_command_track_session_locks();
     test_replacing_a_used_work_area_releases_prior_table_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
+    test_reprocess_table_lock_timeouts_are_localized();
     test_lock_retry_blocking_is_rejected_inside_critical_section();
     test_rlock_retry_blocking_is_rejected_inside_critical_section();
     test_flock_retry_blocking_is_rejected_inside_critical_section();
