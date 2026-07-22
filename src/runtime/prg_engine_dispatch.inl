@@ -1976,7 +1976,8 @@
                     target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
                         target_path;
                 }
-                if (!std::filesystem::exists(target_path))
+                std::error_code target_exists_error;
+                if (!std::filesystem::exists(target_path, target_exists_error) || target_exists_error)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
@@ -2203,7 +2204,8 @@
                         target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
                             target_path;
                     }
-                    if (!std::filesystem::exists(target_path))
+                    std::error_code target_exists_error;
+                    if (!std::filesystem::exists(target_path, target_exists_error) || target_exists_error)
                     {
                         last_error_message = runtime_text(
                             "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed",
@@ -2441,7 +2443,8 @@
                         target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
                             target_path;
                     }
-                    if (std::filesystem::exists(target_path))
+                    std::error_code target_exists_error;
+                    if (std::filesystem::exists(target_path, target_exists_error) && !target_exists_error)
                     {
                         if (!can_push_frame())
                         {
@@ -2473,7 +2476,8 @@
                 events.push_back({.category = "form.open",
                                   .detail = copperfin::platform::path_to_utf8_string(form_path.lexically_normal()),
                                   .location = statement.location});
-                if (std::filesystem::exists(form_path))
+                std::error_code form_exists_error;
+                if (std::filesystem::exists(form_path, form_exists_error) && !form_exists_error)
                 {
                     if (const auto bootstrap_path = materialize_xasset_bootstrap(
                             copperfin::platform::path_to_utf8_string(form_path), true))

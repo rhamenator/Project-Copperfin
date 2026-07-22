@@ -702,6 +702,65 @@ void test_do_form_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_prg_filesystem_status_errors_become_runtime_results() {
+#if !defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_filesystem_status";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path loop_root = temp_root / "status_loop";
+    fs::create_symlink(loop_root, loop_root, ignored);
+    if (ignored) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto run_script = [&](const std::string &name, const std::string &source) {
+        const fs::path main_path = temp_root / (name + ".prg");
+        write_text(main_path, source);
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const fs::path table_path = loop_root / "people.dbf";
+    const auto use_state = run_script("use_status_error", "USE '" + table_path.string() + "' ALIAS People\nRETURN\n");
+    expect(use_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#4399: USE filesystem status errors should become runtime faults");
+    expect(use_state.message == "Unable to resolve USE target: " + table_path.lexically_normal().string(),
+           "#4399: USE filesystem status errors should preserve the localized target diagnostic");
+
+    const fs::path program_path = loop_root / "worker.prg";
+    const auto do_state = run_script("do_status_error", "DO " + program_path.string() + "\nRETURN\n");
+    expect(do_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#4399: DO filesystem status errors should become runtime faults");
+    expect(do_state.message == "Unable to resolve DO target: " + program_path.string(),
+           "#4399: DO filesystem status errors should preserve the localized target diagnostic");
+
+    const auto call_state = run_script("call_status_error", "CALL " + program_path.string() + "\nRETURN\n");
+    expect(call_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#4399: CALL filesystem status errors should become runtime faults");
+    expect(call_state.message == "Unable to resolve CALL target: " + program_path.string(),
+           "#4399: CALL filesystem status errors should preserve the localized target diagnostic");
+
+    const auto spawn_state = run_script(
+        "spawn_status_error",
+        "SPAWN " + program_path.string() + " TO nTask\nRETURN\n");
+    expect(spawn_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#4399: SPAWN filesystem status errors should become runtime faults");
+    expect(spawn_state.message == "Unable to resolve SPAWN target: " + program_path.string(),
+           "#4399: SPAWN filesystem status errors should preserve the localized target diagnostic");
+
+    const fs::path form_path = loop_root / "form.scx";
+    const auto form_state = run_script("form_status_error", "DO FORM '" + form_path.string() + "'\nRETURN\n");
+    expect(form_state.completed,
+           "#4399: DO FORM filesystem status errors should preserve the existing missing-form completion behavior");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_do_command_macro_target() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_do_macro_target";
@@ -1837,6 +1896,7 @@ int main() {
     test_report_form_pause();
     test_label_form_pause();
     test_do_form_pause();
+    test_prg_filesystem_status_errors_become_runtime_results();
     test_do_command_macro_target();
     test_export_vfp_compatibility_corpus_script();
     test_work_area_and_data_session_compatibility();

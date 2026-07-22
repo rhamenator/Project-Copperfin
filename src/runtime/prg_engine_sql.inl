@@ -547,7 +547,8 @@
                 table_path = table_path.lexically_normal();
                 const bool has_verified_primary =
                     find_verified_file_byte_override(table_path) != options.verified_file_byte_overrides.end();
-                if (!std::filesystem::exists(table_path) &&
+                std::error_code table_exists_error;
+                if ((!std::filesystem::exists(table_path, table_exists_error) || table_exists_error) &&
                     !(options.require_verified_file_byte_overrides && has_verified_primary))
                 {
                     last_error_message = use_target_resolve_message(table_path);
