@@ -82,4 +82,4 @@ POSIX and macOS do not claim this Windows trust boundary yet. Until platform-spe
 
 ## Fixture Evidence
 
-`test_package_launcher_inventory_trust` covers canonical ordering, traversal rejection, unknown signer IDs, invalid signatures, and an RFC 8032 Ed25519 public verification vector. No private or machine-specific key is embedded. A future release-signing integration test must add a detached signature over the canonical envelope using an external key reference and must exercise modified, removed, duplicate, and ambiguous artifacts through the Windows guard.
+`test_package_launcher_inventory_trust` covers canonical ordering, traversal rejection, unknown signer IDs, invalid signatures, strict textual signature-sidecar parsing and signer matching, and an RFC 8032 Ed25519 public verification vector. No private or machine-specific key is embedded. A future release-signing integration test must add a detached signature over the canonical envelope using an external key reference and must exercise modified, removed, duplicate, and ambiguous artifacts through the Windows guard.

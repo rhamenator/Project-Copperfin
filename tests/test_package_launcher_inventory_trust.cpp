@@ -47,6 +47,12 @@ constexpr std::array<std::uint8_t, 64> kFixtureEnvelopeSignature{
     0xc9, 0xfc, 0xac, 0xdf, 0x83, 0x63, 0x2b, 0x0f
 };
 
+constexpr std::string_view kFixtureSignatureSidecar =
+    "launcher_signature_version=1\n"
+    "signature_algorithm=ed25519\n"
+    "signer_key_id=rfc8032\n"
+    "signature_base64=+Mp9m9AmWpehHm8ctz2Zj4w0UHrJA17X5ojxqZgBmQ6bnObhcA7CIdy1e5HHE4fMJDPAt4GU3CfJ/Kzfg2MrDw==\n";
+
 void expect(const bool condition, const char* message) {
     if (!condition) {
         std::cerr << message << '\n';
@@ -91,6 +97,21 @@ int main() {
     expect(
         valid.status == LauncherInventoryVerificationStatus::valid,
         "canonical inventory signed by the public RFC fixture must verify");
+    const auto parsed_sidecar =
+        copperfin::package_trust::parse_launcher_inventory_signature_sidecar(
+            kFixtureSignatureSidecar);
+    expect(parsed_sidecar.has_value(), "valid signature sidecar should parse");
+    expect(
+        parsed_sidecar->signer_key_id == "rfc8032" &&
+            parsed_sidecar->detached_signature == kFixtureEnvelopeSignature,
+        "signature sidecar should preserve signer ID and detached bytes");
+    const auto valid_sidecar = copperfin::package_trust::verify_signed_launcher_inventory(
+        envelope,
+        kFixtureSignatureSidecar,
+        trusted_keys);
+    expect(
+        valid_sidecar.status == LauncherInventoryVerificationStatus::valid,
+        "valid textual signature sidecar must verify");
     const auto unknown = copperfin::package_trust::verify_signed_launcher_inventory(
         envelope,
         kFixtureEmptyMessageSignature,
@@ -131,6 +152,30 @@ int main() {
     expect(
         malformed.status == LauncherInventoryVerificationStatus::malformed_envelope,
         "traversal inventory paths must be rejected as malformed");
+
+    const auto malformed_sidecar =
+        copperfin::package_trust::verify_signed_launcher_inventory(
+            envelope,
+            "launcher_signature_version=1\n"
+            "signature_algorithm=ed25519\n"
+            "signer_key_id=rfc8032\n"
+            "signature_base64=not-a-signature\n",
+            trusted_keys);
+    expect(
+        malformed_sidecar.status == LauncherInventoryVerificationStatus::malformed_envelope,
+        "malformed signature sidecars must fail closed");
+
+    const auto mismatched_sidecar =
+        copperfin::package_trust::verify_signed_launcher_inventory(
+            envelope,
+            "launcher_signature_version=1\n"
+            "signature_algorithm=ed25519\n"
+            "signer_key_id=other-key\n"
+            "signature_base64=+Mp9m9AmWpehHm8ctz2Zj4w0UHrJA17X5ojxqZgBmQ6bnObhcA7CIdy1e5HHE4fMJDPAt4GU3CfJ/Kzfg2MrDw==\n",
+            trusted_keys);
+    expect(
+        mismatched_sidecar.status == LauncherInventoryVerificationStatus::malformed_envelope,
+        "sidecar signer mismatch must fail as malformed");
 
     auto duplicates = artifacts;
     duplicates.push_back(artifacts.front());

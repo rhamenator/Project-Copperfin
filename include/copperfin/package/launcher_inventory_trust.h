@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -31,6 +32,11 @@ struct LauncherInventoryTrustedKey {
     std::array<std::uint8_t, 32> public_key{};
 };
 
+struct LauncherInventorySignatureSidecar {
+    std::string signer_key_id;
+    std::array<std::uint8_t, 64> detached_signature{};
+};
+
 struct LauncherInventoryVerificationResult {
     LauncherInventoryVerificationStatus status =
         LauncherInventoryVerificationStatus::malformed_envelope;
@@ -43,11 +49,24 @@ struct LauncherInventoryVerificationResult {
     std::string_view signer_key_id,
     std::span<const LauncherInventoryArtifact> artifacts);
 
+// Parses the exact UTF-8/LF textual app.cftrust.sig sidecar. The returned
+// signature is decoded only after the sidecar's version, algorithm, signer,
+// and line-ending contract have been validated.
+[[nodiscard]] std::optional<LauncherInventorySignatureSidecar>
+parse_launcher_inventory_signature_sidecar(std::string_view sidecar);
+
 // Verifies only the launcher-inventory trust contract. Package-file hashes,
 // containment, and Windows process identity remain separate guard checks.
 [[nodiscard]] LauncherInventoryVerificationResult verify_signed_launcher_inventory(
     std::string_view envelope,
     const std::array<std::uint8_t, 64>& detached_signature,
+    std::span<const LauncherInventoryTrustedKey> trusted_keys);
+
+// Parses and verifies the textual detached-signature sidecar, including the
+// requirement that its signer ID exactly match the signed inventory.
+[[nodiscard]] LauncherInventoryVerificationResult verify_signed_launcher_inventory(
+    std::string_view envelope,
+    std::string_view signature_sidecar,
     std::span<const LauncherInventoryTrustedKey> trusted_keys);
 
 }  // namespace copperfin::package_trust

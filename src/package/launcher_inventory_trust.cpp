@@ -4,6 +4,7 @@
 
 #include "copperfin/package/launcher_inventory_trust.h"
 
+#include "base64.h"
 #include "ed25519_verify.h"
 
 #include <algorithm>
@@ -16,6 +17,7 @@ namespace {
 constexpr std::string_view kVersion = "launcher_inventory_version=1";
 constexpr std::string_view kHashAlgorithm = "hash_algorithm=sha256";
 constexpr std::string_view kSignatureAlgorithm = "signature_algorithm=ed25519";
+constexpr std::string_view kSidecarVersion = "launcher_signature_version=1";
 
 bool safe_token(std::string_view value) {
     if (value.empty()) {
@@ -46,6 +48,12 @@ bool valid_digest(std::string_view value) {
     return std::all_of(value.begin(), value.end(), [](const char ch) {
         return (ch >= '0' && ch <= '9') ||
             (ch >= 'a' && ch <= 'f');
+    });
+}
+
+bool contains_whitespace(std::string_view value) {
+    return std::any_of(value.begin(), value.end(), [](const char ch) {
+        return std::isspace(static_cast<unsigned char>(ch)) != 0;
     });
 }
 
@@ -105,6 +113,36 @@ std::vector<std::string_view> split_lines(std::string_view envelope) {
         return {};
     }
     return lines;
+}
+
+std::optional<LauncherInventorySignatureSidecar> parse_signature_sidecar(
+    std::string_view sidecar) {
+    const auto lines = split_lines(sidecar);
+    if (lines.size() != 4U || lines[0] != kSidecarVersion ||
+        lines[1] != kSignatureAlgorithm ||
+        !lines[2].starts_with("signer_key_id=") ||
+        !lines[3].starts_with("signature_base64=")) {
+        return std::nullopt;
+    }
+
+    const std::string_view signer_key_id = lines[2].substr(
+        std::string_view("signer_key_id=").size());
+    const std::string_view signature_base64 = lines[3].substr(
+        std::string_view("signature_base64=").size());
+    if (!safe_token(signer_key_id) || signature_base64.empty() ||
+        contains_whitespace(signature_base64)) {
+        return std::nullopt;
+    }
+
+    const auto decoded = licensing::base64_decode(std::string(signature_base64));
+    if (!decoded.has_value() || decoded->size() != 64U) {
+        return std::nullopt;
+    }
+
+    LauncherInventorySignatureSidecar result;
+    result.signer_key_id = std::string(signer_key_id);
+    std::copy(decoded->begin(), decoded->end(), result.detached_signature.begin());
+    return result;
 }
 
 bool parse_artifact(
@@ -190,6 +228,11 @@ std::string canonical_launcher_inventory_envelope(
     return output.str();
 }
 
+std::optional<LauncherInventorySignatureSidecar>
+parse_launcher_inventory_signature_sidecar(const std::string_view sidecar) {
+    return parse_signature_sidecar(sidecar);
+}
+
 LauncherInventoryVerificationResult verify_signed_launcher_inventory(
     const std::string_view envelope,
     const std::array<std::uint8_t, 64>& detached_signature,
@@ -217,6 +260,26 @@ LauncherInventoryVerificationResult verify_signed_launcher_inventory(
         return result;
     }
     result.status = LauncherInventoryVerificationStatus::valid;
+    return result;
+}
+
+LauncherInventoryVerificationResult verify_signed_launcher_inventory(
+    const std::string_view envelope,
+    const std::string_view signature_sidecar,
+    const std::span<const LauncherInventoryTrustedKey> trusted_keys) {
+    const auto parsed_sidecar = parse_signature_sidecar(signature_sidecar);
+    if (!parsed_sidecar.has_value()) {
+        return {};
+    }
+
+    auto result = verify_signed_launcher_inventory(
+        envelope,
+        parsed_sidecar->detached_signature,
+        trusted_keys);
+    if (result.status == LauncherInventoryVerificationStatus::malformed_envelope ||
+        result.signer_key_id != parsed_sidecar->signer_key_id) {
+        result.status = LauncherInventoryVerificationStatus::malformed_envelope;
+    }
     return result;
 }
 
