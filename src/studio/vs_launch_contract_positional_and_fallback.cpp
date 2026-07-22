@@ -9,10 +9,10 @@ namespace copperfin::studio {
 LaunchArgumentDispatchOutcome try_parse_positional_and_fallback(
     const std::string& argument,
     const localization::LocalizedCatalog& catalog,
-    const std::vector<std::string>& args,
-    std::size_t& index,
+    [[maybe_unused]] const std::vector<std::string>& args,
+    [[maybe_unused]] std::size_t& index,
     LaunchParseResult& result,
-    std::string& parsed_argument_error) {
+    [[maybe_unused]] std::string& parsed_argument_error) {
 if (!argument.empty() && argument[0] == '-') {
             result = {.ok = false, .error = localized_unknown_argument(catalog, argument)}; return {true, true};
         }

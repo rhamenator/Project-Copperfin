@@ -12,7 +12,7 @@ LaunchArgumentDispatchOutcome try_parse_property_commands(
     const std::vector<std::string>& args,
     std::size_t& index,
     LaunchParseResult& result,
-    std::string& parsed_argument_error) {
+    [[maybe_unused]] std::string& parsed_argument_error) {
 if (argument == "--set-property") {
             result.request.apply_property_update = true;
             return {true, false};

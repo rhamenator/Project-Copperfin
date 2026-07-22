@@ -12,7 +12,7 @@ LaunchArgumentDispatchOutcome try_parse_layout_actions(
     const std::vector<std::string>& args,
     std::size_t& index,
     LaunchParseResult& result,
-    std::string& parsed_argument_error) {
+    [[maybe_unused]] std::string& parsed_argument_error) {
 if (argument == "--align-object") {
             result.request.align_object = true;
             return {true, false};

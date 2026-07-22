@@ -12,7 +12,7 @@ LaunchArgumentDispatchOutcome try_parse_object_lifecycle(
     const std::vector<std::string>& args,
     std::size_t& index,
     LaunchParseResult& result,
-    std::string& parsed_argument_error) {
+    [[maybe_unused]] std::string& parsed_argument_error) {
 if (argument == "--delete-object") {
             result.request.delete_object = true;
             return {true, false};

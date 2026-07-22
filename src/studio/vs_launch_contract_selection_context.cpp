@@ -12,7 +12,7 @@ LaunchArgumentDispatchOutcome try_parse_selection_context(
     const std::vector<std::string>& args,
     std::size_t& index,
     LaunchParseResult& result,
-    std::string& parsed_argument_error) {
+    [[maybe_unused]] std::string& parsed_argument_error) {
 if (argument == "--clear-parent") {
             result.request.clear_parent = true;
             return {true, false};
