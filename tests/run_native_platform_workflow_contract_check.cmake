@@ -420,6 +420,30 @@ require_text(".github/workflows/windows-deep-validation.yml"
 require_text(".github/workflows/windows-deep-validation.yml"
     [=[name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-build-${{ inputs.build_jobs }}-test-${{ inputs.test_jobs }}]=]
     "Windows deep-validation build/test job artifact identity")
+require_text(".github/workflows/windows-deep-validation.yml"
+    [=[      require_vfp9_samples:
+        description: Fail closed unless the installed VFP9 sample corpus is available.
+        required: true
+        default: false
+        type: boolean
+      vfp9_root:]=]
+    "explicit VFP9 prerequisite inputs")
+require_text(".github/workflows/windows-deep-validation.yml"
+    [=[-OutputPath artifacts/windows-deep-validation-metrics/vfp9-sample-prerequisite.json]=]
+    "machine-readable VFP9 prerequisite output")
+require_text(".github/workflows/windows-deep-validation.yml"
+    [=[-Require:$${{ inputs.require_vfp9_samples }}]=]
+    "fail-closed VFP9 prerequisite mode")
+require_text("scripts/check-windows-vfp9-samples.ps1"
+    "windows-vfp9-sample-prerequisite"
+    "VFP9 prerequisite result identity")
+require_text("scripts/check-windows-vfp9-samples.ps1"
+    "no VFP9 sample coverage is claimed"
+    "explicit missing-sample coverage warning")
+require_text_count(".github/workflows/windows-deep-validation.yml"
+    [=[if: ${{ steps.vfp9_samples.outputs.available == 'true' }}]=]
+    4
+    "VFP9-dependent smoke guards")
 foreach(deep_step IN ITEMS
         "Build Visual Studio extension"
         "Build standalone Studio shell"

@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Windows Deep Validation now runs `scripts/check-windows-vfp9-samples.ps1` before smoke stages. It writes `artifacts/windows-deep-validation-metrics/vfp9-sample-prerequisite.json`, skips only VFP9-dependent runtime/package, xAsset, report, and menu stages when the proprietary corpus is absent, and warns that no sample coverage is claimed. Dispatch release validation with `require_vfp9_samples=true` and a valid `vfp9_root`/`COPPERFIN_VFP9_ROOT`; missing samples then fail closed (#4408).
+
 - Shipped #4406 workflow hardening: the Windows installer now retries Chocolatey NSIS installation, verifies `C:\Program Files (x86)\NSIS\makensis.exe`, and fails at setup if the compiler is unavailable instead of allowing CPack to produce a misleading missing-artifact error. Preserve the NSIS/ZIP generator and exact artifact contracts; the original trigger was Chocolatey feed HTTP 503 on run `29937993087`.
 
 - Shipped #4405: `export_database_as_json` now probes the DBC path with the non-throwing `std::filesystem::exists(path, error_code)` overload, preserving the localized missing-DBC error and empty JSON result when an inaccessible parent produces a filesystem status error. `test_vfp_assets` adds a POSIX permission-denied regression and restores permissions before cleanup; retain Windows ACL validation in the hosted native lane.

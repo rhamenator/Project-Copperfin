@@ -27,6 +27,16 @@ on:
         options:
           - '1'
           - '2'
+      require_vfp9_samples:
+        description: Fail closed unless the installed VFP9 sample corpus is available.
+        required: true
+        default: false
+        type: boolean
+      vfp9_root:
+        description: Installed VFP9 root on the Windows runner.
+        required: false
+        default: 'C:\Program Files (x86)\Microsoft Visual FoxPro 9'
+        type: string
 
 permissions:
   contents: read
@@ -46,6 +56,15 @@ jobs:
           & ./scripts/measure-windows-validation.ps1
           -Mode Initialize
           -MetricsDirectory artifacts/windows-deep-validation-metrics
+
+      - name: Check VFP9 sample prerequisite
+        id: vfp9_samples
+        shell: pwsh
+        run: >-
+          & ./scripts/check-windows-vfp9-samples.ps1
+          -Root '${{ inputs.vfp9_root }}'
+          -Require:$${{ inputs.require_vfp9_samples }}
+          -OutputPath artifacts/windows-deep-validation-metrics/vfp9-sample-prerequisite.json
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
@@ -177,6 +196,7 @@ jobs:
           -SampleResources
 
       - name: Run runtime package smoke test
+        if: ${{ steps.vfp9_samples.outputs.available == 'true' }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
@@ -201,6 +221,7 @@ jobs:
           -SampleResources
 
       - name: Run xAsset bootstrap smoke test
+        if: ${{ steps.vfp9_samples.outputs.available == 'true' }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
@@ -213,6 +234,7 @@ jobs:
           -SampleResources
 
       - name: Run report xAsset smoke test
+        if: ${{ steps.vfp9_samples.outputs.available == 'true' }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
@@ -225,6 +247,7 @@ jobs:
           -SampleResources
 
       - name: Run menu xAsset smoke test
+        if: ${{ steps.vfp9_samples.outputs.available == 'true' }}
         shell: pwsh
         run: >-
           & ./scripts/measure-windows-validation.ps1
