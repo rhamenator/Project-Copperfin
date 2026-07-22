@@ -167,6 +167,28 @@ set_source_files_properties(
 # cf_licensing is intentionally dependency-free (no cf_localization link) so
 # it stays trivially unit-testable offline; see license_status.h.
 
+add_library(cf_package_trust
+    src/package/launcher_inventory_trust.cpp
+)
+
+target_include_directories(cf_package_trust
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/licensing
+)
+
+if(MSVC)
+    target_compile_options(cf_package_trust PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_package_trust PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Package trust may reuse the verify-only cryptographic primitive, but it has
+# its own envelope, key registry, and verification API. It must not consume
+# license parsing or license-status decisions.
+target_link_libraries(cf_package_trust PRIVATE cf_licensing)
+
 add_library(cf_platform_profile
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp

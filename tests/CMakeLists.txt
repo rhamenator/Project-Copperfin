@@ -571,6 +571,23 @@ add_test(
     COMMAND $<TARGET_FILE:test_licensing_status>
 )
 
+add_executable(test_package_launcher_inventory_trust
+    test_package_launcher_inventory_trust.cpp
+)
+target_link_libraries(test_package_launcher_inventory_trust PRIVATE cf_package_trust)
+target_include_directories(test_package_launcher_inventory_trust PRIVATE ${CMAKE_SOURCE_DIR}/src/licensing)
+
+if(MSVC)
+    target_compile_options(test_package_launcher_inventory_trust PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_package_launcher_inventory_trust PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_package_launcher_inventory_trust
+    COMMAND $<TARGET_FILE:test_package_launcher_inventory_trust>
+)
+
 add_test(
     NAME test_focused_workflow_path_filters
     COMMAND ${CMAKE_COMMAND}
