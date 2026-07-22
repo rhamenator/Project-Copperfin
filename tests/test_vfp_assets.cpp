@@ -505,6 +505,74 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
         "#4355: asset inspector diagnostics should refresh after in-process locale changes");
 }
 
+#if !defined(_WIN32)
+void test_inspect_asset_inaccessible_path_returns_structured_failure() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir =
+        fs::temp_directory_path() / "copperfin_vfp_asset_inaccessible_path_tests";
+    const fs::path restricted_dir = temp_dir / "restricted";
+    const fs::path asset_path = restricted_dir / "blocked.dbf";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(restricted_dir);
+
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(asset_path, std::ios::binary);
+        output.write(
+            reinterpret_cast<const char*>(bytes.data()),
+            static_cast<std::streamsize>(bytes.size()));
+    }
+
+    std::error_code status_error;
+    const fs::perms original_permissions = fs::status(restricted_dir, status_error).permissions();
+    expect(
+        !status_error,
+        "#4354: inaccessible asset fixture should report its original directory permissions");
+    if (status_error) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    fs::permissions(
+        restricted_dir,
+        fs::perms::none,
+        fs::perm_options::replace,
+        status_error);
+    expect(
+        !status_error,
+        "#4354: inaccessible asset fixture should remove directory permissions");
+    if (status_error) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    std::ifstream permission_probe(asset_path, std::ios::binary);
+    const bool access_is_denied = !permission_probe.good();
+    expect(
+        access_is_denied,
+        "#4354: inaccessible asset fixture should be unreadable when the host enforces POSIX permissions");
+    permission_probe.close();
+
+    if (access_is_denied) {
+        const auto result = copperfin::vfp::inspect_asset(asset_path.string());
+        expect(
+            !result.ok,
+            "#4354: inaccessible asset inspection should return a structured failure instead of throwing");
+        expect(
+            result.error == "Path does not exist.",
+            "#4354: inaccessible asset inspection should preserve the existing missing-path contract");
+    }
+
+    fs::permissions(
+        restricted_dir,
+        original_permissions,
+        fs::perm_options::replace,
+        ignored);
+    fs::remove_all(temp_dir, ignored);
+}
+#endif
+
 void test_parse_index_probe_for_cdx() {
     const auto bytes = make_synthetic_cdx_family_bytes(true, true);
 
@@ -2154,6 +2222,9 @@ int main() {
     test_vfp_header_and_index_default_catalog_refresh();
     test_asset_family_detection();
     test_asset_inspector_errors_resolve_through_localization_catalog();
+#if !defined(_WIN32)
+    test_inspect_asset_inaccessible_path_returns_structured_failure();
+#endif
     test_parse_index_probe_for_cdx();
     test_parse_cdx_header_root_offset_beyond_16_bits();
     test_parse_index_probe_for_dcx();
