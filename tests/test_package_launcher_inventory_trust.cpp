@@ -165,6 +165,18 @@ int main() {
         malformed_sidecar.status == LauncherInventoryVerificationStatus::malformed_envelope,
         "malformed signature sidecars must fail closed");
 
+    const auto noncanonical_sidecar =
+        copperfin::package_trust::verify_signed_launcher_inventory(
+            envelope,
+            "launcher_signature_version=1\n"
+            "signature_algorithm=ed25519\n"
+            "signer_key_id=rfc8032\n"
+            "signature_base64=+Mp9m9AmWpehHm8ctz2Zj4w0UHrJA17X5ojxqZgBmQ6bnObhcA7CIdy1e5HHE4fMJDPAt4GU3CfJ/Kzfg=0=\n",
+            trusted_keys);
+    expect(
+        noncanonical_sidecar.status == LauncherInventoryVerificationStatus::malformed_envelope,
+        "noncanonical signature base64 padding must fail closed");
+
     const auto mismatched_sidecar =
         copperfin::package_trust::verify_signed_launcher_inventory(
             envelope,

@@ -57,6 +57,16 @@ bool contains_whitespace(std::string_view value) {
     });
 }
 
+bool canonical_signature_base64(std::string_view value) {
+    if (value.size() != 88U || value.substr(86U) != "==") {
+        return false;
+    }
+    return std::all_of(value.begin(), value.begin() + 86U, [](const char ch) {
+        return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') ||
+            (ch >= '0' && ch <= '9') || ch == '+' || ch == '/';
+    });
+}
+
 int role_order(std::string_view role) {
     if (role == "public_apphost") {
         return 0;
@@ -129,7 +139,7 @@ std::optional<LauncherInventorySignatureSidecar> parse_signature_sidecar(
         std::string_view("signer_key_id=").size());
     const std::string_view signature_base64 = lines[3].substr(
         std::string_view("signature_base64=").size());
-    if (!safe_token(signer_key_id) || signature_base64.empty() ||
+    if (!safe_token(signer_key_id) || !canonical_signature_base64(signature_base64) ||
         contains_whitespace(signature_base64)) {
         return std::nullopt;
     }
