@@ -281,6 +281,15 @@ require_text(".github/workflows/build-installers.yml"
     "linux-deb-rpm-installers:"
     "Linux installer job")
 require_text(".github/workflows/build-installers.yml"
+    "--retry-count=3 --retry-delay=5"
+    "NSIS package-feed retry contract")
+require_text(".github/workflows/build-installers.yml"
+    "Test-Path -LiteralPath $makensis -PathType Leaf"
+    "NSIS compiler availability contract")
+require_text(".github/workflows/build-installers.yml"
+    "NSIS compiler verification failed with exit code"
+    "NSIS compiler execution verification")
+require_text(".github/workflows/build-installers.yml"
     "cpack --config build/CPackConfig.cmake -B build/package -C Release -G \"NSIS;ZIP\""
     "Windows CPack generator inventory")
 require_text(".github/workflows/build-installers.yml"

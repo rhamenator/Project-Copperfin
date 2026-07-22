@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Shipped #4406 workflow hardening: the Windows installer now retries Chocolatey NSIS installation, verifies `C:\Program Files (x86)\NSIS\makensis.exe`, and fails at setup if the compiler is unavailable instead of allowing CPack to produce a misleading missing-artifact error. Preserve the NSIS/ZIP generator and exact artifact contracts; the original trigger was Chocolatey feed HTTP 503 on run `29937993087`.
+
 - Shipped #4405: `export_database_as_json` now probes the DBC path with the non-throwing `std::filesystem::exists(path, error_code)` overload, preserving the localized missing-DBC error and empty JSON result when an inaccessible parent produces a filesystem status error. `test_vfp_assets` adds a POSIX permission-denied regression and restores permissions before cleanup; retain Windows ACL validation in the hosted native lane.
 
 - #4387 trust verification must bind `app.cftrust` to the artifact records in the selected `app.cfdebug` or `app.cfmanifest`; verifying a valid sidecar alone is insufficient because a replaced manifest could otherwise supply a different unsigned inventory. `copperfin::package_trust::launcher_inventory_envelope_matches_artifacts()` provides the canonical comparison used by the Windows guard and its regression test.

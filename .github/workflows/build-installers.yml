@@ -17,9 +17,37 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install NSIS
+        shell: pwsh
         run: |
-          choco install nsis -y --no-progress
-          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $ErrorActionPreference = 'Stop'
+          $nsisRoot = 'C:\Program Files (x86)\NSIS'
+          $makensis = Join-Path $nsisRoot 'makensis.exe'
+
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            if (Test-Path -LiteralPath $makensis -PathType Leaf) {
+              break
+            }
+
+            & choco install nsis -y --no-progress --retry-count=3 --retry-delay=5
+            $chocoExitCode = $LASTEXITCODE
+            if ($chocoExitCode -ne 0) {
+              Write-Warning "Chocolatey NSIS install attempt $attempt exited with code $chocoExitCode."
+            }
+
+            if (-not (Test-Path -LiteralPath $makensis -PathType Leaf) -and $attempt -lt 3) {
+              Start-Sleep -Seconds (5 * $attempt)
+            }
+          }
+
+          if (-not (Test-Path -LiteralPath $makensis -PathType Leaf)) {
+            throw "NSIS installation did not provide makensis.exe at $makensis."
+          }
+
+          $nsisRoot | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & $makensis /VERSION
+          if ($LASTEXITCODE -ne 0) {
+            throw "NSIS compiler verification failed with exit code $LASTEXITCODE."
+          }
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
