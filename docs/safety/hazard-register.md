@@ -46,9 +46,11 @@ When investigating an incident potentially related to documentation:
 
 ## Release Gate Use
 
-Run `scripts/validate-safety-traceability.ps1` before release tagging (or run the `Safety Traceability Gate` workflow) to verify:
+Run `scripts/validate-safety-traceability.ps1` before release tagging (or run the `Safety Traceability Gate` workflow) against the intended documentation-traceability issue set to verify:
 
 1. `DQ-*`, `DV-*`, and `HZ-*` presence for safety-relevant documentation issues
 2. hazard ids resolve in this register
 3. primary hazard coverage includes at least one of `HZ-data-corruption-01`, `HZ-system-failure-01`, or `HZ-runtime-crash-01`
 4. investigation-ready evidence sections are present
+
+Do not pass every issue carrying the broad `safety` label. That label also covers implementation and test lanes; the validator selects documentation issues through the `documentation` label, a `[docs-safety]` title, or `DQ-*` identifiers in the issue body.

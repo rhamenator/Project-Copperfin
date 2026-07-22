@@ -149,7 +149,9 @@ function Test-SafetyDocIssue {
         $labelSet[$label.ToLowerInvariant()] = $true
     }
 
-    if ($labelSet.ContainsKey("safety") -or $labelSet.ContainsKey("documentation")) {
+    # The broad safety label also marks implementation and test lanes. Only
+    # the dedicated documentation signal should enter this evidence validator.
+    if ($labelSet.ContainsKey("documentation")) {
         return $true
     }
 

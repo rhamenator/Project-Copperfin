@@ -98,6 +98,26 @@ assert_probe_is_environment_data([=[2201 # injected comment]=])
 
 find_program(POWERSHELL_EXECUTABLE NAMES pwsh powershell)
 if(POWERSHELL_EXECUTABLE)
+    set(classifier_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-classifier-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_classifier_issues.json"
+            -ReportPath "${classifier_report}"
+        RESULT_VARIABLE classifier_result
+        OUTPUT_VARIABLE classifier_output
+        ERROR_VARIABLE classifier_error)
+    if(NOT classifier_result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator classifier regression failed:\n${classifier_output}\n${classifier_error}")
+    endif()
+    file(READ "${classifier_report}" classifier_report_contents)
+    string(FIND "${classifier_report_contents}" "\"validatedIssueCount\": 1" validated_count_index)
+    if(validated_count_index EQUAL -1)
+        message(FATAL_ERROR "Safety validator classified a safety-only implementation issue as documentation work")
+    endif()
+    file(REMOVE "${classifier_report}")
+
     assert_invalid_issue_numbers([=[2201"; Write-Output injected]=])
     assert_invalid_issue_numbers([=[2201; Write-Output injected]=])
     assert_invalid_issue_numbers([=[2201$env:RUNNER_TEMP]=])

@@ -1,0 +1,21 @@
+[
+  {
+    "number": 216,
+    "title": "[gap-09] Diagnostic error reporting depth - lane",
+    "state": "closed",
+    "labels": [
+      { "name": "safety" }
+    ],
+    "body": "Parent: #108\n\n## Coverage Gap: GAP-09 — Diagnostic and Error Reporting Completeness\n\nHazard linkage: HZ-runtime-debug-01"
+  },
+  {
+    "number": 4383,
+    "title": "[docs-safety] Validator classification regression",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" },
+      { "name": "safety" }
+    ],
+    "body": "DQ-validator-classification DV-validator-classification HZ-system-failure-01\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  }
+]
