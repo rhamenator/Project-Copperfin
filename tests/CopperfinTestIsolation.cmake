@@ -202,6 +202,7 @@ function(copperfin_configure_native_test_isolation)
             test_windows_msvc_cache_workflow_contract
             test_native_test_isolation_contract
             test_package_signer_contract
+            test_launcher_trust_provisioning_contract
             test_package_launcher_inventory_trust
             test_security_supply_chain_workflow_contract
             test_focused_workflow_path_filters)

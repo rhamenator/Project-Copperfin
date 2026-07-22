@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4409 now has a manually dispatched `Windows Launcher Trust Validation` workflow. It expects protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets, writes them only under `RUNNER_TEMP`, runs `scripts/prepare-windows-launcher-trust.ps1`, and configures `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON`. The preflight report contains no key material. Do not add push/PR triggers or reuse licensing keys; valid signed-launch and tamper-case execution still needs an approved registry and release evidence.
+
 - PRG lock arguments under #4407 are stack-frugal and conversion-bounded. `RLOCK()`/`ISRLOCKED()` reject negative, non-finite, and out-of-range numeric record arguments before `std::llround`, preserve VFP fractional rounding, and compare the rounded integer to `size_t` through `uintmax_t` without a warned integral-to-double narrowing path. Keep the focused lock regression and hosted Win32/Win64/POSIX validation when touching this code.
 
 - Windows Deep Validation now runs `scripts/check-windows-vfp9-samples.ps1` before smoke stages. It writes `artifacts/windows-deep-validation-metrics/vfp9-sample-prerequisite.json`, skips only VFP9-dependent runtime/package, xAsset, report, and menu stages when the proprietary corpus is absent, and warns that no sample coverage is claimed. Dispatch release validation with `require_vfp9_samples=true` and a valid `vfp9_root`/`COPPERFIN_VFP9_ROOT`; missing samples then fail closed (#4408).

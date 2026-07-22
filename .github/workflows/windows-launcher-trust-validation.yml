@@ -1,0 +1,64 @@
+name: Windows Launcher Trust Validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-launcher-trust:
+    name: Windows enforced launcher trust provisioning
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Materialize protected trust inputs outside checkout
+        shell: pwsh
+        env:
+          COPPERFIN_TRUST_REGISTRY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER }}
+          COPPERFIN_TRUST_SIGNING_KEY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:COPPERFIN_TRUST_REGISTRY_SECRET) -or
+              [string]::IsNullOrWhiteSpace($env:COPPERFIN_TRUST_SIGNING_KEY_SECRET)) {
+            throw 'Protected launcher trust registry and signing-key secrets are required.'
+          }
+          $encoding = New-Object System.Text.UTF8Encoding($false)
+          $registryPath = Join-Path $env:RUNNER_TEMP 'copperfin-launcher-trust-registry.h'
+          $signingKeyPath = Join-Path $env:RUNNER_TEMP 'copperfin-launcher-trust-signing-key.pem'
+          [System.IO.File]::WriteAllText($registryPath, $env:COPPERFIN_TRUST_REGISTRY_SECRET, $encoding)
+          [System.IO.File]::WriteAllText($signingKeyPath, $env:COPPERFIN_TRUST_SIGNING_KEY_SECRET, $encoding)
+          "COPPERFIN_TRUST_REGISTRY_PATH=$registryPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "COPPERFIN_TRUST_SIGNING_KEY_PATH=$signingKeyPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Validate external trust inputs
+        shell: pwsh
+        run: |
+          .\scripts\prepare-windows-launcher-trust.ps1 `
+            -RegistryHeaderPath $env:COPPERFIN_TRUST_REGISTRY_PATH `
+            -SigningKeyPath $env:COPPERFIN_TRUST_SIGNING_KEY_PATH `
+            -RepositoryRoot $env:GITHUB_WORKSPACE `
+            -OutputPath (Join-Path $env:RUNNER_TEMP 'copperfin-launcher-trust-provisioning.json')
+
+      - name: Configure enforced native build
+        shell: pwsh
+        run: >-
+          cmake -S . -B build -A x64 -DCOPPERFIN_BUILD_TESTS=ON
+          -DCOPPERFIN_ENFORCE_LAUNCHER_TRUST=ON
+          -DCOPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER="$env:COPPERFIN_TRUST_REGISTRY_PATH"
+
+      - name: Build enforced launcher trust targets
+        run: cmake --build build --config Release --parallel 2 --target copperfin_launcher_guard test_package_launcher_inventory_trust
+
+      - name: Run package trust contract tests
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_package_launcher_inventory_trust)$"
+
+      - name: Upload non-secret provisioning evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-windows-launcher-trust-provisioning
+          path: ${{ runner.temp }}/copperfin-launcher-trust-provisioning.json
+          if-no-files-found: error
