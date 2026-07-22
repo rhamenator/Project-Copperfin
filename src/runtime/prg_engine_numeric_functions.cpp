@@ -8,8 +8,11 @@
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
+#include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <iomanip>
 #include <random>
 #include <sstream>
@@ -36,6 +39,106 @@ std::string numeric_domain_error(
         });
 }
 
+std::optional<double> round_decimal_value(const double value, const int decimal_places) {
+    if (!std::isfinite(value) || decimal_places < -308 || decimal_places > 308) {
+        return std::nullopt;
+    }
+
+    std::array<char, 128> buffer{};
+    const auto converted = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
+    if (converted.ec != std::errc{}) {
+        return std::nullopt;
+    }
+
+    std::string text(buffer.data(), converted.ptr);
+    const bool negative = !text.empty() && text.front() == '-';
+    if (negative) {
+        text.erase(text.begin());
+    }
+
+    int exponent = 0;
+    const std::size_t exponent_position = text.find_first_of("eE");
+    if (exponent_position != std::string::npos) {
+        const std::string exponent_text = text.substr(exponent_position + 1U);
+        const auto parsed_exponent = std::from_chars(
+            exponent_text.data(), exponent_text.data() + exponent_text.size(), exponent);
+        if (parsed_exponent.ec != std::errc{} || parsed_exponent.ptr != exponent_text.data() + exponent_text.size()) {
+            return std::nullopt;
+        }
+        text.erase(exponent_position);
+    }
+
+    const std::size_t decimal_position = text.find('.');
+    const int digits_before_decimal = decimal_position == std::string::npos
+                                          ? static_cast<int>(text.size())
+                                          : static_cast<int>(decimal_position);
+    std::string digits;
+    digits.reserve(text.size());
+    for (const char character : text) {
+        if (character != '.') {
+            digits.push_back(character);
+        }
+    }
+    if (digits.empty()) {
+        return std::copysign(0.0, negative ? -1.0 : 1.0);
+    }
+
+    const long long decimal_index = static_cast<long long>(digits_before_decimal) + exponent;
+    const long long cut = decimal_index + decimal_places;
+    std::string rounded_digits;
+    long long rounded_decimal_index = decimal_index;
+
+    if (cut <= 0LL) {
+        rounded_digits = !digits.empty() && digits.front() >= '5' ? "1" : std::string{};
+        rounded_decimal_index = cut - decimal_places;
+    } else if (cut >= static_cast<long long>(digits.size())) {
+        rounded_digits = digits;
+    } else {
+        rounded_digits = digits.substr(0U, static_cast<std::size_t>(cut));
+        if (digits[static_cast<std::size_t>(cut)] >= '5') {
+            bool carry = true;
+            for (auto digit = rounded_digits.rbegin(); digit != rounded_digits.rend() && carry; ++digit) {
+                if (*digit == '9') {
+                    *digit = '0';
+                } else {
+                    ++*digit;
+                    carry = false;
+                }
+            }
+            if (carry) {
+                rounded_digits.insert(rounded_digits.begin(), '1');
+            }
+        }
+        rounded_decimal_index = cut - decimal_places;
+    }
+
+    if (rounded_digits.empty() || rounded_digits.find_first_not_of('0') == std::string::npos) {
+        return std::copysign(0.0, negative ? -1.0 : 1.0);
+    }
+
+    std::string rounded_text;
+    if (rounded_decimal_index <= 0LL) {
+        rounded_text = "0.";
+        rounded_text.append(static_cast<std::size_t>(-rounded_decimal_index), '0');
+        rounded_text += rounded_digits;
+    } else if (rounded_decimal_index >= static_cast<long long>(rounded_digits.size())) {
+        rounded_text = rounded_digits;
+        rounded_text.append(
+            static_cast<std::size_t>(rounded_decimal_index - static_cast<long long>(rounded_digits.size())), '0');
+    } else {
+        rounded_text = rounded_digits;
+        rounded_text.insert(static_cast<std::size_t>(rounded_decimal_index), 1U, '.');
+    }
+
+    double rounded_value = 0.0;
+    const auto parsed = std::from_chars(
+        rounded_text.data(), rounded_text.data() + rounded_text.size(), rounded_value);
+    if (parsed.ec != std::errc{} || parsed.ptr != rounded_text.data() + rounded_text.size()) {
+        return std::nullopt;
+    }
+    return negative ? -rounded_value : rounded_value;
+}
+
 }  // namespace
 
 std::optional<PrgValue> evaluate_numeric_function(
@@ -49,7 +152,18 @@ std::optional<PrgValue> evaluate_numeric_function(
     }
     if (function == "round" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
-        const int decimals = arguments.size() >= 2U ? static_cast<int>(std::llround(value_as_number(arguments[1]))) : 0;
+        const double requested_decimals = arguments.size() >= 2U ? value_as_number(arguments[1]) : 0.0;
+        const double rounded_decimals = std::round(requested_decimals);
+        const int decimals = !std::isfinite(rounded_decimals)
+                                 ? 0
+                                 : rounded_decimals > static_cast<double>(std::numeric_limits<int>::max())
+                                       ? std::numeric_limits<int>::max()
+                                       : rounded_decimals < static_cast<double>(std::numeric_limits<int>::min())
+                                             ? std::numeric_limits<int>::min()
+                                             : static_cast<int>(rounded_decimals);
+        if (const auto rounded = round_decimal_value(value, decimals); rounded.has_value()) {
+            return make_number_value(*rounded);
+        }
         const double factor = std::pow(10.0, static_cast<double>(decimals));
         return make_number_value(std::round(value * factor) / factor);
     }

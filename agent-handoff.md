@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #3957 ROUND() compatibility is confirmed against a real VFP9 execution: `ROUND(1.005, 2)` returns `1.01` and `ROUND(0.145, 2)` returns `0.15`, with half-away-from-zero ties. The runtime uses locale-independent shortest-decimal rounding for ordinary decimal-place ranges and keeps the legacy arithmetic fallback only for extreme ranges; preserve negative decimal-place behavior, signed zero, and invariant machine contracts. Focused coverage is in `test_prg_engine_string_math_functions`; hosted cross-platform validation remains required.
+
 - #4409 now has a manually dispatched `Windows Launcher Trust Validation` workflow. It expects protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets, writes them only under `RUNNER_TEMP`, runs `scripts/prepare-windows-launcher-trust.ps1`, and configures `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON`. The preflight report contains no key material. Do not add push/PR triggers or reuse licensing keys; valid signed-launch and tamper-case execution still needs an approved registry and release evidence.
 
 - PRG lock arguments under #4407 are stack-frugal and conversion-bounded. `RLOCK()`/`ISRLOCKED()` reject negative, non-finite, and out-of-range numeric record arguments before `std::llround`, preserve VFP fractional rounding, and compare the rounded integer to `size_t` through `uintmax_t` without a warned integral-to-double narrowing path. Keep the focused lock regression and hosted Win32/Win64/POSIX validation when touching this code.

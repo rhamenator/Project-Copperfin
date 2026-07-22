@@ -927,6 +927,50 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_round_uses_decimal_half_away_from_zero_behavior()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_round_decimal_edges";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "round_edges.prg";
+        write_text(
+            main_path,
+            "nBinary = ROUND(1.005, 2)\n"
+            "nBinarySmall = ROUND(0.145, 2)\n"
+            "nPositiveTie = ROUND(2.5, 0)\n"
+            "nNegativeTie = ROUND(-2.5, 0)\n"
+            "nNegativePlaces = ROUND(1234.5678, -2)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "ROUND decimal edge script should complete: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be present");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + ": expected \"" + expected + "\", got \"" +
+                           copperfin::runtime::format_value(it->second) + "\"");
+            }
+        };
+
+        check("nbinary", "1.01");
+        check("nbinarysmall", "0.15");
+        check("npositivetie", "3");
+        check("nnegativetie", "-3");
+        check("nnegativeplaces", "1200");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_numeric_coercion_of_blank_padded_string_does_not_fault()
     {
         namespace fs = std::filesystem;
@@ -1060,6 +1104,7 @@ int main()
     test_financial_and_misc_expression_functions();
     test_textmerge_set_state_and_delimiters();
     test_nested_macro_eval_textmerge_execscript_semantics();
+    test_round_uses_decimal_half_away_from_zero_behavior();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
     test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
