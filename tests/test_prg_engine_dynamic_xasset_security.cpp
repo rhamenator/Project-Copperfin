@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdint>
@@ -208,11 +209,87 @@ void test_dynamic_xasset_bootstrap_paths_are_session_unique() {
     fs::remove_all(root, ignored);
 }
 
+void test_dynamic_xasset_bootstrap_cleanup() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_bootstrap_cleanup";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path form_path = root / "dynamic.scx";
+    const fs::path memo_path = root / "dynamic.sct";
+    const fs::path main_path = root / "main.prg";
+    write_form_fixture(form_path, memo_path);
+    write_text(main_path, "DO FORM '" + form_path.string() + "'\n");
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.verified_file_byte_overrides.emplace(form_path.string(), read_text(form_path));
+    options.verified_file_byte_overrides.emplace(memo_path.string(), read_text(memo_path));
+    options.require_verified_file_byte_overrides = true;
+
+    std::string bootstrap_path;
+    {
+        auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        bootstrap_path = find_xasset_bootstrap_path(state);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   !bootstrap_path.empty() && fs::exists(bootstrap_path),
+               "successful xAsset bootstrap should remain available while its PRG session is active");
+    }
+    expect(!bootstrap_path.empty() && !fs::exists(bootstrap_path),
+           "successful xAsset bootstrap should be removed when its PRG session is destroyed");
+    fs::remove_all(root, ignored);
+}
+
+void test_dynamic_xasset_failed_write_cleanup() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_bootstrap_write_failure";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path form_path = root / "dynamic.scx";
+    const fs::path memo_path = root / "dynamic.sct";
+    const fs::path main_path = root / "main.prg";
+    write_form_fixture(form_path, memo_path);
+    write_text(main_path, "DO FORM '" + form_path.string() + "'\n");
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.verified_file_byte_overrides.emplace(form_path.string(), read_text(form_path));
+    options.verified_file_byte_overrides.emplace(memo_path.string(), read_text(memo_path));
+    options.require_verified_file_byte_overrides = true;
+
+    const copperfin::test_support::ScopedEnvironmentValue fail_path(
+        "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS",
+        "_copperfin_bootstrap_");
+    const copperfin::test_support::ScopedEnvironmentValue fail_stage(
+        "COPPERFIN_TEST_FAIL_WRITE_STAGE",
+        "prg-xasset-bootstrap");
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "failed xAsset bootstrap writes should fault the PRG session");
+
+    bool bootstrap_leaked = false;
+    if (fs::exists(options.temp_directory))
+    {
+        for (const auto& entry : fs::directory_iterator(options.temp_directory))
+        {
+            if (entry.path().filename().string().find("_copperfin_bootstrap_") != std::string::npos)
+            {
+                bootstrap_leaked = true;
+                break;
+            }
+        }
+    }
+    expect(!bootstrap_leaked,
+           "failed xAsset bootstrap writes should remove partial generated sources");
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_dynamic_xasset_uses_verified_snapshot();
     test_dynamic_xasset_requires_verified_snapshot();
     test_dynamic_xasset_bootstrap_paths_are_session_unique();
+    test_dynamic_xasset_bootstrap_cleanup();
+    test_dynamic_xasset_failed_write_cleanup();
     return test_failures() == 0 ? 0 : 1;
 }

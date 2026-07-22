@@ -872,6 +872,17 @@ namespace copperfin::runtime
                  std::to_string(static_cast<unsigned long long>(runtime_instance_id)) + "_" +
                  std::to_string(nonce_counter) + ".prg");
         }
+
+        bool prg_xasset_bootstrap_write_failure_requested(const std::filesystem::path &path)
+        {
+            const auto marker = copperfin::platform::read_environment_variable(
+                "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+            const auto stage = copperfin::platform::read_environment_variable(
+                "COPPERFIN_TEST_FAIL_WRITE_STAGE");
+            return marker.has_value() && stage.has_value() &&
+                !marker->empty() && *stage == "prg-xasset-bootstrap" &&
+                copperfin::platform::path_to_utf8_string(path).find(*marker) != std::string::npos;
+        }
     } // namespace
 
     struct PrgRuntimeSession::Impl
@@ -1042,6 +1053,7 @@ namespace copperfin::runtime
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
         std::uint64_t runtime_instance_id = 0;
+        std::vector<std::filesystem::path> owned_xasset_bootstrap_paths;
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
         std::shared_ptr<std::atomic<bool>> task_cancel_requested;
@@ -1215,6 +1227,11 @@ namespace copperfin::runtime
         ~Impl()
         {
             release_declared_dll_functions();
+            for (const auto &path : owned_xasset_bootstrap_paths)
+            {
+                std::error_code ignored;
+                std::filesystem::remove(path, ignored);
+            }
         }
     };
 
@@ -8690,8 +8707,28 @@ namespace copperfin::runtime
 
         const std::string bootstrap_source =
             build_xasset_bootstrap_source(model, include_read_events, asset_path);
-        std::ofstream output(bootstrap_path, std::ios::binary);
+        struct ScopedXAssetBootstrapFileCleanup
+        {
+            std::filesystem::path path;
+            bool preserve = false;
+
+            ~ScopedXAssetBootstrapFileCleanup()
+            {
+                if (preserve)
+                {
+                    return;
+                }
+                std::error_code ignored;
+                std::filesystem::remove(path, ignored);
+            }
+        } bootstrap_file_cleanup{bootstrap_path};
+
+        std::ofstream output(bootstrap_path, std::ios::binary | std::ios::trunc);
         output << bootstrap_source;
+        if (prg_xasset_bootstrap_write_failure_requested(bootstrap_path))
+        {
+            output.setstate(std::ios::badbit);
+        }
         output.close();
         if (!output.good())
         {
@@ -8703,6 +8740,8 @@ namespace copperfin::runtime
 
         options.source_text_overrides[copperfin::runtime::normalize_path(
             copperfin::platform::path_to_utf8_string(bootstrap_path))] = bootstrap_source;
+        owned_xasset_bootstrap_paths.push_back(bootstrap_path);
+        bootstrap_file_cleanup.preserve = true;
 
         return copperfin::platform::path_to_utf8_string(bootstrap_path);
     }
