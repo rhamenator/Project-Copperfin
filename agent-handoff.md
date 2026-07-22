@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Shipped #4405: `export_database_as_json` now probes the DBC path with the non-throwing `std::filesystem::exists(path, error_code)` overload, preserving the localized missing-DBC error and empty JSON result when an inaccessible parent produces a filesystem status error. `test_vfp_assets` adds a POSIX permission-denied regression and restores permissions before cleanup; retain Windows ACL validation in the hosted native lane.
+
 - #4387 trust verification must bind `app.cftrust` to the artifact records in the selected `app.cfdebug` or `app.cfmanifest`; verifying a valid sidecar alone is insufficient because a replaced manifest could otherwise supply a different unsigned inventory. `copperfin::package_trust::launcher_inventory_envelope_matches_artifacts()` provides the canonical comparison used by the Windows guard and its regression test.
 
 - The #4387 `test_package_signer_contract` is classified as a portable, read-only, parallel-safe test in `tests/CopperfinTestIsolation.cmake`; keep new release-tool contract tests in the isolation inventory when registering them with CTest.

@@ -571,6 +571,66 @@ void test_inspect_asset_inaccessible_path_returns_structured_failure() {
         ignored);
     fs::remove_all(temp_dir, ignored);
 }
+
+void test_export_database_as_json_inaccessible_path_returns_structured_failure() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir =
+        fs::temp_directory_path() / "copperfin_vfp_dbc_inaccessible_path_tests";
+    const fs::path restricted_dir = temp_dir / "restricted";
+    const fs::path dbc_path = restricted_dir / "blocked.dbc";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(restricted_dir);
+
+    std::error_code status_error;
+    const fs::perms original_permissions = fs::status(restricted_dir, status_error).permissions();
+    expect(
+        !status_error,
+        "#4405: inaccessible DBC fixture should report its original directory permissions");
+    if (status_error) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    fs::permissions(
+        restricted_dir,
+        fs::perms::none,
+        fs::perm_options::replace,
+        status_error);
+    expect(
+        !status_error,
+        "#4405: inaccessible DBC fixture should remove directory permissions");
+    if (status_error) {
+        fs::remove_all(temp_dir, ignored);
+        return;
+    }
+
+    std::error_code probe_error;
+    const bool access_is_denied = !fs::exists(dbc_path, probe_error) && static_cast<bool>(probe_error);
+    expect(
+        access_is_denied,
+        "#4405: inaccessible DBC fixture should produce a filesystem status error");
+
+    if (access_is_denied) {
+        const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
+        expect(
+            !result.ok,
+            "#4405: inaccessible DBC export should return a structured failure instead of throwing");
+        expect(
+            result.error == "DBC path does not exist: " + dbc_path.string(),
+            "#4405: inaccessible DBC export should preserve the missing-path contract");
+        expect(
+            result.json.empty(),
+            "#4405: inaccessible DBC export should leave the JSON result empty");
+    }
+
+    fs::permissions(
+        restricted_dir,
+        original_permissions,
+        fs::perm_options::replace,
+        ignored);
+    fs::remove_all(temp_dir, ignored);
+}
 #endif
 
 void test_parse_index_probe_for_cdx() {
@@ -2224,6 +2284,7 @@ int main() {
     test_asset_inspector_errors_resolve_through_localization_catalog();
 #if !defined(_WIN32)
     test_inspect_asset_inaccessible_path_returns_structured_failure();
+    test_export_database_as_json_inaccessible_path_returns_structured_failure();
 #endif
     test_parse_index_probe_for_cdx();
     test_parse_cdx_header_root_offset_beyond_16_bits();

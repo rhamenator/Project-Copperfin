@@ -1468,7 +1468,8 @@ DatabaseExportResult export_database_as_json(
     namespace fs = std::filesystem;
     const fs::path dbc_fs_path = copperfin::platform::path_from_utf8_string(dbc_path);
 
-    if (!fs::exists(dbc_fs_path)) {
+    std::error_code dbc_status_error;
+    if (!fs::exists(dbc_fs_path, dbc_status_error)) {
         return {
             .ok = false,
             .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}}),
