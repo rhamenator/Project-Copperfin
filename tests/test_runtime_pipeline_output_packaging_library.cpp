@@ -307,7 +307,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         expect(wrapper_source.find("STARTUPINFOEXW startup_info{};") != std::string::npos &&
                    wrapper_source.find("PROC_THREAD_ATTRIBUTE_HANDLE_LIST") != std::string::npos &&
                    wrapper_source.find("UpdateProcThreadAttribute(") != std::string::npos &&
-                   wrapper_source.find("DuplicateHandle(") != std::string::npos,
+                   wrapper_source.find("DuplicateHandle(") != std::string::npos &&
+                   wrapper_source.find("SetHandleInformation(duplicate, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)") != std::string::npos,
                "library-output Windows bridge should restrict child handle inheritance to duplicated standard streams.");
         expect(wrapper_source.find("const bool launch_succeeded = launch_attempted && process_created && exit_code == dispatch_execution.expected_exit_code;") != std::string::npos,
                "library-output wrapper source should compare runtime-host exit code with the expected exit code.");

@@ -1665,7 +1665,7 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "    }\n";
     stream << "    SECURITY_ATTRIBUTES security_attributes{};\n";
     stream << "    security_attributes.nLength = sizeof(security_attributes);\n";
-    stream << "    security_attributes.bInheritHandle = TRUE;\n";
+    stream << "    security_attributes.bInheritHandle = FALSE;\n";
     stream << "    const auto open_log = [&](const std::filesystem::path& path, bool capture) {\n";
     stream << "        if (!capture || path.empty()) {\n";
     stream << "            return static_cast<HANDLE>(nullptr);\n";
@@ -1690,7 +1690,11 @@ static bool copperfin_runtime_bridge_read_verified_host(
     stream << "                return static_cast<HANDLE>(nullptr);\n";
     stream << "            }\n";
     stream << "            HANDLE duplicate = nullptr;\n";
-    stream << "            if (!DuplicateHandle(GetCurrentProcess(), source, GetCurrentProcess(), &duplicate, 0, TRUE, DUPLICATE_SAME_ACCESS)) {\n";
+    stream << "            if (!DuplicateHandle(GetCurrentProcess(), source, GetCurrentProcess(), &duplicate, 0, TRUE, DUPLICATE_SAME_ACCESS) ||\n";
+    stream << "                SetHandleInformation(duplicate, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) == FALSE) {\n";
+    stream << "                if (duplicate != nullptr) {\n";
+    stream << "                    CloseHandle(duplicate);\n";
+    stream << "                }\n";
     stream << "                return static_cast<HANDLE>(nullptr);\n";
     stream << "            }\n";
     stream << "            duplicated_standard_handles.push_back(duplicate);\n";
