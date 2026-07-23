@@ -58,7 +58,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("WIDTH", "4000.000", 305U),
                 value("HEIGHT", "450.000", 306U),
                 value("FONTFACE", "Segoe UI", 12U),
-                value("FONTSIZE", "10")
+                value("FONTSIZE", "10"),
+                value("SUPEXPR", "customer.company > 0", 313U)
             }
         },
         {
@@ -208,6 +209,22 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].title_memo_block_number == 31U, "#716: detail object title should inherit EXPR memo block provenance");
     expect(layout.sections[1].objects[0].expression_field_index == 2U, "#665: layout objects should preserve EXPR field provenance");
     expect(layout.sections[1].objects[0].expression_memo_block_number == 31U, "#716: layout object expressions should retain EXPR memo block provenance");
+    const auto print_when_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "SUPEXPR";
+        });
+    expect(print_when_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4510: report layout highlights should include the memo-backed SUPEXPR Print When expression");
+    if (print_when_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(print_when_highlight->value == "customer.company > 0",
+            "#4510: SUPEXPR highlights should preserve the Print When expression value");
+        expect(print_when_highlight->field_index == 9U,
+            "#4510: SUPEXPR highlights should retain the source DBF field ordinal");
+        expect(print_when_highlight->memo_block_number == 313U,
+            "#4510: SUPEXPR highlights should retain the source memo block provenance");
+    }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,
         "#723: layout objects should preserve HPOS memo block provenance");

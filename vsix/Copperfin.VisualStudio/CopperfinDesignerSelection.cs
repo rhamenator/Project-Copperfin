@@ -121,6 +121,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 selection.AddReadOnlyInt("RECORDINDEX", L("AssetEditor.Column.Record", "Record"), snapshotObject.RecordIndex.ToString(CultureInfo.InvariantCulture));
                 selection.AddReadOnlyString("OBJECTSTATE", L("AssetEditor.Property.ObjectState", "Object State"), BuildStateText(localization, snapshotObject.Deleted));
                 selection.AddEditableString("EXPR", L("AssetEditor.Property.Expression", "Expression"), selection.Read(snapshotObject, "EXPR"));
+                selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 if (int.TryParse(
                         selection.Read(snapshotObject, "OBJTYPE"),
                         NumberStyles.Integer,

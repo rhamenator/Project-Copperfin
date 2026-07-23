@@ -2699,5 +2699,6 @@
   "AssetEditor.Property.Float": "Float",
   "AssetEditor.Property.NoRepeat": "No Repeat",
   "AssetEditor.Property.Stretch": "Stretch with Overflow",
-  "AssetEditor.Property.StretchTop": "Stretch Relative to Top"
+  "AssetEditor.Property.StretchTop": "Stretch Relative to Top",
+  "AssetEditor.Property.PrintWhen": "Print When"
 }
