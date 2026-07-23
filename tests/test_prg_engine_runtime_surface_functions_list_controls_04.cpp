@@ -741,4 +741,97 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listbox_onmoveitem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "onmoveitem.prg";
+        write_text(
+            main_path,
+            "oAllowed = CREATEOBJECT('MoveListBox')\n"
+            "oAllowed.AddItem('One')\n"
+            "oAllowed.AddItem('Two')\n"
+            "oAllowed.MoveItem(2, -1)\n"
+            "cAllowedFirst = oAllowed.List(1)\n"
+            "nAllowedCalls = oAllowed.nCalls\n"
+            "oVeto = CREATEOBJECT('VetoListBox')\n"
+            "oVeto.AddItem('One')\n"
+            "oVeto.AddItem('Two')\n"
+            "oVeto.MoveItem(2, -1)\n"
+            "cVetoFirst = oVeto.List(1)\n"
+            "nVetoCalls = oVeto.nCalls\n"
+            "oUnsupported = CREATEOBJECT('MoveListBox')\n"
+            "oUnsupported.AddItem('One')\n"
+            "oUnsupported.AddItem('Two')\n"
+            "oUnsupported.RowSourceType = 5\n"
+            "oUnsupported.MoveItem(2, -1)\n"
+            "cUnsupportedFirst = oUnsupported.List(1)\n"
+            "nUnsupportedCalls = oUnsupported.nCalls\n"
+            "oBound = CREATEOBJECT('ListBox')\n"
+            "oBound.AddItem('One')\n"
+            "oBound.AddItem('Two')\n"
+            "oSink = CREATEOBJECT('MoveSink')\n"
+            "nBind = BINDEVENT(oBound, 'OnMoveItem', oSink, 'HandleMove')\n"
+            "oBound.MoveItem(2, -1)\n"
+            "cBoundFirst = oBound.List(1)\n"
+            "nBoundCalls = oSink.nCalls\n"
+            "RETURN\n"
+            "DEFINE CLASS MoveListBox AS ListBox\n"
+            "    nCalls = 0\n"
+            "    PROCEDURE OnMoveItem\n"
+            "        THIS.nCalls = THIS.nCalls + 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS VetoListBox AS ListBox\n"
+            "    nCalls = 0\n"
+            "    PROCEDURE OnMoveItem\n"
+            "        THIS.nCalls = THIS.nCalls + 1\n"
+            "        RETURN .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MoveSink AS Custom\n"
+            "    nCalls = 0\n"
+            "    FUNCTION HandleMove\n"
+            "        THIS.nCalls = THIS.nCalls + 1\n"
+            "        RETURN .F.\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListBox OnMoveItem script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("nbind", "1");
+        check("callowedfirst", "Two");
+        check("nallowedcalls", "1");
+        check("cvetofirst", "One");
+        check("nvetocalls", "1");
+        check("cunsupportedfirst", "One");
+        check("nunsupportedcalls", "1");
+        check("cboundfirst", "One");
+        check("nboundcalls", "1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

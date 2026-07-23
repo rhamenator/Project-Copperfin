@@ -1195,7 +1195,8 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references,
-            bool *requested_nodefault = nullptr);
+            bool *requested_nodefault = nullptr,
+            bool *returned_false = nullptr);
         std::optional<PrgValue> invoke_native_event_delegate(
             const NativeEventBinding &binding,
             const CurrentNativeEventContext &event_context,
@@ -2821,7 +2822,30 @@ namespace copperfin::runtime
         {
             return *native_result;
         }
-        if (auto list_control_result = invoke_native_list_control_method(*target_object, leaf, arguments);
+        std::function<bool()> before_list_control_move;
+        if (leaf == "moveitem")
+        {
+            before_list_control_move = [&]()
+            {
+                bool requested_nodefault = false;
+                bool returned_false = false;
+                (void)invoke_native_object_method_if_present(
+                    *target_object,
+                    "onmoveitem",
+                    frame,
+                    {},
+                    {},
+                    &requested_nodefault,
+                    &returned_false);
+                (void)consume_last_popped_frame_requested_nodefault();
+                return !returned_false;
+            };
+        }
+        if (auto list_control_result = invoke_native_list_control_method(
+                *target_object,
+                leaf,
+                arguments,
+                before_list_control_move);
             list_control_result.has_value())
         {
             if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" ||
@@ -6140,8 +6164,13 @@ namespace copperfin::runtime
         const Frame &source_frame,
         const std::vector<PrgValue> &arguments,
         const std::vector<std::optional<std::string>> &argument_references,
-        bool *requested_nodefault)
+        bool *requested_nodefault,
+        bool *returned_false)
     {
+        if (returned_false != nullptr)
+        {
+            *returned_false = false;
+        }
         const std::string normalized_identifier = normalize_identifier(identifier);
         std::vector<NativeEventBinding> bindings;
         bindings.reserve(native_event_bindings.size());
@@ -6162,13 +6191,20 @@ namespace copperfin::runtime
                 const bool binding_after_source_method = (binding.flags & 1) == 0;
                 if (binding_after_source_method == after_source_method)
                 {
-                    (void)invoke_native_event_delegate(
+                    const auto delegate_result = invoke_native_event_delegate(
                         binding,
                         {.source_handle = runtime_object.handle,
                          .event_name = normalized_identifier,
                          .event_type = 2},
                         arguments,
                         argument_references);
+                    if (returned_false != nullptr &&
+                        delegate_result.has_value() &&
+                        delegate_result->kind != PrgValueKind::empty &&
+                        !value_as_bool(*delegate_result))
+                    {
+                        *returned_false = true;
+                    }
                 }
             }
         };
@@ -6189,17 +6225,32 @@ namespace copperfin::runtime
                 arguments,
                 argument_references,
                 requested_nodefault);
+            if (returned_false != nullptr &&
+                result.has_value() &&
+                result->kind != PrgValueKind::empty &&
+                !value_as_bool(*result))
+            {
+                *returned_false = true;
+            }
             invoke_delegates_for_phase(true);
             return result;
         }
 
-        return invoke_native_object_method_body_if_present(
+        auto result = invoke_native_object_method_body_if_present(
             runtime_object,
             normalized_identifier,
             source_frame,
             arguments,
             argument_references,
             requested_nodefault);
+        if (returned_false != nullptr &&
+            result.has_value() &&
+            result->kind != PrgValueKind::empty &&
+            !value_as_bool(*result))
+        {
+            *returned_false = true;
+        }
+        return result;
     }
 
     PrgValue PrgRuntimeSession::Impl::bind_native_event(
@@ -6289,7 +6340,12 @@ namespace copperfin::runtime
         }
 
         auto source_object = resolve_ole_object(arguments[0]);
-        if (!source_object.has_value() || (*source_object)->source.empty())
+        const bool source_is_native_list_control =
+            source_object.has_value() &&
+            (normalize_identifier(trim_copy((*source_object)->base_class_name)) == "combobox" ||
+             normalize_identifier(trim_copy((*source_object)->base_class_name)) == "listbox");
+        if (!source_object.has_value() ||
+            ((*source_object)->source.empty() && !source_is_native_list_control))
         {
             return make_number_value(0.0);
         }

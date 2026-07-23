@@ -6,6 +6,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_list_controls_field_structure_rowsource_materializes_fields();
     void test_native_list_controls_collection_rowsource_materializes_members();
     void test_native_listbox_moveitem_preserves_row_identity_and_state();
+    void test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto();
     void test_expression_runtime_surface_extensions();
     void test_local_optimistic_table_buffering();
     void test_local_optimistic_table_buffering_append_lifecycle();

@@ -103,7 +103,8 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
                                                         const std::vector<PrgValue>& arguments);
 std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
                                                           const std::string& normalized_method_name,
-                                                          const std::vector<PrgValue>& arguments);
+                                                          const std::vector<PrgValue>& arguments,
+                                                          const std::function<bool()>& before_move = {});
 std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name);
