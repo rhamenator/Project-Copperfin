@@ -1949,6 +1949,7 @@
   "Studio.TerminalWindowMenu": "Terminal",
   "Studio.FileMenu": "\u0026Archivo",
   "Studio.OpenMenu": "\u0026Abrir...",
+  "Studio.CloseMenu": "\u0026Cerrar",
   "Studio.ExitMenu": "\u0026Salir",
   "Studio.EmptyDocumentStatus": "Abra uno o m\u00E1s activos VFP para inspeccionarlos y editarlos en Copperfin Studio.",
   "Studio.InitialStatus": "Abra un activo VFP para inspeccionarlo y editarlo en Copperfin Studio.",

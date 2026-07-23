@@ -38,6 +38,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeManagedProjectProcessLaunchContracts), SmokeManagedProjectProcessLaunchContracts);
         runner.Run(nameof(SmokeStandaloneStudioDocumentIdentity), SmokeStandaloneStudioDocumentIdentity);
         runner.Run(nameof(SmokeStandaloneStudioRevisitingDocumentPreservesSelectors), SmokeStandaloneStudioRevisitingDocumentPreservesSelectors);
+        runner.Run(nameof(SmokeStandaloneStudioCloseDocumentTabs), SmokeStandaloneStudioCloseDocumentTabs);
         runner.Run(nameof(SmokeStandaloneStudioCommandWindowDocking), SmokeStandaloneStudioCommandWindowDocking);
         runner.Run(nameof(SmokeStandaloneStudioShellLayoutPersistence), SmokeStandaloneStudioShellLayoutPersistence);
         runner.Run(nameof(SmokeStandaloneStudioFileLayoutStoreRoundTrip), SmokeStandaloneStudioFileLayoutStoreRoundTrip);

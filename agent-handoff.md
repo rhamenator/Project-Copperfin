@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4421 under #2997 is implemented in the current synced slice: standalone Studio now exposes a localized File > Close command with `Ctrl+F4`, removes the active document from the normalized path map, disposes its editor, restores the next/empty document chrome, and permits reopening the closed path. Focused Mono UI smoke, standalone build, managed catalog parity, and language-service validation pass; hosted Windows UI evidence remains part of the release gate.
+
 - #4420 under #3217 is shipped in `9c252d30`: native ListBox multi-select now keeps `ListIndex` on the focused row when that row is explicitly deselected, while `Selected(n)`/`SelectedID(n)` bits remain independent and `ListItemID`, `Value`, and `DisplayValue` stay focused-row coherent. Single-selection fallback behavior remains unchanged. Focused and full local runtime-surface coverage passes, and the exact-head RC native matrix passed on hosted Linux (`29984891966`), macOS (`29984891958`), and Windows (`29984891935`).
 
 - Hosted permissive safety validation for #4403 passed on exact head `a34b041f` in run `29989839062`: the dispatch-boundary contract, primary-hazard coverage, and non-secret JSON report all passed. This does not close #4403; strict closed-issue validation, the archived runtime-recovery walkthrough, and independent reviewer sign-off remain release gates.

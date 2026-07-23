@@ -60,6 +60,88 @@ internal static partial class Program
         TearDownForm(form);
     }
 
+    private static void SmokeStandaloneStudioCloseDocumentTabs()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-close-document",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var firstPath = Path.Combine(root, "first.prg");
+        var secondPath = Path.Combine(root, "second.prg");
+        try
+        {
+            File.WriteAllText(firstPath, "RETURN");
+            File.WriteAllText(secondPath, "RETURN");
+
+            using var form = new StudioMainForm(
+                new CopperfinLocalization("es-419"),
+                new InMemoryStudioShellLayoutStore())
+            {
+                Width = 1200,
+                Height = 800,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            form.Show();
+            Application.DoEvents();
+            Expect(form.CloseDocumentMenuText == "&Cerrar",
+                "standalone Close command should use the active locale catalog");
+            form.CloseActiveDocument();
+            Expect(form.DocumentTabCount == 0,
+                "closing with no standalone document should be a safe no-op");
+
+            form.OpenDocument(firstPath);
+            form.OpenDocument(secondPath);
+            Application.DoEvents();
+            var normalizedFirstPath = CopperfinDocumentPathIdentity.Normalize(firstPath);
+            var normalizedSecondPath = CopperfinDocumentPathIdentity.Normalize(secondPath);
+            Expect(form.DocumentTabCount == 2 &&
+                   string.Equals(form.ActiveDocumentPath, normalizedSecondPath, StringComparison.Ordinal),
+                "standalone Studio should make the newest document active");
+
+            form.CloseActiveDocument();
+            Application.DoEvents();
+            Expect(form.DocumentTabCount == 1 &&
+                   string.Equals(form.ActiveDocumentPath, normalizedFirstPath, StringComparison.Ordinal),
+                "closing the active standalone document should select the remaining tab");
+
+            form.CloseActiveDocument();
+            Application.DoEvents();
+            Expect(form.DocumentTabCount == 0 &&
+                   form.ActiveDocumentPath is null,
+                "closing the last standalone document should restore the empty shell");
+
+            form.OpenDocument(firstPath);
+            Application.DoEvents();
+            Expect(form.DocumentTabCount == 1 &&
+                   string.Equals(form.ActiveDocumentPath, normalizedFirstPath, StringComparison.Ordinal),
+                "a closed standalone path should be reopenable as a fresh tab");
+
+            TearDownForm(form);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeStandaloneStudioShellLayoutPersistence()
     {
         var store = new InMemoryStudioShellLayoutStore();

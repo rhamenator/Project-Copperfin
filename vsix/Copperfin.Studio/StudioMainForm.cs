@@ -20,6 +20,7 @@ internal sealed class StudioMainForm : Form
     private readonly TabPage terminalWindowPage;
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
+    private readonly ToolStripMenuItem closeDocumentMenuItem;
     private readonly ToolStripMenuItem commandWindowMenuItem;
     private readonly ToolStripMenuItem terminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
@@ -44,8 +45,14 @@ internal sealed class StudioMainForm : Form
         var menuStrip = new MenuStrip();
         var fileMenu = new ToolStripMenuItem(this.localization.Text("Studio.FileMenu"));
         var openItem = new ToolStripMenuItem(this.localization.Text("Studio.OpenMenu"), null, (_, _) => OpenFromPicker());
+        closeDocumentMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.CloseMenu"), null, (_, _) => CloseActiveDocument())
+        {
+            ShortcutKeys = Keys.Control | Keys.F4,
+            Enabled = false
+        };
         var exitItem = new ToolStripMenuItem(this.localization.Text("Studio.ExitMenu"), null, (_, _) => Close());
         fileMenu.DropDownItems.Add(openItem);
+        fileMenu.DropDownItems.Add(closeDocumentMenuItem);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
         menuStrip.Items.Add(fileMenu);
@@ -76,13 +83,7 @@ internal sealed class StudioMainForm : Form
         };
         documentTabs.SelectedIndexChanged += (_, _) =>
         {
-            if (documentTabs.SelectedTab is null)
-            {
-                UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
-                return;
-            }
-
-            UpdateStatus(documentTabs.SelectedTab.ToolTipText ?? documentTabs.SelectedTab.Text);
+            UpdateSelectedDocumentChrome();
         };
 
         toolWindowTabs = new TabControl
@@ -149,6 +150,12 @@ internal sealed class StudioMainForm : Form
     internal bool IsTerminalShellRunning => terminalWindowControl.IsShellRunning;
 
     internal string TerminalTranscript => terminalWindowControl.TranscriptText;
+
+    internal int DocumentTabCount => documentTabs.TabPages.Count;
+
+    internal string? ActiveDocumentPath => documentTabs.SelectedTab?.ToolTipText;
+
+    internal string CloseDocumentMenuText => closeDocumentMenuItem.Text;
 
     internal int ShellSplitterDistance => shellSplitContainer.SplitterDistance;
 
@@ -337,6 +344,25 @@ internal sealed class StudioMainForm : Form
             documentTabs.TabPages.Count));
     }
 
+    internal void CloseActiveDocument()
+    {
+        var page = documentTabs.SelectedTab;
+        if (page is null)
+        {
+            return;
+        }
+
+        var normalizedPath = page.ToolTipText;
+        if (!string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            openDocuments.Remove(normalizedPath);
+        }
+
+        documentTabs.TabPages.Remove(page);
+        page.Dispose();
+        UpdateSelectedDocumentChrome();
+    }
+
     private void OpenFromPicker()
     {
         using var dialog = new OpenFileDialog
@@ -356,5 +382,22 @@ internal sealed class StudioMainForm : Form
     private void UpdateStatus(string text)
     {
         statusLabel.Text = text;
+    }
+
+    private void UpdateSelectedDocumentChrome()
+    {
+        var page = documentTabs.SelectedTab;
+        closeDocumentMenuItem.Enabled = page is not null;
+        if (page is null)
+        {
+            Text = localization.Text("Studio.AppTitle");
+            UpdateStatus(localization.Text("Studio.EmptyDocumentStatus"));
+            return;
+        }
+
+        var normalizedPath = page.ToolTipText ?? string.Empty;
+        var assetKind = CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath, localization);
+        Text = localization.Format("Studio.WindowTitleWithAssetKind", assetKind);
+        UpdateStatus(normalizedPath);
     }
 }
