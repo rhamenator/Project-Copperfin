@@ -235,6 +235,28 @@ internal static partial class Program
                             Line = 2,
                             Message = "TODO: wire the startup command"
                         }
+                    },
+                    DefinedSymbols = new List<CopperfinProjectCodeSymbol>
+                    {
+                        new CopperfinProjectCodeSymbol
+                        {
+                            Kind = "procedure",
+                            Name = "SaveOrder",
+                            FilePath = taskSourcePath,
+                            Line = 3,
+                            Detail = "PROCEDURE SaveOrder"
+                        }
+                    },
+                    RuntimeReferences = new List<CopperfinProjectCodeSymbol>
+                    {
+                        new CopperfinProjectCodeSymbol
+                        {
+                            Kind = "call",
+                            Name = "SaveOrder",
+                            FilePath = taskSourcePath,
+                            Line = 5,
+                            Detail = "? SaveOrder()"
+                        }
                     }
                 });
             typeof(CopperfinAssetEditorControl)
@@ -265,6 +287,30 @@ internal static partial class Program
                     string.Equals(requestedTaskPath, taskSourcePath, StringComparison.Ordinal) &&
                     requestedTaskLine == 2,
                     "project workspace Task List activation should open the source file at its one-based source line");
+            }
+
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.SelectTab(3);
+            }
+            Application.DoEvents();
+            var codeReferences = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count >= 5 &&
+                                        string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase));
+            Expect(codeReferences is not null && codeReferences.Items.Count == 2,
+                "project workspace Code References should show every discovered definition and reference with stable columns");
+            if (codeReferences is not null && codeReferences.Items.Count == 2)
+            {
+                codeReferences.Items[1].Selected = true;
+                codeReferences.Items[1].Focused = true;
+                requestedTaskPath = null;
+                requestedTaskLine = 0;
+                var referenceActivated = control.TryActivateSelectedCodeReference();
+                Expect(
+                    referenceActivated &&
+                    string.Equals(requestedTaskPath, taskSourcePath, StringComparison.Ordinal) &&
+                    requestedTaskLine == 5,
+                    "project workspace Code References activation should open the selected source line");
             }
             hostForm.Close();
         }

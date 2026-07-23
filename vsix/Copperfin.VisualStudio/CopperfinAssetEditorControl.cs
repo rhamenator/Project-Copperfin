@@ -110,6 +110,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox taskListSummaryBox;
     private readonly ListView taskListView;
     private readonly RichTextBox codeReferencesSummaryBox;
+    private readonly ListView codeReferencesView;
     private readonly RichTextBox dataExplorerSummaryBox;
     private readonly RichTextBox objectBrowserSummaryBox;
     private readonly RichTextBox toolboxSummaryBox;
@@ -599,6 +600,32 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences")
         };
 
+        codeReferencesView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        codeReferencesView.Columns.Add(this.localization.Text("AssetEditor.CodeReferences.Column.Kind"), 100);
+        codeReferencesView.Columns.Add(this.localization.Text("AssetEditor.CodeReferences.Column.Symbol"), 200);
+        codeReferencesView.Columns.Add(this.localization.Text("AssetEditor.CodeReferences.Column.File"), 220);
+        codeReferencesView.Columns.Add(this.localization.Text("AssetEditor.CodeReferences.Column.Line"), 70);
+        codeReferencesView.Columns.Add(this.localization.Text("AssetEditor.CodeReferences.Column.Detail"), 520);
+        codeReferencesView.DoubleClick += (_, _) => TryActivateSelectedCodeReference();
+        codeReferencesView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedCodeReference();
+        };
+
         dataExplorerSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -802,8 +829,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         taskListPageHost.Controls.Add(taskListSummaryPanel);
         var taskListPage = new TabPage(this.localization.Text("AssetEditor.Tab.TaskList"));
         taskListPage.Controls.Add(taskListPageHost);
+        var codeReferencesPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        var codeReferencesSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 112
+        };
+        codeReferencesSummaryPanel.Controls.Add(codeReferencesSummaryBox);
+        codeReferencesPageHost.Controls.Add(codeReferencesView);
+        codeReferencesPageHost.Controls.Add(codeReferencesSummaryPanel);
         var codeReferencesPage = new TabPage(this.localization.Text("AssetEditor.Tab.CodeReferences"));
-        codeReferencesPage.Controls.Add(codeReferencesSummaryBox);
+        codeReferencesPage.Controls.Add(codeReferencesPageHost);
         var dataExplorerPageHost = new Panel
         {
             Dock = DockStyle.Fill
@@ -1029,6 +1068,33 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    public bool TryActivateSelectedCodeReference()
+    {
+        if (currentSnapshot?.AssetFamily != "project" ||
+            codeReferencesView.SelectedItems.Count != 1 ||
+            codeReferencesView.SelectedItems[0].Tag is not CopperfinProjectCodeSymbol symbol ||
+            !File.Exists(symbol.FilePath))
+        {
+            return false;
+        }
+
+        var openDocumentAtLine = OpenDocumentAtLineRequested;
+        if (openDocumentAtLine is not null)
+        {
+            openDocumentAtLine(symbol.FilePath, symbol.Line);
+            return true;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(symbol.FilePath);
+        return true;
+    }
+
     public string GetUndoCommandText()
     {
         if (TryFindFocusedUndoTextBox() is not null)
@@ -1176,6 +1242,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         taskListSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.TaskList");
         taskListView.Items.Clear();
         codeReferencesSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences");
+        codeReferencesView.Items.Clear();
         dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
         toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
@@ -2560,6 +2627,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
         PopulateTaskList(currentProjectInsights);
         taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
+        PopulateCodeReferences(currentProjectInsights);
         codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
         dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights, dataExplorerFilterBox.Text);
         objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
@@ -2585,6 +2653,26 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             item.SubItems.Add(task.Message);
             item.Tag = task;
             taskListView.Items.Add(item);
+        }
+    }
+
+    private void PopulateCodeReferences(CopperfinProjectInsights? insights)
+    {
+        codeReferencesView.Items.Clear();
+        if (insights is null)
+        {
+            return;
+        }
+
+        foreach (var symbol in insights.DefinedSymbols.Concat(insights.RuntimeReferences))
+        {
+            var item = new ListViewItem(BuildCodeSymbolKindDisplayText(symbol.Kind));
+            item.SubItems.Add(symbol.Name);
+            item.SubItems.Add(Path.GetFileName(symbol.FilePath));
+            item.SubItems.Add(symbol.Line.ToString(CultureInfo.InvariantCulture));
+            item.SubItems.Add(symbol.Detail);
+            item.Tag = symbol;
+            codeReferencesView.Items.Add(item);
         }
     }
 
@@ -4013,20 +4101,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            foreach (var symbol in insights.DefinedSymbols.Take(40))
-            {
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.SymbolLine",
-                        BuildCodeSymbolKindDisplayText(symbol.Kind),
-                        symbol.Name,
-                        Path.GetFileName(symbol.FilePath),
-                        symbol.Line));
-            }
-            if (insights.DefinedSymbols.Count > 40)
-            {
-                summary.AppendLine(F("AssetEditor.Summary.MoreItems", insights.DefinedSymbols.Count - 40, L("AssetEditor.Summary.LabelDefinitions")));
-            }
+            summary.AppendLine(L("AssetEditor.Summary.CodeReferencesActivation"));
         }
 
         summary.AppendLine();
@@ -4037,24 +4112,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            foreach (var symbol in insights.RuntimeReferences.Take(40))
-            {
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.SymbolLine",
-                        BuildCodeSymbolKindDisplayText(symbol.Kind),
-                        symbol.Name,
-                        Path.GetFileName(symbol.FilePath),
-                        symbol.Line));
-            }
-            if (insights.RuntimeReferences.Count > 40)
-            {
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.MoreItems",
-                        insights.RuntimeReferences.Count - 40,
-                        L("AssetEditor.Summary.LabelRuntimeReferences")));
-            }
+            summary.AppendLine(L("AssetEditor.Summary.CodeReferencesActivation"));
         }
 
         return summary.ToString();
