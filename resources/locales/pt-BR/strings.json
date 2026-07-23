@@ -2704,6 +2704,7 @@
   "AssetEditor.Property.StringTrimming": "Truncamento de cadeias",
   "AssetEditor.Property.ExpressionAlignment": "Alinhamento da expressão",
   "AssetEditor.Property.ExpressionDataType": "Tipo de dados da expressão",
+  "AssetEditor.Property.CalculationType": "Tipo de cálculo",
   "AssetEditor.Property.PrintWhen": "Quando imprimir",
   "AssetEditor.Property.PrintWhenGroup": "Quando o grupo muda",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",

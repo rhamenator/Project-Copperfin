@@ -438,7 +438,8 @@ internal static partial class Program
                 new() { Name = "PICTURE", Value = "@J" },
                 new() { Name = "RULERLINES", Value = "4" },
                 new() { Name = "OFFSET", Value = "1" },
-                new() { Name = "FILLCHAR", Value = "N" }
+                new() { Name = "FILLCHAR", Value = "N" },
+                new() { Name = "TOTALTYPE", Value = "2" }
             }
         };
 
@@ -467,6 +468,9 @@ internal static partial class Program
         var reportExpressionDataTypeProperty = reportExpressionSelection?.GetProperties().Find("FILLCHAR", false);
         var labelDataTypeProperty = labelSelection?.GetProperties().Find("FILLCHAR", false);
         var imageDataTypeProperty = imageSelection?.GetProperties().Find("FILLCHAR", false);
+        var reportTotalTypeProperty = reportExpressionSelection?.GetProperties().Find("TOTALTYPE", false);
+        var labelTotalTypeProperty = labelSelection?.GetProperties().Find("TOTALTYPE", false);
+        var imageTotalTypeProperty = imageSelection?.GetProperties().Find("TOTALTYPE", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
@@ -481,6 +485,9 @@ internal static partial class Program
         Expect(reportExpressionDataTypeProperty is not null && labelDataTypeProperty is null && imageDataTypeProperty is null &&
                reportExpressionDataTypeProperty.DisplayName == "Expression Data Type",
             "only report-expression selections should expose the localized FILLCHAR property");
+        Expect(reportTotalTypeProperty is not null && labelTotalTypeProperty is null && imageTotalTypeProperty is null &&
+               reportTotalTypeProperty.DisplayName == "Calculation Type",
+            "only report-expression selections should expose the localized TOTALTYPE property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -501,6 +508,10 @@ internal static partial class Program
         Expect(reportExpressionSelection?.TryGetUpdate("FILLCHAR", out var dataTypeTarget, out var dataTypeValue) == true &&
                dataTypeTarget == "FILLCHAR" && dataTypeValue == "D",
             "report-expression FILLCHAR edits should preserve the invariant update target");
+        reportTotalTypeProperty?.SetValue(reportExpressionSelection, 3);
+        Expect(reportExpressionSelection?.TryGetUpdate("TOTALTYPE", out var totalTypeTarget, out var totalTypeValue) == true &&
+               totalTypeTarget == "TOTALTYPE" && totalTypeValue == "3",
+            "report-expression TOTALTYPE edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
@@ -520,7 +531,8 @@ internal static partial class Program
             string bottomValue = "false",
             string topValue = "false",
             string modeValue = "0",
-            string fillCharValue = "N") => new()
+            string fillCharValue = "N",
+            string totalTypeValue = "2") => new()
         {
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
@@ -535,6 +547,7 @@ internal static partial class Program
                 new() { Name = "TOP", Value = topValue },
                 new() { Name = "MODE", Value = modeValue },
                 new() { Name = "FILLCHAR", Value = fillCharValue },
+                new() { Name = "TOTALTYPE", Value = totalTypeValue },
                 new() { Name = "FLOAT", Value = floatValue },
                 new() { Name = "NOREPEAT", Value = noRepeatValue },
                 new() { Name = "STRETCH", Value = stretchValue },
@@ -563,13 +576,14 @@ internal static partial class Program
             var topProperty = properties?.Find("TOP", false);
             var modeProperty = properties?.Find("MODE", false);
             var fillCharProperty = properties?.Find("FILLCHAR", false);
+            var totalTypeProperty = properties?.Find("TOTALTYPE", false);
 
             Expect(floatProperty is not null && noRepeatProperty is not null &&
                    stretchProperty is not null && stretchTopProperty is not null && printWhenProperty is not null &&
                    printWhenGroupProperty is not null && printWhenRepeatedProperty is not null &&
                    printWhenValueChangesProperty is not null && printWhenNewPageColumnProperty is not null &&
                    printWhenOverflowProperty is not null && bottomProperty is not null && topProperty is not null &&
-                   modeProperty is not null && fillCharProperty is not null,
+                   modeProperty is not null && fillCharProperty is not null && totalTypeProperty is not null,
                 $"{assetFamily} object selections should expose editable report-control behavior properties");
             Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat" &&
                    stretchProperty?.DisplayName == "Stretch with Overflow" &&
@@ -583,7 +597,8 @@ internal static partial class Program
                    bottomProperty?.DisplayName == "Fix Relative to Bottom of Band" &&
                    topProperty?.DisplayName == "Fix Relative to Top of Band" &&
                    modeProperty?.DisplayName == "Back Style / Direction Mode" &&
-                   fillCharProperty?.DisplayName == "Expression Data Type",
+                   fillCharProperty?.DisplayName == "Expression Data Type" &&
+                   totalTypeProperty?.DisplayName == "Calculation Type",
                 $"{assetFamily} object behavior properties should use the English catalog labels");
             if (selection is not null)
             {
@@ -601,6 +616,7 @@ internal static partial class Program
                 topProperty?.SetValue(selection, true);
                 modeProperty?.SetValue(selection, 6);
                 fillCharProperty?.SetValue(selection, "D");
+                totalTypeProperty?.SetValue(selection, 3);
                 Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
                        floatTarget == "FLOAT" && serializedFloatValue == "false" &&
                        selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
@@ -640,12 +656,15 @@ internal static partial class Program
                 Expect(selection.TryGetUpdate("FILLCHAR", out var fillCharTarget, out var serializedFillCharValue) &&
                        fillCharTarget == "FILLCHAR" && serializedFillCharValue == "D",
                     $"{assetFamily} expression data-type edits should preserve the invariant update target");
+                Expect(selection.TryGetUpdate("TOTALTYPE", out var totalTypeTarget, out var serializedTotalTypeValue) &&
+                       totalTypeTarget == "TOTALTYPE" && serializedTotalTypeValue == "3",
+                    $"{assetFamily} calculation-type edits should preserve the invariant update target");
             }
         }
 
         var blankSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
-            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
             new CopperfinLocalization("en-US"));
         Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
                blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue &&
@@ -660,7 +679,8 @@ internal static partial class Program
                blankSelection.GetProperties().Find("BOTTOM", false)?.GetValue(blankSelection) is bool blankBottomValue && !blankBottomValue &&
                blankSelection.GetProperties().Find("TOP", false)?.GetValue(blankSelection) is bool blankTopValue && !blankTopValue &&
                blankSelection.GetProperties().Find("MODE", false)?.GetValue(blankSelection) is int blankModeValue && blankModeValue == 0 &&
-               string.Equals(blankSelection.GetProperties().Find("FILLCHAR", false)?.GetValue(blankSelection)?.ToString(), string.Empty, StringComparison.Ordinal),
+               string.Equals(blankSelection.GetProperties().Find("FILLCHAR", false)?.GetValue(blankSelection)?.ToString(), string.Empty, StringComparison.Ordinal) &&
+               blankSelection.GetProperties().Find("TOTALTYPE", false)?.GetValue(blankSelection) is int blankTotalTypeValue && blankTotalTypeValue == 0,
             "blank and false report-control logical values should remain stable as false until edited");
 
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -681,6 +701,7 @@ internal static partial class Program
         var pseudoTopLabel = pseudoSelection?.GetProperties().Find("TOP", false)?.DisplayName;
         var pseudoModeLabel = pseudoSelection?.GetProperties().Find("MODE", false)?.DisplayName;
         var pseudoFillCharLabel = pseudoSelection?.GetProperties().Find("FILLCHAR", false)?.DisplayName;
+        var pseudoTotalTypeLabel = pseudoSelection?.GetProperties().Find("TOTALTYPE", false)?.DisplayName;
         Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
@@ -708,7 +729,9 @@ internal static partial class Program
                pseudoModeLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoModeLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoFillCharLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
-               pseudoFillCharLabel.EndsWith(" !!]", StringComparison.Ordinal),
+               pseudoFillCharLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoTotalTypeLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoTotalTypeLabel.EndsWith(" !!]", StringComparison.Ordinal),
             "pseudo-localized report-control property labels should remain visibly localized");
 
         var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
@@ -729,7 +752,8 @@ internal static partial class Program
                readOnlySelection.GetProperties().Find("BOTTOM", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("TOP", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("MODE", false)?.IsReadOnly == true &&
-               readOnlySelection.GetProperties().Find("FILLCHAR", false)?.IsReadOnly == true,
+               readOnlySelection.GetProperties().Find("FILLCHAR", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("TOTALTYPE", false)?.IsReadOnly == true,
             "read-only report documents should keep report-control behavior properties read-only");
     }
 

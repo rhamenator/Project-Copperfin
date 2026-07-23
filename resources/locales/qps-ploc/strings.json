@@ -2704,6 +2704,7 @@
   "AssetEditor.Property.StringTrimming": "[!! Šţŕïñĝ Ţŕïmmïñĝ !!]",
   "AssetEditor.Property.ExpressionAlignment": "[!! Ëxþŕëššïøñ Åľïģñmëñţ !!]",
   "AssetEditor.Property.ExpressionDataType": "[!! Ëxþŕëššïøñ Ðåţå Ţýþë !!]",
+  "AssetEditor.Property.CalculationType": "[!! Çåľçüľåţïøñ Ţýþë !!]",
   "AssetEditor.Property.PrintWhen": "[Print When]",
   "AssetEditor.Property.PrintWhenGroup": "[When Group Changes]",
   "AssetEditor.Property.PrintWhenRepeated": "[Print Repeated Values]",

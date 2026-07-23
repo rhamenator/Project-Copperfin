@@ -356,6 +356,7 @@ StudioLayoutObjectSnapshot build_layout_object(
         add_highlight("RULERLINES");
         add_highlight("OFFSET");
         add_highlight("FILLCHAR");
+        add_highlight("TOTALTYPE");
     }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
