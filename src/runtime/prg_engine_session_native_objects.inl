@@ -203,6 +203,12 @@
                 runtime_object.properties["hideselection"] = make_boolean_value(true);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("autocomplete"))
+            {
+                runtime_object.properties["autocomplete"] = make_number_value(0.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {

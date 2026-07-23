@@ -8362,6 +8362,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_hideselection_invariant(runtime_object);
                 }
+                if (normalized_property_name == "autocomplete")
+                {
+                    normalize_native_textbox_autocomplete_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

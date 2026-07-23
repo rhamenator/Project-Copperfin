@@ -525,6 +525,14 @@ bool native_textbox_hideselection_member_name_matches(
            runtime_object.properties.contains("hideselection");
 }
 
+bool native_textbox_autocomplete_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "autocomplete" &&
+           native_textbox_autocomplete_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("autocomplete");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
