@@ -8338,6 +8338,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_inputmask_invariant(runtime_object);
                 }
+                if (normalized_property_name == "format")
+                {
+                    normalize_native_textbox_format_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

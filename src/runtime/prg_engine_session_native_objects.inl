@@ -167,6 +167,12 @@
                 runtime_object.properties["inputmask"] = make_string_value("");
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("format"))
+            {
+                runtime_object.properties["format"] = make_string_value("");
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
