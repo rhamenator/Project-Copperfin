@@ -8370,6 +8370,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_enablehyperlinks_invariant(runtime_object);
                 }
+                if (normalized_property_name == "tooltiptext")
+                {
+                    normalize_native_textbox_tooltiptext_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

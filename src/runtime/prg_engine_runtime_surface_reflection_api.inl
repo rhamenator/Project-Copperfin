@@ -231,6 +231,11 @@ bool is_native_textbox_enablehyperlinks_member_name(const RuntimeOleObjectState&
     return native_textbox_enablehyperlinks_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_tooltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_tooltiptext_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -678,6 +683,20 @@ void normalize_native_textbox_enablehyperlinks_invariant(RuntimeOleObjectState& 
     }
 
     enable_hyperlinks->second = make_boolean_value(value_as_bool(enable_hyperlinks->second));
+}
+
+void normalize_native_textbox_tooltiptext_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_tooltiptext_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto tooltip_text = runtime_object.properties.find("tooltiptext");
+    if (tooltip_text == runtime_object.properties.end()) {
+        return;
+    }
+
+    tooltip_text->second = make_string_value(value_as_string(tooltip_text->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
