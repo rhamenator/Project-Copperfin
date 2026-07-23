@@ -8414,6 +8414,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_dateformat_invariant(runtime_object);
                 }
+                if (normalized_property_name == "century")
+                {
+                    normalize_native_textbox_century_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

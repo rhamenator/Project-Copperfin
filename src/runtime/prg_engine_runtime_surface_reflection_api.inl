@@ -286,6 +286,11 @@ bool is_native_textbox_dateformat_member_name(const RuntimeOleObjectState& runti
     return native_textbox_dateformat_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_century_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_century_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -900,6 +905,23 @@ void normalize_native_textbox_dateformat_invariant(RuntimeOleObjectState& runtim
     const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
     const long long normalized = rounded >= 0LL && rounded <= 14LL ? rounded : 0LL;
     date_format->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_textbox_century_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_century_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto century = runtime_object.properties.find("century");
+    if (century == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(century->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
+    const long long normalized = rounded >= 0LL && rounded <= 2LL ? rounded : 1LL;
+    century->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

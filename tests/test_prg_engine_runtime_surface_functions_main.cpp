@@ -110,6 +110,7 @@ int main()
     test_native_textbox_themes_defaults_mutate_and_stay_builtin();
     test_native_textbox_selected_colors_defaults_mutate_and_stay_builtin();
     test_native_textbox_dateformat_defaults_mutate_and_stay_builtin();
+    test_native_textbox_century_defaults_mutate_and_stay_builtin();
     test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     test_native_combobox_style_defaults_mutate_and_stay_builtin();
     test_native_combobox_readonly_defaults_mutate_and_honor_style_guard();
