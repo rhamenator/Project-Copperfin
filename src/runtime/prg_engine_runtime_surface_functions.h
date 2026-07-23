@@ -81,6 +81,7 @@ bool is_native_autohidescrollbar_member_name(const RuntimeOleObjectState& runtim
 bool is_native_firstelement_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_numberofelements_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_displaycount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_nulldisplay_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_newitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -101,6 +102,7 @@ void normalize_native_listbox_moverbars_invariant(RuntimeOleObjectState& runtime
 void normalize_native_listbox_autohidescrollbar_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_array_range_invariants(RuntimeOleObjectState& runtime_object);
 void normalize_native_combobox_displaycount_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_list_control_nulldisplay_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_name_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

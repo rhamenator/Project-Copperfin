@@ -259,6 +259,7 @@
             is_native_firstelement_member_name(*runtime_object, property_name) ||
             is_native_numberofelements_member_name(*runtime_object, property_name) ||
             is_native_displaycount_member_name(*runtime_object, property_name) ||
+            is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -600,6 +601,9 @@
             if (member_name == "displaycount") {
                 normalize_native_combobox_displaycount_invariant(*runtime_object);
             }
+            if (member_name == "nulldisplay") {
+                normalize_native_list_control_nulldisplay_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -647,6 +651,9 @@
             }
             if (member_name == "displaycount") {
                 normalize_native_combobox_displaycount_invariant(*runtime_object);
+            }
+            if (member_name == "nulldisplay") {
+                normalize_native_list_control_nulldisplay_invariant(*runtime_object);
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -735,6 +742,7 @@
             is_native_firstelement_member_name(*runtime_object, property_name) ||
             is_native_numberofelements_member_name(*runtime_object, property_name) ||
             is_native_displaycount_member_name(*runtime_object, property_name) ||
+            is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||

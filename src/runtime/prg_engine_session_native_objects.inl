@@ -238,6 +238,13 @@
 
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("nulldisplay"))
+            {
+                runtime_object.properties["nulldisplay"] = make_string_value(".NULL.");
+            }
+
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("listindex"))
             {
                 runtime_object.properties["listindex"] = make_number_value(0.0);

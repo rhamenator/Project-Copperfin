@@ -384,8 +384,15 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
 
     if (const auto selected_slot = native_list_control_selected_slot(runtime_object);
         selected_slot.has_value()) {
+        std::string display_text = value_as_string(runtime_object.collection_items[*selected_slot]);
+        if (runtime_object.collection_items[*selected_slot].is_null) {
+            if (const auto null_display = runtime_object.properties.find("nulldisplay");
+                null_display != runtime_object.properties.end()) {
+                display_text = value_as_string(null_display->second);
+            }
+        }
         runtime_object.properties["displayvalue"] =
-            make_string_value(value_as_string(runtime_object.collection_items[*selected_slot]));
+            make_string_value(display_text);
         const std::size_t bound_column = native_list_control_bound_column(runtime_object);
         if (*selected_slot < runtime_object.list_rows.size() &&
             bound_column >= 1U &&

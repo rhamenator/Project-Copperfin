@@ -345,6 +345,20 @@ void normalize_native_combobox_displaycount_invariant(RuntimeOleObjectState& run
     display_count->second = make_number_value(static_cast<double>(normalized));
 }
 
+void normalize_native_list_control_nulldisplay_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto null_display = runtime_object.properties.find("nulldisplay");
+    if (null_display == runtime_object.properties.end()) {
+        return;
+    }
+
+    null_display->second = make_string_value(value_as_string(null_display->second));
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -493,6 +507,11 @@ bool is_native_numberofelements_member_name(const RuntimeOleObjectState& runtime
 bool is_native_displaycount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_displaycount_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_nulldisplay_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_nulldisplay_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
