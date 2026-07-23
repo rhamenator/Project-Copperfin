@@ -764,6 +764,7 @@ bool native_string_control_value_member_name_matches(
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_base_class == "textbox" ||
+           normalized_base_class == "editbox" ||
            normalized_base_class == "combobox" ||
            normalized_base_class == "listbox";
 }

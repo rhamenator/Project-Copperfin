@@ -18,6 +18,7 @@ namespace copperfin::runtime_surface_tests
             "lDefault = oText.Text\n"
             "lHas = PEMSTATUS(oText, 'Text', 1)\n"
             "lEditHas = PEMSTATUS(oEdit, 'Text', 1)\n"
+            "lEditValueHas = PEMSTATUS(oEdit, 'Value', 1)\n"
             "lReadOnly = PEMSTATUS(oText, 'Text', 5)\n"
             "oText.Value = 'unformatted'\n"
             "lAfterValue = oText.Text\n"
@@ -26,6 +27,8 @@ namespace copperfin::runtime_surface_tests
             "lAfterRejected = GETPEM(oText, 'Text')\n"
             "lAdd = ADDPROPERTY(oText, 'Text', 'shadow')\n"
             "lRemove = REMOVEPROPERTY(oText, 'Text')\n"
+            "lEditValueAdd = ADDPROPERTY(oEdit, 'Value', 'shadow')\n"
+            "lEditValueRemove = REMOVEPROPERTY(oEdit, 'Value')\n"
             "nPropMembers = AMEMBERS(aPropMembers, oText, 1)\n"
             "lPropHas = .F.\n"
             "FOR i = 1 TO nPropMembers\n"
@@ -64,6 +67,7 @@ namespace copperfin::runtime_surface_tests
         check("ldefault", "");
         check("lhas", "true");
         check("ledithas", "true");
+        check("leditvaluehas", "true");
         check("lreadonly", "true");
         check("laftervalue", "unformatted");
         check("lset", "false");
@@ -71,6 +75,8 @@ namespace copperfin::runtime_surface_tests
         check("lafterrejected", "unformatted");
         check("ladd", "false");
         check("lremove", "false");
+        check("leditvalueadd", "false");
+        check("leditvalueremove", "false");
         check("lprophas", "true");
         check("lderived", "derived");
         expect(state.ole_objects.size() == 3U,
