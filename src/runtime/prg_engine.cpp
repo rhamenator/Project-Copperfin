@@ -8342,6 +8342,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_format_invariant(runtime_object);
                 }
+                if (normalized_property_name == "passwordchar")
+                {
+                    normalize_native_textbox_passwordchar_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

@@ -485,6 +485,14 @@ bool native_textbox_format_member_name_matches(
            runtime_object.properties.contains("format");
 }
 
+bool native_textbox_passwordchar_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "passwordchar" &&
+           native_textbox_passwordchar_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("passwordchar");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

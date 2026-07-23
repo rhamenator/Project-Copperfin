@@ -110,6 +110,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_text_alignment_defaults_mutate_and_stay_builtin();
     void test_native_textbox_inputmask_defaults_mutate_and_stay_builtin();
     void test_native_textbox_format_defaults_mutate_and_stay_builtin();
+    void test_native_textbox_passwordchar_defaults_mutate_and_stay_builtin();
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     void test_native_string_control_value_defaults_mutates_and_stays_builtin();
     void test_native_selectonentry_defaults_mutate_and_stay_builtin();

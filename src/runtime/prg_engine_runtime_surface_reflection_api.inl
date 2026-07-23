@@ -196,6 +196,11 @@ bool is_native_textbox_format_member_name(const RuntimeOleObjectState& runtime_o
     return native_textbox_format_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_passwordchar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_passwordchar_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -532,6 +537,20 @@ void normalize_native_textbox_format_invariant(RuntimeOleObjectState& runtime_ob
     }
 
     format->second = make_string_value(value_as_string(format->second));
+}
+
+void normalize_native_textbox_passwordchar_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_passwordchar_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto password_char = runtime_object.properties.find("passwordchar");
+    if (password_char == runtime_object.properties.end()) {
+        return;
+    }
+
+    password_char->second = make_string_value(value_as_string(password_char->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
