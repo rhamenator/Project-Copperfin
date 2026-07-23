@@ -1,6 +1,8 @@
 # Agent Handoff
 
-- #4420 under #3217 is shipped in `9c252d30`: native ListBox multi-select now keeps `ListIndex` on the focused row when that row is explicitly deselected, while `Selected(n)`/`SelectedID(n)` bits remain independent and `ListItemID`, `Value`, and `DisplayValue` stay focused-row coherent. Single-selection fallback behavior remains unchanged. Focused and full local runtime-surface coverage passes; exact-head hosted validation remains pending.
+- #4420 under #3217 is shipped in `9c252d30`: native ListBox multi-select now keeps `ListIndex` on the focused row when that row is explicitly deselected, while `Selected(n)`/`SelectedID(n)` bits remain independent and `ListItemID`, `Value`, and `DisplayValue` stay focused-row coherent. Single-selection fallback behavior remains unchanged. Focused and full local runtime-surface coverage passes, and the exact-head RC native matrix passed on hosted Linux (`29984891966`), macOS (`29984891958`), and Windows (`29984891935`).
+
+- Hosted permissive safety validation for #4403 passed on exact head `a34b041f` in run `29989839062`: the dispatch-boundary contract, primary-hazard coverage, and non-secret JSON report all passed. This does not close #4403; strict closed-issue validation, the archived runtime-recovery walkthrough, and independent reviewer sign-off remain release gates.
 
 - Release publication is intentionally deferred until the complete MVP evidence set is closed. Do not tag or publish installers/VSIX artifacts as a release while any required hosted platform validation, Windows mounted-VFP9/deep smoke evidence, Visual Studio UI smoke, launcher-trust provisioning/evidence, or independent safety traceability review remains open. Build artifacts may be produced for validation only.
 
