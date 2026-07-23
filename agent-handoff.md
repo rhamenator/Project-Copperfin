@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Exact-head local native validation for `abff6b3f` passed all 308 CTest tests in 316.67 seconds. The only skips were `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`, both expected toolchain/platform conditionals. This is independent Linux evidence only; hosted Windows mounted-VFP9/UI evidence and enforced launcher-trust provisioning remain release gates.
+
 - #4440 under #3217 is implemented in the current slice: native PRG ComboBox/ListBox `NullDisplay` now exposes a built-in text property defaulting to `.NULL.`. Selected null rows use the object-specific text for `DisplayValue` while the underlying `Value` remains null; direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize to text, and `PEMSTATUS()`, `AMEMBERS()`, and property shadow/removal protection remain coherent. Do not claim global `SET NULLDISPLAY`, native UI painting, or unrelated database null propagation; hosted cross-platform and Windows VFP9 validation remain required.
 
 - #4439 under #3217 is implemented in the current slice: native PRG ComboBox `DisplayCount` now exposes a logical built-in numeric property defaulting to 0 for plain and derived ComboBox objects. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize nonnegative values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent and ListBox does not gain the property. Do not claim popup sizing, scroll-arrow painting, or native UI behavior; hosted cross-platform and Windows VFP9 validation remain required.
