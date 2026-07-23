@@ -291,6 +291,44 @@ internal static partial class Program
                         }
                     }
                 });
+            SetPrivateField(
+                control,
+                "currentDebugSession",
+                new CopperfinRuntimeDebugSession
+                {
+                    Success = true,
+                    State = new CopperfinRuntimePauseState
+                    {
+                        ExecutedStatements = 3,
+                        Events = new List<CopperfinRuntimeEvent>
+                        {
+                            new CopperfinRuntimeEvent
+                            {
+                                Category = "runtime.dispatch",
+                                Detail = "first hit",
+                                Location = taskSourcePath + ":2"
+                            },
+                            new CopperfinRuntimeEvent
+                            {
+                                Category = "runtime.dispatch",
+                                Detail = "second hit",
+                                Location = taskSourcePath + ":2"
+                            },
+                            new CopperfinRuntimeEvent
+                            {
+                                Category = "runtime.call",
+                                Detail = "another line",
+                                Location = taskSourcePath + ":3"
+                            },
+                            new CopperfinRuntimeEvent
+                            {
+                                Category = "runtime.info",
+                                Detail = "no source location",
+                                Location = "runtime-only"
+                            }
+                        }
+                    }
+                });
             typeof(CopperfinAssetEditorControl)
                 .GetMethod("RefreshProjectWorkspaceInsightViews", BindingFlags.Instance | BindingFlags.NonPublic)
                 ?.Invoke(control, null);
@@ -405,6 +443,33 @@ internal static partial class Program
                     objectActivated &&
                     string.Equals(requestedPath, CopperfinDocumentPathIdentity.Normalize(childPath), StringComparison.Ordinal),
                     "project workspace Object Browser activation should open the selected source asset");
+            }
+
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.SelectTab(8);
+            }
+            Application.DoEvents();
+            var coverage = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count == 4 &&
+                                        string.Equals(list.Columns[0].Text, "Location", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[1].Text, "Hits", StringComparison.OrdinalIgnoreCase));
+            Expect(coverage is not null && coverage.Items.Count == 2,
+                "project workspace Coverage should deduplicate source locations and retain stable columns");
+            if (coverage is not null && coverage.Items.Count == 2)
+            {
+                Expect(coverage.Items[0].SubItems[1].Text == "2",
+                    "project workspace Coverage should count repeated runtime events at one source location");
+                coverage.Items[0].Selected = true;
+                coverage.Items[0].Focused = true;
+                requestedTaskPath = null;
+                requestedTaskLine = 0;
+                var coverageActivated = control.TryActivateSelectedCoverage();
+                Expect(
+                    coverageActivated &&
+                    string.Equals(requestedTaskPath, taskSourcePath, StringComparison.Ordinal) &&
+                    requestedTaskLine == 2,
+                    "project workspace Coverage activation should open the selected source line");
             }
             hostForm.Close();
         }

@@ -56,6 +56,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public override string ToString() => DisplayName;
     }
 
+    private sealed class CoverageLocation
+    {
+        public string FilePath { get; set; } = string.Empty;
+        public int Line { get; set; }
+        public int HitCount { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string Detail { get; set; } = string.Empty;
+    }
+
     private sealed class ExplorerSelectionState
     {
         public int? ReportSectionRecordIndex { get; set; }
@@ -123,6 +132,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
     private readonly RichTextBox coverageSummaryBox;
+    private readonly ListView coverageView;
     private readonly RichTextBox databaseSummaryBox;
     private readonly TextBox dataExplorerFilterBox;
     private readonly TextBox objectBrowserFilterBox;
@@ -790,6 +800,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.Coverage")
         };
 
+        coverageView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        coverageView.Columns.Add(this.localization.Text("AssetEditor.Coverage.Column.Location"), 320);
+        coverageView.Columns.Add(this.localization.Text("AssetEditor.Coverage.Column.Hits"), 70);
+        coverageView.Columns.Add(this.localization.Text("AssetEditor.Coverage.Column.Category"), 180);
+        coverageView.Columns.Add(this.localization.Text("AssetEditor.Coverage.Column.Detail"), 460);
+        coverageView.DoubleClick += (_, _) => TryActivateSelectedCoverage();
+        coverageView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedCoverage();
+        };
+
         databaseSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -959,7 +994,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var buildersPage = new TabPage(this.localization.Text("AssetEditor.Tab.Builders"));
         buildersPage.Controls.Add(buildersSummaryBox);
         var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
-        coveragePage.Controls.Add(coverageSummaryBox);
+        var coveragePageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        var coverageSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150
+        };
+        coverageSummaryPanel.Controls.Add(coverageSummaryBox);
+        coveragePageHost.Controls.Add(coverageView);
+        coveragePageHost.Controls.Add(coverageSummaryPanel);
+        coveragePage.Controls.Add(coveragePageHost);
         var databasePage = new TabPage(this.localization.Text("AssetEditor.Tab.Database"));
         databasePage.Controls.Add(databaseSummaryBox);
         projectWorkspaceTabs.TabPages.Add(summaryPage);
@@ -1204,6 +1251,34 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    public bool TryActivateSelectedCoverage()
+    {
+        if (coverageView.SelectedItems.Count != 1 ||
+            coverageView.SelectedItems[0].Tag is not CoverageLocation coverage ||
+            coverage.Line < 1 ||
+            string.IsNullOrWhiteSpace(coverage.FilePath) ||
+            !File.Exists(coverage.FilePath))
+        {
+            return false;
+        }
+
+        var openDocumentAtLine = OpenDocumentAtLineRequested;
+        if (openDocumentAtLine is not null)
+        {
+            openDocumentAtLine(coverage.FilePath, coverage.Line);
+            return true;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(coverage.FilePath);
+        return true;
+    }
+
     public string GetUndoCommandText()
     {
         if (TryFindFocusedUndoTextBox() is not null)
@@ -1364,6 +1439,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         toolboxStatusLabel.Text = this.localization.Text("AssetEditor.Toolbox.Loading");
         buildersSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Builders");
         coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
+        coverageView.Items.Clear();
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
@@ -2746,6 +2822,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
         toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
         buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
+        PopulateCoverage(currentDebugSession);
         coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
         databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
     }
@@ -2766,6 +2843,70 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             item.SubItems.Add(task.Message);
             item.Tag = task;
             taskListView.Items.Add(item);
+        }
+    }
+
+    private void PopulateCoverage(CopperfinRuntimeDebugSession? session)
+    {
+        coverageView.Items.Clear();
+        if (session is null || !session.Success)
+        {
+            return;
+        }
+
+        var locations = new Dictionary<string, CoverageLocation>(CopperfinDocumentPathIdentity.CreateComparer());
+        foreach (var runtimeEvent in session.State.Events)
+        {
+            if (string.IsNullOrWhiteSpace(runtimeEvent.Location))
+            {
+                continue;
+            }
+
+            var separator = runtimeEvent.Location.LastIndexOf(':');
+            if (separator <= 0 ||
+                separator == runtimeEvent.Location.Length - 1 ||
+                !int.TryParse(
+                    runtimeEvent.Location.Substring(separator + 1),
+                    NumberStyles.Integer,
+                    CultureInfo.InvariantCulture,
+                    out var line) ||
+                line < 1)
+            {
+                continue;
+            }
+
+            var filePath = runtimeEvent.Location.Substring(0, separator);
+            if (!locations.TryGetValue(runtimeEvent.Location, out var coverage))
+            {
+                coverage = new CoverageLocation
+                {
+                    FilePath = filePath,
+                    Line = line,
+                    Category = runtimeEvent.Category,
+                    Detail = runtimeEvent.Detail
+                };
+                locations.Add(runtimeEvent.Location, coverage);
+            }
+
+            coverage.HitCount++;
+            if (string.IsNullOrWhiteSpace(coverage.Category))
+            {
+                coverage.Category = runtimeEvent.Category;
+            }
+            if (string.IsNullOrWhiteSpace(coverage.Detail))
+            {
+                coverage.Detail = runtimeEvent.Detail;
+            }
+        }
+
+        foreach (var coverage in locations.Values.OrderBy(item => item.FilePath, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Line))
+        {
+            var item = new ListViewItem($"{Path.GetFileName(coverage.FilePath)}:{coverage.Line.ToString(CultureInfo.InvariantCulture)}");
+            item.SubItems.Add(coverage.HitCount.ToString(CultureInfo.InvariantCulture));
+            item.SubItems.Add(coverage.Category);
+            item.SubItems.Add(coverage.Detail);
+            item.Tag = coverage;
+            coverageView.Items.Add(item);
         }
     }
 
@@ -3268,6 +3409,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             debuggerSummaryBox.Text = BuildDebugSessionSummary(session);
             if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
             {
+                PopulateCoverage(session);
                 coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, session);
             }
             if (projectWorkspaceTabs.Visible)
@@ -4476,12 +4618,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var executedLocations = state.Events
             .Where(runtimeEvent => !string.IsNullOrWhiteSpace(runtimeEvent.Location))
             .Select(runtimeEvent => runtimeEvent.Location)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Distinct(CopperfinDocumentPathIdentity.CreateComparer())
             .ToList();
 
         summary.AppendLine($"{L("AssetEditor.Summary.LabelPauseReason")}: {state.Reason}");
         summary.AppendLine($"{L("AssetEditor.Summary.LabelExecutedStatements")}: {state.ExecutedStatements}");
         summary.AppendLine($"{L("AssetEditor.Summary.LabelDistinctRuntimeLocations")}: {executedLocations.Count}");
+        summary.AppendLine();
+        summary.AppendLine(L("AssetEditor.Summary.CoverageActivation"));
         summary.AppendLine();
         summary.AppendLine(L("AssetEditor.Summary.RecentCoverageSignals"));
         foreach (var location in executedLocations.Take(12))

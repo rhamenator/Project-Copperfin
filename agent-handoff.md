@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4446 under #25 is implemented in the current slice: the shared project Coverage pane now deduplicates valid runtime `file:line` events into localized location/hit/category/detail columns and activates existing source files through the shared line callback. Non-source runtime events remain excluded from activation, runtime event schemas and paths remain invariant, and the summary retains pause/session context. Builders and remaining utility panes are still separate work.
+
 - #4445 under #25 is implemented in the current slice: the shared project Object Browser now renders every filtered object node in localized kind/title/file/detail columns and respects the hide-project-records option. Enter or double-click activates eligible existing source assets through the shared document callback; project records, missing files, and excluded nodes do not open. Preserve object identities, paths, exclusion state, and localized warnings; builders, coverage, and remaining utility panes are still separate work.
 
 - #4444 under #25 is implemented in the current slice: the shared project Data Explorer now renders every filtered database/table/query asset in localized kind/title/file/group columns. Enter or double-click activates the selected non-excluded asset through the shared document callback in both VSIX and standalone Studio. Preserve filter semantics, group ids, paths, exclusion state, and localized warnings; connector guidance and the remaining utility panes are still separate work.
