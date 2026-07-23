@@ -419,6 +419,12 @@
                 runtime_object.properties["rowheight"] = make_number_value(-1.0);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("headerheight"))
+            {
+                runtime_object.properties["headerheight"] = make_number_value(20.0);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {

@@ -205,6 +205,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_caption_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||
+               native_grid_headerheight_member_name_matches(runtime_object, member_name) ||
                native_editbox_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
                native_textbox_format_member_name_matches(runtime_object, member_name) ||

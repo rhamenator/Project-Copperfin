@@ -375,6 +375,7 @@ int main()
     test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_allowaddnew_default_mutates_and_stays_builtin();
     test_native_grid_rowheight_defaults_mutate_and_stay_builtin();
+    test_native_grid_headerheight_defaults_mutate_and_stay_builtin();
     test_native_columnorder_default_reorders_siblings_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();

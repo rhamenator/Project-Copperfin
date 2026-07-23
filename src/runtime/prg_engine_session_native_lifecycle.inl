@@ -258,6 +258,7 @@
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
             seed_native_visual_properties(*runtime_object);
             normalize_native_grid_rowheight_invariant(*runtime_object);
+            normalize_native_grid_headerheight_invariant(*runtime_object);
             refresh_native_list_control_controlsource_value_kind_hint(
                 *runtime_object,
                 resolve_controlsource_value);
@@ -374,6 +375,7 @@
                             trim_copy(property_statement.expression);
                     }
                     normalize_native_grid_rowheight_invariant(*child_object);
+                    normalize_native_grid_headerheight_invariant(*child_object);
                     refresh_native_list_control_controlsource_value_kind_hint(
                         *child_object,
                         resolve_controlsource_value);
