@@ -201,6 +201,11 @@ bool is_native_textbox_passwordchar_member_name(const RuntimeOleObjectState& run
     return native_textbox_passwordchar_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_maxlength_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_maxlength_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -551,6 +556,24 @@ void normalize_native_textbox_passwordchar_invariant(RuntimeOleObjectState& runt
     }
 
     password_char->second = make_string_value(value_as_string(password_char->second));
+}
+
+void normalize_native_textbox_maxlength_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_maxlength_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto max_length = runtime_object.properties.find("maxlength");
+    if (max_length == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(max_length->second);
+    max_length->second = make_number_value(
+        std::isfinite(value) && value >= 0.0
+            ? static_cast<double>(std::llround(value))
+            : 0.0);
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

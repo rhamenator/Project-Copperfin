@@ -493,6 +493,14 @@ bool native_textbox_passwordchar_member_name_matches(
            runtime_object.properties.contains("passwordchar");
 }
 
+bool native_textbox_maxlength_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "maxlength" &&
+           native_textbox_maxlength_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("maxlength");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
