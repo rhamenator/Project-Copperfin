@@ -4,6 +4,7 @@ namespace copperfin::runtime_surface_tests
 {
     void test_native_list_controls_file_rowsource_materializes_masks();
     void test_native_list_controls_field_structure_rowsource_materializes_fields();
+    void test_native_list_controls_collection_rowsource_materializes_members();
     void test_expression_runtime_surface_extensions();
     void test_local_optimistic_table_buffering();
     void test_local_optimistic_table_buffering_append_lifecycle();

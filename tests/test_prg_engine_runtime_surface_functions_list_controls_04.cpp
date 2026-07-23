@@ -148,6 +148,89 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_collection_rowsource_materializes_members()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_collection_rowsource";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "collection_rowsource.prg";
+        write_text(
+            main_path,
+            "colItems = CREATEOBJECT('Collection')\n"
+            "colItems.Add('Alpha', 'alpha')\n"
+            "colItems.Add('Beta')\n"
+            "oForm = CREATEOBJECT('Form')\n"
+            "oForm.Caption = 'Window'\n"
+            "oForm.Name = 'frmOne'\n"
+            "colItems.Add(oForm, 'form')\n"
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "oCombo.RowSourceType = 10\n"
+            "oCombo.RowSource = 'colItems'\n"
+            "oCombo.Requery()\n"
+            "nComboCount = oCombo.ListCount\n"
+            "cComboScalar = oCombo.List(1)\n"
+            "cComboObject = oCombo.List(3)\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.RowSourceType = 10\n"
+            "oList.RowSource = 'colItems, Caption, Name'\n"
+            "oList.Requery()\n"
+            "nListCount = oList.ListCount\n"
+            "cListScalar = oList.List(1, 1)\n"
+            "cListScalarProperty = oList.List(1, 2)\n"
+            "cListObjectCaption = oList.List(3, 1)\n"
+            "cListObjectName = oList.List(3, 2)\n"
+            "oMissing = CREATEOBJECT('ListBox')\n"
+            "oMissing.RowSourceType = 10\n"
+            "oMissing.RowSource = 'notACollection'\n"
+            "oMissing.Requery()\n"
+            "nMissingCount = oMissing.ListCount\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native collection RowSource script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("ncombocount", "3");
+        check("ccomboscalar", "Alpha");
+        check("ccomboobject", "(Object)");
+        check("nlistcount", "3");
+        check("clistscalar", "Alpha");
+        check("clistscalarproperty", "");
+        check("clistobjectcaption", "Window");
+        check("clistobjectname", "Form");
+        check("nmissingcount", "0");
+        expect(state.ole_objects.size() == 5U,
+               "collection RowSource coverage should register collection, form, and three controls");
+        if (state.ole_objects.size() == 5U)
+        {
+            expect(state.ole_objects[2].list_rows.size() == 3U &&
+                       state.ole_objects[3].list_rows.size() == 3U &&
+                       state.ole_objects[4].list_rows.empty(),
+                   "collection RowSource should preserve collection order and empty missing sources");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_itemdata_stays_coherent()
     {
         namespace fs = std::filesystem;

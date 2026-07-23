@@ -5665,6 +5665,64 @@ namespace copperfin::runtime
             }
             break;
         }
+        case 10:
+        {
+            const std::vector<std::string> source_parts = split_csv_like(row_source);
+            if (source_parts.empty() || trim_copy(source_parts.front()).empty())
+            {
+                break;
+            }
+
+            const PrgValue collection_value = evaluate_expression(trim_copy(source_parts.front()), frame);
+            const auto collection = resolve_ole_object(collection_value);
+            if (!collection.has_value() || !is_native_collection_object(**collection))
+            {
+                break;
+            }
+
+            std::vector<std::string> property_names;
+            property_names.reserve(source_parts.size() > 1U ? source_parts.size() - 1U : 0U);
+            for (std::size_t index = 1U; index < source_parts.size(); ++index)
+            {
+                const std::string property_name = trim_copy(unquote_string(source_parts[index]));
+                if (!property_name.empty())
+                {
+                    property_names.push_back(property_name);
+                }
+            }
+
+            refreshed_rows.reserve((*collection)->collection_items.size());
+            for (const PrgValue &item : (*collection)->collection_items)
+            {
+                const auto item_object = resolve_ole_object(item);
+                if (!item_object.has_value())
+                {
+                    std::vector<PrgValue> row;
+                    row.reserve(property_names.size() + 1U);
+                    row.push_back(item);
+                    row.resize(property_names.size() + 1U, make_empty_value());
+                    refreshed_rows.push_back(std::move(row));
+                    continue;
+                }
+
+                if (property_names.empty())
+                {
+                    refreshed_rows.push_back({make_string_value("(Object)")});
+                    continue;
+                }
+
+                std::vector<PrgValue> row;
+                row.reserve(property_names.size());
+                for (const std::string &property_name : property_names)
+                {
+                    row.push_back(
+                        read_native_property_if_present(**item_object, property_name, frame)
+                            .value_or(make_empty_value()));
+                }
+                refreshed_rows.push_back(std::move(row));
+            }
+            break;
+        }
         case 3:
         case 4:
         {
