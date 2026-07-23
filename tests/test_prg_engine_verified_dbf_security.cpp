@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -457,6 +458,43 @@ void test_typed_append_from_reads_verified_destination_schema()
     fs::remove_all(root, ignored);
 }
 
+void test_verified_alter_table_fails_closed_without_mutation()
+{
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE", "qps-ploc");
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_alter_table_mutation";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 12U}},
+        {{"Ada"}});
+    expect(created.ok, "verified ALTER TABLE fixture should be created");
+    const std::string verified_bytes = read_text(table_path);
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_alter_table.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "ALTER TABLE '" + table_path.string() + "' ADD COLUMN STATUS C(8)\n"
+        "RETURN\n",
+        options);
+
+    expect(!state.completed, "strict ALTER TABLE should fail closed for an admitted DBF");
+    expect(state.message.find("[!! ") == 0U &&
+               state.message.find("ALTER TABLE") != std::string::npos &&
+               state.message.find("verified package DBFs") == std::string::npos,
+           "strict ALTER TABLE rejection should preserve the localized mutation contract: " + state.message);
+    const auto unchanged = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(unchanged.ok && unchanged.table.fields.size() == 1U && unchanged.table.records.size() == 1U,
+           "strict ALTER TABLE rejection should leave the physical DBF unchanged");
+    fs::remove_all(root, ignored);
+}
+
 void test_typed_append_from_fails_closed_without_verified_source_bytes()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_unverified_typed_append";
@@ -754,6 +792,7 @@ int main()
     test_typed_append_from_reads_verified_json_bytes();
     test_typed_append_from_reads_verified_delimited_bytes();
     test_typed_append_from_reads_verified_destination_schema();
+    test_verified_alter_table_fails_closed_without_mutation();
     test_typed_append_from_fails_closed_without_verified_source_bytes();
     test_restore_from_reads_verified_mem_bytes();
     test_restore_from_fails_closed_without_verified_mem_bytes();

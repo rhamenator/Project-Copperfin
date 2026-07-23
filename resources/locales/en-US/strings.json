@@ -1066,6 +1066,7 @@
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration": "{command} requires a supported field declaration",
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE requires a target table name",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only",
+  "Runtime.Prg.Dispatch.Error.VerifiedAlterTableMutationUnsupported": "ALTER TABLE mutation is not supported for verified package DBFs: {path}",
   "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions": "DIMENSION/DECLARE requires array dimensions",
   "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition": "Illegal redefinition of variable \"{variableName}\"",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE failed: {errorMessage} ({path})",

@@ -6173,6 +6173,19 @@
                 table_path = table_path.lexically_normal();
                 std::string affected_field = trim_copy(statement.expression);
 
+                // Verified package DBFs are immutable admissions until the runtime has
+                // an exact-object mutation/publication path. Do not reopen and mutate
+                // the logical path under strict verification.
+                if (options.require_verified_file_byte_overrides)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.VerifiedAlterTableMutationUnsupported",
+                        { {"path", copperfin::platform::path_to_utf8_string(table_path)} });
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 if (!execute_with_command_undo(copperfin::platform::path_to_utf8_string(table_path), "ALTER TABLE", [&]
                 {
                     if (!ensure_transaction_backup_for_table(copperfin::platform::path_to_utf8_string(table_path)))

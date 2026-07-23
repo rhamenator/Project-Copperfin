@@ -1395,6 +1395,7 @@
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration": "{command} requires a supported field declaration",
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE requires a target table name",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only",
+  "Runtime.Prg.Dispatch.Error.VerifiedAlterTableMutationUnsupported": "[!! ALTER TABLE müţåţïøñ ïš ñøţ šüppørţëð før vërïfïëð þåçkåġë ÐßFš: {path} !!]",
   "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions": "DIMENSION/DECLARE requires array dimensions",
   "Runtime.Prg.Dispatch.Error.IllegalVariableRedefinition": "[!! Ïllëgål rëdëfïñïtïøñ øf vårïåblë \"{variableName}\". !!]",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE failed: {errorMessage} ({path})",
