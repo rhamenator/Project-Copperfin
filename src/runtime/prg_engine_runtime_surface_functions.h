@@ -77,6 +77,7 @@ bool is_native_textbox_autocomplete_member_name(const RuntimeOleObjectState& run
 bool is_native_textbox_enablehyperlinks_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_tooltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_margin_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_textbox_mouseicon_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_tabindex_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -137,6 +138,7 @@ void normalize_native_textbox_autocomplete_invariant(RuntimeOleObjectState& runt
 void normalize_native_textbox_enablehyperlinks_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_tooltiptext_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_margin_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_textbox_mouseicon_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_selectonentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

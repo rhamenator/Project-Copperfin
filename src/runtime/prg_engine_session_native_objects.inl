@@ -227,6 +227,12 @@
                 runtime_object.properties["margin"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("mouseicon"))
+            {
+                runtime_object.properties["mouseicon"] = make_string_value("");
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {

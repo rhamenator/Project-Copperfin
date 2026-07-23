@@ -557,6 +557,14 @@ bool native_textbox_margin_member_name_matches(
            runtime_object.properties.contains("margin");
 }
 
+bool native_textbox_mouseicon_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "mouseicon" &&
+           native_textbox_mouseicon_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("mouseicon");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
