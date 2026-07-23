@@ -24,6 +24,22 @@ internal static partial class Program
                textBox.DefaultNamePrefix == "txt",
             "managed toolbox palette should preserve invariant item metadata and localized display text");
 
+        var containerResult = CopperfinStudioSnapshotClient.TryLoadToolboxPalette(
+            "form",
+            new CopperfinLocalization("es-419"),
+            "container");
+        var grid = containerResult.Items.FirstOrDefault(item => item.Id == "grid");
+        Expect(containerResult.Success &&
+               grid is not null &&
+               grid.Title == "Cuadricula" &&
+               grid.VfpClass == "Grid",
+            "managed shared editor should expose the localized container toolbox context with invariant metadata");
+
+        var localization = new CopperfinLocalization("pt-BR");
+        Expect(localization.Text("AssetEditor.Toolbox.ContextLabel") == "Contexto:" &&
+               localization.Text("AssetEditor.Toolbox.Context.Container") == "Contêiner",
+            "toolbox context controls should use the active locale catalog");
+
         var arguments = CopperfinStudioHostBridge.BuildToolboxCreateArguments(
             "sample.scx",
             "textbox",

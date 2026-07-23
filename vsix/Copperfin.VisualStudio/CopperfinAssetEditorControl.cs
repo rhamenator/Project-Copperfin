@@ -41,6 +41,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public CopperfinStudioReportGrouping Grouping { get; set; } = new();
     }
 
+    private sealed class ToolboxContextOption
+    {
+        public ToolboxContextOption(string id, string displayName)
+        {
+            Id = id;
+            DisplayName = displayName;
+        }
+
+        public string Id { get; }
+        public string DisplayName { get; }
+
+        public override string ToString() => DisplayName;
+    }
+
     private sealed class ExplorerSelectionState
     {
         public int? ReportSectionRecordIndex { get; set; }
@@ -99,6 +113,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox toolboxSummaryBox;
     private readonly ListView toolboxPaletteList;
     private readonly Button toolboxCreateButton;
+    private readonly Label toolboxContextLabel;
+    private readonly ComboBox toolboxContextComboBox;
     private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
     private readonly RichTextBox coverageSummaryBox;
@@ -117,6 +133,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private CopperfinProjectExecutionResult? currentProjectWorkflowResult;
     private CopperfinProjectInsights? currentProjectInsights;
     private bool suppressSelectionSync;
+    private bool suppressToolboxContextChange;
     private bool embeddedStudioShell;
     private int loadGeneration;
     private readonly object uiActionGate = new();
@@ -610,6 +627,36 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                                           !string.IsNullOrWhiteSpace(currentPath);
         };
 
+        toolboxContextLabel = new Label
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Toolbox.ContextLabel")
+        };
+        toolboxContextComboBox = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Enabled = false,
+            Width = 150
+        };
+        toolboxContextComboBox.SelectedIndexChanged += (_, _) =>
+        {
+            var path = currentPath;
+            if (suppressToolboxContextChange ||
+                toolboxContextComboBox.SelectedItem is not ToolboxContextOption toolboxContextOption ||
+                currentSnapshot is null ||
+                path is null ||
+                string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            _ = LoadToolboxPaletteAsync(
+                path,
+                currentSnapshot.AssetFamily,
+                loadGeneration,
+                toolboxContextOption.Id);
+        };
+
         toolboxStatusLabel = new Label
         {
             AutoSize = true,
@@ -752,6 +799,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             WrapContents = false,
             Padding = new Padding(6)
         };
+        toolboxActionPanel.Controls.Add(toolboxContextLabel);
+        toolboxActionPanel.Controls.Add(toolboxContextComboBox);
         toolboxActionPanel.Controls.Add(toolboxCreateButton);
         toolboxActionPanel.Controls.Add(toolboxStatusLabel);
         var toolboxSummaryPanel = new Panel
@@ -1064,6 +1113,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
         toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
         toolboxPaletteList.Items.Clear();
+        toolboxContextComboBox.Items.Clear();
+        toolboxContextComboBox.Enabled = false;
         toolboxCreateButton.Enabled = false;
         toolboxStatusLabel.Text = this.localization.Text("AssetEditor.Toolbox.Loading");
         buildersSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Builders");
@@ -1117,11 +1168,60 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             SyncExplorerSelection();
             LoadSurface();
             UpdateObjectLifecycleButtonVisibility();
-            _ = LoadToolboxPaletteAsync(path, snapshotResult.Document.AssetFamily, expectedGeneration);
+            ConfigureToolboxContexts(snapshotResult.Document.AssetFamily);
         });
     }
 
-    private async Task LoadToolboxPaletteAsync(string path, string assetFamily, int expectedGeneration)
+    private void ConfigureToolboxContexts(string assetFamily)
+    {
+        var contexts = new List<ToolboxContextOption>();
+        if (assetFamily == "form")
+        {
+            contexts.Add(new ToolboxContextOption("form", localization.Text("AssetEditor.Toolbox.Context.Form")));
+            contexts.Add(new ToolboxContextOption("container", localization.Text("AssetEditor.Toolbox.Context.Container")));
+        }
+        else if (assetFamily == "class")
+        {
+            contexts.Add(new ToolboxContextOption("class_designer", localization.Text("AssetEditor.Toolbox.Context.Class")));
+        }
+        else if (assetFamily is "report" or "label")
+        {
+            contexts.Add(new ToolboxContextOption("report", localization.Text("AssetEditor.Toolbox.Context.Report")));
+        }
+
+        suppressToolboxContextChange = true;
+        try
+        {
+            var path = currentPath;
+            toolboxContextComboBox.Items.Clear();
+            foreach (var context in contexts)
+            {
+                toolboxContextComboBox.Items.Add(context);
+            }
+
+            toolboxContextComboBox.Enabled = contexts.Count > 0;
+            if (contexts.Count > 0 && path is not null && !string.IsNullOrWhiteSpace(path))
+            {
+                toolboxContextComboBox.SelectedIndex = 0;
+                _ = LoadToolboxPaletteAsync(
+                    path,
+                    assetFamily,
+                    loadGeneration,
+                    contexts[0].Id);
+            }
+        }
+        finally
+        {
+            suppressToolboxContextChange = false;
+        }
+
+    }
+
+    private async Task LoadToolboxPaletteAsync(
+        string path,
+        string assetFamily,
+        int expectedGeneration,
+        string toolboxContext)
     {
         if (assetFamily is not ("form" or "class" or "report" or "label"))
         {
@@ -1132,7 +1232,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         var paletteResult = await Task.Run(() =>
-            CopperfinStudioSnapshotClient.TryLoadToolboxPalette(assetFamily, localization));
+            CopperfinStudioSnapshotClient.TryLoadToolboxPalette(assetFamily, localization, toolboxContext));
         if (IsDisposed || Disposing || expectedGeneration != loadGeneration ||
             !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
         {
@@ -1190,13 +1290,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         var path = currentPath!;
         var generation = loadGeneration;
+        if (toolboxContextComboBox.SelectedItem is not ToolboxContextOption toolboxContextOption)
+        {
+            return;
+        }
+
         toolboxCreateButton.Enabled = false;
         toolboxStatusLabel.Text = localization.Text("AssetEditor.Toolbox.Creating");
         var createResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryCreateToolboxItem(
             path,
             item.Id,
             currentSnapshot!.AssetFamily,
-            localization));
+            localization,
+            toolboxContextOption.Id));
         if (IsDisposed || Disposing || generation != loadGeneration ||
             !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
         {

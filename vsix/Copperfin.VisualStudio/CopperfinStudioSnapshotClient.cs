@@ -151,7 +151,8 @@ internal static class CopperfinStudioSnapshotClient
 
     public static CopperfinStudioToolboxPaletteResult TryLoadToolboxPalette(
         string assetFamily,
-        CopperfinLocalization? localization = null)
+        CopperfinLocalization? localization = null,
+        string? toolboxContext = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
@@ -164,10 +165,14 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
+        var resolvedToolboxContext = string.IsNullOrWhiteSpace(toolboxContext)
+            ? ToolboxContextForAssetFamily(assetFamily)
+            : toolboxContext!;
+
         var commandResult = RunCommand(
             studioHostPath!,
             CopperfinStudioHostBridge.BuildToolboxPaletteQueryArguments(
-                ToolboxContextForAssetFamily(assetFamily)),
+                resolvedToolboxContext),
             localization);
         if (!commandResult.Success)
         {
@@ -213,7 +218,8 @@ internal static class CopperfinStudioSnapshotClient
         string assetPath,
         string toolboxItemId,
         string assetFamily,
-        CopperfinLocalization? localization = null)
+        CopperfinLocalization? localization = null,
+        string? toolboxContext = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
@@ -226,12 +232,16 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
+        var resolvedToolboxContext = string.IsNullOrWhiteSpace(toolboxContext)
+            ? ToolboxContextForAssetFamily(assetFamily)
+            : toolboxContext!;
+
         var commandResult = RunCommand(
             studioHostPath!,
             CopperfinStudioHostBridge.BuildToolboxCreateArguments(
                 assetPath,
                 toolboxItemId,
-                ToolboxContextForAssetFamily(assetFamily)),
+                resolvedToolboxContext),
             localization);
         if (!commandResult.Success)
         {
