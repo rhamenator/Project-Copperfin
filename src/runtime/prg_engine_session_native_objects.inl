@@ -251,6 +251,60 @@
                 runtime_object.properties["statusbartext"] = make_string_value("");
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("strictdateentry"))
+            {
+                runtime_object.properties["strictdateentry"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("themes"))
+            {
+                runtime_object.properties["themes"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("selectedbackcolor"))
+            {
+                runtime_object.properties["selectedbackcolor"] = make_int64_value(8421504LL);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("selectedforecolor"))
+            {
+                runtime_object.properties["selectedforecolor"] = make_int64_value(16777215LL);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("dateformat"))
+            {
+                runtime_object.properties["dateformat"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("century"))
+            {
+                runtime_object.properties["century"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("datemark"))
+            {
+                runtime_object.properties["datemark"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("hours"))
+            {
+                runtime_object.properties["hours"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("seconds"))
+            {
+                runtime_object.properties["seconds"] = make_number_value(2.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
@@ -265,11 +319,40 @@
             }
 
             if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox" ||
                  normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("value"))
             {
                 runtime_object.properties["value"] = make_string_value("");
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("selstart"))
+            {
+                runtime_object.properties["selstart"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("sellength"))
+            {
+                runtime_object.properties["sellength"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("seltext"))
+            {
+                runtime_object.properties["seltext"] = make_string_value("");
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("text"))
+            {
+                runtime_object.properties["text"] = make_string_value("");
             }
 
             if ((normalized_base_class == "textbox" ||

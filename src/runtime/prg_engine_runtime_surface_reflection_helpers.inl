@@ -589,6 +589,112 @@ bool native_textbox_statusbartext_member_name_matches(
            runtime_object.properties.contains("statusbartext");
 }
 
+bool native_textbox_strictdateentry_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "strictdateentry" &&
+           native_textbox_strictdateentry_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("strictdateentry");
+}
+
+bool native_textbox_themes_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "themes" &&
+           native_textbox_themes_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("themes");
+}
+
+bool native_textbox_selectedbackcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "selectedbackcolor" &&
+           native_textbox_selectedbackcolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("selectedbackcolor");
+}
+
+bool native_textbox_selectedforecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "selectedforecolor" &&
+           native_textbox_selectedforecolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("selectedforecolor");
+}
+
+bool native_textbox_dateformat_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dateformat" &&
+           native_textbox_dateformat_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dateformat");
+}
+
+bool native_textbox_century_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "century" &&
+           native_textbox_century_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("century");
+}
+
+bool native_textbox_datemark_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "datemark" &&
+           native_textbox_datemark_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("datemark");
+}
+
+bool native_textbox_hours_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "hours" &&
+           native_textbox_hours_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("hours");
+}
+
+bool native_textbox_seconds_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "seconds" &&
+           native_textbox_seconds_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("seconds");
+}
+
+bool native_textbox_selection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "selstart" &&
+        normalized_member_name != "sellength" &&
+        normalized_member_name != "seltext") {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return (normalized_base_class == "textbox" ||
+            normalized_base_class == "editbox") &&
+           runtime_object.properties.contains("value") &&
+           runtime_object.properties.contains("selstart") &&
+           runtime_object.properties.contains("sellength") &&
+           runtime_object.properties.contains("seltext");
+}
+
+bool native_textbox_text_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "text" ||
+        !runtime_object.properties.contains("text") ||
+        !runtime_object.properties.contains("value")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "editbox";
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -658,6 +764,7 @@ bool native_string_control_value_member_name_matches(
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_base_class == "textbox" ||
+           normalized_base_class == "editbox" ||
            normalized_base_class == "combobox" ||
            normalized_base_class == "listbox";
 }

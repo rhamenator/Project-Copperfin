@@ -251,6 +251,17 @@
             is_native_textbox_disabledbackcolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
+            is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
+            is_native_textbox_themes_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selectedbackcolor_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selectedforecolor_member_name(*runtime_object, property_name) ||
+            is_native_textbox_dateformat_member_name(*runtime_object, property_name) ||
+            is_native_textbox_century_member_name(*runtime_object, property_name) ||
+            is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
+            is_native_textbox_hours_member_name(*runtime_object, property_name) ||
+            is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selection_member_name(*runtime_object, property_name) ||
+            is_native_textbox_text_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -339,6 +350,9 @@
         const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
+        }
+        if (is_native_textbox_selection_member_name(*runtime_object, member_name)) {
+            normalize_native_textbox_selection_invariant(*runtime_object);
         }
         if (const auto list_cell = parse_native_list_control_list_member_cell(*runtime_object, member_name);
             list_cell.has_value()) {
@@ -508,6 +522,15 @@
         if (is_native_topindex_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
                 write_native_list_control_top_index(*runtime_object, arguments[2]));
+        }
+        if (is_native_textbox_selection_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(write_native_textbox_selection_property(
+                *runtime_object,
+                member_name,
+                arguments[2]));
+        }
+        if (is_native_textbox_text_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(false);
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
@@ -687,6 +710,33 @@
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
+            if (member_name == "strictdateentry") {
+                normalize_native_textbox_strictdateentry_invariant(*runtime_object);
+            }
+            if (member_name == "themes") {
+                normalize_native_textbox_themes_invariant(*runtime_object);
+            }
+            if (member_name == "selectedbackcolor") {
+                normalize_native_textbox_selectedbackcolor_invariant(*runtime_object);
+            }
+            if (member_name == "selectedforecolor") {
+                normalize_native_textbox_selectedforecolor_invariant(*runtime_object);
+            }
+            if (member_name == "dateformat") {
+                normalize_native_textbox_dateformat_invariant(*runtime_object);
+            }
+            if (member_name == "century") {
+                normalize_native_textbox_century_invariant(*runtime_object);
+            }
+            if (member_name == "datemark") {
+                normalize_native_textbox_datemark_invariant(*runtime_object);
+            }
+            if (member_name == "hours") {
+                normalize_native_textbox_hours_invariant(*runtime_object);
+            }
+            if (member_name == "seconds") {
+                normalize_native_textbox_seconds_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -832,6 +882,33 @@
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
+            if (member_name == "strictdateentry") {
+                normalize_native_textbox_strictdateentry_invariant(*runtime_object);
+            }
+            if (member_name == "themes") {
+                normalize_native_textbox_themes_invariant(*runtime_object);
+            }
+            if (member_name == "selectedbackcolor") {
+                normalize_native_textbox_selectedbackcolor_invariant(*runtime_object);
+            }
+            if (member_name == "selectedforecolor") {
+                normalize_native_textbox_selectedforecolor_invariant(*runtime_object);
+            }
+            if (member_name == "dateformat") {
+                normalize_native_textbox_dateformat_invariant(*runtime_object);
+            }
+            if (member_name == "century") {
+                normalize_native_textbox_century_invariant(*runtime_object);
+            }
+            if (member_name == "datemark") {
+                normalize_native_textbox_datemark_invariant(*runtime_object);
+            }
+            if (member_name == "hours") {
+                normalize_native_textbox_hours_invariant(*runtime_object);
+            }
+            if (member_name == "seconds") {
+                normalize_native_textbox_seconds_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -955,6 +1032,17 @@
             is_native_textbox_disabledbackcolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
+            is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
+            is_native_textbox_themes_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selectedbackcolor_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selectedforecolor_member_name(*runtime_object, property_name) ||
+            is_native_textbox_dateformat_member_name(*runtime_object, property_name) ||
+            is_native_textbox_century_member_name(*runtime_object, property_name) ||
+            is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
+            is_native_textbox_hours_member_name(*runtime_object, property_name) ||
+            is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selection_member_name(*runtime_object, property_name) ||
+            is_native_textbox_text_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

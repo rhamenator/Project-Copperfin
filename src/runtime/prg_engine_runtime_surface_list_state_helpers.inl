@@ -133,6 +133,42 @@ bool native_textbox_statusbartext_runtime_object(const RuntimeOleObjectState& ru
     return native_textbox_inputmask_runtime_object(runtime_object);
 }
 
+bool native_textbox_strictdateentry_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_themes_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_selectedbackcolor_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_selectedforecolor_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_dateformat_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_century_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_datemark_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_hours_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
+bool native_textbox_seconds_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
 bool native_tabindex_runtime_object_matches(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

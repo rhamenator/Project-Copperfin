@@ -7262,6 +7262,14 @@ namespace copperfin::runtime
             {
                 sync_native_list_control_displayvalue_from_selection(runtime_object);
             }
+            if (is_native_textbox_selection_member_name(runtime_object, normalized_property_name))
+            {
+                normalize_native_textbox_selection_invariant(runtime_object);
+            }
+            if (is_native_textbox_text_member_name(runtime_object, normalized_property_name))
+            {
+                normalize_native_textbox_text_invariant(runtime_object);
+            }
             if (is_native_identity_member_name(runtime_object, normalized_property_name))
             {
                 return make_empty_value();
@@ -8025,6 +8033,10 @@ namespace copperfin::runtime
 
         const auto perform_property_write = [&]() -> bool
         {
+            if (is_native_textbox_text_member_name(runtime_object, normalized_property_name))
+            {
+                return false;
+            }
             if (invoke_native_object_method_body_if_present(
                     runtime_object,
                     normalized_property_name + "_assign",
@@ -8073,6 +8085,18 @@ namespace copperfin::runtime
                 {
                     const bool wrote =
                         write_native_column_bound_property(runtime_object, assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
+                }
+                if (is_native_textbox_selection_member_name(runtime_object, normalized_property_name))
+                {
+                    const bool wrote = write_native_textbox_selection_property(
+                        runtime_object,
+                        normalized_property_name,
+                        assigned_value);
                     if (wrote)
                     {
                         remember_property_expression();
@@ -8393,6 +8417,47 @@ namespace copperfin::runtime
                 if (normalized_property_name == "statusbartext")
                 {
                     normalize_native_textbox_statusbartext_invariant(runtime_object);
+                }
+                if (normalized_property_name == "strictdateentry")
+                {
+                    normalize_native_textbox_strictdateentry_invariant(runtime_object);
+                }
+                if (normalized_property_name == "themes")
+                {
+                    normalize_native_textbox_themes_invariant(runtime_object);
+                }
+                if (normalized_property_name == "selectedbackcolor")
+                {
+                    normalize_native_textbox_selectedbackcolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "selectedforecolor")
+                {
+                    normalize_native_textbox_selectedforecolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "dateformat")
+                {
+                    normalize_native_textbox_dateformat_invariant(runtime_object);
+                }
+                if (normalized_property_name == "century")
+                {
+                    normalize_native_textbox_century_invariant(runtime_object);
+                }
+                if (normalized_property_name == "datemark")
+                {
+                    normalize_native_textbox_datemark_invariant(runtime_object);
+                }
+                if (normalized_property_name == "hours")
+                {
+                    normalize_native_textbox_hours_invariant(runtime_object);
+                }
+                if (normalized_property_name == "seconds")
+                {
+                    normalize_native_textbox_seconds_invariant(runtime_object);
+                }
+                if (normalized_property_name == "value")
+                {
+                    normalize_native_textbox_selection_invariant(runtime_object);
+                    normalize_native_textbox_text_invariant(runtime_object);
                 }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
