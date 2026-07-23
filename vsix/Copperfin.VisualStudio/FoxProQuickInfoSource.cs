@@ -3,29 +3,30 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Copperfin.VisualStudio;
 
-[Export(typeof(IQuickInfoSourceProvider))]
+[Export(typeof(IAsyncQuickInfoSourceProvider))]
 [ContentType(FoxProContentTypeDefinitions.ContentTypeName)]
 [Name("Copperfin FoxPro Quick Info")]
-internal sealed class FoxProQuickInfoSourceProvider : IQuickInfoSourceProvider
+internal sealed class FoxProQuickInfoSourceProvider : IAsyncQuickInfoSourceProvider
 {
     [Import]
     internal Microsoft.VisualStudio.Text.ITextDocumentFactoryService TextDocumentFactoryService = null!;
 
-    public IQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
+    public IAsyncQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
     {
         return new FoxProQuickInfoSource(textBuffer, TextDocumentFactoryService);
     }
 }
 
-internal sealed class FoxProQuickInfoSource : IQuickInfoSource
+internal sealed class FoxProQuickInfoSource : IAsyncQuickInfoSource
 {
     private readonly ITextBuffer textBuffer;
     private readonly Microsoft.VisualStudio.Text.ITextDocumentFactoryService textDocumentFactoryService;
@@ -39,18 +40,19 @@ internal sealed class FoxProQuickInfoSource : IQuickInfoSource
         this.textDocumentFactoryService = textDocumentFactoryService;
     }
 
-    public void AugmentQuickInfoSession(IQuickInfoSession session, IList<object> quickInfoContent, out ITrackingSpan applicableToSpan)
+    public Task<QuickInfoItem?> GetQuickInfoItemAsync(
+        IAsyncQuickInfoSession session,
+        CancellationToken cancellationToken)
     {
-        applicableToSpan = null!;
-        if (disposed)
+        if (disposed || cancellationToken.IsCancellationRequested)
         {
-            return;
+            return Task.FromResult<QuickInfoItem?>(null);
         }
 
         var triggerPoint = session.GetTriggerPoint(textBuffer.CurrentSnapshot);
         if (triggerPoint is null)
         {
-            return;
+            return Task.FromResult<QuickInfoItem?>(null);
         }
 
         var snapshot = triggerPoint.Value.Snapshot;
@@ -58,23 +60,26 @@ internal sealed class FoxProQuickInfoSource : IQuickInfoSource
         var span = FoxProTextUtilities.FindTokenSpan(snapshot, position);
         if (span.Length == 0)
         {
-            return;
+            return Task.FromResult<QuickInfoItem?>(null);
         }
 
         var token = snapshot.GetText(span);
         if (string.IsNullOrWhiteSpace(token))
         {
-            return;
+            return Task.FromResult<QuickInfoItem?>(null);
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         var description = FoxProIntelliSenseCatalog.DescribeToken(TryGetFilePath(), token);
         if (string.IsNullOrWhiteSpace(description))
         {
-            return;
+            return Task.FromResult<QuickInfoItem?>(null);
         }
 
-        applicableToSpan = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-        quickInfoContent.Add($"{token}\r\n{description}");
+        var applicableToSpan = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+        return Task.FromResult<QuickInfoItem?>(new QuickInfoItem(
+            applicableToSpan,
+            $"{token}\r\n{description}"));
     }
 
     public void Dispose()

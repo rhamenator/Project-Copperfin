@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4419 under #27 is implemented: FoxPro QuickInfo now uses `IAsyncQuickInfoSourceProvider`/`IAsyncQuickInfoSource` and returns `QuickInfoItem` with the existing tracking span and project-aware/localized description. Cancellation and disposal return no item; preserve token text, language-service identities, and machine contracts. Local language-service build/tests pass; hosted Windows VSIX validation remains required.
+
 - #4418 under #2996 is implemented: `SelectionPropertyDescriptor.GetValue`/`SetValue` match the nullable `PropertyDescriptor` component contract and return safely for null or unrelated components, while valid property-grid access remains unchanged. Local language-service and designer-smoke projects build with zero warnings and language-service tests pass; hosted designer/VSIX validation remains required.
 
 - #4417 under #25 is implemented: POSIX `ps` descendant discovery in `CopperfinProcessRunner` now uses `BeginOutputReadLine()` plus a bounded completion event rather than `ReadToEndAsync().Wait()`/`.Result`. Preserve the 2-second discovery grace, cleanup fallback, reverse descendant order, and empty-list failure behavior. Local language-service tests pass; net472 project builds, while direct Mono execution of its Windows cmd/PowerShell fixture is not applicable on Linux. Hosted Windows and POSIX process-runner validation remain required.
