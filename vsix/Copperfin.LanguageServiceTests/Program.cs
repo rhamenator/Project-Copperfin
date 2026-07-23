@@ -439,7 +439,8 @@ internal static partial class Program
                 new() { Name = "RULERLINES", Value = "4" },
                 new() { Name = "OFFSET", Value = "1" },
                 new() { Name = "FILLCHAR", Value = "N" },
-                new() { Name = "TOTALTYPE", Value = "2" }
+                new() { Name = "TOTALTYPE", Value = "2" },
+                new() { Name = "RESETTOTAL", Value = "1" }
             }
         };
 
@@ -471,6 +472,9 @@ internal static partial class Program
         var reportTotalTypeProperty = reportExpressionSelection?.GetProperties().Find("TOTALTYPE", false);
         var labelTotalTypeProperty = labelSelection?.GetProperties().Find("TOTALTYPE", false);
         var imageTotalTypeProperty = imageSelection?.GetProperties().Find("TOTALTYPE", false);
+        var reportResetTotalProperty = reportExpressionSelection?.GetProperties().Find("RESETTOTAL", false);
+        var labelResetTotalProperty = labelSelection?.GetProperties().Find("RESETTOTAL", false);
+        var imageResetTotalProperty = imageSelection?.GetProperties().Find("RESETTOTAL", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
@@ -488,6 +492,9 @@ internal static partial class Program
         Expect(reportTotalTypeProperty is not null && labelTotalTypeProperty is null && imageTotalTypeProperty is null &&
                reportTotalTypeProperty.DisplayName == "Calculation Type",
             "only report-expression selections should expose the localized TOTALTYPE property");
+        Expect(reportResetTotalProperty is not null && labelResetTotalProperty is null && imageResetTotalProperty is null &&
+               reportResetTotalProperty.DisplayName == "Reset Total",
+            "only report-expression selections should expose the localized RESETTOTAL property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -512,6 +519,10 @@ internal static partial class Program
         Expect(reportExpressionSelection?.TryGetUpdate("TOTALTYPE", out var totalTypeTarget, out var totalTypeValue) == true &&
                totalTypeTarget == "TOTALTYPE" && totalTypeValue == "3",
             "report-expression TOTALTYPE edits should preserve the invariant update target");
+        reportResetTotalProperty?.SetValue(reportExpressionSelection, 2);
+        Expect(reportExpressionSelection?.TryGetUpdate("RESETTOTAL", out var resetTotalTarget, out var resetTotalValue) == true &&
+               resetTotalTarget == "RESETTOTAL" && resetTotalValue == "2",
+            "report-expression RESETTOTAL edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()

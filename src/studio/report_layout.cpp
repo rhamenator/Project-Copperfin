@@ -357,6 +357,7 @@ StudioLayoutObjectSnapshot build_layout_object(
         add_highlight("OFFSET");
         add_highlight("FILLCHAR");
         add_highlight("TOTALTYPE");
+        add_highlight("RESETTOTAL");
     }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");

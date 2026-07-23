@@ -144,6 +144,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         "TOTALTYPE",
                         L("AssetEditor.Property.CalculationType", "Calculation Type"),
                         selection.Read(snapshotObject, "TOTALTYPE"));
+                    selection.AddEditableInt(
+                        "RESETTOTAL",
+                        L("AssetEditor.Property.ResetTotal", "Reset Total"),
+                        selection.Read(snapshotObject, "RESETTOTAL"));
                 }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
