@@ -4,6 +4,8 @@
 
 - Release publication is intentionally deferred until the complete MVP evidence set is closed. Do not tag or publish installers/VSIX artifacts as a release while any required hosted platform validation, Windows mounted-VFP9/deep smoke evidence, Visual Studio UI smoke, launcher-trust provisioning/evidence, or independent safety traceability review remains open. Build artifacts may be produced for validation only.
 
+- RC readiness is a separate implementation gate: once the planned MVP implementations, focused regressions, and local build/test contracts are complete, produce a testable release candidate for user validation even if hosted release evidence, independent safety review, launcher-trust provisioning, or final publication artifacts remain open. This RC is not a release, tag, or publication; keep the evidence gates in force before public release.
+
 - The Phase A issue-tree table now records #4069 as closed: native Form/FormSet `Load` dispatch is shipped through the stack-frugal iterative method-frame path. Do not reopen it without fresh regression evidence; choose a new prompt-sized #3217 child from live GitHub state before adding native runtime work.
 
 - #4417 follow-up in `b390519c`: the Windows descendant-held-pipe success fixture now allows a 10-second configured process-runner bound instead of a brittle 5-second wall-clock assertion. It still requires successful root exit, captured output, no timeout, and return before the configured bound. This hardens hosted-test scheduling tolerance without changing production process-runner behavior; focused local language-service tests pass and hosted new-head VSIX validation remains required.
