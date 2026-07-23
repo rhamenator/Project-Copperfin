@@ -431,6 +431,12 @@
                 runtime_object.properties["allowheadersizing"] = make_boolean_value(true);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("allowrowsizing"))
+            {
+                runtime_object.properties["allowrowsizing"] = make_boolean_value(true);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {

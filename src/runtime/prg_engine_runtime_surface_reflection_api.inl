@@ -681,6 +681,20 @@ void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& ru
     allow_header_sizing->second = make_boolean_value(value_as_bool(allow_header_sizing->second));
 }
 
+void normalize_native_grid_allowrowsizing_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_allowrowsizing_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto allow_row_sizing = runtime_object.properties.find("allowrowsizing");
+    if (allow_row_sizing == runtime_object.properties.end()) {
+        return;
+    }
+
+    allow_row_sizing->second = make_boolean_value(value_as_bool(allow_row_sizing->second));
+}
+
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_editbox_scrollbars_runtime_object(runtime_object)) {
@@ -1233,6 +1247,11 @@ bool is_native_grid_headerheight_member_name(const RuntimeOleObjectState& runtim
 bool is_native_grid_allowheadersizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_allowheadersizing_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_allowrowsizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_allowrowsizing_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
