@@ -8366,6 +8366,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_grid_headerheight_invariant(runtime_object);
                 }
+                if (normalized_property_name == "allowheadersizing")
+                {
+                    normalize_native_grid_allowheadersizing_invariant(runtime_object);
+                }
                 if (normalized_property_name == "scrollbars")
                 {
                     normalize_native_editbox_scrollbars_invariant(runtime_object);
