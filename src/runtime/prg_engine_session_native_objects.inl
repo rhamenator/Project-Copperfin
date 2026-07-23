@@ -273,7 +273,9 @@
                 runtime_object.properties["incrementalsearch"] = make_boolean_value(true);
             }
 
-            if (normalized_base_class == "listbox" &&
+            if ((normalized_base_class == "listbox" ||
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "textbox") &&
                 !runtime_object.properties.contains("integralheight"))
             {
                 runtime_object.properties["integralheight"] = make_boolean_value(false);

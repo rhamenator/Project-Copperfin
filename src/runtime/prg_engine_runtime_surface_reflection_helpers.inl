@@ -864,7 +864,11 @@ bool native_integralheight_member_name_matches(
         return false;
     }
 
-    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "listbox" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "textbox";
 }
 
 bool native_boundto_member_name_matches(

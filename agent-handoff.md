@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4453 under #3217 is implemented in the current slice: native PRG EditBox/TextBox `IntegralHeight` now exposes a built-in logical property defaulting to `.F.` and reports read-only reflection for plain and derived controls. Direct assignment, `GETPEM()` / `SETPEM()` / `PUTPEM()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` cannot change or erase it. Do not claim pixel-level height adjustment or native layout; hosted cross-platform and Windows VFP9 validation remain required.
+
 - #4452 under #3217 is implemented in the current slice: native PRG Column/EditBox/TextBox `SelectOnEntry` now exposes a built-in logical property with the documented defaults `.T.` for Column and `.F.` for EditBox/TextBox. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim focus, highlighting, text selection, or native UI interaction; hosted cross-platform and Windows VFP9 validation remain required.
 
 - #4451 under #3217 is implemented in the current slice: native PRG ComboBox/ListBox `IncrementalSearch` now exposes a built-in logical property defaulting to `.T.` for plain and derived controls. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim keyboard/prefix-search behavior or native UI interaction; hosted cross-platform and Windows VFP9 validation remain required.
