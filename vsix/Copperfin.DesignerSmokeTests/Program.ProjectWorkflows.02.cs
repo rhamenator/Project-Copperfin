@@ -81,6 +81,9 @@ internal static partial class Program
             }
             var taskSourcePath = Path.Combine(root, "code", "main.prg");
             File.WriteAllText(taskSourcePath, "* Copperfin task source" + Environment.NewLine + "* TODO: wire the startup command" + Environment.NewLine);
+            var dataAssetPath = Path.Combine(root, "data", "customers.dbf");
+            Directory.CreateDirectory(Path.GetDirectoryName(dataAssetPath)!);
+            File.WriteAllText(dataAssetPath, "data asset");
             File.WriteAllText(Path.GetFullPath(outsidePath), "outside");
 
             foreach (var relativePath in supportedRelativePaths)
@@ -257,6 +260,16 @@ internal static partial class Program
                             Line = 5,
                             Detail = "? SaveOrder()"
                         }
+                    },
+                    DataAssets = new List<CopperfinProjectDataAsset>
+                    {
+                        new CopperfinProjectDataAsset
+                        {
+                            Kind = "Table",
+                            Title = "customers",
+                            FilePath = dataAssetPath,
+                            GroupTitle = "Tables"
+                        }
                     }
                 });
             typeof(CopperfinAssetEditorControl)
@@ -311,6 +324,34 @@ internal static partial class Program
                     string.Equals(requestedTaskPath, taskSourcePath, StringComparison.Ordinal) &&
                     requestedTaskLine == 5,
                     "project workspace Code References activation should open the selected source line");
+            }
+
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.SelectTab(4);
+            }
+            var dataFilter = GetPrivateField<TextBox>(control, "dataExplorerFilterBox");
+            if (dataFilter is not null)
+            {
+                dataFilter.Text = "customer";
+            }
+            Application.DoEvents();
+            var dataExplorer = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count == 4 &&
+                                        string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[1].Text, "Title", StringComparison.OrdinalIgnoreCase));
+            Expect(dataExplorer is not null && dataExplorer.Items.Count == 1,
+                "project workspace Data Explorer should apply its filter to all matching assets with stable columns");
+            if (dataExplorer is not null && dataExplorer.Items.Count == 1)
+            {
+                dataExplorer.Items[0].Selected = true;
+                dataExplorer.Items[0].Focused = true;
+                requestedPath = null;
+                var dataActivated = control.TryActivateSelectedDataAsset();
+                Expect(
+                    dataActivated &&
+                    string.Equals(requestedPath, dataAssetPath, StringComparison.Ordinal),
+                    "project workspace Data Explorer activation should open the selected asset path");
             }
             hostForm.Close();
         }

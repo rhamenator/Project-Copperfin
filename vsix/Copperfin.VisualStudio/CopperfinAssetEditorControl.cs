@@ -112,6 +112,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox codeReferencesSummaryBox;
     private readonly ListView codeReferencesView;
     private readonly RichTextBox dataExplorerSummaryBox;
+    private readonly ListView dataExplorerView;
     private readonly RichTextBox objectBrowserSummaryBox;
     private readonly RichTextBox toolboxSummaryBox;
     private readonly ListView toolboxPaletteList;
@@ -636,6 +637,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer")
         };
 
+        dataExplorerView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        dataExplorerView.Columns.Add(this.localization.Text("AssetEditor.DataExplorer.Column.Kind"), 110);
+        dataExplorerView.Columns.Add(this.localization.Text("AssetEditor.DataExplorer.Column.Title"), 220);
+        dataExplorerView.Columns.Add(this.localization.Text("AssetEditor.DataExplorer.Column.File"), 320);
+        dataExplorerView.Columns.Add(this.localization.Text("AssetEditor.DataExplorer.Column.Group"), 180);
+        dataExplorerView.DoubleClick += (_, _) => TryActivateSelectedDataAsset();
+        dataExplorerView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedDataAsset();
+        };
+
         objectBrowserSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -847,7 +873,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             Dock = DockStyle.Fill
         };
-        dataExplorerPageHost.Controls.Add(dataExplorerSummaryBox);
+        var dataExplorerSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150
+        };
+        dataExplorerSummaryPanel.Controls.Add(dataExplorerSummaryBox);
+        dataExplorerPageHost.Controls.Add(dataExplorerView);
+        dataExplorerPageHost.Controls.Add(dataExplorerSummaryPanel);
         dataExplorerPageHost.Controls.Add(dataExplorerFilterBox);
         var dataExplorerPage = new TabPage(this.localization.Text("AssetEditor.Tab.DataExplorer"));
         dataExplorerPage.Controls.Add(dataExplorerPageHost);
@@ -1095,6 +1128,27 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    public bool TryActivateSelectedDataAsset()
+    {
+        if (currentSnapshot?.AssetFamily != "project" ||
+            dataExplorerView.SelectedItems.Count != 1 ||
+            dataExplorerView.SelectedItems[0].Tag is not CopperfinProjectDataAsset asset ||
+            asset.Excluded ||
+            !File.Exists(asset.FilePath))
+        {
+            return false;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(asset.FilePath);
+        return true;
+    }
+
     public string GetUndoCommandText()
     {
         if (TryFindFocusedUndoTextBox() is not null)
@@ -1244,6 +1298,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         codeReferencesSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences");
         codeReferencesView.Items.Clear();
         dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
+        dataExplorerView.Items.Clear();
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
         toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
         toolboxPaletteList.Items.Clear();
@@ -2629,6 +2684,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
         PopulateCodeReferences(currentProjectInsights);
         codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
+        PopulateDataExplorer(currentProjectInsights, dataExplorerFilterBox.Text);
         dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights, dataExplorerFilterBox.Text);
         objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
         toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
@@ -2674,6 +2730,43 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             item.Tag = symbol;
             codeReferencesView.Items.Add(item);
         }
+    }
+
+    private void PopulateDataExplorer(CopperfinProjectInsights? insights, string? filter)
+    {
+        dataExplorerView.Items.Clear();
+        if (insights is null)
+        {
+            return;
+        }
+
+        foreach (var asset in FilterDataAssets(insights, filter))
+        {
+            var item = new ListViewItem(BuildProjectInsightArtifactKindDisplayText(asset.Kind));
+            item.SubItems.Add(asset.Title);
+            item.SubItems.Add(asset.FilePath);
+            item.SubItems.Add(asset.GroupTitle + (asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty));
+            item.Tag = asset;
+            if (asset.Excluded)
+            {
+                item.ForeColor = Color.Firebrick;
+            }
+
+            dataExplorerView.Items.Add(item);
+        }
+    }
+
+    private List<CopperfinProjectDataAsset> FilterDataAssets(CopperfinProjectInsights insights, string? filter)
+    {
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        return insights.DataAssets
+            .Where(asset =>
+                string.IsNullOrWhiteSpace(normalizedFilter) ||
+                asset.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                asset.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                BuildProjectInsightArtifactKindDisplayText(asset.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
     }
 
     private string BuildGuidanceText(string assetFamily)
@@ -4131,14 +4224,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         var normalizedFilter = (filter ?? string.Empty).Trim();
-        var filteredAssets = insights.DataAssets
-            .Where(asset =>
-                string.IsNullOrWhiteSpace(normalizedFilter) ||
-                asset.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                asset.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                BuildProjectInsightArtifactKindDisplayText(asset.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
-            .ToList();
+        var filteredAssets = FilterDataAssets(insights, filter);
 
         summary.AppendLine($"{L("AssetEditor.Summary.LabelDiscoveredDataAssets")}: {insights.DataAssets.Count}");
         if (!string.IsNullOrWhiteSpace(normalizedFilter))
@@ -4154,28 +4240,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            foreach (var asset in filteredAssets.Take(40))
-            {
-                var excludedSuffix = asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty;
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.DataAssetLine",
-                        BuildProjectInsightArtifactKindDisplayText(asset.Kind),
-                        asset.Title,
-                        excludedSuffix));
-                if (!string.IsNullOrWhiteSpace(asset.FilePath))
-                {
-                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", asset.FilePath));
-                }
-            }
-            if (filteredAssets.Count > 40)
-            {
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.MoreItems",
-                        filteredAssets.Count - 40,
-                        L("AssetEditor.Summary.LabelDataAssets")));
-            }
+            summary.AppendLine(L("AssetEditor.Summary.DataExplorerActivation"));
         }
 
         summary.AppendLine();
