@@ -252,6 +252,9 @@ internal static class CopperfinProcessRunner
     private static IReadOnlyList<int> FindPosixDescendants(int rootProcessId)
     {
         var children = new Dictionary<int, List<int>>();
+        var output = new StringBuilder();
+        var outputLock = new object();
+        using var outputCompleted = new ManualResetEventSlim(false);
         try
         {
             using var ps = new Process
@@ -265,29 +268,43 @@ internal static class CopperfinProcessRunner
                     CreateNoWindow = true
                 }
             };
+            ps.OutputDataReceived += (_, args) =>
+            {
+                if (args.Data is null)
+                {
+                    TrySetCompleted(outputCompleted);
+                    return;
+                }
+
+                lock (outputLock)
+                {
+                    output.AppendLine(args.Data);
+                }
+            };
             if (!ps.Start())
             {
                 return Array.Empty<int>();
             }
 
-            var outputTask = ps.StandardOutput.ReadToEndAsync();
+            ps.BeginOutputReadLine();
             var snapshotStopwatch = Stopwatch.StartNew();
             if (!ps.WaitForExit(ProcessTreeDiscoveryGraceMilliseconds))
             {
                 TryKill(ps);
                 _ = TryWaitForExit(ps, CleanupGraceMilliseconds);
+                TryCancelOutputRead(ps, ps.StartInfo);
                 return Array.Empty<int>();
             }
             var outputWaitMilliseconds = Math.Max(
                 0,
                 ProcessTreeDiscoveryGraceMilliseconds - (int)snapshotStopwatch.ElapsedMilliseconds);
-            if (!outputTask.Wait(outputWaitMilliseconds))
+            if (!outputCompleted.Wait(outputWaitMilliseconds))
             {
+                TryCancelOutputRead(ps, ps.StartInfo);
                 return Array.Empty<int>();
             }
-            var output = outputTask.Result;
 
-            foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var line in ReadCapturedOutput(output, outputLock).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 var fields = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 if (fields.Length != 2 ||
