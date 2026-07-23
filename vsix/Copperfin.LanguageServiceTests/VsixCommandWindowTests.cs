@@ -52,12 +52,15 @@ internal static partial class Program
         }
 
         var vsixRoot = Path.Combine(repositoryRoot, "vsix", "Copperfin.VisualStudio");
+        var studioRoot = Path.Combine(repositoryRoot, "vsix", "Copperfin.Studio");
         var packageSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinPackage.cs"));
         var paneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowPane.cs"));
         var commandSource = File.ReadAllText(Path.Combine(vsixRoot, "ShowCopperfinCommandWindowCommand.cs"));
         var controlSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowControl.cs"));
         var commandTable = File.ReadAllText(Path.Combine(vsixRoot, "Copperfin.vsct"));
         var projectSource = File.ReadAllText(Path.Combine(vsixRoot, "Copperfin.VisualStudio.csproj"));
+        var standaloneSource = File.ReadAllText(Path.Combine(studioRoot, "StudioMainForm.cs"));
+        var editorSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinAssetEditorControl.cs"));
 
         Expect(packageSource.Contains("ProvideToolWindow(", StringComparison.Ordinal) &&
                packageSource.Contains("typeof(CopperfinCommandWindowPane)", StringComparison.Ordinal),
@@ -82,6 +85,11 @@ internal static partial class Program
                controlSource.Contains("commandExecutor", StringComparison.Ordinal) &&
                controlSource.Contains("SubmitCommandForTest", StringComparison.Ordinal),
             "VSIX command window should use Visual Studio theme/font settings and expose an interactive executor boundary");
+        Expect(standaloneSource.Contains("ExecuteCommandWindowInput", StringComparison.Ordinal) &&
+               standaloneSource.Contains("new StudioCommandWindowControl(this.localization, ExecuteCommandWindowInput)", StringComparison.Ordinal) &&
+               editorSource.Contains("VSIX.CommandWindow.Unsupported", StringComparison.Ordinal) &&
+               editorSource.Contains("EvaluateWatchAsync(currentDebugSession", StringComparison.Ordinal),
+            "standalone Command window should route its constrained expression form through the active debugger watch evaluator");
         Expect(File.ReadAllText(Path.Combine(vsixRoot, "OpenInCopperfinStudioCommand.cs"))
                    .Contains("FromVisualStudioUiCulture()", StringComparison.Ordinal) &&
                File.ReadAllText(Path.Combine(vsixRoot, "CopperfinProjectCommands.cs"))

@@ -3893,6 +3893,56 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerDetailTabs.SelectedIndex = debuggerDetailTabs.TabPages.Count - 1;
     }
 
+    // The Command window is a synchronous WinForms executor boundary; the debug client performs transport work off the UI thread.
+#pragma warning disable VSTHRD002
+    internal string ExecuteCommandWindowInput(string command)
+    {
+        var trimmedCommand = command.Trim();
+        if (trimmedCommand.Length < 2 ||
+            trimmedCommand[0] != '?' ||
+            !char.IsWhiteSpace(trimmedCommand[1]))
+        {
+            return localization.Text("VSIX.CommandWindow.Unsupported");
+        }
+
+        var expression = trimmedCommand.Substring(1).Trim();
+        if (expression.Length == 0)
+        {
+            return localization.Text("VSIX.CommandWindow.Unsupported");
+        }
+
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            return localization.Text("VSIX.CommandWindow.NoActiveSession");
+        }
+
+        var session = CopperfinRuntimeDebugClient
+            .EvaluateWatchAsync(currentDebugSession, expression, localization)
+            .GetAwaiter()
+            .GetResult();
+        if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
+        {
+            return localization.Text("VSIX.CommandWindow.Unavailable");
+        }
+
+        if (session.Success)
+        {
+            ApplyDebugSession(session);
+        }
+
+        var watch = session.State.Watches.LastOrDefault(item =>
+            string.Equals(item.Expression, expression, StringComparison.OrdinalIgnoreCase));
+        if (watch?.Success == true)
+        {
+            return watch.Value;
+        }
+
+        return string.IsNullOrWhiteSpace(watch?.Error)
+            ? localization.Text("VSIX.CommandWindow.Unavailable")
+            : watch?.Error ?? string.Empty;
+    }
+#pragma warning restore VSTHRD002
+
     private async Task AddBreakpointAsync()
     {
         var specification = debuggerBreakpointSpecificationBox.Text.Trim();

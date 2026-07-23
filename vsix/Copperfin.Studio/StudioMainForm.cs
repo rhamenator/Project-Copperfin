@@ -94,7 +94,7 @@ internal sealed class StudioMainForm : Form
             Multiline = false
         };
         commandWindowPage = new TabPage(this.localization.Text("VSIX.CommandWindow.Title"));
-        commandWindowControl = new StudioCommandWindowControl(this.localization);
+        commandWindowControl = new StudioCommandWindowControl(this.localization, ExecuteCommandWindowInput);
         commandWindowPage.Controls.Add(commandWindowControl);
         toolWindowTabs.TabPages.Add(commandWindowPage);
         terminalWindowPage = new TabPage(this.localization.Text("VSIX.TerminalWindow.Title"));
@@ -198,6 +198,15 @@ internal sealed class StudioMainForm : Form
     internal void SubmitCommandForTest(string command)
     {
         commandWindowControl.SubmitCommandForTest(command);
+    }
+
+    private string ExecuteCommandWindowInput(string command)
+    {
+        var editor = documentTabs.SelectedTab?.Controls
+            .OfType<CopperfinAssetEditorControl>()
+            .SingleOrDefault();
+        return editor?.ExecuteCommandWindowInput(command) ??
+               localization.Text("VSIX.CommandWindow.NoActiveSession");
     }
 
     internal void SetShellSplitterDistanceForTest(int distance)

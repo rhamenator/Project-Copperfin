@@ -20,6 +20,8 @@
   "VSIX.CommandWindow.Ready": "Listo.",
   "VSIX.CommandWindow.Unavailable": "No se pudo abrir el comando de Copperfin.",
   "VSIX.CommandWindow.SendTooltip": "Enviar comando",
+  "VSIX.CommandWindow.NoActiveSession": "No hay una sesion de depuracion activa de Copperfin.",
+  "VSIX.CommandWindow.Unsupported": "Solo se admite '? <expresion>' en la ventana de comandos de Copperfin.",
   "VSIX.TerminalWindow.Title": "Terminal de Copperfin",
   "VSIX.TerminalWindow.Ready": "Listo.",
   "VSIX.TerminalWindow.SendTooltip": "Enviar comando",

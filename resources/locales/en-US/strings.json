@@ -20,6 +20,8 @@
   "VSIX.CommandWindow.Ready": "Ready.",
   "VSIX.CommandWindow.Unavailable": "Copperfin Command could not be opened.",
   "VSIX.CommandWindow.SendTooltip": "Send command",
+  "VSIX.CommandWindow.NoActiveSession": "No active Copperfin debug session.",
+  "VSIX.CommandWindow.Unsupported": "Only '? <expression>' is supported in the Copperfin Command window.",
   "VSIX.TerminalWindow.Title": "Copperfin Terminal",
   "VSIX.TerminalWindow.Ready": "Ready.",
   "VSIX.TerminalWindow.SendTooltip": "Send command",
