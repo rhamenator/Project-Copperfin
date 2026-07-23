@@ -232,6 +232,7 @@
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
+            is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
@@ -618,6 +619,11 @@
             if (member_name == "incrementalsearch") {
                 normalize_native_list_control_incrementalsearch_invariant(*runtime_object);
             }
+            if (member_name == "selectonentry" &&
+                runtime_object->properties.contains("selectonentry")) {
+                runtime_object->properties["selectonentry"] =
+                    make_boolean_value(value_as_bool(runtime_object->properties["selectonentry"]));
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -677,6 +683,11 @@
             }
             if (member_name == "incrementalsearch") {
                 normalize_native_list_control_incrementalsearch_invariant(*runtime_object);
+            }
+            if (member_name == "selectonentry" &&
+                runtime_object->properties.contains("selectonentry")) {
+                runtime_object->properties["selectonentry"] =
+                    make_boolean_value(value_as_bool(runtime_object->properties["selectonentry"]));
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -738,6 +749,7 @@
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
+            is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||

@@ -93,6 +93,15 @@
                 runtime_object.properties["controlsource"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "column") &&
+                !runtime_object.properties.contains("selectonentry"))
+            {
+                runtime_object.properties["selectonentry"] =
+                    make_boolean_value(normalized_base_class == "column");
+            }
+
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("currentcontrol"))
             {

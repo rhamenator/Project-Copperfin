@@ -446,6 +446,21 @@ bool native_string_control_value_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_selectonentry_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "selectonentry" ||
+        !runtime_object.properties.contains("selectonentry")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "column";
+}
+
 bool native_controlsource_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

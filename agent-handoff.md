@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4452 under #3217 is implemented in the current slice: native PRG Column/EditBox/TextBox `SelectOnEntry` now exposes a built-in logical property with the documented defaults `.T.` for Column and `.F.` for EditBox/TextBox. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim focus, highlighting, text selection, or native UI interaction; hosted cross-platform and Windows VFP9 validation remain required.
+
 - #4451 under #3217 is implemented in the current slice: native PRG ComboBox/ListBox `IncrementalSearch` now exposes a built-in logical property defaulting to `.T.` for plain and derived controls. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim keyboard/prefix-search behavior or native UI interaction; hosted cross-platform and Windows VFP9 validation remain required.
 
 - #4447 under #23 is implemented in the current slice: the shared project Builders pane now queries the existing native launch catalogs across form, class, control, report, label, menu, project, and data-environment contexts. It renders localized kind/builder/context/description metadata in both shells, preserves invariant builder ids/context tokens/entry points, and leaves mutation or external launch execution to the existing admission/dispatch contracts.

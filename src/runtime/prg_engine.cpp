@@ -8311,6 +8311,12 @@ namespace copperfin::runtime
                 {
                     normalize_native_list_control_incrementalsearch_invariant(runtime_object);
                 }
+                if (normalized_property_name == "selectonentry" &&
+                    runtime_object.properties.contains("selectonentry"))
+                {
+                    runtime_object.properties["selectonentry"] =
+                        make_boolean_value(value_as_bool(runtime_object.properties["selectonentry"]));
+                }
                 if (normalized_property_name == "sorted")
                 {
                     if (!write_native_list_control_controlsource_target(runtime_object, source_frame))

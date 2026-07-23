@@ -111,6 +111,7 @@ void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& 
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_selectonentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_name_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_collection_object(const RuntimeOleObjectState& runtime_object);
