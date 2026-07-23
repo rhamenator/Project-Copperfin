@@ -2,6 +2,81 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_visual_fontbold_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_fontbold";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_fontbold.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'FontBold', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'FontBold', 5)\n"
+            "lDefault = oButton.FontBold\n"
+            "oButton.FontBold = .T.\n"
+            "lDirect = oButton.FontBold\n"
+            "lSetPem = SETPEM(oButton, 'FontBold', 0)\n"
+            "lSetPemValue = GETPEM(oButton, 'FontBold')\n"
+            "lPutPem = PUTPEM(oButton, 'FontBold', 'true')\n"
+            "lPutPemValue = GETPEM(oButton, 'FontBold')\n"
+            "lAddProperty = ADDPROPERTY(oButton, 'FontBold', .F.)\n"
+            "lRemoveProperty = REMOVEPROPERTY(oButton, 'FontBold')\n"
+            "lPropHas = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'FONTBOLD'\n"
+            "        lPropHas = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedFontBold')\n"
+            "lDerived = oDerived.FontBold\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedFontBold AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.FontBold = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native FontBold script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ldefault", "false");
+        check("ldirect", "true");
+        check("lsetpem", "true");
+        check("lsetpemvalue", "false");
+        check("lputpem", "true");
+        check("lputpemvalue", "true");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lprophas", "true");
+        check("lderived", "true");
+        expect(state.ole_objects.size() == 2U,
+               "native FontBold coverage should register the base and derived controls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_fontsize_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;

@@ -225,6 +225,7 @@
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
@@ -593,6 +594,10 @@
                 runtime_object->properties[member_name] = make_number_value(
                     std::isfinite(font_size) && font_size >= 0.0 ? font_size : 0.0);
             }
+            if (member_name == "fontbold") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -665,6 +670,10 @@
                 const double font_size = value_as_number(runtime_object->properties[member_name]);
                 runtime_object->properties[member_name] = make_number_value(
                     std::isfinite(font_size) && font_size >= 0.0 ? font_size : 0.0);
+            }
+            if (member_name == "fontbold") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
             }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
@@ -763,6 +772,7 @@
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||

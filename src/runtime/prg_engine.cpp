@@ -8300,6 +8300,11 @@ namespace copperfin::runtime
                     runtime_object.properties[normalized_property_name] = make_number_value(
                         std::isfinite(font_size) && font_size >= 0.0 ? font_size : 0.0);
                 }
+                if (normalized_property_name == "fontbold")
+                {
+                    runtime_object.properties[normalized_property_name] = make_boolean_value(
+                        value_as_bool(assigned_value));
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {
