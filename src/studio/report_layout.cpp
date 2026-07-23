@@ -352,6 +352,9 @@ StudioLayoutObjectSnapshot build_layout_object(
     if (object.objtype_code == 5 || object.objtype_code == 8 || object.objtype_code == 17) {
         add_highlight("PICTURE");
     }
+    if (object.objtype_code == 8) {
+        add_highlight("RULERLINES");
+    }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");

@@ -4470,6 +4470,7 @@ copperfin_add_test(test_report_layout cf_design_model
     test_report_layout_support.cpp
     test_report_layout_sections.cpp
     test_report_layout_image_objects.cpp
+    test_report_layout_ruler_lines.cpp
     test_report_layout_grouping.cpp
     test_report_layout_summary.cpp
 )

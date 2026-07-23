@@ -435,7 +435,8 @@ internal static partial class Program
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
                 new() { Name = "OBJTYPE", Value = objectType },
-                new() { Name = "PICTURE", Value = "@J" }
+                new() { Name = "PICTURE", Value = "@J" },
+                new() { Name = "RULERLINES", Value = "4" }
             }
         };
 
@@ -455,11 +456,17 @@ internal static partial class Program
         var labelPictureProperty = labelSelection?.GetProperties().Find("PICTURE", false);
         var reportPictureProperty = reportExpressionSelection?.GetProperties().Find("PICTURE", false);
         var imagePictureProperty = imageSelection?.GetProperties().Find("PICTURE", false);
+        var reportRulerLinesProperty = reportExpressionSelection?.GetProperties().Find("RULERLINES", false);
+        var labelRulerLinesProperty = labelSelection?.GetProperties().Find("RULERLINES", false);
+        var imageRulerLinesProperty = imageSelection?.GetProperties().Find("RULERLINES", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
                imagePictureProperty?.DisplayName == "Picture",
             "label, report-expression, and image PICTURE should use the localized property label");
+        Expect(reportRulerLinesProperty is not null && labelRulerLinesProperty is null && imageRulerLinesProperty is null &&
+               reportRulerLinesProperty.DisplayName == "String Trimming",
+            "only report-expression selections should expose the localized RULERLINES property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -468,6 +475,10 @@ internal static partial class Program
         Expect(imageSelection?.TryGetUpdate("PICTURE", out var imagePictureTarget, out var imagePictureValue) == true &&
                imagePictureTarget == "PICTURE" && imagePictureValue == "images\\logo.bmp",
             "image PICTURE edits should preserve the invariant source-field update target");
+        reportRulerLinesProperty?.SetValue(reportExpressionSelection, 2);
+        Expect(reportExpressionSelection?.TryGetUpdate("RULERLINES", out var rulerLinesTarget, out var rulerLinesValue) == true &&
+               rulerLinesTarget == "RULERLINES" && rulerLinesValue == "2",
+            "report-expression RULERLINES edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
