@@ -365,6 +365,14 @@ bool native_visual_enabled_member_name_matches(
            runtime_object.properties.contains("enabled");
 }
 
+bool native_visual_fontname_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "fontname" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("fontname");
+}
+
 bool native_visual_visible_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

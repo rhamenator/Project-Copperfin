@@ -223,6 +223,7 @@
             is_native_form_maxbutton_member_name(*runtime_object, property_name) ||
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
@@ -749,6 +750,7 @@
             is_native_form_maxbutton_member_name(*runtime_object, property_name) ||
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
