@@ -100,6 +100,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_visual_tag_defaults_mutate_and_stay_builtin();
     void test_native_visual_caption_defaults_mutate_and_stay_builtin();
     void test_native_visual_fontname_defaults_mutate_and_stay_builtin();
+    void test_native_visual_fontsize_defaults_mutate_and_stay_builtin();
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     void test_native_string_control_value_defaults_mutates_and_stays_builtin();
     void test_native_selectonentry_defaults_mutate_and_stay_builtin();

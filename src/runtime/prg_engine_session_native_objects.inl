@@ -59,6 +59,15 @@
             }
 
             if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("fontsize"))
+            {
+                // Headless contract: preserve fractional point sizes without requiring
+                // platform font enumeration or rendering support.
+                runtime_object.properties["fontsize"] = make_number_value(10.0);
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("controltiptext"))
             {
                 runtime_object.properties["controltiptext"] = make_string_value("");

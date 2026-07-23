@@ -8294,6 +8294,12 @@ namespace copperfin::runtime
                             ? static_cast<double>(std::llround(mouse_pointer))
                             : 0.0);
                 }
+                if (normalized_property_name == "fontsize")
+                {
+                    const double font_size = value_as_number(assigned_value);
+                    runtime_object.properties[normalized_property_name] = make_number_value(
+                        std::isfinite(font_size) && font_size >= 0.0 ? font_size : 0.0);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

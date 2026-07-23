@@ -373,6 +373,14 @@ bool native_visual_fontname_member_name_matches(
            runtime_object.properties.contains("fontname");
 }
 
+bool native_visual_fontsize_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "fontsize" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("fontsize");
+}
+
 bool native_visual_visible_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
