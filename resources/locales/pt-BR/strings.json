@@ -2705,5 +2705,6 @@
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",
   "AssetEditor.Property.PrintWhenValueChanges": "Imprimir somente quando o valor muda",
   "AssetEditor.Property.PrintWhenNewPageColumn": "Na primeira banda inteira da nova p\u00E1gina/coluna",
-  "AssetEditor.Property.PrintWhenOverflow": "Quando o detalhe transborda para uma nova p\u00E1gina/coluna"
+  "AssetEditor.Property.PrintWhenOverflow": "Quando o detalhe transborda para uma nova p\u00E1gina/coluna",
+  "AssetEditor.Property.BottomRelativeToBand": "Fixar em rela\u00E7\u00E3o \u00E0 parte inferior da banda"
 }
