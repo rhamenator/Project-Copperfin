@@ -153,6 +153,7 @@ bool is_builtin_native_runtime_method_name(
         normalized_member_name == "clear" ||
         normalized_member_name == "indextoitemid" ||
         normalized_member_name == "itemidtoindex" ||
+        normalized_member_name == "moveitem" ||
         normalized_member_name == "removeitem" ||
         normalized_member_name == "removelistitem") {
         const std::string normalized_base_class =

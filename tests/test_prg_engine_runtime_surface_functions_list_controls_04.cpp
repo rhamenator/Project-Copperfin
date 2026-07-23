@@ -650,4 +650,95 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_listbox_moveitem_preserves_row_identity_and_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listbox_moveitem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "moveitem.prg";
+        write_text(
+            main_path,
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.AddItem('Alpha')\n"
+            "oList.AddItem('Bravo')\n"
+            "oList.AddItem('Charlie')\n"
+            "oList.ItemData(2) = 42\n"
+            "oList.Selected(2) = .T.\n"
+            "oList.ListIndex = 2\n"
+            "oList.TopIndex = 2\n"
+            "oList.MoveItem(2, -1)\n"
+            "cAfterUpFirst = oList.List(1)\n"
+            "cAfterUpSecond = oList.List(2)\n"
+            "nAfterUpData = oList.ItemData(1)\n"
+            "lAfterUpSelected = oList.Selected(1)\n"
+            "nAfterUpListIndex = oList.ListIndex\n"
+            "nAfterUpTopIndex = oList.TopIndex\n"
+            "nAfterUpTopItemID = oList.TopItemID\n"
+            "oList.MoveItem(1, 99)\n"
+            "cAfterDownLast = oList.List(oList.ListCount)\n"
+            "nAfterDownListIndex = oList.ListIndex\n"
+            "nAfterDownTopIndex = oList.TopIndex\n"
+            "nAfterDownTopItemID = oList.TopItemID\n"
+            "oList.RowSourceType = 5\n"
+            "oList.MoveItem(1, 1)\n"
+            "cUnsupportedFirst = oList.List(1)\n"
+            "oValueList = CREATEOBJECT('ListBox')\n"
+            "oValueList.RowSourceType = 1\n"
+            "oValueList.RowSource = 'One,Two,Three'\n"
+            "oValueList.Requery()\n"
+            "oValueList.MoveItem(1, 2)\n"
+            "cValueMovedLast = oValueList.List(3)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListBox MoveItem script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("cafterupfirst", "Bravo");
+        check("cafterupsecond", "Alpha");
+        check("nafterupdata", "42");
+        check("lafterupselected", "true");
+        check("nafteruplistindex", "1");
+        check("nafteruptopindex", "1");
+        check("nafteruptopitemid", "2");
+        check("cafterdownlast", "Bravo");
+        check("nafterdownlistindex", "3");
+        check("nafterdowntopindex", "3");
+        check("nafterdowntopitemid", "2");
+        check("cunsupportedfirst", "Alpha");
+        check("cvaluemovedlast", "One");
+        expect(state.ole_objects.size() == 2U,
+               "native ListBox MoveItem coverage should register two list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects.front().collection_item_keys.size() == 3U &&
+                       state.ole_objects.front().collection_item_keys[2] == "2",
+                   "MoveItem should preserve the moved row's stable item ID at its new slot");
+            expect(state.ole_objects.back().collection_item_keys.size() == 3U &&
+                       state.ole_objects.back().collection_item_keys[2] == "1",
+                   "RowSourceType 1 MoveItem should preserve the moved row's stable item ID");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

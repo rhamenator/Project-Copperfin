@@ -330,6 +330,110 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         return make_empty_value();
     }
 
+    if (normalized_method_name == "moveitem") {
+        if (!is_native_listbox_runtime_object(runtime_object) ||
+            arguments.size() < 2U ||
+            !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
+            return make_empty_value();
+        }
+
+        materialize_native_list_control_rows(runtime_object);
+        runtime_object.collection_item_keys.resize(runtime_object.list_rows.size());
+        std::set<long long> used_item_ids;
+        for (const std::string& key : runtime_object.collection_item_keys) {
+            try {
+                const long long item_id = std::stoll(key);
+                if (item_id >= 1LL) {
+                    used_item_ids.insert(item_id);
+                }
+            } catch (const std::exception&) {
+            }
+        }
+        long long next_item_id = 1LL;
+        for (std::string& key : runtime_object.collection_item_keys) {
+            if (!key.empty()) {
+                continue;
+            }
+            while (used_item_ids.contains(next_item_id)) {
+                ++next_item_id;
+            }
+            key = std::to_string(next_item_id);
+            used_item_ids.insert(next_item_id);
+            ++next_item_id;
+        }
+        const double raw_index = value_as_number(arguments[0]);
+        const double raw_move_by = value_as_number(arguments[1]);
+        if (!std::isfinite(raw_index) ||
+            !std::isfinite(raw_move_by) ||
+            raw_index < 1.0 ||
+            raw_index > static_cast<double>(runtime_object.list_rows.size()) ||
+            raw_move_by <= static_cast<double>(std::numeric_limits<long long>::min()) ||
+            raw_move_by >= static_cast<double>(std::numeric_limits<long long>::max())) {
+            return make_empty_value();
+        }
+        const long long requested_index = std::llround(raw_index);
+        const long long move_by = std::llround(raw_move_by);
+
+        const std::size_t source_slot = static_cast<std::size_t>(requested_index - 1LL);
+        const long long unclamped_target = static_cast<long long>(source_slot) + move_by;
+        const long long last_slot = static_cast<long long>(runtime_object.list_rows.size() - 1U);
+        const std::size_t target_slot = static_cast<std::size_t>(std::max(
+            0LL,
+            std::min(last_slot, unclamped_target)));
+
+        std::optional<std::string> active_item_key;
+        if (const auto listindex = runtime_object.properties.find("listindex");
+            listindex != runtime_object.properties.end()) {
+            const long long active_index = std::llround(value_as_number(listindex->second));
+            if (active_index >= 1LL &&
+                static_cast<std::size_t>(active_index) <= runtime_object.collection_item_keys.size()) {
+                active_item_key = runtime_object.collection_item_keys[static_cast<std::size_t>(active_index - 1LL)];
+            }
+        }
+        std::optional<std::string> new_item_key;
+        if (const auto newindex = runtime_object.properties.find("newindex");
+            newindex != runtime_object.properties.end()) {
+            const long long new_item_index = std::llround(value_as_number(newindex->second));
+            if (new_item_index >= 1LL &&
+                static_cast<std::size_t>(new_item_index) <= runtime_object.collection_item_keys.size()) {
+                new_item_key = runtime_object.collection_item_keys[static_cast<std::size_t>(new_item_index - 1LL)];
+            }
+        }
+
+        if (source_slot != target_slot) {
+            auto move_parallel_entry = [&](auto& values) {
+                auto moved = values[source_slot];
+                values.erase(values.begin() + static_cast<std::ptrdiff_t>(source_slot));
+                values.insert(values.begin() + static_cast<std::ptrdiff_t>(target_slot), std::move(moved));
+            };
+            move_parallel_entry(runtime_object.list_rows);
+            move_parallel_entry(runtime_object.collection_item_keys);
+            move_parallel_entry(runtime_object.list_item_data);
+            move_parallel_entry(runtime_object.list_selected);
+        }
+
+        sync_native_list_control_primary_state_from_rows(runtime_object);
+        sync_native_list_control_count_impl(runtime_object);
+        const auto set_index_for_key = [&](const std::optional<std::string>& item_key,
+                                           const char* property_name) {
+            if (!item_key.has_value()) {
+                return;
+            }
+            const auto slot = std::find(
+                runtime_object.collection_item_keys.begin(),
+                runtime_object.collection_item_keys.end(),
+                *item_key);
+            if (slot != runtime_object.collection_item_keys.end()) {
+                runtime_object.properties[property_name] = make_number_value(
+                    static_cast<double>(std::distance(runtime_object.collection_item_keys.begin(), slot) + 1U));
+            }
+        };
+        set_index_for_key(active_item_key, "listindex");
+        set_index_for_key(new_item_key, "newindex");
+        sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+        return make_empty_value();
+    }
+
     if (normalized_method_name != "additem") {
         return std::nullopt;
     }
