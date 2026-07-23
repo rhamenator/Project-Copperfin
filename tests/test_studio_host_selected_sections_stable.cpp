@@ -82,14 +82,16 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "RESETPAGE", .type = 'L', .length = 1U},
         {.name = "EJECTBEFOR", .type = 'L', .length = 1U},
         {.name = "EJECTAFTER", .type = 'L', .length = 1U},
-        {.name = "PLAIN", .type = 'L', .length = 1U}
+        {.name = "PLAIN", .type = 'L', .length = 1U},
+        {.name = "TAG", .type = 'M', .length = 4U},
+        {.name = "TAG2", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T."},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", ""},
-        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", ""},
-        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", ""}
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT"},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", ""},
+        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", ""},
+        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -203,6 +205,12 @@ void run_live_section_selection(
                     issue_prefix + " should expose the invariant COLBREAK section value");
     expect_contains(section_process.stdout_text, "\"resetPage\": \"true\"",
                     issue_prefix + " should expose the invariant RESETPAGE section value");
+    expect_contains(section_process.stdout_text, "\"onEntryExpression\": \"DO ENTRY\"",
+                    issue_prefix + " should expose the invariant TAG entry expression");
+    expect_contains(section_process.stdout_text, "\"onEntryExpressionFieldIndex\": 14",
+                    issue_prefix + " should expose TAG entry-expression field provenance");
+    expect_contains(section_process.stdout_text, "\"onExitExpression\": \"DO EXIT\"",
+                    issue_prefix + " should expose the invariant TAG2 exit expression");
     expect_contains(
         section_process.stdout_text,
         "\"sectionCount\": 1,\n      \"deletedSectionCount\": 0",
@@ -234,6 +242,8 @@ void run_live_section_selection(
             "--property-name", "EJECTBEFOR", "--property-value", "false",
             "--property-name", "EJECTAFTER", "--property-value", "true",
             "--property-name", "PLAIN", "--property-value", "false",
+            "--property-name", "TAG", "--property-value", "UPDATED ENTRY",
+            "--property-name", "TAG2", "--property-value", "UPDATED EXIT",
             "--json"
         },
         temp_root);
@@ -257,6 +267,10 @@ void run_live_section_selection(
                     issue_prefix + " should persist EJECTAFTER edits");
     expect_contains(reopened_process.stdout_text, "\"plain\": \"false\"",
                     issue_prefix + " should persist PLAIN edits");
+    expect_contains(reopened_process.stdout_text, "\"onEntryExpression\": \"UPDATED ENTRY\"",
+                    issue_prefix + " should persist TAG entry-expression edits");
+    expect_contains(reopened_process.stdout_text, "\"onExitExpression\": \"UPDATED EXIT\"",
+                    issue_prefix + " should persist TAG2 exit-expression edits");
 }
 
 void run_deleted_section_selection(
@@ -363,6 +377,10 @@ void run_deleted_section_selection(
                     issue_prefix + " should expose deleted-section EJECTAFTER values");
     expect_contains(section_process.stdout_text, "\"plain\": \"true\"",
                     issue_prefix + " should expose deleted-section PLAIN values");
+    expect_contains(section_process.stdout_text, "\"onEntryExpression\": \"DO ENTRY\"",
+                    issue_prefix + " should expose deleted-section TAG entry expressions");
+    expect_contains(section_process.stdout_text, "\"onExitExpression\": \"DO EXIT\"",
+                    issue_prefix + " should expose deleted-section TAG2 exit expressions");
 }
 
 void test_studio_host_json_preserves_selected_sections_stable_selection(const std::string& studio_host_path) {

@@ -315,6 +315,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "PLAIN",
             localization.Text("AssetEditor.Property.ConstantBandHeight"),
             section.Plain);
+        selection.AddEditableString(
+            "TAG",
+            localization.Text("AssetEditor.Property.OnEntryExpression"),
+            section.OnEntryExpression);
+        selection.AddEditableString(
+            "TAG2",
+            localization.Text("AssetEditor.Property.OnExitExpression"),
+            section.OnExitExpression);
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
             section.ExpressionFieldIndex.HasValue ||

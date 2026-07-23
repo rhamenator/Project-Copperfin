@@ -973,6 +973,8 @@ StudioReportSectionSnapshot build_report_section(
     const FieldSelection eject_before = first_non_empty_selection(record, {"EJECTBEFOR"});
     const FieldSelection eject_after = first_non_empty_selection(record, {"EJECTAFTER"});
     const FieldSelection plain = first_non_empty_selection(record, {"PLAIN"});
+    const FieldSelection on_entry_expression = first_non_empty_selection(record, {"TAG"});
+    const FieldSelection on_exit_expression = first_non_empty_selection(record, {"TAG2"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -1017,7 +1019,13 @@ StudioReportSectionSnapshot build_report_section(
         .eject_after_memo_block_number = eject_after.memo_block_number,
         .plain = plain.value,
         .plain_field_index = plain.field_index,
-        .plain_memo_block_number = plain.memo_block_number
+        .plain_memo_block_number = plain.memo_block_number,
+        .on_entry_expression = on_entry_expression.value,
+        .on_entry_expression_field_index = on_entry_expression.field_index,
+        .on_entry_expression_memo_block_number = on_entry_expression.memo_block_number,
+        .on_exit_expression = on_exit_expression.value,
+        .on_exit_expression_field_index = on_exit_expression.field_index,
+        .on_exit_expression_memo_block_number = on_exit_expression.memo_block_number
     };
 }
 

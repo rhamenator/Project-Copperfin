@@ -2374,6 +2374,8 @@
   "AssetEditor.Property.EjectBefore": "[!! Ëĵëćţ Bëƒøŕë !!]",
   "AssetEditor.Property.EjectAfter": "[!! Ëĵëćţ Åƒţëŕ !!]",
   "AssetEditor.Property.ConstantBandHeight": "[!! Çøñŝţåñţ Båñð Hëïğħţ !!]",
+  "AssetEditor.Property.OnEntryExpression": "[!! Øñ Ëñţŕ¥ Ëxþŕëŝŝïøñ !!]",
+  "AssetEditor.Property.OnExitExpression": "[!! Øñ Ëxïţ Ëxþŕëŝŝïøñ !!]",
   "AssetEditor.Property.ObjectName": "Object Name",
   "AssetEditor.Property.BaseClass": "Base Class",
   "AssetEditor.Property.Parent": "Parent",

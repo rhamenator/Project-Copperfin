@@ -130,6 +130,12 @@ struct StudioReportSectionSnapshot {
     std::string plain{};
     std::size_t plain_field_index = StudioReportMissingFieldIndex;
     std::uint32_t plain_memo_block_number = 0;
+    std::string on_entry_expression{};
+    std::size_t on_entry_expression_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t on_entry_expression_memo_block_number = 0;
+    std::string on_exit_expression{};
+    std::size_t on_exit_expression_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t on_exit_expression_memo_block_number = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 

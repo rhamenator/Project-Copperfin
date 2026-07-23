@@ -39,7 +39,9 @@ void test_build_report_layout_groups_band_objects() {
                 value("RESETPAGE", "T", 46U),
                 value("EJECTBEFOR", "T", 47U),
                 value("EJECTAFTER", "F", 48U),
-                value("PLAIN", "T", 49U)
+                value("PLAIN", "T", 49U),
+                value("TAG", "DO ENTRY", 50U),
+                value("TAG2", "DO EXIT", 51U)
             }
         },
         {
@@ -55,7 +57,9 @@ void test_build_report_layout_groups_band_objects() {
                 value("RESETPAGE", "", 46U),
                 value("EJECTBEFOR", "", 47U),
                 value("EJECTAFTER", "", 48U),
-                value("PLAIN", "", 49U)
+                value("PLAIN", "", 49U),
+                value("TAG", "", 50U),
+                value("TAG2", "", 51U)
             }
         },
         {
@@ -168,7 +172,9 @@ void test_build_report_layout_groups_band_objects() {
            layout.sections[1].reset_page.empty() &&
            layout.sections[1].eject_before.empty() &&
            layout.sections[1].eject_after.empty() &&
-           layout.sections[1].plain.empty(),
+           layout.sections[1].plain.empty() &&
+           layout.sections[1].on_entry_expression.empty() &&
+           layout.sections[1].on_exit_expression.empty(),
         "#4531: blank section pagination flags should remain blank without fabricating provenance");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
@@ -201,6 +207,14 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[0].plain == "T" && layout.sections[0].plain_field_index == 9U &&
            layout.sections[0].plain_memo_block_number == 49U,
         "#4532: report sections should preserve PLAIN values and source provenance");
+    expect(layout.sections[0].on_entry_expression == "DO ENTRY" &&
+           layout.sections[0].on_entry_expression_field_index == 10U &&
+           layout.sections[0].on_entry_expression_memo_block_number == 50U,
+        "#4533: report sections should preserve TAG entry expressions and source provenance");
+    expect(layout.sections[0].on_exit_expression == "DO EXIT" &&
+           layout.sections[0].on_exit_expression_field_index == 11U &&
+           layout.sections[0].on_exit_expression_memo_block_number == 51U,
+        "#4533: report sections should preserve TAG2 exit expressions and source provenance");
     expect(layout.sections[0].reset_page == "T" && layout.sections[0].reset_page_field_index == 6U &&
            layout.sections[0].reset_page_memo_block_number == 46U,
         "#4531: report sections should preserve RESETPAGE values and source provenance");

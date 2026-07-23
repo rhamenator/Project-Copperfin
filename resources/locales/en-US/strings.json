@@ -2374,6 +2374,8 @@
   "AssetEditor.Property.EjectBefore": "Eject Before",
   "AssetEditor.Property.EjectAfter": "Eject After",
   "AssetEditor.Property.ConstantBandHeight": "Constant Band Height",
+  "AssetEditor.Property.OnEntryExpression": "On Entry Expression",
+  "AssetEditor.Property.OnExitExpression": "On Exit Expression",
   "AssetEditor.Property.ObjectName": "Object Name",
   "AssetEditor.Property.BaseClass": "Base Class",
   "AssetEditor.Property.Parent": "Parent",

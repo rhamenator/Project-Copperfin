@@ -265,6 +265,8 @@ internal static partial class Program
                         EjectBefore = "true",
                         EjectAfter = "false",
                         Plain = "true",
+                        OnEntryExpression = "DO ENTRY",
+                        OnExitExpression = "DO EXIT",
                         DeletedObjectCount = 1,
                         Expression = "customer.company",
                         ExpressionFieldIndex = 3,
@@ -319,6 +321,10 @@ internal static partial class Program
                 "Report section property-grid selection should serialize EJECTAFTER edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "PLAIN", false, "false",
                 "Report section property-grid selection should serialize PLAIN edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "TAG", "UPDATED ENTRY", "UPDATED ENTRY",
+                "Report section property-grid selection should serialize TAG edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "TAG2", "UPDATED EXIT", "UPDATED EXIT",
+                "Report section property-grid selection should serialize TAG2 edits through the shared update path");
 
             TypeDescriptor.GetProperties(editableSelection)["EXPR"]?.SetValue(editableSelection, "customer.region");
             Expect(editableSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
@@ -339,6 +345,9 @@ internal static partial class Program
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expulsar después", StringComparison.Ordinal)) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura de banda constante", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize optional-band flag labels");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expresión al entrar", StringComparison.Ordinal)) &&
+               spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expresión al salir", StringComparison.Ordinal)),
+            "Spanish report section property-grid selection should localize band event expression labels");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should expose localized record metadata");
@@ -385,6 +394,9 @@ internal static partial class Program
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Ejetar depois", StringComparison.Ordinal)) &&
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura constante da banda", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize optional-band flag labels");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Expressão ao entrar", StringComparison.Ordinal)) &&
+               portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Expressão ao sair", StringComparison.Ordinal)),
+            "Portuguese report section property-grid selection should localize band event expression labels");
         Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should expose localized record metadata");
@@ -430,6 +442,9 @@ internal static partial class Program
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.EjectAfter"), StringComparison.Ordinal)) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ConstantBandHeight"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route optional-band flag labels through the shared catalog");
+        Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.OnEntryExpression"), StringComparison.Ordinal)) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.OnExitExpression"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route band event expression labels through the shared catalog");
         Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "41", StringComparison.Ordinal) &&

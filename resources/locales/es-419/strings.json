@@ -2373,6 +2373,8 @@
   "AssetEditor.Property.EjectBefore": "Expulsar antes",
   "AssetEditor.Property.EjectAfter": "Expulsar despu\u00E9s",
   "AssetEditor.Property.ConstantBandHeight": "Altura de banda constante",
+  "AssetEditor.Property.OnEntryExpression": "Expresión al entrar",
+  "AssetEditor.Property.OnExitExpression": "Expresión al salir",
   "AssetEditor.Property.ObjectName": "Nombre del objeto",
   "AssetEditor.Property.BaseClass": "Clase base",
   "AssetEditor.Property.Parent": "Padre",
