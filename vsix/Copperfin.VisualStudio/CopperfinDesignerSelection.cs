@@ -140,6 +140,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 selection.AddEditableString("FONTFACE", L("AssetEditor.Property.FontFace", "Font Face"), selection.Read(snapshotObject, "FONTFACE"));
                 selection.AddEditableInt("FONTSTYLE", L("AssetEditor.Property.FontStyle", "Font Style"), selection.Read(snapshotObject, "FONTSTYLE"));
                 selection.AddEditableInt("FONTSIZE", L("AssetEditor.Property.FontSize", "Font Size"), selection.Read(snapshotObject, "FONTSIZE"));
+                selection.AddEditableBool("FLOAT", L("AssetEditor.Property.Float", "Float"), selection.Read(snapshotObject, "FLOAT"));
+                selection.AddEditableBool("NOREPEAT", L("AssetEditor.Property.NoRepeat", "No Repeat"), selection.Read(snapshotObject, "NOREPEAT"));
                 break;
 
             case "menu":

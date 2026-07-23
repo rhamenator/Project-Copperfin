@@ -43,6 +43,7 @@ internal static partial class Program
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestReportLayoutObjectPreservesPictureMetadata();
         TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects();
+        TestDesignerSelectionExposesReportControlBehaviorProperties();
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestDesignerSelectionHonorsReadOnlyDocumentState();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
@@ -454,6 +455,74 @@ internal static partial class Program
             "label-object PICTURE should use the localized property label");
         Expect(nonLabelSelection?.GetProperties().Find("PICTURE", false) is null,
             "non-label report objects should not expose label PICTURE");
+    }
+
+    private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
+    {
+        CopperfinStudioSnapshotObject Snapshot(string objectType, string floatValue, string noRepeatValue) => new()
+        {
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = objectType },
+                new() { Name = "FLOAT", Value = floatValue },
+                new() { Name = "NOREPEAT", Value = noRepeatValue }
+            }
+        };
+
+        foreach (var assetFamily in new[] { "report", "label" })
+        {
+            var selection = CopperfinDesignerSelection.FromSnapshot(
+                assetFamily,
+                Snapshot("8", "true", "false"),
+                new CopperfinLocalization("en-US"));
+            var properties = selection?.GetProperties();
+            var floatProperty = properties?.Find("FLOAT", false);
+            var noRepeatProperty = properties?.Find("NOREPEAT", false);
+
+            Expect(floatProperty is not null && noRepeatProperty is not null,
+                $"{assetFamily} object selections should expose editable FLOAT and NOREPEAT properties");
+            Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat",
+                $"{assetFamily} object behavior properties should use the English catalog labels");
+            if (selection is not null)
+            {
+                floatProperty?.SetValue(selection, false);
+                noRepeatProperty?.SetValue(selection, true);
+                Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
+                       floatTarget == "FLOAT" && serializedFloatValue == "false" &&
+                       selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
+                       noRepeatTarget == "NOREPEAT" && serializedNoRepeatValue == "true",
+                    $"{assetFamily} object behavior edits should preserve invariant FRX/LBX update targets");
+            }
+        }
+
+        var blankSelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            Snapshot("8", string.Empty, "false"),
+            new CopperfinLocalization("en-US"));
+        Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
+               blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue,
+            "blank and false report-control logical values should remain stable as false until edited");
+
+        var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            Snapshot("8", "true", "false"),
+            new CopperfinLocalization("qps-ploc"));
+        var pseudoFloatLabel = pseudoSelection?.GetProperties().Find("FLOAT", false)?.DisplayName;
+        var pseudoNoRepeatLabel = pseudoSelection?.GetProperties().Find("NOREPEAT", false)?.DisplayName;
+        Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoNoRepeatLabel.EndsWith(" !!]", StringComparison.Ordinal),
+            "pseudo-localized report-control property labels should remain visibly localized");
+
+        var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            Snapshot("8", "true", "false"),
+            new CopperfinLocalization("en-US"),
+            documentReadOnly: true);
+        Expect(readOnlySelection?.GetProperties().Find("FLOAT", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("NOREPEAT", false)?.IsReadOnly == true,
+            "read-only report documents should keep report-control behavior properties read-only");
     }
 
     private static void TestDesignerSelectionDefaultsToEnvironmentLocalization()

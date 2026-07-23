@@ -2695,5 +2695,7 @@
   "AssetEditor.Debugger.UpdatingBreakpointsStatus": "Actualizando puntos de interrupci\u00F3n...",
   "AssetEditor.Debugger.Column.File": "Archivo",
   "AssetEditor.Debugger.Column.Line": "L\u00EDnea",
-  "AssetEditor.Debugger.Column.Action": "Acci\u00F3n"
+  "AssetEditor.Debugger.Column.Action": "Acci\u00F3n",
+  "AssetEditor.Property.Float": "Flotante",
+  "AssetEditor.Property.NoRepeat": "No repetir"
 }
