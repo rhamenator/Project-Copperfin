@@ -1,5 +1,6 @@
 # VFP Language Reference Coverage
 
+- Report/label stretching note: VFP9 report controls define `Stretch with overflow` and `Stretch relative to top` options. Copperfin now exposes these existing FRX/LBX logical values in the shared report/label property grid with localized display labels and invariant `STRETCH`/`STRETCHTOP` update targets; native stretching, band layout, pagination, and print semantics remain separate implementation work. Reference: https://www.vfphelp.com/help/_5wn12p5a4.htm.
 - Report/label control option note: VFP9 report controls define `Float` and `NoRepeat` behavior fields. Copperfin now exposes these existing FRX/LBX logical values in the shared report/label property grid with localized display labels and invariant `FLOAT`/`NOREPEAT` update targets; rendering, layout, pagination, and repetition semantics remain separate implementation work.
 
 This document anchors Copperfin's command/runtime backlog to the official Visual FoxPro reference instead of memory.
