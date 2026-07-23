@@ -309,7 +309,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     object.expression = first_non_empty(record, {"EXPR"});
     object.expression_field_index = field_index_or_missing(record, "EXPR");
     object.expression_memo_block_number = memo_block_number_or_zero(record, "EXPR");
-    if (object.objtype_code == 5 || object.objtype_code == 8) {
+    if (object.objtype_code == 5 || object.objtype_code == 8 || object.objtype_code == 17) {
         object.picture = value_or_empty(record, "PICTURE");
         object.picture_field_index = field_index_or_missing(record, "PICTURE");
         object.picture_memo_block_number = memo_block_number_or_zero(record, "PICTURE");
@@ -349,6 +349,9 @@ StudioLayoutObjectSnapshot build_layout_object(
         }
     };
 
+    if (object.objtype_code == 5 || object.objtype_code == 8 || object.objtype_code == 17) {
+        add_highlight("PICTURE");
+    }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");

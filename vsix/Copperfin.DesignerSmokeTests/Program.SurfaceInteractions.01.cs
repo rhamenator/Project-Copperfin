@@ -288,6 +288,42 @@ internal static partial class Program
             }
         };
 
+        var imageSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 11,
+            Title = "images.logo",
+            Subtitle = "picture",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "17" },
+                new() { Name = "OBJCODE", Value = "0" },
+                new() { Name = "PICTURE", Value = "images\\logo.bmp" }
+            }
+        };
+        var imageSelection = CopperfinDesignerSelection.FromSnapshot("report", imageSnapshot, new CopperfinLocalization("es-419"));
+        var deletedImageSelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 12,
+                Deleted = true,
+                Title = "deleted.images.logo",
+                Subtitle = "picture",
+                Properties = imageSnapshot.Properties
+            },
+            new CopperfinLocalization("pt-BR"));
+        Expect(imageSelection is not null && deletedImageSelection is not null &&
+               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagen", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagem", StringComparison.Ordinal)),
+            "Report image object selections should expose localized editable PICTURE for live and deleted objects");
+        if (imageSelection is not null && deletedImageSelection is not null)
+        {
+            ExpectSelectionUpdate(imageSelection, "PICTURE", "images\\hero.bmp", "images\\hero.bmp",
+                "Live report image property-grid selection should preserve the invariant PICTURE update target");
+            ExpectSelectionUpdate(deletedImageSelection, "PICTURE", "images\\deleted.bmp", "images\\deleted.bmp",
+                "Deleted report image property-grid selection should preserve the invariant PICTURE update target");
+        }
+
         var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));
         Expect(spanishSelection is not null &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de objeto", StringComparison.Ordinal)) &&

@@ -447,17 +447,27 @@ internal static partial class Program
             "report",
             Snapshot("8"),
             new CopperfinLocalization("en-US"));
+        var imageSelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            Snapshot("17"),
+            new CopperfinLocalization("en-US"));
 
         var labelPictureProperty = labelSelection?.GetProperties().Find("PICTURE", false);
         var reportPictureProperty = reportExpressionSelection?.GetProperties().Find("PICTURE", false);
-        Expect(labelPictureProperty is not null && reportPictureProperty is not null,
-            "label-object selections should expose editable PICTURE");
-        Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture",
-            "label and report-expression PICTURE should use the localized property label");
+        var imagePictureProperty = imageSelection?.GetProperties().Find("PICTURE", false);
+        Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
+            "label, report-expression, and image selections should expose editable PICTURE");
+        Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
+               imagePictureProperty?.DisplayName == "Picture",
+            "label, report-expression, and image PICTURE should use the localized property label");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
             "report-expression PICTURE edits should preserve the invariant formatting-field update target");
+        imagePictureProperty?.SetValue(imageSelection, "images\\logo.bmp");
+        Expect(imageSelection?.TryGetUpdate("PICTURE", out var imagePictureTarget, out var imagePictureValue) == true &&
+               imagePictureTarget == "PICTURE" && imagePictureValue == "images\\logo.bmp",
+            "image PICTURE edits should preserve the invariant source-field update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
