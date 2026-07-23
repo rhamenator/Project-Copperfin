@@ -124,6 +124,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
                 selection.AddEditableBool("SUPALWAYS", L("AssetEditor.Property.PrintWhenRepeated", "Print Repeated Values"), selection.Read(snapshotObject, "SUPALWAYS"));
+                selection.AddEditableBool("SUPVALCHNG", L("AssetEditor.Property.PrintWhenValueChanges", "Print Only When Value Changes"), selection.Read(snapshotObject, "SUPVALCHNG"));
                 if (int.TryParse(
                         selection.Read(snapshotObject, "OBJTYPE"),
                         NumberStyles.Integer,

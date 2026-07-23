@@ -2702,5 +2702,6 @@
   "AssetEditor.Property.StretchTop": "Stretch Relative to Top",
   "AssetEditor.Property.PrintWhen": "Print When",
   "AssetEditor.Property.PrintWhenGroup": "When Group Changes",
-  "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values"
+  "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values",
+  "AssetEditor.Property.PrintWhenValueChanges": "Print Only When Value Changes"
 }

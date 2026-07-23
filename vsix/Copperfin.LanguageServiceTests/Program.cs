@@ -467,7 +467,8 @@ internal static partial class Program
             string stretchTopValue = "false",
             string printWhenValue = "amount > 0",
             string printWhenGroupValue = "6",
-            string printWhenRepeatedValue = "true") => new()
+            string printWhenRepeatedValue = "true",
+            string printWhenValueChangesValue = "false") => new()
         {
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
@@ -475,6 +476,7 @@ internal static partial class Program
                 new() { Name = "SUPEXPR", Value = printWhenValue },
                 new() { Name = "SUPGROUP", Value = printWhenGroupValue },
                 new() { Name = "SUPALWAYS", Value = printWhenRepeatedValue },
+                new() { Name = "SUPVALCHNG", Value = printWhenValueChangesValue },
                 new() { Name = "FLOAT", Value = floatValue },
                 new() { Name = "NOREPEAT", Value = noRepeatValue },
                 new() { Name = "STRETCH", Value = stretchValue },
@@ -496,17 +498,20 @@ internal static partial class Program
             var printWhenProperty = properties?.Find("SUPEXPR", false);
             var printWhenGroupProperty = properties?.Find("SUPGROUP", false);
             var printWhenRepeatedProperty = properties?.Find("SUPALWAYS", false);
+            var printWhenValueChangesProperty = properties?.Find("SUPVALCHNG", false);
 
             Expect(floatProperty is not null && noRepeatProperty is not null &&
                    stretchProperty is not null && stretchTopProperty is not null && printWhenProperty is not null &&
-                   printWhenGroupProperty is not null && printWhenRepeatedProperty is not null,
+                   printWhenGroupProperty is not null && printWhenRepeatedProperty is not null &&
+                   printWhenValueChangesProperty is not null,
                 $"{assetFamily} object selections should expose editable report-control behavior properties");
             Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat" &&
                    stretchProperty?.DisplayName == "Stretch with Overflow" &&
                    stretchTopProperty?.DisplayName == "Stretch Relative to Top" &&
                    printWhenProperty?.DisplayName == "Print When" &&
                    printWhenGroupProperty?.DisplayName == "When Group Changes" &&
-                   printWhenRepeatedProperty?.DisplayName == "Print Repeated Values",
+                   printWhenRepeatedProperty?.DisplayName == "Print Repeated Values" &&
+                   printWhenValueChangesProperty?.DisplayName == "Print Only When Value Changes",
                 $"{assetFamily} object behavior properties should use the English catalog labels");
             if (selection is not null)
             {
@@ -517,6 +522,7 @@ internal static partial class Program
                 printWhenProperty?.SetValue(selection, "amount > 100");
                 printWhenGroupProperty?.SetValue(selection, 7);
                 printWhenRepeatedProperty?.SetValue(selection, false);
+                printWhenValueChangesProperty?.SetValue(selection, true);
                 Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
                        floatTarget == "FLOAT" && serializedFloatValue == "false" &&
                        selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
@@ -535,12 +541,15 @@ internal static partial class Program
                 Expect(selection.TryGetUpdate("SUPALWAYS", out var printWhenRepeatedTarget, out var serializedPrintWhenRepeatedValue) &&
                        printWhenRepeatedTarget == "SUPALWAYS" && serializedPrintWhenRepeatedValue == "false",
                     $"{assetFamily} repeated-value edits should preserve the invariant logical update target");
+                Expect(selection.TryGetUpdate("SUPVALCHNG", out var printWhenValueChangesTarget, out var serializedPrintWhenValueChangesValue) &&
+                       printWhenValueChangesTarget == "SUPVALCHNG" && serializedPrintWhenValueChangesValue == "true",
+                    $"{assetFamily} value-change edits should preserve the invariant logical update target");
             }
         }
 
         var blankSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
-            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty),
+            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty),
             new CopperfinLocalization("en-US"));
         Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
                blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue &&
@@ -548,7 +557,8 @@ internal static partial class Program
                blankSelection.GetProperties().Find("STRETCHTOP", false)?.GetValue(blankSelection) is bool stretchTopValue && !stretchTopValue &&
                string.Equals(blankSelection.GetProperties().Find("SUPEXPR", false)?.GetValue(blankSelection)?.ToString(), string.Empty, StringComparison.Ordinal) &&
                blankSelection.GetProperties().Find("SUPGROUP", false)?.GetValue(blankSelection) is int blankGroupValue && blankGroupValue == 0 &&
-               blankSelection.GetProperties().Find("SUPALWAYS", false)?.GetValue(blankSelection) is bool blankRepeatedValue && !blankRepeatedValue,
+               blankSelection.GetProperties().Find("SUPALWAYS", false)?.GetValue(blankSelection) is bool blankRepeatedValue && !blankRepeatedValue &&
+               blankSelection.GetProperties().Find("SUPVALCHNG", false)?.GetValue(blankSelection) is bool blankValueChangesValue && !blankValueChangesValue,
             "blank and false report-control logical values should remain stable as false until edited");
 
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -562,6 +572,7 @@ internal static partial class Program
         var pseudoPrintWhenLabel = pseudoSelection?.GetProperties().Find("SUPEXPR", false)?.DisplayName;
         var pseudoPrintWhenGroupLabel = pseudoSelection?.GetProperties().Find("SUPGROUP", false)?.DisplayName;
         var pseudoPrintWhenRepeatedLabel = pseudoSelection?.GetProperties().Find("SUPALWAYS", false)?.DisplayName;
+        var pseudoPrintWhenValueChangesLabel = pseudoSelection?.GetProperties().Find("SUPVALCHNG", false)?.DisplayName;
         Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
@@ -575,7 +586,9 @@ internal static partial class Program
                pseudoPrintWhenGroupLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoPrintWhenGroupLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoPrintWhenRepeatedLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
-               pseudoPrintWhenRepeatedLabel.EndsWith(" !!]", StringComparison.Ordinal),
+               pseudoPrintWhenRepeatedLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoPrintWhenValueChangesLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoPrintWhenValueChangesLabel.EndsWith(" !!]", StringComparison.Ordinal),
             "pseudo-localized report-control property labels should remain visibly localized");
 
         var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
@@ -589,7 +602,8 @@ internal static partial class Program
                readOnlySelection.GetProperties().Find("STRETCHTOP", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("SUPEXPR", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("SUPGROUP", false)?.IsReadOnly == true &&
-               readOnlySelection.GetProperties().Find("SUPALWAYS", false)?.IsReadOnly == true,
+               readOnlySelection.GetProperties().Find("SUPALWAYS", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("SUPVALCHNG", false)?.IsReadOnly == true,
             "read-only report documents should keep report-control behavior properties read-only");
     }
 

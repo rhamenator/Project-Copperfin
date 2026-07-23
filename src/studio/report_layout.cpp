@@ -353,6 +353,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");
     add_highlight("SUPALWAYS");
+    add_highlight("SUPVALCHNG");
     add_highlight("FONTFACE");
     add_highlight("FONTSIZE");
     add_highlight("MODE");
