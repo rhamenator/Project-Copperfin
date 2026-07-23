@@ -357,6 +357,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     add_highlight("SUPRPCOL");
     add_highlight("SUPOVFLOW");
     add_highlight("BOTTOM");
+    add_highlight("TOP");
     add_highlight("FONTFACE");
     add_highlight("FONTSIZE");
     add_highlight("MODE");

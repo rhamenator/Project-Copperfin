@@ -128,6 +128,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 selection.AddEditableInt("SUPRPCOL", L("AssetEditor.Property.PrintWhenNewPageColumn", "In First Whole Band of New Page/Column"), selection.Read(snapshotObject, "SUPRPCOL"));
                 selection.AddEditableBool("SUPOVFLOW", L("AssetEditor.Property.PrintWhenOverflow", "When Detail Overflows to New Page/Column"), selection.Read(snapshotObject, "SUPOVFLOW"));
                 selection.AddEditableBool("BOTTOM", L("AssetEditor.Property.BottomRelativeToBand", "Fix Relative to Bottom of Band"), selection.Read(snapshotObject, "BOTTOM"));
+                selection.AddEditableBool("TOP", L("AssetEditor.Property.TopRelativeToBand", "Fix Relative to Top of Band"), selection.Read(snapshotObject, "TOP"));
                 if (int.TryParse(
                         selection.Read(snapshotObject, "OBJTYPE"),
                         NumberStyles.Integer,

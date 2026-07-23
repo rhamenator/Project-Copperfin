@@ -271,6 +271,7 @@ internal static partial class Program
                 new() { Name = "SUPRPCOL", Value = "0" },
                 new() { Name = "SUPOVFLOW", Value = "false" },
                 new() { Name = "BOTTOM", Value = "false" },
+                new() { Name = "TOP", Value = "false" },
                 new() { Name = "HPOS", Value = "1200" },
                 new() { Name = "VPOS", Value = "2600" },
                 new() { Name = "WIDTH", Value = "4000" },
@@ -297,6 +298,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "En la primera banda completa de la página/columna nueva", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Cuando el detalle desborda a una página/columna nueva", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fijar en relación con la parte inferior de la banda", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fijar en relación con la parte superior de la banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño de fuente", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flotante", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "No repetir", StringComparison.Ordinal)) &&
@@ -319,6 +321,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Na primeira banda inteira da nova página/coluna", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Quando o detalhe transborda para uma nova página/coluna", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fixar em relação à parte inferior da banda", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fixar em relação à parte superior da banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho da fonte", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flutuar", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Não repetir", StringComparison.Ordinal)) &&
@@ -342,6 +345,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrintWhenNewPageColumn"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrintWhenOverflow"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.BottomRelativeToBand"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopRelativeToBand"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontSize"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Float"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.NoRepeat"), StringComparison.Ordinal)) &&
@@ -399,6 +403,8 @@ internal static partial class Program
                 "Live report object property-grid selection should serialize SUPOVFLOW edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "BOTTOM", true, "true",
                 "Live report object property-grid selection should serialize BOTTOM edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "TOP", true, "true",
+                "Live report object property-grid selection should serialize TOP edits through the shared update path");
         }
 
         var labelSelection = CopperfinDesignerSelection.FromSnapshot("label", snapshotObject, new CopperfinLocalization("en-US"));
@@ -432,6 +438,7 @@ internal static partial class Program
                 new() { Name = "SUPRPCOL", Value = "0" },
                 new() { Name = "SUPOVFLOW", Value = "false" },
                 new() { Name = "BOTTOM", Value = "false" },
+                new() { Name = "TOP", Value = "false" },
                 new() { Name = "HPOS", Value = "1400" },
                 new() { Name = "VPOS", Value = "9200" },
                 new() { Name = "WIDTH", Value = "3000" },
@@ -469,6 +476,8 @@ internal static partial class Program
                 "Deleted report object property-grid selection should preserve the invariant overflow update target");
             ExpectSelectionUpdate(deletedSelection, "BOTTOM", true, "true",
                 "Deleted report object property-grid selection should preserve the invariant bottom-position update target");
+            ExpectSelectionUpdate(deletedSelection, "TOP", true, "true",
+                "Deleted report object property-grid selection should preserve the invariant top-position update target");
             ExpectSelectionUpdate(deletedSelection, "HPOS", 1600, "1600",
                 "Deleted report object property-grid selection should serialize HPOS edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "VPOS", 9300, "9300",

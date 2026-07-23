@@ -2706,5 +2706,6 @@
   "AssetEditor.Property.PrintWhenValueChanges": "Print Only When Value Changes",
   "AssetEditor.Property.PrintWhenNewPageColumn": "In First Whole Band of New Page/Column",
   "AssetEditor.Property.PrintWhenOverflow": "When Detail Overflows to New Page/Column",
-  "AssetEditor.Property.BottomRelativeToBand": "Fix Relative to Bottom of Band"
+  "AssetEditor.Property.BottomRelativeToBand": "Fix Relative to Bottom of Band",
+  "AssetEditor.Property.TopRelativeToBand": "Fix Relative to Top of Band"
 }
