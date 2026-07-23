@@ -8422,6 +8422,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_datemark_invariant(runtime_object);
                 }
+                if (normalized_property_name == "hours")
+                {
+                    normalize_native_textbox_hours_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

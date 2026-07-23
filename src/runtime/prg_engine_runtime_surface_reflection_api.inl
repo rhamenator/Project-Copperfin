@@ -296,6 +296,11 @@ bool is_native_textbox_datemark_member_name(const RuntimeOleObjectState& runtime
     return native_textbox_datemark_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_hours_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_hours_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -941,6 +946,23 @@ void normalize_native_textbox_datemark_invariant(RuntimeOleObjectState& runtime_
     }
 
     date_mark->second = make_string_value(value_as_string(date_mark->second));
+}
+
+void normalize_native_textbox_hours_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_hours_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto hours = runtime_object.properties.find("hours");
+    if (hours == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(hours->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
+    const long long normalized = rounded == 12LL || rounded == 24LL ? rounded : 0LL;
+    hours->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
