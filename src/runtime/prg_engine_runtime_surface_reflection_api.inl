@@ -186,6 +186,11 @@ bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime
     return native_visual_alignment_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_inputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_inputmask_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -494,6 +499,20 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
     const long long normalized =
         !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 2LL);
     alignment->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_inputmask_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto input_mask = runtime_object.properties.find("inputmask");
+    if (input_mask == runtime_object.properties.end()) {
+        return;
+    }
+
+    input_mask->second = make_string_value(value_as_string(input_mask->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

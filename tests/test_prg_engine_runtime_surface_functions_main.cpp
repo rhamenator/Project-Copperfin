@@ -92,6 +92,7 @@ int main()
     test_native_visual_fontoutline_defaults_mutate_and_stay_builtin();
     test_native_visual_fontshadow_defaults_mutate_and_stay_builtin();
     test_native_text_alignment_defaults_mutate_and_stay_builtin();
+    test_native_textbox_inputmask_defaults_mutate_and_stay_builtin();
     test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     test_native_combobox_style_defaults_mutate_and_stay_builtin();
     test_native_combobox_readonly_defaults_mutate_and_honor_style_guard();

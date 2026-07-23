@@ -204,6 +204,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_tag_member_name_matches(runtime_object, member_name) ||
                native_visual_caption_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
+               native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||

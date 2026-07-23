@@ -66,6 +66,7 @@ bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_textbox_inputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_tabindex_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -115,6 +116,7 @@ void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& 
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_selectonentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
