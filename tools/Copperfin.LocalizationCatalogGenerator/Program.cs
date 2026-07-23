@@ -21,6 +21,7 @@ var locales = new Dictionary<string, string>(StringComparer.Ordinal)
 var options = new JsonSerializerOptions { WriteIndented = true };
 foreach (var locale in locales)
 {
+    var isPseudoLocale = string.Equals(locale.Key, "qps-ploc", StringComparison.Ordinal);
     var catalogPath = Path.Combine(repositoryRoot, "resources", "locales", locale.Key, "strings.json");
     var catalogText = File.ReadAllText(catalogPath);
     var existingValues = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -54,7 +55,8 @@ foreach (var locale in locales)
     {
         if (existingValues.TryGetValue(entry.Key, out var existingValue))
         {
-            if (!string.Equals(existingValue, entry.Value, StringComparison.Ordinal))
+            if ((!isPseudoLocale && !string.Equals(existingValue, entry.Value, StringComparison.Ordinal)) ||
+                (isPseudoLocale && string.IsNullOrWhiteSpace(existingValue)))
             {
                 throw new InvalidDataException($"Catalog value drift for {locale.Key}/{entry.Key}");
             }
@@ -67,7 +69,9 @@ foreach (var locale in locales)
             throw new InvalidDataException($"Catalog is missing managed key {locale.Key}/{entry.Key}");
         }
 
-        missingEntries.Add(entry);
+        missingEntries.Add(isPseudoLocale
+            ? new KeyValuePair<string, string>(entry.Key, $"[{entry.Value}]")
+            : entry);
     }
 
     if (missingEntries.Count > 0)

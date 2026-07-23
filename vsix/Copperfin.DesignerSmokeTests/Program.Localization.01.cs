@@ -368,7 +368,8 @@ internal static partial class Program
                HasButtonText(spanishControl, "Continuar") &&
                HasButtonText(spanishControl, "Paso") &&
                HasButtonText(spanishControl, "Siguiente") &&
-               HasButtonText(spanishControl, "Salir"),
+               HasButtonText(spanishControl, "Salir") &&
+               HasButtonText(spanishControl, "Evaluar"),
             "Spanish project command and debugger chrome should localize buttons");
         Expect(HasLabelText(spanishControl, "Cargando instantánea de Copperfin Studio...") &&
                HasLabelText(spanishControl, "Depurador listo."),
@@ -380,7 +381,7 @@ internal static partial class Program
         Expect(spanishDebuggerTabs is not null &&
                spanishDebuggerTabs.TabPages.Cast<TabPage>().Select(page => page.Text).SequenceEqual(new[]
                {
-                   "Pila de llamadas", "Locales", "Globales", "Eventos de ejecución"
+                   "Pila de llamadas", "Locales", "Globales", "Eventos de ejecución", "Expresiones vigiladas"
                }) &&
                spanishDebuggerCallStack.Columns[0].Text == "Rutina" &&
                spanishDebuggerCallStack.Columns[1].Text == "Ubicación",
@@ -394,7 +395,8 @@ internal static partial class Program
                HasButtonText(portugueseControl, "Continuar") &&
                HasButtonText(portugueseControl, "Passo") &&
                HasButtonText(portugueseControl, "Próximo") &&
-               HasButtonText(portugueseControl, "Sair"),
+               HasButtonText(portugueseControl, "Sair") &&
+               HasButtonText(portugueseControl, "Avaliar"),
             "Portuguese project command and debugger chrome should localize buttons");
         Expect(HasLabelText(portugueseControl, "Carregando instantâneo do Copperfin Studio...") &&
                HasLabelText(portugueseControl, "Depurador pronto."),
@@ -406,7 +408,7 @@ internal static partial class Program
         Expect(portugueseDebuggerTabs is not null &&
                portugueseDebuggerTabs.TabPages.Cast<TabPage>().Select(page => page.Text).SequenceEqual(new[]
                {
-                   "Pilha de chamadas", "Locais", "Globais", "Eventos de runtime"
+                   "Pilha de chamadas", "Locais", "Globais", "Eventos de runtime", "Expressões observadas"
                }) &&
                portugueseDebuggerCallStack.Columns[0].Text == "Rotina" &&
                portugueseDebuggerCallStack.Columns[1].Text == "Localização",

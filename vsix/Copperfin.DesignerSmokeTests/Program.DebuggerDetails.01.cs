@@ -45,6 +45,15 @@ internal static partial class Program
                         Detail = "prg.pause",
                         Location = "sample.prg:12"
                     }
+                },
+                Watches =
+                {
+                    new CopperfinRuntimeWatch
+                    {
+                        Expression = "nValue + 1",
+                        Success = true,
+                        Value = "43"
+                    }
                 }
             }
         };
@@ -54,13 +63,17 @@ internal static partial class Program
         var locals = GetPrivateListView(control, "debuggerLocalsView");
         var globals = GetPrivateListView(control, "debuggerGlobalsView");
         var events = GetPrivateListView(control, "debuggerEventsView");
+        var watches = GetPrivateListView(control, "debuggerWatchesView");
         var tabs = GetPrivateField<TabControl>(control, "debuggerDetailTabs");
         Expect(tabs is not null &&
-               tabs.TabPages.Count == 4 &&
+               tabs.TabPages.Count == 5 &&
                callStack.Items.Count == 1 &&
                locals.Items.Count == 2 &&
                globals.Items.Count == 1 &&
                events.Items.Count == 1 &&
+               watches.Items.Count == 1 &&
+               watches.Items[0].SubItems[0].Text == "nValue + 1" &&
+               watches.Items[0].SubItems[1].Text == "43" &&
                locals.Items[0].SubItems[1].Text == "nValue" &&
                locals.Items[0].SubItems[2].Text == "42",
             "debugger detail tables should mirror the shared pause-state model");
@@ -76,7 +89,8 @@ internal static partial class Program
         Expect(callStack.Items.Count == 0 &&
                locals.Items.Count == 0 &&
                globals.Items.Count == 0 &&
-               events.Items.Count == 0,
+               events.Items.Count == 0 &&
+               watches.Items.Count == 0,
             "failed debugger sessions should clear stale detail rows");
     }
 }

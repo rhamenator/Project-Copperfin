@@ -80,7 +80,7 @@ Pseudo-localization is a test tool, not a production language pack.
 
 ## Catalog QA Gate
 
-The `test_localization` CTest entry is the technical catalog gate. It compares every shipped locale with `en-US` and fails for missing or extra keys, blank values, or a changed placeholder name/multiplicity. It also translates every `qps-ploc` key with marker values and verifies the result remains decorated while each marker survives. This protects runtime substitution and pseudo-locale coverage without changing JSON fields, command switches, diagnostic identities, or other machine contracts.
+The `test_localization` CTest entry is the technical catalog gate. It compares every production locale with its managed catalog values and fails for missing or extra keys, blank values, or a changed placeholder name/multiplicity. The managed catalog generator treats `qps-ploc` as intentionally decorated: it enforces key presence and nonblank values without requiring byte-for-byte English text. The gate also translates every `qps-ploc` key with marker values and verifies the result remains decorated while each marker survives. This protects runtime substitution and pseudo-locale coverage without changing JSON fields, command switches, diagnostic identities, or other machine contracts.
 
 Passing the technical gate does not approve a regional language pack. A human linguistic and cultural review is still required before `es-419` or `pt-BR` can be marked production-ready; record the reviewer, source, date, terminology decisions, regional suitability, tone/formality, euphemism/directness, and offensive-wording review with the release evidence.
 

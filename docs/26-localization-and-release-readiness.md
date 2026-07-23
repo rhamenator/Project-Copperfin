@@ -59,6 +59,7 @@ Before a localized production release:
 - Review Spanish and Portuguese terminology for consistency across Studio, VSIX, CLI diagnostics, docs/help, and templates.
 - Verify screenshots or UI smoke captures for clipped text in Spanish and Portuguese.
 - Verify JSON and CLI machine-readable contracts are unchanged across locales.
+- Keep the managed catalog generator and `qps-ploc` catalog check in the routine compile gate; pseudo-localized values must remain nonblank and decorated while production locale entries retain exact managed text.
 - Record translation source, reviewer, locale, and release version in the release checklist.
 
 The automated gate is necessary but not sufficient for a production language pack. `es-419` and `pt-BR` remain placeholder/review-pending catalogs until a qualified reviewer records accuracy, regional usage, formality, euphemism/directness, terminology consistency, and the absence of awkward or offensive wording. `qps-ploc` is test-only and must never be presented as a production language option.

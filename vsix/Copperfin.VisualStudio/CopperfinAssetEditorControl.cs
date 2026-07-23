@@ -108,6 +108,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button debugStepButton;
     private readonly Button debugNextButton;
     private readonly Button debugOutButton;
+    private readonly TextBox debuggerWatchExpressionBox;
+    private readonly Button debuggerEvaluateWatchButton;
     private readonly SplitContainer leftExplorerSplit;
     private readonly ListView sectionListView;
     private readonly ListView objectListView;
@@ -121,6 +123,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly ListView debuggerLocalsView;
     private readonly ListView debuggerGlobalsView;
     private readonly ListView debuggerEventsView;
+    private readonly ListView debuggerWatchesView;
     private readonly RichTextBox taskListSummaryBox;
     private readonly ListView taskListView;
     private readonly RichTextBox codeReferencesSummaryBox;
@@ -480,6 +483,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         debugOutButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(session => CopperfinRuntimeDebugClient.StepOutAsync(session, this.localization)));
 
+        debuggerWatchExpressionBox = new TextBox
+        {
+            Width = 360,
+            AccessibleName = this.localization.Text("AssetEditor.Debugger.WatchExpressionLabel")
+        };
+        debuggerEvaluateWatchButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Debugger.EvaluateWatchButton")
+        };
+        debuggerEvaluateWatchButton.Click += (_, _) => QueueUiAction(EvaluateWatchAsync);
+
         snapshotStatusLabel = new Label
         {
             AutoSize = true,
@@ -621,6 +636,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerEventsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Detail"), 500);
         debuggerEventsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Location"), 300);
 
+        debuggerWatchesView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerWatchesView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Expression"), 360);
+        debuggerWatchesView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Value"), 520);
+        debuggerWatchesView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Status"), 180);
+
         debuggerDetailTabs = new TabControl
         {
             Dock = DockStyle.Fill
@@ -633,10 +660,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerGlobalsPage.Controls.Add(debuggerGlobalsView);
         var debuggerEventsPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.RuntimeEvents"));
         debuggerEventsPage.Controls.Add(debuggerEventsView);
+        var debuggerWatchesPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.Watches"));
+        debuggerWatchesPage.Controls.Add(debuggerWatchesView);
         debuggerDetailTabs.TabPages.Add(debuggerCallStackPage);
         debuggerDetailTabs.TabPages.Add(debuggerLocalsPage);
         debuggerDetailTabs.TabPages.Add(debuggerGlobalsPage);
         debuggerDetailTabs.TabPages.Add(debuggerEventsPage);
+        debuggerDetailTabs.TabPages.Add(debuggerWatchesPage);
 
         taskListSummaryBox = new RichTextBox
         {
@@ -982,6 +1012,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         debuggerStatusPanel.Controls.Add(debuggerStatusLabel);
 
+        var debuggerWatchPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(8, 0, 8, 4)
+        };
+        debuggerWatchPanel.Controls.Add(new Label
+        {
+            AutoSize = true,
+            Padding = new Padding(0, 6, 6, 0),
+            Text = this.localization.Text("AssetEditor.Debugger.WatchExpressionLabel")
+        });
+        debuggerWatchPanel.Controls.Add(debuggerWatchExpressionBox);
+        debuggerWatchPanel.Controls.Add(debuggerEvaluateWatchButton);
+
         var debuggerPageHost = new Panel
         {
             Dock = DockStyle.Fill
@@ -990,6 +1037,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerPageHost.Controls.Add(debuggerSummaryBox);
         debuggerPageHost.Controls.Add(debuggerStatusPanel);
         debuggerPageHost.Controls.Add(debuggerButtonPanel);
+        debuggerPageHost.Controls.Add(debuggerWatchPanel);
 
         projectWorkspaceTabs = new TabControl
         {
@@ -3651,6 +3699,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerLocalsView.Items.Clear();
         debuggerGlobalsView.Items.Clear();
         debuggerEventsView.Items.Clear();
+        debuggerWatchesView.Items.Clear();
     }
 
     private void PopulateDebuggerDetails(CopperfinRuntimeDebugSession? session)
@@ -3666,6 +3715,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerLocalsView.BeginUpdate();
         debuggerGlobalsView.BeginUpdate();
         debuggerEventsView.BeginUpdate();
+        debuggerWatchesView.BeginUpdate();
         try
         {
             foreach (var frame in state.Frames)
@@ -3695,9 +3745,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                         runtimeEvent.Location
                     }));
             }
+
+            foreach (var watch in state.Watches)
+            {
+                debuggerWatchesView.Items.Add(new ListViewItem(new[]
+                {
+                    watch.Expression,
+                    watch.Success ? watch.Value : watch.Error,
+                    this.localization.Text(watch.Success
+                        ? "AssetEditor.Debugger.WatchSucceeded"
+                        : "AssetEditor.Debugger.WatchFailed")
+                }));
+            }
         }
         finally
         {
+            debuggerWatchesView.EndUpdate();
             debuggerEventsView.EndUpdate();
             debuggerGlobalsView.EndUpdate();
             debuggerLocalsView.EndUpdate();
@@ -3712,6 +3775,34 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debugNextButton.Enabled = enabled;
         debugOutButton.Enabled = enabled;
         debugRestartButton.Enabled = CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+        debuggerEvaluateWatchButton.Enabled = enabled;
+    }
+
+    private async Task EvaluateWatchAsync()
+    {
+        var expression = debuggerWatchExpressionBox.Text.Trim();
+        if (expression.Length == 0)
+        {
+            debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.WatchExpressionRequired");
+            return;
+        }
+
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.EvaluatingWatchStatus");
+        SetDebuggerButtonsEnabled(false);
+        var session = await CopperfinRuntimeDebugClient.EvaluateWatchAsync(currentDebugSession, expression, this.localization);
+        if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
+        {
+            return;
+        }
+
+        ApplyDebugSession(session);
+        debuggerDetailTabs.SelectedIndex = debuggerDetailTabs.TabPages.Count - 1;
     }
 
     private void UpdateProjectCommandVisibility()

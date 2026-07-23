@@ -105,6 +105,19 @@ internal static class CopperfinRuntimeDebugClient
         return ReplayWithCommandAsync(session, "out", localization);
     }
 
+    public static Task<CopperfinRuntimeDebugSession> EvaluateWatchAsync(
+        CopperfinRuntimeDebugSession session,
+        string expression,
+        CopperfinLocalization? localization = null)
+    {
+        if (session.Transport is not null)
+        {
+            return AdvanceLiveAsync(session, "watch:" + expression, localization);
+        }
+
+        return ReplayWithCommandAsync(session, "watch:" + expression, localization);
+    }
+
     internal static void Stop(CopperfinRuntimeDebugSession session)
     {
         session.Transport?.Dispose();
@@ -442,6 +455,30 @@ internal static class CopperfinRuntimeDebugClient
             return;
         }
 
+        if (string.Equals(key, "debug.watch.expression", StringComparison.OrdinalIgnoreCase))
+        {
+            state.Watches.Add(new CopperfinRuntimeWatch { Expression = value });
+            return;
+        }
+
+        if (string.Equals(key, "debug.watch.ok", StringComparison.OrdinalIgnoreCase))
+        {
+            GetCurrentWatch(state).Success = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+            return;
+        }
+
+        if (string.Equals(key, "debug.watch.value", StringComparison.OrdinalIgnoreCase))
+        {
+            GetCurrentWatch(state).Value = value;
+            return;
+        }
+
+        if (string.Equals(key, "debug.watch.error", StringComparison.OrdinalIgnoreCase))
+        {
+            GetCurrentWatch(state).Error = value;
+            return;
+        }
+
         if (string.Equals(key, "debug.stack.depth", StringComparison.OrdinalIgnoreCase))
         {
             state.StackDepth = ParseInt(value);
@@ -485,6 +522,16 @@ internal static class CopperfinRuntimeDebugClient
                string.Equals(key, "debug.watch.expression", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(key, "debug.watch.value", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(key, "debug.watch.error", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static CopperfinRuntimeWatch GetCurrentWatch(CopperfinRuntimePauseState state)
+    {
+        if (state.Watches.Count == 0)
+        {
+            state.Watches.Add(new CopperfinRuntimeWatch());
+        }
+
+        return state.Watches[state.Watches.Count - 1];
     }
 
     private static string UnescapeDebugLineValue(string value)
@@ -636,7 +683,8 @@ internal static class CopperfinRuntimeDebugClient
                !string.IsNullOrWhiteSpace(state.Message) ||
                state.Frames.Count > 0 ||
                state.Globals.Count > 0 ||
-               state.Events.Count > 0;
+               state.Events.Count > 0 ||
+               state.Watches.Count > 0;
     }
 
     private static string PrepareReplayManifest(string debugManifestPath)
