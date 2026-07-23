@@ -311,6 +311,11 @@ bool is_native_textbox_selection_member_name(const RuntimeOleObjectState& runtim
     return native_textbox_selection_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_text_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_text_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -1029,6 +1034,22 @@ void normalize_native_textbox_selection_invariant(RuntimeOleObjectState& runtime
         text.substr(
             static_cast<std::size_t>(normalized_start),
             static_cast<std::size_t>(normalized_length)));
+}
+
+void normalize_native_textbox_text_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_textbox_text_member_name(runtime_object, "text")) {
+        return;
+    }
+
+    const auto value = runtime_object.properties.find("value");
+    const auto text = runtime_object.properties.find("text");
+    if (value == runtime_object.properties.end() ||
+        text == runtime_object.properties.end()) {
+        return;
+    }
+
+    text->second = make_string_value(value_as_string(value->second));
 }
 
 bool write_native_textbox_selection_property(

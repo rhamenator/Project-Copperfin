@@ -261,6 +261,7 @@
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
             is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
             is_native_textbox_selection_member_name(*runtime_object, property_name) ||
+            is_native_textbox_text_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -527,6 +528,9 @@
                 *runtime_object,
                 member_name,
                 arguments[2]));
+        }
+        if (is_native_textbox_text_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(false);
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
@@ -1038,6 +1042,7 @@
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
             is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
             is_native_textbox_selection_member_name(*runtime_object, property_name) ||
+            is_native_textbox_text_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

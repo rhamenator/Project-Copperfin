@@ -229,6 +229,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_hours_member_name_matches(runtime_object, member_name) ||
                native_textbox_seconds_member_name_matches(runtime_object, member_name) ||
                native_textbox_selection_member_name_matches(runtime_object, member_name) ||
+               native_textbox_text_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
@@ -247,6 +248,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                (native_topindex_member_name_matches(runtime_object, member_name) &&
                 normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox") ||
                native_integralheight_member_name_matches(runtime_object, member_name) ||
+               native_textbox_text_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_child_collection_member_name_matches(runtime_object, member_name) ||

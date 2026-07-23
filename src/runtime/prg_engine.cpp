@@ -7266,6 +7266,10 @@ namespace copperfin::runtime
             {
                 normalize_native_textbox_selection_invariant(runtime_object);
             }
+            if (is_native_textbox_text_member_name(runtime_object, normalized_property_name))
+            {
+                normalize_native_textbox_text_invariant(runtime_object);
+            }
             if (is_native_identity_member_name(runtime_object, normalized_property_name))
             {
                 return make_empty_value();
@@ -8029,6 +8033,10 @@ namespace copperfin::runtime
 
         const auto perform_property_write = [&]() -> bool
         {
+            if (is_native_textbox_text_member_name(runtime_object, normalized_property_name))
+            {
+                return false;
+            }
             if (invoke_native_object_method_body_if_present(
                     runtime_object,
                     normalized_property_name + "_assign",
@@ -8449,6 +8457,7 @@ namespace copperfin::runtime
                 if (normalized_property_name == "value")
                 {
                     normalize_native_textbox_selection_invariant(runtime_object);
+                    normalize_native_textbox_text_invariant(runtime_object);
                 }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")

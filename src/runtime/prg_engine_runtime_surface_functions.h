@@ -91,6 +91,7 @@ bool is_native_textbox_datemark_member_name(const RuntimeOleObjectState& runtime
 bool is_native_textbox_hours_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_seconds_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_selection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_textbox_text_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_tabindex_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -165,6 +166,7 @@ void normalize_native_textbox_datemark_invariant(RuntimeOleObjectState& runtime_
 void normalize_native_textbox_hours_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_seconds_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_selection_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_textbox_text_invariant(RuntimeOleObjectState& runtime_object);
 bool write_native_textbox_selection_property(RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name, const PrgValue& assigned_value);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_selectonentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

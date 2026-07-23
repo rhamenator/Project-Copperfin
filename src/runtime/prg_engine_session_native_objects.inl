@@ -349,6 +349,13 @@
             }
 
             if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("text"))
+            {
+                runtime_object.properties["text"] = make_string_value("");
+            }
+
+            if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox" ||
                  normalized_base_class == "column" ||
