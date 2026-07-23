@@ -226,6 +226,7 @@
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
+            is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -745,6 +746,7 @@
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
+            is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

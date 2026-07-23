@@ -39,6 +39,24 @@ bool is_native_visual_runtime_object(const RuntimeOleObjectState& runtime_object
            normalized_base_class == "toolbar";
 }
 
+bool native_visual_caption_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "checkbox" ||
+           normalized_base_class == "commandbutton" ||
+           normalized_base_class == "commandgroup" ||
+           normalized_base_class == "form" ||
+           normalized_base_class == "label" ||
+           normalized_base_class == "optionbutton" ||
+           normalized_base_class == "optiongroup" ||
+           normalized_base_class == "page" ||
+           normalized_base_class == "pageframe";
+}
+
 bool native_tabindex_runtime_object_matches(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

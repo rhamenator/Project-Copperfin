@@ -902,3 +902,4 @@ The official command inventory is much larger than the current runtime. The deep
 - Use the generated local CHM command-topic index and topic manifest to jump from a command or `foxtools` function name to the installed VFP help page that describes its behavior.
 - Use installed VFP 9 help and local source trees for product-era behavior and sample patterns.
 - Use `FOXHELP.DBF` and its memo file as a fallback source for older semantics when Learn pages are missing, gated, or too shallow.
+- Native visual `Caption` contract note — caption-bearing native PRG visual classes now expose a protected string `Caption` property with declarative initialization and direct/reflection coverage under #3217/#4457. TextBox remains outside this contract because VFP does not define `Caption` there; rendering and UI layout remain separate evidence lanes.

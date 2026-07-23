@@ -389,6 +389,14 @@ bool native_visual_tag_member_name_matches(
            runtime_object.properties.contains("tag");
 }
 
+bool native_visual_caption_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "caption" &&
+           native_visual_caption_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("caption");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

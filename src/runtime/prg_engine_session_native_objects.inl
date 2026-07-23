@@ -54,6 +54,20 @@
                 runtime_object.properties["tag"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "checkbox" ||
+                 normalized_base_class == "commandbutton" ||
+                 normalized_base_class == "commandgroup" ||
+                 normalized_base_class == "form" ||
+                 normalized_base_class == "label" ||
+                 normalized_base_class == "optionbutton" ||
+                 normalized_base_class == "optiongroup" ||
+                 normalized_base_class == "page" ||
+                 normalized_base_class == "pageframe") &&
+                !runtime_object.properties.contains("caption"))
+            {
+                runtime_object.properties["caption"] = make_string_value("");
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
