@@ -262,6 +262,7 @@
             is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_columnlines_member_name(*runtime_object, property_name) ||
             is_native_itemtips_member_name(*runtime_object, property_name) ||
+            is_native_incrementalsearch_member_name(*runtime_object, property_name) ||
             is_native_integralheight_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
@@ -614,6 +615,9 @@
             if (member_name == "itemtips") {
                 normalize_native_list_control_itemtips_invariant(*runtime_object);
             }
+            if (member_name == "incrementalsearch") {
+                normalize_native_list_control_incrementalsearch_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -670,6 +674,9 @@
             }
             if (member_name == "itemtips") {
                 normalize_native_list_control_itemtips_invariant(*runtime_object);
+            }
+            if (member_name == "incrementalsearch") {
+                normalize_native_list_control_incrementalsearch_invariant(*runtime_object);
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -761,6 +768,7 @@
             is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_columnlines_member_name(*runtime_object, property_name) ||
             is_native_itemtips_member_name(*runtime_object, property_name) ||
+            is_native_incrementalsearch_member_name(*runtime_object, property_name) ||
             is_native_integralheight_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||

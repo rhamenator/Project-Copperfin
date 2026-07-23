@@ -84,6 +84,7 @@ bool is_native_displaycount_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_nulldisplay_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_columnlines_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_itemtips_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_incrementalsearch_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_integralheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -108,6 +109,7 @@ void normalize_native_combobox_displaycount_invariant(RuntimeOleObjectState& run
 void normalize_native_list_control_nulldisplay_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_name_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

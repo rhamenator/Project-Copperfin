@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4451 under #3217 is implemented in the current slice: native PRG ComboBox/ListBox `IncrementalSearch` now exposes a built-in logical property defaulting to `.T.` for plain and derived controls. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim keyboard/prefix-search behavior or native UI interaction; hosted cross-platform and Windows VFP9 validation remain required.
+
 - #4447 under #23 is implemented in the current slice: the shared project Builders pane now queries the existing native launch catalogs across form, class, control, report, label, menu, project, and data-environment contexts. It renders localized kind/builder/context/description metadata in both shells, preserves invariant builder ids/context tokens/entry points, and leaves mutation or external launch execution to the existing admission/dispatch contracts.
 
 - #4446 under #25 is implemented in the current slice: the shared project Coverage pane now deduplicates valid runtime `file:line` events into localized location/hit/category/detail columns and activates existing source files through the shared line callback. Non-source runtime events remain excluded from activation, runtime event schemas and paths remain invariant, and the summary retains pause/session context. Builders and remaining utility panes are still separate work.
