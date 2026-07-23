@@ -18,6 +18,7 @@ internal sealed class StudioMainForm : Form
     private readonly TabControl toolWindowTabs;
     private readonly TabPage commandWindowPage;
     private readonly TabPage terminalWindowPage;
+    private readonly StudioCommandWindowControl commandWindowControl;
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly ToolStripMenuItem closeDocumentMenuItem;
@@ -93,7 +94,8 @@ internal sealed class StudioMainForm : Form
             Multiline = false
         };
         commandWindowPage = new TabPage(this.localization.Text("VSIX.CommandWindow.Title"));
-        commandWindowPage.Controls.Add(new StudioCommandWindowControl(this.localization));
+        commandWindowControl = new StudioCommandWindowControl(this.localization);
+        commandWindowPage.Controls.Add(commandWindowControl);
         toolWindowTabs.TabPages.Add(commandWindowPage);
         terminalWindowPage = new TabPage(this.localization.Text("VSIX.TerminalWindow.Title"));
         terminalWindowControl = new StudioTerminalWindowControl(this.localization);
@@ -189,6 +191,13 @@ internal sealed class StudioMainForm : Form
     internal void SubmitTerminalCommandForTest(string command)
     {
         terminalWindowControl.SubmitCommandForTest(command);
+    }
+
+    internal string CommandWindowTranscriptText => commandWindowControl.TranscriptText;
+
+    internal void SubmitCommandForTest(string command)
+    {
+        commandWindowControl.SubmitCommandForTest(command);
     }
 
     internal void SetShellSplitterDistanceForTest(int distance)

@@ -60,6 +60,39 @@ internal static partial class Program
         TearDownForm(form);
     }
 
+    private static void SmokeStandaloneStudioCommandWindowInteraction()
+    {
+        using var form = new StudioMainForm(
+            new CopperfinLocalization("es-419"),
+            new InMemoryStudioShellLayoutStore())
+        {
+            Width = 1200,
+            Height = 800,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        form.Show();
+        Application.DoEvents();
+        var initialTranscript = form.CommandWindowTranscriptText;
+
+        form.SubmitCommandForTest("LIST");
+        Application.DoEvents();
+
+        Expect(form.CommandWindowTranscriptText.Contains("> LIST", StringComparison.Ordinal) &&
+               form.CommandWindowTranscriptText.Contains("No se pudo abrir el comando de Copperfin.", StringComparison.Ordinal),
+            "standalone Command window should record submitted commands and localize an unavailable executor");
+        var transcriptAfterCommand = form.CommandWindowTranscriptText;
+        form.SubmitCommandForTest("   ");
+        Expect(form.CommandWindowTranscriptText == transcriptAfterCommand,
+            "standalone Command window should ignore empty submissions without changing the transcript");
+        Expect(form.CommandWindowTranscriptText.StartsWith(initialTranscript, StringComparison.Ordinal),
+            "standalone Command window should preserve its initial transcript");
+
+        TearDownForm(form);
+    }
+
     private static void SmokeStandaloneStudioCloseDocumentTabs()
     {
         var root = Path.Combine(

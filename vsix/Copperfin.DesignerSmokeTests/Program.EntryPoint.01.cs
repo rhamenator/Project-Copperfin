@@ -40,6 +40,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeStandaloneStudioRevisitingDocumentPreservesSelectors), SmokeStandaloneStudioRevisitingDocumentPreservesSelectors);
         runner.Run(nameof(SmokeStandaloneStudioCloseDocumentTabs), SmokeStandaloneStudioCloseDocumentTabs);
         runner.Run(nameof(SmokeStandaloneStudioCommandWindowDocking), SmokeStandaloneStudioCommandWindowDocking);
+        runner.Run(nameof(SmokeStandaloneStudioCommandWindowInteraction), SmokeStandaloneStudioCommandWindowInteraction);
         runner.Run(nameof(SmokeStandaloneStudioShellLayoutPersistence), SmokeStandaloneStudioShellLayoutPersistence);
         runner.Run(nameof(SmokeStandaloneStudioFileLayoutStoreRoundTrip), SmokeStandaloneStudioFileLayoutStoreRoundTrip);
         runner.Run(nameof(SmokeStandaloneStudioTerminalShellContract), SmokeStandaloneStudioTerminalShellContract);

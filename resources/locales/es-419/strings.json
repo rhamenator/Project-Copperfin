@@ -19,6 +19,7 @@
   "VSIX.CommandWindow.Title": "Comando de Copperfin",
   "VSIX.CommandWindow.Ready": "Listo.",
   "VSIX.CommandWindow.Unavailable": "No se pudo abrir el comando de Copperfin.",
+  "VSIX.CommandWindow.SendTooltip": "Enviar comando",
   "VSIX.TerminalWindow.Title": "Terminal de Copperfin",
   "VSIX.TerminalWindow.Ready": "Listo.",
   "VSIX.TerminalWindow.SendTooltip": "Enviar comando",
