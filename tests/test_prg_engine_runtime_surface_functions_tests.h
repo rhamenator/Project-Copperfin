@@ -136,6 +136,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_combobox_displaycount_property_stays_builtin();
     void test_native_list_control_nulldisplay_stays_builtin_and_visible();
     void test_native_list_control_columnlines_property_stays_builtin();
+    void test_native_list_control_itemtips_property_stays_builtin();
     void test_native_list_controls_itemdata_stays_coherent();
     void test_native_list_controls_topitemid_stays_coherent();
     void test_native_list_controls_topindex_stays_coherent();

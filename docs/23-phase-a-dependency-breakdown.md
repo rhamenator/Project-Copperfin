@@ -2034,3 +2034,4 @@ Operationally:
 - pick or create one prompt-sized child from the Current Issue Tree Status unless the live issue tracker shows a higher-weight blocker
 - do not treat the closed Phase A/A3/A4 notes as active runtime queues without fresh issue evidence
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task
+- #4448 (#3217): native PRG ComboBox/ListBox `ItemTips` property contract is implemented and covered. The mounted VFP9 help confirms the read/write logical default `.F.`; runtime reflection and derived initialization are covered, while tooltip rendering remains UI work.
