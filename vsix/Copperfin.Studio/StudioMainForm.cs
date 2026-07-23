@@ -324,6 +324,7 @@ internal sealed class StudioMainForm : Form
             EmbeddedStudioShell = true
         };
         editorControl.OpenDocumentRequested += path => OpenDocument(path);
+        editorControl.OpenDocumentAtLineRequested += (path, _) => OpenDocument(path);
 
         var page = new TabPage(Path.GetFileName(normalizedPath))
         {

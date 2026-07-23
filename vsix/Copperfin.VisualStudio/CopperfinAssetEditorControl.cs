@@ -22,6 +22,7 @@ namespace Copperfin.VisualStudio;
 internal sealed class CopperfinAssetEditorControl : UserControl
 {
     public event Action<string>? OpenDocumentRequested;
+    public event Action<string, int>? OpenDocumentAtLineRequested;
 
     private sealed class ReportUnplacedObjectScope
     {
@@ -107,6 +108,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly TabControl projectWorkspaceTabs;
     private readonly RichTextBox debuggerSummaryBox;
     private readonly RichTextBox taskListSummaryBox;
+    private readonly ListView taskListView;
     private readonly RichTextBox codeReferencesSummaryBox;
     private readonly RichTextBox dataExplorerSummaryBox;
     private readonly RichTextBox objectBrowserSummaryBox;
@@ -562,6 +564,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.TaskList")
         };
 
+        taskListView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        taskListView.Columns.Add(this.localization.Text("AssetEditor.TaskList.Column.Category"), 90);
+        taskListView.Columns.Add(this.localization.Text("AssetEditor.TaskList.Column.File"), 220);
+        taskListView.Columns.Add(this.localization.Text("AssetEditor.TaskList.Column.Line"), 70);
+        taskListView.Columns.Add(this.localization.Text("AssetEditor.TaskList.Column.Message"), 560);
+        taskListView.DoubleClick += (_, _) => TryActivateSelectedTask();
+        taskListView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedTask();
+        };
+
         codeReferencesSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -761,8 +788,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summaryPage.Controls.Add(workspaceSummaryBox);
         var debuggerPage = new TabPage(this.localization.Text("AssetEditor.Tab.Debugger"));
         debuggerPage.Controls.Add(debuggerPageHost);
+        var taskListPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        var taskListSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 112
+        };
+        taskListSummaryPanel.Controls.Add(taskListSummaryBox);
+        taskListPageHost.Controls.Add(taskListView);
+        taskListPageHost.Controls.Add(taskListSummaryPanel);
         var taskListPage = new TabPage(this.localization.Text("AssetEditor.Tab.TaskList"));
-        taskListPage.Controls.Add(taskListSummaryBox);
+        taskListPage.Controls.Add(taskListPageHost);
         var codeReferencesPage = new TabPage(this.localization.Text("AssetEditor.Tab.CodeReferences"));
         codeReferencesPage.Controls.Add(codeReferencesSummaryBox);
         var dataExplorerPageHost = new Panel
@@ -963,6 +1002,33 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    public bool TryActivateSelectedTask()
+    {
+        if (currentSnapshot?.AssetFamily != "project" ||
+            taskListView.SelectedItems.Count != 1 ||
+            taskListView.SelectedItems[0].Tag is not CopperfinProjectTaskItem task ||
+            !File.Exists(task.FilePath))
+        {
+            return false;
+        }
+
+        var openDocumentAtLine = OpenDocumentAtLineRequested;
+        if (openDocumentAtLine is not null)
+        {
+            openDocumentAtLine(task.FilePath, task.Line);
+            return true;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(task.FilePath);
+        return true;
+    }
+
     public string GetUndoCommandText()
     {
         if (TryFindFocusedUndoTextBox() is not null)
@@ -1108,6 +1174,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         projectWorkspaceTabs.Visible = false;
         debuggerSummaryBox.Text = this.localization.Text("AssetEditor.Debugger.InitialSummary");
         taskListSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.TaskList");
+        taskListView.Items.Clear();
         codeReferencesSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences");
         dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
@@ -2491,6 +2558,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
+        PopulateTaskList(currentProjectInsights);
         taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
         codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
         dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights, dataExplorerFilterBox.Text);
@@ -2499,6 +2567,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
         coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
         databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
+    }
+
+    private void PopulateTaskList(CopperfinProjectInsights? insights)
+    {
+        taskListView.Items.Clear();
+        if (insights is null)
+        {
+            return;
+        }
+
+        foreach (var task in insights.TaskItems)
+        {
+            var item = new ListViewItem(task.Category);
+            item.SubItems.Add(Path.GetFileName(task.FilePath));
+            item.SubItems.Add(task.Line.ToString(CultureInfo.InvariantCulture));
+            item.SubItems.Add(task.Message);
+            item.Tag = task;
+            taskListView.Items.Add(item);
+        }
     }
 
     private string BuildGuidanceText(string assetFamily)
@@ -3888,14 +3975,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            foreach (var task in insights.TaskItems.Take(40))
-            {
-                summary.AppendLine(F("AssetEditor.Summary.TaskItemLine", task.Category, Path.GetFileName(task.FilePath), task.Line, task.Message));
-            }
-            if (insights.TaskItems.Count > 40)
-            {
-                summary.AppendLine(F("AssetEditor.Summary.MoreItems", insights.TaskItems.Count - 40, L("AssetEditor.Summary.LabelTaskItems")));
-            }
+            summary.AppendLine(L("AssetEditor.Summary.TaskListActivation"));
         }
 
         if (insights.Warnings.Count > 0)

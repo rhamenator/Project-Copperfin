@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4442 under #25 is implemented in the current slice: the shared project Task List now renders every scanned TODO/FIXME/HACK/BUG/UNDONE finding in localized category/file/line/message columns. Enter or double-click activates the selected source item; VSIX positions the Visual Studio text view at the one-based line, while standalone Studio opens the shared document through the same callback. Keep marker tokens and paths invariant, keep missing/read-failure warnings localized, and do not claim that the other project utility panes are fully interactive yet.
+
 - #4441 under #3217 is implemented in the current slice: native PRG ComboBox/ListBox `ColumnLines` now exposes a built-in logical property defaulting to `.T.` for plain and derived controls. Direct writes and `GETPEM()` / `SETPEM()` / `PUTPEM()` normalize logical values; `PEMSTATUS()`, `AMEMBERS()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` remain coherent. Do not claim column-separator painting; hosted cross-platform and Windows VFP9 validation remain required.
 
 - Exact-head local native validation for `abff6b3f` passed all 308 CTest tests in 316.67 seconds. The only skips were `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`, both expected toolchain/platform conditionals. This is independent Linux evidence only; hosted Windows mounted-VFP9/UI evidence and enforced launcher-trust provisioning remain release gates.

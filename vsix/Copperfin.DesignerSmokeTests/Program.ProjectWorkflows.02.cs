@@ -79,6 +79,8 @@ internal static partial class Program
                 Directory.CreateDirectory(Path.GetDirectoryName(supportedPath)!);
                 File.WriteAllText(supportedPath, "asset");
             }
+            var taskSourcePath = Path.Combine(root, "code", "main.prg");
+            File.WriteAllText(taskSourcePath, "* Copperfin task source" + Environment.NewLine + "* TODO: wire the startup command" + Environment.NewLine);
             File.WriteAllText(Path.GetFullPath(outsidePath), "outside");
 
             foreach (var relativePath in supportedRelativePaths)
@@ -133,7 +135,14 @@ internal static partial class Program
                 Dock = DockStyle.Fill
             };
             string? requestedPath = null;
+            string? requestedTaskPath = null;
+            var requestedTaskLine = 0;
             control.OpenDocumentRequested += path => requestedPath = path;
+            control.OpenDocumentAtLineRequested += (path, line) =>
+            {
+                requestedTaskPath = path;
+                requestedTaskLine = line;
+            };
             hostForm.Controls.Add(control);
             hostForm.Show();
             Application.DoEvents();
@@ -159,16 +168,25 @@ internal static partial class Program
                 },
                 Objects = new List<CopperfinStudioSnapshotObject> { snapshotObject }
             });
+            GetPrivateField<ListView>(control, "sectionListView")?.Items.Clear();
             typeof(CopperfinAssetEditorControl)
                 .GetMethod("PopulateObjectList", BindingFlags.Instance | BindingFlags.NonPublic)
                 ?.Invoke(control, new object[] { true });
-
             var objectList = FindListViews(control)
                 .FirstOrDefault(list => list.Columns.Count >= 3 &&
                                         string.Equals(
                                             list.Columns[0].Text,
                                             "Item",
+                                            StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(
+                                            list.Columns[1].Text,
+                                            "Group",
                                             StringComparison.OrdinalIgnoreCase));
+            if (objectList is not null && objectList.Items.Count > 0)
+            {
+                objectList.Focus();
+                objectList.Items[0].Selected = true;
+            }
             Expect(objectList is not null && objectList.SelectedItems.Count == 1,
                 "project workspace activation should select the first project entry in the shared editor list");
             Expect(
@@ -202,6 +220,52 @@ internal static partial class Program
             Expect(
                 !control.TryActivateSelectedProjectEntry() && requestedPath is null,
                 "project workspace activation should reject excluded project entries without opening a document");
+
+            SetPrivateField(
+                control,
+                "currentProjectInsights",
+                new CopperfinProjectInsights
+                {
+                    TaskItems = new List<CopperfinProjectTaskItem>
+                    {
+                        new CopperfinProjectTaskItem
+                        {
+                            Category = "TODO",
+                            FilePath = taskSourcePath,
+                            Line = 2,
+                            Message = "TODO: wire the startup command"
+                        }
+                    }
+                });
+            typeof(CopperfinAssetEditorControl)
+                .GetMethod("RefreshProjectWorkspaceInsightViews", BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.Invoke(control, null);
+            var projectWorkspaceTabs = GetPrivateField<TabControl>(control, "projectWorkspaceTabs");
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.Visible = true;
+                projectWorkspaceTabs.SelectTab(2);
+            }
+            Application.DoEvents();
+
+            var taskList = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count >= 4 &&
+                                        string.Equals(list.Columns[0].Text, "Category", StringComparison.OrdinalIgnoreCase));
+            Expect(taskList is not null && taskList.Items.Count == 1,
+                "project workspace Task List should show every discovered task with stable columns");
+            if (taskList is not null && taskList.Items.Count == 1)
+            {
+                taskList.Items[0].Selected = true;
+                taskList.Items[0].Focused = true;
+                requestedTaskPath = null;
+                requestedTaskLine = 0;
+                var taskActivated = control.TryActivateSelectedTask();
+                Expect(
+                    taskActivated &&
+                    string.Equals(requestedTaskPath, taskSourcePath, StringComparison.Ordinal) &&
+                    requestedTaskLine == 2,
+                    "project workspace Task List activation should open the source file at its one-based source line");
+            }
             hostForm.Close();
         }
         finally

@@ -24,6 +24,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
     {
         control = new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture());
         control.OpenDocumentRequested += OpenDocumentInVisualStudio;
+        control.OpenDocumentAtLineRequested += OpenDocumentAtLineInVisualStudio;
         this.documentPath = documentPath;
         control.LoadDocument(documentPath);
     }
@@ -113,6 +114,29 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
             out uint _,
             out IVsWindowFrame _,
             out IVsTextView _);
+    }
+
+    private void OpenDocumentAtLineInVisualStudio(string path, int line)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        VsShellUtilities.OpenDocument(
+            ServiceProvider.GlobalProvider,
+            path,
+            Guid.Empty,
+            out IVsUIHierarchy _,
+            out uint _,
+            out IVsWindowFrame windowFrame,
+            out IVsTextView textView);
+
+        textView ??= VsShellUtilities.GetTextView(windowFrame);
+        if (textView is null)
+        {
+            return;
+        }
+
+        var targetLine = Math.Max(0, line - 1);
+        ErrorHandler.ThrowOnFailure(textView.SetCaretPos(targetLine, 0));
+        ErrorHandler.ThrowOnFailure(textView.CenterLines(targetLine, 1));
     }
 
     public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
