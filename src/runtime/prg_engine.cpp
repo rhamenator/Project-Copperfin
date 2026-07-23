@@ -8390,6 +8390,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_disabledforecolor_invariant(runtime_object);
                 }
+                if (normalized_property_name == "statusbartext")
+                {
+                    normalize_native_textbox_statusbartext_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

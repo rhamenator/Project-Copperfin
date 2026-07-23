@@ -256,6 +256,11 @@ bool is_native_textbox_disabledforecolor_member_name(const RuntimeOleObjectState
     return native_textbox_disabledforecolor_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_statusbartext_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -778,6 +783,20 @@ void normalize_native_textbox_disabledforecolor_invariant(RuntimeOleObjectState&
 
     const double value = value_as_number(disabled_forecolor->second);
     disabled_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_statusbartext_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto statusbar_text = runtime_object.properties.find("statusbartext");
+    if (statusbar_text == runtime_object.properties.end()) {
+        return;
+    }
+
+    statusbar_text->second = make_string_value(value_as_string(statusbar_text->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

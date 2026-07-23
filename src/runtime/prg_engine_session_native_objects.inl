@@ -245,6 +245,12 @@
                 runtime_object.properties["disabledforecolor"] = make_int64_value(8421504LL);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("statusbartext"))
+            {
+                runtime_object.properties["statusbartext"] = make_string_value("");
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
