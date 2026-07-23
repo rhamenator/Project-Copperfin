@@ -12,6 +12,63 @@ internal sealed class CopperfinStudioSnapshotEnvelope
     public CopperfinStudioSnapshotDocument Document { get; set; } = new();
 }
 
+internal sealed class CopperfinStudioToolboxPaletteEnvelope
+{
+    public string Status { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioToolboxPalettePayload? ToolboxPaletteQuery { get; set; }
+}
+
+internal sealed class CopperfinStudioToolboxPalettePayload
+{
+    public bool Ok { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string ToolboxContext { get; set; } = string.Empty;
+    public List<CopperfinStudioToolboxItem> Items { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioToolboxItem
+{
+    public string Id { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string VfpClass { get; set; } = string.Empty;
+    public string BaseClass { get; set; } = string.Empty;
+    public string DefaultNamePrefix { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioToolboxCreateEnvelope
+{
+    public string Status { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioToolboxCreatePayload? ToolboxCreate { get; set; }
+}
+
+internal sealed class CopperfinStudioToolboxCreatePayload
+{
+    public bool Ok { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string ObjectName { get; set; } = string.Empty;
+    public string UniqueId { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioToolboxPaletteResult
+{
+    public bool Success { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
+    public List<CopperfinStudioToolboxItem> Items { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioToolboxCreateResult
+{
+    public bool Success { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string ObjectName { get; set; } = string.Empty;
+    public string UniqueId { get; set; } = string.Empty;
+}
+
 internal sealed class CopperfinStudioSnapshotDocument
 {
     public string Path { get; set; } = string.Empty;

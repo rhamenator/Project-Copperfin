@@ -139,6 +139,140 @@ internal static class CopperfinStudioSnapshotClient
         }
     }
 
+    private static string ToolboxContextForAssetFamily(string assetFamily)
+    {
+        return assetFamily switch
+        {
+            "report" or "label" => "report",
+            "class" => "class_designer",
+            _ => "form"
+        };
+    }
+
+    public static CopperfinStudioToolboxPaletteResult TryLoadToolboxPalette(
+        string assetFamily,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioToolboxPaletteResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        var commandResult = RunCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildToolboxPaletteQueryArguments(
+                ToolboxContextForAssetFamily(assetFamily)),
+            localization);
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioToolboxPaletteResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
+        try
+        {
+            var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+            var envelope = serializer.Deserialize<CopperfinStudioToolboxPaletteEnvelope>(commandResult.Stdout);
+            var payload = envelope?.ToolboxPaletteQuery;
+            if (payload is null || !payload.Ok)
+            {
+                return new CopperfinStudioToolboxPaletteResult
+                {
+                    Success = false,
+                    Error = payload?.Error ?? envelope?.Error ?? localization.Text("AssetEditor.Toolbox.Unavailable")
+                };
+            }
+
+            return new CopperfinStudioToolboxPaletteResult
+            {
+                Success = true,
+                Items = payload.Items,
+                Context = payload.ToolboxContext
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CopperfinStudioToolboxPaletteResult
+            {
+                Success = false,
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+            };
+        }
+    }
+
+    public static CopperfinStudioToolboxCreateResult TryCreateToolboxItem(
+        string assetPath,
+        string toolboxItemId,
+        string assetFamily,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioToolboxCreateResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        var commandResult = RunCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildToolboxCreateArguments(
+                assetPath,
+                toolboxItemId,
+                ToolboxContextForAssetFamily(assetFamily)),
+            localization);
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioToolboxCreateResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
+        try
+        {
+            var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+            var envelope = serializer.Deserialize<CopperfinStudioToolboxCreateEnvelope>(commandResult.Stdout);
+            var payload = envelope?.ToolboxCreate;
+            if (payload is null || !payload.Ok)
+            {
+                return new CopperfinStudioToolboxCreateResult
+                {
+                    Success = false,
+                    Error = payload?.Error ?? envelope?.Error ?? localization.Text("AssetEditor.Toolbox.CreateFailed")
+                };
+            }
+
+            return new CopperfinStudioToolboxCreateResult
+            {
+                Success = true,
+                ObjectName = payload.ObjectName,
+                UniqueId = payload.UniqueId
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CopperfinStudioToolboxCreateResult
+            {
+                Success = false,
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+            };
+        }
+    }
+
     private static CopperfinStudioSnapshotResult RunBatchPropertyUpdateAndReload(
         string studioHostPath,
         string assetPath,

@@ -97,6 +97,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox dataExplorerSummaryBox;
     private readonly RichTextBox objectBrowserSummaryBox;
     private readonly RichTextBox toolboxSummaryBox;
+    private readonly ListView toolboxPaletteList;
+    private readonly Button toolboxCreateButton;
+    private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
     private readonly RichTextBox coverageSummaryBox;
     private readonly RichTextBox databaseSummaryBox;
@@ -582,6 +585,38 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.Toolbox")
         };
 
+        toolboxPaletteList = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        toolboxPaletteList.Columns.Add(this.localization.Text("AssetEditor.Toolbox.Column.Item"), 220);
+        toolboxPaletteList.Columns.Add(this.localization.Text("AssetEditor.Toolbox.Column.Category"), 150);
+        toolboxPaletteList.Columns.Add(this.localization.Text("AssetEditor.Toolbox.Column.Class"), 150);
+        toolboxCreateButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Toolbox.CreateButton"),
+            Enabled = false
+        };
+        toolboxCreateButton.Click += (_, _) => QueueUiAction(TryCreateSelectedToolboxItemAsync);
+        toolboxPaletteList.SelectedIndexChanged += (_, _) =>
+        {
+            toolboxCreateButton.Enabled = toolboxPaletteList.SelectedItems.Count == 1 &&
+                                          currentSnapshot?.ReadOnly == false &&
+                                          !string.IsNullOrWhiteSpace(currentPath);
+        };
+
+        toolboxStatusLabel = new Label
+        {
+            AutoSize = true,
+            Dock = DockStyle.Fill,
+            Text = this.localization.Text("AssetEditor.Toolbox.Loading")
+        };
+
         buildersSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -709,7 +744,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var objectBrowserPage = new TabPage(this.localization.Text("AssetEditor.Tab.ObjectBrowser"));
         objectBrowserPage.Controls.Add(objectBrowserPageHost);
         var toolboxPage = new TabPage(this.localization.Text("AssetEditor.Tab.Toolbox"));
-        toolboxPage.Controls.Add(toolboxSummaryBox);
+        var toolboxActionPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(6)
+        };
+        toolboxActionPanel.Controls.Add(toolboxCreateButton);
+        toolboxActionPanel.Controls.Add(toolboxStatusLabel);
+        var toolboxSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150
+        };
+        toolboxSummaryPanel.Controls.Add(toolboxSummaryBox);
+        toolboxPage.Controls.Add(toolboxPaletteList);
+        toolboxPage.Controls.Add(toolboxSummaryPanel);
+        toolboxPage.Controls.Add(toolboxActionPanel);
         var buildersPage = new TabPage(this.localization.Text("AssetEditor.Tab.Builders"));
         buildersPage.Controls.Add(buildersSummaryBox);
         var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
@@ -1010,6 +1063,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
         toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
+        toolboxPaletteList.Items.Clear();
+        toolboxCreateButton.Enabled = false;
+        toolboxStatusLabel.Text = this.localization.Text("AssetEditor.Toolbox.Loading");
         buildersSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Builders");
         coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
@@ -1061,7 +1117,105 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             SyncExplorerSelection();
             LoadSurface();
             UpdateObjectLifecycleButtonVisibility();
+            _ = LoadToolboxPaletteAsync(path, snapshotResult.Document.AssetFamily, expectedGeneration);
         });
+    }
+
+    private async Task LoadToolboxPaletteAsync(string path, string assetFamily, int expectedGeneration)
+    {
+        if (assetFamily is not ("form" or "class" or "report" or "label"))
+        {
+            toolboxPaletteList.Items.Clear();
+            toolboxCreateButton.Enabled = false;
+            toolboxStatusLabel.Text = localization.Text("AssetEditor.Toolbox.Empty");
+            return;
+        }
+
+        var paletteResult = await Task.Run(() =>
+            CopperfinStudioSnapshotClient.TryLoadToolboxPalette(assetFamily, localization));
+        if (IsDisposed || Disposing || expectedGeneration != loadGeneration ||
+            !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        PostToUi(() =>
+        {
+            if (!paletteResult.Success)
+            {
+                toolboxPaletteList.Items.Clear();
+                toolboxCreateButton.Enabled = false;
+                toolboxStatusLabel.Text = localization.Format(
+                    "AssetEditor.Toolbox.Unavailable",
+                    paletteResult.Error);
+                return;
+            }
+
+            toolboxPaletteList.BeginUpdate();
+            try
+            {
+                toolboxPaletteList.Items.Clear();
+                foreach (var item in paletteResult.Items)
+                {
+                    var listItem = new ListViewItem(item.Title);
+                    listItem.SubItems.Add(item.Category);
+                    listItem.SubItems.Add(item.VfpClass);
+                    listItem.ToolTipText = item.Description;
+                    listItem.Tag = item;
+                    toolboxPaletteList.Items.Add(listItem);
+                }
+            }
+            finally
+            {
+                toolboxPaletteList.EndUpdate();
+            }
+
+            toolboxCreateButton.Enabled = !currentSnapshot!.ReadOnly &&
+                                          toolboxPaletteList.SelectedItems.Count == 1;
+            toolboxStatusLabel.Text = toolboxPaletteList.Items.Count == 0
+                ? localization.Text("AssetEditor.Toolbox.Empty")
+                : localization.Format("AssetEditor.Toolbox.Available", toolboxPaletteList.Items.Count);
+        });
+    }
+
+    private async Task TryCreateSelectedToolboxItemAsync()
+    {
+        if (toolboxPaletteList.SelectedItems.Count != 1 ||
+            currentSnapshot?.ReadOnly != false ||
+            string.IsNullOrWhiteSpace(currentPath) ||
+            toolboxPaletteList.SelectedItems[0].Tag is not CopperfinStudioToolboxItem item)
+        {
+            return;
+        }
+
+        var path = currentPath!;
+        var generation = loadGeneration;
+        toolboxCreateButton.Enabled = false;
+        toolboxStatusLabel.Text = localization.Text("AssetEditor.Toolbox.Creating");
+        var createResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryCreateToolboxItem(
+            path,
+            item.Id,
+            currentSnapshot!.AssetFamily,
+            localization));
+        if (IsDisposed || Disposing || generation != loadGeneration ||
+            !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (!createResult.Success)
+        {
+            toolboxCreateButton.Enabled = toolboxPaletteList.SelectedItems.Count == 1;
+            toolboxStatusLabel.Text = localization.Format(
+                "AssetEditor.Toolbox.CreateFailed",
+                createResult.Error);
+            return;
+        }
+
+        toolboxStatusLabel.Text = localization.Format(
+            "AssetEditor.Toolbox.Created",
+            createResult.ObjectName);
+        LoadDocument(path, currentStartupObjectName, currentStartupUniqueId);
     }
 
     private void HandleCreatedForPendingUiActions(object? sender, EventArgs e)
