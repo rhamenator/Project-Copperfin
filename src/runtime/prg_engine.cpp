@@ -8350,6 +8350,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_maxlength_invariant(runtime_object);
                 }
+                if (normalized_property_name == "specialeffect")
+                {
+                    normalize_native_textbox_specialeffect_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

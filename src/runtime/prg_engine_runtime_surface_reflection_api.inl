@@ -206,6 +206,11 @@ bool is_native_textbox_maxlength_member_name(const RuntimeOleObjectState& runtim
     return native_textbox_maxlength_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_specialeffect_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_specialeffect_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -574,6 +579,23 @@ void normalize_native_textbox_maxlength_invariant(RuntimeOleObjectState& runtime
         std::isfinite(value) && value >= 0.0
             ? static_cast<double>(std::llround(value))
             : 0.0);
+}
+
+void normalize_native_textbox_specialeffect_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_specialeffect_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto special_effect = runtime_object.properties.find("specialeffect");
+    if (special_effect == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(special_effect->second);
+    const long long normalized =
+        !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 2LL);
+    special_effect->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

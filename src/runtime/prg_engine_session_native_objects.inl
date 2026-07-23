@@ -185,6 +185,12 @@
                 runtime_object.properties["maxlength"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("specialeffect"))
+            {
+                runtime_object.properties["specialeffect"] = make_number_value(0.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
