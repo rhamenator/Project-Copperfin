@@ -255,6 +255,7 @@
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_moverbars_member_name(*runtime_object, property_name) ||
+            is_native_autohidescrollbar_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -586,6 +587,9 @@
                 member_name == "rowsourcetype") {
                 normalize_native_listbox_moverbars_invariant(*runtime_object);
             }
+            if (member_name == "autohidescrollbar") {
+                normalize_native_listbox_autohidescrollbar_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -623,6 +627,9 @@
             if (member_name == "moverbars" ||
                 member_name == "rowsourcetype") {
                 normalize_native_listbox_moverbars_invariant(*runtime_object);
+            }
+            if (member_name == "autohidescrollbar") {
+                normalize_native_listbox_autohidescrollbar_invariant(*runtime_object);
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -707,6 +714,7 @@
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_moverbars_member_name(*runtime_object, property_name) ||
+            is_native_autohidescrollbar_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||

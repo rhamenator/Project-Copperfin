@@ -735,6 +735,17 @@ bool native_moverbars_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
 }
 
+bool native_autohidescrollbar_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "autohidescrollbar" ||
+        !runtime_object.properties.contains("autohidescrollbar")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+}
+
 bool native_boundto_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

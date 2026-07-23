@@ -270,6 +270,22 @@ bool native_listbox_moverbars_row_source_supported(const RuntimeOleObjectState& 
            native_list_control_rowsourcetype_supports_additem(runtime_object);
 }
 
+void normalize_native_listbox_autohidescrollbar_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_listbox_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto autohide = runtime_object.properties.find("autohidescrollbar");
+    if (autohide == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(autohide->second);
+    autohide->second = make_number_value(
+        std::isfinite(value) && std::llround(value) == 1LL ? 1.0 : 0.0);
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -398,6 +414,11 @@ bool is_native_multiselect_member_name(const RuntimeOleObjectState& runtime_obje
 bool is_native_moverbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_moverbars_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_autohidescrollbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_autohidescrollbar_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

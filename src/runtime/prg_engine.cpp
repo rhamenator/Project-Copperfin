@@ -8251,6 +8251,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_listbox_moverbars_invariant(runtime_object);
                 }
+                if (normalized_property_name == "autohidescrollbar")
+                {
+                    normalize_native_listbox_autohidescrollbar_invariant(runtime_object);
+                }
                 if (normalized_property_name == "sorted")
                 {
                     if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
