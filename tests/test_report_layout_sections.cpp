@@ -68,7 +68,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("BOTTOM", "0"),
                 value("TOP", "0"),
                 value("FONTSTYLE", "5"),
-                value("MODE", "1")
+                value("MODE", "1"),
+                value("PICTURE", "@J", 314U)
             }
         },
         {
@@ -351,6 +352,11 @@ void test_build_report_layout_groups_band_objects() {
                mode_highlight->memo_block_number == 0U,
             "#4519: MODE highlights should preserve value and source field provenance");
     }
+    expect(layout.sections[1].objects[0].picture == "@J",
+        "#4520: report expression objects should preserve PICTURE formatting values");
+    expect(layout.sections[1].objects[0].picture_field_index == 19U &&
+           layout.sections[1].objects[0].picture_memo_block_number == 314U,
+        "#4520: report expression PICTURE should preserve field and memo provenance");
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,
         "#723: layout objects should preserve HPOS memo block provenance");

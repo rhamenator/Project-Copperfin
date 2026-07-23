@@ -134,7 +134,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         NumberStyles.Integer,
                         CultureInfo.InvariantCulture,
                         out var objectType) &&
-                    objectType == 5)
+                    (objectType == 5 || objectType == 8))
                 {
                     selection.AddEditableString(
                         "PICTURE",

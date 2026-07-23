@@ -42,7 +42,7 @@ internal static partial class Program
         TestLocalizationCatalogDiscoversInstalledStudioLayout();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestReportLayoutObjectPreservesPictureMetadata();
-        TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects();
+        TestDesignerSelectionExposesPictureForLabelAndReportExpressionObjects();
         TestDesignerSelectionExposesReportControlBehaviorProperties();
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestDesignerSelectionHonorsReadOnlyDocumentState();
@@ -428,7 +428,7 @@ internal static partial class Program
             "unsupported locales should keep English asset-kind fallback labels");
     }
 
-    private static void TestDesignerSelectionExposesLabelPictureOnlyForLabelObjects()
+    private static void TestDesignerSelectionExposesPictureForLabelAndReportExpressionObjects()
     {
         CopperfinStudioSnapshotObject Snapshot(string objectType) => new()
         {
@@ -443,18 +443,21 @@ internal static partial class Program
             "label",
             Snapshot("5"),
             new CopperfinLocalization("en-US"));
-        var nonLabelSelection = CopperfinDesignerSelection.FromSnapshot(
-            "label",
+        var reportExpressionSelection = CopperfinDesignerSelection.FromSnapshot(
+            "report",
             Snapshot("8"),
             new CopperfinLocalization("en-US"));
 
-        var pictureProperty = labelSelection?.GetProperties().Find("PICTURE", false);
-        Expect(pictureProperty is not null,
+        var labelPictureProperty = labelSelection?.GetProperties().Find("PICTURE", false);
+        var reportPictureProperty = reportExpressionSelection?.GetProperties().Find("PICTURE", false);
+        Expect(labelPictureProperty is not null && reportPictureProperty is not null,
             "label-object selections should expose editable PICTURE");
-        Expect(pictureProperty?.DisplayName == "Picture",
-            "label-object PICTURE should use the localized property label");
-        Expect(nonLabelSelection?.GetProperties().Find("PICTURE", false) is null,
-            "non-label report objects should not expose label PICTURE");
+        Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture",
+            "label and report-expression PICTURE should use the localized property label");
+        reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
+        Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
+               pictureTarget == "PICTURE" && pictureValue == "@N",
+            "report-expression PICTURE edits should preserve the invariant formatting-field update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
