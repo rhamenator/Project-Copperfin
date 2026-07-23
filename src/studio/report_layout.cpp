@@ -366,6 +366,10 @@ StudioLayoutObjectSnapshot build_layout_object(
         add_highlight("GENERAL");
         add_highlight("OFFSET");
     }
+    if (object.objtype_code == 5 || object.objtype_code == 6 || object.objtype_code == 7 ||
+        object.objtype_code == 8 || object.objtype_code == 10 || object.objtype_code == 17) {
+        add_highlight("TAG2");
+    }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");

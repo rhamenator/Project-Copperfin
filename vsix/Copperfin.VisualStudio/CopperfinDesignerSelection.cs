@@ -177,6 +177,19 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         L("AssetEditor.Property.ImageSourceMode", "Image Source Mode"),
                         selection.Read(snapshotObject, "OFFSET"));
                 }
+                if (int.TryParse(
+                        selection.Read(snapshotObject, "OBJTYPE"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var tooltipObjectType) &&
+                    (tooltipObjectType == 5 || tooltipObjectType == 6 || tooltipObjectType == 7 ||
+                     tooltipObjectType == 8 || tooltipObjectType == 10 || tooltipObjectType == 17))
+                {
+                    selection.AddEditableString(
+                        "TAG2",
+                        L("AssetEditor.Property.ToolTipText", "ToolTip Text"),
+                        selection.Read(snapshotObject, "TAG2"));
+                }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
                 selection.AddEditableBool("SUPALWAYS", L("AssetEditor.Property.PrintWhenRepeated", "Print Repeated Values"), selection.Read(snapshotObject, "SUPALWAYS"));

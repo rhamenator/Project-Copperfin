@@ -270,6 +270,7 @@ internal static partial class Program
                 new() { Name = "FILLCHAR", Value = "N" },
                 new() { Name = "TOTALTYPE", Value = "2" },
                 new() { Name = "RESETTOTAL", Value = "1" },
+                new() { Name = "TAG2", Value = "Report tooltip" },
                 new() { Name = "SUPEXPR", Value = "customer.company > 0" },
                 new() { Name = "SUPGROUP", Value = "6" },
                 new() { Name = "SUPALWAYS", Value = "true" },
@@ -304,7 +305,8 @@ internal static partial class Program
                 new() { Name = "OBJCODE", Value = "0" },
                 new() { Name = "PICTURE", Value = "images\\logo.bmp" },
                 new() { Name = "GENERAL", Value = "1" },
-                new() { Name = "OFFSET", Value = "0" }
+                new() { Name = "OFFSET", Value = "0" },
+                new() { Name = "TAG2", Value = "Image tooltip" }
             }
         };
         var imageSelection = CopperfinDesignerSelection.FromSnapshot("report", imageSnapshot, new CopperfinLocalization("es-419"));
@@ -337,6 +339,12 @@ internal static partial class Program
         Expect(deletedImageSelection is not null &&
                TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de origem da imagem", StringComparison.Ordinal)),
             "Deleted report image selection should expose localized image-source OFFSET");
+        Expect(imageSelection is not null &&
+               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Texto de informacion sobre herramientas", StringComparison.Ordinal)),
+            "Live report image selection should expose localized TAG2 tooltip");
+        Expect(deletedImageSelection is not null &&
+               TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Texto da dica de ferramenta", StringComparison.Ordinal)),
+            "Deleted report image selection should expose localized TAG2 tooltip");
         if (imageSelection is not null && deletedImageSelection is not null)
         {
             ExpectSelectionUpdate(imageSelection, "PICTURE", "images\\hero.bmp", "images\\hero.bmp",
@@ -351,6 +359,10 @@ internal static partial class Program
                 "Live report image property-grid selection should preserve the invariant image-source OFFSET update target");
             ExpectSelectionUpdate(deletedImageSelection, "OFFSET", 1, "1",
                 "Deleted report image property-grid selection should preserve the invariant image-source OFFSET update target");
+            ExpectSelectionUpdate(imageSelection, "TAG2", "Updated image tooltip", "Updated image tooltip",
+                "Live report image property-grid selection should preserve the invariant TAG2 update target");
+            ExpectSelectionUpdate(deletedImageSelection, "TAG2", "Updated deleted tooltip", "Updated deleted tooltip",
+                "Deleted report image property-grid selection should preserve the invariant TAG2 update target");
         }
 
         var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));
@@ -359,6 +371,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Estado del objeto", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expresión", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagen", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Texto de informacion sobre herramientas", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Truncamiento de cadenas", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Alineación de expresión", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de datos de expresión", StringComparison.Ordinal)) &&
@@ -389,6 +402,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Estado do objeto", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expressão", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagem", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Texto da dica de ferramenta", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Truncamento de cadeias", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Alinhamento da expressão", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de dados da expressão", StringComparison.Ordinal)) &&
@@ -420,6 +434,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectState"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Picture"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ToolTipText"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.StringTrimming"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExpressionAlignment"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExpressionDataType"), StringComparison.Ordinal)) &&
@@ -471,6 +486,8 @@ internal static partial class Program
                 "Live report object property-grid selection should serialize FONTSIZE edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "PICTURE", "@N", "@N",
                 "Live report object property-grid selection should serialize PICTURE edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "TAG2", "Updated tooltip", "Updated tooltip",
+                "Live report object property-grid selection should serialize TAG2 edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "MODE", 6, "6",
                 "Live report object property-grid selection should serialize MODE edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "FLOAT", false, "false",
@@ -520,6 +537,8 @@ internal static partial class Program
                 "Shared label object property-grid selection should serialize FONTFACE edits through the shared update path");
             ExpectSelectionUpdate(labelSelection, "FONTSIZE", 12, "12",
                 "Shared label object property-grid selection should serialize FONTSIZE edits through the shared update path");
+            ExpectSelectionUpdate(labelSelection, "TAG2", "Updated label tooltip", "Updated label tooltip",
+                "Shared label object property-grid selection should serialize TAG2 edits through the shared update path");
         }
 
         var labelSpacingSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -561,6 +580,7 @@ internal static partial class Program
                 new() { Name = "FILLCHAR", Value = "D" },
                 new() { Name = "TOTALTYPE", Value = "5" },
                 new() { Name = "RESETTOTAL", Value = "80" },
+                new() { Name = "TAG2", Value = "Deleted tooltip" },
                 new() { Name = "SUPEXPR", Value = "customer.deleted_total > 0" },
                 new() { Name = "SUPGROUP", Value = "6" },
                 new() { Name = "SUPALWAYS", Value = "true" },
@@ -625,6 +645,8 @@ internal static partial class Program
                 "Deleted report object property-grid selection should serialize FONTSIZE edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "PICTURE", "@N", "@N",
                 "Deleted report object property-grid selection should serialize PICTURE edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "TAG2", "Updated deleted tooltip", "Updated deleted tooltip",
+                "Deleted report object property-grid selection should serialize TAG2 edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "FILLCHAR", "C", "C",
                 "Deleted report-expression property-grid selection should serialize FILLCHAR edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "TOTALTYPE", 4, "4",

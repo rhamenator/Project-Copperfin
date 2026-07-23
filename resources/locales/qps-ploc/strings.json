@@ -2709,6 +2709,7 @@
   "AssetEditor.Property.LineSpacing": "[!! Ľïñë Šþåçïñĝ !!]",
   "AssetEditor.Property.ImageScaleMode": "[!! Ïmåĝë Šçåľë Møðë !!]",
   "AssetEditor.Property.ImageSourceMode": "[!! Ïmåĝë Šøüŕçë Møðë !!]",
+  "AssetEditor.Property.ToolTipText": "[!! ŢøøľŢïþ Ţëxţ !!]",
   "AssetEditor.Property.PrintWhen": "[Print When]",
   "AssetEditor.Property.PrintWhenGroup": "[When Group Changes]",
   "AssetEditor.Property.PrintWhenRepeated": "[Print Repeated Values]",

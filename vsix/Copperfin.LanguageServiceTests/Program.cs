@@ -442,7 +442,8 @@ internal static partial class Program
                 new() { Name = "TOTALTYPE", Value = "2" },
                 new() { Name = "RESETTOTAL", Value = "1" },
                 new() { Name = "SPACING", Value = "1" },
-                new() { Name = "GENERAL", Value = "1" }
+                new() { Name = "GENERAL", Value = "1" },
+                new() { Name = "TAG2", Value = "Hover tip" }
             }
         };
 
@@ -483,6 +484,9 @@ internal static partial class Program
         var imageGeneralProperty = imageSelection?.GetProperties().Find("GENERAL", false);
         var reportGeneralProperty = reportExpressionSelection?.GetProperties().Find("GENERAL", false);
         var labelGeneralProperty = labelSelection?.GetProperties().Find("GENERAL", false);
+        var reportTooltipProperty = reportExpressionSelection?.GetProperties().Find("TAG2", false);
+        var labelTooltipProperty = labelSelection?.GetProperties().Find("TAG2", false);
+        var imageTooltipProperty = imageSelection?.GetProperties().Find("TAG2", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
@@ -494,7 +498,7 @@ internal static partial class Program
         Expect(reportOffsetProperty is not null && labelOffsetProperty is null && imageOffsetProperty is not null &&
                reportOffsetProperty.DisplayName == "Expression Alignment",
             "report-expression and image selections should expose their distinct localized OFFSET properties");
-        Expect(imageOffsetProperty.DisplayName == "Image Source Mode",
+        Expect(imageOffsetProperty?.DisplayName == "Image Source Mode",
             "image selections should use the localized image-source OFFSET label");
         Expect(reportExpressionDataTypeProperty is not null && labelDataTypeProperty is null && imageDataTypeProperty is null &&
                reportExpressionDataTypeProperty.DisplayName == "Expression Data Type",
@@ -511,6 +515,11 @@ internal static partial class Program
         Expect(imageGeneralProperty is not null && reportGeneralProperty is null && labelGeneralProperty is null &&
                imageGeneralProperty.DisplayName == "Image Scale Mode",
             "only image selections should expose the localized GENERAL property");
+        Expect(reportTooltipProperty is not null && labelTooltipProperty is not null && imageTooltipProperty is not null &&
+               reportTooltipProperty.DisplayName == "ToolTip Text" &&
+               labelTooltipProperty.DisplayName == "ToolTip Text" &&
+               imageTooltipProperty.DisplayName == "ToolTip Text",
+            "report-control selections should expose the localized TAG2 tooltip property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -551,6 +560,10 @@ internal static partial class Program
         Expect(imageSelection?.TryGetUpdate("OFFSET", out var imageOffsetTarget, out var imageOffsetValue) == true &&
                imageOffsetTarget == "OFFSET" && imageOffsetValue == "2",
             "image OFFSET edits should preserve the invariant update target");
+        reportTooltipProperty?.SetValue(reportExpressionSelection, "Updated tip");
+        Expect(reportExpressionSelection?.TryGetUpdate("TAG2", out var tooltipTarget, out var tooltipValue) == true &&
+               tooltipTarget == "TAG2" && tooltipValue == "Updated tip",
+            "report-control TAG2 edits should preserve the invariant memo-backed update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
