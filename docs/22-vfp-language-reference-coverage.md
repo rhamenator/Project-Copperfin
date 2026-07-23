@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Report/label control option note: VFP9 report controls define `Float` and `NoRepeat` behavior fields. Copperfin now exposes these existing FRX/LBX logical values in the shared report/label property grid with localized display labels and invariant `FLOAT`/`NOREPEAT` update targets; rendering, layout, pagination, and repetition semantics remain separate implementation work.
+
 This document anchors Copperfin's command/runtime backlog to the official Visual FoxPro reference instead of memory.
 
 This is a reference-coverage document, not the active slice-selection authority. Choose active work from live GitHub issue state, `agents.md`, `agent-handoff.md`, and `docs/23-phase-a-dependency-breakdown.md`; use this file when the chosen slice touches VFP/runtime language coverage.
