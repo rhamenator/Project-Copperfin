@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4455 under #3217 is implemented in the current slice: native visual PRG objects now expose the built-in string `ControlTipText` property with an empty default. Direct access, `GETPEM()`/`SETPEM()`, `PEMSTATUS()`, and `AMEMBERS()` remain coherent across plain, derived, and nested controls, while `ADDPROPERTY()`/`REMOVEPROPERTY()` cannot shadow or remove it. Do not claim tooltip rendering or mouse/UI behavior; preserve the iterative stack-frugal runtime path and hosted Windows VFP9 validation requirement.
+
 - #4454 under #25 is implemented in the current slice: the shared debugger pane now exposes localized Call Stack, Locals, Globals, and Runtime Events ListViews over the existing `CopperfinRuntimeDebugSession` pause model in VSIX and standalone Studio. Tables refresh after start/continue/step/next/out/restart and clear on failed/new sessions; routine names, locations, values, event categories, and debug protocol fields remain invariant. Do not claim breakpoints, watches, expression evaluation, or editing; hosted Windows debugger validation remains required.
 
 - #4453 under #3217 is implemented in the current slice: native PRG EditBox/TextBox `IntegralHeight` now exposes a built-in logical property defaulting to `.F.` and reports read-only reflection for plain and derived controls. Direct assignment, `GETPEM()` / `SETPEM()` / `PUTPEM()`, and `ADDPROPERTY()` / `REMOVEPROPERTY()` cannot change or erase it. Do not claim pixel-level height adjustment or native layout; hosted cross-platform and Windows VFP9 validation remain required.

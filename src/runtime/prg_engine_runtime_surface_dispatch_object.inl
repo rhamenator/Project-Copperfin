@@ -224,6 +224,7 @@
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -741,6 +742,7 @@
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

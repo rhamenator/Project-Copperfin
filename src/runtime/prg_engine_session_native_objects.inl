@@ -43,6 +43,12 @@
             }
 
             if (is_native_visual_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("controltiptext"))
+            {
+                runtime_object.properties["controltiptext"] = make_string_value("");
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
             {
