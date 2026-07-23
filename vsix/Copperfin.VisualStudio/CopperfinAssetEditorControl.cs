@@ -2488,18 +2488,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 continue;
             }
 
-            if (child is Panel ||
-                child is SplitContainer ||
-                child is ListView ||
-                child is PropertyGrid ||
-                child is RichTextBox ||
-                child is TabControl ||
-                child is TabPage ||
-                child is TextBox)
+            // Labels stay transparent so they retain the host surface, while every
+            // other shell control must leave the default light WinForms palette.
+            if (child is not Label)
             {
                 child.BackColor = background;
-                child.ForeColor = foreground;
             }
+
+            child.ForeColor = foreground;
 
             ApplyVisualStudioHostThemeToChildren(child, background, foreground);
         }

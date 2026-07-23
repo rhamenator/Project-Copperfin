@@ -35,6 +35,10 @@ internal static partial class Program
             "VSIX editor host theme should fall back to system colors outside a live Visual Studio shell");
         Expect(editorSource.Contains("if (child is CopperfinDesignSurfaceControl)", StringComparison.Ordinal),
             "VSIX editor host theme should leave the designer canvas rendering contract independent from shell chrome");
+        Expect(editorSource.Contains("if (child is not Label)", StringComparison.Ordinal) &&
+               editorSource.Contains("child.BackColor = background", StringComparison.Ordinal) &&
+               editorSource.Contains("child.ForeColor = foreground", StringComparison.Ordinal),
+            "VSIX editor host theme should recolor buttons, lists, editors, and labels without forcing label backgrounds opaque");
     }
 
     private static void TestVsixCommandWindowRegistration()

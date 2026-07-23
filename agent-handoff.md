@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4311 follow-up is implemented locally: `CopperfinAssetEditorControl` now applies VSIX theme foreground colors to every non-canvas shell control and themed backgrounds to non-label controls, keeping labels transparent while preventing default light WinForms colors on buttons, checkboxes, panes, editors, lists, and property surfaces. Local language-service/designer builds and language-service tests pass; hosted Visual Studio dark/high-contrast smoke remains required.
+
 - Exact-head POSIX evidence for `beffd0d7`: `scripts/validate-posix.sh` passed all 308 CTest cases in 325.46 seconds. The only skips were `test_build_host_utf8_launcher_paths` (toolchain conditional) and `test_generated_launcher_process` (POSIX conditional). This confirms the current native localization, report/label, package/runtime/debug, security, and PRG/xAsset slices on POSIX; it does not replace hosted Windows VSIX/theme, mounted-VFP9, launcher-trust, or safety-review gates.
 
 - #4419 under #27 is implemented: FoxPro QuickInfo now uses `IAsyncQuickInfoSourceProvider`/`IAsyncQuickInfoSource` and returns `QuickInfoItem` with the existing tracking span and project-aware/localized description. Cancellation and disposal return no item; preserve token text, language-service identities, and machine contracts. Local language-service build/tests pass; hosted Windows VSIX validation remains required.
