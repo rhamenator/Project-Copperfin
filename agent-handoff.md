@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4414 is queued under #3866 for strict `ALTER TABLE` mutation semantics. Do not route only its post-write schema parse through the admitted snapshot: strict mutation currently writes the physical path, so that would create stale metadata. Choose and test an exact-handle, session-owned working-copy/publication, or fail-closed contract before changing `add_dbf_table_field`, `alter_dbf_table_field`, `drop_dbf_table_field`, or default-value writes; preserve ordinary non-strict behavior and localized machine contracts.
+
 - #4413 under #3866: strict typed `APPEND FROM` destination schemas now use `parse_cursor_table()` for JSON, CSV, SDF, DIF, SYLK, XLS, and delimited paths. This keeps field order/types bound to the admitted immutable DBF bytes instead of the mutable logical destination path. The regression replaces the physical destination with reversed columns and checks CSV header handling plus persisted name/age mapping; preserve non-strict writes, undo behavior, localized diagnostics, and machine contracts. Hosted cross-platform validation remains required.
 
 - Follow-up to #3957: decimal rounding must preserve the scale when a retained digit sequence carries into a new leading digit, and must derive the rounded unit correctly when VFP9 emits scientific notation for values below one. The focused string-math regression covers both cases plus negative-place ties; keep this path locale-independent and stack-frugal.
