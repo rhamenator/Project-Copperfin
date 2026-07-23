@@ -218,6 +218,20 @@
 
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("firstelement"))
+            {
+                runtime_object.properties["firstelement"] = make_number_value(1.0);
+            }
+
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("numberofelements"))
+            {
+                runtime_object.properties["numberofelements"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("listindex"))
             {
                 runtime_object.properties["listindex"] = make_number_value(0.0);

@@ -5803,6 +5803,36 @@ namespace copperfin::runtime
             return false;
         }
 
+        if (row_source_type == 5) {
+            const RuntimeArray *array = find_array(row_source);
+            if (array != nullptr && array->columns == 1U) {
+                normalize_native_list_control_array_range_invariants(runtime_object);
+                const long long first_element = std::llround(value_as_number(
+                    runtime_object.properties.at("firstelement")));
+                const long long number_of_elements = std::llround(value_as_number(
+                    runtime_object.properties.at("numberofelements")));
+                const std::size_t start = first_element <= 1LL
+                    ? 0U
+                    : static_cast<unsigned long long>(first_element - 1LL) >=
+                            static_cast<unsigned long long>(refreshed_rows.size())
+                        ? refreshed_rows.size()
+                        : static_cast<std::size_t>(first_element - 1LL);
+                const std::size_t available = refreshed_rows.size() - start;
+                const std::size_t count = number_of_elements <= 0LL
+                    ? available
+                    : static_cast<unsigned long long>(number_of_elements) >=
+                            static_cast<unsigned long long>(available)
+                        ? available
+                        : static_cast<std::size_t>(number_of_elements);
+                std::vector<std::vector<PrgValue>> ranged_rows;
+                ranged_rows.reserve(count);
+                for (std::size_t index = 0U; index < count; ++index) {
+                    ranged_rows.push_back(std::move(refreshed_rows[start + index]));
+                }
+                refreshed_rows = std::move(ranged_rows);
+            }
+        }
+
         runtime_object.list_rows = std::move(refreshed_rows);
         runtime_object.collection_items.clear();
         runtime_object.collection_items.reserve(runtime_object.list_rows.size());
@@ -8254,6 +8284,11 @@ namespace copperfin::runtime
                 if (normalized_property_name == "autohidescrollbar")
                 {
                     normalize_native_listbox_autohidescrollbar_invariant(runtime_object);
+                }
+                if (normalized_property_name == "firstelement" ||
+                    normalized_property_name == "numberofelements")
+                {
+                    normalize_native_list_control_array_range_invariants(runtime_object);
                 }
                 if (normalized_property_name == "sorted")
                 {

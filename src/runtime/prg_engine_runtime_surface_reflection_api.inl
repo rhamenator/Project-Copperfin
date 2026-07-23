@@ -286,6 +286,44 @@ void normalize_native_listbox_autohidescrollbar_invariant(RuntimeOleObjectState&
         std::isfinite(value) && std::llround(value) == 1LL ? 1.0 : 0.0);
 }
 
+void normalize_native_list_control_array_range_invariants(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto normalize_positive_integer = [](double value, long long fallback) {
+        if (!std::isfinite(value) || value <= 0.0) {
+            return fallback;
+        }
+        if (value >= static_cast<double>(std::numeric_limits<long long>::max())) {
+            return std::numeric_limits<long long>::max();
+        }
+        return std::llround(value);
+    };
+
+    if (const auto first_element = runtime_object.properties.find("firstelement");
+        first_element != runtime_object.properties.end())
+    {
+        first_element->second = make_number_value(static_cast<double>(normalize_positive_integer(
+            value_as_number(first_element->second),
+            1LL)));
+    }
+
+    if (const auto number_of_elements = runtime_object.properties.find("numberofelements");
+        number_of_elements != runtime_object.properties.end())
+    {
+        const double value = value_as_number(number_of_elements->second);
+        const long long normalized =
+            !std::isfinite(value) || value <= 0.0
+                ? 0LL
+                : value >= static_cast<double>(std::numeric_limits<long long>::max())
+                    ? std::numeric_limits<long long>::max()
+                    : std::llround(value);
+        number_of_elements->second = make_number_value(static_cast<double>(normalized));
+    }
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -419,6 +457,16 @@ bool is_native_moverbars_member_name(const RuntimeOleObjectState& runtime_object
 bool is_native_autohidescrollbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_autohidescrollbar_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_firstelement_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_firstelement_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_numberofelements_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_numberofelements_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
