@@ -260,6 +260,7 @@
             is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
             is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selection_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -348,6 +349,9 @@
         const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
+        }
+        if (is_native_textbox_selection_member_name(*runtime_object, member_name)) {
+            normalize_native_textbox_selection_invariant(*runtime_object);
         }
         if (const auto list_cell = parse_native_list_control_list_member_cell(*runtime_object, member_name);
             list_cell.has_value()) {
@@ -517,6 +521,12 @@
         if (is_native_topindex_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
                 write_native_list_control_top_index(*runtime_object, arguments[2]));
+        }
+        if (is_native_textbox_selection_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(write_native_textbox_selection_property(
+                *runtime_object,
+                member_name,
+                arguments[2]));
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
@@ -1027,6 +1037,7 @@
             is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
             is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
+            is_native_textbox_selection_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

@@ -306,6 +306,11 @@ bool is_native_textbox_seconds_member_name(const RuntimeOleObjectState& runtime_
     return native_textbox_seconds_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_selection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_selection_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -985,6 +990,111 @@ void normalize_native_textbox_seconds_invariant(RuntimeOleObjectState& runtime_o
     const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
     const long long normalized = rounded >= 0LL && rounded <= 2LL ? rounded : 2LL;
     seconds->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_textbox_selection_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_textbox_selection_member_name(runtime_object, "selstart")) {
+        return;
+    }
+
+    auto value = runtime_object.properties.find("value");
+    auto selection_start = runtime_object.properties.find("selstart");
+    auto selection_length = runtime_object.properties.find("sellength");
+    auto selected_text = runtime_object.properties.find("seltext");
+    if (value == runtime_object.properties.end() ||
+        selection_start == runtime_object.properties.end() ||
+        selection_length == runtime_object.properties.end() ||
+        selected_text == runtime_object.properties.end()) {
+        return;
+    }
+
+    const std::string text = value_as_string(value->second);
+    const long long text_length = static_cast<long long>(text.size());
+    const double raw_start = value_as_number(selection_start->second);
+    const double raw_length = value_as_number(selection_length->second);
+    const long long requested_start =
+        std::isfinite(raw_start) ? std::llround(raw_start) : 0LL;
+    const long long requested_length =
+        std::isfinite(raw_length) ? std::llround(raw_length) : 0LL;
+    const long long normalized_start = std::clamp(requested_start, 0LL, text_length);
+    const long long normalized_length = std::clamp(
+        requested_length,
+        0LL,
+        text_length - normalized_start);
+
+    selection_start->second = make_number_value(static_cast<double>(normalized_start));
+    selection_length->second = make_number_value(static_cast<double>(normalized_length));
+    selected_text->second = make_string_value(
+        text.substr(
+            static_cast<std::size_t>(normalized_start),
+            static_cast<std::size_t>(normalized_length)));
+}
+
+bool write_native_textbox_selection_property(
+    RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_textbox_selection_member_name(runtime_object, normalized_member_name)) {
+        return false;
+    }
+
+    normalize_native_textbox_selection_invariant(runtime_object);
+    auto value = runtime_object.properties.find("value");
+    auto selection_start = runtime_object.properties.find("selstart");
+    auto selection_length = runtime_object.properties.find("sellength");
+    if (value == runtime_object.properties.end() ||
+        selection_start == runtime_object.properties.end() ||
+        selection_length == runtime_object.properties.end()) {
+        return false;
+    }
+
+    std::string text = value_as_string(value->second);
+    const long long text_length = static_cast<long long>(text.size());
+    const long long start = std::clamp(
+        static_cast<long long>(std::llround(value_as_number(selection_start->second))),
+        0LL,
+        text_length);
+    const long long length = std::clamp(
+        static_cast<long long>(std::llround(value_as_number(selection_length->second))),
+        0LL,
+        text_length - start);
+
+    if (normalized_member_name == "selstart") {
+        const double raw_start = value_as_number(assigned_value);
+        if (!std::isfinite(raw_start) || raw_start < 0.0) {
+            return false;
+        }
+        selection_start->second = make_number_value(
+            static_cast<double>(std::clamp(std::llround(raw_start), 0LL, text_length)));
+        selection_length->second = make_number_value(0.0);
+        normalize_native_textbox_selection_invariant(runtime_object);
+        return true;
+    }
+
+    if (normalized_member_name == "sellength") {
+        const double raw_length = value_as_number(assigned_value);
+        if (!std::isfinite(raw_length) || raw_length < 0.0) {
+            return false;
+        }
+        selection_length->second = make_number_value(
+            static_cast<double>(std::clamp(std::llround(raw_length), 0LL, text_length - start)));
+        normalize_native_textbox_selection_invariant(runtime_object);
+        return true;
+    }
+
+    const std::string replacement = value_as_string(assigned_value);
+    text.replace(
+        static_cast<std::size_t>(start),
+        static_cast<std::size_t>(length),
+        replacement);
+    value->second = make_string_value(text);
+    selection_start->second = make_number_value(
+        static_cast<double>(start + static_cast<long long>(replacement.size())));
+    selection_length->second = make_number_value(0.0);
+    normalize_native_textbox_selection_invariant(runtime_object);
+    return true;
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

@@ -661,6 +661,25 @@ bool native_textbox_seconds_member_name_matches(
            runtime_object.properties.contains("seconds");
 }
 
+bool native_textbox_selection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "selstart" &&
+        normalized_member_name != "sellength" &&
+        normalized_member_name != "seltext") {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return (normalized_base_class == "textbox" ||
+            normalized_base_class == "editbox") &&
+           runtime_object.properties.contains("value") &&
+           runtime_object.properties.contains("selstart") &&
+           runtime_object.properties.contains("sellength") &&
+           runtime_object.properties.contains("seltext");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

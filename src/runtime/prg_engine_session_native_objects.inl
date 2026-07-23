@@ -319,11 +319,33 @@
             }
 
             if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox" ||
                  normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("value"))
             {
                 runtime_object.properties["value"] = make_string_value("");
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("selstart"))
+            {
+                runtime_object.properties["selstart"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("sellength"))
+            {
+                runtime_object.properties["sellength"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("seltext"))
+            {
+                runtime_object.properties["seltext"] = make_string_value("");
             }
 
             if ((normalized_base_class == "textbox" ||

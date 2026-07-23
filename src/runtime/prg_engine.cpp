@@ -7262,6 +7262,10 @@ namespace copperfin::runtime
             {
                 sync_native_list_control_displayvalue_from_selection(runtime_object);
             }
+            if (is_native_textbox_selection_member_name(runtime_object, normalized_property_name))
+            {
+                normalize_native_textbox_selection_invariant(runtime_object);
+            }
             if (is_native_identity_member_name(runtime_object, normalized_property_name))
             {
                 return make_empty_value();
@@ -8079,6 +8083,18 @@ namespace copperfin::runtime
                     }
                     return wrote;
                 }
+                if (is_native_textbox_selection_member_name(runtime_object, normalized_property_name))
+                {
+                    const bool wrote = write_native_textbox_selection_property(
+                        runtime_object,
+                        normalized_property_name,
+                        assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
+                }
                 if (is_native_columnorder_member_name(runtime_object, normalized_property_name))
                 {
                     const bool wrote =
@@ -8429,6 +8445,10 @@ namespace copperfin::runtime
                 if (normalized_property_name == "seconds")
                 {
                     normalize_native_textbox_seconds_invariant(runtime_object);
+                }
+                if (normalized_property_name == "value")
+                {
+                    normalize_native_textbox_selection_invariant(runtime_object);
                 }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
