@@ -89,6 +89,7 @@ int main()
     test_native_visual_fontitalic_defaults_mutate_and_stay_builtin();
     test_native_visual_fontunderline_defaults_mutate_and_stay_builtin();
     test_native_visual_fontstrikethru_defaults_mutate_and_stay_builtin();
+    test_native_visual_fontoutline_defaults_mutate_and_stay_builtin();
     test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     test_native_combobox_style_defaults_mutate_and_stay_builtin();
     test_native_combobox_readonly_defaults_mutate_and_honor_style_guard();
