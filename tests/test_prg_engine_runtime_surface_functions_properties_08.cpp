@@ -2,6 +2,81 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_visual_fontshadow_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_fontshadow";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_fontshadow.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'FontShadow', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'FontShadow', 5)\n"
+            "lDefault = oButton.FontShadow\n"
+            "oButton.FontShadow = .T.\n"
+            "lDirect = oButton.FontShadow\n"
+            "lSetPem = SETPEM(oButton, 'FontShadow', 0)\n"
+            "lSetPemValue = GETPEM(oButton, 'FontShadow')\n"
+            "lPutPem = PUTPEM(oButton, 'FontShadow', 'true')\n"
+            "lPutPemValue = GETPEM(oButton, 'FontShadow')\n"
+            "lAddProperty = ADDPROPERTY(oButton, 'FontShadow', .F.)\n"
+            "lRemoveProperty = REMOVEPROPERTY(oButton, 'FontShadow')\n"
+            "lPropHas = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'FONTSHADOW'\n"
+            "        lPropHas = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedFontShadow')\n"
+            "lDerived = oDerived.FontShadow\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedFontShadow AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.FontShadow = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native FontShadow script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ldefault", "false");
+        check("ldirect", "true");
+        check("lsetpem", "true");
+        check("lsetpemvalue", "false");
+        check("lputpem", "true");
+        check("lputpemvalue", "true");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lprophas", "true");
+        check("lderived", "true");
+        expect(state.ole_objects.size() == 2U,
+               "native FontShadow coverage should register the base and derived controls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_fontoutline_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
