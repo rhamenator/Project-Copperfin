@@ -105,6 +105,20 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     internal string TranscriptText => transcript.Text;
 
+    internal void ApplyTheme(Color background, Color foreground)
+    {
+        BackColor = background;
+        ForeColor = foreground;
+        transcript.BackColor = background;
+        transcript.ForeColor = foreground;
+        commandInput.BackColor = background;
+        commandInput.ForeColor = foreground;
+        stateLabel.BackColor = background;
+        stateLabel.ForeColor = foreground;
+        sendButton.BackColor = background;
+        sendButton.ForeColor = foreground;
+    }
+
     internal static ProcessStartInfo CreateShellStartInfo(
         bool? isWindowsOverride = null,
         string? shellOverride = null)

@@ -23,6 +23,12 @@ namespace Copperfin.VisualStudio;
     Orientation = ToolWindowOrientation.Bottom,
     Window = ToolWindowGuids80.Outputwindow,
     DockedHeight = 240)]
+[ProvideToolWindow(
+    typeof(CopperfinTerminalWindowPane),
+    Style = VsDockStyle.Tabbed,
+    Orientation = ToolWindowOrientation.Bottom,
+    Window = ToolWindowGuids80.Outputwindow,
+    DockedHeight = 240)]
 [ProvideEditorFactory(typeof(CopperfinAssetEditorFactory), 200)]
 [ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".pjx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
 [ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".scx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
@@ -40,5 +46,6 @@ public sealed class CopperfinPackage : AsyncPackage
         await OpenInCopperfinStudioCommand.InitializeAsync(this);
         await CopperfinProjectCommands.InitializeAsync(this);
         await ShowCopperfinCommandWindowCommand.InitializeAsync(this);
+        await ShowCopperfinTerminalWindowCommand.InitializeAsync(this);
     }
 }

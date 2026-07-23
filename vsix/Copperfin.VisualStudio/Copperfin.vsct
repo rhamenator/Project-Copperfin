@@ -128,6 +128,25 @@
           <LocCanonicalName>.Copperfin.ShowCommandWindow</LocCanonicalName>
         </Strings>
       </Button>
+      <Button guid="guidCopperfinCommandSet" id="ShowCopperfinTerminalWindowCommand" priority="0x0150" type="Button">
+        <Parent guid="guidCopperfinCommandSet" id="CopperfinGroup" />
+        <Strings Language="en-US">
+          <ButtonText>Copperfin Terminal</ButtonText>
+          <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Terminal de Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Terminal do Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! Çóþþéŕƒíñ Ťëŕṁïñåľ !!]</ButtonText>
+          <LocCanonicalName>.Copperfin.ShowTerminalWindow</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
   </Commands>
 
@@ -154,6 +173,7 @@
       <IDSymbol name="RunCopperfinProjectCommand" value="0x0201" />
       <IDSymbol name="DebugCopperfinProjectCommand" value="0x0202" />
       <IDSymbol name="ShowCopperfinCommandWindowCommand" value="0x0300" />
+      <IDSymbol name="ShowCopperfinTerminalWindowCommand" value="0x0301" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>
