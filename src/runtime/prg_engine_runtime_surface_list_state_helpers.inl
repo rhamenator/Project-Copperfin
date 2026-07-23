@@ -423,6 +423,8 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
     }
 }
 
+void sync_native_list_control_top_item_id_impl(RuntimeOleObjectState& runtime_object);
+
 void sync_native_list_control_count_impl(RuntimeOleObjectState& runtime_object) {
     if (!is_native_list_control_runtime_object(runtime_object)) {
         return;
@@ -450,6 +452,7 @@ void sync_native_list_control_primary_state_from_rows(RuntimeOleObjectState& run
         runtime_object.collection_item_keys.resize(runtime_object.list_rows.size());
     }
     sync_native_list_control_selected_state_size(runtime_object);
+    sync_native_list_control_top_item_id_impl(runtime_object);
 }
 
 void materialize_native_list_control_rows(RuntimeOleObjectState& runtime_object) {
@@ -467,6 +470,7 @@ void materialize_native_list_control_rows(RuntimeOleObjectState& runtime_object)
         runtime_object.list_rows.push_back({item});
     }
     sync_native_list_control_selected_state_size(runtime_object);
+    sync_native_list_control_top_item_id_impl(runtime_object);
 }
 
 std::optional<std::size_t> find_native_list_control_row_by_item_id(
@@ -487,6 +491,38 @@ std::optional<std::size_t> find_native_list_control_row_by_item_id(
 
     return static_cast<std::size_t>(
         std::distance(runtime_object.collection_item_keys.begin(), found));
+}
+
+void sync_native_list_control_top_item_id_impl(RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    auto top_item_id = runtime_object.properties.find("topitemid");
+    if (top_item_id == runtime_object.properties.end()) {
+        top_item_id = runtime_object.properties.emplace(
+            "topitemid",
+            make_number_value(0.0)).first;
+    }
+
+    if (runtime_object.collection_item_keys.empty()) {
+        top_item_id->second = make_number_value(0.0);
+        return;
+    }
+
+    const long long current_item_id = std::llround(value_as_number(top_item_id->second));
+    if (current_item_id >= 1LL &&
+        find_native_list_control_row_by_item_id(runtime_object, current_item_id).has_value()) {
+        return;
+    }
+
+    try {
+        const long long first_item_id = std::stoll(runtime_object.collection_item_keys.front());
+        top_item_id->second = make_number_value(
+            first_item_id >= 1LL ? static_cast<double>(first_item_id) : 0.0);
+    } catch (const std::exception&) {
+        top_item_id->second = make_number_value(0.0);
+    }
 }
 
 std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runtime_object) {
@@ -688,6 +724,7 @@ void clear_native_list_control_rows(RuntimeOleObjectState& runtime_object) {
     runtime_object.properties["listindex"] = make_number_value(0.0);
     runtime_object.properties["newindex"] = make_number_value(0.0);
     runtime_object.properties["newitemid"] = make_number_value(0.0);
+    runtime_object.properties["topitemid"] = make_number_value(0.0);
     sync_native_list_control_count_impl(runtime_object);
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     runtime_object.properties["value"] = prefer_index_value

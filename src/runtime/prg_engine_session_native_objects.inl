@@ -280,6 +280,13 @@
 
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("topitemid"))
+            {
+                runtime_object.properties["topitemid"] = make_number_value(0.0);
+            }
+
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("boundcolumn"))
             {
                 runtime_object.properties["boundcolumn"] = make_number_value(1.0);

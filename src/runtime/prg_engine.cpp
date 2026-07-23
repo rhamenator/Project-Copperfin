@@ -7904,6 +7904,17 @@ namespace copperfin::runtime
                     }
                     return wrote;
                 }
+                if (is_native_topitemid_member_name(runtime_object, normalized_property_name))
+                {
+                    const bool wrote = write_native_list_control_top_item_id(
+                        runtime_object,
+                        assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
+                }
                 if (is_native_activepage_member_name(runtime_object, normalized_property_name))
                 {
                     runtime_object.properties[normalized_property_name] = assigned_value;

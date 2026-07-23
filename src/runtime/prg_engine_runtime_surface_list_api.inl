@@ -74,6 +74,11 @@ void sync_native_list_control_count(RuntimeOleObjectState& runtime_object)
     sync_native_list_control_count_impl(runtime_object);
 }
 
+void sync_native_list_control_top_item_id(RuntimeOleObjectState& runtime_object)
+{
+    sync_native_list_control_top_item_id_impl(runtime_object);
+}
+
 bool write_native_list_control_item_id(RuntimeOleObjectState& runtime_object, const PrgValue& assigned_value)
 {
     if (!is_native_list_control_runtime_object(runtime_object)) {
@@ -171,6 +176,26 @@ bool write_native_list_control_item_data(
         return false;
     }
     runtime_object.list_item_data[row_slot] = make_number_value(value_as_number(assigned_value));
+    return true;
+}
+
+bool write_native_list_control_top_item_id(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_listbox_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    const long long requested_item_id = std::llround(value_as_number(assigned_value));
+    if (requested_item_id < 1LL ||
+        !find_native_list_control_row_by_item_id(runtime_object, requested_item_id).has_value()) {
+        return false;
+    }
+
+    runtime_object.properties["topitemid"] = make_number_value(
+        static_cast<double>(requested_item_id));
     return true;
 }
 

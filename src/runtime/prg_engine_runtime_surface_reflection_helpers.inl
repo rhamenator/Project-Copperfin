@@ -806,6 +806,19 @@ bool native_itemdata_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_topitemid_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "topitemid") {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
 bool native_boundcolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

@@ -182,6 +182,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_listitem_member_name_matches(runtime_object, member_name) ||
                native_itemdata_member_name_matches(runtime_object, member_name) ||
+               native_topitemid_member_name_matches(runtime_object, member_name) ||
                native_sorted_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
@@ -199,6 +200,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
+               (native_topitemid_member_name_matches(runtime_object, member_name) &&
+                normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox") ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_child_collection_member_name_matches(runtime_object, member_name) ||
