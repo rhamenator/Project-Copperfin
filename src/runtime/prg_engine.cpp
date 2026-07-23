@@ -8060,6 +8060,7 @@ namespace copperfin::runtime
                 !is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
+                !is_native_integralheight_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&

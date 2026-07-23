@@ -257,6 +257,12 @@
                 runtime_object.properties["itemtips"] = make_boolean_value(false);
             }
 
+            if (normalized_base_class == "listbox" &&
+                !runtime_object.properties.contains("integralheight"))
+            {
+                runtime_object.properties["integralheight"] = make_boolean_value(false);
+            }
+
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("listindex"))

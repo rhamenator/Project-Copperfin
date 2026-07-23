@@ -194,6 +194,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_nulldisplay_member_name_matches(runtime_object, member_name) ||
                native_columnlines_member_name_matches(runtime_object, member_name) ||
                native_itemtips_member_name_matches(runtime_object, member_name) ||
+               native_integralheight_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_listitemid_member_name_matches(runtime_object, member_name) ||
@@ -214,6 +215,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox") ||
                (native_topindex_member_name_matches(runtime_object, member_name) &&
                 normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox") ||
+               native_integralheight_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_child_collection_member_name_matches(runtime_object, member_name) ||

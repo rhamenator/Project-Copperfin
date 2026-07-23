@@ -262,6 +262,7 @@
             is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_columnlines_member_name(*runtime_object, property_name) ||
             is_native_itemtips_member_name(*runtime_object, property_name) ||
+            is_native_integralheight_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -494,6 +495,7 @@
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_conflict_member_name(*runtime_object, member_name) ||
+            is_native_integralheight_member_name(*runtime_object, member_name) ||
             is_native_collection_readonly_member_name(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
@@ -759,6 +761,7 @@
             is_native_nulldisplay_member_name(*runtime_object, property_name) ||
             is_native_columnlines_member_name(*runtime_object, property_name) ||
             is_native_itemtips_member_name(*runtime_object, property_name) ||
+            is_native_integralheight_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||

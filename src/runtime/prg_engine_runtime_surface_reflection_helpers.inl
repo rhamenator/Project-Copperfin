@@ -827,6 +827,17 @@ bool native_itemtips_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_integralheight_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "integralheight" ||
+        !runtime_object.properties.contains("integralheight")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+}
+
 bool native_boundto_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

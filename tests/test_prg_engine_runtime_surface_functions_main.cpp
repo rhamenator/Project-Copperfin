@@ -364,6 +364,7 @@ int main()
     test_native_list_control_nulldisplay_stays_builtin_and_visible();
     test_native_list_control_columnlines_property_stays_builtin();
     test_native_list_control_itemtips_property_stays_builtin();
+    test_native_listbox_integralheight_property_stays_read_only();
     test_native_list_controls_itemdata_stays_coherent();
     test_native_list_controls_topitemid_stays_coherent();
     test_native_list_controls_topindex_stays_coherent();
