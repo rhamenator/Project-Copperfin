@@ -533,6 +533,14 @@ bool native_textbox_autocomplete_member_name_matches(
            runtime_object.properties.contains("autocomplete");
 }
 
+bool native_textbox_enablehyperlinks_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "enablehyperlinks" &&
+           native_textbox_enablehyperlinks_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("enablehyperlinks");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

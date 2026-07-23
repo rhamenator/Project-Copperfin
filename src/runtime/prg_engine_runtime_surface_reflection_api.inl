@@ -226,6 +226,11 @@ bool is_native_textbox_autocomplete_member_name(const RuntimeOleObjectState& run
     return native_textbox_autocomplete_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_enablehyperlinks_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_enablehyperlinks_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -659,6 +664,20 @@ void normalize_native_textbox_autocomplete_invariant(RuntimeOleObjectState& runt
     const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
     const long long normalized = rounded >= 0LL && rounded <= 4LL ? rounded : 0LL;
     auto_complete->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_textbox_enablehyperlinks_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_enablehyperlinks_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto enable_hyperlinks = runtime_object.properties.find("enablehyperlinks");
+    if (enable_hyperlinks == runtime_object.properties.end()) {
+        return;
+    }
+
+    enable_hyperlinks->second = make_boolean_value(value_as_bool(enable_hyperlinks->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

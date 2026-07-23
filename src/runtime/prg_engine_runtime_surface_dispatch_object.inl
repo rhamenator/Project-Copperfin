@@ -244,6 +244,7 @@
             is_native_textbox_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_textbox_hideselection_member_name(*runtime_object, property_name) ||
             is_native_textbox_autocomplete_member_name(*runtime_object, property_name) ||
+            is_native_textbox_enablehyperlinks_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -659,6 +660,9 @@
             if (member_name == "autocomplete") {
                 normalize_native_textbox_autocomplete_invariant(*runtime_object);
             }
+            if (member_name == "enablehyperlinks") {
+                normalize_native_textbox_enablehyperlinks_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -783,6 +787,9 @@
             if (member_name == "autocomplete") {
                 normalize_native_textbox_autocomplete_invariant(*runtime_object);
             }
+            if (member_name == "enablehyperlinks") {
+                normalize_native_textbox_enablehyperlinks_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -899,6 +906,7 @@
             is_native_textbox_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_textbox_hideselection_member_name(*runtime_object, property_name) ||
             is_native_textbox_autocomplete_member_name(*runtime_object, property_name) ||
+            is_native_textbox_enablehyperlinks_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

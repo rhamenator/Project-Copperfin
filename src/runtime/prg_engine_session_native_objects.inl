@@ -209,6 +209,12 @@
                 runtime_object.properties["autocomplete"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("enablehyperlinks"))
+            {
+                runtime_object.properties["enablehyperlinks"] = make_boolean_value(false);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
