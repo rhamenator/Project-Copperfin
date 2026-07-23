@@ -8021,8 +8021,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8122,8 +8122,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8224,8 +8224,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8338,8 +8338,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8452,8 +8452,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(
@@ -8566,8 +8566,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const auto dest_result = vfp::parse_dbf_table_from_file(
-                        cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
+                    const auto dest_result = parse_cursor_table(
+                        *cursor, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
                         last_error_message = runtime_text(

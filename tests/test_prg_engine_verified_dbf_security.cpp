@@ -405,6 +405,58 @@ void test_typed_append_from_reads_verified_delimited_bytes()
     fs::remove_all(root, ignored);
 }
 
+void test_typed_append_from_reads_verified_destination_schema()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_typed_append_destination_schema";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path destination_path = root / "destination.dbf";
+    const fs::path source_path = root / "source.csv";
+    const auto verified_created = copperfin::vfp::create_dbf_table_file(
+        destination_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 12U}, {.name = "AGE", .type = 'N', .length = 3U}},
+        {{"Existing", "7"}});
+    expect(verified_created.ok, "verified typed APPEND FROM destination fixture should be created");
+    const std::string verified_destination_bytes = read_text(destination_path);
+    const auto tampered_created = copperfin::vfp::create_dbf_table_file(
+        destination_path.string(),
+        {{.name = "AGE", .type = 'N', .length = 3U}, {.name = "NAME", .type = 'C', .length = 12U}},
+        {{"99", "Tampered"}});
+    expect(tampered_created.ok, "tampered typed APPEND FROM destination fixture should remain valid");
+    write_text(source_path, "NAME,AGE\nAda,42\n");
+    const std::string verified_source_bytes = read_text(source_path);
+    write_text(source_path, "NAME,AGE\nTampered,0\n");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(destination_path.string(), verified_destination_bytes);
+    options.verified_file_byte_overrides.emplace(source_path.string(), verified_source_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_typed_append_destination_schema.prg",
+        "USE '" + destination_path.string() + "' ALIAS destination\n"
+        "APPEND FROM '" + source_path.string() + "' TYPE CSV\n"
+        "nRows = RECCOUNT('destination')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict typed APPEND FROM should use the admitted destination schema: " + state.message);
+    expect(global_text(state, "nrows") == "2",
+           "strict typed APPEND FROM should skip the admitted CSV header exactly once");
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(persisted.ok && persisted.table.records.size() == 2U,
+           "strict typed APPEND FROM should persist one row using the admitted destination schema");
+    if (persisted.ok && persisted.table.records.size() == 2U && persisted.table.records[1].values.size() == 2U)
+    {
+        expect(persisted.table.records[1].values[0].display_value == "42" &&
+                   persisted.table.records[1].values[1].display_value == "Ada",
+               "strict typed APPEND FROM should map CSV columns through admitted field names");
+    }
+    fs::remove_all(root, ignored);
+}
+
 void test_typed_append_from_fails_closed_without_verified_source_bytes()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_unverified_typed_append";
@@ -701,6 +753,7 @@ int main()
     test_append_from_reads_verified_source_rows();
     test_typed_append_from_reads_verified_json_bytes();
     test_typed_append_from_reads_verified_delimited_bytes();
+    test_typed_append_from_reads_verified_destination_schema();
     test_typed_append_from_fails_closed_without_verified_source_bytes();
     test_restore_from_reads_verified_mem_bytes();
     test_restore_from_fails_closed_without_verified_mem_bytes();

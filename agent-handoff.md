@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4413 under #3866: strict typed `APPEND FROM` destination schemas now use `parse_cursor_table()` for JSON, CSV, SDF, DIF, SYLK, XLS, and delimited paths. This keeps field order/types bound to the admitted immutable DBF bytes instead of the mutable logical destination path. The regression replaces the physical destination with reversed columns and checks CSV header handling plus persisted name/age mapping; preserve non-strict writes, undo behavior, localized diagnostics, and machine contracts. Hosted cross-platform validation remains required.
+
 - Follow-up to #3957: decimal rounding must preserve the scale when a retained digit sequence carries into a new leading digit, and must derive the rounded unit correctly when VFP9 emits scientific notation for values below one. The focused string-math regression covers both cases plus negative-place ties; keep this path locale-independent and stack-frugal.
 
 - #3957 ROUND() compatibility is confirmed against a real VFP9 execution: `ROUND(1.005, 2)` returns `1.01` and `ROUND(0.145, 2)` returns `0.15`, with half-away-from-zero ties. The runtime uses locale-independent shortest-decimal rounding for ordinary decimal-place ranges and keeps the legacy arithmetic fallback only for extreme ranges; preserve negative decimal-place behavior, signed zero, and invariant machine contracts. Focused coverage is in `test_prg_engine_string_math_functions`; hosted cross-platform validation remains required.
