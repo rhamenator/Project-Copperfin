@@ -59,7 +59,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("HEIGHT", "450.000", 306U),
                 value("FONTFACE", "Segoe UI", 12U),
                 value("FONTSIZE", "10"),
-                value("SUPEXPR", "customer.company > 0", 313U)
+                value("SUPEXPR", "customer.company > 0", 313U),
+                value("SUPGROUP", "6")
             }
         },
         {
@@ -224,6 +225,19 @@ void test_build_report_layout_groups_band_objects() {
             "#4510: SUPEXPR highlights should retain the source DBF field ordinal");
         expect(print_when_highlight->memo_block_number == 313U,
             "#4510: SUPEXPR highlights should retain the source memo block provenance");
+    }
+    const auto print_when_group_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "SUPGROUP";
+        });
+    expect(print_when_group_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4511: report layout highlights should include the SUPGROUP group-change setting");
+    if (print_when_group_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(print_when_group_highlight->value == "6" && print_when_group_highlight->field_index == 10U &&
+               print_when_group_highlight->memo_block_number == 0U,
+            "#4511: SUPGROUP highlights should preserve value and source field provenance");
     }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,

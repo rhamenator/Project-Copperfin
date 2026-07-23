@@ -2700,5 +2700,6 @@
   "AssetEditor.Property.NoRepeat": "N\u00E3o repetir",
   "AssetEditor.Property.Stretch": "Expandir com estouro",
   "AssetEditor.Property.StretchTop": "Expandir em rela\u00E7\u00E3o ao topo",
-  "AssetEditor.Property.PrintWhen": "Quando imprimir"
+  "AssetEditor.Property.PrintWhen": "Quando imprimir",
+  "AssetEditor.Property.PrintWhenGroup": "Quando o grupo muda"
 }
