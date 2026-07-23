@@ -589,6 +589,14 @@ bool native_textbox_statusbartext_member_name_matches(
            runtime_object.properties.contains("statusbartext");
 }
 
+bool native_textbox_strictdateentry_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "strictdateentry" &&
+           native_textbox_strictdateentry_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("strictdateentry");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

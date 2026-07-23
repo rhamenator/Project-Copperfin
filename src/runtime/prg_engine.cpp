@@ -8394,6 +8394,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_statusbartext_invariant(runtime_object);
                 }
+                if (normalized_property_name == "strictdateentry")
+                {
+                    normalize_native_textbox_strictdateentry_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

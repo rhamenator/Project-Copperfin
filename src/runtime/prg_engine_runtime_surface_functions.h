@@ -81,6 +81,7 @@ bool is_native_textbox_mouseicon_member_name(const RuntimeOleObjectState& runtim
 bool is_native_textbox_disabledbackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_disabledforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_textbox_strictdateentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_tabindex_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -145,6 +146,7 @@ void normalize_native_textbox_mouseicon_invariant(RuntimeOleObjectState& runtime
 void normalize_native_textbox_disabledbackcolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_disabledforecolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object);
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_selectonentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

@@ -219,6 +219,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_disabledbackcolor_member_name_matches(runtime_object, member_name) ||
                native_textbox_disabledforecolor_member_name_matches(runtime_object, member_name) ||
                native_textbox_statusbartext_member_name_matches(runtime_object, member_name) ||
+               native_textbox_strictdateentry_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||

@@ -261,6 +261,11 @@ bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& ru
     return native_textbox_statusbartext_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_strictdateentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_strictdateentry_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -797,6 +802,23 @@ void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& run
     }
 
     statusbar_text->second = make_string_value(value_as_string(statusbar_text->second));
+}
+
+void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_strictdateentry_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto strict_date_entry = runtime_object.properties.find("strictdateentry");
+    if (strict_date_entry == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(strict_date_entry->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
+    const long long normalized = rounded >= 0LL && rounded <= 1LL ? rounded : 1LL;
+    strict_date_entry->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
