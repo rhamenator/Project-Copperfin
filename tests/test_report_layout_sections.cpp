@@ -33,7 +33,10 @@ void test_build_report_layout_groups_band_objects() {
                 value("OBJTYPE", "9"),
                 value("OBJCODE", "1", 41U),
                 value("VPOS", "0.000", 42U),
-                value("HEIGHT", "2000.000", 43U)
+                value("HEIGHT", "2000.000", 43U),
+                value("PAGEBREAK", "T", 44U),
+                value("COLBREAK", "F", 45U),
+                value("RESETPAGE", "T", 46U)
             }
         },
         {
@@ -43,7 +46,10 @@ void test_build_report_layout_groups_band_objects() {
                 value("OBJTYPE", "9"),
                 value("OBJCODE", "4"),
                 value("VPOS", "2000.000"),
-                value("HEIGHT", "5000.000")
+                value("HEIGHT", "5000.000"),
+                value("PAGEBREAK", "", 44U),
+                value("COLBREAK", "", 45U),
+                value("RESETPAGE", "", 46U)
             }
         },
         {
@@ -150,6 +156,11 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].section_count == 2U, "#1460: later report sections should carry live section counts");
     expect(layout.sections[0].bottom == 2000, "#1461: report sections should carry bottom-edge coordinates");
     expect(layout.sections[1].bottom == 7000, "#1461: later report sections should carry bottom-edge coordinates");
+    expect(layout.sections[1].page_break.empty() &&
+           layout.sections[1].page_break_field_index == copperfin::studio::StudioReportMissingFieldIndex &&
+           layout.sections[1].column_break.empty() &&
+           layout.sections[1].reset_page.empty(),
+        "#4531: blank section pagination flags should remain blank without fabricating provenance");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
         "#729: synthesized report section ids should use missing DBF field provenance");
@@ -166,6 +177,15 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[0].top_memo_block_number == 42U, "#722: report section top geometry should preserve VPOS memo block provenance");
     expect(layout.sections[0].height_field_index == 3U, "#664: report section should preserve HEIGHT field provenance");
     expect(layout.sections[0].height_memo_block_number == 43U, "#722: report section height geometry should preserve HEIGHT memo block provenance");
+    expect(layout.sections[0].page_break == "T" && layout.sections[0].page_break_field_index == 4U &&
+           layout.sections[0].page_break_memo_block_number == 44U,
+        "#4531: report sections should preserve PAGEBREAK values and source provenance");
+    expect(layout.sections[0].column_break == "F" && layout.sections[0].column_break_field_index == 5U &&
+           layout.sections[0].column_break_memo_block_number == 45U,
+        "#4531: report sections should preserve COLBREAK values and source provenance");
+    expect(layout.sections[0].reset_page == "T" && layout.sections[0].reset_page_field_index == 6U &&
+           layout.sections[0].reset_page_memo_block_number == 46U,
+        "#4531: report sections should preserve RESETPAGE values and source provenance");
     expect(layout.sections[0].objects.size() == 1U, "page header should capture its label object");
     if (!layout.sections[0].objects.empty()) {
         expect(layout.sections[0].objects[0].objtype_field_index == 0U, "#674: present report object fields should keep DBF field provenance");

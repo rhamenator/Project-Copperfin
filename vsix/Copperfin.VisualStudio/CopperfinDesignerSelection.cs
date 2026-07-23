@@ -291,6 +291,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             section.Top.ToString(CultureInfo.InvariantCulture),
             targetName: "VPOS");
         selection.AddEditableInt("HEIGHT", localization.Text("AssetEditor.Property.Height"), section.Height.ToString(CultureInfo.InvariantCulture));
+        selection.AddEditableBool(
+            "PAGEBREAK",
+            localization.Text("AssetEditor.Property.PageBreak"),
+            section.PageBreak);
+        selection.AddEditableBool(
+            "COLBREAK",
+            localization.Text("AssetEditor.Property.ColumnBreak"),
+            section.ColumnBreak);
+        selection.AddEditableBool(
+            "RESETPAGE",
+            localization.Text("AssetEditor.Property.ResetPage"),
+            section.ResetPage);
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
             section.ExpressionFieldIndex.HasValue ||

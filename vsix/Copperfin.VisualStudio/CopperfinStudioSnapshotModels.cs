@@ -244,6 +244,15 @@ internal sealed class CopperfinStudioReportSection
     public bool GroupPartnerDeleted { get; set; }
     public int Top { get; set; }
     public int Height { get; set; }
+    public string PageBreak { get; set; } = string.Empty;
+    public int? PageBreakFieldIndex { get; set; }
+    public int PageBreakMemoBlockNumber { get; set; }
+    public string ColumnBreak { get; set; } = string.Empty;
+    public int? ColumnBreakFieldIndex { get; set; }
+    public int ColumnBreakMemoBlockNumber { get; set; }
+    public string ResetPage { get; set; } = string.Empty;
+    public int? ResetPageFieldIndex { get; set; }
+    public int ResetPageMemoBlockNumber { get; set; }
     public int DeletedObjectCount { get; set; }
     public List<CopperfinStudioReportLayoutObject> Objects { get; set; } = new();
 }

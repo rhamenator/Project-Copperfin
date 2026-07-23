@@ -259,6 +259,9 @@ internal static partial class Program
                         RecordIndex = 41,
                         Top = 2000,
                         Height = 5000,
+                        PageBreak = "true",
+                        ColumnBreak = "false",
+                        ResetPage = "true",
                         DeletedObjectCount = 1,
                         Expression = "customer.company",
                         ExpressionFieldIndex = 3,
@@ -301,6 +304,13 @@ internal static partial class Program
                    string.Equals(heightValue, "6100", StringComparison.Ordinal),
                 "Report section property-grid selection should serialize HEIGHT edits through the shared update path");
 
+            ExpectSelectionUpdate(editableSelection, "PAGEBREAK", false, "false",
+                "Report section property-grid selection should serialize PAGEBREAK edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLBREAK", true, "true",
+                "Report section property-grid selection should serialize COLBREAK edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "RESETPAGE", false, "false",
+                "Report section property-grid selection should serialize RESETPAGE edits through the shared update path");
+
             TypeDescriptor.GetProperties(editableSelection)["EXPR"]?.SetValue(editableSelection, "customer.region");
             Expect(editableSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
                    string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
@@ -312,6 +322,10 @@ internal static partial class Program
         var spanishSectionProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize section field labels");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar en una página nueva", StringComparison.Ordinal)) &&
+               spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar en una columna nueva", StringComparison.Ordinal)) &&
+               spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Restablecer número de página", StringComparison.Ordinal)),
+            "Spanish report section property-grid selection should localize pagination flag labels");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should expose localized record metadata");
@@ -350,6 +364,10 @@ internal static partial class Program
         var portugueseSectionProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize section field labels");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar em uma nova página", StringComparison.Ordinal)) &&
+               portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar em uma nova coluna", StringComparison.Ordinal)) &&
+               portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Redefinir número da página", StringComparison.Ordinal)),
+            "Portuguese report section property-grid selection should localize pagination flag labels");
         Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should expose localized record metadata");
@@ -387,6 +405,10 @@ internal static partial class Program
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         var pseudoSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], pseudoLocalization);
         var pseudoSectionProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PageBreak"), StringComparison.Ordinal)) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnBreak"), StringComparison.Ordinal)) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ResetPage"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route pagination flag labels through the shared catalog");
         Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "41", StringComparison.Ordinal) &&

@@ -967,6 +967,9 @@ StudioReportSectionSnapshot build_report_section(
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
     const FieldSelection unique_id = first_non_empty_selection(record, {"UNIQUEID"});
     const FieldSelection expression = first_non_empty_selection(record, {"EXPR"});
+    const FieldSelection page_break = first_non_empty_selection(record, {"PAGEBREAK"});
+    const FieldSelection column_break = first_non_empty_selection(record, {"COLBREAK"});
+    const FieldSelection reset_page = first_non_empty_selection(record, {"RESETPAGE"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -993,7 +996,16 @@ StudioReportSectionSnapshot build_report_section(
         .height = height,
         .height_field_index = field_index_or_missing(record, "HEIGHT"),
         .height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT"),
-        .bottom = top + height
+        .bottom = top + height,
+        .page_break = page_break.value,
+        .page_break_field_index = page_break.field_index,
+        .page_break_memo_block_number = page_break.memo_block_number,
+        .column_break = column_break.value,
+        .column_break_field_index = column_break.field_index,
+        .column_break_memo_block_number = column_break.memo_block_number,
+        .reset_page = reset_page.value,
+        .reset_page_field_index = reset_page.field_index,
+        .reset_page_memo_block_number = reset_page.memo_block_number
     };
 }
 

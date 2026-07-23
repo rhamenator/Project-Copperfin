@@ -112,6 +112,15 @@ struct StudioReportSectionSnapshot {
     std::size_t height_field_index = StudioReportMissingFieldIndex;
     std::uint32_t height_memo_block_number = 0;
     int bottom = 0;
+    std::string page_break{};
+    std::size_t page_break_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t page_break_memo_block_number = 0;
+    std::string column_break{};
+    std::size_t column_break_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t column_break_memo_block_number = 0;
+    std::string reset_page{};
+    std::size_t reset_page_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t reset_page_memo_block_number = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 

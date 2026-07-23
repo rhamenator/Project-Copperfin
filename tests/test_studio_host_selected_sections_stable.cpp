@@ -76,14 +76,17 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "VPOS", .type = 'N', .length = 10U},
         {.name = "WIDTH", .type = 'N', .length = 10U},
         {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "PAGEBREAK", .type = 'L', .length = 1U},
+        {.name = "COLBREAK", .type = 'L', .length = 1U},
+        {.name = "RESETPAGE", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", ""},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid"},
-        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid"},
-        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid"}
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T."},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", ""},
+        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", ""},
+        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -189,6 +192,14 @@ void run_live_section_selection(
                     issue_prefix + " should preserve live preview heights");
     expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                     issue_prefix + " should not fabricate deleted preview availability");
+    expect_contains(section_process.stdout_text, "\"pageBreak\": \"true\"",
+                    issue_prefix + " should expose the invariant PAGEBREAK section value");
+    expect_contains(section_process.stdout_text, "\"pageBreakFieldIndex\": 8",
+                    issue_prefix + " should expose PAGEBREAK field provenance");
+    expect_contains(section_process.stdout_text, "\"columnBreak\": \"false\"",
+                    issue_prefix + " should expose the invariant COLBREAK section value");
+    expect_contains(section_process.stdout_text, "\"resetPage\": \"true\"",
+                    issue_prefix + " should expose the invariant RESETPAGE section value");
     expect_contains(
         section_process.stdout_text,
         "\"sectionCount\": 1,\n      \"deletedSectionCount\": 0",
@@ -207,6 +218,33 @@ void run_live_section_selection(
             "\"objectCount\": 3"
         },
         issue_prefix + " should expose selected live-section metadata");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "section-guid",
+            "--property-name", "PAGEBREAK", "--property-value", "false",
+            "--property-name", "COLBREAK", "--property-value", "true",
+            "--property-name", "RESETPAGE", "--property-value", "false",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip section pagination flag edits through the host update path");
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "section-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen a section after pagination flag edits");
+    expect_contains(reopened_process.stdout_text, "\"pageBreak\": \"false\"",
+                    issue_prefix + " should persist PAGEBREAK edits");
+    expect_contains(reopened_process.stdout_text, "\"columnBreak\": \"true\"",
+                    issue_prefix + " should persist COLBREAK edits");
+    expect_contains(reopened_process.stdout_text, "\"resetPage\": \"false\"",
+                    issue_prefix + " should persist RESETPAGE edits");
 }
 
 void run_deleted_section_selection(
@@ -301,6 +339,12 @@ void run_deleted_section_selection(
             "\"sectionCount\": 0"
         },
         issue_prefix + " should expose selected deleted-section metadata");
+    expect_contains(section_process.stdout_text, "\"pageBreak\": \"true\"",
+                    issue_prefix + " should expose deleted-section PAGEBREAK values");
+    expect_contains(section_process.stdout_text, "\"columnBreak\": \"false\"",
+                    issue_prefix + " should expose deleted-section COLBREAK values");
+    expect_contains(section_process.stdout_text, "\"resetPage\": \"true\"",
+                    issue_prefix + " should expose deleted-section RESETPAGE values");
 }
 
 void test_studio_host_json_preserves_selected_sections_stable_selection(const std::string& studio_host_path) {
