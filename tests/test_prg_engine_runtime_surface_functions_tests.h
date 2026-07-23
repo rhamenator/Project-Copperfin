@@ -126,6 +126,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_list_controls_sorted_property_stays_coherent();
     void test_native_list_controls_itemdata_stays_coherent();
     void test_native_list_controls_topitemid_stays_coherent();
+    void test_native_list_controls_topindex_stays_coherent();
     void test_native_list_controls_itemid_index_conversion_methods_stay_coherent();
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     void test_native_list_control_boundto_and_listbox_list_shape_defaults_mutate_and_stay_builtin();

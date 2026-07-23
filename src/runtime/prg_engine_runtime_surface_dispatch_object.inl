@@ -261,6 +261,7 @@
             native_listitem_member_name_matches(*runtime_object, property_name) ||
             native_itemdata_member_name_matches(*runtime_object, property_name) ||
             is_native_topitemid_member_name(*runtime_object, property_name) ||
+            is_native_topindex_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||
@@ -322,6 +323,10 @@
             return *read_native_list_control_item_data(*runtime_object, *item_data_slot);
         }
         if (is_native_topitemid_member_name(*runtime_object, member_name)) {
+            sync_native_list_control_top_item_id(*runtime_object);
+            return runtime_object->properties[member_name];
+        }
+        if (is_native_topindex_member_name(*runtime_object, member_name)) {
             sync_native_list_control_top_item_id(*runtime_object);
             return runtime_object->properties[member_name];
         }
@@ -461,6 +466,10 @@
         if (is_native_topitemid_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
                 write_native_list_control_top_item_id(*runtime_object, arguments[2]));
+        }
+        if (is_native_topindex_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(
+                write_native_list_control_top_index(*runtime_object, arguments[2]));
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
@@ -681,6 +690,7 @@
             native_listitem_member_name_matches(*runtime_object, property_name) ||
             native_itemdata_member_name_matches(*runtime_object, property_name) ||
             is_native_topitemid_member_name(*runtime_object, property_name) ||
+            is_native_topindex_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||

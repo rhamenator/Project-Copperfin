@@ -403,6 +403,11 @@ bool is_native_topitemid_member_name(const RuntimeOleObjectState& runtime_object
     return native_topitemid_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_topindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_topindex_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_boundcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_boundcolumn_member_name_matches(runtime_object, normalized_member_name);

@@ -82,6 +82,7 @@ bool is_native_newitemid_member_name(const RuntimeOleObjectState& runtime_object
 bool is_native_listitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_itemdata_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_topitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_topindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_column_bound_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_child_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -148,6 +149,8 @@ bool write_native_list_control_item_data(RuntimeOleObjectState& runtime_object,
                                          const PrgValue& assigned_value);
 bool write_native_list_control_top_item_id(RuntimeOleObjectState& runtime_object,
                                            const PrgValue& assigned_value);
+bool write_native_list_control_top_index(RuntimeOleObjectState& runtime_object,
+                                         const PrgValue& assigned_value);
 std::optional<std::size_t> parse_native_list_control_selected_member_slot(const RuntimeOleObjectState& runtime_object,
                                                                           const std::string& member_name);
 std::optional<long long> parse_native_list_control_selectedid_member_item_id(const RuntimeOleObjectState& runtime_object,

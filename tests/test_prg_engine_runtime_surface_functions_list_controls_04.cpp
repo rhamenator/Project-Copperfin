@@ -194,6 +194,101 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_topindex_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_topindex";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_control_topindex.prg";
+        write_text(
+            main_path,
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "lComboHasTopIndex = PEMSTATUS(oCombo, 'TopIndex', 1)\n"
+            "lComboTopIndexReadOnly = PEMSTATUS(oCombo, 'TopIndex', 5)\n"
+            "oCombo.AddListItem('Zulu', 30)\n"
+            "oCombo.AddListItem('Alpha', 10)\n"
+            "nComboTopIndex = oCombo.TopIndex\n"
+            "lComboSetTopIndex = SETPEM(oCombo, 'TopIndex', 2)\n"
+            "nComboTopAfterSet = oCombo.TopIndex\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "lListHasTopIndex = PEMSTATUS(oList, 'TopIndex', 1)\n"
+            "lListTopIndexReadOnly = PEMSTATUS(oList, 'TopIndex', 5)\n"
+            "oList.AddListItem('Zulu', 30)\n"
+            "oList.AddListItem('Alpha', 10)\n"
+            "oList.AddListItem('Echo', 20)\n"
+            "nListTopInitial = oList.TopIndex\n"
+            "lListSetTopIndex = SETPEM(oList, 'TopIndex', 3)\n"
+            "nListTopAfterSet = GETPEM(oList, 'TopIndex')\n"
+            "nListTopItemAfterSet = oList.TopItemID\n"
+            "lListSetInvalidTopIndex = SETPEM(oList, 'TopIndex', 99)\n"
+            "nListTopAfterInvalidSet = oList.TopIndex\n"
+            "oList.Sorted = .T.\n"
+            "nListTopAfterSort = oList.TopIndex\n"
+            "nListTopItemAfterSort = oList.TopItemID\n"
+            "oList.RemoveListItem(20)\n"
+            "nListTopAfterRemove = oList.TopIndex\n"
+            "nListTopItemAfterRemove = oList.TopItemID\n"
+            "oList.Clear()\n"
+            "nListTopAfterClear = oList.TopIndex\n"
+            "oSeed = CREATEOBJECT('SeededList')\n"
+            "nSeedTopIndex = oSeed.TopIndex\n"
+            "nSeedTopItemId = oSeed.TopItemID\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddListItem('North', 200)\n"
+            "        THIS.AddListItem('East', 100)\n"
+            "        THIS.TopIndex = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native TopIndex list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcombohastopindex", "true");
+        check("lcombotopindexreadonly", "true");
+        check("ncombotopindex", "1");
+        check("lcombosettopindex", "false");
+        check("ncombotopafterset", "1");
+        check("llisthastopindex", "true");
+        check("llisttopindexreadonly", "false");
+        check("nlisttopinitial", "1");
+        check("llistsettopindex", "true");
+        check("nlisttopafterset", "3");
+        check("nlisttopitemafterset", "20");
+        check("llistsetinvalidtopindex", "false");
+        check("nlisttopafterinvalidset", "3");
+        check("nlisttopaftersort", "2");
+        check("nlisttopitemaftersort", "20");
+        check("nlisttopafterremove", "1");
+        check("nlisttopitemafterremove", "10");
+        check("nlisttopafterclear", "0");
+        check("nseedtopindex", "2");
+        check("nseedtopitemid", "100");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_itemid_index_conversion_methods_stay_coherent()
     {
         namespace fs = std::filesystem;

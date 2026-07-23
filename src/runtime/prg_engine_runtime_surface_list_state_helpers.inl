@@ -504,24 +504,39 @@ void sync_native_list_control_top_item_id_impl(RuntimeOleObjectState& runtime_ob
             "topitemid",
             make_number_value(0.0)).first;
     }
+    auto top_index = runtime_object.properties.find("topindex");
+    if (top_index == runtime_object.properties.end()) {
+        top_index = runtime_object.properties.emplace(
+            "topindex",
+            make_number_value(0.0)).first;
+    }
 
     if (runtime_object.collection_item_keys.empty()) {
         top_item_id->second = make_number_value(0.0);
+        top_index->second = make_number_value(0.0);
         return;
     }
 
     const long long current_item_id = std::llround(value_as_number(top_item_id->second));
-    if (current_item_id >= 1LL &&
-        find_native_list_control_row_by_item_id(runtime_object, current_item_id).has_value()) {
-        return;
+    std::optional<std::size_t> top_slot;
+    if (current_item_id >= 1LL) {
+        top_slot = find_native_list_control_row_by_item_id(runtime_object, current_item_id);
     }
-
-    try {
-        const long long first_item_id = std::stoll(runtime_object.collection_item_keys.front());
-        top_item_id->second = make_number_value(
-            first_item_id >= 1LL ? static_cast<double>(first_item_id) : 0.0);
-    } catch (const std::exception&) {
+    if (!top_slot.has_value()) {
+        try {
+            const long long first_item_id = std::stoll(runtime_object.collection_item_keys.front());
+            if (first_item_id >= 1LL) {
+                top_item_id->second = make_number_value(static_cast<double>(first_item_id));
+                top_slot = 0U;
+            }
+        } catch (const std::exception&) {
+        }
+    }
+    if (top_slot.has_value()) {
+        top_index->second = make_number_value(static_cast<double>(*top_slot + 1U));
+    } else {
         top_item_id->second = make_number_value(0.0);
+        top_index->second = make_number_value(0.0);
     }
 }
 
@@ -725,6 +740,7 @@ void clear_native_list_control_rows(RuntimeOleObjectState& runtime_object) {
     runtime_object.properties["newindex"] = make_number_value(0.0);
     runtime_object.properties["newitemid"] = make_number_value(0.0);
     runtime_object.properties["topitemid"] = make_number_value(0.0);
+    runtime_object.properties["topindex"] = make_number_value(0.0);
     sync_native_list_control_count_impl(runtime_object);
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     runtime_object.properties["value"] = prefer_index_value
