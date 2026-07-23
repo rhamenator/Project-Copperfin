@@ -1244,7 +1244,9 @@
                             starts_with_insensitive(normalized_member_path, "list(") ||
                             starts_with_insensitive(normalized_member_path, "list[") ||
                             starts_with_insensitive(normalized_member_path, "listitem(") ||
-                            starts_with_insensitive(normalized_member_path, "listitem["))
+                            starts_with_insensitive(normalized_member_path, "listitem[") ||
+                            starts_with_insensitive(normalized_member_path, "itemdata(") ||
+                            starts_with_insensitive(normalized_member_path, "itemdata["))
                         {
                             const PrgValue object_value = lookup_variable(frame, object_part);
                             auto object = resolve_ole_object(object_value);

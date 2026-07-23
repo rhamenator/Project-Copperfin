@@ -7009,6 +7009,12 @@ namespace copperfin::runtime
                     item_cell->item_id,
                     item_cell->column_slot);
             }
+            if (const auto item_data_slot =
+                    parse_native_list_control_itemdata_member_slot(runtime_object, property_name);
+                item_data_slot.has_value())
+            {
+                return read_native_list_control_item_data(runtime_object, *item_data_slot);
+            }
             if (const auto item_id_slot = resolve_indextoitemid_member_slot();
                 item_id_slot.has_value())
             {
@@ -7921,6 +7927,15 @@ namespace copperfin::runtime
                         runtime_object,
                         item_cell->item_id,
                         item_cell->column_slot,
+                        assigned_value);
+                }
+                if (const auto item_data_slot =
+                        parse_native_list_control_itemdata_member_slot(runtime_object, property_name);
+                    item_data_slot.has_value())
+                {
+                    return write_native_list_control_item_data(
+                        runtime_object,
+                        *item_data_slot,
                         assigned_value);
                 }
                 if (resolve_indextoitemid_member_slot().has_value() ||

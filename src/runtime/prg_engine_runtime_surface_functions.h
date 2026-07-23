@@ -80,6 +80,7 @@ bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, 
 bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_newitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_listitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_itemdata_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_column_bound_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_child_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -107,6 +108,9 @@ std::optional<NativeListControlCellReference> parse_native_list_control_list_mem
 std::optional<NativeListControlItemCellReference> parse_native_list_control_listitem_member_cell(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name);
+std::optional<std::size_t> parse_native_list_control_itemdata_member_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name);
 std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name);
@@ -123,6 +127,9 @@ std::optional<PrgValue> read_native_list_control_item_cell(
 std::optional<PrgValue> read_native_list_control_item_id_for_slot(
     RuntimeOleObjectState& runtime_object,
     std::size_t row_slot);
+std::optional<PrgValue> read_native_list_control_item_data(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot);
 std::optional<PrgValue> read_native_list_control_index_for_item_id(
     RuntimeOleObjectState& runtime_object,
     long long item_id);
@@ -133,6 +140,9 @@ bool write_native_list_control_cell(RuntimeOleObjectState& runtime_object,
 bool write_native_list_control_item_cell(RuntimeOleObjectState& runtime_object,
                                          long long item_id,
                                          std::size_t column_slot,
+                                         const PrgValue& assigned_value);
+bool write_native_list_control_item_data(RuntimeOleObjectState& runtime_object,
+                                         std::size_t row_slot,
                                          const PrgValue& assigned_value);
 std::optional<std::size_t> parse_native_list_control_selected_member_slot(const RuntimeOleObjectState& runtime_object,
                                                                           const std::string& member_name);

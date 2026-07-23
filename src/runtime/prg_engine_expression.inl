@@ -957,6 +957,7 @@
                         normalize_identifier(member_name);
                     return normalized_member_name == "list" ||
                            normalized_member_name == "listitem" ||
+                           normalized_member_name == "itemdata" ||
                            normalized_member_name == "selected" ||
                            normalized_member_name == "selectedid" ||
                            normalized_member_name == "indextoitemid" ||
@@ -1910,9 +1911,10 @@
                 {
                     const std::string normalized_member_name =
                         normalize_identifier(member_name);
-                    return normalized_member_name == "list" ||
-                           normalized_member_name == "listitem" ||
-                           normalized_member_name == "selected" ||
+                        return normalized_member_name == "list" ||
+                               normalized_member_name == "listitem" ||
+                               normalized_member_name == "itemdata" ||
+                               normalized_member_name == "selected" ||
                            normalized_member_name == "selectedid" ||
                            normalized_member_name == "indextoitemid" ||
                            normalized_member_name == "itemidtoindex";

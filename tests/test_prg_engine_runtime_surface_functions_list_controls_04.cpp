@@ -2,6 +2,103 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_list_controls_itemdata_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_itemdata";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_control_itemdata.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lHasItemData = PEMSTATUS(oPlain, 'ItemData', 1)\n"
+            "lItemDataReadOnly = PEMSTATUS(oPlain, 'ItemData', 5)\n"
+            "nPropertyCount = AMEMBERS(aProperties, oPlain, 1)\n"
+            "lPropertyHasItemData = .F.\n"
+            "FOR i = 1 TO nPropertyCount\n"
+            "    IF UPPER(aProperties[i]) == 'ITEMDATA'\n"
+            "        lPropertyHasItemData = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "nMethodCount = AMEMBERS(aMethods, oPlain, 2)\n"
+            "nItemDataMethodIndex = ASCAN(aMethods, 'ITEMDATA')\n"
+            "oPlain.AddItem('Zulu')\n"
+            "oPlain.ItemData(1) = 30\n"
+            "oPlain.AddItem('Alpha')\n"
+            "oPlain.ItemData[2] = 10\n"
+            "oPlain.AddItem('Echo')\n"
+            "lSetPem = SETPEM(oPlain, 'ItemData(3)', 20)\n"
+            "nBeforeSort1 = oPlain.ItemData(1)\n"
+            "nBeforeSort2 = oPlain.ItemData(2)\n"
+            "nBeforeSort3 = GETPEM(oPlain, 'ItemData[3]')\n"
+            "oPlain.Sorted = .T.\n"
+            "nAfterSort1 = oPlain.ItemData(1)\n"
+            "nAfterSort2 = oPlain.ItemData(2)\n"
+            "nAfterSort3 = oPlain.ItemData(3)\n"
+            "oPlain.RemoveItem(2)\n"
+            "nAfterRemove1 = oPlain.ItemData(1)\n"
+            "nAfterRemove2 = oPlain.ItemData(2)\n"
+            "nInvalidItemData = oPlain.ItemData(9)\n"
+            "oPlain.Clear()\n"
+            "nAfterClear = oPlain.ItemData(1)\n"
+            "oSeed = CREATEOBJECT('SeededList')\n"
+            "nSeed1 = oSeed.ItemData(1)\n"
+            "nSeed2 = oSeed.ItemData(2)\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.ItemData(1) = 100\n"
+            "        THIS.AddItem('East')\n"
+            "        THIS.ItemData(2) = 200\n"
+            "        THIS.Sorted = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ItemData list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhasitemdata", "true");
+        check("litemdatareadonly", "false");
+        check("lpropertyhasitemdata", "true");
+        check("nitemdatamethodindex", "0");
+        check("lsetpem", "true");
+        check("nbeforesort1", "30");
+        check("nbeforesort2", "10");
+        check("nbeforesort3", "20");
+        check("naftersort1", "10");
+        check("naftersort2", "20");
+        check("naftersort3", "30");
+        check("nafterremove1", "10");
+        check("nafterremove2", "30");
+        check("ninvaliditemdata", "0");
+        check("nafterclear", "0");
+        check("nseed1", "200");
+        check("nseed2", "100");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_itemid_index_conversion_methods_stay_coherent()
     {
         namespace fs = std::filesystem;

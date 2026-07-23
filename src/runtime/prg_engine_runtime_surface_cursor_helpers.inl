@@ -203,6 +203,9 @@ std::vector<std::string> collect_object_member_names(
         if (native_listitem_member_name_matches(runtime_object, "listitem")) {
             unique_members.insert("listitem");
         }
+        if (native_itemdata_member_name_matches(runtime_object, "itemdata")) {
+            unique_members.insert("itemdata");
+        }
         for (const auto& metadata_name : collect_native_identity_member_names(runtime_object)) {
             unique_members.insert(metadata_name);
         }

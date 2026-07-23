@@ -241,6 +241,7 @@ void sync_native_list_control_selected_state_size(RuntimeOleObjectState& runtime
     const std::size_t row_count =
         runtime_object.list_rows.empty() ? runtime_object.collection_items.size()
                                          : runtime_object.list_rows.size();
+    runtime_object.list_item_data.resize(row_count, make_number_value(0.0));
     runtime_object.list_selected.resize(row_count, false);
 }
 
@@ -524,6 +525,7 @@ void sort_native_list_control_rows_if_needed(RuntimeOleObjectState& runtime_obje
     struct NativeListControlSortEntry {
         std::vector<PrgValue> row;
         std::string item_key;
+        PrgValue item_data = make_number_value(0.0);
         bool selected = false;
         bool active = false;
         bool latest_added = false;
@@ -537,6 +539,9 @@ void sort_native_list_control_rows_if_needed(RuntimeOleObjectState& runtime_obje
             .item_key = index < runtime_object.collection_item_keys.size()
                             ? runtime_object.collection_item_keys[index]
                             : std::string{},
+            .item_data = index < runtime_object.list_item_data.size()
+                             ? runtime_object.list_item_data[index]
+                             : make_number_value(0.0),
             .selected = index < runtime_object.list_selected.size() &&
                         runtime_object.list_selected[index],
             .active = active_slot.has_value() && *active_slot == index,
@@ -556,6 +561,7 @@ void sort_native_list_control_rows_if_needed(RuntimeOleObjectState& runtime_obje
 
     runtime_object.list_rows.clear();
     runtime_object.collection_item_keys.clear();
+    runtime_object.list_item_data.clear();
     runtime_object.list_selected.clear();
     runtime_object.list_rows.reserve(entries.size());
     runtime_object.collection_item_keys.reserve(entries.size());
@@ -567,6 +573,7 @@ void sort_native_list_control_rows_if_needed(RuntimeOleObjectState& runtime_obje
         auto& entry = entries[index];
         runtime_object.list_rows.push_back(std::move(entry.row));
         runtime_object.collection_item_keys.push_back(std::move(entry.item_key));
+        runtime_object.list_item_data.push_back(std::move(entry.item_data));
         runtime_object.list_selected.push_back(entry.selected);
         if (entry.active) {
             runtime_object.properties["listindex"] =
@@ -611,6 +618,10 @@ bool remove_native_list_control_slot(
     if (slot < runtime_object.collection_item_keys.size()) {
         runtime_object.collection_item_keys.erase(
             runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(slot));
+    }
+    if (slot < runtime_object.list_item_data.size()) {
+        runtime_object.list_item_data.erase(
+            runtime_object.list_item_data.begin() + static_cast<std::ptrdiff_t>(slot));
     }
     if (slot < runtime_object.list_selected.size()) {
         runtime_object.list_selected.erase(
@@ -672,6 +683,7 @@ void clear_native_list_control_rows(RuntimeOleObjectState& runtime_object) {
     runtime_object.list_rows.clear();
     runtime_object.collection_items.clear();
     runtime_object.collection_item_keys.clear();
+    runtime_object.list_item_data.clear();
     runtime_object.list_selected.clear();
     runtime_object.properties["listindex"] = make_number_value(0.0);
     runtime_object.properties["newindex"] = make_number_value(0.0);

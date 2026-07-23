@@ -16,6 +16,13 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id(
     return parse_native_list_control_selectedid_member_item_id_impl(runtime_object, member_name);
 }
 
+std::optional<std::size_t> parse_native_list_control_itemdata_member_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name)
+{
+    return parse_native_list_control_itemdata_member_slot_impl(runtime_object, member_name);
+}
+
 std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name)
@@ -148,6 +155,23 @@ bool write_native_list_control_item_cell(
     }
 
     return write_native_list_control_cell(runtime_object, *row_slot, column_slot, assigned_value);
+}
+
+bool write_native_list_control_item_data(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+    materialize_native_list_control_rows(runtime_object);
+    sync_native_list_control_selected_state_size(runtime_object);
+    if (row_slot >= runtime_object.list_item_data.size()) {
+        return false;
+    }
+    runtime_object.list_item_data[row_slot] = make_number_value(value_as_number(assigned_value));
+    return true;
 }
 
 bool write_native_list_control_selected_slot(

@@ -197,6 +197,7 @@
         }
         if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value() ||
             parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_itemdata_member_slot(*runtime_object, property_name).has_value() ||
             parse_native_list_control_indextoitemid_member_slot(*runtime_object, property_name).has_value() ||
             parse_native_list_control_itemidtoindex_member_item_id(*runtime_object, property_name).has_value()) {
             return make_boolean_value(false);
@@ -258,6 +259,7 @@
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
             native_listitem_member_name_matches(*runtime_object, property_name) ||
+            native_itemdata_member_name_matches(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||
@@ -312,6 +314,11 @@
                 *runtime_object,
                 item_cell->item_id,
                 item_cell->column_slot);
+        }
+        if (const auto item_data_slot =
+                parse_native_list_control_itemdata_member_slot(*runtime_object, member_name);
+            item_data_slot.has_value()) {
+            return *read_native_list_control_item_data(*runtime_object, *item_data_slot);
         }
         if (const auto item_id_slot =
                 parse_native_list_control_indextoitemid_member_slot(*runtime_object, member_name);
@@ -435,6 +442,15 @@
                     *runtime_object,
                     item_cell->item_id,
                     item_cell->column_slot,
+                    arguments[2]));
+        }
+        if (const auto item_data_slot =
+                parse_native_list_control_itemdata_member_slot(*runtime_object, member_name);
+            item_data_slot.has_value()) {
+            return make_boolean_value(
+                write_native_list_control_item_data(
+                    *runtime_object,
+                    *item_data_slot,
                     arguments[2]));
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
@@ -592,6 +608,7 @@
         }
         if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value() ||
             parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_itemdata_member_slot(*runtime_object, property_name).has_value() ||
             parse_native_list_control_indextoitemid_member_slot(*runtime_object, property_name).has_value() ||
             parse_native_list_control_itemidtoindex_member_item_id(*runtime_object, property_name).has_value()) {
             return make_boolean_value(false);
@@ -653,6 +670,7 @@
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
             native_listitem_member_name_matches(*runtime_object, property_name) ||
+            native_itemdata_member_name_matches(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||

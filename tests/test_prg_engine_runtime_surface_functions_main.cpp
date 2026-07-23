@@ -356,6 +356,7 @@ int main()
     test_native_listbox_selected_property_stays_coherent();
     test_native_listbox_multiselect_property_controls_selection_mode();
     test_native_list_controls_sorted_property_stays_coherent();
+    test_native_list_controls_itemdata_stays_coherent();
     test_native_list_controls_itemid_index_conversion_methods_stay_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_list_control_boundto_and_listbox_list_shape_defaults_mutate_and_stay_builtin();

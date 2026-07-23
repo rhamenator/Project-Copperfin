@@ -181,6 +181,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_activepage_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_listitem_member_name_matches(runtime_object, member_name) ||
+               native_itemdata_member_name_matches(runtime_object, member_name) ||
                native_sorted_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||

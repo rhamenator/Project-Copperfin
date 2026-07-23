@@ -109,6 +109,19 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             value_as_string(row[static_cast<std::size_t>(requested_column - 1LL)]));
     }
 
+    if (normalized_method_name == "itemdata") {
+        if (arguments.empty()) {
+            return make_number_value(0.0);
+        }
+        sync_native_list_control_selected_state_size(runtime_object);
+        const long long requested_index = std::llround(value_as_number(arguments[0]));
+        if (requested_index < 1LL ||
+            static_cast<std::size_t>(requested_index) > runtime_object.list_item_data.size()) {
+            return make_number_value(0.0);
+        }
+        return runtime_object.list_item_data[static_cast<std::size_t>(requested_index - 1LL)];
+    }
+
     if (normalized_method_name == "selected") {
         if (arguments.empty()) {
             return make_boolean_value(false);
@@ -353,6 +366,9 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
     runtime_object.list_selected.insert(
         runtime_object.list_selected.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
         false);
+    runtime_object.list_item_data.insert(
+        runtime_object.list_item_data.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
+        make_number_value(0.0));
     sync_native_list_control_primary_state_from_rows(runtime_object);
     sync_native_list_control_count_impl(runtime_object);
     runtime_object.properties["newindex"] =
@@ -390,6 +406,21 @@ std::optional<NativeListControlItemCellReference> parse_native_list_control_list
     const std::string& member_name)
 {
     return parse_native_list_control_listitem_member_cell_impl(runtime_object, member_name);
+}
+
+std::optional<PrgValue> read_native_list_control_item_data(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+    materialize_native_list_control_rows(runtime_object);
+    sync_native_list_control_selected_state_size(runtime_object);
+    if (row_slot >= runtime_object.list_item_data.size()) {
+        return make_number_value(0.0);
+    }
+    return runtime_object.list_item_data[row_slot];
 }
 
 std::optional<PrgValue> read_native_list_control_cell(

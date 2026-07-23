@@ -160,6 +160,7 @@ struct RuntimeOleObjectState {
     std::vector<PrgValue> collection_items{};
     std::vector<std::string> collection_item_keys{};
     std::vector<std::vector<PrgValue>> list_rows{};
+    std::vector<PrgValue> list_item_data{};
     std::vector<bool> list_selected{};
     std::vector<std::string> class_hierarchy{};
     std::map<std::string, NativeMemberVisibility> member_visibility{};
