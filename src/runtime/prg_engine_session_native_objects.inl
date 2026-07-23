@@ -257,6 +257,12 @@
                 runtime_object.properties["multiselect"] = make_boolean_value(false);
             }
 
+            if (normalized_base_class == "listbox" &&
+                !runtime_object.properties.contains("moverbars"))
+            {
+                runtime_object.properties["moverbars"] = make_boolean_value(false);
+            }
+
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("newindex"))

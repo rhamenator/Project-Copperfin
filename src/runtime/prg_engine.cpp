@@ -8190,6 +8190,11 @@ namespace copperfin::runtime
                 {
                     return false;
                 }
+                if (is_native_moverbars_member_name(runtime_object, normalized_property_name) &&
+                    !native_listbox_moverbars_row_source_supported(runtime_object))
+                {
+                    return false;
+                }
                 runtime_object.properties[normalized_property_name] = assigned_value;
                 if (normalized_property_name == "controlsource")
                 {
@@ -8227,6 +8232,11 @@ namespace copperfin::runtime
                     normalized_property_name == "rowsourcetype")
                 {
                     normalize_native_list_control_sorted_invariant(runtime_object);
+                }
+                if (normalized_property_name == "moverbars" ||
+                    normalized_property_name == "rowsourcetype")
+                {
+                    normalize_native_listbox_moverbars_invariant(runtime_object);
                 }
                 if (normalized_property_name == "sorted")
                 {

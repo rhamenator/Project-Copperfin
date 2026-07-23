@@ -821,4 +821,122 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_listbox_moverbars_property_stays_gated_and_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listbox_moverbars";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_listbox_moverbars.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ListBox')\n"
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasMoverBars = PEMSTATUS(oPlain, 'MoverBars', 1)\n"
+            "lPlainMoverBarsReadOnly = PEMSTATUS(oPlain, 'MoverBars', 5)\n"
+            "lPlainBefore = oPlain.MoverBars\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'MoverBars')\n"
+            "lComboHasMoverBars = PEMSTATUS(oCombo, 'MoverBars', 1)\n"
+            "oPlain.MoverBars = .T.\n"
+            "lPlainAfterDirect = oPlain.MoverBars\n"
+            "lSetPemFalse = SETPEM(oPlain, 'MoverBars', .F.)\n"
+            "lAfterSetPemFalse = oPlain.MoverBars\n"
+            "oPlain.RowSourceType = 1\n"
+            "lSetPemRowOne = SETPEM(oPlain, 'MoverBars', .T.)\n"
+            "lRowOne = oPlain.MoverBars\n"
+            "oPlain.RowSourceType = 5\n"
+            "lUnsupportedRead = oPlain.MoverBars\n"
+            "lUnsupportedSetPem = SETPEM(oPlain, 'MoverBars', .T.)\n"
+            "oPlain.MoverBars = .T.\n"
+            "lUnsupportedAfterWrites = oPlain.MoverBars\n"
+            "oPlain.RowSourceType = 0\n"
+            "lAfterReturnToValue = oPlain.MoverBars\n"
+            "lSetPemAfterReturn = SETPEM(oPlain, 'MoverBars', .T.)\n"
+            "lAfterRestore = oPlain.MoverBars\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'MoverBars', .F.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'MoverBars')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oPlain, 1)\n"
+            "lPropHasMoverBars = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'MOVERBARS'\n"
+            "        lPropHasMoverBars = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedMoverList')\n"
+            "lDerived = oDerived.MoverBars\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedMoverList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.RowSourceType = 1\n"
+            "        THIS.MoverBars = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native MoverBars list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasmoverbars", "true");
+        check("lplainmoverbarsreadonly", "false");
+        check("lplainbefore", "false");
+        check("xplaingetpembefore", "false");
+        check("lcombohasmoverbars", "false");
+        check("lplainafterdirect", "true");
+        check("lsetpemfalse", "true");
+        check("laftersetpemfalse", "false");
+        check("lsetpemrowone", "true");
+        check("lrowone", "true");
+        check("lunsupportedread", "false");
+        check("lunsupportedsetpem", "false");
+        check("lunsupportedafterwrites", "false");
+        check("lafterreturntovalue", "false");
+        check("lsetpemafterreturn", "true");
+        check("lafterrestore", "true");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lprophasmoverbars", "true");
+        check("lderived", "true");
+
+        expect(state.ole_objects.size() == 3U,
+               "native MoverBars coverage should register plain ListBox, ComboBox, and derived ListBox");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &plain_list = state.ole_objects[0];
+            const auto &combo = state.ole_objects[1];
+            const auto &derived_list = state.ole_objects[2];
+            const auto plain_moverbars = plain_list.properties.find("moverbars");
+            const auto combo_moverbars = combo.properties.find("moverbars");
+            const auto derived_moverbars = derived_list.properties.find("moverbars");
+
+            expect(plain_moverbars != plain_list.properties.end() &&
+                       copperfin::runtime::format_value(plain_moverbars->second) == "true",
+                   "plain ListBox MoverBars coverage should preserve the final supported write");
+            expect(combo_moverbars == combo.properties.end(),
+                   "ComboBox MoverBars coverage should not seed a ListBox-only property");
+            expect(derived_moverbars != derived_list.properties.end() &&
+                       copperfin::runtime::format_value(derived_moverbars->second) == "true",
+                   "derived ListBox MoverBars coverage should preserve Init-time enablement");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

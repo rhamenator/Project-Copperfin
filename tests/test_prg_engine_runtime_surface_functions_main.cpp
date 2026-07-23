@@ -356,6 +356,7 @@ int main()
     test_native_listbox_selected_property_stays_coherent();
     test_native_listbox_multiselect_property_controls_selection_mode();
     test_native_list_controls_sorted_property_stays_coherent();
+    test_native_listbox_moverbars_property_stays_gated_and_builtin();
     test_native_list_controls_itemdata_stays_coherent();
     test_native_list_controls_topitemid_stays_coherent();
     test_native_list_controls_topindex_stays_coherent();

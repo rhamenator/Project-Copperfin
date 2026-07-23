@@ -248,6 +248,28 @@ void normalize_native_listbox_multiselect_invariant(RuntimeOleObjectState& runti
     sync_native_list_control_selected_state_from_listindex(runtime_object);
 }
 
+void normalize_native_listbox_moverbars_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_listbox_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto moverbars = runtime_object.properties.find("moverbars");
+    if (moverbars == runtime_object.properties.end()) {
+        return;
+    }
+
+    moverbars->second = make_boolean_value(
+        native_list_control_rowsourcetype_supports_additem(runtime_object) &&
+        value_as_bool(moverbars->second));
+}
+
+bool native_listbox_moverbars_row_source_supported(const RuntimeOleObjectState& runtime_object)
+{
+    return is_native_listbox_runtime_object(runtime_object) &&
+           native_list_control_rowsourcetype_supports_additem(runtime_object);
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -371,6 +393,11 @@ bool is_native_sorted_member_name(const RuntimeOleObjectState& runtime_object, c
 bool is_native_multiselect_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_multiselect_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_moverbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_moverbars_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

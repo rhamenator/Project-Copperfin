@@ -724,6 +724,17 @@ bool native_multiselect_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
 }
 
+bool native_moverbars_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "moverbars" ||
+        !runtime_object.properties.contains("moverbars")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+}
+
 bool native_boundto_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

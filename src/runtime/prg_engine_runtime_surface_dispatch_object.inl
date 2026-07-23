@@ -254,6 +254,7 @@
             is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
+            is_native_moverbars_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -557,6 +558,10 @@
                 native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
                 return make_boolean_value(false);
             }
+            if (is_native_moverbars_member_name(*runtime_object, member_name) &&
+                !native_list_control_rowsourcetype_supports_additem(*runtime_object)) {
+                return make_boolean_value(false);
+            }
             runtime_object->properties[member_name] = arguments[2];
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
@@ -570,6 +575,10 @@
             if (member_name == "sorted" ||
                 member_name == "rowsourcetype") {
                 normalize_native_list_control_sorted_invariant(*runtime_object);
+            }
+            if (member_name == "moverbars" ||
+                member_name == "rowsourcetype") {
+                normalize_native_listbox_moverbars_invariant(*runtime_object);
             }
             return make_boolean_value(true);
         }
@@ -587,6 +596,10 @@
                 native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
                 return make_boolean_value(false);
             }
+            if (is_native_moverbars_member_name(*runtime_object, member_name) &&
+                !native_list_control_rowsourcetype_supports_additem(*runtime_object)) {
+                return make_boolean_value(false);
+            }
             runtime_object->properties[member_name] = arguments[2];
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
@@ -600,6 +613,10 @@
             if (member_name == "sorted" ||
                 member_name == "rowsourcetype") {
                 normalize_native_list_control_sorted_invariant(*runtime_object);
+            }
+            if (member_name == "moverbars" ||
+                member_name == "rowsourcetype") {
+                normalize_native_listbox_moverbars_invariant(*runtime_object);
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -683,6 +700,7 @@
             is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
+            is_native_moverbars_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
