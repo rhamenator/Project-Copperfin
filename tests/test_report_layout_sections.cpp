@@ -63,7 +63,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("SUPGROUP", "6"),
                 value("SUPALWAYS", "1"),
                 value("SUPVALCHNG", "0"),
-                value("SUPRPCOL", "0")
+                value("SUPRPCOL", "0"),
+                value("SUPOVFLOW", "0")
             }
         },
         {
@@ -280,6 +281,19 @@ void test_build_report_layout_groups_band_objects() {
         expect(print_when_page_column_highlight->value == "0" && print_when_page_column_highlight->field_index == 13U &&
                print_when_page_column_highlight->memo_block_number == 0U,
             "#4514: SUPRPCOL highlights should preserve value and source field provenance");
+    }
+    const auto print_when_overflow_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "SUPOVFLOW";
+        });
+    expect(print_when_overflow_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4515: report layout highlights should include the SUPOVFLOW overflow setting");
+    if (print_when_overflow_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(print_when_overflow_highlight->value == "0" && print_when_overflow_highlight->field_index == 14U &&
+               print_when_overflow_highlight->memo_block_number == 0U,
+            "#4515: SUPOVFLOW highlights should preserve value and source field provenance");
     }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,

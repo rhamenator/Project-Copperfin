@@ -469,7 +469,8 @@ internal static partial class Program
             string printWhenGroupValue = "6",
             string printWhenRepeatedValue = "true",
             string printWhenValueChangesValue = "false",
-            string printWhenNewPageColumnValue = "0") => new()
+            string printWhenNewPageColumnValue = "0",
+            string printWhenOverflowValue = "false") => new()
         {
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
@@ -479,6 +480,7 @@ internal static partial class Program
                 new() { Name = "SUPALWAYS", Value = printWhenRepeatedValue },
                 new() { Name = "SUPVALCHNG", Value = printWhenValueChangesValue },
                 new() { Name = "SUPRPCOL", Value = printWhenNewPageColumnValue },
+                new() { Name = "SUPOVFLOW", Value = printWhenOverflowValue },
                 new() { Name = "FLOAT", Value = floatValue },
                 new() { Name = "NOREPEAT", Value = noRepeatValue },
                 new() { Name = "STRETCH", Value = stretchValue },
@@ -502,11 +504,13 @@ internal static partial class Program
             var printWhenRepeatedProperty = properties?.Find("SUPALWAYS", false);
             var printWhenValueChangesProperty = properties?.Find("SUPVALCHNG", false);
             var printWhenNewPageColumnProperty = properties?.Find("SUPRPCOL", false);
+            var printWhenOverflowProperty = properties?.Find("SUPOVFLOW", false);
 
             Expect(floatProperty is not null && noRepeatProperty is not null &&
                    stretchProperty is not null && stretchTopProperty is not null && printWhenProperty is not null &&
                    printWhenGroupProperty is not null && printWhenRepeatedProperty is not null &&
-                   printWhenValueChangesProperty is not null && printWhenNewPageColumnProperty is not null,
+                   printWhenValueChangesProperty is not null && printWhenNewPageColumnProperty is not null &&
+                   printWhenOverflowProperty is not null,
                 $"{assetFamily} object selections should expose editable report-control behavior properties");
             Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat" &&
                    stretchProperty?.DisplayName == "Stretch with Overflow" &&
@@ -515,7 +519,8 @@ internal static partial class Program
                    printWhenGroupProperty?.DisplayName == "When Group Changes" &&
                    printWhenRepeatedProperty?.DisplayName == "Print Repeated Values" &&
                    printWhenValueChangesProperty?.DisplayName == "Print Only When Value Changes" &&
-                   printWhenNewPageColumnProperty?.DisplayName == "In First Whole Band of New Page/Column",
+                   printWhenNewPageColumnProperty?.DisplayName == "In First Whole Band of New Page/Column" &&
+                   printWhenOverflowProperty?.DisplayName == "When Detail Overflows to New Page/Column",
                 $"{assetFamily} object behavior properties should use the English catalog labels");
             if (selection is not null)
             {
@@ -528,6 +533,7 @@ internal static partial class Program
                 printWhenRepeatedProperty?.SetValue(selection, false);
                 printWhenValueChangesProperty?.SetValue(selection, true);
                 printWhenNewPageColumnProperty?.SetValue(selection, 3);
+                printWhenOverflowProperty?.SetValue(selection, true);
                 Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
                        floatTarget == "FLOAT" && serializedFloatValue == "false" &&
                        selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
@@ -552,12 +558,15 @@ internal static partial class Program
                 Expect(selection.TryGetUpdate("SUPRPCOL", out var printWhenNewPageColumnTarget, out var serializedPrintWhenNewPageColumnValue) &&
                        printWhenNewPageColumnTarget == "SUPRPCOL" && serializedPrintWhenNewPageColumnValue == "3",
                     $"{assetFamily} page-column edits should preserve the invariant numeric update target");
+                Expect(selection.TryGetUpdate("SUPOVFLOW", out var printWhenOverflowTarget, out var serializedPrintWhenOverflowValue) &&
+                       printWhenOverflowTarget == "SUPOVFLOW" && serializedPrintWhenOverflowValue == "true",
+                    $"{assetFamily} overflow edits should preserve the invariant logical update target");
             }
         }
 
         var blankSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
-            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
             new CopperfinLocalization("en-US"));
         Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
                blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue &&
@@ -567,7 +576,8 @@ internal static partial class Program
                blankSelection.GetProperties().Find("SUPGROUP", false)?.GetValue(blankSelection) is int blankGroupValue && blankGroupValue == 0 &&
                blankSelection.GetProperties().Find("SUPALWAYS", false)?.GetValue(blankSelection) is bool blankRepeatedValue && !blankRepeatedValue &&
                blankSelection.GetProperties().Find("SUPVALCHNG", false)?.GetValue(blankSelection) is bool blankValueChangesValue && !blankValueChangesValue &&
-               blankSelection.GetProperties().Find("SUPRPCOL", false)?.GetValue(blankSelection) is int blankPageColumnValue && blankPageColumnValue == 0,
+               blankSelection.GetProperties().Find("SUPRPCOL", false)?.GetValue(blankSelection) is int blankPageColumnValue && blankPageColumnValue == 0 &&
+               blankSelection.GetProperties().Find("SUPOVFLOW", false)?.GetValue(blankSelection) is bool blankOverflowValue && !blankOverflowValue,
             "blank and false report-control logical values should remain stable as false until edited");
 
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -583,6 +593,7 @@ internal static partial class Program
         var pseudoPrintWhenRepeatedLabel = pseudoSelection?.GetProperties().Find("SUPALWAYS", false)?.DisplayName;
         var pseudoPrintWhenValueChangesLabel = pseudoSelection?.GetProperties().Find("SUPVALCHNG", false)?.DisplayName;
         var pseudoPrintWhenNewPageColumnLabel = pseudoSelection?.GetProperties().Find("SUPRPCOL", false)?.DisplayName;
+        var pseudoPrintWhenOverflowLabel = pseudoSelection?.GetProperties().Find("SUPOVFLOW", false)?.DisplayName;
         Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
@@ -600,7 +611,9 @@ internal static partial class Program
                pseudoPrintWhenValueChangesLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoPrintWhenValueChangesLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoPrintWhenNewPageColumnLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
-               pseudoPrintWhenNewPageColumnLabel.EndsWith(" !!]", StringComparison.Ordinal),
+               pseudoPrintWhenNewPageColumnLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoPrintWhenOverflowLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoPrintWhenOverflowLabel.EndsWith(" !!]", StringComparison.Ordinal),
             "pseudo-localized report-control property labels should remain visibly localized");
 
         var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
@@ -616,7 +629,8 @@ internal static partial class Program
                readOnlySelection.GetProperties().Find("SUPGROUP", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("SUPALWAYS", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("SUPVALCHNG", false)?.IsReadOnly == true &&
-               readOnlySelection.GetProperties().Find("SUPRPCOL", false)?.IsReadOnly == true,
+               readOnlySelection.GetProperties().Find("SUPRPCOL", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("SUPOVFLOW", false)?.IsReadOnly == true,
             "read-only report documents should keep report-control behavior properties read-only");
     }
 
