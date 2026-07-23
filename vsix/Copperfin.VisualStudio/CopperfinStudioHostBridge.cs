@@ -68,6 +68,11 @@ internal static class CopperfinStudioHostBridge
                $" --toolbox-context {Quote(toolboxContext)} --path {Quote(documentPath)}";
     }
 
+    public static string BuildBuilderLaunchCatalogArguments(string builderContext)
+    {
+        return $"--json --builder-launch-catalog --builder-context {Quote(builderContext)}";
+    }
+
     public static string BuildPropertyBatchUpdateArguments(
         string documentPath,
         int recordIndex,

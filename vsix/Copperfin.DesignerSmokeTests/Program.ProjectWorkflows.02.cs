@@ -340,6 +340,32 @@ internal static partial class Program
             }
             Application.DoEvents();
 
+            if (!string.IsNullOrWhiteSpace(CopperfinStudioHostBridge.ResolveStudioHostPath()))
+            {
+                var buildersLoaded = WaitUntil(
+                    TimeSpan.FromSeconds(12),
+                    () => FindListViews(control).Any(list =>
+                        list.Columns.Count == 4 &&
+                        string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(list.Columns[1].Text, "Builder", StringComparison.OrdinalIgnoreCase) &&
+                        list.Items.Count >= 4));
+                var builders = FindListViews(control)
+                    .FirstOrDefault(list => list.Columns.Count == 4 &&
+                                            string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                                            string.Equals(list.Columns[1].Text, "Builder", StringComparison.OrdinalIgnoreCase));
+                Expect(buildersLoaded && builders is not null && builders.Items.Count >= 4,
+                    "project workspace Builders should expose the native builder catalog across supported contexts");
+                if (builders is not null)
+                {
+                    Expect(builders.Items.Cast<ListViewItem>().Any(item => item.SubItems[1].Text == "Form Builder"),
+                        "project workspace Builders should preserve localized native builder titles");
+                }
+            }
+            else
+            {
+                Console.WriteLine("SKIP: project workspace builder catalog host was not found.");
+            }
+
             var taskList = FindListViews(control)
                 .FirstOrDefault(list => list.Columns.Count >= 4 &&
                                         string.Equals(list.Columns[0].Text, "Category", StringComparison.OrdinalIgnoreCase));

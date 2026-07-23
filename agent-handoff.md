@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4447 under #23 is implemented in the current slice: the shared project Builders pane now queries the existing native launch catalogs across form, class, control, report, label, menu, project, and data-environment contexts. It renders localized kind/builder/context/description metadata in both shells, preserves invariant builder ids/context tokens/entry points, and leaves mutation or external launch execution to the existing admission/dispatch contracts.
+
 - #4446 under #25 is implemented in the current slice: the shared project Coverage pane now deduplicates valid runtime `file:line` events into localized location/hit/category/detail columns and activates existing source files through the shared line callback. Non-source runtime events remain excluded from activation, runtime event schemas and paths remain invariant, and the summary retains pause/session context. Builders and remaining utility panes are still separate work.
 
 - #4445 under #25 is implemented in the current slice: the shared project Object Browser now renders every filtered object node in localized kind/title/file/detail columns and respects the hide-project-records option. Enter or double-click activates eligible existing source assets through the shared document callback; project records, missing files, and excluded nodes do not open. Preserve object identities, paths, exclusion state, and localized warnings; builders, coverage, and remaining utility panes are still separate work.

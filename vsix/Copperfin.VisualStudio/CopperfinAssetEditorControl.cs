@@ -131,6 +131,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly ComboBox toolboxContextComboBox;
     private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
+    private readonly ListView buildersView;
     private readonly RichTextBox coverageSummaryBox;
     private readonly ListView coverageView;
     private readonly RichTextBox databaseSummaryBox;
@@ -790,6 +791,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.Builders")
         };
 
+        buildersView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Kind"), 90);
+        buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Builder"), 220);
+        buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Context"), 150);
+        buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Description"), 520);
+
         coverageSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -992,7 +1006,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         toolboxPage.Controls.Add(toolboxSummaryPanel);
         toolboxPage.Controls.Add(toolboxActionPanel);
         var buildersPage = new TabPage(this.localization.Text("AssetEditor.Tab.Builders"));
-        buildersPage.Controls.Add(buildersSummaryBox);
+        var buildersPageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        var buildersSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150
+        };
+        buildersSummaryPanel.Controls.Add(buildersSummaryBox);
+        buildersPageHost.Controls.Add(buildersView);
+        buildersPageHost.Controls.Add(buildersSummaryPanel);
+        buildersPage.Controls.Add(buildersPageHost);
         var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
         var coveragePageHost = new Panel
         {
@@ -1438,6 +1464,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         toolboxCreateButton.Enabled = false;
         toolboxStatusLabel.Text = this.localization.Text("AssetEditor.Toolbox.Loading");
         buildersSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Builders");
+        buildersView.Items.Clear();
         coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
         coverageView.Items.Clear();
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
@@ -1643,6 +1670,52 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "AssetEditor.Toolbox.Created",
             createResult.ObjectName);
         LoadDocument(path, currentStartupObjectName, currentStartupUniqueId);
+    }
+
+    private async Task LoadBuilderCatalogAsync(int expectedGeneration)
+    {
+        if (currentSnapshot?.ProjectWorkspace is null || currentSnapshot.AssetFamily != "project")
+        {
+            buildersView.Items.Clear();
+            return;
+        }
+
+        var catalogResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoadBuilderCatalog(localization));
+        if (IsDisposed || Disposing || expectedGeneration != loadGeneration)
+        {
+            return;
+        }
+
+        PostToUi(() =>
+        {
+            if (!catalogResult.Success)
+            {
+                buildersView.Items.Clear();
+                return;
+            }
+
+            buildersView.BeginUpdate();
+            try
+            {
+                buildersView.Items.Clear();
+                foreach (var entry in catalogResult.Entries
+                             .OrderBy(item => item.Context, StringComparer.OrdinalIgnoreCase)
+                             .ThenBy(item => item.Title, StringComparer.OrdinalIgnoreCase))
+                {
+                    var item = new ListViewItem(BuildBuilderKindDisplayText(entry.Kind));
+                    item.SubItems.Add(entry.Title);
+                    item.SubItems.Add(BuildBuilderContextDisplayText(entry.Context));
+                    item.SubItems.Add(entry.Description);
+                    item.ToolTipText = entry.Vfp9EquivalentDisplay;
+                    item.Tag = entry;
+                    buildersView.Items.Add(item);
+                }
+            }
+            finally
+            {
+                buildersView.EndUpdate();
+            }
+        });
     }
 
     private void HandleCreatedForPendingUiActions(object? sender, EventArgs e)
@@ -2822,6 +2895,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
         toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
         buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
+        _ = LoadBuilderCatalogAsync(loadGeneration);
         PopulateCoverage(currentDebugSession);
         coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
         databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
@@ -4600,6 +4674,29 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return summary.ToString();
+    }
+
+    private string BuildBuilderKindDisplayText(string kind)
+    {
+        return string.Equals(kind, "wizard", StringComparison.OrdinalIgnoreCase)
+            ? L("AssetEditor.Builders.Kind.Wizard")
+            : L("AssetEditor.Builders.Kind.Builder");
+    }
+
+    private string BuildBuilderContextDisplayText(string context)
+    {
+        return context.ToLowerInvariant() switch
+        {
+            "form" => L("AssetEditor.Builders.Context.Form"),
+            "class_designer" => L("AssetEditor.Builders.Context.Class"),
+            "control" => L("AssetEditor.Builders.Context.Control"),
+            "report" => L("AssetEditor.Builders.Context.Report"),
+            "label" => L("AssetEditor.Builders.Context.Label"),
+            "menu" => L("AssetEditor.Builders.Context.Menu"),
+            "project" => L("AssetEditor.Builders.Context.Project"),
+            "data_environment" => L("AssetEditor.Builders.Context.DataEnvironment"),
+            _ => context
+        };
     }
 
     private string BuildCoverageSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinRuntimeDebugSession? session)

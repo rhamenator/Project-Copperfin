@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Web.Script.Serialization;
 
 namespace Copperfin.VisualStudio;
@@ -146,6 +147,65 @@ internal static class CopperfinStudioSnapshotClient
             "report" or "label" => "report",
             "class" => "class_designer",
             _ => "form"
+        };
+    }
+
+    public static CopperfinStudioBuilderCatalogResult TryLoadBuilderCatalog(
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioBuilderCatalogResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        var contexts = new[]
+        {
+            "form", "class_designer", "control", "report", "label", "menu", "project", "data_environment"
+        };
+        var entries = new List<CopperfinStudioBuilderCatalogEntry>();
+        var errors = new List<string>();
+        foreach (var context in contexts)
+        {
+            var commandResult = RunCommand(
+                studioHostPath!,
+                CopperfinStudioHostBridge.BuildBuilderLaunchCatalogArguments(context),
+                localization);
+            if (!commandResult.Success)
+            {
+                errors.Add(commandResult.Error);
+                continue;
+            }
+
+            try
+            {
+                var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+                var envelope = serializer.Deserialize<CopperfinStudioBuilderCatalogEnvelope>(commandResult.Stdout);
+                var payload = envelope?.BuilderLaunchCatalog;
+                if (payload is null || !payload.Ok)
+                {
+                    errors.Add(payload?.Error ?? envelope?.Error ?? context);
+                    continue;
+                }
+
+                entries.AddRange(payload.Entries);
+            }
+            catch (InvalidOperationException ex)
+            {
+                errors.Add(localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message));
+            }
+        }
+
+        return new CopperfinStudioBuilderCatalogResult
+        {
+            Success = entries.Count > 0,
+            Error = entries.Count > 0 ? string.Empty : string.Join("; ", errors.Distinct(StringComparer.Ordinal)),
+            Entries = entries
         };
     }
 

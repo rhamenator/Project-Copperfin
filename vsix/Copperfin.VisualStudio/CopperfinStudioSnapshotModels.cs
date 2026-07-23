@@ -69,6 +69,39 @@ internal sealed class CopperfinStudioToolboxCreateResult
     public string UniqueId { get; set; } = string.Empty;
 }
 
+internal sealed class CopperfinStudioBuilderCatalogEnvelope
+{
+    public string Status { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioBuilderCatalogPayload? BuilderLaunchCatalog { get; set; }
+}
+
+internal sealed class CopperfinStudioBuilderCatalogPayload
+{
+    public bool Ok { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
+    public List<CopperfinStudioBuilderCatalogEntry> Entries { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioBuilderCatalogEntry
+{
+    public string BuilderId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Kind { get; set; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Vfp9EquivalentDisplay { get; set; } = string.Empty;
+    public bool LaunchOk { get; set; }
+}
+
+internal sealed class CopperfinStudioBuilderCatalogResult
+{
+    public bool Success { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public List<CopperfinStudioBuilderCatalogEntry> Entries { get; set; } = new();
+}
+
 internal sealed class CopperfinStudioSnapshotDocument
 {
     public string Path { get; set; } = string.Empty;
