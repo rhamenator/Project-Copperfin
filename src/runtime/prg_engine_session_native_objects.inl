@@ -49,6 +49,12 @@
             }
 
             if (is_native_visual_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("tag"))
+            {
+                runtime_object.properties["tag"] = make_string_value("");
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
             {
