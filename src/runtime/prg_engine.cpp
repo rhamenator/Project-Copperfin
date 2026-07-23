@@ -8777,7 +8777,9 @@ namespace copperfin::runtime
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
                 {{"classLibraryPath", trimmed_library_path},
-                 {"errorMessage", filesystem_error ? filesystem_error.message() : "file not found"}});
+                 {"errorMessage", filesystem_error
+                                      ? filesystem_error.message()
+                                      : runtime_text("Runtime.Prg.Core.Detail.FileNotFound")}});
             return std::nullopt;
         }
 
@@ -8857,7 +8859,7 @@ namespace copperfin::runtime
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
                 {{"classLibraryPath", trimmed_library_path},
-                 {"errorMessage", "root BASECLASS is not a valid identifier"}});
+                 {"errorMessage", runtime_text("Runtime.Prg.Core.Detail.InvalidRootBaseClass")}});
             return std::nullopt;
         }
 
@@ -8913,7 +8915,7 @@ namespace copperfin::runtime
             last_error_message = runtime_text(
                 "Runtime.Prg.Core.Error.NewObjectVcxOpenFailed",
                 {{"classLibraryPath", trimmed_library_path},
-                 {"errorMessage", "generated class source could not be written"}});
+                 {"errorMessage", runtime_text("Runtime.Prg.Core.Detail.GeneratedClassSourceWriteFailed")}});
             return std::nullopt;
         }
 

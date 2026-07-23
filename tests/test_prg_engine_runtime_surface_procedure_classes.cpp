@@ -5,10 +5,12 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <system_error>
 
@@ -16,7 +18,9 @@ namespace {
 
 using namespace copperfin::test_support;
 
-void write_synthetic_vcx_class_library(const std::filesystem::path& table_path) {
+void write_synthetic_vcx_class_library(
+    const std::filesystem::path& table_path,
+    const std::string& base_class = "Custom") {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 32U},
         {.name = "PARENT", .type = 'C', .length = 32U},
@@ -30,7 +34,7 @@ void write_synthetic_vcx_class_library(const std::filesystem::path& table_path) 
             "MyWidget",
             "",
             "MyWidget",
-            "Custom",
+            base_class,
             "PROCEDURE Init\r\n"
             "LPARAMETERS seed\r\n"
             "THIS.nSeed = seed\r\n"
@@ -429,6 +433,63 @@ void test_newobject_local_vcx_rejects_missing_library() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_newobject_local_vcx_fallback_details_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_fallback_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment catalog_environment;
+    copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+
+    const auto run = [&](const fs::path& main_path, const fs::path& working_directory,
+                         std::optional<fs::path> temp_directory = std::nullopt) {
+        auto options = make_runtime_session_options(main_path, working_directory);
+        if (temp_directory.has_value()) {
+            options.temp_directory = temp_directory->string();
+        }
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(options);
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    fs::create_directories(temp_root / "not_a_file.vcx");
+    const auto missing_library_path = temp_root / "missing_library.prg";
+    write_text(missing_library_path, "oWidget = NEWOBJECT('MyWidget', 'not_a_file.vcx')\nRETURN\n");
+    const auto missing_library_state = run(missing_library_path, temp_root);
+    expect(missing_library_state.message.find("archivo no encontrado") != std::string::npos,
+           "#4424: Spanish VCX missing-file fallback should be localized");
+
+    const auto invalid_base_library_path = temp_root / "invalid_base.vcx";
+    write_synthetic_vcx_class_library(invalid_base_library_path, "Bad Base");
+    const auto invalid_base_path = temp_root / "invalid_base.prg";
+    write_text(invalid_base_path, "oWidget = NEWOBJECT('MyWidget', 'invalid_base.vcx')\nRETURN\n");
+    const auto invalid_base_state = run(invalid_base_path, temp_root);
+    expect(invalid_base_state.message.find("la BASECLASS raíz no es un identificador válido") != std::string::npos,
+           "#4424: Spanish invalid-root-BASECLASS fallback should be localized");
+
+    const auto generated_source_library_path = temp_root / "generated_source.vcx";
+    write_synthetic_vcx_class_library(generated_source_library_path);
+    const auto blocked_temp_path = temp_root / "blocked-runtime-temp";
+    write_text(blocked_temp_path, "not a directory");
+    const auto generated_source_path = temp_root / "generated_source.prg";
+    write_text(generated_source_path, "oWidget = NEWOBJECT('MyWidget', 'generated_source.vcx')\nRETURN\n");
+    const auto generated_source_state = run(generated_source_path, temp_root, blocked_temp_path);
+    expect(generated_source_state.message.find("no se pudo escribir el origen de clase generado") != std::string::npos,
+           "#4424: Spanish generated-source write fallback should be localized");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_missing_library_path = temp_root / "pseudo_missing_library.prg";
+    write_text(pseudo_missing_library_path, "oWidget = NEWOBJECT('MyWidget', 'missing.vcx')\nRETURN\n");
+    const auto pseudo_missing_library_state = run(pseudo_missing_library_path, temp_root);
+    expect(pseudo_missing_library_state.message.find("[!! ") == 0U &&
+               pseudo_missing_library_state.message.find("file not found") == std::string::npos,
+           "#4424: qps-ploc VCX missing-file fallback should expose pseudo-localization");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_release_object_alias_waits_for_last_variable_reference() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_release_object_alias_reference";
@@ -567,6 +628,7 @@ int main() {
     test_newobject_local_vcx_requires_verified_snapshot();
     test_newobject_local_vcx_rejects_missing_class();
     test_newobject_local_vcx_rejects_missing_library();
+    test_newobject_local_vcx_fallback_details_localize();
     test_release_object_alias_waits_for_last_variable_reference();
     test_scope_exit_releases_unreferenced_objects_and_preserves_returns();
 
