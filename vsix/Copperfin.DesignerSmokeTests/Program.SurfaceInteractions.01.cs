@@ -303,7 +303,8 @@ internal static partial class Program
                 new() { Name = "OBJTYPE", Value = "17" },
                 new() { Name = "OBJCODE", Value = "0" },
                 new() { Name = "PICTURE", Value = "images\\logo.bmp" },
-                new() { Name = "GENERAL", Value = "1" }
+                new() { Name = "GENERAL", Value = "1" },
+                new() { Name = "OFFSET", Value = "0" }
             }
         };
         var imageSelection = CopperfinDesignerSelection.FromSnapshot("report", imageSnapshot, new CopperfinLocalization("es-419"));
@@ -318,12 +319,24 @@ internal static partial class Program
                 Properties = imageSnapshot.Properties
             },
             new CopperfinLocalization("pt-BR"));
-        Expect(imageSelection is not null && deletedImageSelection is not null &&
-               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagen", StringComparison.Ordinal)) &&
-               TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagem", StringComparison.Ordinal)) &&
-               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de escala de imagen", StringComparison.Ordinal)) &&
+        Expect(imageSelection is not null &&
+               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagen", StringComparison.Ordinal)),
+            "Live report image selection should expose localized PICTURE");
+        Expect(deletedImageSelection is not null &&
+               TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagem", StringComparison.Ordinal)),
+            "Deleted report image selection should expose localized PICTURE");
+        Expect(imageSelection is not null &&
+               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de escala de imagen", StringComparison.Ordinal)),
+            "Live report image selection should expose localized GENERAL");
+        Expect(deletedImageSelection is not null &&
                TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de escala da imagem", StringComparison.Ordinal)),
-            "Report image object selections should expose localized editable PICTURE and GENERAL for live and deleted objects");
+            "Deleted report image selection should expose localized GENERAL");
+        Expect(imageSelection is not null &&
+               TypeDescriptor.GetProperties(imageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de origen de imagen", StringComparison.Ordinal)),
+            "Live report image selection should expose localized image-source OFFSET");
+        Expect(deletedImageSelection is not null &&
+               TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de origem da imagem", StringComparison.Ordinal)),
+            "Deleted report image selection should expose localized image-source OFFSET");
         if (imageSelection is not null && deletedImageSelection is not null)
         {
             ExpectSelectionUpdate(imageSelection, "PICTURE", "images\\hero.bmp", "images\\hero.bmp",
@@ -334,6 +347,10 @@ internal static partial class Program
                 "Live report image property-grid selection should preserve the invariant GENERAL update target");
             ExpectSelectionUpdate(deletedImageSelection, "GENERAL", 1, "1",
                 "Deleted report image property-grid selection should preserve the invariant GENERAL update target");
+            ExpectSelectionUpdate(imageSelection, "OFFSET", 2, "2",
+                "Live report image property-grid selection should preserve the invariant image-source OFFSET update target");
+            ExpectSelectionUpdate(deletedImageSelection, "OFFSET", 1, "1",
+                "Deleted report image property-grid selection should preserve the invariant image-source OFFSET update target");
         }
 
         var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));

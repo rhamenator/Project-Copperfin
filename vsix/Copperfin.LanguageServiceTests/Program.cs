@@ -491,9 +491,11 @@ internal static partial class Program
         Expect(reportRulerLinesProperty is not null && labelRulerLinesProperty is null && imageRulerLinesProperty is null &&
                reportRulerLinesProperty.DisplayName == "String Trimming",
             "only report-expression selections should expose the localized RULERLINES property");
-        Expect(reportOffsetProperty is not null && labelOffsetProperty is null && imageOffsetProperty is null &&
+        Expect(reportOffsetProperty is not null && labelOffsetProperty is null && imageOffsetProperty is not null &&
                reportOffsetProperty.DisplayName == "Expression Alignment",
-            "only report-expression selections should expose the localized OFFSET property");
+            "report-expression and image selections should expose their distinct localized OFFSET properties");
+        Expect(imageOffsetProperty.DisplayName == "Image Source Mode",
+            "image selections should use the localized image-source OFFSET label");
         Expect(reportExpressionDataTypeProperty is not null && labelDataTypeProperty is null && imageDataTypeProperty is null &&
                reportExpressionDataTypeProperty.DisplayName == "Expression Data Type",
             "only report-expression selections should expose the localized FILLCHAR property");
@@ -545,6 +547,10 @@ internal static partial class Program
         Expect(imageSelection?.TryGetUpdate("GENERAL", out var generalTarget, out var generalValue) == true &&
                generalTarget == "GENERAL" && generalValue == "2",
             "image GENERAL edits should preserve the invariant update target");
+        imageOffsetProperty?.SetValue(imageSelection, 2);
+        Expect(imageSelection?.TryGetUpdate("OFFSET", out var imageOffsetTarget, out var imageOffsetValue) == true &&
+               imageOffsetTarget == "OFFSET" && imageOffsetValue == "2",
+            "image OFFSET edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()

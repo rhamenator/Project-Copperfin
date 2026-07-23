@@ -2708,6 +2708,7 @@
   "AssetEditor.Property.ResetTotal": "Redefinir total",
   "AssetEditor.Property.LineSpacing": "Espaçamento entre linhas",
   "AssetEditor.Property.ImageScaleMode": "Modo de escala da imagem",
+  "AssetEditor.Property.ImageSourceMode": "Modo de origem da imagem",
   "AssetEditor.Property.PrintWhen": "Quando imprimir",
   "AssetEditor.Property.PrintWhenGroup": "Quando o grupo muda",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",

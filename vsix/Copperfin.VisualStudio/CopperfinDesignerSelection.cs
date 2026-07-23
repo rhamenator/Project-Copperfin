@@ -172,6 +172,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         "GENERAL",
                         L("AssetEditor.Property.ImageScaleMode", "Image Scale Mode"),
                         selection.Read(snapshotObject, "GENERAL"));
+                    selection.AddEditableInt(
+                        "OFFSET",
+                        L("AssetEditor.Property.ImageSourceMode", "Image Source Mode"),
+                        selection.Read(snapshotObject, "OFFSET"));
                 }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));

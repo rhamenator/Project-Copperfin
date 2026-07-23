@@ -364,6 +364,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     }
     if (object.objtype_code == 17) {
         add_highlight("GENERAL");
+        add_highlight("OFFSET");
     }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
