@@ -405,6 +405,14 @@ bool native_visual_fontunderline_member_name_matches(
            runtime_object.properties.contains("fontunderline");
 }
 
+bool native_visual_fontstrikethru_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "fontstrikethru" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("fontstrikethru");
+}
+
 bool native_visual_visible_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

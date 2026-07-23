@@ -228,6 +228,7 @@
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||
             is_native_visual_fontunderline_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontstrikethru_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
@@ -608,6 +609,10 @@
                 runtime_object->properties[member_name] = make_boolean_value(
                     value_as_bool(runtime_object->properties[member_name]));
             }
+            if (member_name == "fontstrikethru") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -690,6 +695,10 @@
                     value_as_bool(runtime_object->properties[member_name]));
             }
             if (member_name == "fontunderline") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
+            }
+            if (member_name == "fontstrikethru") {
                 runtime_object->properties[member_name] = make_boolean_value(
                     value_as_bool(runtime_object->properties[member_name]));
             }
@@ -793,6 +802,7 @@
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||
             is_native_visual_fontunderline_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontstrikethru_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||

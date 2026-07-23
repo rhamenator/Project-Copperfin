@@ -8315,6 +8315,11 @@ namespace copperfin::runtime
                     runtime_object.properties[normalized_property_name] = make_boolean_value(
                         value_as_bool(assigned_value));
                 }
+                if (normalized_property_name == "fontstrikethru")
+                {
+                    runtime_object.properties[normalized_property_name] = make_boolean_value(
+                        value_as_bool(assigned_value));
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {
