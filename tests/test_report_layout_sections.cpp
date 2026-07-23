@@ -60,7 +60,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("FONTFACE", "Segoe UI", 12U),
                 value("FONTSIZE", "10"),
                 value("SUPEXPR", "customer.company > 0", 313U),
-                value("SUPGROUP", "6")
+                value("SUPGROUP", "6"),
+                value("SUPALWAYS", "1")
             }
         },
         {
@@ -238,6 +239,19 @@ void test_build_report_layout_groups_band_objects() {
         expect(print_when_group_highlight->value == "6" && print_when_group_highlight->field_index == 10U &&
                print_when_group_highlight->memo_block_number == 0U,
             "#4511: SUPGROUP highlights should preserve value and source field provenance");
+    }
+    const auto print_when_repeated_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "SUPALWAYS";
+        });
+    expect(print_when_repeated_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4512: report layout highlights should include the SUPALWAYS repeated-value setting");
+    if (print_when_repeated_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(print_when_repeated_highlight->value == "1" && print_when_repeated_highlight->field_index == 11U &&
+               print_when_repeated_highlight->memo_block_number == 0U,
+            "#4512: SUPALWAYS highlights should preserve value and source field provenance");
     }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,

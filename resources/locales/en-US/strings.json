@@ -2701,5 +2701,6 @@
   "AssetEditor.Property.Stretch": "Stretch with Overflow",
   "AssetEditor.Property.StretchTop": "Stretch Relative to Top",
   "AssetEditor.Property.PrintWhen": "Print When",
-  "AssetEditor.Property.PrintWhenGroup": "When Group Changes"
+  "AssetEditor.Property.PrintWhenGroup": "When Group Changes",
+  "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values"
 }
