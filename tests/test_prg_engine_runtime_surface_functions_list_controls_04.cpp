@@ -758,12 +758,20 @@ namespace copperfin::runtime_surface_tests
             "oAllowed.MoveItem(2, -1)\n"
             "cAllowedFirst = oAllowed.List(1)\n"
             "nAllowedCalls = oAllowed.nCalls\n"
+            "nAllowedSource = oAllowed.nSource\n"
+            "nAllowedShift = oAllowed.nShift\n"
+            "nAllowedCurrent = oAllowed.nCurrent\n"
+            "nAllowedMoveBy = oAllowed.nMoveBy\n"
             "oVeto = CREATEOBJECT('VetoListBox')\n"
             "oVeto.AddItem('One')\n"
             "oVeto.AddItem('Two')\n"
             "oVeto.MoveItem(2, -1)\n"
             "cVetoFirst = oVeto.List(1)\n"
             "nVetoCalls = oVeto.nCalls\n"
+            "nVetoSource = oVeto.nSource\n"
+            "nVetoShift = oVeto.nShift\n"
+            "nVetoCurrent = oVeto.nCurrent\n"
+            "nVetoMoveBy = oVeto.nMoveBy\n"
             "oUnsupported = CREATEOBJECT('MoveListBox')\n"
             "oUnsupported.AddItem('One')\n"
             "oUnsupported.AddItem('Two')\n"
@@ -771,6 +779,20 @@ namespace copperfin::runtime_surface_tests
             "oUnsupported.MoveItem(2, -1)\n"
             "cUnsupportedFirst = oUnsupported.List(1)\n"
             "nUnsupportedCalls = oUnsupported.nCalls\n"
+            "nUnsupportedSource = oUnsupported.nSource\n"
+            "nUnsupportedShift = oUnsupported.nShift\n"
+            "nUnsupportedCurrent = oUnsupported.nCurrent\n"
+            "nUnsupportedMoveBy = oUnsupported.nMoveBy\n"
+            "oInvalid = CREATEOBJECT('MoveListBox')\n"
+            "oInvalid.AddItem('One')\n"
+            "oInvalid.AddItem('Two')\n"
+            "oInvalid.MoveItem(99, 1)\n"
+            "cInvalidFirst = oInvalid.List(1)\n"
+            "nInvalidCalls = oInvalid.nCalls\n"
+            "nInvalidSource = oInvalid.nSource\n"
+            "nInvalidShift = oInvalid.nShift\n"
+            "nInvalidCurrent = oInvalid.nCurrent\n"
+            "nInvalidMoveBy = oInvalid.nMoveBy\n"
             "oBound = CREATEOBJECT('ListBox')\n"
             "oBound.AddItem('One')\n"
             "oBound.AddItem('Two')\n"
@@ -779,24 +801,55 @@ namespace copperfin::runtime_surface_tests
             "oBound.MoveItem(2, -1)\n"
             "cBoundFirst = oBound.List(1)\n"
             "nBoundCalls = oSink.nCalls\n"
+            "nBoundSource = oSink.nSource\n"
+            "nBoundShift = oSink.nShift\n"
+            "nBoundCurrent = oSink.nCurrent\n"
+            "nBoundMoveBy = oSink.nMoveBy\n"
             "RETURN\n"
             "DEFINE CLASS MoveListBox AS ListBox\n"
             "    nCalls = 0\n"
+            "    nSource = 0\n"
+            "    nShift = 0\n"
+            "    nCurrent = 0\n"
+            "    nMoveBy = 0\n"
             "    PROCEDURE OnMoveItem\n"
+            "        LPARAMETERS tnSource, tnShift, tnCurrent, tnMoveBy\n"
             "        THIS.nCalls = THIS.nCalls + 1\n"
+            "        THIS.nSource = tnSource\n"
+            "        THIS.nShift = tnShift\n"
+            "        THIS.nCurrent = tnCurrent\n"
+            "        THIS.nMoveBy = tnMoveBy\n"
             "    ENDPROC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS VetoListBox AS ListBox\n"
             "    nCalls = 0\n"
+            "    nSource = 0\n"
+            "    nShift = 0\n"
+            "    nCurrent = 0\n"
+            "    nMoveBy = 0\n"
             "    PROCEDURE OnMoveItem\n"
+            "        LPARAMETERS tnSource, tnShift, tnCurrent, tnMoveBy\n"
             "        THIS.nCalls = THIS.nCalls + 1\n"
+            "        THIS.nSource = tnSource\n"
+            "        THIS.nShift = tnShift\n"
+            "        THIS.nCurrent = tnCurrent\n"
+            "        THIS.nMoveBy = tnMoveBy\n"
             "        RETURN .F.\n"
             "    ENDPROC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS MoveSink AS Custom\n"
             "    nCalls = 0\n"
+            "    nSource = 0\n"
+            "    nShift = 0\n"
+            "    nCurrent = 0\n"
+            "    nMoveBy = 0\n"
             "    FUNCTION HandleMove\n"
+            "        LPARAMETERS tnSource, tnShift, tnCurrent, tnMoveBy\n"
             "        THIS.nCalls = THIS.nCalls + 1\n"
+            "        THIS.nSource = tnSource\n"
+            "        THIS.nShift = tnShift\n"
+            "        THIS.nCurrent = tnCurrent\n"
+            "        THIS.nMoveBy = tnMoveBy\n"
             "        RETURN .F.\n"
             "    ENDFUNC\n"
             "ENDDEFINE\n");
@@ -824,12 +877,34 @@ namespace copperfin::runtime_surface_tests
         check("nbind", "1");
         check("callowedfirst", "Two");
         check("nallowedcalls", "1");
+        check("nallowedsource", "8");
+        check("nallowedshift", "0");
+        check("nallowedcurrent", "2");
+        check("nallowedmoveby", "-1");
         check("cvetofirst", "One");
         check("nvetocalls", "1");
+        check("nvetosource", "8");
+        check("nvetoshift", "0");
+        check("nvetocurrent", "2");
+        check("nvetomoveby", "-1");
         check("cunsupportedfirst", "One");
         check("nunsupportedcalls", "1");
+        check("nunsupportedsource", "8");
+        check("nunsupportedshift", "0");
+        check("nunsupportedcurrent", "2");
+        check("nunsupportedmoveby", "-1");
+        check("cinvalidfirst", "One");
+        check("ninvalidcalls", "1");
+        check("ninvalidsource", "8");
+        check("ninvalidshift", "0");
+        check("ninvalidcurrent", "99");
+        check("ninvalidmoveby", "1");
         check("cboundfirst", "One");
         check("nboundcalls", "1");
+        check("nboundsource", "8");
+        check("nboundshift", "0");
+        check("nboundcurrent", "2");
+        check("nboundmoveby", "-1");
 
         fs::remove_all(temp_root, ignored);
     }

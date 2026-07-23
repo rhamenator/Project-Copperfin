@@ -2822,10 +2822,10 @@ namespace copperfin::runtime
         {
             return *native_result;
         }
-        std::function<bool()> before_list_control_move;
+        std::function<bool(const std::vector<PrgValue>&)> before_list_control_move;
         if (leaf == "moveitem")
         {
-            before_list_control_move = [&]()
+            before_list_control_move = [&](const std::vector<PrgValue>& event_arguments)
             {
                 bool requested_nodefault = false;
                 bool returned_false = false;
@@ -2833,8 +2833,8 @@ namespace copperfin::runtime
                     *target_object,
                     "onmoveitem",
                     frame,
-                    {},
-                    {},
+                    event_arguments,
+                    std::vector<std::optional<std::string>>(event_arguments.size()),
                     &requested_nodefault,
                     &returned_false);
                 (void)consume_last_popped_frame_requested_nodefault();

@@ -75,7 +75,7 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
 std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments,
-                                                          const std::function<bool()>& before_move)
+                                                          const std::function<bool(const std::vector<PrgValue>&)>& before_move)
 {
     if (!is_native_list_control_runtime_object(runtime_object)) {
         return std::nullopt;
@@ -336,7 +336,12 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             return make_empty_value();
         }
 
-        if (before_move && !before_move()) {
+        const std::vector<PrgValue> event_arguments = {
+            make_number_value(8.0),
+            make_number_value(0.0),
+            arguments[0],
+            arguments[1]};
+        if (before_move && !before_move(event_arguments)) {
             return make_empty_value();
         }
         if (!native_list_control_rowsourcetype_supports_additem(runtime_object)) {
