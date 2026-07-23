@@ -4476,6 +4476,7 @@ copperfin_add_test(test_report_layout cf_design_model
     test_report_layout_total_type.cpp
     test_report_layout_reset_total.cpp
     test_report_layout_spacing.cpp
+    test_report_layout_general.cpp
     test_report_layout_grouping.cpp
     test_report_layout_summary.cpp
 )

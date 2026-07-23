@@ -2707,6 +2707,7 @@
   "AssetEditor.Property.CalculationType": "Tipo de cálculo",
   "AssetEditor.Property.ResetTotal": "Restablecer total",
   "AssetEditor.Property.LineSpacing": "Interlineado",
+  "AssetEditor.Property.ImageScaleMode": "Modo de escala de imagen",
   "AssetEditor.Property.PrintWhen": "Imprimir cuando",
   "AssetEditor.Property.PrintWhenGroup": "Cuando cambia el grupo",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",

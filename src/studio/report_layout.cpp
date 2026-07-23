@@ -362,6 +362,9 @@ StudioLayoutObjectSnapshot build_layout_object(
     if (object.objtype_code == 5) {
         add_highlight("SPACING");
     }
+    if (object.objtype_code == 17) {
+        add_highlight("GENERAL");
+    }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");

@@ -441,7 +441,8 @@ internal static partial class Program
                 new() { Name = "FILLCHAR", Value = "N" },
                 new() { Name = "TOTALTYPE", Value = "2" },
                 new() { Name = "RESETTOTAL", Value = "1" },
-                new() { Name = "SPACING", Value = "1" }
+                new() { Name = "SPACING", Value = "1" },
+                new() { Name = "GENERAL", Value = "1" }
             }
         };
 
@@ -479,6 +480,9 @@ internal static partial class Program
         var labelSpacingProperty = labelSelection?.GetProperties().Find("SPACING", false);
         var reportSpacingProperty = reportExpressionSelection?.GetProperties().Find("SPACING", false);
         var imageSpacingProperty = imageSelection?.GetProperties().Find("SPACING", false);
+        var imageGeneralProperty = imageSelection?.GetProperties().Find("GENERAL", false);
+        var reportGeneralProperty = reportExpressionSelection?.GetProperties().Find("GENERAL", false);
+        var labelGeneralProperty = labelSelection?.GetProperties().Find("GENERAL", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
@@ -502,6 +506,9 @@ internal static partial class Program
         Expect(labelSpacingProperty is not null && reportSpacingProperty is null && imageSpacingProperty is null &&
                labelSpacingProperty.DisplayName == "Line Spacing",
             "only label selections should expose the localized SPACING property");
+        Expect(imageGeneralProperty is not null && reportGeneralProperty is null && labelGeneralProperty is null &&
+               imageGeneralProperty.DisplayName == "Image Scale Mode",
+            "only image selections should expose the localized GENERAL property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -534,6 +541,10 @@ internal static partial class Program
         Expect(labelSelection?.TryGetUpdate("SPACING", out var spacingTarget, out var spacingValue) == true &&
                spacingTarget == "SPACING" && spacingValue == "2",
             "label SPACING edits should preserve the invariant update target");
+        imageGeneralProperty?.SetValue(imageSelection, 2);
+        Expect(imageSelection?.TryGetUpdate("GENERAL", out var generalTarget, out var generalValue) == true &&
+               generalTarget == "GENERAL" && generalValue == "2",
+            "image GENERAL edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()

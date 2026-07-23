@@ -16,6 +16,7 @@ void test_report_expression_fillchar_provenance();
 void test_report_expression_total_type_provenance();
 void test_report_expression_reset_total_provenance();
 void test_report_label_spacing_provenance();
+void test_report_image_general_provenance();
 void test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
 void test_report_layout_default_catalog_refreshes_when_locale_changes();
 void test_report_layout_section_catalog_entries_cover_placeholder_locales();
@@ -52,6 +53,7 @@ int main() {
     test_report_expression_total_type_provenance();
     test_report_expression_reset_total_provenance();
     test_report_label_spacing_provenance();
+    test_report_image_general_provenance();
     test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
     test_report_layout_default_catalog_refreshes_when_locale_changes();
     test_report_layout_section_catalog_entries_cover_placeholder_locales();
