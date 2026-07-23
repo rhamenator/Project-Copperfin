@@ -2655,5 +2655,11 @@
   "AssetEditor.Summary.QueryPathLine": "- {0} ({1})",
   "AssetEditor.Summary.NoConnectorTargets": "- No se encontraron objetivos de conectores que coincidan con el filtro actual.",
   "AssetEditor.Summary.NoQueryPaths": "- No se encontraron rutas de traducci\u00F3n de consulta que coincidan con el filtro actual.",
-  "AssetEditor.Summary.Guardrails": "Guardarra\u00EDles:"
+  "AssetEditor.Summary.Guardrails": "Guardarra\u00EDles:",
+  "AssetEditor.Database.Column.Kind": "Tipo",
+  "AssetEditor.Database.Column.Title": "T\u00EDtulo",
+  "AssetEditor.Database.Column.Shape": "Forma",
+  "AssetEditor.Database.Column.Details": "Detalles",
+  "AssetEditor.Database.Kind.Connector": "Conector",
+  "AssetEditor.Database.Kind.QueryPath": "Ruta de consulta"
 }

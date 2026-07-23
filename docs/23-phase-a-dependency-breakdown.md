@@ -2036,3 +2036,4 @@ Operationally:
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task
 - #4448 (#3217): native PRG ComboBox/ListBox `ItemTips` property contract is implemented and covered. The mounted VFP9 help confirms the read/write logical default `.F.`; runtime reflection and derived initialization are covered, while tooltip rendering remains UI work.
 - #4449 (#3217): native PRG ListBox `IntegralHeight` read-only property contract is implemented and covered. The mounted VFP9 help confirms the default `.F.` and runtime read-only status; pixel-level height adjustment remains UI work.
+- #4450 (#25): shared VSIX/standalone database workspace now exposes the existing connector and query-path catalog with localized display columns and invariant snapshot data. This is inspection/readiness only; connection execution and federation mutation remain future work.

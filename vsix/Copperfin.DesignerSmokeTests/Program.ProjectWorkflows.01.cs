@@ -241,6 +241,21 @@ internal static partial class Program
             .FirstOrDefault(box => box.Text.IndexOf("Copperfin Database Federation", StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(databaseSummary is not null, $"project editor should surface a database pane for {path}");
 
+        var databaseList = FindListViews(control)
+            .FirstOrDefault(list => list.Columns.Count >= 4 &&
+                                    string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(list.Columns[1].Text, "Title", StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(list.Columns[2].Text, "Shape", StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(list.Columns[3].Text, "Details", StringComparison.OrdinalIgnoreCase));
+        Expect(databaseList is not null, $"project editor should surface a database federation catalog for {path}");
+        var databaseSnapshot = GetPrivateField<CopperfinStudioSnapshotDocument>(control, "currentSnapshot");
+        if (databaseList is not null && databaseSnapshot is not null && databaseSnapshot.DatabaseProfile.Available)
+        {
+            Expect(databaseList.Items.Count == databaseSnapshot.DatabaseProfile.Connectors.Count +
+                   databaseSnapshot.DatabaseProfile.QueryPaths.Count,
+                $"database federation catalog should render every available entry for {path}");
+        }
+
         TearDownForm(hostForm);
     }
 

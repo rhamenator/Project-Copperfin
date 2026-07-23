@@ -135,6 +135,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox coverageSummaryBox;
     private readonly ListView coverageView;
     private readonly RichTextBox databaseSummaryBox;
+    private readonly ListView databaseView;
     private readonly TextBox dataExplorerFilterBox;
     private readonly TextBox objectBrowserFilterBox;
     private readonly CheckBox objectBrowserHideProjectCheckBox;
@@ -849,6 +850,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.Database")
         };
 
+        databaseView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Kind"), 130);
+        databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Title"), 240);
+        databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Shape"), 300);
+        databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Details"), 620);
+
         dataExplorerFilterBox = new TextBox
         {
             Dock = DockStyle.Top
@@ -1034,7 +1048,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         coveragePageHost.Controls.Add(coverageSummaryPanel);
         coveragePage.Controls.Add(coveragePageHost);
         var databasePage = new TabPage(this.localization.Text("AssetEditor.Tab.Database"));
-        databasePage.Controls.Add(databaseSummaryBox);
+        var databasePageHost = new Panel
+        {
+            Dock = DockStyle.Fill
+        };
+        var databaseSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 180
+        };
+        databaseSummaryPanel.Controls.Add(databaseSummaryBox);
+        databasePageHost.Controls.Add(databaseView);
+        databasePageHost.Controls.Add(databaseSummaryPanel);
+        databasePage.Controls.Add(databasePageHost);
         projectWorkspaceTabs.TabPages.Add(summaryPage);
         projectWorkspaceTabs.TabPages.Add(debuggerPage);
         projectWorkspaceTabs.TabPages.Add(taskListPage);
@@ -1468,6 +1494,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
         coverageView.Items.Clear();
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
+        databaseView.Items.Clear();
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
         objectBrowserHideProjectCheckBox.Checked = false;
@@ -2898,7 +2925,46 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         _ = LoadBuilderCatalogAsync(loadGeneration);
         PopulateCoverage(currentDebugSession);
         coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
+        PopulateDatabaseFederation(currentSnapshot, dataExplorerFilterBox.Text);
         databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
+    }
+
+    private void PopulateDatabaseFederation(CopperfinStudioSnapshotDocument snapshot, string? filter)
+    {
+        databaseView.Items.Clear();
+        if (!snapshot.DatabaseProfile.Available)
+        {
+            return;
+        }
+
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        foreach (var connector in snapshot.DatabaseProfile.Connectors.Where(connector =>
+                     string.IsNullOrWhiteSpace(normalizedFilter) ||
+                     connector.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     connector.Family.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     connector.SchemaShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
+        {
+            var item = new ListViewItem(L("AssetEditor.Database.Kind.Connector"));
+            item.SubItems.Add(connector.Title);
+            item.SubItems.Add(connector.Family + " / " + connector.SchemaShape);
+            item.SubItems.Add(connector.TranslationStory);
+            item.Tag = connector.Id;
+            databaseView.Items.Add(item);
+        }
+
+        foreach (var path in snapshot.DatabaseProfile.QueryPaths.Where(path =>
+                     string.IsNullOrWhiteSpace(normalizedFilter) ||
+                     path.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     path.SourceShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     path.TargetShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
+        {
+            var item = new ListViewItem(L("AssetEditor.Database.Kind.QueryPath"));
+            item.SubItems.Add(path.Title);
+            item.SubItems.Add(path.SourceShape + " -> " + path.TargetShape);
+            item.SubItems.Add(path.Complexity + ": " + path.Strategy);
+            item.Tag = path.Id;
+            databaseView.Items.Add(item);
+        }
     }
 
     private void PopulateTaskList(CopperfinProjectInsights? insights)

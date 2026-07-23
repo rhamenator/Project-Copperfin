@@ -2655,5 +2655,11 @@
   "AssetEditor.Summary.QueryPathLine": "- {0} ({1})",
   "AssetEditor.Summary.NoConnectorTargets": "- No connector targets matched the current filter.",
   "AssetEditor.Summary.NoQueryPaths": "- No query translation paths matched the current filter.",
-  "AssetEditor.Summary.Guardrails": "Guardrails:"
+  "AssetEditor.Summary.Guardrails": "[Ğµåřðřåîļš:]",
+  "AssetEditor.Database.Column.Kind": "[Ҡîñð]",
+  "AssetEditor.Database.Column.Title": "[Ţîţļê]",
+  "AssetEditor.Database.Column.Shape": "[Šĥåþê]",
+  "AssetEditor.Database.Column.Details": "[Ðêţåîļš]",
+  "AssetEditor.Database.Kind.Connector": "[Çøññêçţøř]",
+  "AssetEditor.Database.Kind.QueryPath": "[Qµêř¥ þåţĥ]"
 }
