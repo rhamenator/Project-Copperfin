@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4418 under #2996 is implemented: `SelectionPropertyDescriptor.GetValue`/`SetValue` match the nullable `PropertyDescriptor` component contract and return safely for null or unrelated components, while valid property-grid access remains unchanged. Local language-service and designer-smoke projects build with zero warnings and language-service tests pass; hosted designer/VSIX validation remains required.
+
 - #4417 under #25 is implemented: POSIX `ps` descendant discovery in `CopperfinProcessRunner` now uses `BeginOutputReadLine()` plus a bounded completion event rather than `ReadToEndAsync().Wait()`/`.Result`. Preserve the 2-second discovery grace, cleanup fallback, reverse descendant order, and empty-list failure behavior. Local language-service tests pass; net472 project builds, while direct Mono execution of its Windows cmd/PowerShell fixture is not applicable on Linux. Hosted Windows and POSIX process-runner validation remain required.
 
 - #4416 under #2996 is implemented: `CopperfinProjectCommands` now guards both `OleMenuCommand` callbacks before invoking `ExecuteAsync()` or `UpdateQueryStatus()`. Preserve the async workflow dispatch and localized status refresh; local managed tests pass, and hosted Visual Studio analyzer validation remains required.

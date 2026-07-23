@@ -52,16 +52,23 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         public override bool CanResetValue(object component) => false;
 
-        public override object? GetValue(object component) {
-            return ((CopperfinDesignerSelection)component).GetValue(field.Name);
+        public override object? GetValue(object? component) {
+            return component is CopperfinDesignerSelection selection
+                ? selection.GetValue(field.Name)
+                : null;
         }
 
         public override void ResetValue(object component) {
         }
 
-        public override void SetValue(object component, object? value) {
-            ((CopperfinDesignerSelection)component).SetValue(field.Name, value);
-            OnValueChanged(component, EventArgs.Empty);
+        public override void SetValue(object? component, object? value) {
+            if (component is not CopperfinDesignerSelection selection)
+            {
+                return;
+            }
+
+            selection.SetValue(field.Name, value);
+            OnValueChanged(selection, EventArgs.Empty);
         }
 
         public override bool ShouldSerializeValue(object component) => false;
