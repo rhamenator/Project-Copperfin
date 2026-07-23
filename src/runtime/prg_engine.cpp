@@ -8290,6 +8290,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_list_control_array_range_invariants(runtime_object);
                 }
+                if (normalized_property_name == "displaycount")
+                {
+                    normalize_native_combobox_displaycount_invariant(runtime_object);
+                }
                 if (normalized_property_name == "sorted")
                 {
                     if (!write_native_list_control_controlsource_target(runtime_object, source_frame))

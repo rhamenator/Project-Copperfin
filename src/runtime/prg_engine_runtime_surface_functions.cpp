@@ -190,6 +190,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_autohidescrollbar_member_name_matches(runtime_object, member_name) ||
                native_firstelement_member_name_matches(runtime_object, member_name) ||
                native_numberofelements_member_name_matches(runtime_object, member_name) ||
+               native_displaycount_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_listitemid_member_name_matches(runtime_object, member_name) ||

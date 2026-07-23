@@ -360,6 +360,7 @@ int main()
     test_native_list_controls_value_assignment_routes_selection();
     test_native_listbox_autohidescrollbar_property_stays_builtin();
     test_native_list_control_array_range_properties_stay_coherent();
+    test_native_combobox_displaycount_property_stays_builtin();
     test_native_list_controls_itemdata_stays_coherent();
     test_native_list_controls_topitemid_stays_coherent();
     test_native_list_controls_topindex_stays_coherent();

@@ -774,6 +774,17 @@ bool native_numberofelements_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_displaycount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "displaycount" ||
+        !runtime_object.properties.contains("displaycount")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "combobox";
+}
+
 bool native_boundto_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

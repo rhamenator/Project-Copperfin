@@ -230,6 +230,12 @@
                 runtime_object.properties["numberofelements"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "combobox" &&
+                !runtime_object.properties.contains("displaycount"))
+            {
+                runtime_object.properties["displaycount"] = make_number_value(0.0);
+            }
+
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("listindex"))

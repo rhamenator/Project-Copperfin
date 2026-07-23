@@ -258,6 +258,7 @@
             is_native_autohidescrollbar_member_name(*runtime_object, property_name) ||
             is_native_firstelement_member_name(*runtime_object, property_name) ||
             is_native_numberofelements_member_name(*runtime_object, property_name) ||
+            is_native_displaycount_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -596,6 +597,9 @@
                 member_name == "numberofelements") {
                 normalize_native_list_control_array_range_invariants(*runtime_object);
             }
+            if (member_name == "displaycount") {
+                normalize_native_combobox_displaycount_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -640,6 +644,9 @@
             if (member_name == "firstelement" ||
                 member_name == "numberofelements") {
                 normalize_native_list_control_array_range_invariants(*runtime_object);
+            }
+            if (member_name == "displaycount") {
+                normalize_native_combobox_displaycount_invariant(*runtime_object);
             }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
@@ -727,6 +734,7 @@
             is_native_autohidescrollbar_member_name(*runtime_object, property_name) ||
             is_native_firstelement_member_name(*runtime_object, property_name) ||
             is_native_numberofelements_member_name(*runtime_object, property_name) ||
+            is_native_displaycount_member_name(*runtime_object, property_name) ||
             is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||

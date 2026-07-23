@@ -324,6 +324,27 @@ void normalize_native_list_control_array_range_invariants(RuntimeOleObjectState&
     }
 }
 
+void normalize_native_combobox_displaycount_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "combobox") {
+        return;
+    }
+
+    const auto display_count = runtime_object.properties.find("displaycount");
+    if (display_count == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(display_count->second);
+    const long long normalized =
+        !std::isfinite(value) || value <= 0.0
+            ? 0LL
+            : value >= static_cast<double>(std::numeric_limits<long long>::max())
+                ? std::numeric_limits<long long>::max()
+                : std::llround(value);
+    display_count->second = make_number_value(static_cast<double>(normalized));
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -467,6 +488,11 @@ bool is_native_firstelement_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_numberofelements_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_numberofelements_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_displaycount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_displaycount_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
