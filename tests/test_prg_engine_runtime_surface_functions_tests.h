@@ -127,6 +127,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_textbox_selected_colors_defaults_mutate_and_stay_builtin();
     void test_native_textbox_dateformat_defaults_mutate_and_stay_builtin();
     void test_native_textbox_century_defaults_mutate_and_stay_builtin();
+    void test_native_textbox_datemark_defaults_mutate_and_stay_builtin();
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     void test_native_string_control_value_defaults_mutates_and_stays_builtin();
     void test_native_selectonentry_defaults_mutate_and_stay_builtin();
