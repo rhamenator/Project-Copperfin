@@ -272,6 +272,7 @@
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
+            is_native_resizable_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
@@ -801,6 +802,11 @@
                 runtime_object->properties["selectonentry"] =
                     make_boolean_value(value_as_bool(runtime_object->properties["selectonentry"]));
             }
+            if (member_name == "resizable" &&
+                is_native_resizable_member_name(*runtime_object, member_name)) {
+                runtime_object->properties["resizable"] =
+                    make_boolean_value(value_as_bool(runtime_object->properties["resizable"]));
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -988,6 +994,11 @@
                 runtime_object->properties["selectonentry"] =
                     make_boolean_value(value_as_bool(runtime_object->properties["selectonentry"]));
             }
+            if (member_name == "resizable" &&
+                is_native_resizable_member_name(*runtime_object, member_name)) {
+                runtime_object->properties["resizable"] =
+                    make_boolean_value(value_as_bool(runtime_object->properties["resizable"]));
+            }
             if (member_name == "boundcolumn" ||
                 member_name == "boundto") {
                 sync_native_list_control_displayvalue_from_selection(*runtime_object);
@@ -1088,6 +1099,7 @@
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
+            is_native_resizable_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||

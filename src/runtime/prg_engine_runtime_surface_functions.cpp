@@ -236,6 +236,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_selection_member_name_matches(runtime_object, member_name) ||
                native_textbox_text_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
+               native_resizable_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
                object_has_accessor_property(runtime_object, member_name) ||

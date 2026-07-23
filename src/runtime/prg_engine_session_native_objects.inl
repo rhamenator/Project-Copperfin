@@ -383,6 +383,12 @@
             }
 
             if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("resizable"))
+            {
+                runtime_object.properties["resizable"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("currentcontrol"))
             {
                 runtime_object.properties["currentcontrol"] = make_string_value("Text1");

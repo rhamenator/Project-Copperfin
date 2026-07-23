@@ -125,6 +125,7 @@ int main()
     test_native_checkbox_and_spinner_readonly_defaults_mutate_and_stay_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();
     test_native_selectonentry_defaults_mutate_and_stay_builtin();
+    test_native_column_resizable_defaults_mutate_and_stay_builtin();
     test_native_name_reflects_parent_chain_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();

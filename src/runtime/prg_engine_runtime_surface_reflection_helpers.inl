@@ -792,6 +792,17 @@ bool native_selectonentry_member_name_matches(
            normalized_base_class == "column";
 }
 
+bool native_resizable_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "resizable" ||
+        !runtime_object.properties.contains("resizable")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
 bool native_controlsource_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
