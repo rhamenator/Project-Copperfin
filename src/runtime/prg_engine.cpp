@@ -8382,6 +8382,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_mouseicon_invariant(runtime_object);
                 }
+                if (normalized_property_name == "disabledbackcolor")
+                {
+                    normalize_native_textbox_disabledbackcolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "disabledforecolor")
+                {
+                    normalize_native_textbox_disabledforecolor_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

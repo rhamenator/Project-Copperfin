@@ -246,6 +246,16 @@ bool is_native_textbox_mouseicon_member_name(const RuntimeOleObjectState& runtim
     return native_textbox_mouseicon_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_disabledbackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_disabledbackcolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_textbox_disabledforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_disabledforecolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -738,6 +748,36 @@ void normalize_native_textbox_mouseicon_invariant(RuntimeOleObjectState& runtime
     }
 
     mouse_icon->second = make_string_value(value_as_string(mouse_icon->second));
+}
+
+void normalize_native_textbox_disabledbackcolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_disabledbackcolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto disabled_backcolor = runtime_object.properties.find("disabledbackcolor");
+    if (disabled_backcolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(disabled_backcolor->second);
+    disabled_backcolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_textbox_disabledforecolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_disabledforecolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto disabled_forecolor = runtime_object.properties.find("disabledforecolor");
+    if (disabled_forecolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(disabled_forecolor->second);
+    disabled_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
