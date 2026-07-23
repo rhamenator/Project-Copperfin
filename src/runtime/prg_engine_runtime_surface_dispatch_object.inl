@@ -274,6 +274,7 @@
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
+            is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||
@@ -666,6 +667,9 @@
             if (member_name == "alignment") {
                 normalize_native_visual_alignment_invariant(*runtime_object);
             }
+            if (member_name == "rowheight") {
+                normalize_native_grid_rowheight_invariant(*runtime_object);
+            }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
             }
@@ -840,6 +844,9 @@
             }
             if (member_name == "alignment") {
                 normalize_native_visual_alignment_invariant(*runtime_object);
+            }
+            if (member_name == "rowheight") {
+                normalize_native_grid_rowheight_invariant(*runtime_object);
             }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
@@ -1062,6 +1069,7 @@
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
+            is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||

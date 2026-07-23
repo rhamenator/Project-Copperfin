@@ -833,6 +833,17 @@ bool native_allowaddnew_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_grid_rowheight_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "rowheight" ||
+        !runtime_object.properties.contains("rowheight")) {
+        return false;
+    }
+
+    return native_grid_rowheight_runtime_object(runtime_object);
+}
+
 bool native_allowcellselection_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

@@ -631,6 +631,24 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
     alignment->second = make_number_value(static_cast<double>(normalized));
 }
 
+void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_rowheight_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto row_height = runtime_object.properties.find("rowheight");
+    if (row_height == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(row_height->second);
+    row_height->second = make_number_value(
+        std::isfinite(value) && value >= -1.0
+            ? static_cast<double>(std::llround(value))
+            : -1.0);
+}
+
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_editbox_scrollbars_runtime_object(runtime_object)) {
@@ -1168,6 +1186,11 @@ bool is_native_recordsource_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_allowaddnew_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_allowaddnew_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_rowheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_rowheight_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

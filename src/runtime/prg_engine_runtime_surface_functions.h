@@ -99,6 +99,7 @@ bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object,
 bool is_native_tabstop_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabstop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_allowaddnew_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_grid_rowheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_deletemark_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_splitbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_leftcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -142,6 +143,7 @@ void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& 
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_format_invariant(RuntimeOleObjectState& runtime_object);

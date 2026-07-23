@@ -413,6 +413,12 @@
                 runtime_object.properties["columncount"] = make_number_value(-1.0);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("rowheight"))
+            {
+                runtime_object.properties["rowheight"] = make_number_value(-1.0);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {
