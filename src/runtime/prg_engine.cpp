@@ -8358,6 +8358,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_alignment_invariant(runtime_object);
                 }
+                if (normalized_property_name == "scrollbars")
+                {
+                    normalize_native_editbox_scrollbars_invariant(runtime_object);
+                }
                 if (normalized_property_name == "inputmask")
                 {
                     normalize_native_textbox_inputmask_invariant(runtime_object);

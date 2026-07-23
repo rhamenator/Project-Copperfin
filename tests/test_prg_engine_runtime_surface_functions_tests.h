@@ -131,6 +131,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_textbox_hours_defaults_mutate_and_stay_builtin();
     void test_native_textbox_seconds_defaults_mutate_and_stay_builtin();
     void test_native_textbox_selection_defaults_mutate_and_stay_builtin();
+    void test_native_editbox_scrollbars_defaults_mutate_and_stay_builtin();
     void test_native_textbox_text_defaults_read_only_and_stay_builtin();
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     void test_native_string_control_value_defaults_mutates_and_stays_builtin();

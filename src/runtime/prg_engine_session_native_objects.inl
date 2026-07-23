@@ -161,6 +161,12 @@
                 runtime_object.properties["alignment"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "editbox" &&
+                !runtime_object.properties.contains("scrollbars"))
+            {
+                runtime_object.properties["scrollbars"] = make_number_value(0.0);
+            }
+
             if (normalized_base_class == "textbox" &&
                 !runtime_object.properties.contains("inputmask"))
             {

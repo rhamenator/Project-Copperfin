@@ -469,6 +469,14 @@ bool native_visual_alignment_member_name_matches(
            runtime_object.properties.contains("alignment");
 }
 
+bool native_editbox_scrollbars_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "scrollbars" &&
+           native_editbox_scrollbars_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("scrollbars");
+}
+
 bool native_textbox_inputmask_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
