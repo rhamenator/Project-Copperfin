@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4416 under #2996 is implemented: `CopperfinProjectCommands` now guards both `OleMenuCommand` callbacks before invoking `ExecuteAsync()` or `UpdateQueryStatus()`. Preserve the async workflow dispatch and localized status refresh; local managed tests pass, and hosted Visual Studio analyzer validation remains required.
+
 - #4415 under #2996 is implemented: `CopperfinProjectSelection.EnumerateSelectedProjectPaths()` now calls `ThreadHelper.ThrowIfNotOnUIThread()` inside the deferred iterator before touching `DTE.SelectedItems`. Keep the resolver's selected-project precedence unchanged; this removes the VSTHRD010 off-thread COM access warning without changing project paths or machine contracts. Local language-service build and tests pass; hosted Visual Studio validation remains required.
 
 - Exact-head independent POSIX release evidence for `478a6e49`: `scripts/validate-posix.sh` passed all 308 CTest cases. The only skips were `test_build_host_utf8_launcher_paths` (toolchain conditional) and `test_generated_launcher_process` (platform conditional). This validates the current localization, report/label host, package/runtime/debug, security, and PRG slices on POSIX; it does not claim Windows mounted-VFP9, live Visual Studio theme, independent-review, or external launcher-trust gates.

@@ -46,10 +46,15 @@ internal sealed class CopperfinProjectCommands
 
     private void AddCommand(OleMenuCommandService commandService, int commandId, string labelKey, CopperfinProjectOperation operation)
     {
-        var menuCommand = new OleMenuCommand((_, _) => { _ = package.JoinableTaskFactory.RunAsync(() => ExecuteAsync(operation)); }, new CommandID(CommandSet, commandId));
+        var menuCommand = new OleMenuCommand((_, _) =>
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            _ = package.JoinableTaskFactory.RunAsync(() => ExecuteAsync(operation));
+        }, new CommandID(CommandSet, commandId));
         menuCommand.Text = Localization.Text(labelKey);
         menuCommand.BeforeQueryStatus += (_, _) =>
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             menuCommand.Text = Localization.Text(labelKey);
             UpdateQueryStatus(menuCommand);
         };
