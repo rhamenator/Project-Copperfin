@@ -597,6 +597,14 @@ bool native_textbox_strictdateentry_member_name_matches(
            runtime_object.properties.contains("strictdateentry");
 }
 
+bool native_textbox_themes_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "themes" &&
+           native_textbox_themes_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("themes");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

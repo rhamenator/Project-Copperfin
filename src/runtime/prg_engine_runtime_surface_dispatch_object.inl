@@ -252,6 +252,7 @@
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
+            is_native_textbox_themes_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -691,6 +692,9 @@
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
+            if (member_name == "themes") {
+                normalize_native_textbox_themes_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -839,6 +843,9 @@
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
+            if (member_name == "themes") {
+                normalize_native_textbox_themes_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -963,6 +970,7 @@
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
+            is_native_textbox_themes_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

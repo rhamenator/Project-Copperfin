@@ -266,6 +266,11 @@ bool is_native_textbox_strictdateentry_member_name(const RuntimeOleObjectState& 
     return native_textbox_strictdateentry_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_themes_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_themes_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -819,6 +824,20 @@ void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& r
     const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
     const long long normalized = rounded >= 0LL && rounded <= 1LL ? rounded : 1LL;
     strict_date_entry->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_textbox_themes_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_themes_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto themes = runtime_object.properties.find("themes");
+    if (themes == runtime_object.properties.end()) {
+        return;
+    }
+
+    themes->second = make_boolean_value(value_as_bool(themes->second));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

@@ -8398,6 +8398,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_strictdateentry_invariant(runtime_object);
                 }
+                if (normalized_property_name == "themes")
+                {
+                    normalize_native_textbox_themes_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {
