@@ -49,6 +49,7 @@ internal sealed class CopperfinRuntimePauseState
     public List<CopperfinRuntimeNamedValue> Globals { get; set; } = new();
     public List<CopperfinRuntimeEvent> Events { get; set; } = new();
     public List<CopperfinRuntimeWatch> Watches { get; set; } = new();
+    public List<CopperfinRuntimeBreakpoint> Breakpoints { get; set; } = new();
 }
 
 internal sealed class CopperfinRuntimeStackFrame
@@ -77,6 +78,14 @@ internal sealed class CopperfinRuntimeWatch
     public bool Success { get; set; }
     public string Value { get; set; } = string.Empty;
     public string Error { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinRuntimeBreakpoint
+{
+    public string FilePath { get; set; } = string.Empty;
+    public int Line { get; set; }
+    public string ActionId { get; set; } = string.Empty;
+    public string ActionTitle { get; set; } = string.Empty;
 }
 
 internal sealed class CopperfinRuntimeTransportResponse

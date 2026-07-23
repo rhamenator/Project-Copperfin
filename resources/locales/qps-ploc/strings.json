@@ -2681,5 +2681,16 @@
   "AssetEditor.Database.Column.Shape": "[Šĥåþê]",
   "AssetEditor.Database.Column.Details": "[Ðêţåîļš]",
   "AssetEditor.Database.Kind.Connector": "[Çøññêçţøř]",
-  "AssetEditor.Database.Kind.QueryPath": "[Qµêř¥ þåţĥ]"
+  "AssetEditor.Database.Kind.QueryPath": "[Qµêř¥ þåţĥ]",
+  "AssetEditor.Debugger.Tab.Breakpoints": "[Breakpoints]",
+  "AssetEditor.Debugger.BreakpointSpecificationLabel": "[File and line:]",
+  "AssetEditor.Debugger.AddBreakpointButton": "[Add]",
+  "AssetEditor.Debugger.RemoveBreakpointButton": "[Remove]",
+  "AssetEditor.Debugger.ClearBreakpointsButton": "[Clear]",
+  "AssetEditor.Debugger.BreakpointSpecificationRequired": "[Enter a breakpoint file and line.]",
+  "AssetEditor.Debugger.SelectBreakpointRequired": "[Select a breakpoint first.]",
+  "AssetEditor.Debugger.UpdatingBreakpointsStatus": "[Updating breakpoints...]",
+  "AssetEditor.Debugger.Column.File": "[File]",
+  "AssetEditor.Debugger.Column.Line": "[Line]",
+  "AssetEditor.Debugger.Column.Action": "[Action]"
 }

@@ -2681,5 +2681,16 @@
   "AssetEditor.Database.Column.Shape": "Forma",
   "AssetEditor.Database.Column.Details": "Detalhes",
   "AssetEditor.Database.Kind.Connector": "Conector",
-  "AssetEditor.Database.Kind.QueryPath": "Caminho de consulta"
+  "AssetEditor.Database.Kind.QueryPath": "Caminho de consulta",
+  "AssetEditor.Debugger.Tab.Breakpoints": "Pontos de interrup\u00E7\u00E3o",
+  "AssetEditor.Debugger.BreakpointSpecificationLabel": "Arquivo e linha:",
+  "AssetEditor.Debugger.AddBreakpointButton": "Adicionar",
+  "AssetEditor.Debugger.RemoveBreakpointButton": "Remover",
+  "AssetEditor.Debugger.ClearBreakpointsButton": "Limpar",
+  "AssetEditor.Debugger.BreakpointSpecificationRequired": "Insira um arquivo e uma linha para o ponto de interrup\u00E7\u00E3o.",
+  "AssetEditor.Debugger.SelectBreakpointRequired": "Selecione primeiro um ponto de interrup\u00E7\u00E3o.",
+  "AssetEditor.Debugger.UpdatingBreakpointsStatus": "Atualizando pontos de interrup\u00E7\u00E3o...",
+  "AssetEditor.Debugger.Column.File": "Arquivo",
+  "AssetEditor.Debugger.Column.Line": "Linha",
+  "AssetEditor.Debugger.Column.Action": "A\u00E7\u00E3o"
 }

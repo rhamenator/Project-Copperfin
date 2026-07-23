@@ -118,6 +118,39 @@ internal static class CopperfinRuntimeDebugClient
         return ReplayWithCommandAsync(session, "watch:" + expression, localization);
     }
 
+    public static Task<CopperfinRuntimeDebugSession> AddBreakpointAsync(
+        CopperfinRuntimeDebugSession session,
+        string specification,
+        CopperfinLocalization? localization = null)
+    {
+        return SendDebuggerCommandAsync(session, "break:add:" + specification, localization);
+    }
+
+    public static Task<CopperfinRuntimeDebugSession> RemoveBreakpointAsync(
+        CopperfinRuntimeDebugSession session,
+        string specification,
+        CopperfinLocalization? localization = null)
+    {
+        return SendDebuggerCommandAsync(session, "break:remove:" + specification, localization);
+    }
+
+    public static Task<CopperfinRuntimeDebugSession> ClearBreakpointsAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
+    {
+        return SendDebuggerCommandAsync(session, "break:clear", localization);
+    }
+
+    private static Task<CopperfinRuntimeDebugSession> SendDebuggerCommandAsync(
+        CopperfinRuntimeDebugSession session,
+        string command,
+        CopperfinLocalization? localization)
+    {
+        return session.Transport is not null
+            ? AdvanceLiveAsync(session, command, localization)
+            : ReplayWithCommandAsync(session, command, localization);
+    }
+
     internal static void Stop(CopperfinRuntimeDebugSession session)
     {
         session.Transport?.Dispose();
@@ -479,6 +512,12 @@ internal static class CopperfinRuntimeDebugClient
             return;
         }
 
+        if (key.StartsWith("debug.breakpoint[", StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyBreakpointLine(state, key, value);
+            return;
+        }
+
         if (string.Equals(key, "debug.stack.depth", StringComparison.OrdinalIgnoreCase))
         {
             state.StackDepth = ParseInt(value);
@@ -532,6 +571,48 @@ internal static class CopperfinRuntimeDebugClient
         }
 
         return state.Watches[state.Watches.Count - 1];
+    }
+
+    private static void ApplyBreakpointLine(CopperfinRuntimePauseState state, string key, string value)
+    {
+        var closeIndex = key.IndexOf(']');
+        if (closeIndex <= "debug.breakpoint[".Length)
+        {
+            return;
+        }
+
+        var breakpointIndex = ParseInt(key.Substring("debug.breakpoint[".Length, closeIndex - "debug.breakpoint[".Length));
+        while (state.Breakpoints.Count <= breakpointIndex)
+        {
+            state.Breakpoints.Add(new CopperfinRuntimeBreakpoint());
+        }
+
+        var breakpoint = state.Breakpoints[breakpointIndex];
+        var propertySeparator = key.IndexOf("].", StringComparison.Ordinal);
+        if (propertySeparator < 0)
+        {
+            var separator = value.LastIndexOf(':');
+            if (separator > 0 && int.TryParse(value.Substring(separator + 1), out var line))
+            {
+                breakpoint.FilePath = value.Substring(0, separator);
+                breakpoint.Line = line;
+            }
+            else
+            {
+                breakpoint.FilePath = value;
+            }
+            return;
+        }
+
+        var property = key.Substring(propertySeparator + 2);
+        if (string.Equals(property, "xasset.action_id", StringComparison.OrdinalIgnoreCase))
+        {
+            breakpoint.ActionId = value;
+        }
+        else if (string.Equals(property, "xasset.title", StringComparison.OrdinalIgnoreCase))
+        {
+            breakpoint.ActionTitle = value;
+        }
     }
 
     private static string UnescapeDebugLineValue(string value)
@@ -684,7 +765,8 @@ internal static class CopperfinRuntimeDebugClient
                state.Frames.Count > 0 ||
                state.Globals.Count > 0 ||
                state.Events.Count > 0 ||
-               state.Watches.Count > 0;
+               state.Watches.Count > 0 ||
+               state.Breakpoints.Count > 0;
     }
 
     private static string PrepareReplayManifest(string debugManifestPath)

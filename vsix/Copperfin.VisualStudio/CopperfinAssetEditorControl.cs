@@ -110,6 +110,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button debugOutButton;
     private readonly TextBox debuggerWatchExpressionBox;
     private readonly Button debuggerEvaluateWatchButton;
+    private readonly TextBox debuggerBreakpointSpecificationBox;
+    private readonly Button debuggerAddBreakpointButton;
+    private readonly Button debuggerRemoveBreakpointButton;
+    private readonly Button debuggerClearBreakpointsButton;
     private readonly SplitContainer leftExplorerSplit;
     private readonly ListView sectionListView;
     private readonly ListView objectListView;
@@ -124,6 +128,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly ListView debuggerGlobalsView;
     private readonly ListView debuggerEventsView;
     private readonly ListView debuggerWatchesView;
+    private readonly ListView debuggerBreakpointsView;
     private readonly RichTextBox taskListSummaryBox;
     private readonly ListView taskListView;
     private readonly RichTextBox codeReferencesSummaryBox;
@@ -495,6 +500,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         debuggerEvaluateWatchButton.Click += (_, _) => QueueUiAction(EvaluateWatchAsync);
 
+        debuggerBreakpointSpecificationBox = new TextBox
+        {
+            Width = 360,
+            AccessibleName = this.localization.Text("AssetEditor.Debugger.BreakpointSpecificationLabel")
+        };
+        debuggerAddBreakpointButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Debugger.AddBreakpointButton")
+        };
+        debuggerAddBreakpointButton.Click += (_, _) => QueueUiAction(AddBreakpointAsync);
+        debuggerRemoveBreakpointButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Debugger.RemoveBreakpointButton")
+        };
+        debuggerRemoveBreakpointButton.Click += (_, _) => QueueUiAction(RemoveBreakpointAsync);
+        debuggerClearBreakpointsButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.Debugger.ClearBreakpointsButton")
+        };
+        debuggerClearBreakpointsButton.Click += (_, _) => QueueUiAction(ClearBreakpointsAsync);
+
         snapshotStatusLabel = new Label
         {
             AutoSize = true,
@@ -648,6 +677,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerWatchesView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Value"), 520);
         debuggerWatchesView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Status"), 180);
 
+        debuggerBreakpointsView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerBreakpointsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.File"), 520);
+        debuggerBreakpointsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Line"), 90);
+        debuggerBreakpointsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Action"), 360);
+        debuggerBreakpointsView.SelectedIndexChanged += (_, _) =>
+        {
+            debuggerRemoveBreakpointButton.Enabled = currentDebugSession?.Success == true &&
+                                                      debuggerBreakpointsView.SelectedItems.Count == 1;
+        };
+
         debuggerDetailTabs = new TabControl
         {
             Dock = DockStyle.Fill
@@ -662,11 +708,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerEventsPage.Controls.Add(debuggerEventsView);
         var debuggerWatchesPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.Watches"));
         debuggerWatchesPage.Controls.Add(debuggerWatchesView);
+        var debuggerBreakpointsPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.Breakpoints"));
+        debuggerBreakpointsPage.Controls.Add(debuggerBreakpointsView);
         debuggerDetailTabs.TabPages.Add(debuggerCallStackPage);
         debuggerDetailTabs.TabPages.Add(debuggerLocalsPage);
         debuggerDetailTabs.TabPages.Add(debuggerGlobalsPage);
         debuggerDetailTabs.TabPages.Add(debuggerEventsPage);
         debuggerDetailTabs.TabPages.Add(debuggerWatchesPage);
+        debuggerDetailTabs.TabPages.Add(debuggerBreakpointsPage);
 
         taskListSummaryBox = new RichTextBox
         {
@@ -1029,6 +1078,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerWatchPanel.Controls.Add(debuggerWatchExpressionBox);
         debuggerWatchPanel.Controls.Add(debuggerEvaluateWatchButton);
 
+        var debuggerBreakpointPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(8, 0, 8, 4)
+        };
+        debuggerBreakpointPanel.Controls.Add(new Label
+        {
+            AutoSize = true,
+            Padding = new Padding(0, 6, 6, 0),
+            Text = this.localization.Text("AssetEditor.Debugger.BreakpointSpecificationLabel")
+        });
+        debuggerBreakpointPanel.Controls.Add(debuggerBreakpointSpecificationBox);
+        debuggerBreakpointPanel.Controls.Add(debuggerAddBreakpointButton);
+        debuggerBreakpointPanel.Controls.Add(debuggerRemoveBreakpointButton);
+        debuggerBreakpointPanel.Controls.Add(debuggerClearBreakpointsButton);
+
         var debuggerPageHost = new Panel
         {
             Dock = DockStyle.Fill
@@ -1038,6 +1106,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerPageHost.Controls.Add(debuggerStatusPanel);
         debuggerPageHost.Controls.Add(debuggerButtonPanel);
         debuggerPageHost.Controls.Add(debuggerWatchPanel);
+        debuggerPageHost.Controls.Add(debuggerBreakpointPanel);
 
         projectWorkspaceTabs = new TabControl
         {
@@ -3700,6 +3769,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerGlobalsView.Items.Clear();
         debuggerEventsView.Items.Clear();
         debuggerWatchesView.Items.Clear();
+        debuggerBreakpointsView.Items.Clear();
     }
 
     private void PopulateDebuggerDetails(CopperfinRuntimeDebugSession? session)
@@ -3716,6 +3786,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerGlobalsView.BeginUpdate();
         debuggerEventsView.BeginUpdate();
         debuggerWatchesView.BeginUpdate();
+        debuggerBreakpointsView.BeginUpdate();
         try
         {
             foreach (var frame in state.Frames)
@@ -3757,9 +3828,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                         : "AssetEditor.Debugger.WatchFailed")
                 }));
             }
+
+            foreach (var breakpoint in state.Breakpoints)
+            {
+                var action = string.IsNullOrWhiteSpace(breakpoint.ActionTitle)
+                    ? breakpoint.ActionId
+                    : breakpoint.ActionTitle;
+                debuggerBreakpointsView.Items.Add(new ListViewItem(new[]
+                {
+                    breakpoint.FilePath,
+                    breakpoint.Line.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    action
+                }));
+            }
         }
         finally
         {
+            debuggerBreakpointsView.EndUpdate();
             debuggerWatchesView.EndUpdate();
             debuggerEventsView.EndUpdate();
             debuggerGlobalsView.EndUpdate();
@@ -3776,6 +3861,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debugOutButton.Enabled = enabled;
         debugRestartButton.Enabled = CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         debuggerEvaluateWatchButton.Enabled = enabled;
+        debuggerAddBreakpointButton.Enabled = enabled;
+        debuggerRemoveBreakpointButton.Enabled = enabled && debuggerBreakpointsView.SelectedItems.Count == 1;
+        debuggerClearBreakpointsButton.Enabled = enabled && debuggerBreakpointsView.Items.Count > 0;
     }
 
     private async Task EvaluateWatchAsync()
@@ -3796,6 +3884,72 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.EvaluatingWatchStatus");
         SetDebuggerButtonsEnabled(false);
         var session = await CopperfinRuntimeDebugClient.EvaluateWatchAsync(currentDebugSession, expression, this.localization);
+        if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
+        {
+            return;
+        }
+
+        ApplyDebugSession(session);
+        debuggerDetailTabs.SelectedIndex = debuggerDetailTabs.TabPages.Count - 1;
+    }
+
+    private async Task AddBreakpointAsync()
+    {
+        var specification = debuggerBreakpointSpecificationBox.Text.Trim();
+        if (specification.Length == 0)
+        {
+            debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.BreakpointSpecificationRequired");
+            return;
+        }
+
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        await ApplyBreakpointCommandAsync(
+            session => CopperfinRuntimeDebugClient.AddBreakpointAsync(session, specification, this.localization));
+    }
+
+    private async Task RemoveBreakpointAsync()
+    {
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        if (debuggerBreakpointsView.SelectedItems.Count != 1)
+        {
+            debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.SelectBreakpointRequired");
+            return;
+        }
+
+        var selected = debuggerBreakpointsView.SelectedItems[0];
+        var specification = selected.SubItems[0].Text + ":" + selected.SubItems[1].Text;
+        await ApplyBreakpointCommandAsync(
+            session => CopperfinRuntimeDebugClient.RemoveBreakpointAsync(session, specification, this.localization));
+    }
+
+    private async Task ClearBreakpointsAsync()
+    {
+        if (currentDebugSession is null || !currentDebugSession.Success)
+        {
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        await ApplyBreakpointCommandAsync(
+            session => CopperfinRuntimeDebugClient.ClearBreakpointsAsync(session, this.localization));
+    }
+
+    private async Task ApplyBreakpointCommandAsync(
+        Func<CopperfinRuntimeDebugSession, Task<CopperfinRuntimeDebugSession>> command)
+    {
+        debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UpdatingBreakpointsStatus");
+        SetDebuggerButtonsEnabled(false);
+        var session = await command(currentDebugSession!);
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
         {
             return;

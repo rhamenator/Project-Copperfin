@@ -2681,5 +2681,16 @@
   "AssetEditor.Database.Column.Shape": "Shape",
   "AssetEditor.Database.Column.Details": "Details",
   "AssetEditor.Database.Kind.Connector": "Connector",
-  "AssetEditor.Database.Kind.QueryPath": "Query path"
+  "AssetEditor.Database.Kind.QueryPath": "Query path",
+  "AssetEditor.Debugger.Tab.Breakpoints": "Breakpoints",
+  "AssetEditor.Debugger.BreakpointSpecificationLabel": "File and line:",
+  "AssetEditor.Debugger.AddBreakpointButton": "Add",
+  "AssetEditor.Debugger.RemoveBreakpointButton": "Remove",
+  "AssetEditor.Debugger.ClearBreakpointsButton": "Clear",
+  "AssetEditor.Debugger.BreakpointSpecificationRequired": "Enter a breakpoint file and line.",
+  "AssetEditor.Debugger.SelectBreakpointRequired": "Select a breakpoint first.",
+  "AssetEditor.Debugger.UpdatingBreakpointsStatus": "Updating breakpoints...",
+  "AssetEditor.Debugger.Column.File": "File",
+  "AssetEditor.Debugger.Column.Line": "Line",
+  "AssetEditor.Debugger.Column.Action": "Action"
 }
