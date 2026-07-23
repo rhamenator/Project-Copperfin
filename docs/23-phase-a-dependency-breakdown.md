@@ -2040,6 +2040,7 @@ Operationally:
 - pick or create one prompt-sized child from the Current Issue Tree Status unless the live issue tracker shows a higher-weight blocker
 - do not treat the closed Phase A/A3/A4 notes as active runtime queues without fresh issue evidence
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task
+- #4461 (#3217): native PRG visual-control `MousePointer` property contract is implemented and covered. The numeric default is 0; direct and `GETPEM()` / `SETPEM()` / `PUTPEM()` writes normalize to nonnegative integer state, and derived initialization is covered. OS cursor selection, MouseIcon assets, and pixel-level UI behavior remain separate work.
 - #4448 (#3217): native PRG ComboBox/ListBox `ItemTips` property contract is implemented and covered. The mounted VFP9 help confirms the read/write logical default `.F.`; runtime reflection and derived initialization are covered, while tooltip rendering remains UI work.
 - #4449 (#3217): native PRG ListBox `IntegralHeight` read-only property contract is implemented and covered. The mounted VFP9 help confirms the default `.F.` and runtime read-only status; pixel-level height adjustment remains UI work.
 - #4451 (#3217): native PRG ComboBox/ListBox `IncrementalSearch` property contract is implemented and covered. The mounted VFP9 help confirms the read/write logical default `.T.`; keyboard/prefix-search behavior remains UI work.

@@ -583,6 +583,9 @@
                 return make_boolean_value(false);
             }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "mousepointer") {
+                normalize_native_visual_mousepointer_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -648,6 +651,9 @@
                 return make_boolean_value(false);
             }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "mousepointer") {
+                normalize_native_visual_mousepointer_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }

@@ -2,6 +2,80 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_mousepointer";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_mousepointer.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'MousePointer', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'MousePointer', 5)\n"
+            "nDefault = oButton.MousePointer\n"
+            "oButton.MousePointer = 2\n"
+            "nDirect = GETPEM(oButton, 'MousePointer')\n"
+            "lSetPem = SETPEM(oButton, 'MousePointer', 4)\n"
+            "nSetPem = GETPEM(oButton, 'MousePointer')\n"
+            "lPutPem = PUTPEM(oButton, 'MousePointer', 6)\n"
+            "nPutPem = GETPEM(oButton, 'MousePointer')\n"
+            "oButton.MousePointer = -1\n"
+            "nNormalized = oButton.MousePointer\n"
+            "lPropHas = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'MOUSEPOINTER'\n"
+            "        lPropHas = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedMousePointer')\n"
+            "nDerived = oDerived.MousePointer\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedMousePointer AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.MousePointer = 7\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native MousePointer script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ndefault", "0");
+        check("ndirect", "2");
+        check("lsetpem", "true");
+        check("nsetpem", "4");
+        check("lputpem", "true");
+        check("nputpem", "6");
+        check("nnormalized", "0");
+        check("lprophas", "true");
+        check("nderived", "7");
+        expect(state.ole_objects.size() == 2U,
+               "native MousePointer coverage should register the base and derived controls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_caption_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;

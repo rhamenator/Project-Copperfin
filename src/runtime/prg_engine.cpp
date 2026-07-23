@@ -8286,6 +8286,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_listbox_autohidescrollbar_invariant(runtime_object);
                 }
+                if (normalized_property_name == "mousepointer")
+                {
+                    const double mouse_pointer = value_as_number(assigned_value);
+                    runtime_object.properties[normalized_property_name] = make_number_value(
+                        std::isfinite(mouse_pointer) && mouse_pointer >= 0.0
+                            ? static_cast<double>(std::llround(mouse_pointer))
+                            : 0.0);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

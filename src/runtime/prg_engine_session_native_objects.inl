@@ -43,6 +43,13 @@
             }
 
             if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("mousepointer"))
+            {
+                runtime_object.properties["mousepointer"] = make_number_value(0.0);
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("controltiptext"))
             {
                 runtime_object.properties["controltiptext"] = make_string_value("");

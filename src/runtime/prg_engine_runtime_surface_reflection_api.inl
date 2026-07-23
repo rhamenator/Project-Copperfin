@@ -301,6 +301,22 @@ void normalize_native_listbox_autohidescrollbar_invariant(RuntimeOleObjectState&
         std::isfinite(value) && std::llround(value) == 1LL ? 1.0 : 0.0);
 }
 
+void normalize_native_visual_mousepointer_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_visual_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto mouse_pointer = runtime_object.properties.find("mousepointer");
+    if (mouse_pointer == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(mouse_pointer->second);
+    mouse_pointer->second = make_number_value(
+        std::isfinite(value) && value >= 0.0 ? static_cast<double>(std::llround(value)) : 0.0);
+}
+
 void normalize_native_list_control_array_range_invariants(RuntimeOleObjectState& runtime_object)
 {
     if (!is_native_list_control_runtime_object(runtime_object)) {

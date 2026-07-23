@@ -83,6 +83,7 @@ int main()
     test_native_visual_controltiptext_defaults_mutate_and_stay_builtin();
     test_native_visual_tag_defaults_mutate_and_stay_builtin();
     test_native_visual_caption_defaults_mutate_and_stay_builtin();
+    test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     test_native_combobox_style_defaults_mutate_and_stay_builtin();
     test_native_combobox_readonly_defaults_mutate_and_honor_style_guard();
     test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
