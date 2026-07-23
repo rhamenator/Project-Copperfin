@@ -970,6 +970,9 @@ StudioReportSectionSnapshot build_report_section(
     const FieldSelection page_break = first_non_empty_selection(record, {"PAGEBREAK"});
     const FieldSelection column_break = first_non_empty_selection(record, {"COLBREAK"});
     const FieldSelection reset_page = first_non_empty_selection(record, {"RESETPAGE"});
+    const FieldSelection eject_before = first_non_empty_selection(record, {"EJECTBEFOR"});
+    const FieldSelection eject_after = first_non_empty_selection(record, {"EJECTAFTER"});
+    const FieldSelection plain = first_non_empty_selection(record, {"PLAIN"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -1005,7 +1008,16 @@ StudioReportSectionSnapshot build_report_section(
         .column_break_memo_block_number = column_break.memo_block_number,
         .reset_page = reset_page.value,
         .reset_page_field_index = reset_page.field_index,
-        .reset_page_memo_block_number = reset_page.memo_block_number
+        .reset_page_memo_block_number = reset_page.memo_block_number,
+        .eject_before = eject_before.value,
+        .eject_before_field_index = eject_before.field_index,
+        .eject_before_memo_block_number = eject_before.memo_block_number,
+        .eject_after = eject_after.value,
+        .eject_after_field_index = eject_after.field_index,
+        .eject_after_memo_block_number = eject_after.memo_block_number,
+        .plain = plain.value,
+        .plain_field_index = plain.field_index,
+        .plain_memo_block_number = plain.memo_block_number
     };
 }
 

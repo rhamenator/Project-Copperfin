@@ -36,7 +36,10 @@ void test_build_report_layout_groups_band_objects() {
                 value("HEIGHT", "2000.000", 43U),
                 value("PAGEBREAK", "T", 44U),
                 value("COLBREAK", "F", 45U),
-                value("RESETPAGE", "T", 46U)
+                value("RESETPAGE", "T", 46U),
+                value("EJECTBEFOR", "T", 47U),
+                value("EJECTAFTER", "F", 48U),
+                value("PLAIN", "T", 49U)
             }
         },
         {
@@ -49,7 +52,10 @@ void test_build_report_layout_groups_band_objects() {
                 value("HEIGHT", "5000.000"),
                 value("PAGEBREAK", "", 44U),
                 value("COLBREAK", "", 45U),
-                value("RESETPAGE", "", 46U)
+                value("RESETPAGE", "", 46U),
+                value("EJECTBEFOR", "", 47U),
+                value("EJECTAFTER", "", 48U),
+                value("PLAIN", "", 49U)
             }
         },
         {
@@ -159,7 +165,10 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].page_break.empty() &&
            layout.sections[1].page_break_field_index == copperfin::studio::StudioReportMissingFieldIndex &&
            layout.sections[1].column_break.empty() &&
-           layout.sections[1].reset_page.empty(),
+           layout.sections[1].reset_page.empty() &&
+           layout.sections[1].eject_before.empty() &&
+           layout.sections[1].eject_after.empty() &&
+           layout.sections[1].plain.empty(),
         "#4531: blank section pagination flags should remain blank without fabricating provenance");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
@@ -183,6 +192,15 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[0].column_break == "F" && layout.sections[0].column_break_field_index == 5U &&
            layout.sections[0].column_break_memo_block_number == 45U,
         "#4531: report sections should preserve COLBREAK values and source provenance");
+    expect(layout.sections[0].eject_before == "T" && layout.sections[0].eject_before_field_index == 7U &&
+           layout.sections[0].eject_before_memo_block_number == 47U,
+        "#4532: report sections should preserve EJECTBEFOR values and source provenance");
+    expect(layout.sections[0].eject_after == "F" && layout.sections[0].eject_after_field_index == 8U &&
+           layout.sections[0].eject_after_memo_block_number == 48U,
+        "#4532: report sections should preserve EJECTAFTER values and source provenance");
+    expect(layout.sections[0].plain == "T" && layout.sections[0].plain_field_index == 9U &&
+           layout.sections[0].plain_memo_block_number == 49U,
+        "#4532: report sections should preserve PLAIN values and source provenance");
     expect(layout.sections[0].reset_page == "T" && layout.sections[0].reset_page_field_index == 6U &&
            layout.sections[0].reset_page_memo_block_number == 46U,
         "#4531: report sections should preserve RESETPAGE values and source provenance");

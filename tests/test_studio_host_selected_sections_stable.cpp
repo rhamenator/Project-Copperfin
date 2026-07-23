@@ -79,14 +79,17 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "UNIQUEID", .type = 'C', .length = 24U},
         {.name = "PAGEBREAK", .type = 'L', .length = 1U},
         {.name = "COLBREAK", .type = 'L', .length = 1U},
-        {.name = "RESETPAGE", .type = 'L', .length = 1U}
+        {.name = "RESETPAGE", .type = 'L', .length = 1U},
+        {.name = "EJECTBEFOR", .type = 'L', .length = 1U},
+        {.name = "EJECTAFTER", .type = 'L', .length = 1U},
+        {.name = "PLAIN", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T."},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", ""},
-        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", ""},
-        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", ""}
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T."},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", ""},
+        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", ""},
+        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -228,6 +231,9 @@ void run_live_section_selection(
             "--property-name", "PAGEBREAK", "--property-value", "false",
             "--property-name", "COLBREAK", "--property-value", "true",
             "--property-name", "RESETPAGE", "--property-value", "false",
+            "--property-name", "EJECTBEFOR", "--property-value", "false",
+            "--property-name", "EJECTAFTER", "--property-value", "true",
+            "--property-name", "PLAIN", "--property-value", "false",
             "--json"
         },
         temp_root);
@@ -245,6 +251,12 @@ void run_live_section_selection(
                     issue_prefix + " should persist COLBREAK edits");
     expect_contains(reopened_process.stdout_text, "\"resetPage\": \"false\"",
                     issue_prefix + " should persist RESETPAGE edits");
+    expect_contains(reopened_process.stdout_text, "\"ejectBefore\": \"false\"",
+                    issue_prefix + " should persist EJECTBEFOR edits");
+    expect_contains(reopened_process.stdout_text, "\"ejectAfter\": \"true\"",
+                    issue_prefix + " should persist EJECTAFTER edits");
+    expect_contains(reopened_process.stdout_text, "\"plain\": \"false\"",
+                    issue_prefix + " should persist PLAIN edits");
 }
 
 void run_deleted_section_selection(
@@ -345,6 +357,12 @@ void run_deleted_section_selection(
                     issue_prefix + " should expose deleted-section COLBREAK values");
     expect_contains(section_process.stdout_text, "\"resetPage\": \"true\"",
                     issue_prefix + " should expose deleted-section RESETPAGE values");
+    expect_contains(section_process.stdout_text, "\"ejectBefore\": \"true\"",
+                    issue_prefix + " should expose deleted-section EJECTBEFOR values");
+    expect_contains(section_process.stdout_text, "\"ejectAfter\": \"false\"",
+                    issue_prefix + " should expose deleted-section EJECTAFTER values");
+    expect_contains(section_process.stdout_text, "\"plain\": \"true\"",
+                    issue_prefix + " should expose deleted-section PLAIN values");
 }
 
 void test_studio_host_json_preserves_selected_sections_stable_selection(const std::string& studio_host_path) {

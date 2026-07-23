@@ -303,6 +303,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "RESETPAGE",
             localization.Text("AssetEditor.Property.ResetPage"),
             section.ResetPage);
+        selection.AddEditableBool(
+            "EJECTBEFOR",
+            localization.Text("AssetEditor.Property.EjectBefore"),
+            section.EjectBefore);
+        selection.AddEditableBool(
+            "EJECTAFTER",
+            localization.Text("AssetEditor.Property.EjectAfter"),
+            section.EjectAfter);
+        selection.AddEditableBool(
+            "PLAIN",
+            localization.Text("AssetEditor.Property.ConstantBandHeight"),
+            section.Plain);
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
             section.ExpressionFieldIndex.HasValue ||

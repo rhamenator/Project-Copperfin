@@ -262,6 +262,9 @@ internal static partial class Program
                         PageBreak = "true",
                         ColumnBreak = "false",
                         ResetPage = "true",
+                        EjectBefore = "true",
+                        EjectAfter = "false",
+                        Plain = "true",
                         DeletedObjectCount = 1,
                         Expression = "customer.company",
                         ExpressionFieldIndex = 3,
@@ -310,6 +313,12 @@ internal static partial class Program
                 "Report section property-grid selection should serialize COLBREAK edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RESETPAGE", false, "false",
                 "Report section property-grid selection should serialize RESETPAGE edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "EJECTBEFOR", false, "false",
+                "Report section property-grid selection should serialize EJECTBEFOR edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "EJECTAFTER", true, "true",
+                "Report section property-grid selection should serialize EJECTAFTER edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "PLAIN", false, "false",
+                "Report section property-grid selection should serialize PLAIN edits through the shared update path");
 
             TypeDescriptor.GetProperties(editableSelection)["EXPR"]?.SetValue(editableSelection, "customer.region");
             Expect(editableSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
@@ -326,6 +335,10 @@ internal static partial class Program
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar en una columna nueva", StringComparison.Ordinal)) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Restablecer número de página", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize pagination flag labels");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expulsar antes", StringComparison.Ordinal)) &&
+               spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expulsar después", StringComparison.Ordinal)) &&
+               spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura de banda constante", StringComparison.Ordinal)),
+            "Spanish report section property-grid selection should localize optional-band flag labels");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should expose localized record metadata");
@@ -368,6 +381,10 @@ internal static partial class Program
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Iniciar em uma nova coluna", StringComparison.Ordinal)) &&
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Redefinir número da página", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize pagination flag labels");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Ejetar antes", StringComparison.Ordinal)) &&
+               portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Ejetar depois", StringComparison.Ordinal)) &&
+               portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura constante da banda", StringComparison.Ordinal)),
+            "Portuguese report section property-grid selection should localize optional-band flag labels");
         Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should expose localized record metadata");
@@ -409,6 +426,10 @@ internal static partial class Program
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnBreak"), StringComparison.Ordinal)) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ResetPage"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route pagination flag labels through the shared catalog");
+        Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.EjectBefore"), StringComparison.Ordinal)) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.EjectAfter"), StringComparison.Ordinal)) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ConstantBandHeight"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route optional-band flag labels through the shared catalog");
         Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "41", StringComparison.Ordinal) &&

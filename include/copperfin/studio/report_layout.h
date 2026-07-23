@@ -121,6 +121,15 @@ struct StudioReportSectionSnapshot {
     std::string reset_page{};
     std::size_t reset_page_field_index = StudioReportMissingFieldIndex;
     std::uint32_t reset_page_memo_block_number = 0;
+    std::string eject_before{};
+    std::size_t eject_before_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t eject_before_memo_block_number = 0;
+    std::string eject_after{};
+    std::size_t eject_after_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t eject_after_memo_block_number = 0;
+    std::string plain{};
+    std::size_t plain_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t plain_memo_block_number = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 

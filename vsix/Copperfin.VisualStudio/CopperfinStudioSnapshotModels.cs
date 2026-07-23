@@ -253,6 +253,15 @@ internal sealed class CopperfinStudioReportSection
     public string ResetPage { get; set; } = string.Empty;
     public int? ResetPageFieldIndex { get; set; }
     public int ResetPageMemoBlockNumber { get; set; }
+    public string EjectBefore { get; set; } = string.Empty;
+    public int? EjectBeforeFieldIndex { get; set; }
+    public int EjectBeforeMemoBlockNumber { get; set; }
+    public string EjectAfter { get; set; } = string.Empty;
+    public int? EjectAfterFieldIndex { get; set; }
+    public int EjectAfterMemoBlockNumber { get; set; }
+    public string Plain { get; set; } = string.Empty;
+    public int? PlainFieldIndex { get; set; }
+    public int PlainMemoBlockNumber { get; set; }
     public int DeletedObjectCount { get; set; }
     public List<CopperfinStudioReportLayoutObject> Objects { get; set; } = new();
 }
