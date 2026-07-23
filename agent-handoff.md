@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Exact-head POSIX evidence for `beffd0d7`: `scripts/validate-posix.sh` passed all 308 CTest cases in 325.46 seconds. The only skips were `test_build_host_utf8_launcher_paths` (toolchain conditional) and `test_generated_launcher_process` (POSIX conditional). This confirms the current native localization, report/label, package/runtime/debug, security, and PRG/xAsset slices on POSIX; it does not replace hosted Windows VSIX/theme, mounted-VFP9, launcher-trust, or safety-review gates.
+
 - #4419 under #27 is implemented: FoxPro QuickInfo now uses `IAsyncQuickInfoSourceProvider`/`IAsyncQuickInfoSource` and returns `QuickInfoItem` with the existing tracking span and project-aware/localized description. Cancellation and disposal return no item; preserve token text, language-service identities, and machine contracts. Local language-service build/tests pass; hosted Windows VSIX validation remains required.
 
 - #4418 under #2996 is implemented: `SelectionPropertyDescriptor.GetValue`/`SetValue` match the nullable `PropertyDescriptor` component contract and return safely for null or unrelated components, while valid property-grid access remains unchanged. Local language-service and designer-smoke projects build with zero warnings and language-service tests pass; hosted designer/VSIX validation remains required.
