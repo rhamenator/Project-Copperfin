@@ -227,6 +227,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_century_member_name_matches(runtime_object, member_name) ||
                native_textbox_datemark_member_name_matches(runtime_object, member_name) ||
                native_textbox_hours_member_name_matches(runtime_object, member_name) ||
+               native_textbox_seconds_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||

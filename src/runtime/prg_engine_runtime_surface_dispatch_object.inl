@@ -259,6 +259,7 @@
             is_native_textbox_century_member_name(*runtime_object, property_name) ||
             is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
+            is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
@@ -719,6 +720,9 @@
             if (member_name == "hours") {
                 normalize_native_textbox_hours_invariant(*runtime_object);
             }
+            if (member_name == "seconds") {
+                normalize_native_textbox_seconds_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -888,6 +892,9 @@
             if (member_name == "hours") {
                 normalize_native_textbox_hours_invariant(*runtime_object);
             }
+            if (member_name == "seconds") {
+                normalize_native_textbox_seconds_invariant(*runtime_object);
+            }
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
@@ -1019,6 +1026,7 @@
             is_native_textbox_century_member_name(*runtime_object, property_name) ||
             is_native_textbox_datemark_member_name(*runtime_object, property_name) ||
             is_native_textbox_hours_member_name(*runtime_object, property_name) ||
+            is_native_textbox_seconds_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||

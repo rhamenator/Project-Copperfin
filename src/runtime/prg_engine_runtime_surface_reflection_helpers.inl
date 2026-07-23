@@ -653,6 +653,14 @@ bool native_textbox_hours_member_name_matches(
            runtime_object.properties.contains("hours");
 }
 
+bool native_textbox_seconds_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "seconds" &&
+           native_textbox_seconds_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("seconds");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
