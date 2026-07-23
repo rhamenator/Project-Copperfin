@@ -359,6 +359,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     add_highlight("BOTTOM");
     add_highlight("TOP");
     add_highlight("FONTFACE");
+    add_highlight("FONTSTYLE");
     add_highlight("FONTSIZE");
     add_highlight("MODE");
 
