@@ -180,15 +180,26 @@ bool write_native_list_control_selected_slot(
     if (selected) {
         listindex->second = make_number_value(static_cast<double>(slot + 1U));
     } else if (std::llround(value_as_number(listindex->second)) == static_cast<long long>(slot + 1U)) {
-        if (const auto replacement = find_last_native_list_control_selected_slot(runtime_object);
-            replacement.has_value()) {
-            listindex->second = make_number_value(static_cast<double>(*replacement + 1U));
-        } else {
-            listindex->second = make_number_value(0.0);
+        // In a multi-select ListBox, ListIndex is the focused row even when
+        // that row is no longer selected. Single-selection controls retain
+        // the existing deterministic fallback to another selected row.
+        if (!native_list_control_allows_multiple_selection(runtime_object)) {
+            if (const auto replacement = find_last_native_list_control_selected_slot(runtime_object);
+                replacement.has_value()) {
+                listindex->second = make_number_value(static_cast<double>(*replacement + 1U));
+            } else {
+                listindex->second = make_number_value(0.0);
+            }
         }
     }
 
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    if (!selected && native_list_control_allows_multiple_selection(runtime_object) &&
+        slot < runtime_object.list_selected.size()) {
+        // Display synchronization keeps the focused row's derived value
+        // current; it must not undo an explicit multi-select deselection.
+        runtime_object.list_selected[slot] = false;
+    }
     return true;
 }
 

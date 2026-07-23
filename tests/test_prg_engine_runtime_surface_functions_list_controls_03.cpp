@@ -326,6 +326,8 @@ namespace copperfin::runtime_surface_tests
             "oPlain.Selected(2) = .F.\n"
             "lSelected2AfterClear = oPlain.Selected(2)\n"
             "nIndexAfterClear = oPlain.ListIndex\n"
+            "nItemIdAfterClear = oPlain.ListItemID\n"
+            "cValueAfterClear = oPlain.Value\n"
             "cDisplayAfterClear = oPlain.DisplayValue\n"
             "oPlain.Selected(3) = .T.\n"
             "oPlain.RemoveItem(2)\n"
@@ -348,7 +350,9 @@ namespace copperfin::runtime_surface_tests
             "    PROCEDURE Init\n"
             "        THIS.AddItem('North')\n"
             "        THIS.AddItem('South')\n"
+            "        THIS.Selected(1) = .T.\n"
             "        THIS.Selected(2) = .T.\n"
+            "        THIS.Selected(2) = .F.\n"
             "    ENDPROC\n"
             "ENDDEFINE\n");
 
@@ -378,8 +382,10 @@ namespace copperfin::runtime_surface_tests
         check("nindexaftersecondselect", "2");
         check("cdisplayaftersecondselect", "Beta");
         check("lselected2afterclear", "false");
-        check("nindexafterclear", "1");
-        check("cdisplayafterclear", "Alpha");
+        check("nindexafterclear", "2");
+        check("nitemidafterclear", "2");
+        check("cvalueafterclear", "Beta");
+        check("cdisplayafterclear", "Beta");
         check("ncountafterremove", "2");
         check("lselected1afterremove", "true");
         check("lselected2afterremove", "true");
@@ -388,8 +394,8 @@ namespace copperfin::runtime_surface_tests
         check("lsetpemselected1", "true");
         check("lselected1aftersetpem", "true");
         check("lsetpemmissing", "false");
-        check("lseedrow1", "false");
-        check("lseedrow2", "true");
+        check("lseedrow1", "true");
+        check("lseedrow2", "false");
         check("nseedindex", "2");
         check("cseeddisplay", "South");
 
@@ -416,8 +422,8 @@ namespace copperfin::runtime_surface_tests
                        copperfin::runtime::format_value(plain_listindex->second) == "1",
                    "plain ListBox Selected coverage should keep ListIndex synchronized after the final SETPEM() selection change");
             expect(seed_list.list_selected.size() == 2U &&
-                       !seed_list.list_selected[0] &&
-                       seed_list.list_selected[1],
+                       seed_list.list_selected[0] &&
+                       !seed_list.list_selected[1],
                    "derived ListBox Selected coverage should preserve Init-time selection bits");
             expect(seed_listindex != seed_list.properties.end() &&
                        copperfin::runtime::format_value(seed_listindex->second) == "2",

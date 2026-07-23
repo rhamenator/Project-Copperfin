@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4420 under #3217 is implemented locally: native ListBox multi-select now keeps `ListIndex` on the focused row when that row is explicitly deselected, while `Selected(n)`/`SelectedID(n)` bits remain independent and `ListItemID`, `Value`, and `DisplayValue` stay focused-row coherent. Single-selection fallback behavior remains unchanged. Focused runtime-surface coverage passes; push and hosted validation are still pending.
+
 - The Phase A issue-tree table now records #4069 as closed: native Form/FormSet `Load` dispatch is shipped through the stack-frugal iterative method-frame path. Do not reopen it without fresh regression evidence; choose a new prompt-sized #3217 child from live GitHub state before adding native runtime work.
 
 - #4417 follow-up in `b390519c`: the Windows descendant-held-pipe success fixture now allows a 10-second configured process-runner bound instead of a brittle 5-second wall-clock assertion. It still requires successful root exit, captured output, no timeout, and return before the configured bound. This hardens hosted-test scheduling tolerance without changing production process-runner behavior; focused local language-service tests pass and hosted new-head VSIX validation remains required.

@@ -5,6 +5,7 @@ This document anchors Copperfin's command/runtime backlog to the official Visual
 This is a reference-coverage document, not the active slice-selection authority. Choose active work from live GitHub issue state, `agents.md`, `agent-handoff.md`, and `docs/23-phase-a-dependency-breakdown.md`; use this file when the chosen slice touches VFP/runtime language coverage.
 
 - Runtime reflection note: documented VFP `PUTPEM(oObject, cPEMName, eValue)` is the canonical write-by-name function. Copperfin accepts `PUTPEM()` on the shared runtime path and retains the historical `SETPEM()` spelling as a compatibility alias; new VFP-facing examples and coverage should use `PUTPEM()`.
+- Runtime/list-control focus note: native ListBox multi-select now preserves `ListIndex` as the focused row when `Selected(n) = .F.` clears that row, even when another row remains selected. Focused-row `ListItemID`, `Value`, and `DisplayValue` remain coherent with independent selection bits, while single-selection controls retain their existing fallback behavior; focused and derived-Init regressions are covered under #3217/#4420.
 
 ## Primary Sources
 
