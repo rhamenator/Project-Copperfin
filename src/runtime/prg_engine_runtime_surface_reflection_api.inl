@@ -181,6 +181,11 @@ bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_o
     return native_visual_caption_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_alignment_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -472,6 +477,23 @@ void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectS
     }
 
     incremental_search->second = make_boolean_value(value_as_bool(incremental_search->second));
+}
+
+void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_alignment_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto alignment = runtime_object.properties.find("alignment");
+    if (alignment == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(alignment->second);
+    const long long normalized =
+        !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 2LL);
+    alignment->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

@@ -153,6 +153,14 @@
                 runtime_object.properties["forecolor"] = make_int64_value(0);
             }
 
+            if ((normalized_base_class == "editbox" ||
+                 normalized_base_class == "label" ||
+                 normalized_base_class == "textbox") &&
+                !runtime_object.properties.contains("alignment"))
+            {
+                runtime_object.properties["alignment"] = make_number_value(0.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
