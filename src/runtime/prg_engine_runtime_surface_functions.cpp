@@ -209,6 +209,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_passwordchar_member_name_matches(runtime_object, member_name) ||
                native_textbox_maxlength_member_name_matches(runtime_object, member_name) ||
                native_textbox_specialeffect_member_name_matches(runtime_object, member_name) ||
+               native_textbox_borderstyle_member_name_matches(runtime_object, member_name) ||
                native_selectonentry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||

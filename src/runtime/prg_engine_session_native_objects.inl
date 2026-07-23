@@ -191,6 +191,12 @@
                 runtime_object.properties["specialeffect"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("borderstyle"))
+            {
+                runtime_object.properties["borderstyle"] = make_number_value(1.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
