@@ -2703,5 +2703,6 @@
   "AssetEditor.Property.PrintWhen": "[Print When]",
   "AssetEditor.Property.PrintWhenGroup": "[When Group Changes]",
   "AssetEditor.Property.PrintWhenRepeated": "[Print Repeated Values]",
-  "AssetEditor.Property.PrintWhenValueChanges": "[Print Only When Value Changes]"
+  "AssetEditor.Property.PrintWhenValueChanges": "[Print Only When Value Changes]",
+  "AssetEditor.Property.PrintWhenNewPageColumn": "[In First Whole Band of New Page/Column]"
 }

@@ -2703,5 +2703,6 @@
   "AssetEditor.Property.PrintWhen": "Quando imprimir",
   "AssetEditor.Property.PrintWhenGroup": "Quando o grupo muda",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",
-  "AssetEditor.Property.PrintWhenValueChanges": "Imprimir somente quando o valor muda"
+  "AssetEditor.Property.PrintWhenValueChanges": "Imprimir somente quando o valor muda",
+  "AssetEditor.Property.PrintWhenNewPageColumn": "Na primeira banda inteira da nova p\u00E1gina/coluna"
 }

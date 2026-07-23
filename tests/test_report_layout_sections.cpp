@@ -62,7 +62,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("SUPEXPR", "customer.company > 0", 313U),
                 value("SUPGROUP", "6"),
                 value("SUPALWAYS", "1"),
-                value("SUPVALCHNG", "0")
+                value("SUPVALCHNG", "0"),
+                value("SUPRPCOL", "0")
             }
         },
         {
@@ -266,6 +267,19 @@ void test_build_report_layout_groups_band_objects() {
         expect(print_when_value_changes_highlight->value == "0" && print_when_value_changes_highlight->field_index == 12U &&
                print_when_value_changes_highlight->memo_block_number == 0U,
             "#4513: SUPVALCHNG highlights should preserve value and source field provenance");
+    }
+    const auto print_when_page_column_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "SUPRPCOL";
+        });
+    expect(print_when_page_column_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4514: report layout highlights should include the SUPRPCOL page-column setting");
+    if (print_when_page_column_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(print_when_page_column_highlight->value == "0" && print_when_page_column_highlight->field_index == 13U &&
+               print_when_page_column_highlight->memo_block_number == 0U,
+            "#4514: SUPRPCOL highlights should preserve value and source field provenance");
     }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,
