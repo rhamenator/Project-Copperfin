@@ -359,6 +359,20 @@ void normalize_native_list_control_nulldisplay_invariant(RuntimeOleObjectState& 
     null_display->second = make_string_value(value_as_string(null_display->second));
 }
 
+void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto column_lines = runtime_object.properties.find("columnlines");
+    if (column_lines == runtime_object.properties.end()) {
+        return;
+    }
+
+    column_lines->second = make_boolean_value(value_as_bool(column_lines->second));
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -512,6 +526,11 @@ bool is_native_displaycount_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_nulldisplay_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_nulldisplay_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_columnlines_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_columnlines_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

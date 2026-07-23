@@ -245,6 +245,13 @@
 
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("columnlines"))
+            {
+                runtime_object.properties["columnlines"] = make_boolean_value(true);
+            }
+
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("listindex"))
             {
                 runtime_object.properties["listindex"] = make_number_value(0.0);
