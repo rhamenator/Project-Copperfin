@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4415 under #2996 is implemented: `CopperfinProjectSelection.EnumerateSelectedProjectPaths()` now calls `ThreadHelper.ThrowIfNotOnUIThread()` inside the deferred iterator before touching `DTE.SelectedItems`. Keep the resolver's selected-project precedence unchanged; this removes the VSTHRD010 off-thread COM access warning without changing project paths or machine contracts. Local language-service build and tests pass; hosted Visual Studio validation remains required.
+
 - Exact-head independent POSIX release evidence for `478a6e49`: `scripts/validate-posix.sh` passed all 308 CTest cases. The only skips were `test_build_host_utf8_launcher_paths` (toolchain conditional) and `test_generated_launcher_process` (platform conditional). This validates the current localization, report/label host, package/runtime/debug, security, and PRG slices on POSIX; it does not claim Windows mounted-VFP9, live Visual Studio theme, independent-review, or external launcher-trust gates.
 
 - #4414 under #3866 is implemented as an explicit MVP limitation: when `require_verified_file_byte_overrides` is enabled, `ALTER TABLE` fails before transaction backup or physical mutation. This prevents strict sessions from reopening an admitted DBF by logical path until exact-object mutation/publication exists. The diagnostic is catalog-backed in en-US, es-419, pt-BR, and qps-ploc; qps-ploc preserves the invariant `ALTER TABLE` token. Keep ordinary non-strict ALTER TABLE behavior unchanged and do not weaken the guard by reading the stale admitted snapshot after a write.

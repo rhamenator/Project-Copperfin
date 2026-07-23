@@ -27,6 +27,8 @@ internal static class CopperfinProjectSelection
 
     private static IEnumerable<string?> EnumerateSelectedProjectPaths(DTE? dte)
     {
+        ThreadHelper.ThrowIfNotOnUIThread();
+
         var selectedItems = dte?.SelectedItems;
         if (selectedItems is null || selectedItems.Count <= 0)
         {
