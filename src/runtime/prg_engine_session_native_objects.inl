@@ -263,6 +263,18 @@
                 runtime_object.properties["themes"] = make_boolean_value(true);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("selectedbackcolor"))
+            {
+                runtime_object.properties["selectedbackcolor"] = make_int64_value(8421504LL);
+            }
+
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("selectedforecolor"))
+            {
+                runtime_object.properties["selectedforecolor"] = make_int64_value(16777215LL);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {

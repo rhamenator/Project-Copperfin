@@ -8402,6 +8402,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_themes_invariant(runtime_object);
                 }
+                if (normalized_property_name == "selectedbackcolor")
+                {
+                    normalize_native_textbox_selectedbackcolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "selectedforecolor")
+                {
+                    normalize_native_textbox_selectedforecolor_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

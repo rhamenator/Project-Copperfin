@@ -605,6 +605,22 @@ bool native_textbox_themes_member_name_matches(
            runtime_object.properties.contains("themes");
 }
 
+bool native_textbox_selectedbackcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "selectedbackcolor" &&
+           native_textbox_selectedbackcolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("selectedbackcolor");
+}
+
+bool native_textbox_selectedforecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "selectedforecolor" &&
+           native_textbox_selectedforecolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("selectedforecolor");
+}
+
 bool native_visual_backcolor_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
