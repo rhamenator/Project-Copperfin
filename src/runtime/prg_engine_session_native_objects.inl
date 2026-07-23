@@ -275,6 +275,12 @@
                 runtime_object.properties["selectedforecolor"] = make_int64_value(16777215LL);
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("dateformat"))
+            {
+                runtime_object.properties["dateformat"] = make_number_value(0.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {

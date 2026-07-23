@@ -8410,6 +8410,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_selectedforecolor_invariant(runtime_object);
                 }
+                if (normalized_property_name == "dateformat")
+                {
+                    normalize_native_textbox_dateformat_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

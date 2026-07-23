@@ -149,6 +149,10 @@ bool native_textbox_selectedforecolor_runtime_object(const RuntimeOleObjectState
     return native_textbox_inputmask_runtime_object(runtime_object);
 }
 
+bool native_textbox_dateformat_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_textbox_inputmask_runtime_object(runtime_object);
+}
+
 bool native_tabindex_runtime_object_matches(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;
