@@ -114,6 +114,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox dataExplorerSummaryBox;
     private readonly ListView dataExplorerView;
     private readonly RichTextBox objectBrowserSummaryBox;
+    private readonly ListView objectBrowserView;
     private readonly RichTextBox toolboxSummaryBox;
     private readonly ListView toolboxPaletteList;
     private readonly Button toolboxCreateButton;
@@ -672,6 +673,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser")
         };
 
+        objectBrowserView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        objectBrowserView.Columns.Add(this.localization.Text("AssetEditor.ObjectBrowser.Column.Kind"), 120);
+        objectBrowserView.Columns.Add(this.localization.Text("AssetEditor.ObjectBrowser.Column.Title"), 220);
+        objectBrowserView.Columns.Add(this.localization.Text("AssetEditor.ObjectBrowser.Column.File"), 320);
+        objectBrowserView.Columns.Add(this.localization.Text("AssetEditor.ObjectBrowser.Column.Detail"), 420);
+        objectBrowserView.DoubleClick += (_, _) => TryActivateSelectedObjectNode();
+        objectBrowserView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TryActivateSelectedObjectNode();
+        };
+
         toolboxSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -896,7 +922,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             Dock = DockStyle.Fill
         };
-        objectBrowserPageHost.Controls.Add(objectBrowserSummaryBox);
+        var objectBrowserSummaryPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 150
+        };
+        objectBrowserSummaryPanel.Controls.Add(objectBrowserSummaryBox);
+        objectBrowserPageHost.Controls.Add(objectBrowserView);
+        objectBrowserPageHost.Controls.Add(objectBrowserSummaryPanel);
         objectBrowserPageHost.Controls.Add(objectBrowserOptionsPanel);
         objectBrowserPageHost.Controls.Add(objectBrowserFilterBox);
         var objectBrowserPage = new TabPage(this.localization.Text("AssetEditor.Tab.ObjectBrowser"));
@@ -1149,6 +1182,28 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    public bool TryActivateSelectedObjectNode()
+    {
+        if (currentSnapshot?.AssetFamily != "project" ||
+            objectBrowserView.SelectedItems.Count != 1 ||
+            objectBrowserView.SelectedItems[0].Tag is not CopperfinProjectObjectNode node ||
+            node.Excluded ||
+            string.IsNullOrWhiteSpace(node.FilePath) ||
+            !File.Exists(node.FilePath))
+        {
+            return false;
+        }
+
+        var openDocument = OpenDocumentRequested;
+        if (openDocument is null)
+        {
+            return false;
+        }
+
+        openDocument(node.FilePath);
+        return true;
+    }
+
     public string GetUndoCommandText()
     {
         if (TryFindFocusedUndoTextBox() is not null)
@@ -1300,6 +1355,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
         dataExplorerView.Items.Clear();
         objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
+        objectBrowserView.Items.Clear();
         toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
         toolboxPaletteList.Items.Clear();
         toolboxContextComboBox.Items.Clear();
@@ -2686,6 +2742,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         codeReferencesSummaryBox.Text = BuildCodeReferenceSummary(currentProjectInsights);
         PopulateDataExplorer(currentProjectInsights, dataExplorerFilterBox.Text);
         dataExplorerSummaryBox.Text = BuildDataExplorerSummary(currentSnapshot, currentProjectInsights, dataExplorerFilterBox.Text);
+        PopulateObjectBrowser(currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
         objectBrowserSummaryBox.Text = BuildObjectBrowserSummary(currentSnapshot, currentProjectInsights, objectBrowserFilterBox.Text, objectBrowserHideProjectCheckBox.Checked);
         toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
         buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
@@ -2766,6 +2823,49 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 asset.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                 BuildProjectInsightArtifactKindDisplayText(asset.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                 asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+    }
+
+    private void PopulateObjectBrowser(CopperfinProjectInsights? insights, string? filter, bool hideProjectRecords)
+    {
+        objectBrowserView.Items.Clear();
+        if (insights is null)
+        {
+            return;
+        }
+
+        foreach (var node in FilterObjectNodes(insights, filter, hideProjectRecords))
+        {
+            var item = new ListViewItem(BuildProjectInsightArtifactKindDisplayText(node.Kind));
+            item.SubItems.Add(node.Title);
+            item.SubItems.Add(node.FilePath);
+            item.SubItems.Add(BuildObjectBrowserNodeDetailDisplayText(node));
+            item.Tag = node;
+            if (node.Excluded)
+            {
+                item.ForeColor = Color.Firebrick;
+            }
+
+            objectBrowserView.Items.Add(item);
+        }
+    }
+
+    private List<CopperfinProjectObjectNode> FilterObjectNodes(
+        CopperfinProjectInsights insights,
+        string? filter,
+        bool hideProjectRecords)
+    {
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        return insights.ObjectNodes
+            .Where(node =>
+                (!hideProjectRecords || !string.Equals(node.Kind, "Project Header", StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(normalizedFilter) ||
+                 node.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 BuildProjectInsightArtifactKindDisplayText(node.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 BuildObjectBrowserNodeDetailDisplayText(node).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
             .ToList();
     }
 
@@ -4263,17 +4363,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         var normalizedFilter = (filter ?? string.Empty).Trim();
-        var filteredNodes = insights.ObjectNodes
-            .Where(node =>
-                (!hideProjectRecords || !string.Equals(node.Kind, "Project Header", StringComparison.OrdinalIgnoreCase)) &&
-                (string.IsNullOrWhiteSpace(normalizedFilter) ||
-                 node.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 node.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 BuildProjectInsightArtifactKindDisplayText(node.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 BuildObjectBrowserNodeDetailDisplayText(node).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 node.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                 node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
-            .ToList();
+        var filteredNodes = FilterObjectNodes(insights, filter, hideProjectRecords);
 
         summary.AppendLine($"{L("AssetEditor.Summary.LabelObjectNodes")}: {insights.ObjectNodes.Count}");
         summary.AppendLine($"{L("AssetEditor.Summary.LabelDefinitions")}: {insights.DefinedSymbols.Count}");
@@ -4292,31 +4382,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
-            foreach (var node in filteredNodes.Take(50))
-            {
-                var detailText = BuildObjectBrowserNodeDetailDisplayText(node);
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.ObjectNodeLine",
-                        BuildProjectInsightArtifactKindDisplayText(node.Kind),
-                        node.Title));
-                if (!string.IsNullOrWhiteSpace(detailText))
-                {
-                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", detailText));
-                }
-                if (!string.IsNullOrWhiteSpace(node.FilePath))
-                {
-                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", Path.GetFileName(node.FilePath)));
-                }
-            }
-            if (filteredNodes.Count > 50)
-            {
-                summary.AppendLine(
-                    F(
-                        "AssetEditor.Summary.MoreItems",
-                        filteredNodes.Count - 50,
-                        L("AssetEditor.Summary.LabelObjectNodes")));
-            }
+            summary.AppendLine(L("AssetEditor.Summary.ObjectBrowserActivation"));
         }
 
         summary.AppendLine();

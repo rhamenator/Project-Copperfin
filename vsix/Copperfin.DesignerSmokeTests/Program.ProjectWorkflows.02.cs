@@ -270,6 +270,25 @@ internal static partial class Program
                             FilePath = dataAssetPath,
                             GroupTitle = "Tables"
                         }
+                    },
+                    ObjectNodes = new List<CopperfinProjectObjectNode>
+                    {
+                        new CopperfinProjectObjectNode
+                        {
+                            Kind = "Form",
+                            Title = "orders",
+                            FilePath = childPath,
+                            GroupTitle = "Forms",
+                            Detail = "Form asset"
+                        },
+                        new CopperfinProjectObjectNode
+                        {
+                            Kind = "Project Header",
+                            Title = "sample",
+                            FilePath = projectPath,
+                            GroupTitle = "Project",
+                            Detail = "Project record"
+                        }
                     }
                 });
             typeof(CopperfinAssetEditorControl)
@@ -352,6 +371,40 @@ internal static partial class Program
                     dataActivated &&
                     string.Equals(requestedPath, dataAssetPath, StringComparison.Ordinal),
                     "project workspace Data Explorer activation should open the selected asset path");
+            }
+
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.SelectTab(5);
+            }
+            var objectBrowserFilter = GetPrivateField<TextBox>(control, "objectBrowserFilterBox");
+            var hideProjectRecords = GetPrivateField<CheckBox>(control, "objectBrowserHideProjectCheckBox");
+            if (objectBrowserFilter is not null)
+            {
+                objectBrowserFilter.Text = string.Empty;
+            }
+            if (hideProjectRecords is not null)
+            {
+                hideProjectRecords.Checked = true;
+            }
+            Application.DoEvents();
+            var objectBrowser = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count == 4 &&
+                                        string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[1].Text, "Title", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[3].Text, "Detail", StringComparison.OrdinalIgnoreCase));
+            Expect(objectBrowser is not null && objectBrowser.Items.Count == 1,
+                "project workspace Object Browser should apply its hide-project-records option to all matching nodes");
+            if (objectBrowser is not null && objectBrowser.Items.Count == 1)
+            {
+                objectBrowser.Items[0].Selected = true;
+                objectBrowser.Items[0].Focused = true;
+                requestedPath = null;
+                var objectActivated = control.TryActivateSelectedObjectNode();
+                Expect(
+                    objectActivated &&
+                    string.Equals(requestedPath, CopperfinDocumentPathIdentity.Normalize(childPath), StringComparison.Ordinal),
+                    "project workspace Object Browser activation should open the selected source asset");
             }
             hostForm.Close();
         }
