@@ -236,6 +236,11 @@ bool is_native_textbox_tooltiptext_member_name(const RuntimeOleObjectState& runt
     return native_textbox_tooltiptext_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_margin_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_margin_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
@@ -697,6 +702,23 @@ void normalize_native_textbox_tooltiptext_invariant(RuntimeOleObjectState& runti
     }
 
     tooltip_text->second = make_string_value(value_as_string(tooltip_text->second));
+}
+
+void normalize_native_textbox_margin_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_margin_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto margin = runtime_object.properties.find("margin");
+    if (margin == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(margin->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : -1LL;
+    const long long normalized = rounded >= 0LL ? rounded : 0LL;
+    margin->second = make_number_value(static_cast<double>(normalized));
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

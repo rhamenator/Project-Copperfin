@@ -118,6 +118,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_textbox_autocomplete_defaults_mutate_and_stay_builtin();
     void test_native_textbox_enablehyperlinks_defaults_mutate_and_stay_builtin();
     void test_native_textbox_tooltiptext_defaults_mutate_and_stay_builtin();
+    void test_native_textbox_margin_defaults_mutate_and_stay_builtin();
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin();
     void test_native_string_control_value_defaults_mutates_and_stays_builtin();
     void test_native_selectonentry_defaults_mutate_and_stay_builtin();

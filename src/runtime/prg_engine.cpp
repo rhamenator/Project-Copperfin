@@ -8374,6 +8374,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_tooltiptext_invariant(runtime_object);
                 }
+                if (normalized_property_name == "margin")
+                {
+                    normalize_native_textbox_margin_invariant(runtime_object);
+                }
                 if (normalized_property_name == "firstelement" ||
                     normalized_property_name == "numberofelements")
                 {

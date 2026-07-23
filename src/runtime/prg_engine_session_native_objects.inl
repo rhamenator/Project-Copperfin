@@ -221,6 +221,12 @@
                 runtime_object.properties["tooltiptext"] = make_string_value("");
             }
 
+            if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("margin"))
+            {
+                runtime_object.properties["margin"] = make_number_value(0.0);
+            }
+
             if (is_native_tabindex_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("tabindex"))
             {
