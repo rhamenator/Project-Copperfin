@@ -5588,6 +5588,65 @@ namespace copperfin::runtime
             build_rows_from_cursor_fields(*cursor, requested_fields, refreshed_rows);
             break;
         }
+        case 7:
+        {
+            if (trim_copy(row_source).empty())
+            {
+                break;
+            }
+
+            namespace fs = std::filesystem;
+            fs::path pattern_path = copperfin::platform::path_from_utf8_string(row_source);
+            if (pattern_path.is_relative())
+            {
+                pattern_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                    pattern_path;
+            }
+
+            const fs::path directory = pattern_path.has_parent_path()
+                ? pattern_path.parent_path()
+                : copperfin::platform::path_from_utf8_string(current_default_directory());
+            const std::string pattern = copperfin::platform::path_to_utf8_string(pattern_path.filename());
+            if (pattern.empty())
+            {
+                break;
+            }
+
+            std::vector<std::string> file_names;
+            std::error_code directory_error;
+            fs::directory_iterator iterator(directory, directory_error);
+            const fs::directory_iterator end;
+            while (!directory_error && iterator != end)
+            {
+                const fs::directory_entry entry = *iterator;
+                std::error_code entry_error;
+                if (entry.is_regular_file(entry_error) &&
+                    wildcard_match_insensitive(
+                        pattern,
+                        copperfin::platform::path_to_utf8_string(entry.path().filename())))
+                {
+                    file_names.push_back(
+                        copperfin::platform::path_to_utf8_string(entry.path().filename()));
+                }
+                iterator.increment(directory_error);
+            }
+
+            std::sort(
+                file_names.begin(),
+                file_names.end(),
+                [](const std::string &left, const std::string &right)
+                {
+                    const std::string left_folded = lowercase_copy(left);
+                    const std::string right_folded = lowercase_copy(right);
+                    return left_folded == right_folded ? left < right : left_folded < right_folded;
+                });
+            refreshed_rows.reserve(file_names.size());
+            for (const std::string &file_name : file_names)
+            {
+                refreshed_rows.push_back({make_string_value(file_name)});
+            }
+            break;
+        }
         case 3:
         case 4:
         {

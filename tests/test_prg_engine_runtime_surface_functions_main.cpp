@@ -359,6 +359,7 @@ int main()
     test_native_list_controls_itemdata_stays_coherent();
     test_native_list_controls_topitemid_stays_coherent();
     test_native_list_controls_topindex_stays_coherent();
+    test_native_list_controls_file_rowsource_materializes_masks();
     test_native_list_controls_itemid_index_conversion_methods_stay_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_list_control_boundto_and_listbox_list_shape_defaults_mutate_and_stay_builtin();

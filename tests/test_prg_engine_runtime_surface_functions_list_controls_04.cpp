@@ -2,6 +2,79 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_list_controls_file_rowsource_materializes_masks()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_file_rowsource";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root / "nested");
+        write_text(temp_root / "alpha.txt", "alpha");
+        write_text(temp_root / "Bravo.TXT", "bravo");
+        write_text(temp_root / "ignored.prg", "RETURN\n");
+        fs::create_directories(temp_root / "folder.txt");
+        write_text(temp_root / "nested" / "child.txt", "child");
+        const fs::path unicode_file = temp_root / copperfin::platform::path_from_utf8_string("caf\xC3\xA9.txt");
+        write_text(unicode_file, "cafe");
+
+        const fs::path main_path = temp_root / "file_rowsource.prg";
+        write_text(
+            main_path,
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "oCombo.RowSourceType = 7\n"
+            "oCombo.RowSource = '*.txt'\n"
+            "oCombo.Requery()\n"
+            "nComboCount = oCombo.ListCount\n"
+            "cComboFirst = oCombo.List(1)\n"
+            "cComboLast = oCombo.List(oCombo.ListCount)\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.RowSourceType = 7\n"
+            "oList.RowSource = 'nested/child.?xt'\n"
+            "oList.Requery()\n"
+            "nListCount = oList.ListCount\n"
+            "cListOnly = oList.List(1)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native file RowSource script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("ncombocount", "3");
+        check("ccombofirst", "alpha.txt");
+        check("ccombolast", "caf\xC3\xA9.txt");
+        check("nlistcount", "1");
+        check("clistonly", "child.txt");
+        expect(state.ole_objects.size() == 2U,
+               "file RowSource coverage should register ComboBox and ListBox objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].collection_items.size() == 3U &&
+                       state.ole_objects[0].list_rows.size() == 3U,
+                   "file RowSource ComboBox should materialize matching regular files only");
+            expect(state.ole_objects[1].collection_items.size() == 1U &&
+                       copperfin::runtime::format_value(state.ole_objects[1].collection_items.front()) == "child.txt",
+                   "file RowSource ListBox should materialize an explicit directory mask");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_itemdata_stays_coherent()
     {
         namespace fs = std::filesystem;
