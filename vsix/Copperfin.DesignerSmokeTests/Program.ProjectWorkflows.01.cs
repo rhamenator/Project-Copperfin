@@ -514,6 +514,26 @@ internal static partial class Program
                 $"project debugger should include runtime events for {path}");
         }
 
+        var debuggerCallStackView = GetPrivateListView(control, "debuggerCallStackView");
+        var debuggerLocalsView = GetPrivateListView(control, "debuggerLocalsView");
+        var debuggerGlobalsView = GetPrivateListView(control, "debuggerGlobalsView");
+        var debuggerEventsView = GetPrivateListView(control, "debuggerEventsView");
+        Expect(debuggerCallStackView.Columns.Count == 2 &&
+               debuggerLocalsView.Columns.Count == 3 &&
+               debuggerGlobalsView.Columns.Count == 2 &&
+               debuggerEventsView.Columns.Count == 3,
+               $"project debugger should expose localized frame, local, global, and event table schemas for {path}");
+        var appliedDebugSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+        if (appliedDebugSession is not null && appliedDebugSession.Success)
+        {
+            var expectedLocals = appliedDebugSession.State.Frames.Sum(frame => frame.Locals.Count);
+            Expect(debuggerCallStackView.Items.Count == appliedDebugSession.State.Frames.Count &&
+                   debuggerLocalsView.Items.Count == expectedLocals &&
+                   debuggerGlobalsView.Items.Count == appliedDebugSession.State.Globals.Count &&
+                   debuggerEventsView.Items.Count == appliedDebugSession.State.Events.Count,
+                   $"project debugger detail tables should mirror the active runtime pause state for {path}");
+        }
+
         TearDownForm(hostForm);
     }
 

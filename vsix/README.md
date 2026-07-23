@@ -44,7 +44,7 @@ Current limitations:
 - it still relies on the external native build/runtime hosts for project build/debug/run workflows instead of owning a full in-process Copperfin compiler/debugger inside Visual Studio
 - it does not yet render forms/reports inline inside the Visual Studio document with full VFP 9 fidelity, even though reports and labels now have a section-aware designer shape
 - the debugger pane is a first runtime-facing surface, not yet the finished VFP 9-level watch/coverage/task-window experience
-- most new project utility panes are still summary-first panes, not yet the full interactive VFP 9-equivalent Project Explorer/Builders/Coverage toolchain; Task List, Code References, Data Explorer, and Object Browser are the current navigable exceptions
+- most new project utility panes are still summary-first panes, not yet the full interactive VFP 9-equivalent Project Explorer/Builders/Coverage toolchain; Task List, Code References, Data Explorer, Object Browser, and the debugger detail tables are the current inspectable/navigable exceptions
 - database federation and polyglot query translation are now modeled in the shell, but the actual backend translators still need deeper implementation beyond the current architectural contract
 - FoxPro editor assistance is still a first pass inspired by community and external xBase tooling patterns, not yet a full semantic language service with rename, refactor, or complete symbol resolution
 

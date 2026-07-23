@@ -375,6 +375,16 @@ internal static partial class Program
             "Spanish project command and debugger chrome should localize status labels");
         Expect(HasRichTextBoxTextContaining(spanishControl, "sesión de depuración de Copperfin"),
             "Spanish debugger chrome should localize initial debugger guidance");
+        var spanishDebuggerTabs = GetPrivateField<TabControl>(spanishControl, "debuggerDetailTabs");
+        var spanishDebuggerCallStack = GetPrivateListView(spanishControl, "debuggerCallStackView");
+        Expect(spanishDebuggerTabs is not null &&
+               spanishDebuggerTabs.TabPages.Cast<TabPage>().Select(page => page.Text).SequenceEqual(new[]
+               {
+                   "Pila de llamadas", "Locales", "Globales", "Eventos de ejecución"
+               }) &&
+               spanishDebuggerCallStack.Columns[0].Text == "Rutina" &&
+               spanishDebuggerCallStack.Columns[1].Text == "Ubicación",
+            "Spanish debugger detail tabs and columns should localize");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         Expect(HasButtonText(portugueseControl, "Compilar projeto Copperfin") &&
@@ -391,6 +401,16 @@ internal static partial class Program
             "Portuguese project command and debugger chrome should localize status labels");
         Expect(HasRichTextBoxTextContaining(portugueseControl, "sessão de depuração do Copperfin"),
             "Portuguese debugger chrome should localize initial debugger guidance");
+        var portugueseDebuggerTabs = GetPrivateField<TabControl>(portugueseControl, "debuggerDetailTabs");
+        var portugueseDebuggerCallStack = GetPrivateListView(portugueseControl, "debuggerCallStackView");
+        Expect(portugueseDebuggerTabs is not null &&
+               portugueseDebuggerTabs.TabPages.Cast<TabPage>().Select(page => page.Text).SequenceEqual(new[]
+               {
+                   "Pilha de chamadas", "Locais", "Globais", "Eventos de runtime"
+               }) &&
+               portugueseDebuggerCallStack.Columns[0].Text == "Rotina" &&
+               portugueseDebuggerCallStack.Columns[1].Text == "Localização",
+            "Portuguese debugger detail tabs and columns should localize");
     }
 
     private static void SmokeLocalizedProjectWorkspacePlaceholders()

@@ -116,6 +116,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly RichTextBox workspaceSummaryBox;
     private readonly TabControl projectWorkspaceTabs;
     private readonly RichTextBox debuggerSummaryBox;
+    private readonly TabControl debuggerDetailTabs;
+    private readonly ListView debuggerCallStackView;
+    private readonly ListView debuggerLocalsView;
+    private readonly ListView debuggerGlobalsView;
+    private readonly ListView debuggerEventsView;
     private readonly RichTextBox taskListSummaryBox;
     private readonly ListView taskListView;
     private readonly RichTextBox codeReferencesSummaryBox;
@@ -561,13 +566,77 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         debuggerSummaryBox = new RichTextBox
         {
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
+            Height = 180,
             ReadOnly = true,
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
             Text = this.localization.Text("AssetEditor.Debugger.InitialSummary")
         };
+
+        debuggerCallStackView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerCallStackView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Routine"), 300);
+        debuggerCallStackView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Location"), 520);
+
+        debuggerLocalsView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerLocalsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Frame"), 260);
+        debuggerLocalsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Name"), 220);
+        debuggerLocalsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Value"), 520);
+
+        debuggerGlobalsView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerGlobalsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Name"), 300);
+        debuggerGlobalsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Value"), 700);
+
+        debuggerEventsView = new ListView
+        {
+            Dock = DockStyle.Fill,
+            FullRowSelect = true,
+            HideSelection = false,
+            MultiSelect = false,
+            View = View.Details
+        };
+        debuggerEventsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Category"), 220);
+        debuggerEventsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Detail"), 500);
+        debuggerEventsView.Columns.Add(this.localization.Text("AssetEditor.Debugger.Column.Location"), 300);
+
+        debuggerDetailTabs = new TabControl
+        {
+            Dock = DockStyle.Fill
+        };
+        var debuggerCallStackPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.CallStack"));
+        debuggerCallStackPage.Controls.Add(debuggerCallStackView);
+        var debuggerLocalsPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.Locals"));
+        debuggerLocalsPage.Controls.Add(debuggerLocalsView);
+        var debuggerGlobalsPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.Globals"));
+        debuggerGlobalsPage.Controls.Add(debuggerGlobalsView);
+        var debuggerEventsPage = new TabPage(this.localization.Text("AssetEditor.Debugger.Tab.RuntimeEvents"));
+        debuggerEventsPage.Controls.Add(debuggerEventsView);
+        debuggerDetailTabs.TabPages.Add(debuggerCallStackPage);
+        debuggerDetailTabs.TabPages.Add(debuggerLocalsPage);
+        debuggerDetailTabs.TabPages.Add(debuggerGlobalsPage);
+        debuggerDetailTabs.TabPages.Add(debuggerEventsPage);
 
         taskListSummaryBox = new RichTextBox
         {
@@ -917,6 +986,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             Dock = DockStyle.Fill
         };
+        debuggerPageHost.Controls.Add(debuggerDetailTabs);
         debuggerPageHost.Controls.Add(debuggerSummaryBox);
         debuggerPageHost.Controls.Add(debuggerStatusPanel);
         debuggerPageHost.Controls.Add(debuggerButtonPanel);
@@ -1475,6 +1545,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         workspaceSummaryBox.Visible = false;
         projectWorkspaceTabs.Visible = false;
         debuggerSummaryBox.Text = this.localization.Text("AssetEditor.Debugger.InitialSummary");
+        ClearDebuggerDetails();
         taskListSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.TaskList");
         taskListView.Items.Clear();
         codeReferencesSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences");
@@ -3536,6 +3607,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
 
             currentDebugSession = session;
+            PopulateDebuggerDetails(session);
             if (!session.Success)
             {
                 debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UnavailableStatus");
@@ -3570,6 +3642,66 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         catch (System.ComponentModel.Win32Exception)
         {
+        }
+    }
+
+    private void ClearDebuggerDetails()
+    {
+        debuggerCallStackView.Items.Clear();
+        debuggerLocalsView.Items.Clear();
+        debuggerGlobalsView.Items.Clear();
+        debuggerEventsView.Items.Clear();
+    }
+
+    private void PopulateDebuggerDetails(CopperfinRuntimeDebugSession? session)
+    {
+        ClearDebuggerDetails();
+        if (session is null || !session.Success)
+        {
+            return;
+        }
+
+        var state = session.State;
+        debuggerCallStackView.BeginUpdate();
+        debuggerLocalsView.BeginUpdate();
+        debuggerGlobalsView.BeginUpdate();
+        debuggerEventsView.BeginUpdate();
+        try
+        {
+            foreach (var frame in state.Frames)
+            {
+                debuggerCallStackView.Items.Add(
+                    new ListViewItem(new[] { frame.RoutineName, frame.Location }));
+                foreach (var local in frame.Locals)
+                {
+                    debuggerLocalsView.Items.Add(
+                        new ListViewItem(new[] { frame.RoutineName, local.Name, local.Value }));
+                }
+            }
+
+            foreach (var global in state.Globals)
+            {
+                debuggerGlobalsView.Items.Add(
+                    new ListViewItem(new[] { global.Name, global.Value }));
+            }
+
+            foreach (var runtimeEvent in state.Events)
+            {
+                debuggerEventsView.Items.Add(
+                    new ListViewItem(new[]
+                    {
+                        runtimeEvent.Category,
+                        runtimeEvent.Detail,
+                        runtimeEvent.Location
+                    }));
+            }
+        }
+        finally
+        {
+            debuggerEventsView.EndUpdate();
+            debuggerGlobalsView.EndUpdate();
+            debuggerLocalsView.EndUpdate();
+            debuggerCallStackView.EndUpdate();
         }
     }
 
