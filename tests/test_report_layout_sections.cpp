@@ -67,7 +67,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("SUPOVFLOW", "0"),
                 value("BOTTOM", "0"),
                 value("TOP", "0"),
-                value("FONTSTYLE", "5")
+                value("FONTSTYLE", "5"),
+                value("MODE", "1")
             }
         },
         {
@@ -336,6 +337,19 @@ void test_build_report_layout_groups_band_objects() {
         expect(font_style_highlight->value == "5" && font_style_highlight->field_index == 17U &&
                font_style_highlight->memo_block_number == 0U,
             "#4518: FONTSTYLE highlights should preserve value and source field provenance");
+    }
+    const auto mode_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "MODE";
+        });
+    expect(mode_highlight != layout.sections[1].objects[0].highlights.end(),
+        "#4519: report layout highlights should include the MODE appearance setting");
+    if (mode_highlight != layout.sections[1].objects[0].highlights.end()) {
+        expect(mode_highlight->value == "1" && mode_highlight->field_index == 18U &&
+               mode_highlight->memo_block_number == 0U,
+            "#4519: MODE highlights should preserve value and source field provenance");
     }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,

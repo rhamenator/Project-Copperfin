@@ -472,7 +472,8 @@ internal static partial class Program
             string printWhenNewPageColumnValue = "0",
             string printWhenOverflowValue = "false",
             string bottomValue = "false",
-            string topValue = "false") => new()
+            string topValue = "false",
+            string modeValue = "0") => new()
         {
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
@@ -485,6 +486,7 @@ internal static partial class Program
                 new() { Name = "SUPOVFLOW", Value = printWhenOverflowValue },
                 new() { Name = "BOTTOM", Value = bottomValue },
                 new() { Name = "TOP", Value = topValue },
+                new() { Name = "MODE", Value = modeValue },
                 new() { Name = "FLOAT", Value = floatValue },
                 new() { Name = "NOREPEAT", Value = noRepeatValue },
                 new() { Name = "STRETCH", Value = stretchValue },
@@ -511,12 +513,14 @@ internal static partial class Program
             var printWhenOverflowProperty = properties?.Find("SUPOVFLOW", false);
             var bottomProperty = properties?.Find("BOTTOM", false);
             var topProperty = properties?.Find("TOP", false);
+            var modeProperty = properties?.Find("MODE", false);
 
             Expect(floatProperty is not null && noRepeatProperty is not null &&
                    stretchProperty is not null && stretchTopProperty is not null && printWhenProperty is not null &&
                    printWhenGroupProperty is not null && printWhenRepeatedProperty is not null &&
                    printWhenValueChangesProperty is not null && printWhenNewPageColumnProperty is not null &&
-                   printWhenOverflowProperty is not null && bottomProperty is not null && topProperty is not null,
+                   printWhenOverflowProperty is not null && bottomProperty is not null && topProperty is not null &&
+                   modeProperty is not null,
                 $"{assetFamily} object selections should expose editable report-control behavior properties");
             Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat" &&
                    stretchProperty?.DisplayName == "Stretch with Overflow" &&
@@ -528,7 +532,8 @@ internal static partial class Program
                    printWhenNewPageColumnProperty?.DisplayName == "In First Whole Band of New Page/Column" &&
                    printWhenOverflowProperty?.DisplayName == "When Detail Overflows to New Page/Column" &&
                    bottomProperty?.DisplayName == "Fix Relative to Bottom of Band" &&
-                   topProperty?.DisplayName == "Fix Relative to Top of Band",
+                   topProperty?.DisplayName == "Fix Relative to Top of Band" &&
+                   modeProperty?.DisplayName == "Back Style / Direction Mode",
                 $"{assetFamily} object behavior properties should use the English catalog labels");
             if (selection is not null)
             {
@@ -544,6 +549,7 @@ internal static partial class Program
                 printWhenOverflowProperty?.SetValue(selection, true);
                 bottomProperty?.SetValue(selection, true);
                 topProperty?.SetValue(selection, true);
+                modeProperty?.SetValue(selection, 6);
                 Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
                        floatTarget == "FLOAT" && serializedFloatValue == "false" &&
                        selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
@@ -577,12 +583,15 @@ internal static partial class Program
                 Expect(selection.TryGetUpdate("TOP", out var topTarget, out var serializedTopValue) &&
                        topTarget == "TOP" && serializedTopValue == "true",
                     $"{assetFamily} top-position edits should preserve the invariant logical update target");
+                Expect(selection.TryGetUpdate("MODE", out var modeTarget, out var serializedModeValue) &&
+                       modeTarget == "MODE" && serializedModeValue == "6",
+                    $"{assetFamily} mode edits should preserve the invariant numeric update target");
             }
         }
 
         var blankSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
-            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+            Snapshot("8", string.Empty, "false", string.Empty, "false", string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
             new CopperfinLocalization("en-US"));
         Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
                blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue &&
@@ -595,7 +604,8 @@ internal static partial class Program
                blankSelection.GetProperties().Find("SUPRPCOL", false)?.GetValue(blankSelection) is int blankPageColumnValue && blankPageColumnValue == 0 &&
                blankSelection.GetProperties().Find("SUPOVFLOW", false)?.GetValue(blankSelection) is bool blankOverflowValue && !blankOverflowValue &&
                blankSelection.GetProperties().Find("BOTTOM", false)?.GetValue(blankSelection) is bool blankBottomValue && !blankBottomValue &&
-               blankSelection.GetProperties().Find("TOP", false)?.GetValue(blankSelection) is bool blankTopValue && !blankTopValue,
+               blankSelection.GetProperties().Find("TOP", false)?.GetValue(blankSelection) is bool blankTopValue && !blankTopValue &&
+               blankSelection.GetProperties().Find("MODE", false)?.GetValue(blankSelection) is int blankModeValue && blankModeValue == 0,
             "blank and false report-control logical values should remain stable as false until edited");
 
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -614,6 +624,7 @@ internal static partial class Program
         var pseudoPrintWhenOverflowLabel = pseudoSelection?.GetProperties().Find("SUPOVFLOW", false)?.DisplayName;
         var pseudoBottomLabel = pseudoSelection?.GetProperties().Find("BOTTOM", false)?.DisplayName;
         var pseudoTopLabel = pseudoSelection?.GetProperties().Find("TOP", false)?.DisplayName;
+        var pseudoModeLabel = pseudoSelection?.GetProperties().Find("MODE", false)?.DisplayName;
         Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
@@ -637,7 +648,9 @@ internal static partial class Program
                pseudoBottomLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoBottomLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoTopLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
-               pseudoTopLabel.EndsWith(" !!]", StringComparison.Ordinal),
+               pseudoTopLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoModeLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoModeLabel.EndsWith(" !!]", StringComparison.Ordinal),
             "pseudo-localized report-control property labels should remain visibly localized");
 
         var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
@@ -656,7 +669,8 @@ internal static partial class Program
                readOnlySelection.GetProperties().Find("SUPRPCOL", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("SUPOVFLOW", false)?.IsReadOnly == true &&
                readOnlySelection.GetProperties().Find("BOTTOM", false)?.IsReadOnly == true &&
-               readOnlySelection.GetProperties().Find("TOP", false)?.IsReadOnly == true,
+               readOnlySelection.GetProperties().Find("TOP", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("MODE", false)?.IsReadOnly == true,
             "read-only report documents should keep report-control behavior properties read-only");
     }
 

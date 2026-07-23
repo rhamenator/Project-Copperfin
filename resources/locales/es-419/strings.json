@@ -2396,6 +2396,7 @@
   "AssetEditor.Property.Picture": "Imagen",
   "AssetEditor.Property.FontStyle": "Estilo de fuente",
   "AssetEditor.Property.FontSize": "Tama\u00F1o de fuente",
+  "AssetEditor.Property.ReportMode": "Modo de estilo de fondo/direcci\u00F3n",
   "AssetEditor.Property.Height": "Altura",
   "AssetEditor.Property.SettingsCount": "Cantidad de configuraciones",
   "AssetEditor.Property.SettingsState": "Estado de las configuraciones",

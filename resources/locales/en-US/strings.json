@@ -2397,6 +2397,7 @@
   "AssetEditor.Property.Picture": "Picture",
   "AssetEditor.Property.FontStyle": "Font Style",
   "AssetEditor.Property.FontSize": "Font Size",
+  "AssetEditor.Property.ReportMode": "Back Style / Direction Mode",
   "AssetEditor.Property.Height": "Height",
   "AssetEditor.Property.SettingsCount": "Settings Count",
   "AssetEditor.Property.SettingsState": "Settings State",
