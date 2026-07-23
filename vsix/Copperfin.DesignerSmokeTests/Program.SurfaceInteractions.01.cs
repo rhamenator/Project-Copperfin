@@ -267,6 +267,7 @@ internal static partial class Program
                 new() { Name = "PICTURE", Value = "@J" },
                 new() { Name = "RULERLINES", Value = "4" },
                 new() { Name = "OFFSET", Value = "1" },
+                new() { Name = "FILLCHAR", Value = "N" },
                 new() { Name = "SUPEXPR", Value = "customer.company > 0" },
                 new() { Name = "SUPGROUP", Value = "6" },
                 new() { Name = "SUPALWAYS", Value = "true" },
@@ -334,6 +335,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagen", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Truncamiento de cadenas", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Alineación de expresión", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de datos de expresión", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imprimir cuando", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Cuando cambia el grupo", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imprimir valores repetidos", StringComparison.Ordinal)) &&
@@ -361,6 +363,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imagem", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Truncamento de cadeias", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Alinhamento da expressão", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de dados da expressão", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Quando imprimir", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Quando o grupo muda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Imprimir valores repetidos", StringComparison.Ordinal)) &&
@@ -389,6 +392,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Picture"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.StringTrimming"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExpressionAlignment"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExpressionDataType"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrintWhen"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrintWhenGroup"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrintWhenRepeated"), StringComparison.Ordinal)) &&
@@ -465,6 +469,8 @@ internal static partial class Program
                 "Live report-expression property-grid selection should serialize RULERLINES edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "OFFSET", 2, "2",
                 "Live report-expression property-grid selection should serialize OFFSET edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "FILLCHAR", "D", "D",
+                "Live report-expression property-grid selection should serialize FILLCHAR edits through the shared update path");
         }
 
         var labelSelection = CopperfinDesignerSelection.FromSnapshot("label", snapshotObject, new CopperfinLocalization("en-US"));
@@ -492,6 +498,7 @@ internal static partial class Program
                 new() { Name = "OBJCODE", Value = "53" },
                 new() { Name = "EXPR", Value = "customer.deleted_total" },
                 new() { Name = "PICTURE", Value = "@I" },
+                new() { Name = "FILLCHAR", Value = "D" },
                 new() { Name = "SUPEXPR", Value = "customer.deleted_total > 0" },
                 new() { Name = "SUPGROUP", Value = "6" },
                 new() { Name = "SUPALWAYS", Value = "true" },
@@ -556,6 +563,8 @@ internal static partial class Program
                 "Deleted report object property-grid selection should serialize FONTSIZE edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "PICTURE", "@N", "@N",
                 "Deleted report object property-grid selection should serialize PICTURE edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "FILLCHAR", "C", "C",
+                "Deleted report-expression property-grid selection should serialize FILLCHAR edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "MODE", 6, "6",
                 "Deleted report object property-grid selection should serialize MODE edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "FLOAT", true, "true",

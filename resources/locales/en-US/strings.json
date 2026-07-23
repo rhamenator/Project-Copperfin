@@ -2703,6 +2703,7 @@
   "AssetEditor.Property.StretchTop": "Stretch Relative to Top",
   "AssetEditor.Property.StringTrimming": "String Trimming",
   "AssetEditor.Property.ExpressionAlignment": "Expression Alignment",
+  "AssetEditor.Property.ExpressionDataType": "Expression Data Type",
   "AssetEditor.Property.PrintWhen": "Print When",
   "AssetEditor.Property.PrintWhenGroup": "When Group Changes",
   "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values",

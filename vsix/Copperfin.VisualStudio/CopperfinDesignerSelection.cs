@@ -136,6 +136,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         "OFFSET",
                         L("AssetEditor.Property.ExpressionAlignment", "Expression Alignment"),
                         selection.Read(snapshotObject, "OFFSET"));
+                    selection.AddEditableString(
+                        "FILLCHAR",
+                        L("AssetEditor.Property.ExpressionDataType", "Expression Data Type"),
+                        selection.Read(snapshotObject, "FILLCHAR"));
                 }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
