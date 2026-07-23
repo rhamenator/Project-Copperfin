@@ -75,6 +75,79 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_field_structure_rowsource_materializes_fields()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_structure_rowsource";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "structure_rowsource.prg";
+        write_text(
+            main_path,
+            "CREATE CURSOR lookup (NAME C(12), AMOUNT N(8,2), ACTIVE L)\n"
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "oCombo.RowSourceType = 8\n"
+            "oCombo.RowSource = ''\n"
+            "oCombo.Requery()\n"
+            "nComboCount = oCombo.ListCount\n"
+            "cComboFirst = oCombo.List(1)\n"
+            "cComboLast = oCombo.List(oCombo.ListCount)\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.RowSourceType = 8\n"
+            "oList.RowSource = 'lookup'\n"
+            "oList.Requery()\n"
+            "nListCount = oList.ListCount\n"
+            "cListFirst = oList.List(1)\n"
+            "cListLast = oList.List(oList.ListCount)\n"
+            "oMissing = CREATEOBJECT('ListBox')\n"
+            "oMissing.RowSourceType = 8\n"
+            "oMissing.RowSource = 'missing_alias'\n"
+            "oMissing.Requery()\n"
+            "nMissingCount = oMissing.ListCount\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native field-structure RowSource script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("ncombocount", "3");
+        check("ccombofirst", "NAME");
+        check("ccombolast", "ACTIVE");
+        check("nlistcount", "3");
+        check("clistfirst", "NAME");
+        check("clistlast", "ACTIVE");
+        check("nmissingcount", "0");
+        expect(state.ole_objects.size() == 3U,
+               "field-structure RowSource coverage should register both populated and missing-source controls");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].list_rows.size() == 3U &&
+                       state.ole_objects[1].list_rows.size() == 3U &&
+                       state.ole_objects[2].list_rows.empty(),
+                   "field-structure RowSource should materialize descriptor order and empty missing sources");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_itemdata_stays_coherent()
     {
         namespace fs = std::filesystem;

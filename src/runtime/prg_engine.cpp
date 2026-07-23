@@ -5647,6 +5647,24 @@ namespace copperfin::runtime
             }
             break;
         }
+        case 8:
+        {
+            CursorState *cursor = row_source.empty()
+                ? resolve_cursor_target({})
+                : resolve_cursor_target(row_source);
+            if (cursor == nullptr)
+            {
+                break;
+            }
+
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+            refreshed_rows.reserve(fields.size());
+            for (const vfp::DbfFieldDescriptor &field : fields)
+            {
+                refreshed_rows.push_back({make_string_value(field.name)});
+            }
+            break;
+        }
         case 3:
         case 4:
         {
