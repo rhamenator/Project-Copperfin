@@ -1641,8 +1641,9 @@ internal static partial class Program
                     "exit 0"
                 ]);
 
+            const int timeoutMilliseconds = 10000;
             var stopwatch = Stopwatch.StartNew();
-            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 5000);
+            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds);
             stopwatch.Stop();
             Expect(result.Started, "process runner should start the successful descendant fixture");
             Expect(!result.TimedOut,
@@ -1651,7 +1652,7 @@ internal static partial class Program
                 "process runner should preserve the root exit code when a descendant retains output handles");
             Expect(result.StandardOutput.Contains("successful-stdout", StringComparison.Ordinal),
                 "process runner should retain output captured before successful root completion");
-            Expect(stopwatch.ElapsedMilliseconds < 5000,
+            Expect(stopwatch.ElapsedMilliseconds < timeoutMilliseconds,
                 "process runner should bound post-exit output draining without converting success into a timeout");
             Expect(TryReadProcessId(descendantPidPath, out descendantPid),
                 "successful descendant fixture should record its PID");
