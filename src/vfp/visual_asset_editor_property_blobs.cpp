@@ -50,7 +50,7 @@ bool is_report_settings_record(const DbfRecord& record) {
 }
 
 bool is_known_report_settings_expr_property(const std::string& normalized_property_name) {
-    static constexpr std::array<std::string_view, 25> known_settings{
+    static constexpr std::array<std::string_view, 27> known_settings{
         "ascii",
         "botmargin",
         "collate",
@@ -58,6 +58,7 @@ bool is_known_report_settings_expr_property(const std::string& normalized_proper
         "copies",
         "defaultsource",
         "device",
+        "duplex",
         "driver",
         "gridh",
         "gridv",
@@ -68,6 +69,7 @@ bool is_known_report_settings_expr_property(const std::string& normalized_proper
         "papersize",
         "printquality",
         "ttoption",
+        "winspool",
         "yresolution",
         "topmargin",
         "leftmargin",

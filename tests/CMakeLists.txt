@@ -4416,6 +4416,7 @@ copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor_object_lifecycle_identity_02.cpp
     test_visual_asset_editor_methods.cpp
     test_visual_asset_editor_properties.cpp
+    test_visual_asset_editor_report_printer_settings.cpp
     test_visual_asset_editor_report_settings_case.cpp
     test_visual_asset_editor_hierarchy_and_listing.cpp
     test_visual_asset_editor_update_batch.cpp

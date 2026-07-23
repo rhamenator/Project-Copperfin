@@ -27,6 +27,7 @@ int main() {
     test_update_visual_object_property_preserves_equals_for_blank_property_values();
     test_update_visual_object_report_settings_property_preserves_comment_lines();
     test_report_settings_bottom_margin_memo_round_trips();
+    test_report_printer_duplex_and_winspool_settings_are_admitted();
     test_report_settings_fallback_root_gridv_round_trips();
     test_report_settings_case_insensitive_expr_field_round_trips();
     test_report_settings_topmargin_and_tag_memo_round_trips();
