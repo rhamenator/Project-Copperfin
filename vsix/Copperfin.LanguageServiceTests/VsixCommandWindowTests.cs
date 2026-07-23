@@ -77,8 +77,11 @@ internal static partial class Program
             "VSIX command should show the registered command window instead of launching a second shell");
         Expect(controlSource.Contains("VSColorTheme.GetThemedColor", StringComparison.Ordinal) &&
                controlSource.Contains("EnvironmentColors.ToolWindowBackgroundColorKey", StringComparison.Ordinal) &&
-               controlSource.Contains("VsShellUtilities.GetEnvironmentFont", StringComparison.Ordinal),
-            "VSIX command window should use Visual Studio theme colors and environment font settings");
+               controlSource.Contains("VsShellUtilities.GetEnvironmentFont", StringComparison.Ordinal) &&
+               controlSource.Contains("commandInput.KeyDown", StringComparison.Ordinal) &&
+               controlSource.Contains("commandExecutor", StringComparison.Ordinal) &&
+               controlSource.Contains("SubmitCommandForTest", StringComparison.Ordinal),
+            "VSIX command window should use Visual Studio theme/font settings and expose an interactive executor boundary");
         Expect(File.ReadAllText(Path.Combine(vsixRoot, "OpenInCopperfinStudioCommand.cs"))
                    .Contains("FromVisualStudioUiCulture()", StringComparison.Ordinal) &&
                File.ReadAllText(Path.Combine(vsixRoot, "CopperfinProjectCommands.cs"))
