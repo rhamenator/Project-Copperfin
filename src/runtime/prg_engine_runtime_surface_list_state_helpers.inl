@@ -94,7 +94,13 @@ bool native_textbox_passwordchar_runtime_object(const RuntimeOleObjectState& run
 }
 
 bool native_textbox_maxlength_runtime_object(const RuntimeOleObjectState& runtime_object) {
-    return native_textbox_inputmask_runtime_object(runtime_object);
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "editbox" || normalized_base_class == "textbox";
 }
 
 bool native_textbox_specialeffect_runtime_object(const RuntimeOleObjectState& runtime_object) {

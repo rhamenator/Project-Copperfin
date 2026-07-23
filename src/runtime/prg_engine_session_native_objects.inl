@@ -185,7 +185,7 @@
                 runtime_object.properties["passwordchar"] = make_string_value("");
             }
 
-            if (normalized_base_class == "textbox" &&
+            if ((normalized_base_class == "editbox" || normalized_base_class == "textbox") &&
                 !runtime_object.properties.contains("maxlength"))
             {
                 runtime_object.properties["maxlength"] = make_number_value(0.0);
