@@ -354,6 +354,7 @@ StudioLayoutObjectSnapshot build_layout_object(
     }
     if (object.objtype_code == 8) {
         add_highlight("RULERLINES");
+        add_highlight("OFFSET");
     }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");

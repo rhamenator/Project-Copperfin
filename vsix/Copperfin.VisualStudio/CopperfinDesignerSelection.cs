@@ -132,6 +132,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         "RULERLINES",
                         L("AssetEditor.Property.StringTrimming", "String Trimming"),
                         selection.Read(snapshotObject, "RULERLINES"));
+                    selection.AddEditableInt(
+                        "OFFSET",
+                        L("AssetEditor.Property.ExpressionAlignment", "Expression Alignment"),
+                        selection.Read(snapshotObject, "OFFSET"));
                 }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));

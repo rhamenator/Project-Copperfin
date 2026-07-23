@@ -436,7 +436,8 @@ internal static partial class Program
             {
                 new() { Name = "OBJTYPE", Value = objectType },
                 new() { Name = "PICTURE", Value = "@J" },
-                new() { Name = "RULERLINES", Value = "4" }
+                new() { Name = "RULERLINES", Value = "4" },
+                new() { Name = "OFFSET", Value = "1" }
             }
         };
 
@@ -459,6 +460,9 @@ internal static partial class Program
         var reportRulerLinesProperty = reportExpressionSelection?.GetProperties().Find("RULERLINES", false);
         var labelRulerLinesProperty = labelSelection?.GetProperties().Find("RULERLINES", false);
         var imageRulerLinesProperty = imageSelection?.GetProperties().Find("RULERLINES", false);
+        var reportOffsetProperty = reportExpressionSelection?.GetProperties().Find("OFFSET", false);
+        var labelOffsetProperty = labelSelection?.GetProperties().Find("OFFSET", false);
+        var imageOffsetProperty = imageSelection?.GetProperties().Find("OFFSET", false);
         Expect(labelPictureProperty is not null && reportPictureProperty is not null && imagePictureProperty is not null,
             "label, report-expression, and image selections should expose editable PICTURE");
         Expect(labelPictureProperty?.DisplayName == "Picture" && reportPictureProperty?.DisplayName == "Picture" &&
@@ -467,6 +471,9 @@ internal static partial class Program
         Expect(reportRulerLinesProperty is not null && labelRulerLinesProperty is null && imageRulerLinesProperty is null &&
                reportRulerLinesProperty.DisplayName == "String Trimming",
             "only report-expression selections should expose the localized RULERLINES property");
+        Expect(reportOffsetProperty is not null && labelOffsetProperty is null && imageOffsetProperty is null &&
+               reportOffsetProperty.DisplayName == "Expression Alignment",
+            "only report-expression selections should expose the localized OFFSET property");
         reportPictureProperty?.SetValue(reportExpressionSelection, "@N");
         Expect(reportExpressionSelection?.TryGetUpdate("PICTURE", out var pictureTarget, out var pictureValue) == true &&
                pictureTarget == "PICTURE" && pictureValue == "@N",
@@ -479,6 +486,10 @@ internal static partial class Program
         Expect(reportExpressionSelection?.TryGetUpdate("RULERLINES", out var rulerLinesTarget, out var rulerLinesValue) == true &&
                rulerLinesTarget == "RULERLINES" && rulerLinesValue == "2",
             "report-expression RULERLINES edits should preserve the invariant update target");
+        reportOffsetProperty?.SetValue(reportExpressionSelection, 2);
+        Expect(reportExpressionSelection?.TryGetUpdate("OFFSET", out var offsetTarget, out var offsetValue) == true &&
+               offsetTarget == "OFFSET" && offsetValue == "2",
+            "report-expression OFFSET edits should preserve the invariant update target");
     }
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
