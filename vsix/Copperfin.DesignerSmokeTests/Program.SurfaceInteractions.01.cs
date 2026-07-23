@@ -498,6 +498,30 @@ internal static partial class Program
                 "Shared label object property-grid selection should serialize FONTSIZE edits through the shared update path");
         }
 
+        var labelSpacingSelection = CopperfinDesignerSelection.FromSnapshot(
+            "label",
+            new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 14,
+                Title = "customer.label",
+                Subtitle = "label",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "OBJTYPE", Value = "5" },
+                    new() { Name = "EXPR", Value = "Customer name" },
+                    new() { Name = "SPACING", Value = "1" }
+                }
+            },
+            new CopperfinLocalization("es-419"));
+        Expect(labelSpacingSelection is not null &&
+               TypeDescriptor.GetProperties(labelSpacingSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Interlineado", StringComparison.Ordinal)),
+            "Spanish label object property-grid selection should expose localized SPACING");
+        if (labelSpacingSelection is not null)
+        {
+            ExpectSelectionUpdate(labelSpacingSelection, "SPACING", 2, "2",
+                "Shared label object property-grid selection should serialize SPACING edits through the shared update path");
+        }
+
         var deletedSnapshotObject = new CopperfinStudioSnapshotObject
         {
             RecordIndex = 13,

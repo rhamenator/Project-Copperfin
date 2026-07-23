@@ -2706,6 +2706,7 @@
   "AssetEditor.Property.ExpressionDataType": "Expression Data Type",
   "AssetEditor.Property.CalculationType": "Calculation Type",
   "AssetEditor.Property.ResetTotal": "Reset Total",
+  "AssetEditor.Property.LineSpacing": "Line Spacing",
   "AssetEditor.Property.PrintWhen": "Print When",
   "AssetEditor.Property.PrintWhenGroup": "When Group Changes",
   "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values",

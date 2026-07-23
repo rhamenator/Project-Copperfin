@@ -2706,6 +2706,7 @@
   "AssetEditor.Property.ExpressionDataType": "Tipo de datos de expresión",
   "AssetEditor.Property.CalculationType": "Tipo de cálculo",
   "AssetEditor.Property.ResetTotal": "Restablecer total",
+  "AssetEditor.Property.LineSpacing": "Interlineado",
   "AssetEditor.Property.PrintWhen": "Imprimir cuando",
   "AssetEditor.Property.PrintWhenGroup": "Cuando cambia el grupo",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",

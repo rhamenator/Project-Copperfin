@@ -359,6 +359,9 @@ StudioLayoutObjectSnapshot build_layout_object(
         add_highlight("TOTALTYPE");
         add_highlight("RESETTOTAL");
     }
+    if (object.objtype_code == 5) {
+        add_highlight("SPACING");
+    }
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");
