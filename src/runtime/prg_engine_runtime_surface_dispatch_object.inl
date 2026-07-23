@@ -517,6 +517,12 @@
             normalize_native_pageframe_activepage_invariant(*runtime_object);
             return make_boolean_value(true);
         }
+        if (member_name == "value" &&
+            (normalize_identifier(runtime_object->base_class_name) == "combobox" ||
+             normalize_identifier(runtime_object->base_class_name) == "listbox")) {
+            return make_boolean_value(
+                write_native_list_control_value(*runtime_object, arguments[2]));
+        }
         if (is_native_pagecount_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
                 write_native_member_callback &&

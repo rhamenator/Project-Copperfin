@@ -166,6 +166,8 @@ bool write_native_list_control_selected_slot(RuntimeOleObjectState& runtime_obje
 bool write_native_list_control_selected_item_id(RuntimeOleObjectState& runtime_object,
                                                 long long requested_item_id,
                                                 const PrgValue& assigned_value);
+bool write_native_list_control_value(RuntimeOleObjectState& runtime_object,
+                                     const PrgValue& assigned_value);
 void refresh_native_list_control_controlsource_value_kind_hint(
     RuntimeOleObjectState& runtime_object,
     const RuntimeControlSourceValueResolver& resolver);

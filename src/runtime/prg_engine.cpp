@@ -8124,6 +8124,19 @@ namespace copperfin::runtime
                     remember_property_expression();
                     return true;
                 }
+                if (normalized_property_name == "value" &&
+                    (normalize_identifier(runtime_object.base_class_name) == "combobox" ||
+                     normalize_identifier(runtime_object.base_class_name) == "listbox"))
+                {
+                    const bool wrote =
+                        write_native_list_control_value(runtime_object, assigned_value) &&
+                        write_native_list_control_controlsource_target(runtime_object, source_frame);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
+                }
                 if (const auto list_cell = resolve_list_member_cell();
                     list_cell.has_value())
                 {

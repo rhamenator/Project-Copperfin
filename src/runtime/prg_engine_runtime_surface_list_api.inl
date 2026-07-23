@@ -304,3 +304,44 @@ bool write_native_list_control_selected_item_id(
 
     return write_native_list_control_selected_slot(runtime_object, *slot, assigned_value);
 }
+
+bool write_native_list_control_value(
+    RuntimeOleObjectState& runtime_object,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (runtime_object.list_rows.empty()) {
+        runtime_object.properties["value"] = assigned_value;
+        return true;
+    }
+    std::optional<std::size_t> selected_slot;
+    if (native_list_control_prefers_index_value(runtime_object)) {
+        const long long requested_index = std::llround(value_as_number(assigned_value));
+        if (requested_index >= 1LL &&
+            static_cast<std::size_t>(requested_index) <= runtime_object.list_rows.size()) {
+            selected_slot = static_cast<std::size_t>(requested_index - 1LL);
+        }
+    } else {
+        const std::size_t bound_column = native_list_control_bound_column(runtime_object);
+        if (bound_column >= 1U) {
+            const std::string requested_value = value_as_string(assigned_value);
+            for (std::size_t row_slot = 0U; row_slot < runtime_object.list_rows.size(); ++row_slot) {
+                const auto& row = runtime_object.list_rows[row_slot];
+                if (bound_column <= row.size() &&
+                    value_as_string(row[bound_column - 1U]) == requested_value) {
+                    selected_slot = row_slot;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!selected_slot.has_value()) {
+        return false;
+    }
+    return write_native_list_control_selected_slot(runtime_object, *selected_slot, make_boolean_value(true));
+}
