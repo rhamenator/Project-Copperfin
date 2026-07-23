@@ -141,6 +141,11 @@ bool is_native_visual_fontitalic_member_name(const RuntimeOleObjectState& runtim
     return native_visual_fontitalic_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_fontunderline_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_fontunderline_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_visible_member_name_matches(runtime_object, normalized_member_name);
