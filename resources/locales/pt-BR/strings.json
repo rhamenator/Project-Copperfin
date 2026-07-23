@@ -2697,5 +2697,7 @@
   "AssetEditor.Debugger.Column.Line": "Linha",
   "AssetEditor.Debugger.Column.Action": "A\u00E7\u00E3o",
   "AssetEditor.Property.Float": "Flutuar",
-  "AssetEditor.Property.NoRepeat": "N\u00E3o repetir"
+  "AssetEditor.Property.NoRepeat": "N\u00E3o repetir",
+  "AssetEditor.Property.Stretch": "Expandir com estouro",
+  "AssetEditor.Property.StretchTop": "Expandir em rela\u00E7\u00E3o ao topo"
 }

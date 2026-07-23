@@ -272,7 +272,9 @@ internal static partial class Program
                 new() { Name = "FONTSTYLE", Value = "1" },
                 new() { Name = "FONTSIZE", Value = "10" },
                 new() { Name = "FLOAT", Value = "true" },
-                new() { Name = "NOREPEAT", Value = "false" }
+                new() { Name = "NOREPEAT", Value = "false" },
+                new() { Name = "STRETCH", Value = "true" },
+                new() { Name = "STRETCHTOP", Value = "false" }
             }
         };
 
@@ -283,7 +285,9 @@ internal static partial class Program
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expresión", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño de fuente", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flotante", StringComparison.Ordinal)) &&
-               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "No repetir", StringComparison.Ordinal)),
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "No repetir", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Extender con desbordamiento", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Extender en relación con la parte superior", StringComparison.Ordinal)),
             "Spanish report object property-grid selection should localize object field labels");
         Expect(string.Equals(TypeDescriptor.GetProperties(spanishSelection)["OBJECTSTATE"]?.GetValue(spanishSelection)?.ToString(), "Activa", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(spanishSelection)["RECORDINDEX"]?.GetValue(spanishSelection)?.ToString(), "10", StringComparison.Ordinal),
@@ -296,7 +300,9 @@ internal static partial class Program
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expressão", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho da fonte", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flutuar", StringComparison.Ordinal)) &&
-               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Não repetir", StringComparison.Ordinal)),
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Não repetir", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expandir com estouro", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expandir em relação ao topo", StringComparison.Ordinal)),
             "Portuguese report object property-grid selection should localize object field labels");
         Expect(string.Equals(TypeDescriptor.GetProperties(portugueseSelection)["OBJECTSTATE"]?.GetValue(portugueseSelection)?.ToString(), "Ativa", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(portugueseSelection)["RECORDINDEX"]?.GetValue(portugueseSelection)?.ToString(), "10", StringComparison.Ordinal),
@@ -310,7 +316,9 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontSize"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Float"), StringComparison.Ordinal)) &&
-               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.NoRepeat"), StringComparison.Ordinal)),
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.NoRepeat"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Stretch"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.StretchTop"), StringComparison.Ordinal)),
             "Pseudo-localized report object property-grid selection should route object field labels through the shared catalog");
 
         if (pseudoSelection is not null)
@@ -345,6 +353,10 @@ internal static partial class Program
                 "Live report object property-grid selection should serialize FLOAT edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "NOREPEAT", true, "true",
                 "Live report object property-grid selection should serialize NOREPEAT edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "STRETCH", false, "false",
+                "Live report object property-grid selection should serialize STRETCH edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "STRETCHTOP", true, "true",
+                "Live report object property-grid selection should serialize STRETCHTOP edits through the shared update path");
         }
 
         var labelSelection = CopperfinDesignerSelection.FromSnapshot("label", snapshotObject, new CopperfinLocalization("en-US"));
@@ -379,7 +391,9 @@ internal static partial class Program
                 new() { Name = "FONTSTYLE", Value = "0" },
                 new() { Name = "FONTSIZE", Value = "9" },
                 new() { Name = "FLOAT", Value = string.Empty },
-                new() { Name = "NOREPEAT", Value = "false" }
+                new() { Name = "NOREPEAT", Value = "false" },
+                new() { Name = "STRETCH", Value = string.Empty },
+                new() { Name = "STRETCHTOP", Value = "false" }
             }
         };
 
@@ -410,6 +424,10 @@ internal static partial class Program
                 "Deleted report object property-grid selection should serialize FLOAT edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "NOREPEAT", true, "true",
                 "Deleted report object property-grid selection should serialize NOREPEAT edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "STRETCH", true, "true",
+                "Deleted report object property-grid selection should serialize STRETCH edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "STRETCHTOP", true, "true",
+                "Deleted report object property-grid selection should serialize STRETCHTOP edits through the shared update path");
         }
     }
 

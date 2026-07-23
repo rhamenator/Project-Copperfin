@@ -459,13 +459,20 @@ internal static partial class Program
 
     private static void TestDesignerSelectionExposesReportControlBehaviorProperties()
     {
-        CopperfinStudioSnapshotObject Snapshot(string objectType, string floatValue, string noRepeatValue) => new()
+        CopperfinStudioSnapshotObject Snapshot(
+            string objectType,
+            string floatValue,
+            string noRepeatValue,
+            string stretchValue = "true",
+            string stretchTopValue = "false") => new()
         {
             Properties = new List<CopperfinStudioSnapshotProperty>
             {
                 new() { Name = "OBJTYPE", Value = objectType },
                 new() { Name = "FLOAT", Value = floatValue },
-                new() { Name = "NOREPEAT", Value = noRepeatValue }
+                new() { Name = "NOREPEAT", Value = noRepeatValue },
+                new() { Name = "STRETCH", Value = stretchValue },
+                new() { Name = "STRETCHTOP", Value = stretchTopValue }
             }
         };
 
@@ -478,29 +485,42 @@ internal static partial class Program
             var properties = selection?.GetProperties();
             var floatProperty = properties?.Find("FLOAT", false);
             var noRepeatProperty = properties?.Find("NOREPEAT", false);
+            var stretchProperty = properties?.Find("STRETCH", false);
+            var stretchTopProperty = properties?.Find("STRETCHTOP", false);
 
-            Expect(floatProperty is not null && noRepeatProperty is not null,
-                $"{assetFamily} object selections should expose editable FLOAT and NOREPEAT properties");
-            Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat",
+            Expect(floatProperty is not null && noRepeatProperty is not null &&
+                   stretchProperty is not null && stretchTopProperty is not null,
+                $"{assetFamily} object selections should expose editable report-control behavior properties");
+            Expect(floatProperty?.DisplayName == "Float" && noRepeatProperty?.DisplayName == "No Repeat" &&
+                   stretchProperty?.DisplayName == "Stretch with Overflow" &&
+                   stretchTopProperty?.DisplayName == "Stretch Relative to Top",
                 $"{assetFamily} object behavior properties should use the English catalog labels");
             if (selection is not null)
             {
                 floatProperty?.SetValue(selection, false);
                 noRepeatProperty?.SetValue(selection, true);
+                stretchProperty?.SetValue(selection, false);
+                stretchTopProperty?.SetValue(selection, true);
                 Expect(selection.TryGetUpdate("FLOAT", out var floatTarget, out var serializedFloatValue) &&
                        floatTarget == "FLOAT" && serializedFloatValue == "false" &&
                        selection.TryGetUpdate("NOREPEAT", out var noRepeatTarget, out var serializedNoRepeatValue) &&
-                       noRepeatTarget == "NOREPEAT" && serializedNoRepeatValue == "true",
+                       noRepeatTarget == "NOREPEAT" && serializedNoRepeatValue == "true" &&
+                       selection.TryGetUpdate("STRETCH", out var stretchTarget, out var serializedStretchValue) &&
+                       stretchTarget == "STRETCH" && serializedStretchValue == "false" &&
+                       selection.TryGetUpdate("STRETCHTOP", out var stretchTopTarget, out var serializedStretchTopValue) &&
+                       stretchTopTarget == "STRETCHTOP" && serializedStretchTopValue == "true",
                     $"{assetFamily} object behavior edits should preserve invariant FRX/LBX update targets");
             }
         }
 
         var blankSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
-            Snapshot("8", string.Empty, "false"),
+            Snapshot("8", string.Empty, "false", string.Empty, "false"),
             new CopperfinLocalization("en-US"));
         Expect(blankSelection?.GetProperties().Find("FLOAT", false)?.GetValue(blankSelection) is bool floatValue && !floatValue &&
-               blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue,
+               blankSelection.GetProperties().Find("NOREPEAT", false)?.GetValue(blankSelection) is bool noRepeatValue && !noRepeatValue &&
+               blankSelection.GetProperties().Find("STRETCH", false)?.GetValue(blankSelection) is bool stretchValue && !stretchValue &&
+               blankSelection.GetProperties().Find("STRETCHTOP", false)?.GetValue(blankSelection) is bool stretchTopValue && !stretchTopValue,
             "blank and false report-control logical values should remain stable as false until edited");
 
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot(
@@ -509,10 +529,16 @@ internal static partial class Program
             new CopperfinLocalization("qps-ploc"));
         var pseudoFloatLabel = pseudoSelection?.GetProperties().Find("FLOAT", false)?.DisplayName;
         var pseudoNoRepeatLabel = pseudoSelection?.GetProperties().Find("NOREPEAT", false)?.DisplayName;
+        var pseudoStretchLabel = pseudoSelection?.GetProperties().Find("STRETCH", false)?.DisplayName;
+        var pseudoStretchTopLabel = pseudoSelection?.GetProperties().Find("STRETCHTOP", false)?.DisplayName;
         Expect(pseudoFloatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
                pseudoFloatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
                pseudoNoRepeatLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
-               pseudoNoRepeatLabel.EndsWith(" !!]", StringComparison.Ordinal),
+               pseudoNoRepeatLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoStretchLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoStretchLabel.EndsWith(" !!]", StringComparison.Ordinal) &&
+               pseudoStretchTopLabel?.StartsWith("[!! ", StringComparison.Ordinal) == true &&
+               pseudoStretchTopLabel.EndsWith(" !!]", StringComparison.Ordinal),
             "pseudo-localized report-control property labels should remain visibly localized");
 
         var readOnlySelection = CopperfinDesignerSelection.FromSnapshot(
@@ -521,7 +547,9 @@ internal static partial class Program
             new CopperfinLocalization("en-US"),
             documentReadOnly: true);
         Expect(readOnlySelection?.GetProperties().Find("FLOAT", false)?.IsReadOnly == true &&
-               readOnlySelection.GetProperties().Find("NOREPEAT", false)?.IsReadOnly == true,
+               readOnlySelection.GetProperties().Find("NOREPEAT", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("STRETCH", false)?.IsReadOnly == true &&
+               readOnlySelection.GetProperties().Find("STRETCHTOP", false)?.IsReadOnly == true,
             "read-only report documents should keep report-control behavior properties read-only");
     }
 
