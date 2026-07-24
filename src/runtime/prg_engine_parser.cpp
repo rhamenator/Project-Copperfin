@@ -1761,6 +1761,24 @@ Program parse_program_impl(
             if (!while_clause.empty()) {
                 statement.names.push_back(while_clause);
             }
+        } else if (starts_with_insensitive(line, "DEFINE POPUP ")) {
+            statement.kind = StatementKind::define_popup_command;
+            const std::string body = trim_copy(line.substr(13U));
+            statement.identifier = unquote_identifier(take_first_token(body));
+        } else if (starts_with_insensitive(line, "DEFINE BAR ")) {
+            const std::string body = trim_copy(line.substr(11U));
+            const auto [bar_number, bar_tail] = split_first_word(body);
+            const std::size_t of_position = find_keyword_top_level(bar_tail, "OF");
+            const std::size_t prompt_position = of_position == std::string::npos
+                ? std::string::npos
+                : find_keyword_top_level_from(bar_tail, "PROMPT", of_position + 2U);
+            if (of_position != std::string::npos && prompt_position != std::string::npos) {
+                statement.kind = StatementKind::define_bar_command;
+                statement.secondary_expression = trim_copy(bar_number);
+                statement.identifier = unquote_identifier(trim_copy(
+                    bar_tail.substr(of_position + 2U, prompt_position - of_position - 2U)));
+                statement.expression = trim_copy(bar_tail.substr(prompt_position + 6U));
+            }
         } else if (starts_with_insensitive(line, "ACTIVATE POPUP ")) {
             statement.kind = StatementKind::activate_surface;
             statement.identifier = "popup";

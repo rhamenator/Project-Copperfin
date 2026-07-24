@@ -42,6 +42,10 @@ const char* statement_kind_name(const StatementKind kind) {
             return "report_form";
         case StatementKind::label_form:
             return "label_form";
+        case StatementKind::define_popup_command:
+            return "define_popup_command";
+        case StatementKind::define_bar_command:
+            return "define_bar_command";
         case StatementKind::activate_surface:
             return "activate_surface";
         case StatementKind::release_surface:

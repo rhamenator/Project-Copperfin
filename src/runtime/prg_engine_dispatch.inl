@@ -2767,6 +2767,31 @@
                 return open_report_surface(statement, frame, ".frx", "report");
             case StatementKind::label_form:
                 return open_report_surface(statement, frame, ".lbx", "label");
+            case StatementKind::define_popup_command:
+            {
+                const std::string popup_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                if (!popup_name.empty())
+                {
+                    current_session_state().popup_bar_prompts[popup_name].clear();
+                }
+                return {};
+            }
+            case StatementKind::define_bar_command:
+            {
+                const auto bar_number = try_parse_numeric_index_value(statement.secondary_expression);
+                const std::string popup_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                if (!bar_number.has_value() || popup_name.empty())
+                {
+                    return {};
+                }
+
+                const PrgValue prompt_value = evaluate_expression(statement.expression, frame);
+                current_session_state().popup_bar_prompts[popup_name][
+                    static_cast<long long>(std::llround(*bar_number))] = value_as_string(prompt_value);
+                return {};
+            }
             case StatementKind::activate_surface:
                 waiting_for_events = true;
                 events.push_back({.category = statement.identifier + ".activate",
@@ -2774,6 +2799,12 @@
                                   .location = statement.location});
                 return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
             case StatementKind::release_surface:
+                if (statement.identifier == "popup")
+                {
+                    const std::string popup_name = normalize_identifier(
+                        unquote_identifier(trim_copy(statement.expression)));
+                    current_session_state().popup_bar_prompts.erase(popup_name);
+                }
                 waiting_for_events = false;
                 events.push_back({.category = statement.identifier + ".release",
                                   .detail = statement.expression,

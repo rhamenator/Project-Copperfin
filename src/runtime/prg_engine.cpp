@@ -773,6 +773,7 @@ namespace copperfin::runtime
             std::vector<std::string> key_stack;
             std::vector<std::string> menu_stack;
             std::vector<std::string> popup_stack;
+            std::map<std::string, std::map<long long, std::string>> popup_bar_prompts;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
         };
@@ -5702,6 +5703,24 @@ namespace copperfin::runtime
             for (const vfp::DbfFieldDescriptor &field : fields)
             {
                 refreshed_rows.push_back({make_string_value(field.name)});
+            }
+            break;
+        }
+        case 9:
+        {
+            const std::string popup_name = normalize_identifier(
+                unquote_identifier(trim_copy(row_source)));
+            const auto popup = current_session_state().popup_bar_prompts.find(popup_name);
+            if (popup == current_session_state().popup_bar_prompts.end())
+            {
+                break;
+            }
+
+            refreshed_rows.reserve(popup->second.size());
+            for (const auto &[bar_number, prompt] : popup->second)
+            {
+                (void)bar_number;
+                refreshed_rows.push_back({make_string_value(prompt)});
             }
             break;
         }

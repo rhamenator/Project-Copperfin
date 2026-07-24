@@ -29,6 +29,8 @@ enum class StatementKind {
     do_form,
     report_form,
     label_form,
+    define_popup_command,
+    define_bar_command,
     activate_surface,
     release_surface,
     return_statement,
