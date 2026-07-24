@@ -75,6 +75,16 @@ Suggested UI regression flow:
 2. Run `..\Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe`
 3. Keep the smoke tests green as report/label/form/project shells evolve
 
+Portable shared-UI regression flow:
+
+```sh
+scripts/run-designer-smoke-portable.sh --list-tests
+scripts/run-designer-smoke-portable.sh --exact SmokeStandaloneStudioCommandWindowInteraction
+scripts/run-designer-smoke-portable.sh --filter SmokeStandaloneStudio
+```
+
+The portable runner builds the same net472 smoke executable with Windows targeting enabled, then runs the shared WinForms controls through Mono. Linux uses Xvfb when available; macOS can use an existing XQuartz display by exporting `DISPLAY`. `scripts/run-designer-smoke-headless.sh` remains a strict Xvfb compatibility entry point. These tests cover shared managed UI behavior only; Visual Studio integration, Win32 rendering, installers, and hosted VFP9 behavior remain Windows validation gates.
+
 Repeatable Windows validation:
 
 ```powershell
