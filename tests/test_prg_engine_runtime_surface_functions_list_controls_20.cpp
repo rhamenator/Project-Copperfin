@@ -33,6 +33,11 @@ namespace copperfin::runtime_surface_tests
             "cThird = oList.List(5)\n"
             "nPopupCount = CNTBAR('choices')\n"
             "nMissingPopupCount = CNTBAR('missing_popup')\n"
+            "nFirstBar = GETBAR('choices', 1)\n"
+            "nSecondBar = GETBAR('choices', 2)\n"
+            "nFifthBar = GETBAR('choices', 5)\n"
+            "nMissingBar = GETBAR('choices', 99)\n"
+            "cPromptByPosition = PRMBAR('choices', GETBAR('choices', 5))\n"
             "cPromptTwo = PRMBAR('choices', 2)\n"
             "cPromptThree = PRMBAR('choices', 3)\n"
             "cPromptDisabled = PRMBAR('choices', 4)\n"
@@ -92,6 +97,11 @@ namespace copperfin::runtime_surface_tests
         check("cthird", "Twenty");
         check("npopupcount", "5");
         check("nmissingpopupcount", "0");
+        check("nfirstbar", "2");
+        check("nsecondbar", "3");
+        check("nfifthbar", "20");
+        check("nmissingbar", "0");
+        check("cpromptbyposition", "Twenty");
         check("cprompttwo", "Two");
         check("cpromptthree", "Three");
         check("cpromptdisabled", "Disabled");

@@ -61,6 +61,7 @@
         const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
         const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_prompt_callback,
         const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_count_callback,
+        const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_position_callback,
         const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
     namespace
@@ -148,6 +149,7 @@
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_prompt_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_count_callback,
+                std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_position_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
@@ -224,6 +226,7 @@
                   assign_array_callback_(std::move(assign_array_callback)),
                   popup_prompt_callback_(std::move(popup_prompt_callback)),
                   popup_bar_count_callback_(std::move(popup_bar_count_callback)),
+                  popup_bar_position_callback_(std::move(popup_bar_position_callback)),
                   bindevent_callback_(std::move(bindevent_callback)),
                   raiseevent_callback_(std::move(raiseevent_callback)),
                   unbindevents_callback_(std::move(unbindevents_callback)),
@@ -1867,6 +1870,7 @@
                                                           assign_array_callback_,
                                                           popup_prompt_callback_,
                                                           popup_bar_count_callback_,
+                                                          popup_bar_position_callback_,
                                                           record_event_callback_))
                 {
                     return *runtime_surface_result;
@@ -3490,6 +3494,7 @@
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_prompt_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_count_callback_;
+            std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_position_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;

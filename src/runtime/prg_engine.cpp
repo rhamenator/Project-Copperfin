@@ -2608,6 +2608,31 @@ namespace copperfin::runtime
                 }
                 return make_number_value(static_cast<double>(popup->second.size()));
             },
+            [this](const std::vector<PrgValue> &arguments) -> std::optional<PrgValue>
+            {
+                if (arguments.size() < 2U)
+                {
+                    return std::nullopt;
+                }
+
+                const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
+                const long long position = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+                if (popup_name.empty() || position < 1LL)
+                {
+                    return std::nullopt;
+                }
+
+                const auto popup = current_session_state().popup_bar_prompts.find(popup_name);
+                if (popup == current_session_state().popup_bar_prompts.end() ||
+                    position > static_cast<long long>(popup->second.size()))
+                {
+                    return std::nullopt;
+                }
+
+                auto bar = popup->second.begin();
+                std::advance(bar, position - 1LL);
+                return make_number_value(static_cast<double>(bar->first));
+            },
             [this, &frame](
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::optional<std::string>> &argument_references) -> PrgValue
