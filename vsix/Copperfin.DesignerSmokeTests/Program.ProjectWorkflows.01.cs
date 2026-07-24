@@ -19,7 +19,10 @@ using System.Windows.Forms;
 namespace Copperfin.VisualStudio;
 internal static partial class Program
 {
-    private static void SmokeProjectEditorWithRealAsset(string? path, string[] expectGroups)
+    private static void SmokeProjectEditorWithRealAsset(
+        string? path,
+        string[] expectGroups,
+        string expectedManifestAsset = "asset=6|wzcommon/registry.vcx|")
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
@@ -73,6 +76,14 @@ internal static partial class Program
                                     string.Equals(
                                         list.Columns[0].Text,
                                         "Item",
+                                        StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(
+                                        list.Columns[1].Text,
+                                        "Group",
+                                        StringComparison.OrdinalIgnoreCase) &&
+                                    string.Equals(
+                                        list.Columns[2].Text,
+                                        "Record",
                                         StringComparison.OrdinalIgnoreCase));
         var projectEntryItem = projectEntryList?.Items
             .Cast<ListViewItem>()
@@ -144,8 +155,8 @@ internal static partial class Program
                     var manifestText = File.ReadAllText(workflowResult.ManifestPath);
                     Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
                         $"project editor build manifest should remain warning-free for {path}");
-                    Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
-                        $"project editor build manifest should stage the shared class dependency for {path}");
+                    Expect(manifestText.IndexOf(expectedManifestAsset, StringComparison.Ordinal) >= 0,
+                        $"project editor build manifest should stage the expected project dependency for {path}");
                 }
             }
         }
@@ -187,8 +198,8 @@ internal static partial class Program
                     var manifestText = File.ReadAllText(workflowResult.ManifestPath);
                     Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
                         $"project editor run manifest should remain warning-free for {path}");
-                    Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
-                        $"project editor run manifest should stage the shared class dependency for {path}");
+                    Expect(manifestText.IndexOf(expectedManifestAsset, StringComparison.Ordinal) >= 0,
+                        $"project editor run manifest should stage the expected project dependency for {path}");
                 }
             }
         }

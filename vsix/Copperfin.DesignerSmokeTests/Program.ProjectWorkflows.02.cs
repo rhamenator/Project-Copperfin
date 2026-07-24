@@ -821,7 +821,8 @@ internal static partial class Program
 
         SmokeProjectEditorWithRealAsset(
             projectPath,
-            expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
+            expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" },
+            expectedManifestAsset: "asset=5|tasklistui.vcx|");
         SmokeProgramEditorWithRealAsset(programPath);
         SmokeStandaloneStudioWithMultipleAssets(formPath, reportPath);
         SmokeVisualAssetEditorWithRealAsset(formPath, "form", "Visual form", "SCX/SCT assets", ".SCT");

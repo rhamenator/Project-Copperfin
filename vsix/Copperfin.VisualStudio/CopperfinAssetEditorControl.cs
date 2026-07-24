@@ -4439,6 +4439,28 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                                         string.Equals(group.Id, projectGroupId, StringComparison.Ordinal));
         }
 
+        if (selectedItem is null && currentSnapshot?.AssetFamily == "project")
+        {
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is CopperfinStudioProjectGroup group &&
+                                        !string.Equals(group.Id, "project", StringComparison.Ordinal) &&
+                                        group.RecordIndexes.Any(recordIndex =>
+                                        {
+                                            var entry = LookupProjectEntry(recordIndex);
+                                            var snapshotObject = currentSnapshot?.Objects
+                                                .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+                                            return entry is not null &&
+                                                   snapshotObject is not null &&
+                                                   !snapshotObject.Deleted &&
+                                                   !entry.Excluded &&
+                                                   CopperfinProjectEntryActivation.TryResolve(
+                                                       currentPath ?? string.Empty,
+                                                       entry,
+                                                       out _);
+                                        }));
+        }
+
         if (selectedItem is null && sectionListView.Items.Count > 0)
         {
             selectedItem = sectionListView.Items[0];
