@@ -221,113 +221,12 @@ diagram in [24-system-uml.md](24-system-uml.md) but in flowchart form rather
 than UML, and folds in the aspirational layer that document deliberately
 keeps separate.
 
-```mermaid
-flowchart TB
-    classDef real fill:#2f7a52,stroke:#1e5136,color:#ffffff,stroke-width:1px;
-    classDef seed fill:#a8790c,stroke:#6e4f07,color:#ffffff,stroke-width:1px;
-    classDef none fill:#8a3a3a,stroke:#5c2626,color:#ffffff,stroke-width:1px;
-    classDef ground fill:#33475b,stroke:#1f2c38,color:#ffffff,stroke-width:1px;
-    classDef exe fill:#4b5563,stroke:#2f353b,color:#ffffff,stroke-width:1px;
-    classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
-
-    subgraph CORE["Ground Truth Native Libraries (cf_*)"]
-      direction TB
-      L1["cf_localization"]
-      L2["cf_security"]
-      L3["cf_platform_profile"]
-      L4["cf_vfp_assets"]
-      L5["cf_runtime_text"]
-      L6["cf_prg_analysis"]
-      L7["cf_design_model"]
-      L8["cf_xbase_runtime"]
-      L9["cf_runtime_pipeline"]
-    end
-
-    subgraph EXEC["Ground Truth Executables + Managed Hosts"]
-      direction TB
-      X1["copperfin_inspect"]
-      X2["copperfin_studio_host"]
-      X3["copperfin_runtime_host"]
-      X4["copperfin_build_host"]
-      X5["Copperfin.VisualStudio (VSIX)"]
-      X6["Copperfin.Studio (WinForms)"]
-    end
-
-    subgraph ASPIRATIONAL["Aspirational copperfin-* Modules (docs/02 Top-Level Product Map)"]
-      direction TB
-      A1["copperfin-core — NOT extracted"]
-      A2["copperfin-data — NOT extracted"]
-      A3["copperfin-connectors — PARTIAL SEED"]
-      A4["copperfin-runtime — NOT extracted"]
-      A5["copperfin-designer — NOT extracted"]
-      A6["copperfin-reports — NOT extracted"]
-      A7["copperfin-migrator — NO CODE"]
-      A8["copperfin-dotnet — PARTIAL SEED"]
-      A9["copperfin-gateway — NO CODE"]
-      A10["copperfin-shield — PARTIAL SEED"]
-      A11["copperfin-cli — INFORMAL ONLY"]
-      A12["copperfin-vsix — ALREADY REAL (label stale)"]
-    end
-
-    L2 --> L1
-    L3 --> L1
-    L4 --> L1
-    L5 --> L1
-    L6 --> L5
-    L7 --> L4
-    L7 --> L6
-    L7 --> L1
-    L8 --> L6
-    L8 --> L5
-    L8 --> L7
-    L9 --> L7
-    L9 --> L2
-    L9 --> L3
-    L9 --> L8
-
-    X1 --> L4
-    X1 --> L2
-    X2 --> L7
-    X2 --> L2
-    X2 --> L3
-    X3 --> L8
-    X3 --> L2
-    X3 --> L3
-    X4 --> L9
-    X5 --> X2
-    X5 --> X3
-    X6 --> X2
-    X6 --> X3
-
-    A1 -.extract from.-> L1
-    A2 -.extract from.-> L4
-    A2 -.requires.-> A1
-    A3 -.deepen: live backend exec.-> L3
-    A3 -.requires.-> A2
-    A4 -.extract/rename from.-> L8
-    A4 -.requires.-> A2
-    A5 -.extract from.-> L7
-    A5 -.requires.-> A2
-    A6 -.new render/export module.-> L7
-    A6 -.requires.-> A4
-    A7 -.new code entirely.-> L4
-    A7 -.requires.-> A5
-    A8 -.deepen: real CLR host.-> L9
-    A8 -.requires.-> A4
-    A9 -.new code entirely.-> L2
-    A9 -.requires.-> A8
-    A10 -.deepen: policy-profile depth.-> L2
-    A11 -.unify existing hosts.-> L9
-    A12 -.already implemented as.-> X5
-
-    class L1,L2,L3,L4,L5,L6,L7,L8,L9 ground;
-    class X1,X2,X3,X4,X5,X6 exe;
-    class A1,A2,A4,A5,A6,A11 none;
-    class A3,A8,A10 seed;
-    class A7,A9 none;
-    class A12 real;
-    class CORE,EXEC,ASPIRATIONAL lane;
-```
+Moved to its own file — see
+[diagrams/roadmap-whole-system-architecture.md](diagrams/roadmap-whole-system-architecture.md) —
+because GitHub's Mermaid renderer only reliably renders the first diagram on
+a page with multiple diagrams; this page keeps only the
+[Full Lettered Phase Dependency Diagram](#full-lettered-phase-dependency-diagram)
+inline.
 
 ## Phase And Topic Map
 
@@ -338,50 +237,8 @@ and uses workstream names rather than lane letters; the
 [Full Lettered Phase Dependency Diagram](#full-lettered-phase-dependency-diagram)
 below gives the same shape using the real lane identities.
 
-```mermaid
-flowchart TD
-    MVP["MVP implementation-complete RC"]
-
-    subgraph Compatibility["Compatibility And Authoring"]
-        RPT["Report and label fidelity"]
-        IDE["IDE and designer workflows"]
-        RTL["Runtime and language compatibility"]
-    end
-
-    subgraph Foundation["Foundation And Delivery"]
-        LOC["Localization"]
-        PKG["Build, package, and debug contracts"]
-        SEC["Security and platform seams"]
-    end
-
-    subgraph Evidence["Acceptance Evidence"]
-        TEST["Native, managed, and Windows validation"]
-        SAMPLE["Real VFP9 sample coverage"]
-        DOCS["Safety traceability and known limitations"]
-    end
-
-    RPT --> IDE
-    RTL --> RPT
-    LOC --> IDE
-    LOC --> PKG
-    PKG --> IDE
-    SEC --> PKG
-    IDE --> TEST
-    RPT --> SAMPLE
-    RTL --> SAMPLE
-    PKG --> TEST
-    TEST --> MVP
-    SAMPLE --> MVP
-    DOCS --> MVP
-
-    MVP --> V1["v1 transition"]
-    V1 --> PARITY["Broader runtime parity"]
-    V1 --> DESIGN["Full designer and IDE parity"]
-    V1 --> MODERN["Federation, planning, and interop"]
-    V1 --> SECURITY["Security depth"]
-    V1 --> PORT["Portability"]
-    V1 --> TRACE["Requirements traceability"]
-```
+Moved to its own file for the same rendering reason — see
+[diagrams/roadmap-phase-and-topic-map.md](diagrams/roadmap-phase-and-topic-map.md).
 
 ## Full Lettered Phase Dependency Diagram
 
@@ -475,28 +332,9 @@ level; do not reopen without fresh regression evidence per `agents.md`.
 
 ### Phase B — Runtime & xAsset Parity (slice-lane C)
 
-```mermaid
-flowchart LR
-    classDef done fill:#2f7a52,stroke:#1e5136,color:#ffffff,stroke-width:1px;
-    classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
-
-    subgraph LANEC["Lane C — root #109 'Runtime parity surfaces' (closed, #154-162) — this is what CHANGELOG prose calls Phase B"]
-      direction LR
-      C1["C1 Form/Class Lifecycle<br/>startup/shutdown sequencing<br/>#154, #155"]
-      C2["C2 Report/Label Execution<br/>preview-only startup lanes<br/>#156, #157"]
-      C3["C3 Menu Dispatch/Cleanup<br/>setup-activate order, actions<br/>#158, #159"]
-      C4["C4 Build-Inclusion / Startup<br/>Resolution<br/>#160, #161"]
-      C5["C5 Build/Run Workflow<br/>Diagnostics<br/>#162"]
-    end
-
-    C1 --> C4
-    C2 --> C4
-    C3 --> C4
-    C4 --> C5
-
-    class C1,C2,C3,C4,C5 done;
-    class LANEC lane;
-```
+Diagram moved to
+[diagrams/roadmap-phase-b-lane-c.md](diagrams/roadmap-phase-b-lane-c.md) to
+keep this page's diagram count to one.
 
 **What's done:** all five sub-lanes shipped and closed in a single May 2026
 batch — form/class, report/label, and menu xAsset lifecycle sequencing, plus
@@ -509,55 +347,9 @@ closed — this is tracked more as depth work in lane D's debugger sub-lane
 
 ### Phase C — Designer, IDE & Delivery Pipeline (slice-lanes D + E + F + G)
 
-```mermaid
-flowchart TB
-    classDef done fill:#2f7a52,stroke:#1e5136,color:#ffffff,stroke-width:1px;
-    classDef partial fill:#a8790c,stroke:#6e4f07,color:#ffffff,stroke-width:1px;
-    classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
-
-    subgraph LANED["Lane D — root #110 'Build/compiler/debug pipeline'"]
-      direction LR
-      D1["D1 Packaging Pipeline<br/>DLL/FLL/OCX/APP/FXP outputs,<br/>AST/IR/.transpiled.cs contracts<br/>root #19, active through #637"]
-      D2["D2 Debugger<br/>breakpoints, watch/locals,<br/>step, xAsset action-id mapping<br/>root #20, active through #416"]
-    end
-
-    subgraph LANEE["Lane E — root #111 'Shared design model and designer fidelity' (closed 2026-07-24)"]
-      direction LR
-      E1["E1 Shared Design Model<br/>memo-heavy round-trip<br/>preservation groundwork<br/>root #22, closed"]
-      E2["E2 Designer Interactions<br/>builders, context-aware<br/>editors<br/>root #23, closed, to #1749"]
-      E3["E3 Report/Label Fidelity<br/>FRX/LBX field-by-field parity<br/>root #24, closed, to #4543+<br/>(largest lane in the repo)"]
-      E1 --> E2
-      E1 --> E3
-    end
-
-    subgraph LANEF["Lane F — root #112 'IDE and editor parity' (shared root with G)"]
-      direction LR
-      F1["F1 VS Extension Parity<br/>+ Utility Panes<br/>root #25, #174-175, #1714"]
-      F2["F2 Standalone Studio<br/>-> Full IDE<br/>root #26, #176-177"]
-      F1 --> F2
-    end
-
-    subgraph LANEG["Lane G — root #112 'IDE and editor parity' (shared root with F) - IntelliSense"]
-      direction LR
-      G1["G1 Semantic Resolution,<br/>Signature Help, Completions<br/>root #27, #178-183 and #395-401"]
-      G2["G2 Navigation, References,<br/>Refactoring<br/>root #28"]
-      G3["G3 Richer IntelliSense<br/>Metadata Inputs<br/>root #29"]
-      G1 --> G2
-      G1 --> G3
-    end
-
-    E2 --> F1
-    E3 --> F1
-    E2 --> D2
-    E3 --> D1
-    F1 --> G1
-
-    class D1,D2 partial;
-    class E1,E2,E3 done;
-    class F1,F2 partial;
-    class G1,G2,G3 partial;
-    class LANED,LANEE,LANEF,LANEG lane;
-```
+Diagram moved to
+[diagrams/roadmap-phase-c-lanes-defg.md](diagrams/roadmap-phase-c-lanes-defg.md) —
+same rendering reason as above.
 
 **What's done:** lane E (shared design model, designer interactions, and
 report/label fidelity) closed on 2026-07-24 — the newest closure in the whole
@@ -572,66 +364,9 @@ IntelliSense work is still active as of `#395`-`#401`.
 
 ### v1 — Post-MVP Roadmap (slice-lanes H + I + J)
 
-```mermaid
-flowchart TB
-    classDef partial fill:#a8790c,stroke:#6e4f07,color:#ffffff,stroke-width:1px;
-    classDef planned fill:#6b7280,stroke:#484d54,color:#ffffff,stroke-width:1px;
-    classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
-
-    MVP["MVP implementation-complete RC<br/>(gate)"]
-
-    subgraph V1["v1 Roadmap"]
-      direction TB
-
-      CONT1["#108 continuation<br/>Broader runtime parity<br/>(v1 item 1) - no dedicated<br/>letter; continues post-Phase-A work"]
-      CONT2["#111 / #112 continuation<br/>Full authoring workflows<br/>(v1 item 2) - matures lanes<br/>E / F / G past 'reached green'"]
-
-      subgraph LANEH["Lane H — root #113 'Modernization/outputs/interop/security' (shared root with I)"]
-        direction LR
-        H1["H1 Deterministic Relational<br/>Backend Translators<br/>root #30 - SEEDED:<br/>see docs/21, cf_platform_profile"]
-        H2["H2 Document/Vector Backend<br/>+ AI-Assisted Planning<br/>root #31"]
-        H3["H3 .NET Outputs, MCP/AI<br/>Hooks, Python/R Sidecars<br/>root #32 - SEEDED:<br/>see docs/11, docs/19, launcher stub only"]
-        H1 --> H2 --> H3
-      end
-
-      subgraph LANEI["Lane I — root #113 'Modernization/outputs/interop/security' (shared root with H)"]
-        direction LR
-        I1["I1 Runtime/Project Security<br/>Depth + Opt-In Generated-<br/>App Controls<br/>root #33 - SEEDED: cf_security baseline"]
-        I2["I2 Extension/Host/AI-MCP<br/>Security Boundary<br/>root #34"]
-        I1 --> I2
-      end
-
-      subgraph LANEJ["Lane J — root #114 'Portability and portable core boundary' (still OPEN, zero shipped evidence)"]
-        direction LR
-        J1["J1 Preserve Portable Core<br/>Boundary<br/>root #35"]
-        J2["J2 Port Standalone IDE<br/>+ Core to macOS<br/>root #36"]
-        J3["J3 Port Standalone IDE<br/>+ Core to Linux<br/>root #37"]
-        J1 --> J2
-        J1 --> J3
-      end
-
-      TRACE["Requirements-to-code-to-test<br/>traceability matrix<br/>(v1 item 6) - no lettered root;<br/>standing deferred goal"]
-    end
-
-    MVP --> CONT1
-    MVP --> CONT2
-    MVP --> LANEH
-    MVP --> LANEI
-    MVP --> LANEJ
-    CONT1 --> H1
-    CONT2 --> H3
-    H1 --> TRACE
-    H3 --> TRACE
-    I2 --> TRACE
-    J1 --> TRACE
-
-    class CONT1,CONT2 planned;
-    class H1,H3,I1 partial;
-    class H2,I2 planned;
-    class J1,J2,J3 planned;
-    class TRACE planned;
-    class V1,LANEH,LANEI,LANEJ lane;
-```
+Diagram moved to
+[diagrams/roadmap-v1-lanes-hij.md](diagrams/roadmap-v1-lanes-hij.md) — same
+rendering reason as above.
 
 **What's done:** `H1`'s relational backend translators and `I1`'s security
 baseline both have real seeds — `cf_platform_profile`'s deterministic Fox-SQL
@@ -639,17 +374,18 @@ translator/execution-planning lane, and `cf_security`'s RBAC/audit/secrets/
 signing baseline, respectively. **What's left, and what it takes:** this is
 covered in full, document-by-document, in
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md) —
-in particular its "Interop, Federation, Trust, and Security" and "Language &
-Data Fidelity" diagrams give the `H`/`I` gaps in the same level of detail as
-this diagram gives their dependency shape. Lane `J` (portability) has no
-shipped evidence at all yet and is the most clearly not-started item in the
-entire v1 list.
+in particular its interop/federation/trust/security and language/data-fidelity
+gap diagrams give the `H`/`I` gaps in the same level of detail as this diagram
+gives their dependency shape. Lane `J` (portability) has no shipped evidence
+at all yet and is the most clearly not-started item in the entire v1 list.
 
 ## Documentation Ownership
 
 - This file owns the durable roadmap, completion model, phase/topic map, the
   lettered-lane historical reconstruction, and the whole-system and per-phase
-  dependency diagrams.
+  dependency diagrams. Diagrams beyond the first on this page live in
+  `docs/diagrams/roadmap-*.md`, split out because GitHub's Mermaid renderer
+  only reliably renders the first diagram on a page with several.
 - [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md)
   owns the specification-vs-implementation gap analysis — what it takes to
   meet each of the project's own specification documents.
