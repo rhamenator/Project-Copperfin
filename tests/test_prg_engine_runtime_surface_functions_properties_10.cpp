@@ -157,4 +157,82 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_column_dynamicalignment_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_column_dynamicalignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_column_dynamicalignment.prg";
+        write_text(
+            main_path,
+            "oColumn = CREATEOBJECT('Column')\n"
+            "oText = CREATEOBJECT('TextBox')\n"
+            "lHas = PEMSTATUS(oColumn, 'DynamicAlignment', 1)\n"
+            "lReadOnly = PEMSTATUS(oColumn, 'DynamicAlignment', 5)\n"
+            "lTextHas = PEMSTATUS(oText, 'DynamicAlignment', 1)\n"
+            "cDefault = oColumn.DynamicAlignment\n"
+            "oColumn.DynamicAlignment = 'IIF(Value > 0, 1, 0)'\n"
+            "cDirect = oColumn.DynamicAlignment\n"
+            "lSetPem = SETPEM(oColumn, 'DynamicAlignment', 123)\n"
+            "cSetPem = GETPEM(oColumn, 'DynamicAlignment')\n"
+            "lPutPem = PUTPEM(oColumn, 'DynamicAlignment', '2')\n"
+            "cPutPem = GETPEM(oColumn, 'DynamicAlignment')\n"
+            "lAddProperty = ADDPROPERTY(oColumn, 'DynamicAlignment', 'X')\n"
+            "lRemoveProperty = REMOVEPROPERTY(oColumn, 'DynamicAlignment')\n"
+            "lMember = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oColumn, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'DYNAMICALIGNMENT'\n"
+            "        lMember = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedDynamicAlignmentColumn')\n"
+            "cDerived = oDerived.DynamicAlignment\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedDynamicAlignmentColumn AS Column\n"
+            "    PROCEDURE Init\n"
+            "        THIS.DynamicAlignment = '3'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DynamicAlignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ltexthas", "false");
+        check("cdefault", "");
+        check("cdirect", "IIF(Value > 0, 1, 0)");
+        check("lsetpem", "true");
+        check("csetpem", "123");
+        check("lputpem", "true");
+        check("cputpem", "2");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lmember", "true");
+        check("cderived", "3");
+        expect(state.ole_objects.size() == 3U,
+               "native DynamicAlignment coverage should register the base, non-owning TextBox, and derived Column");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

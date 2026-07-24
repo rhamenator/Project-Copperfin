@@ -115,6 +115,7 @@ int main()
     test_native_text_alignment_defaults_mutate_and_stay_builtin();
     test_native_textbox_inputmask_defaults_mutate_and_stay_builtin();
     test_native_textbox_dynamicinputmask_defaults_mutate_and_stay_builtin();
+    test_native_column_dynamicalignment_defaults_mutate_and_stay_builtin();
     test_native_textbox_format_defaults_mutate_and_stay_builtin();
     test_native_textbox_passwordchar_defaults_mutate_and_stay_builtin();
     test_native_textbox_maxlength_defaults_mutate_and_stay_builtin();

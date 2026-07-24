@@ -33,6 +33,11 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Latest native PRG parity slice: `#4588` under #3217 exposes the documented
+  `Column.DynamicAlignment` property as a protected raw string with direct,
+  PEM, reflection, exclusion, and derived-initialization coverage. Preserve
+  the Column-only applicability and do not infer expression evaluation, grid
+  refresh, alignment conversion, layout, rendering, or designer behavior.
 - Latest VSIX Command integration slice: `#4587` under #3051 connects the
   bottom-tabbed Command window to the active Copperfin editor through
   normalized document identity and the existing constrained `? <expression>`

@@ -319,6 +319,13 @@
                 runtime_object.properties["dynamicinputmask"] = make_string_value("");
             }
 
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicalignment"))
+            {
+                // Headless contract: preserve the raw dynamic-alignment expression without evaluating it.
+                runtime_object.properties["dynamicalignment"] = make_string_value("");
+            }
+
             if (normalized_base_class == "textbox" &&
                 !runtime_object.properties.contains("format"))
             {
