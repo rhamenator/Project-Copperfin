@@ -246,6 +246,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_disabledpicture_member_name_matches(runtime_object, member_name) ||
                native_visual_autosize_member_name_matches(runtime_object, member_name) ||
                native_visual_backstyle_member_name_matches(runtime_object, member_name) ||
+               native_form_drawstyle_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||
                native_grid_headerheight_member_name_matches(runtime_object, member_name) ||

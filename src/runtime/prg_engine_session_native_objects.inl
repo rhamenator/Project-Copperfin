@@ -852,6 +852,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("drawstyle"))
+            {
+                // Headless contract: preserve the line style without rasterizing graphics.
+                runtime_object.properties["drawstyle"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("borderstyle"))
             {
                 runtime_object.properties["borderstyle"] = make_number_value(3.0);

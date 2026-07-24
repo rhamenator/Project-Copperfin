@@ -249,6 +249,17 @@ bool native_form_scalemode_member_name_matches(
            runtime_object.properties.contains("scalemode");
 }
 
+bool native_form_drawstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "drawstyle") {
+        return false;
+    }
+
+    return native_form_drawstyle_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("drawstyle");
+}
+
 bool native_form_borderstyle_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
