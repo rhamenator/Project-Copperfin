@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -15,8 +16,11 @@ namespace Copperfin.VisualStudio;
 [ComVisible(true)]
 internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, IOleCommandTarget
 {
+    private static readonly Dictionary<string, WeakReference<CopperfinAssetEditorPane>> OpenPanes =
+        new(CopperfinDocumentPathIdentity.CreateComparer());
     private readonly CopperfinAssetEditorControl control;
     private string documentPath;
+    private string? registeredDocumentPath;
     private uint docCookie;
 
     public CopperfinAssetEditorPane(System.IServiceProvider serviceProvider, string documentPath)
@@ -26,6 +30,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         control.OpenDocumentRequested += OpenDocumentInVisualStudio;
         control.OpenDocumentAtLineRequested += OpenDocumentAtLineInVisualStudio;
         this.documentPath = documentPath;
+        RegisterDocumentPath(documentPath);
         control.LoadDocument(documentPath);
     }
 
@@ -58,6 +63,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
     public int LoadDocData(string pszMkDocument)
     {
         documentPath = pszMkDocument;
+        RegisterDocumentPath(documentPath);
         control.LoadDocument(documentPath);
         return VSConstants.S_OK;
     }
@@ -85,6 +91,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         string pszMkDocumentNew)
     {
         documentPath = pszMkDocumentNew;
+        RegisterDocumentPath(documentPath);
         control.LoadDocument(documentPath);
         return VSConstants.S_OK;
     }
@@ -99,8 +106,71 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
     public int SetUntitledDocPath(string pszDocDataPath)
     {
         documentPath = pszDocDataPath;
+        RegisterDocumentPath(documentPath);
         control.LoadDocument(documentPath);
         return VSConstants.S_OK;
+    }
+
+    internal static CopperfinAssetEditorPane? FindForDocument(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        string normalizedPath;
+        try
+        {
+            normalizedPath = CopperfinDocumentPathIdentity.Normalize(path);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+
+        if (!OpenPanes.TryGetValue(normalizedPath, out var reference) ||
+            !reference.TryGetTarget(out var pane))
+        {
+            OpenPanes.Remove(normalizedPath);
+            return null;
+        }
+
+        return pane;
+    }
+
+    internal string ExecuteCommandWindowInput(string command)
+    {
+        return control.ExecuteCommandWindowInput(command);
+    }
+
+    private void RegisterDocumentPath(string path)
+    {
+        if (registeredDocumentPath is not null &&
+            OpenPanes.TryGetValue(registeredDocumentPath, out var existingReference) &&
+            existingReference.TryGetTarget(out var existingPane) &&
+            ReferenceEquals(existingPane, this))
+        {
+            OpenPanes.Remove(registeredDocumentPath);
+        }
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            registeredDocumentPath = null;
+            return;
+        }
+
+        try
+        {
+            registeredDocumentPath = CopperfinDocumentPathIdentity.Normalize(path);
+            OpenPanes[registeredDocumentPath] =
+                new WeakReference<CopperfinAssetEditorPane>(this);
+        }
+        catch (ArgumentException)
+        {
+            registeredDocumentPath = null;
+            // Visual Studio can briefly provide an untitled or otherwise
+            // non-filesystem moniker while a document is being created.
+        }
     }
 
     private void OpenDocumentInVisualStudio(string path)
@@ -173,6 +243,16 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         if (disposing && docCookie != 0)
         {
             docCookie = 0;
+        }
+
+        if (disposing && registeredDocumentPath is not null)
+        {
+            if (OpenPanes.TryGetValue(registeredDocumentPath, out var reference) &&
+                reference.TryGetTarget(out var pane) &&
+                ReferenceEquals(pane, this))
+            {
+                OpenPanes.Remove(registeredDocumentPath);
+            }
         }
 
         base.Dispose(disposing);

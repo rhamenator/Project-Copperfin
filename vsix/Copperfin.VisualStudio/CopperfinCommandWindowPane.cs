@@ -4,6 +4,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 
 namespace Copperfin.VisualStudio;
@@ -16,7 +17,7 @@ internal sealed class CopperfinCommandWindowPane : ToolWindowPane
     {
         var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         Caption = localization.Text("VSIX.CommandWindow.Title");
-        Content = new CopperfinCommandWindowControl(localization);
+        Content = new CopperfinCommandWindowControl(localization, ExecuteCommandWindowInput);
     }
 
     public void AppendLine(string message)
@@ -25,5 +26,16 @@ internal sealed class CopperfinCommandWindowPane : ToolWindowPane
         {
             control.AppendLine(message);
         }
+    }
+
+    private string ExecuteCommandWindowInput(string command)
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+
+        var dte = ServiceProvider.GlobalProvider.GetService(typeof(DTE)) as DTE;
+        var activeDocumentPath = dte?.ActiveDocument?.FullName;
+        var editorPane = CopperfinAssetEditorPane.FindForDocument(activeDocumentPath);
+        return editorPane?.ExecuteCommandWindowInput(command) ??
+               CopperfinLocalization.FromVisualStudioUiCulture().Text("VSIX.CommandWindow.NoActiveSession");
     }
 }

@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Latest VSIX Command integration slice: `#4587` under #3051 connects the
+  bottom-tabbed Command window to the active Copperfin editor through
+  normalized document identity and the existing constrained `? <expression>`
+  watch evaluator. Preserve no-session/unsupported localized feedback,
+  append-only transcript behavior, Visual Studio docking/theme contracts, and
+  the absence of general command or runtime-protocol expansion.
 - Latest UI validation slice: `#4551` under #110 adds `scripts/run-designer-smoke-headless.sh`, which builds and runs the existing net472 WinForms DesignerSmoke executable through a fixed Xvfb screen and provides selector discovery without Xvfb. Preserve selector and exit-code contracts; use it for portable shared/WinForms evidence, while live Visual Studio theme/docking, Win32 rendering, and hosted VFP9 behavior remain Windows evidence gates.
 - Latest native PRG parity correction: `#4586`, `#4585`, `#4584`, and `#4583` under #3217 are scoped to the documented `Column.DynamicFontOutline`, `Column.DynamicFontShadow`, `Column.DynamicFontSize`, and `Column.DynamicFontName` properties. Preserve each raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; ordinary visual controls, nonvisual objects, and OLE hosts do not receive them, and the runtime does not evaluate expressions or claim font layout/rendering.
 - Latest native PRG parity correction: `#4582` under #3217 is scoped to the documented `Column.DynamicInputMask` property, not `TextBox`. Preserve the raw string through direct/PEM access, reflection, built-in protection, and derived initialization; do not evaluate the expression or claim UI mask application.

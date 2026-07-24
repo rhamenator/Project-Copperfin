@@ -55,6 +55,7 @@ internal static partial class Program
         var studioRoot = Path.Combine(repositoryRoot, "vsix", "Copperfin.Studio");
         var packageSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinPackage.cs"));
         var paneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowPane.cs"));
+        var editorPaneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinAssetEditorPane.cs"));
         var commandSource = File.ReadAllText(Path.Combine(vsixRoot, "ShowCopperfinCommandWindowCommand.cs"));
         var controlSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowControl.cs"));
         var commandTable = File.ReadAllText(Path.Combine(vsixRoot, "Copperfin.vsct"));
@@ -73,8 +74,14 @@ internal static partial class Program
             "VSIX package should initialize the command-window command");
         Expect(paneSource.Contains("[Guid(PackageGuids.CommandWindowString)]", StringComparison.Ordinal) &&
                paneSource.Contains(": ToolWindowPane", StringComparison.Ordinal) &&
-               paneSource.Contains("VSIX.CommandWindow.Title", StringComparison.Ordinal),
+               paneSource.Contains("VSIX.CommandWindow.Title", StringComparison.Ordinal) &&
+               paneSource.Contains("new CopperfinCommandWindowControl(localization, ExecuteCommandWindowInput)", StringComparison.Ordinal) &&
+               paneSource.Contains("CopperfinAssetEditorPane.FindForDocument", StringComparison.Ordinal),
             "VSIX command window should be a localized ToolWindowPane with a stable identity");
+        Expect(editorPaneSource.Contains("FindForDocument", StringComparison.Ordinal) &&
+               editorPaneSource.Contains("ExecuteCommandWindowInput", StringComparison.Ordinal) &&
+               editorPaneSource.Contains("OpenPanes", StringComparison.Ordinal),
+            "VSIX editor panes should expose a normalized active-document lookup for Command evaluation");
         Expect(commandSource.Contains("ShowToolWindowAsync", StringComparison.Ordinal) &&
                commandSource.Contains("typeof(CopperfinCommandWindowPane)", StringComparison.Ordinal),
             "VSIX command should show the registered command window instead of launching a second shell");
