@@ -675,6 +675,13 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("activecolumn"))
+            {
+                // Headless contract: a grid without hosted focus reports no active column.
+                runtime_object.properties["activecolumn"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordmark"))
             {
                 runtime_object.properties["recordmark"] = make_boolean_value(true);

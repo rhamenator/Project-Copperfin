@@ -176,6 +176,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_grid_allowheadersizing_defaults_mutate_and_stay_builtin();
     void test_native_grid_allowrowsizing_defaults_mutate_and_stay_builtin();
     void test_native_grid_allowautocolumnfit_defaults_mutate_and_stay_builtin();
+    void test_native_grid_activecolumn_defaults_read_only_and_stays_builtin();
     void test_native_columnorder_default_reorders_siblings_and_stays_builtin();
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     void test_native_rowsource_defaults_mutates_and_stays_builtin();

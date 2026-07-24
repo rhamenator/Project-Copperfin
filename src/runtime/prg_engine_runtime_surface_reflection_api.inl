@@ -1829,6 +1829,11 @@ bool is_native_grid_allowautocolumnfit_member_name(const RuntimeOleObjectState& 
     return native_grid_allowautocolumnfit_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_grid_activecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_activecolumn_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_allowcellselection_member_name_matches(runtime_object, normalized_member_name);
