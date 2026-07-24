@@ -45,8 +45,8 @@ classDiagram
     }
 
     class cf_vfp_assets {
-        +dbf_header / dbf_table
-        +cdx_header / index_probe
+        +dbf_header_and_dbf_table
+        +cdx_header_and_index_probe
         +asset_inspector
         +visual_asset_editor_appearance
         +visual_asset_editor_behavior
@@ -54,7 +54,7 @@ classDiagram
     }
 
     class cf_runtime_text {
-        +runtime-scoped localized text
+        +runtime_scoped_localized_text
     }
 
     class cf_prg_analysis {
@@ -62,20 +62,18 @@ classDiagram
     }
 
     class cf_design_model {
-        +document_model / project_workspace
+        +document_model_and_project_workspace
         +report_layout
-        +designer_dispatch / designer_context
-        +builder_registry / toolbox_palette
-        +vs_launch_contract (~25 files)
+        +designer_dispatch_and_designer_context
+        +builder_registry_and_toolbox_palette
+        +vs_launch_contract_approx_25_files
     }
 
     class cf_xbase_runtime {
-        +prg_engine (dispatch/flow/expression/
-        records/cursor/arrays/variables/
-        session/sql/aggregate/dll)
+        +prg_engine_dispatch_flow_expression_records_cursor_arrays_variables_session_sql_aggregate_dll
         +index_seek_optimizer
         +xasset_methods
-        +VFP built-in function families
+        +vfp_builtin_function_families
     }
 
     class cf_runtime_pipeline {
@@ -89,32 +87,32 @@ classDiagram
 
     class copperfin_inspect {
         <<executable>>
-        low-level DBF/index inspector
+        +low_level_dbf_index_inspector
     }
 
     class copperfin_studio_host {
         <<executable>>
-        design-time JSON snapshot host
+        +design_time_json_snapshot_host
     }
 
     class copperfin_runtime_host {
         <<executable>>
-        runtime + debugger host
+        +runtime_and_debugger_host
     }
 
     class copperfin_build_host {
         <<executable>>
-        PJX/PJT packaging pipeline
+        +pjx_pjt_packaging_pipeline
     }
 
     class Copperfin_VisualStudio {
-        <<managed VSIX>>
-        designer document shell + language service
+        <<managed_VSIX>>
+        +designer_document_shell_and_language_service
     }
 
     class Copperfin_Studio {
-        <<managed WinForms>>
-        standalone tabbed shell
+        <<managed_WinForms>>
+        +standalone_tabbed_shell
     }
 
     cf_security --> cf_localization
