@@ -276,6 +276,14 @@ bool native_visual_borderwidth_member_name_matches(
            runtime_object.properties.contains("borderwidth");
 }
 
+bool native_visual_bordercolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "bordercolor" &&
+           native_visual_bordercolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("bordercolor");
+}
+
 bool native_form_drawwidth_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

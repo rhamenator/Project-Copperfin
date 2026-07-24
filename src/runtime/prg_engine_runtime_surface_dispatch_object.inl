@@ -216,6 +216,7 @@
             is_native_form_drawstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_fillstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_borderwidth_member_name(*runtime_object, property_name) ||
+            is_native_visual_bordercolor_member_name(*runtime_object, property_name) ||
             is_native_form_drawwidth_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
@@ -711,6 +712,9 @@
             if (member_name == "borderwidth") {
                 normalize_native_visual_borderwidth_invariant(*runtime_object);
             }
+            if (member_name == "bordercolor") {
+                normalize_native_visual_bordercolor_invariant(*runtime_object);
+            }
             if (member_name == "drawwidth") {
                 normalize_native_form_drawwidth_invariant(*runtime_object);
             }
@@ -951,6 +955,9 @@
             if (member_name == "borderwidth") {
                 normalize_native_visual_borderwidth_invariant(*runtime_object);
             }
+            if (member_name == "bordercolor") {
+                normalize_native_visual_bordercolor_invariant(*runtime_object);
+            }
             if (member_name == "drawwidth") {
                 normalize_native_form_drawwidth_invariant(*runtime_object);
             }
@@ -1164,6 +1171,7 @@
             is_native_form_drawstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_fillstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_borderwidth_member_name(*runtime_object, property_name) ||
+            is_native_visual_bordercolor_member_name(*runtime_object, property_name) ||
             is_native_form_drawwidth_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||

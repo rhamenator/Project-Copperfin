@@ -54,6 +54,7 @@ bool is_native_visual_drawmode_runtime_object(const RuntimeOleObjectState& runti
 bool is_native_visual_backstyle_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_fillstyle_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_borderwidth_runtime_object(const RuntimeOleObjectState& runtime_object);
+bool is_native_visual_bordercolor_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_form_drawwidth_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_olecontrol_creation_time_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_object_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -72,6 +73,7 @@ bool is_native_visual_backstyle_member_name(const RuntimeOleObjectState& runtime
 bool is_native_form_drawstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_fillstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_borderwidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_bordercolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_drawwidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_desktop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -182,6 +184,7 @@ void normalize_native_visual_backstyle_invariant(RuntimeOleObjectState& runtime_
 void normalize_native_form_drawstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_fillstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_borderwidth_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_visual_bordercolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_form_drawwidth_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object);

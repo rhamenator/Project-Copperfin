@@ -872,6 +872,13 @@
                 runtime_object.properties["borderwidth"] = make_number_value(1.0);
             }
 
+            if (is_native_visual_bordercolor_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("bordercolor"))
+            {
+                // Headless contract: preserve the integer color without system-color lookup.
+                runtime_object.properties["bordercolor"] = make_int64_value(0);
+            }
+
             if (is_native_form_drawwidth_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("drawwidth"))
             {

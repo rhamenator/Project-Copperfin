@@ -80,6 +80,7 @@ int main()
     test_native_form_drawstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_borderwidth_defaults_mutates_and_stays_builtin();
+    test_native_visual_bordercolor_defaults_mutates_and_stays_builtin();
     test_native_form_drawwidth_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_form_titlebar_defaults_mutates_and_stays_builtin();

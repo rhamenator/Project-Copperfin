@@ -96,6 +96,11 @@ bool is_native_visual_borderwidth_member_name(const RuntimeOleObjectState& runti
     return native_visual_borderwidth_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_bordercolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_bordercolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_drawwidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_drawwidth_member_name_matches(runtime_object, normalized_member_name);
@@ -852,6 +857,21 @@ void normalize_native_visual_borderwidth_invariant(RuntimeOleObjectState& runtim
     const long long rounded = std::isfinite(value) ? std::llround(value) : 1LL;
     const long long normalized = rounded >= 0LL && rounded <= 8192LL ? rounded : 1LL;
     border_width->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_visual_bordercolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_bordercolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto border_color = runtime_object.properties.find("bordercolor");
+    if (border_color == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(border_color->second);
+    border_color->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
 }
 
 void normalize_native_form_drawwidth_invariant(RuntimeOleObjectState& runtime_object)
