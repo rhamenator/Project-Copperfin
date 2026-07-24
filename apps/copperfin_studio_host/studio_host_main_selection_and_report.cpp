@@ -2971,6 +2971,13 @@ void print_json_report_layout_section(
     print_json_report_field_index_or_null(section.plain_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"plainMemoBlockNumber\": " << section.plain_memo_block_number << ",\n";
+    std::cout << indent << "  \"noRepeat\": ";
+    print_json_string(section.no_repeat);
+    std::cout << ",\n";
+    std::cout << indent << "  \"noRepeatFieldIndex\": ";
+    print_json_report_field_index_or_null(section.no_repeat_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"noRepeatMemoBlockNumber\": " << section.no_repeat_memo_block_number << ",\n";
     std::cout << indent << "  \"onEntryExpression\": ";
     print_json_string(section.on_entry_expression);
     std::cout << ",\n";

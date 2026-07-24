@@ -236,6 +236,9 @@ internal sealed class CopperfinStudioReportSection
     public string UserComment { get; set; } = string.Empty;
     public int? UserCommentFieldIndex { get; set; }
     public int UserCommentMemoBlockNumber { get; set; }
+    public string NoRepeat { get; set; } = string.Empty;
+    public int? NoRepeatFieldIndex { get; set; }
+    public int NoRepeatMemoBlockNumber { get; set; }
     public int? SectionIndex { get; set; }
     public int? SectionCount { get; set; }
     public bool GroupingContextAvailable { get; set; }

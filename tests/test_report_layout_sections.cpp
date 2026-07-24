@@ -43,7 +43,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("TAG", "DO ENTRY", 50U),
                 value("TAG2", "DO EXIT", 51U),
                 value("COMMENT", "Band developer note", 52U),
-                value("USER", "Band user comment", 53U)
+                value("USER", "Band user comment", 53U),
+                value("NOREPEAT", "T", 54U)
             }
         },
         {
@@ -189,7 +190,8 @@ void test_build_report_layout_groups_band_objects() {
            layout.sections[1].on_entry_expression.empty() &&
            layout.sections[1].on_exit_expression.empty() &&
            layout.sections[1].comment.empty() &&
-           layout.sections[1].user_comment.empty(),
+           layout.sections[1].user_comment.empty() &&
+           layout.sections[1].no_repeat.empty(),
         "#4531: blank section pagination flags should remain blank without fabricating provenance");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
@@ -238,6 +240,10 @@ void test_build_report_layout_groups_band_objects() {
            layout.sections[0].user_comment_field_index == 13U &&
            layout.sections[0].user_comment_memo_block_number == 53U,
         "#4545: report sections should preserve USER values and memo provenance");
+    expect(layout.sections[0].no_repeat == "T" &&
+           layout.sections[0].no_repeat_field_index == 14U &&
+           layout.sections[0].no_repeat_memo_block_number == 54U,
+        "#4546: report sections should preserve band NOREPEAT values and memo provenance");
     expect(layout.sections[0].reset_page == "T" && layout.sections[0].reset_page_field_index == 6U &&
            layout.sections[0].reset_page_memo_block_number == 46U,
         "#4531: report sections should preserve RESETPAGE values and source provenance");

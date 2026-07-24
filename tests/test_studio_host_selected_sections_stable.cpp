@@ -92,12 +92,13 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "FILLGREEN", .type = 'N', .length = 8U},
         {.name = "FILLBLUE", .type = 'N', .length = 8U},
         {.name = "COMMENT", .type = 'M', .length = 4U},
-        {.name = "USER", .type = 'M', .length = 4U}
+        {.name = "USER", .type = 'M', .length = 4U},
+        {.name = "NOREPEAT", .type = 'L', .length = 1U}
     };
     std::vector<std::vector<std::string>> records{
         {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", "", "", "Band developer note", "Band user comment"},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60", "", "Object developer note", "Object user comment"},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", "", "", "Band developer note", "Band user comment", ".T."},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60", "", "Object developer note", "Object user comment", ""},
         {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", ""},
         {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", "", ""}
     };
@@ -336,6 +337,10 @@ void run_live_section_selection(
                     issue_prefix + " should expose the section USER memo value");
     expect_contains(section_process.stdout_text, "\"userCommentFieldIndex\": 23",
                     issue_prefix + " should expose section USER field provenance");
+    expect_contains(section_process.stdout_text, "\"noRepeat\": \"true\"",
+                    issue_prefix + " should expose band NOREPEAT");
+    expect_contains(section_process.stdout_text, "\"noRepeatFieldIndex\": 24",
+                    issue_prefix + " should expose band NOREPEAT field provenance");
     expect_contains(
         section_process.stdout_text,
         "\"sectionCount\": 1,\n      \"deletedSectionCount\": 0",
@@ -371,6 +376,7 @@ void run_live_section_selection(
             "--property-name", "TAG2", "--property-value", "UPDATED EXIT",
             "--property-name", "COMMENT", "--property-value", "UPDATED BAND NOTE",
             "--property-name", "USER", "--property-value", "UPDATED BAND USER COMMENT",
+            "--property-name", "NOREPEAT", "--property-value", "false",
             "--json"
         },
         temp_root);
@@ -402,6 +408,8 @@ void run_live_section_selection(
                     issue_prefix + " should persist section COMMENT edits");
     expect_contains(reopened_process.stdout_text, "\"userComment\": \"UPDATED BAND USER COMMENT\"",
                     issue_prefix + " should persist section USER edits");
+    expect_contains(reopened_process.stdout_text, "\"noRepeat\": \"false\"",
+                    issue_prefix + " should persist band NOREPEAT edits");
     const auto clear_user_process = run_process_capture(
         studio_host_path,
         {
@@ -420,6 +428,24 @@ void run_live_section_selection(
         temp_root);
     expect_contains(reopened_clear_user_process.stdout_text, "\"userComment\": \"\"",
                     issue_prefix + " should remove cleared section USER comments on reopen");
+    const auto clear_no_repeat_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "section-guid",
+            "--property-name", "NOREPEAT",
+            "--json"
+        },
+        temp_root);
+    expect(clear_no_repeat_process.exit_code == 0,
+           issue_prefix + " should clear band NOREPEAT");
+    const auto reopened_clear_no_repeat_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "section-guid", "--json"},
+        temp_root);
+    expect_contains(reopened_clear_no_repeat_process.stdout_text, "\"noRepeat\": \"\"",
+                    issue_prefix + " should remove cleared band NOREPEAT on reopen");
 }
 
 void run_live_object_color_selection(

@@ -1069,6 +1069,10 @@ StudioReportSectionSnapshot build_report_section(
     const FieldSelection on_exit_expression = first_non_empty_selection(record, {"TAG2"});
     const FieldSelection comment = first_non_empty_selection(record, {"COMMENT"});
     const FieldSelection user_comment = first_non_empty_selection(record, {"USER"});
+    FieldSelection no_repeat = first_non_empty_selection(record, {"NOREPEAT"});
+    if (no_repeat.value == "?") {
+        no_repeat.value.clear();
+    }
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -1090,6 +1094,9 @@ StudioReportSectionSnapshot build_report_section(
         .user_comment = user_comment.value,
         .user_comment_field_index = user_comment.field_index,
         .user_comment_memo_block_number = user_comment.memo_block_number,
+        .no_repeat = no_repeat.value,
+        .no_repeat_field_index = no_repeat.field_index,
+        .no_repeat_memo_block_number = no_repeat.memo_block_number,
         .record_index = record.record_index,
         .deleted = record.deleted,
         .objcode_code = objcode,

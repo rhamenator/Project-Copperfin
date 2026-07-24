@@ -385,6 +385,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "USER",
             localization.Text("AssetEditor.Property.UserComments"),
             section.UserComment);
+        selection.AddEditableBool(
+            "NOREPEAT",
+            localization.Text("AssetEditor.Property.NoRepeat"),
+            section.NoRepeat);
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
             section.ExpressionFieldIndex.HasValue ||
