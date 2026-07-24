@@ -8622,6 +8622,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_commandbutton_default_cancel_invariant(runtime_object);
                 }
+                if (normalized_property_name == "style")
+                {
+                    normalize_native_commandbutton_style_invariant(runtime_object);
+                }
                 if (normalized_property_name == "strictdateentry")
                 {
                     normalize_native_textbox_strictdateentry_invariant(runtime_object);

@@ -79,6 +79,7 @@ int main()
     test_native_visual_backstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_specialeffect_defaults_mutates_and_stays_builtin();
     test_native_commandbutton_default_cancel_defaults_mutate_and_stay_builtin();
+    test_native_commandbutton_style_defaults_mutate_and_stay_builtin();
     test_native_form_drawstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillcolor_defaults_mutates_and_stays_builtin();

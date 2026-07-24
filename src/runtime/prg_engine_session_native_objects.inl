@@ -173,6 +173,12 @@
                 runtime_object.properties["cancel"] = make_boolean_value(false);
             }
 
+            if (normalized_base_class == "commandbutton" &&
+                !runtime_object.properties.contains("style"))
+            {
+                runtime_object.properties["style"] = make_number_value(0.0);
+            }
+
             if ((normalized_base_class == "checkbox" ||
                  normalized_base_class == "commandbutton" ||
                  normalized_base_class == "commandgroup" ||

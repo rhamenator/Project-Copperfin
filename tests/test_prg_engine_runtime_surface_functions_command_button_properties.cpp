@@ -88,4 +88,77 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_commandbutton_style_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_commandbutton_style";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_commandbutton_style.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'Style', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'Style', 5)\n"
+            "nInitial = oButton.Style\n"
+            "oButton.Style = 1\n"
+            "nDirect = oButton.Style\n"
+            "lSetPem = SETPEM(oButton, 'Style', 4)\n"
+            "nAfterSetPem = GETPEM(oButton, 'Style')\n"
+            "lPutPem = PUTPEM(oButton, 'Style', -1)\n"
+            "nAfterPutPem = GETPEM(oButton, 'Style')\n"
+            "lAdd = ADDPROPERTY(oButton, 'Style', 1)\n"
+            "lRemove = REMOVEPROPERTY(oButton, 'Style')\n"
+            "lMember = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'STYLE'\n"
+            "        lMember = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedCommandButtonStyle')\n"
+            "nDerived = oDerived.Style\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedCommandButtonStyle AS CommandButton\n"
+            "    Style = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native CommandButton Style script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ninitial", "0");
+        check("ndirect", "1");
+        check("lsetpem", "true");
+        check("naftersetpem", "0");
+        check("lputpem", "true");
+        check("nafterputpem", "0");
+        check("ladd", "false");
+        check("lremove", "false");
+        check("lmember", "true");
+        check("nderived", "1");
+        expect(state.ole_objects.size() == 2U,
+               "native CommandButton Style coverage should register the base and derived objects");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

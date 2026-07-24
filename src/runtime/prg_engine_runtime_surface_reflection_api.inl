@@ -261,6 +261,11 @@ bool is_native_commandbutton_default_cancel_member_name(const RuntimeOleObjectSt
     return native_commandbutton_default_cancel_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_commandbutton_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_commandbutton_style_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_tag_member_name_matches(runtime_object, normalized_member_name);
@@ -1594,6 +1599,23 @@ void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectSta
             property->second = make_boolean_value(value_as_bool(property->second));
         }
     }
+}
+
+void normalize_native_commandbutton_style_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_commandbutton_style_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto style = runtime_object.properties.find("style");
+    if (style == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(style->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : 0LL;
+    const long long normalized = rounded == 0LL || rounded == 1LL ? rounded : 0LL;
+    style->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object)
