@@ -8510,6 +8510,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_helpcontextid_invariant(runtime_object);
                 }
+                if (normalized_property_name == "whatsthishelpid")
+                {
+                    normalize_native_visual_whatsthishelpid_invariant(runtime_object);
+                }
                 if (normalized_property_name == "strictdateentry")
                 {
                     normalize_native_textbox_strictdateentry_invariant(runtime_object);

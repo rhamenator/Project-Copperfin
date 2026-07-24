@@ -453,6 +453,14 @@ bool native_visual_helpcontextid_member_name_matches(
            runtime_object.properties.contains("helpcontextid");
 }
 
+bool native_visual_whatsthishelpid_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "whatsthishelpid" &&
+           native_visual_whatsthishelpid_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("whatsthishelpid");
+}
+
 bool native_visual_tag_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
