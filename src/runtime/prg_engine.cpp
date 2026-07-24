@@ -8129,6 +8129,10 @@ namespace copperfin::runtime
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_splitbar_member_name(runtime_object, normalized_property_name) &&
                 !is_native_leftcolumn_member_name(runtime_object, normalized_property_name) &&
+                !is_native_grid_activecolumn_member_name(runtime_object, normalized_property_name) &&
+                !is_native_grid_activerow_member_name(runtime_object, normalized_property_name) &&
+                !is_native_grid_relativecolumn_member_name(runtime_object, normalized_property_name) &&
+                !is_native_grid_relativerow_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_desktop_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_scrollbars_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
@@ -8483,6 +8487,26 @@ namespace copperfin::runtime
                 if (normalized_property_name == "allowrowsizing")
                 {
                     normalize_native_grid_allowrowsizing_invariant(runtime_object);
+                }
+                if (normalized_property_name == "allowautocolumnfit")
+                {
+                    normalize_native_grid_allowautocolumnfit_invariant(runtime_object);
+                }
+                if (normalized_property_name == "gridlinecolor")
+                {
+                    normalize_native_grid_gridlinecolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "gridlinewidth")
+                {
+                    normalize_native_grid_gridlinewidth_invariant(runtime_object);
+                }
+                if (normalized_property_name == "highlightstyle")
+                {
+                    normalize_native_grid_highlightstyle_invariant(runtime_object);
+                }
+                if (normalized_property_name == "highlightrowlinewidth")
+                {
+                    normalize_native_grid_highlightrowlinewidth_invariant(runtime_object);
                 }
                 if (normalized_property_name == "scrollbars")
                 {

@@ -5029,6 +5029,12 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_grid_headerheight.cpp
     test_prg_engine_runtime_surface_functions_grid_allowheadersizing.cpp
     test_prg_engine_runtime_surface_functions_grid_allowrowsizing.cpp
+    test_prg_engine_runtime_surface_functions_grid_allowautocolumnfit.cpp
+    test_prg_engine_runtime_surface_functions_grid_gridline_properties.cpp
+    test_prg_engine_runtime_surface_functions_grid_highlight_properties.cpp
+    test_prg_engine_runtime_surface_functions_grid_activecolumn.cpp
+    test_prg_engine_runtime_surface_functions_grid_activerow.cpp
+    test_prg_engine_runtime_surface_functions_grid_relative_focus.cpp
     test_prg_engine_runtime_surface_functions_column_resizable.cpp
     test_prg_engine_runtime_surface_functions_reflection_01.cpp
     test_prg_engine_runtime_surface_functions_reflection_02.cpp

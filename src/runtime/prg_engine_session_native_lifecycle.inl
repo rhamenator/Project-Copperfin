@@ -261,6 +261,7 @@
             normalize_native_grid_headerheight_invariant(*runtime_object);
             normalize_native_grid_allowheadersizing_invariant(*runtime_object);
             normalize_native_grid_allowrowsizing_invariant(*runtime_object);
+            normalize_native_grid_allowautocolumnfit_invariant(*runtime_object);
             refresh_native_list_control_controlsource_value_kind_hint(
                 *runtime_object,
                 resolve_controlsource_value);
@@ -380,6 +381,7 @@
                     normalize_native_grid_headerheight_invariant(*child_object);
                     normalize_native_grid_allowheadersizing_invariant(*child_object);
                     normalize_native_grid_allowrowsizing_invariant(*child_object);
+                    normalize_native_grid_allowautocolumnfit_invariant(*child_object);
                     refresh_native_list_control_controlsource_value_kind_hint(
                         *child_object,
                         resolve_controlsource_value);

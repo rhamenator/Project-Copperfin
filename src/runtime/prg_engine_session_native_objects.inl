@@ -602,6 +602,36 @@
                 runtime_object.properties["allowrowsizing"] = make_boolean_value(true);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("allowautocolumnfit"))
+            {
+                runtime_object.properties["allowautocolumnfit"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("gridlinecolor"))
+            {
+                runtime_object.properties["gridlinecolor"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("gridlinewidth"))
+            {
+                runtime_object.properties["gridlinewidth"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlightstyle"))
+            {
+                runtime_object.properties["highlightstyle"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlightrowlinewidth"))
+            {
+                runtime_object.properties["highlightrowlinewidth"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {
@@ -666,6 +696,34 @@
                 !runtime_object.properties.contains("leftcolumn"))
             {
                 runtime_object.properties["leftcolumn"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("activecolumn"))
+            {
+                // Headless contract: a grid without hosted focus reports no active column.
+                runtime_object.properties["activecolumn"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("activerow"))
+            {
+                // Headless contract: a grid without hosted focus reports no active row.
+                runtime_object.properties["activerow"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("relativecolumn"))
+            {
+                // Headless contract: no visible relative column exists without hosted focus.
+                runtime_object.properties["relativecolumn"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("relativerow"))
+            {
+                // Headless contract: no visible relative row exists without hosted focus.
+                runtime_object.properties["relativerow"] = make_number_value(0.0);
             }
 
             if (normalized_base_class == "grid" &&

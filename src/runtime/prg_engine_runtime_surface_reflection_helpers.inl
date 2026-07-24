@@ -1151,6 +1151,105 @@ bool native_grid_allowrowsizing_member_name_matches(
     return native_grid_allowrowsizing_runtime_object(runtime_object);
 }
 
+bool native_grid_allowautocolumnfit_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "allowautocolumnfit" ||
+        !runtime_object.properties.contains("allowautocolumnfit")) {
+        return false;
+    }
+
+    return native_grid_allowautocolumnfit_runtime_object(runtime_object);
+}
+
+bool native_grid_gridlinecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "gridlinecolor" ||
+        !runtime_object.properties.contains("gridlinecolor")) {
+        return false;
+    }
+
+    return native_grid_gridlinecolor_runtime_object(runtime_object);
+}
+
+bool native_grid_gridlinewidth_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "gridlinewidth" ||
+        !runtime_object.properties.contains("gridlinewidth")) {
+        return false;
+    }
+
+    return native_grid_gridlinewidth_runtime_object(runtime_object);
+}
+
+bool native_grid_highlightstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlightstyle" ||
+        !runtime_object.properties.contains("highlightstyle")) {
+        return false;
+    }
+
+    return native_grid_highlightstyle_runtime_object(runtime_object);
+}
+
+bool native_grid_highlightrowlinewidth_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlightrowlinewidth" ||
+        !runtime_object.properties.contains("highlightrowlinewidth")) {
+        return false;
+    }
+
+    return native_grid_highlightrowlinewidth_runtime_object(runtime_object);
+}
+
+bool native_grid_activecolumn_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "activecolumn" ||
+        !runtime_object.properties.contains("activecolumn")) {
+        return false;
+    }
+
+    return native_grid_activecolumn_runtime_object(runtime_object);
+}
+
+bool native_grid_activerow_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "activerow" ||
+        !runtime_object.properties.contains("activerow")) {
+        return false;
+    }
+
+    return native_grid_activerow_runtime_object(runtime_object);
+}
+
+bool native_grid_relativecolumn_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "relativecolumn" ||
+        !runtime_object.properties.contains("relativecolumn")) {
+        return false;
+    }
+
+    return native_grid_relativecolumn_runtime_object(runtime_object);
+}
+
+bool native_grid_relativerow_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "relativerow" ||
+        !runtime_object.properties.contains("relativerow")) {
+        return false;
+    }
+
+    return native_grid_relativerow_runtime_object(runtime_object);
+}
+
 bool native_allowcellselection_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

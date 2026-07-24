@@ -1078,6 +1078,92 @@ void normalize_native_grid_allowrowsizing_invariant(RuntimeOleObjectState& runti
     allow_row_sizing->second = make_boolean_value(value_as_bool(allow_row_sizing->second));
 }
 
+void normalize_native_grid_allowautocolumnfit_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_allowautocolumnfit_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto allow_auto_column_fit = runtime_object.properties.find("allowautocolumnfit");
+    if (allow_auto_column_fit == runtime_object.properties.end()) {
+        return;
+    }
+
+    allow_auto_column_fit->second = make_boolean_value(value_as_bool(allow_auto_column_fit->second));
+}
+
+void normalize_native_grid_gridlinecolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_gridlinecolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto grid_line_color = runtime_object.properties.find("gridlinecolor");
+    if (grid_line_color == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(grid_line_color->second);
+    grid_line_color->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 16777215LL))
+            : 0.0);
+}
+
+void normalize_native_grid_gridlinewidth_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_gridlinewidth_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto grid_line_width = runtime_object.properties.find("gridlinewidth");
+    if (grid_line_width == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(grid_line_width->second);
+    grid_line_width->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 1LL, 40LL))
+            : 1.0);
+}
+
+void normalize_native_grid_highlightstyle_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_highlightstyle_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto highlight_style = runtime_object.properties.find("highlightstyle");
+    if (highlight_style == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(highlight_style->second);
+    highlight_style->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 2LL))
+            : 0.0);
+}
+
+void normalize_native_grid_highlightrowlinewidth_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_highlightrowlinewidth_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto highlight_row_line_width = runtime_object.properties.find("highlightrowlinewidth");
+    if (highlight_row_line_width == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(highlight_row_line_width->second);
+    highlight_row_line_width->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 7LL))
+            : 1.0);
+}
+
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_editbox_scrollbars_runtime_object(runtime_object)) {
@@ -1808,6 +1894,51 @@ bool is_native_grid_allowheadersizing_member_name(const RuntimeOleObjectState& r
 bool is_native_grid_allowrowsizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_allowrowsizing_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_allowautocolumnfit_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_allowautocolumnfit_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_gridlinecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_gridlinecolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_gridlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_gridlinewidth_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_highlightstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_highlightstyle_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_highlightrowlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_highlightrowlinewidth_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_activecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_activecolumn_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_activerow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_activerow_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_relativecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_relativecolumn_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_relativerow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_relativerow_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
