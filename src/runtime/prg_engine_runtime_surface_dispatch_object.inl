@@ -237,6 +237,7 @@
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
+            is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
@@ -1124,6 +1125,7 @@
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
+            is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||

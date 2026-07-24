@@ -46,6 +46,7 @@ using RuntimeControlSourceValueResolver =
     std::function<std::optional<PrgValue>(const std::string&)>;
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_picture_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_olecontrol_creation_time_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_object_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_inspection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -67,6 +68,7 @@ bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& run
 bool is_native_visual_whatsthishelpid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_picture_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_editbox_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_inputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

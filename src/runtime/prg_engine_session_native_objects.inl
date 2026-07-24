@@ -147,6 +147,13 @@
                 runtime_object.properties["caption"] = make_string_value("");
             }
 
+            if (is_native_visual_picture_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("picture"))
+            {
+                // Headless contract: preserve the VFP string property without loading image bytes.
+                runtime_object.properties["picture"] = make_string_value("");
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
