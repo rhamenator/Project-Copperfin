@@ -251,6 +251,8 @@
             is_native_textbox_mouseicon_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledbackcolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
+            is_native_list_control_disableditembackcolor_member_name(*runtime_object, property_name) ||
+            is_native_list_control_disableditemforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
             is_native_textbox_themes_member_name(*runtime_object, property_name) ||
@@ -722,6 +724,12 @@
             if (member_name == "disabledforecolor") {
                 normalize_native_textbox_disabledforecolor_invariant(*runtime_object);
             }
+            if (member_name == "disableditembackcolor") {
+                normalize_native_list_control_disableditembackcolor_invariant(*runtime_object);
+            }
+            if (member_name == "disableditemforecolor") {
+                normalize_native_list_control_disableditemforecolor_invariant(*runtime_object);
+            }
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
@@ -914,6 +922,12 @@
             if (member_name == "disabledforecolor") {
                 normalize_native_textbox_disabledforecolor_invariant(*runtime_object);
             }
+            if (member_name == "disableditembackcolor") {
+                normalize_native_list_control_disableditembackcolor_invariant(*runtime_object);
+            }
+            if (member_name == "disableditemforecolor") {
+                normalize_native_list_control_disableditemforecolor_invariant(*runtime_object);
+            }
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
@@ -1072,6 +1086,8 @@
             is_native_textbox_mouseicon_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledbackcolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_disabledforecolor_member_name(*runtime_object, property_name) ||
+            is_native_list_control_disableditembackcolor_member_name(*runtime_object, property_name) ||
+            is_native_list_control_disableditemforecolor_member_name(*runtime_object, property_name) ||
             is_native_textbox_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_textbox_strictdateentry_member_name(*runtime_object, property_name) ||
             is_native_textbox_themes_member_name(*runtime_object, property_name) ||

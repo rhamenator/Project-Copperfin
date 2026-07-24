@@ -261,6 +261,16 @@ bool is_native_textbox_disabledforecolor_member_name(const RuntimeOleObjectState
     return native_textbox_disabledforecolor_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_list_control_disableditembackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_list_control_disableditembackcolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_list_control_disableditemforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_list_control_disableditemforecolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_textbox_statusbartext_member_name_matches(runtime_object, normalized_member_name);
@@ -924,6 +934,36 @@ void normalize_native_textbox_disabledforecolor_invariant(RuntimeOleObjectState&
 
     const double value = value_as_number(disabled_forecolor->second);
     disabled_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_list_control_disableditembackcolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_list_control_disableditembackcolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto disabled_item_backcolor = runtime_object.properties.find("disableditembackcolor");
+    if (disabled_item_backcolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(disabled_item_backcolor->second);
+    disabled_item_backcolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_list_control_disableditemforecolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_list_control_disableditemforecolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto disabled_item_forecolor = runtime_object.properties.find("disableditemforecolor");
+    if (disabled_item_forecolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(disabled_item_forecolor->second);
+    disabled_item_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
 }
 
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object)

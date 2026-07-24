@@ -153,6 +153,18 @@
                 runtime_object.properties["forecolor"] = make_int64_value(0);
             }
 
+            if ((normalized_base_class == "combobox" || normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("disableditembackcolor"))
+            {
+                runtime_object.properties["disableditembackcolor"] = make_int64_value(12632256);
+            }
+
+            if ((normalized_base_class == "combobox" || normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("disableditemforecolor"))
+            {
+                runtime_object.properties["disableditemforecolor"] = make_int64_value(8421504);
+            }
+
             if ((normalized_base_class == "editbox" ||
                  normalized_base_class == "label" ||
                  normalized_base_class == "textbox") &&

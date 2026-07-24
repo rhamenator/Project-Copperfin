@@ -352,6 +352,14 @@ bool is_native_list_control_runtime_object(const RuntimeOleObjectState& runtime_
            normalized_base_class == "listbox";
 }
 
+bool native_list_control_disableditembackcolor_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return is_native_list_control_runtime_object(runtime_object);
+}
+
+bool native_list_control_disableditemforecolor_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return is_native_list_control_runtime_object(runtime_object);
+}
+
 bool is_native_listbox_runtime_object(const RuntimeOleObjectState& runtime_object) {
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
 }

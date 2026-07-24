@@ -8478,6 +8478,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_disabledforecolor_invariant(runtime_object);
                 }
+                if (normalized_property_name == "disableditembackcolor")
+                {
+                    normalize_native_list_control_disableditembackcolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "disableditemforecolor")
+                {
+                    normalize_native_list_control_disableditemforecolor_invariant(runtime_object);
+                }
                 if (normalized_property_name == "statusbartext")
                 {
                     normalize_native_textbox_statusbartext_invariant(runtime_object);

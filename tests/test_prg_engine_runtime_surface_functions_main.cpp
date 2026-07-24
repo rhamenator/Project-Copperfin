@@ -409,6 +409,7 @@ int main()
     test_native_list_control_columnlines_property_stays_builtin();
     test_native_list_control_itemtips_property_stays_builtin();
     test_native_list_control_incrementalsearch_property_stays_builtin();
+    test_native_list_controls_disabled_item_colors_stay_builtin();
     test_native_listbox_integralheight_property_stays_read_only();
     test_native_text_controls_integralheight_property_stays_read_only();
     test_native_list_controls_itemdata_stays_coherent();
