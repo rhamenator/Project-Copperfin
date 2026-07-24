@@ -518,7 +518,7 @@ std::size_t native_list_control_bound_column(const RuntimeOleObjectState& runtim
     return requested_column < 1LL ? 1U : static_cast<std::size_t>(requested_column);
 }
 
-bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_object) {
+bool native_list_control_boundto_enabled_impl(const RuntimeOleObjectState& runtime_object) {
     if (!is_native_list_control_runtime_object(runtime_object)) {
         return false;
     }
@@ -526,6 +526,21 @@ bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_ob
     const auto boundto = runtime_object.properties.find("boundto");
     return boundto != runtime_object.properties.end() &&
            value_as_bool(boundto->second);
+}
+
+void update_native_list_control_boundto_index_value_mode_impl(
+    RuntimeOleObjectState& runtime_object,
+    bool was_boundto) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const bool boundto = native_list_control_boundto_enabled_impl(runtime_object);
+    if (boundto) {
+        runtime_object.boundto_index_value_mode = false;
+    } else if (was_boundto) {
+        runtime_object.boundto_index_value_mode = true;
+    }
 }
 
 bool prg_value_kind_prefers_listindex(PrgValueKind kind) {
@@ -537,8 +552,12 @@ bool prg_value_kind_prefers_listindex(PrgValueKind kind) {
 
 bool native_list_control_prefers_index_value(const RuntimeOleObjectState& runtime_object) {
     if (!is_native_list_control_runtime_object(runtime_object) ||
-        native_list_control_boundto_enabled(runtime_object)) {
+        native_list_control_boundto_enabled_impl(runtime_object)) {
         return false;
+    }
+
+    if (runtime_object.boundto_index_value_mode) {
+        return true;
     }
 
     if (runtime_object.controlsource_value_kind_hint.has_value()) {

@@ -51,6 +51,16 @@ namespace {
 
 }  // namespace
 
+bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_object) {
+    return native_list_control_boundto_enabled_impl(runtime_object);
+}
+
+void update_native_list_control_boundto_index_value_mode(
+    RuntimeOleObjectState& runtime_object,
+    bool was_boundto) {
+    update_native_list_control_boundto_index_value_mode_impl(runtime_object, was_boundto);
+}
+
 #include "prg_engine_runtime_surface_list_api.inl"
 
 #include "prg_engine_runtime_surface_reflection_api.inl"

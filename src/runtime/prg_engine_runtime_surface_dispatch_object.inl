@@ -592,6 +592,16 @@
                 write_native_member_callback &&
                 write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
+        if (member_name == "boundto") {
+            const bool was_boundto = native_list_control_boundto_enabled(*runtime_object);
+            const bool wrote =
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]);
+            if (wrote) {
+                update_native_list_control_boundto_index_value_mode(*runtime_object, was_boundto);
+            }
+            return make_boolean_value(wrote);
+        }
         if (is_native_pagecount_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
                 write_native_member_callback &&

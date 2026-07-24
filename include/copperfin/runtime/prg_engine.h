@@ -157,6 +157,10 @@ struct RuntimeOleObjectState {
     std::map<std::string, PrgValue> properties{};
     std::map<std::string, PrgValue> default_properties{};
     std::optional<PrgValueKind> controlsource_value_kind_hint{};
+    // Records an explicit true-to-false BoundTo transition so the selected
+    // Value can return to one-based index semantics without changing the
+    // default behavior of character-valued unbound lists.
+    bool boundto_index_value_mode = false;
     std::vector<PrgValue> collection_items{};
     std::vector<std::string> collection_item_keys{};
     std::vector<std::vector<PrgValue>> list_rows{};

@@ -191,7 +191,9 @@ void test_native_list_control_boundto_switches_selected_value_semantics() {
         "oList.BoundTo = .T.\n"
         "cListValueBoundToTrue = oList.Value\n"
         "oList.Value = 0\n"
-        "oList.BoundTo = .F.\n"
+        "lListSetPemBoundToTrue = SETPEM(oList, 'BoundTo', .T.)\n"
+        "cListValueAfterSetPemBoundToTrue = oList.Value\n"
+        "lListSetPemBoundToFalse = SETPEM(oList, 'BoundTo', .F.)\n"
         "nListValueBoundToFalse = oList.Value\n"
         "RETURN\n");
 
@@ -219,6 +221,9 @@ void test_native_list_control_boundto_switches_selected_value_semantics() {
     check("ncombovalueboundtofalse", "2");
     check("nlistvaluedefault", "2");
     check("clistvalueboundtotrue", "W");
+    check("llistsetpemboundtotrue", "true");
+    check("clistvalueaftersetpemboundtotrue", "W");
+    check("llistsetpemboundtofalse", "true");
     check("nlistvalueboundtofalse", "2");
 
     fs::remove_all(temp_root, ignored);

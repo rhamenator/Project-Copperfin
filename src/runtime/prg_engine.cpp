@@ -8307,7 +8307,14 @@ namespace copperfin::runtime
                 {
                     return false;
                 }
+                const bool was_boundto =
+                    normalized_property_name == "boundto" &&
+                    native_list_control_boundto_enabled(runtime_object);
                 runtime_object.properties[normalized_property_name] = assigned_value;
+                if (normalized_property_name == "boundto")
+                {
+                    update_native_list_control_boundto_index_value_mode(runtime_object, was_boundto);
+                }
                 if (normalized_property_name == "controlsource")
                 {
                     refresh_native_list_control_controlsource_value_kind_hint(

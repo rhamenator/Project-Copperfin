@@ -270,6 +270,10 @@ bool write_native_list_control_selected_item_id(RuntimeOleObjectState& runtime_o
                                                 const PrgValue& assigned_value);
 bool write_native_list_control_value(RuntimeOleObjectState& runtime_object,
                                      const PrgValue& assigned_value);
+bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_object);
+void update_native_list_control_boundto_index_value_mode(
+    RuntimeOleObjectState& runtime_object,
+    bool was_boundto);
 void refresh_native_list_control_controlsource_value_kind_hint(
     RuntimeOleObjectState& runtime_object,
     const RuntimeControlSourceValueResolver& resolver);
