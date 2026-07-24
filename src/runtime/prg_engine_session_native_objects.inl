@@ -865,6 +865,13 @@
                 runtime_object.properties["fillstyle"] = make_number_value(1.0);
             }
 
+            if (is_native_visual_fillcolor_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("fillcolor"))
+            {
+                // Headless contract: preserve the integer fill color without rasterizing graphics.
+                runtime_object.properties["fillcolor"] = make_int64_value(0);
+            }
+
             if (is_native_visual_borderwidth_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("borderwidth"))
             {

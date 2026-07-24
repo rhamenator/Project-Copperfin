@@ -268,6 +268,14 @@ bool native_visual_fillstyle_member_name_matches(
            runtime_object.properties.contains("fillstyle");
 }
 
+bool native_visual_fillcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "fillcolor" &&
+           native_visual_fillcolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("fillcolor");
+}
+
 bool native_visual_borderwidth_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

@@ -91,6 +91,11 @@ bool is_native_visual_fillstyle_member_name(const RuntimeOleObjectState& runtime
     return native_visual_fillstyle_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_fillcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_fillcolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_borderwidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_borderwidth_member_name_matches(runtime_object, normalized_member_name);
@@ -840,6 +845,21 @@ void normalize_native_visual_fillstyle_invariant(RuntimeOleObjectState& runtime_
     const long long rounded = std::isfinite(value) ? std::llround(value) : 1LL;
     const long long normalized = rounded >= 0LL && rounded <= 7LL ? rounded : 1LL;
     fill_style->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_visual_fillcolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_fillcolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto fill_color = runtime_object.properties.find("fillcolor");
+    if (fill_color == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(fill_color->second);
+    fill_color->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
 }
 
 void normalize_native_visual_borderwidth_invariant(RuntimeOleObjectState& runtime_object)
