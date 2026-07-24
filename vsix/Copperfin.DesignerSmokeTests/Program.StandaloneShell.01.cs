@@ -113,8 +113,13 @@ internal static partial class Program
 
             form.SetCommandWindowFloatingForTest(true);
             Application.DoEvents();
+            var commandBounds = new Rectangle(100, 120, 640, 360);
+            form.SetCommandWindowFloatingBoundsForTest(commandBounds);
+            Application.DoEvents();
             Expect(form.IsCommandWindowVisible && form.IsCommandWindowFloating,
                 "standalone Command window should float without changing its visibility state");
+            Expect(form.CommandWindowFloatingBoundsForTest == commandBounds,
+                "standalone Command window should apply its requested floating bounds");
             Expect(form.FloatCommandWindowMenuText == "Acoplar ventana de comandos",
                 "floating Command window should expose the localized dock command");
 
@@ -144,7 +149,9 @@ internal static partial class Program
 
         Expect(store.StoredState is not null &&
                store.StoredState.CommandWindowFloating == false &&
-               store.StoredState.TerminalWindowFloating == false,
+               store.StoredState.TerminalWindowFloating == false &&
+               store.StoredState.CommandWindowFloatingWidth == 640 &&
+               store.StoredState.CommandWindowFloatingHeight == 360,
             "standalone Studio should save the final docked tool-window state");
 
         using (var firstForm = new StudioMainForm(
@@ -162,12 +169,22 @@ internal static partial class Program
             Application.DoEvents();
             firstForm.SetCommandWindowFloatingForTest(true);
             firstForm.SetTerminalWindowFloatingForTest(true);
+            firstForm.SetCommandWindowFloatingBoundsForTest(new Rectangle(140, 150, 660, 380));
+            firstForm.SetTerminalWindowFloatingBoundsForTest(new Rectangle(220, 190, 700, 400));
             firstForm.Close();
         }
 
         Expect(store.StoredState is not null &&
                store.StoredState.CommandWindowFloating &&
-               store.StoredState.TerminalWindowFloating,
+               store.StoredState.TerminalWindowFloating &&
+               store.StoredState.CommandWindowFloatingX == 140 &&
+               store.StoredState.CommandWindowFloatingY == 150 &&
+               store.StoredState.CommandWindowFloatingWidth == 660 &&
+               store.StoredState.CommandWindowFloatingHeight == 380 &&
+               store.StoredState.TerminalWindowFloatingX == 220 &&
+               store.StoredState.TerminalWindowFloatingY == 190 &&
+               store.StoredState.TerminalWindowFloatingWidth == 700 &&
+               store.StoredState.TerminalWindowFloatingHeight == 400,
             "standalone Studio should persist floating state for both tool windows");
 
         using (var restoredForm = new StudioMainForm(
@@ -185,9 +202,46 @@ internal static partial class Program
             Application.DoEvents();
             Expect(restoredForm.IsCommandWindowFloating && restoredForm.IsTerminalWindowFloating,
                 "standalone Studio should restore floating tool-window state");
+            Expect(restoredForm.CommandWindowFloatingBoundsForTest == new Rectangle(140, 150, 660, 380) &&
+                   restoredForm.TerminalWindowFloatingBoundsForTest == new Rectangle(220, 190, 700, 400),
+                "standalone Studio should restore floating tool-window bounds");
             restoredForm.SetCommandWindowFloatingForTest(false);
             restoredForm.SetTerminalWindowFloatingForTest(false);
             restoredForm.Close();
+        }
+
+        store.StoredState = new StudioShellLayoutState
+        {
+            Version = StudioShellLayoutState.CurrentVersion,
+            CommandWindowVisible = true,
+            TerminalWindowVisible = true,
+            SelectedToolWindow = StudioShellLayoutState.CommandWindowKey,
+            SplitterDistance = 420,
+            CommandWindowFloating = true,
+            TerminalWindowFloating = false,
+            CommandWindowFloatingX = -32000,
+            CommandWindowFloatingY = -32000,
+            CommandWindowFloatingWidth = 640,
+            CommandWindowFloatingHeight = 360
+        };
+        using (var fallbackForm = new StudioMainForm(
+                   new CopperfinLocalization("en-US"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            fallbackForm.Show();
+            Application.DoEvents();
+            Expect(fallbackForm.IsCommandWindowFloating &&
+                   fallbackForm.CommandWindowFloatingBoundsForTest is Rectangle fallbackBounds &&
+                   fallbackBounds.X != -32000 && fallbackBounds.Y != -32000,
+                "standalone Studio should ignore wholly off-screen floating bounds");
+            fallbackForm.Close();
         }
     }
 

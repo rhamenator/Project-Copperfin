@@ -35,6 +35,8 @@ internal sealed class StudioMainForm : Form
     private string selectedToolWindowKey = StudioShellLayoutState.CommandWindowKey;
     private Form? commandFloatingForm;
     private Form? terminalFloatingForm;
+    private Rectangle? commandFloatingBounds;
+    private Rectangle? terminalFloatingBounds;
     private bool shellTransitionInProgress;
 
     public StudioMainForm(
@@ -194,6 +196,12 @@ internal sealed class StudioMainForm : Form
 
     internal bool IsTerminalWindowFloating => terminalFloatingForm is not null;
 
+    internal Rectangle? CommandWindowFloatingBoundsForTest =>
+        commandFloatingForm?.Bounds ?? commandFloatingBounds;
+
+    internal Rectangle? TerminalWindowFloatingBoundsForTest =>
+        terminalFloatingForm?.Bounds ?? terminalFloatingBounds;
+
     internal string CommandWindowTabTitle => commandWindowPage.Text;
 
     internal string TerminalWindowTabTitle => terminalWindowPage.Text;
@@ -254,6 +262,24 @@ internal sealed class StudioMainForm : Form
         SetTerminalWindowFloating(floating);
     }
 
+    internal void SetCommandWindowFloatingBoundsForTest(Rectangle bounds)
+    {
+        commandFloatingBounds = bounds;
+        if (commandFloatingForm is not null)
+        {
+            commandFloatingForm.Bounds = bounds;
+        }
+    }
+
+    internal void SetTerminalWindowFloatingBoundsForTest(Rectangle bounds)
+    {
+        terminalFloatingBounds = bounds;
+        if (terminalFloatingForm is not null)
+        {
+            terminalFloatingForm.Bounds = bounds;
+        }
+    }
+
     internal void CloseCommandFloatingWindowForTest()
     {
         commandFloatingForm?.Close();
@@ -312,6 +338,16 @@ internal sealed class StudioMainForm : Form
         }
 
         shellSplitContainer.SplitterDistance = NormalizeSplitterDistance(state.SplitterDistance);
+        commandFloatingBounds = ReadFloatingBounds(
+            state.CommandWindowFloatingX,
+            state.CommandWindowFloatingY,
+            state.CommandWindowFloatingWidth,
+            state.CommandWindowFloatingHeight);
+        terminalFloatingBounds = ReadFloatingBounds(
+            state.TerminalWindowFloatingX,
+            state.TerminalWindowFloatingY,
+            state.TerminalWindowFloatingWidth,
+            state.TerminalWindowFloatingHeight);
         commandWindowMenuItem.Checked = state.CommandWindowVisible;
         terminalWindowMenuItem.Checked = state.TerminalWindowVisible;
 
@@ -342,6 +378,8 @@ internal sealed class StudioMainForm : Form
 
     private void SaveShellLayout()
     {
+        var commandBounds = CaptureFloatingBounds(commandFloatingForm, commandFloatingBounds);
+        var terminalBounds = CaptureFloatingBounds(terminalFloatingForm, terminalFloatingBounds);
         shellLayoutStore.Save(new StudioShellLayoutState
         {
             CommandWindowVisible = IsCommandWindowVisible,
@@ -349,13 +387,21 @@ internal sealed class StudioMainForm : Form
             SelectedToolWindow = SelectedToolWindowKey,
             SplitterDistance = NormalizeSplitterDistance(shellSplitContainer.SplitterDistance),
             CommandWindowFloating = IsCommandWindowFloating,
-            TerminalWindowFloating = IsTerminalWindowFloating
+            TerminalWindowFloating = IsTerminalWindowFloating,
+            CommandWindowFloatingX = commandBounds?.X,
+            CommandWindowFloatingY = commandBounds?.Y,
+            CommandWindowFloatingWidth = commandBounds?.Width,
+            CommandWindowFloatingHeight = commandBounds?.Height,
+            TerminalWindowFloatingX = terminalBounds?.X,
+            TerminalWindowFloatingY = terminalBounds?.Y,
+            TerminalWindowFloatingWidth = terminalBounds?.Width,
+            TerminalWindowFloatingHeight = terminalBounds?.Height
         });
     }
 
     private bool IsValidShellLayout(StudioShellLayoutState state)
     {
-        if ((state.Version != 1 && state.Version != StudioShellLayoutState.CurrentVersion) ||
+        if ((state.Version != 1 && state.Version != 2 && state.Version != StudioShellLayoutState.CurrentVersion) ||
             (state.SelectedToolWindow != StudioShellLayoutState.CommandWindowKey &&
              state.SelectedToolWindow != StudioShellLayoutState.TerminalWindowKey) ||
             state.SplitterDistance < MinimumToolWindowHeight ||
@@ -387,6 +433,25 @@ internal sealed class StudioMainForm : Form
             SelectedToolWindow = StudioShellLayoutState.CommandWindowKey,
             SplitterDistance = NormalizeSplitterDistance(DefaultSplitterDistance)
         };
+    }
+
+    private static Rectangle? CaptureFloatingBounds(Form? form, Rectangle? fallback)
+    {
+        return form is null || form.IsDisposed ? fallback : form.Bounds;
+    }
+
+    private static Rectangle? ReadFloatingBounds(int? x, int? y, int? width, int? height)
+    {
+        if (!x.HasValue || !y.HasValue || !width.HasValue || !height.HasValue ||
+            width.Value < 560 || height.Value < MinimumToolWindowHeight)
+        {
+            return null;
+        }
+
+        var bounds = new Rectangle(x.Value, y.Value, width.Value, height.Value);
+        return Screen.AllScreens.Any(screen => screen.WorkingArea.IntersectsWith(bounds))
+            ? bounds
+            : null;
     }
 
     private int MaximumSplitterDistance => Math.Max(
@@ -436,7 +501,8 @@ internal sealed class StudioMainForm : Form
             commandFloatingForm = CreateFloatingToolWindow(
                 localization.Text("VSIX.CommandWindow.Title"),
                 commandWindowControl,
-                () => DockCommandWindow(addPage: true));
+                () => DockCommandWindow(addPage: true),
+                commandFloatingBounds);
             SetMenuChecked(floatCommandWindowMenuItem, true);
             commandFloatingForm.Show(this);
             return;
@@ -459,7 +525,8 @@ internal sealed class StudioMainForm : Form
             terminalFloatingForm = CreateFloatingToolWindow(
                 localization.Text("VSIX.TerminalWindow.Title"),
                 terminalWindowControl,
-                () => DockTerminalWindow(addPage: true));
+                () => DockTerminalWindow(addPage: true),
+                terminalFloatingBounds);
             SetMenuChecked(floatTerminalWindowMenuItem, true);
             terminalFloatingForm.Show(this);
             return;
@@ -468,16 +535,25 @@ internal sealed class StudioMainForm : Form
         DockTerminalWindow(addPage: true);
     }
 
-    private Form CreateFloatingToolWindow(string title, Control control, Action dockAction)
+    private Form CreateFloatingToolWindow(
+        string title,
+        Control control,
+        Action dockAction,
+        Rectangle? initialBounds)
     {
         var form = new Form
         {
             Text = title,
             FormBorderStyle = FormBorderStyle.SizableToolWindow,
             ShowInTaskbar = false,
-            StartPosition = FormStartPosition.CenterParent,
+            StartPosition = FormStartPosition.Manual,
+            Size = new Size(720, 420),
             MinimumSize = new Size(560, MinimumToolWindowHeight)
         };
+        if (initialBounds.HasValue)
+        {
+            form.Bounds = initialBounds.Value;
+        }
         form.Controls.Add(control);
         form.FormClosing += (_, e) =>
         {
@@ -519,6 +595,7 @@ internal sealed class StudioMainForm : Form
         }
 
         var floatingForm = commandFloatingForm;
+        commandFloatingBounds = floatingForm.Bounds;
         commandFloatingForm = null;
         shellTransitionInProgress = true;
         try
@@ -555,6 +632,7 @@ internal sealed class StudioMainForm : Form
         }
 
         var floatingForm = terminalFloatingForm;
+        terminalFloatingBounds = floatingForm.Bounds;
         terminalFloatingForm = null;
         shellTransitionInProgress = true;
         try

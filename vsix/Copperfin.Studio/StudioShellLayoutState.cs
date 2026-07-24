@@ -20,7 +20,7 @@ internal interface IStudioShellLayoutStore
 [DataContract]
 internal sealed class StudioShellLayoutState
 {
-    internal const int CurrentVersion = 2;
+    internal const int CurrentVersion = 3;
     internal const string CommandWindowKey = "command";
     internal const string TerminalWindowKey = "terminal";
 
@@ -44,6 +44,30 @@ internal sealed class StudioShellLayoutState
 
     [DataMember(Order = 6)]
     public bool TerminalWindowFloating { get; set; }
+
+    [DataMember(Order = 7)]
+    public int? CommandWindowFloatingX { get; set; }
+
+    [DataMember(Order = 8)]
+    public int? CommandWindowFloatingY { get; set; }
+
+    [DataMember(Order = 9)]
+    public int? CommandWindowFloatingWidth { get; set; }
+
+    [DataMember(Order = 10)]
+    public int? CommandWindowFloatingHeight { get; set; }
+
+    [DataMember(Order = 11)]
+    public int? TerminalWindowFloatingX { get; set; }
+
+    [DataMember(Order = 12)]
+    public int? TerminalWindowFloatingY { get; set; }
+
+    [DataMember(Order = 13)]
+    public int? TerminalWindowFloatingWidth { get; set; }
+
+    [DataMember(Order = 14)]
+    public int? TerminalWindowFloatingHeight { get; set; }
 }
 
 internal sealed class StudioShellLayoutFileStore : IStudioShellLayoutStore
