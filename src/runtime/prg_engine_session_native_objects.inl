@@ -58,32 +58,28 @@
                 runtime_object.properties["fontname"] = make_string_value("Arial");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
-                !is_native_olecontrol_host_object(runtime_object) &&
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontname"))
             {
                 // Headless contract: preserve the raw dynamic-font expression without evaluating it.
                 runtime_object.properties["dynamicfontname"] = make_string_value("");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
-                !is_native_olecontrol_host_object(runtime_object) &&
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontsize"))
             {
                 // Headless contract: preserve the raw dynamic-font-size expression without evaluating it.
                 runtime_object.properties["dynamicfontsize"] = make_string_value("");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
-                !is_native_olecontrol_host_object(runtime_object) &&
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontshadow"))
             {
                 // Headless contract: preserve the raw dynamic-font-shadow expression without evaluating it.
                 runtime_object.properties["dynamicfontshadow"] = make_string_value("");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
-                !is_native_olecontrol_host_object(runtime_object) &&
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontoutline"))
             {
                 // Headless contract: preserve the raw dynamic-font-outline expression without evaluating it.
@@ -316,7 +312,7 @@
                 runtime_object.properties["inputmask"] = make_string_value("");
             }
 
-            if (normalized_base_class == "textbox" &&
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicinputmask"))
             {
                 // Headless contract: preserve the raw dynamic-mask expression without evaluating it.

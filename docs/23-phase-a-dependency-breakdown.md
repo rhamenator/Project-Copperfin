@@ -1,21 +1,32 @@
 # Phase A Dependency Breakdown
 
-This document began as a Phase A expansion of [remaining-work.md](../remaining-work.md). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence. `remaining-work.md` is now deprecated as active planning input.
+This document began as a Phase A expansion of [remaining-work.md](../remaining-work.md). Phase A is now closed; the Phase A content is historical dependency evidence. The current durable roadmap and phase/topic map are in [05-roadmap.md](05-roadmap.md). This file retains issue-linked progress evidence and detailed runtime/designer acceptance notes; `remaining-work.md` is deprecated as active planning input.
 
 It is intentionally narrower than the top-level roadmap:
 
-- scope: historical Phase A dependency evidence plus current post-D1/E1 continuation pointers
+- scope: historical Phase A dependency evidence plus issue-linked implementation and acceptance evidence
 - granularity: command/function groups and runtime engine seams
-- purpose: preserve the historical dependency reasoning and identify the current prompt-sized continuation lane
+- purpose: preserve historical dependency reasoning without turning the historical tables into a standing queue
 
-## Current Agent Directive
+## Current Workstream Selection
+
+Select the next slice from the highest-value unfinished subgoal in the
+workstream tree defined by [05-roadmap.md](05-roadmap.md). Use live GitHub
+state, current tests, compatibility risk, blockers, and user-visible impact.
+Do not assume that report/label, runtime, localization, IDE, packaging,
+security, or release work is permanently first. Once a subgoal is complete,
+stop revisiting it except for a regression, new compatibility evidence, or a
+release-validation failure.
+
+Each slice remains prompt-sized, independently testable, and assigned a
+disjoint source/test area when delegated. Parent and umbrella issues organize
+the work; only a prompt-sized child is an execution unit.
+
+## Current Evidence Ledger
 
 - Latest UI validation slice: `#4551` under #110 adds `scripts/run-designer-smoke-headless.sh`, which builds and runs the existing net472 WinForms DesignerSmoke executable through a fixed Xvfb screen and provides selector discovery without Xvfb. Preserve selector and exit-code contracts; use it for portable shared/WinForms evidence, while live Visual Studio theme/docking, Win32 rendering, and hosted VFP9 behavior remain Windows evidence gates.
-- Latest native PRG parity slice: `#4586` under #3217 adds the documented visual `DynamicFontOutline` property to the stack-frugal runtime path. Preserve the raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; exclude nonvisual and OLE-host objects, and do not evaluate expressions, resolve outline state, or claim font layout/rendering.
-- Latest native PRG parity slice: `#4585` under #3217 adds the documented visual `DynamicFontShadow` property to the stack-frugal runtime path. Preserve the raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; exclude nonvisual and OLE-host objects, and do not evaluate expressions, resolve shadow state, or claim font layout/rendering.
-- Latest native PRG parity slice: `#4584` under #3217 adds the documented visual `DynamicFontSize` property to the stack-frugal runtime path. Preserve the raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; exclude nonvisual and OLE-host objects, and do not evaluate expressions, resolve sizes, or claim font layout/rendering.
-- Latest native PRG parity slice: `#4583` under #3217 adds the documented visual `DynamicFontName` property to the stack-frugal runtime path. Preserve the raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; exclude nonvisual and OLE-host objects, and do not evaluate expressions, resolve fonts, or claim rendering.
-- Latest native PRG parity slice: `#4582` under #3217 adds the documented `TextBox.DynamicInputMask` property to the stack-frugal runtime path. Preserve the raw string through direct/PEM access, reflection, built-in protection, and derived initialization; do not evaluate the expression or claim UI mask application.
+- Latest native PRG parity correction: `#4586`, `#4585`, `#4584`, and `#4583` under #3217 are scoped to the documented `Column.DynamicFontOutline`, `Column.DynamicFontShadow`, `Column.DynamicFontSize`, and `Column.DynamicFontName` properties. Preserve each raw expression through direct/PEM access, reflection, built-in protection, and derived initialization; ordinary visual controls, nonvisual objects, and OLE hosts do not receive them, and the runtime does not evaluate expressions or claim font layout/rendering.
+- Latest native PRG parity correction: `#4582` under #3217 is scoped to the documented `Column.DynamicInputMask` property, not `TextBox`. Preserve the raw string through direct/PEM access, reflection, built-in protection, and derived initialization; do not evaluate the expression or claim UI mask application.
 - Latest native PRG parity slice: `#4548` under #3217 exposes VFP9 `DisabledItemBackColor` and `DisabledItemForeColor` on native ComboBox/ListBox objects with deterministic integer defaults, direct/reflection normalization, derived-Init coverage, and built-in reflection protection. Preserve machine property names and stack-frugal execution; keep per-row disabled state, rendering, theme translation, and hosted Windows validation separate. Focused runtime-surface coverage passes locally.
 - Latest native PRG parity slice: `#4549` under #3217 exposes VFP9 `ItemBackColor` and `ItemForeColor` on native ComboBox/ListBox objects with deterministic control-level integer defaults, direct/reflection normalization, derived-Init coverage, and built-in reflection protection. Preserve machine property names and stack-frugal execution; keep per-row color storage, rendering, theme translation, and hosted platform validation separate. Focused runtime-surface coverage passes locally.
 - Latest native PRG parity slice: `#4550` under #3217 exposes VFP9 `SelectedItemBackColor` and `SelectedItemForeColor` on native ComboBox/ListBox objects with deterministic integer defaults matching the native TextBox selected-color fallback, direct/reflection normalization, derived-Init coverage, and built-in reflection protection. Preserve machine property names and stack-frugal execution; keep selected-row rendering, focus/highlight behavior, theme translation, and hosted platform validation separate. Focused runtime-surface coverage passes locally.
@@ -108,7 +119,7 @@ This is the only actionable queue in this file as of 2026-07-04. If another sect
 - Latest runtime-debug launch-contract slice: `#3955` makes debug replay use the same wrapper-aware process-start contract as managed Build/Run. Keep Windows `.cmd`/`.bat` hosts on `COMSPEC /d /c`, direct and POSIX hosts direct, debug/manifest argument quoting and locale environment names intact, and process-start diagnostics localized with the retained host detail. The linked managed smoke covers `.exe`, extensionless, `.cmd`, `.bat`, missing, and unlaunchable runtime hosts; Windows VSIX execution remains required release evidence.
 - Latest debugger path-identity slice: `#3884` applies platform-aware lexical path identity across breakpoint matching, duplicate suppression, removal, and resume-skip handling. Windows compares path case insensitively; POSIX retains normalized case-sensitive behavior. Preserve stored/debug-event path text and invariant event contracts, with casing-variant hit, duplicate, and removal regressions under both platform branches.
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
-- The live execution lane remains broader than a single parent: choose the next prompt-sized child from live GitHub state across E3/#24 report/label designer fidelity, native runtime parity `#3217`, and evidence-backed hardening follow-ons under `#110`; environment-access parent `#3214` is closed. Localization/#2348 remains a standing requirement for new user-facing text rather than the default implementation lane. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
+- Live execution is broader than a single parent: choose the next prompt-sized child from the highest-value unfinished workstream in `docs/05-roadmap.md`, using live GitHub state and current evidence. Localization remains a standing requirement for new user-facing text. Treat evidence-audit rows as closure work unless fresh implementation evidence shows a real remaining local miss.
 - Localization release order is `en-US`, `es-419`, and `pt-BR`; `qps-ploc` remains a test locale. Keep locale selection and catalogs extensible for a later left-to-right alphabetic wave (`en-GB`, French, German, Russian, and similar locales) without changing invariant machine fields or producing per-language binaries. No locale is production-ready from catalog parity or machine translation alone: require recorded native-speaker or qualified cultural-language review for correctness, intent, tone, terminology, formality, euphemism/directness, regional usage, and offensive or awkward wording. Prefer natural regional language to literal translation, and allow a specific regional catalog when a broad locale such as `es-419` cannot serve its whole audience naturally. Defer scripts with bidirectional, shaping, vertical-layout, or materially different input needs until dedicated font, layout, input, collation, casing, accelerator, packaging, and test readiness is complete.
 - Windows runtime-host debug fixture slice `#4048` normalizes captured CRLF only at the test assertion boundary, JSON-escapes native bridge request paths, and passes Unicode filesystem-valued locale roots through `ScopedEnvironmentPath` rather than a lossy narrow path conversion. Keep the per-case/subcase progress markers and the focused audit workflow's explicit `test_runtime_host_debug_output_formatting` and `test_runtime_host_audit_stream` build/CTest selection; hosted Linux GCC, macOS Clang, and Windows MSVC all pass.
 - Preserve stack-frugal PRG execution as a hard runtime constraint. Shipped child `#4074` removes synchronous evaluator re-entry for direct whole-expression `RETURN F(...)` calls. Parent `#4068` retains arbitrary compound and argument-nested expression-level UDF calls; complete those with resumable expression continuations, not by inflating the process stack. Shipped `#3918` owns session-wide UDFPARMS value/reference semantics and must retain its UDF-only call classification, live scalar aliases, canonical array aliases, and independent `DO ... WITH` behavior.
@@ -131,11 +142,11 @@ This is the only actionable queue in this file as of 2026-07-04. If another sect
 - Latest record-scope parity slice: `#4030` implements `DELETE` / `RECALL` `NEXT <n>`, `RECORD <n>`, and `REST` by reusing shared physical-range selection. Preserve bare-current-record commands, `ALL`, `FOR`, `WHILE`, target `IN`, active filters, cursor-position restoration, and the existing distinction where DELETE honors `SET DELETED` while RECALL must reach deleted records. Focused GCC and Clang table-mutation coverage passes; no visible or machine contract changed.
 - Latest implemented E3 slice: `#4062`, direct report/label DBF character-field fidelity. Shared visual-asset `C`-field mutation now keeps leading spaces, strips only right-side storage padding, rejects fixed-width overflow before publication, and uses the same serializer for undo restoration. FRX/LBX direct edit, reopen, undo, subsequent-edit, and overflow regressions pass under GCC and Clang; host JSON fields and all visible/machine contracts remain unchanged. `#4061` remains the preceding fractional-geometry fix.
 - Previous E3 slice: `#4058`, CP-marked FRX/LBX text transcoding at shared designer boundaries. Marked C/V and M values decode to UTF-8 for shared model and host JSON; editor C/M writes strictly encode back to the original table page, rejecting invalid UTF-8 and unrepresentable values, and schema rewrites retain the source mark with their preserved raw fields/memos. Unmarked writes remain UTF-8-compatible, while opaque raw structural fields/memos keep byte-for-byte preservation and malformed legacy displays retain their sanitizing fallback. CP1252/CP1251 codec, FRX/FRT and LBX/LBT direct/memo round-trip, failure-atomic rejection, raw-byte, schema-rewrite, and Studio-host JSON tests pass under GCC and Clang. Keep all future user-facing diagnostics in four catalogs and all machine JSON keys/IDs invariant.
-- Previous localization slice: `#2628`, remaining `StudioHost.LaunchParse.ObjectCommand.*` label parity. Keep new user-facing work localized by default, but prefer ordinary E3/#24 feature children unless live GitHub state raises a higher-priority localization or release blocker.
+- Previous localization slice: `#2628`, remaining `StudioHost.LaunchParse.ObjectCommand.*` label parity. Keep new user-facing work localized by default, and select localization slices when their evidence, dependencies, or release impact makes them the highest-value unfinished work.
 - Recent non-E3 shipped context: localization/#2348 children through `#2538` including infrastructure child `#1779`, localization/release-readiness slices through `#1856` under `#113`, evidence-management `#1700` under `#108`, F1 error-management `#1714` under `#25`, and E2 raw-code fallback `#1749` under `#23`.
 - Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
-- Current continuation shape: continue prompt-sized children from the highest-weight live lane, with E3/#24 still favored when no sharper runtime/hardening blocker outweighs it. For the E3 lane specifically, keep pushing shared host/designer round-trip fidelity, section-aware editing, output preview metadata, and layout/runtime parity seams while keeping new user-facing text localized by default; explicit grouping summaries, section grouping context, resolved grouping-expression provenance, per-section deleted-object counts, deleted placed-object containing-section fidelity, live-object deleted-section membership, stable-selected/deleted/record-selected/nested-group EXPR edit evidence, and mounted real-sample root `GRIDV` plus `TAG` round-trip coverage now exist, so prefer the next unproven seam rather than re-covering those settings/grouping cases. Use host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
-- Next work: select the next prompt-sized child from live GitHub state under native runtime parity `#3217`, E3/#24, or other evidence-backed hardening lanes; retain the iterative, stack-frugal method-frame constraint for any PRG lifecycle work. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The `#1078`-`#1086`, `#1087`-`#1101`, `#1102`-`#1202`, and `#1203`-`#1447` E2 evidence-audit ranges are closed; only older E2 parent/roadmap rows remain open in the local issue snapshot and must not be orphaned. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
+- Current continuation shape: continue prompt-sized children from the highest-value unfinished workstream. Preserve the iterative, stack-frugal method-frame constraint for PRG lifecycle work, keep new user-facing text localized by default, and use shared host/model seams where the selected acceptance criterion requires them. Do not re-cover a completed behavior unless new evidence exposes a regression or compatibility gap.
+- Next work: inspect live issue state and repository evidence, choose the next unfinished subgoal from the roadmap tree, implement it in a disjoint area, validate it, and update only the progress, changelog, and handoff records that materially changed. Keep historical issue tables below as audit evidence, not as a numbered queue.
 - Wishlist and future-facing modernization issues remain valid deferred roadmap work. They are sequenced after important/basic compatibility, usability, release-readiness, and prerequisite architecture unless live GitHub state shows they have become the highest-weight blocker.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Issue Tree Status" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
@@ -184,7 +195,7 @@ Phase A is closed. The rows below are retained only to explain the old dependenc
 
 ## Historical Dependency Table By Recommended Work Package
 
-This was the actionable version of the old Phase A graph. It is retained only as closure evidence and must not redirect agents away from the current E3/#24 lane unless live GitHub state shows a higher-weight blocker.
+This was the actionable version of the old Phase A graph. It is retained only as closure evidence and must not redirect agents away from the current MVP workstream tree in `docs/05-roadmap.md`.
 
 | WP | Work Package | Linked Issues | Duration (Weeks) | Primary Groups | Prerequisites | Expected Output |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -303,7 +314,7 @@ flowchart LR
 
 ## Historical Phase A Recommended Order
 
-This order is retained as closure evidence only. It must not redirect agents away from the current E3/#24 directive unless live GitHub state shows a higher-weight blocker.
+This order is retained as closure evidence only. It must not redirect agents away from the current MVP workstream tree unless live evidence identifies a regression in the historical dependency.
 
 The historical recommended order was not simply "lowest percentage first." It was:
 
@@ -472,7 +483,7 @@ Historical-closed lane structure under `#8`:
 
 ## Current Issue Tree Status
 
-Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure. This table supersedes the historical dependency graph, historical critical path, and numbered closure list in this file. If a parent has no open child rows, create the next prompt-sized child in that parent lane before coding under that parent.
+Historical prompt-sized slice and closure-status snapshot after Phase A/D1/E1 closure. This table preserves issue-linked evidence but does not supersede the durable roadmap or define the current queue. Select new work from the live issue tree and the unfinished workstream acceptance criteria.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
@@ -1602,7 +1613,7 @@ Adjacent prompt-sized native slice queues:
 
 Historical post-D1 execution order through the current E2 queue:
 
-The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. Do not continue by counting the next number in this list. For active work, use the table above and create the next prompt-sized child under `#24` unless the issue tracker shows a higher-weight blocker.
+The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. Do not continue by counting the next number in this list. For active work, use `docs/05-roadmap.md`, live issue state, and current acceptance evidence.
 
 1. `#658`
 2. `#659`
@@ -2082,7 +2093,7 @@ For current post-D1/E1 work, the implementation unit should be a prompt-sized is
 - Keep `#7`, `#8`, and their lane issues (`#92`-`#101`) as historical planning and closure umbrellas.
 - Keep the repo-root umbrella issues `#108`-`#114` as navigation/grouping roots rather than execution units.
 - Keep milestones aligned to the same tree: `Root/#...` for repo umbrellas, historical `A3/#...` / `A4/#...` for closed runtime lanes, and slice issues inheriting the milestone of their parent lane.
-- Before starting code work, pick one open slice issue under the active lane, or create a new slice issue if the intended change does not fit an existing one.
+- Before starting code work, select one unfinished subgoal from the roadmap workstream tree and pick an open slice issue that fits it, or create a new prompt-sized child if no existing issue fits.
 - One implementation prompt should normally map to one slice issue, one focused validation loop, and one doc/handoff update.
 - Close or retarget the slice issue when the prompt-sized implementation lands; do not hide shipped work only inside the broader lane issue body.
 

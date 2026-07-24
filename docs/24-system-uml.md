@@ -6,7 +6,7 @@ Format choice:
 
 - GitHub renders Mermaid diagrams natively in Markdown.
 - Mermaid `classDiagram` is the safest UML-style format available directly on GitHub without requiring generated binaries or external viewers.
-- The diagram below is intentionally architectural rather than code-generated. It is meant to explain subsystem boundaries and dependencies to reviewers who insist on a UML artifact; current issue-lane status lives in the Mermaid status diagrams in `docs/02-architecture.md` and `docs/23-phase-a-dependency-breakdown.md`.
+- The diagram below is intentionally architectural rather than code-generated. It is meant to explain subsystem boundaries and dependencies to reviewers who insist on a UML artifact; the current project phase/topic map lives in `docs/05-roadmap.md`, while issue-linked evidence belongs in `agent-handoff.md` and the progress documents.
 
 ## Core System Class Diagram
 

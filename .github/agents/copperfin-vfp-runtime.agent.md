@@ -25,17 +25,18 @@ Use these sources in order:
 1. Live GitHub issue state.
 2. `agents.md` for operating rules and safety traceability.
 3. `agent-handoff.md` for the compact continuation brief.
-4. `docs/23-phase-a-dependency-breakdown.md` for current lane status and historical dependency evidence.
-5. `docs/22-vfp-language-reference-coverage.md` when the selected slice touches VFP/runtime language coverage.
-6. `docs/safety/hazard-register.md` and related safety docs when a change is safety-relevant.
+4. `docs/05-roadmap.md` for the durable workstream tree and phase/topic map.
+5. `docs/23-phase-a-dependency-breakdown.md` for issue-linked progress and historical dependency evidence.
+6. `docs/22-vfp-language-reference-coverage.md` when the selected slice touches VFP/runtime language coverage.
+7. `docs/safety/hazard-register.md` and related safety docs when a change is safety-relevant.
 
 `remaining-work.md` is deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
 ## Current Selection Rules
 
 1. Check live GitHub state before coding.
-2. Prefer the current high-weight prompt-sized child issue. As of this guidance refresh, native class/object runtime work under #3217 has been superseding the older E3/#24 designer lane, but that is an example of live-state priority rather than a permanent hard-coded queue.
-3. Treat #2348 as a standing architectural constraint for new user-facing text.
+2. Prefer the highest-value unfinished subgoal in the workstream tree in `docs/05-roadmap.md`, then select a prompt-sized child issue that fits it. Do not hard-code runtime, designer, localization, or any other lane as permanently first.
+3. Treat localization as a standing architectural constraint for new user-facing text.
 4. Treat Phase A, D1/#19, E1/#22, and old historical issue sequences such as #150-#153, #92-#101, and #154-#203 as closed/historical unless live regression evidence reopens them.
 5. Do not execute directly from umbrella or parent issues when prompt-sized children exist or can be created.
 6. If a planned change is too large for one prompt, split or create the next prompt-sized child before coding.
@@ -49,7 +50,7 @@ Use these sources in order:
 5. Run focused validation for the selected slice plus `git diff --check`.
 6. Update durable docs only when behavior or active guidance changes.
 7. Update `CHANGELOG.md` for lasting repo changes or material tracked-documentation changes.
-8. Update `agent-handoff.md` only when the last shipped slice, current lane, or next action changes.
+8. Update `agent-handoff.md` only when the last shipped slice, selected workstream, or next action changes.
 
 ## Safety Documentation Standard
 

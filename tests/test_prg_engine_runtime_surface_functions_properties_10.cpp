@@ -91,8 +91,8 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_textbox_dynamicinputmask.prg";
         write_text(
             main_path,
-            "oText = CREATEOBJECT('TextBox')\n"
-            "oEdit = CREATEOBJECT('EditBox')\n"
+            "oText = CREATEOBJECT('Column')\n"
+            "oEdit = CREATEOBJECT('TextBox')\n"
             "lHas = PEMSTATUS(oText, 'DynamicInputMask', 1)\n"
             "lReadOnly = PEMSTATUS(oText, 'DynamicInputMask', 5)\n"
             "lEditHas = PEMSTATUS(oEdit, 'DynamicInputMask', 1)\n"
@@ -115,7 +115,7 @@ namespace copperfin::runtime_surface_tests
             "oDerived = CREATEOBJECT('DerivedDynamicInputMaskText')\n"
             "cDerived = oDerived.DynamicInputMask\n"
             "RETURN\n"
-            "DEFINE CLASS DerivedDynamicInputMaskText AS TextBox\n"
+            "DEFINE CLASS DerivedDynamicInputMaskText AS Column\n"
             "    PROCEDURE Init\n"
             "        THIS.DynamicInputMask = 'TRANSFORM(Value)'\n"
             "    ENDPROC\n"

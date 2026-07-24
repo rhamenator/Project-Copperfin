@@ -1,118 +1,179 @@
 # Roadmap
 
-The Copperfin roadmap is dependency-first: complete deep runtime and data-engine behavior before broad surface expansion.
+The Copperfin roadmap is organized as a completion tree rather than a fixed
+issue sequence. The top-level product objective is an implementation-complete,
+Windows-first MVP release candidate. The v1 roadmap begins after the complete
+MVP tree has passed its implementation acceptance criteria.
 
-Current execution authority is:
+This document is durable roadmap guidance. It intentionally does not list
+individual issue numbers or claim percentage completion. Live issue state,
+focused tests, and release artifacts provide the detailed evidence for each
+workstream.
 
-- live GitHub issue state
-- `agents.md`
-- `agent-handoff.md`
-- `docs/23-phase-a-dependency-breakdown.md`
+## Completion Model
 
-`remaining-work.md` is deprecated as active planning input; use it only for its deprecation notice.
+Each workstream has a subgoal tree with observable acceptance criteria:
 
-## Phase A: Core Data And Compatibility Engine
+1. Choose the highest-value unfinished subgoal using current evidence,
+   compatibility risk, blockers, and user-visible impact.
+2. Implement one small, independently verifiable slice.
+3. Run focused regression tests and the relevant broader validation.
+4. Record durable constraints and evidence in the appropriate progress or
+   handoff document.
+5. Mark the subgoal complete only when its implementation and required tests
+   pass.
 
-Goal:
+Completed workstreams are not revisited unless a regression, new compatibility
+evidence, or release-validation failure creates a new acceptance gap.
 
-- full behavioral compatibility for core DBF/CDX/DBC data paths, work areas/data sessions, command/expression runtime semantics, and automation containment foundations
+## MVP Workstreams
 
-Current state:
+### Report And Label Fidelity
 
-- critical-path closure is complete
-- adjacent work now proceeds from the post-D1/E1 designer queue instead of the old runtime-safety gate
+Complete section-aware FRX/LBX editing in the shared designer model:
 
-Active issue lanes:
+- root settings, bands, grouping, sorting, and placed objects
+- geometry, sizing, positioning, expressions, fonts, and preview metadata
+- safe no-op, supported-property, delete/restore, and unsupported-data
+  round trips
+- identical behavior in standalone Studio and the Visual Studio host, with
+  shell-specific chrome kept outside the shared model
+- stable host JSON with invariant machine fields and optional display fields
 
-- critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is centered on E3/#24 report/label designer fidelity, where the latest shipped child `#4389` preserves nullable report/label section ordinals in managed snapshots, with earlier mounted real-sample FRX/LBX root-setting and object/section round-trip coverage retained; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+The implementation is near the MVP boundary. Hosted Windows validation with
+real VFP9 samples remains part of the acceptance evidence.
 
-Execution rule:
+### Localization
 
-- do not reopen closed Phase A lanes without a concrete regression; prefer the current E3/#24 directive in `docs/23-phase-a-dependency-breakdown.md` unless live GitHub state shows a higher-weight blocker
+Route user-facing native, managed, VSIX, Studio, runtime, diagnostic, and
+packaging text through the catalog system. Preserve invariant parser tokens,
+diagnostic identities, JSON fields, schema keys, enum values, and runtime
+identifiers. Maintain key parity, fallback behavior, pseudo-localization,
+placeholder preservation, and Unicode round trips for the supported catalogs.
 
-## Phase B: Runtime Safety And Diagnostic Fidelity
+All new user-facing work is localized by default. Additional translations are
+separate content work after the catalog and layout contracts are stable.
 
-Goal:
+### IDE And Designer Workflows
 
-- deterministic fault isolation and repeatable debug metadata across pause/resume/retry flows
+Complete the Windows-first open/edit/build/run/debug path for PJX, PRG, SCX,
+VCX, FRX, LBX, and MNX startup assets. The shared designer model must support
+the same behavior in standalone Studio and the VSIX. Stabilize the MVP utility
+surfaces needed for repeated work: debugger, task list, references, data
+explorer, object browser, toolbox/builders, coverage, database, and
+security/extensibility summaries.
 
-Current state:
+### Runtime And Language Compatibility
 
-- `#13` is closed and the current prompt-sized `#14` child queue is exhausted through `#273`
-- any new work under this phase should start with a fresh child issue instead of reusing the closed safety queue
+Expand VFP9-compatible command, function, object, property, method, and event
+behavior using real VFP9 behavior or shipped documentation. Keep PRG execution
+stack-frugal and preserve the iterative frame-machine constraints. Track
+deliberate fallbacks and unsupported behavior in the runtime stub inventory;
+never treat a no-op as completed compatibility.
 
-## Phase C: Runtime Parity Surfaces
+### Build, Package, And Debug Contracts
 
-Goal:
+Formalize and preserve versioned `app.cfmanifest` and `app.cfdebug` contracts,
+staged executable sidecars, source/debug path provenance, and deterministic
+package content. Complete the MVP xAsset lifecycle needed for forms/classes,
+menus, reports/labels, event-loop behavior, runtime faults, and debugger
+recovery.
 
-- forms/classes, reports/labels, menus, and project startup/build behavior parity
+### Security And Platform Seams
 
-Current state:
+Keep package trust, external-process policy, file-handle binding, secrets,
+extension trust, audit, and AI/MCP boundaries explicit and fail-closed where
+required. Preserve portable native seams while giving Windows-first behavior
+the evidence needed for the MVP release candidate. macOS and Linux standalone
+host parity follows the MVP boundary where practical and is expanded in v1.
 
-- first-pass runtime parity lanes are closed (`#15`-`#18`, `#154`-`#161`)
-- follow-on work here should reopen only when a new parity gap is identified or a deeper child issue is created
+### RC And Release Evidence
 
-## Phase D: Build, Compiler, And Debug Pipeline
+Implementation completion of every MVP workstream is RC readiness. Release
+evidence follows that gate and includes:
 
-Goal:
+- native CMake/CTest and platform validation
+- Windows VSIX, standalone Studio, designer, runtime, package, and debugger
+  smoke tests
+- real VFP9 sample validation
+- installer and VSIX artifacts
+- safety traceability validation and archived evidence
+- known limitations and compatibility exceptions
 
-- deterministic package/manifest/build/debug contracts and robust host/runtime launch fidelity
+## v1 Roadmap
 
-Current state:
+After MVP implementation completion and release evidence review, continue in
+this order:
 
-- baseline shipped
-- current prompt-sized child queues are closed on this branch (`#162`-`#177` shipped for build/debug; `#178`-`#183`, `#395`, `#396`, `#397`, `#398`, `#399`, `#400`, and `#401` shipped for language service)
-- routine validation now also includes a managed compile gate over `Copperfin.LanguageServiceTests`, `Copperfin.Studio`, and `Copperfin.DesignerSmokeTests`
+1. Broaden runtime parity from validated VFP9 behavior and shipped docs.
+2. Mature forms/classes, menus, reports/labels, builders, project management,
+   property grids, toolbox, object browser, data explorer, and coverage into
+   full authoring workflows.
+3. Add deterministic SQL federation, then document/vector planning, then
+   first-class .NET runtime interop beyond launcher stubs.
+4. Deepen RBAC, policy profiles, audit, secrets, signing, process controls,
+   extension trust, and AI/MCP boundaries.
+5. Port standalone/core host behavior to macOS and Linux while preserving the
+   portable native contracts.
+6. Build the requirements-to-code-to-test traceability matrix from validated
+   VFP9 behavior, shipped documentation, and documented Copperfin exceptions.
 
-## Phase E: Designers And IDE Parity
+## Phase And Topic Map
 
-Goal:
+This map is a durable view of the project tree. It describes relationships and
+completion gates, not a queue or a promise that every topic is implemented.
 
-- shared design model, designer interaction fidelity, and IDE shell parity
+```mermaid
+flowchart TD
+    MVP["MVP implementation-complete RC"]
 
-Current state:
+    subgraph Compatibility["Compatibility And Authoring"]
+        RPT["Report and label fidelity"]
+        IDE["IDE and designer workflows"]
+        RTL["Runtime and language compatibility"]
+    end
 
-- `#22` is closed; `#23` and `#24` remain open as designer lane parents.
-- `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
-- `#2348` is no longer the default active lane; its shipped catalog sweep now acts as a standing requirement that new user-facing work stay localized. `#24` remains the active E3 report/label lane, with latest shipped child `#4389`; inspect live GitHub state and create or pick the next prompt-sized child under the current lane unless a higher-weight blocker is open.
-- `#27`-`#29` currently have no downstream open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
+    subgraph Foundation["Foundation And Delivery"]
+        LOC["Localization"]
+        PKG["Build, package, and debug contracts"]
+        SEC["Security and platform seams"]
+    end
 
-## Phase F: Federation, Interop, And Modern Platform
+    subgraph Evidence["Acceptance Evidence"]
+        TEST["Native, managed, and Windows validation"]
+        SAMPLE["Real VFP9 sample coverage"]
+        DOCS["Safety traceability and known limitations"]
+    end
 
-Goal:
+    RPT --> IDE
+    RTL --> RPT
+    LOC --> IDE
+    LOC --> PKG
+    PKG --> IDE
+    SEC --> PKG
+    IDE --> TEST
+    RPT --> SAMPLE
+    RTL --> SAMPLE
+    PKG --> TEST
+    TEST --> MVP
+    SAMPLE --> MVP
+    DOCS --> MVP
 
-- relational/document federation, modern interop outputs, and runtime bridge contracts
+    MVP --> V1["v1 transition"]
+    V1 --> PARITY["Broader runtime parity"]
+    V1 --> DESIGN["Full designer and IDE parity"]
+    V1 --> MODERN["Federation, planning, and interop"]
+    V1 --> SECURITY["Security depth"]
+    V1 --> PORT["Portability"]
+    V1 --> TRACE["Requirements traceability"]
+```
 
-Current state:
+## Documentation Ownership
 
-- historical native slice queues under `#30`-`#32`, `#57`, and `#91` were exhausted after `#200`-`#203` shipped; re-audit live GitHub parent issues before opening new federation/interop children.
-
-## Phase G: Security And Policy
-
-Goal:
-
-- runtime/project policy depth and extension/host policy hardening
-
-Current state:
-
-- parent issues `#33` and `#34` remain open for deeper policy work, but the tracked prompt-sized child queue `#190`-`#193` is closed
-- create a fresh child issue before new implementation work under this phase
-
-## Phase H: Portability
-
-Goal:
-
-- portable core boundary and standalone/core host support on macOS and Linux
-
-Current state:
-
-- downstream open queue under `#35`-`#37` (`#194`-`#199`); do not prioritize it ahead of E3/#24 without live higher-weight blocker evidence
-- remains downstream of Windows-first runtime stabilization priorities
-
-## Delivery Discipline
-
-- execute one prompt-sized issue slice at a time
-- ship code with focused regression coverage
-- update changelog + handoff + backlog docs with each durable slice
-- prefer critical-path blockers before adjacent depth work
+- This file owns the durable roadmap, completion model, and phase/topic map.
+- Architecture and reference documents describe stable product boundaries and
+  compatibility rules; they should remain issue-neutral where possible.
+- `agent-handoff.md` and progress documents record current evidence and may
+  reference specific issues, commits, tests, and hosted runs.
+- `CHANGELOG.md` records shipped behavior and durable constraints.
+- `remaining-work.md` is deprecated and must not become a second roadmap.

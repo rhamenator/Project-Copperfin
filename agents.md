@@ -9,15 +9,16 @@ Use these sources in order:
 1. Live GitHub issue state.
 2. This file for operating rules.
 3. `agent-handoff.md` for the compact continuation brief.
-4. `docs/23-phase-a-dependency-breakdown.md` for current lane status and historical dependency evidence.
-5. `docs/22-vfp-language-reference-coverage.md` when a chosen slice touches VFP/runtime language coverage.
-6. `docs/safety/hazard-register.md` and related safety docs when a change is safety-relevant.
+4. `docs/05-roadmap.md` for the durable workstream tree and phase/topic map.
+5. `docs/23-phase-a-dependency-breakdown.md` for issue-linked progress and historical dependency evidence.
+6. `docs/22-vfp-language-reference-coverage.md` when a chosen slice touches VFP/runtime language coverage.
+7. `docs/safety/hazard-register.md` and related safety docs when a change is safety-relevant.
 
 `remaining-work.md` is intentionally deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
 ## Standing Goal: Requirements Recovery
 
-Eventual goal, restated here because it keeps getting dropped from condensed guidance: build a DO-178-style LLR <-> code <-> test traceability matrix via requirements recovery, since Copperfin's requirements were never written before its code. See `docs/01-product-charter.md` (Compatibility Fidelity Rule) and `docs/27-known-vfp9-bug-exceptions.md` (bug/crash exception registry). A recovered requirement must validate against real installed VFP9 or shipped docs only, never decompiled binaries (`docs/07-clean-room-rules.md`). Not the current lane — pick it up only when explicitly prioritized, and do not let it block active work.
+Eventual goal, restated here because it keeps getting dropped from condensed guidance: build a DO-178-style LLR <-> code <-> test traceability matrix via requirements recovery, since Copperfin's requirements were never written before its code. See `docs/01-product-charter.md` (Compatibility Fidelity Rule) and `docs/27-known-vfp9-bug-exceptions.md` (bug/crash exception registry). A recovered requirement must validate against real installed VFP9 or shipped docs only, never decompiled binaries (`docs/07-clean-room-rules.md`). Select this subgoal when its evidence, dependencies, or release impact make it the highest-value unfinished work; do not let it block a more important MVP acceptance gap.
 
 ## Product And Roadmap Intent
 
@@ -29,11 +30,11 @@ Treat wishlist and future-facing issues as deferred roadmap work, not noise. Do 
 
 Choose work from live GitHub issue state and current repo guidance, not from old numbered ledgers.
 
-- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker. Treat localization/#2348 as a standing architectural constraint for new user-facing text.
-- Phase A, D1/#19, E1/#22, and old historical issue sequences are closed/historical unless live regression evidence reopens them.
-- Prefer the open prompt-sized child issue that unblocks the most downstream work.
-- Create the next prompt-sized child under the active lane before coding when no existing child fits.
-- Keep implementation narrow, add focused regression coverage, validate, and update durable docs only when behavior or active guidance changes.
+- The implementation target is the complete MVP workstream tree in `docs/05-roadmap.md`, not one permanently active lane. Select the highest-value unfinished subgoal using live GitHub state, current tests, compatibility risk, blockers, and user-visible impact. Treat localization as a standing architectural constraint for new user-facing text.
+- Mark a subgoal complete only when its implementation and acceptance evidence pass. Do not revisit completed subgoals unless a regression, new compatibility evidence, or release-validation failure creates a new gap.
+- Prefer the open prompt-sized child issue that unblocks the most downstream work within the selected workstream.
+- Create the next prompt-sized child under the selected workstream before coding when no existing child fits.
+- Keep implementation narrow, add focused regression coverage, validate, and update durable docs only when behavior or active guidance changes. Use the roadmap for durable workstream structure and progress/handoff files for issue-linked evidence.
 
 ## Issue Hierarchy
 
@@ -47,7 +48,7 @@ Choose work from live GitHub issue state and current repo guidance, not from old
 
 - Historical Phase A dependency tables and shipped-slice ledgers explain why old work closed; they are not active queues.
 - Do not redirect to old Phase A/runtime issues such as `#150`-`#153`, `#92`-`#101`, or `#154`-`#203` unless the corresponding live issue has reopened with fresh regression evidence.
-- Preserve evidence needed to understand old closure decisions, but keep recurring handoff text limited to last shipped slice, current lane, and next action.
+- Preserve evidence needed to understand old closure decisions, but keep recurring handoff text limited to the last shipped slice, selected workstream, and next action.
 
 ## Safety Documentation Traceability
 
@@ -68,7 +69,7 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 ## Handoff Rules
 
 - `agent-handoff.md` is the canonical continuation brief and should stay compact.
-- Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, current lane, or next action.
+- Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, selected workstream, or next action.
 - Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.

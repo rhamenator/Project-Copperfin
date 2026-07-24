@@ -34,12 +34,12 @@ flowchart LR
 
     subgraph UXHosts[Designer And Host Surfaces]
         direction TB
-        DES["Shared Designers<br/>#23 open evidence-audit queue"]
+        DES["Shared Designers<br/>MVP workflow surface"]
         FORMS["Forms / Classes Runtime<br/>first-pass shipped"]
-        RPT["Reports / Labels Designer<br/>E3 active<br/>#1565 latest"]
+        RPT["Reports / Labels Designer<br/>near MVP; hosted evidence remains"]
         MENU["Menus Runtime<br/>first-pass shipped"]
-        VS["Visual Studio Integration<br/>partial host"]
-        IDE["Standalone Copperfin IDE<br/>partial host"]
+        VS["Visual Studio Integration<br/>Windows-first partial host"]
+        IDE["Standalone Copperfin IDE<br/>Windows-first partial host"]
         LS["Language Service<br/>managed gate active"]
     end
 
@@ -92,7 +92,7 @@ flowchart LR
     class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```
 
-Status legend: green = closed/baseline-shipped lane, amber = partial or active depth lane, red = known missing lane. The diagram intentionally avoids stale percentage math; issue-tree state and focused tests are authoritative.
+Status legend: green = closed/baseline-shipped capability, amber = partial or active depth capability, red = known missing capability. The diagram intentionally avoids percentage math and issue numbers; current acceptance evidence belongs in the progress and handoff documents.
 
 ## Current Status Snapshot
 

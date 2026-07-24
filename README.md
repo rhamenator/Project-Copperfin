@@ -33,7 +33,7 @@ Requirements Recovery:
 
 - Copperfin's eventual requirements-recovery goal is to build a DO-178-style low-level requirement, code, and test traceability matrix from the implementation and validated VFP9 behavior, because the project did not start with a complete requirements set.
 - Recovered requirements must be grounded in real installed VFP9 behavior or shipped documentation, with known-bug and crash exceptions catalogued explicitly. Decompiled VFP binaries are not acceptable requirement sources under the clean-room rules.
-- This is a standing product-quality goal, not the current implementation lane. Current execution remains focused on compatibility, designer fidelity, release-readiness, and prompt-sized GitHub issue slices.
+- This is a standing product-quality goal. It is one subgoal in the roadmap tree and should be selected when its evidence and dependencies make it the highest-value unfinished work.
 
 Why "Copperfin"?
 
@@ -48,52 +48,52 @@ Important note:
 
 Contents:
 
-- [`LICENSE.md`](E:/Project-Copperfin/LICENSE.md)
-- [`SOURCE_AVAILABLE_LICENSE.md`](E:/Project-Copperfin/SOURCE_AVAILABLE_LICENSE.md)
-- [`COMMERCIAL_LICENSE.md`](E:/Project-Copperfin/COMMERCIAL_LICENSE.md)
-- [`CLA.md`](E:/Project-Copperfin/CLA.md)
-- [`MIGRATION_NOTICE.md`](E:/Project-Copperfin/MIGRATION_NOTICE.md)
-- [`LEGAL_FAQ.md`](E:/Project-Copperfin/LEGAL_FAQ.md)
-- [`SECURITY.md`](E:/Project-Copperfin/SECURITY.md)
-- [`agents.md`](E:/Project-Copperfin/agents.md)
-- [`agent-handoff.md`](E:/Project-Copperfin/agent-handoff.md)
-- [`docs/01-product-charter.md`](E:/Project-Copperfin/docs/01-product-charter.md)
-- [`docs/02-architecture.md`](E:/Project-Copperfin/docs/02-architecture.md)
-- [`docs/03-compatibility-and-migration.md`](E:/Project-Copperfin/docs/03-compatibility-and-migration.md)
-- [`docs/04-security-model.md`](E:/Project-Copperfin/docs/04-security-model.md)
-- [`docs/05-roadmap.md`](E:/Project-Copperfin/docs/05-roadmap.md)
-- [`docs/06-branding.md`](E:/Project-Copperfin/docs/06-branding.md)
-- [`docs/07-clean-room-rules.md`](E:/Project-Copperfin/docs/07-clean-room-rules.md)
-- [`docs/08-reference-map.md`](E:/Project-Copperfin/docs/08-reference-map.md)
-- [`docs/09-adr-cpp-first.md`](E:/Project-Copperfin/docs/09-adr-cpp-first.md)
-- [`docs/10-dotnet-interop.md`](E:/Project-Copperfin/docs/10-dotnet-interop.md)
-- [`docs/11-engineering-spec-dotnet.md`](E:/Project-Copperfin/docs/11-engineering-spec-dotnet.md)
-- [`docs/12-vfp-asset-editing-and-execution.md`](E:/Project-Copperfin/docs/12-vfp-asset-editing-and-execution.md)
-- [`docs/13-index-format-notes.md`](E:/Project-Copperfin/docs/13-index-format-notes.md)
-- [`docs/14-hybrid-studio-and-visual-studio-host.md`](E:/Project-Copperfin/docs/14-hybrid-studio-and-visual-studio-host.md)
-- [`docs/15-local-product-archeology.md`](E:/Project-Copperfin/docs/15-local-product-archeology.md)
-- [`docs/16-vfp9-equivalent-subsystems.md`](E:/Project-Copperfin/docs/16-vfp9-equivalent-subsystems.md)
-- [`docs/17-modern-designer-direction.md`](E:/Project-Copperfin/docs/17-modern-designer-direction.md)
-- [`docs/18-native-security-and-rbac.md`](E:/Project-Copperfin/docs/18-native-security-and-rbac.md)
-- [`docs/19-polyglot-and-ai-subprojects.md`](E:/Project-Copperfin/docs/19-polyglot-and-ai-subprojects.md)
-- [`docs/20-runtime-build-and-debug-pipeline.md`](E:/Project-Copperfin/docs/20-runtime-build-and-debug-pipeline.md)
-- [`docs/21-database-federation-and-query-translation.md`](E:/Project-Copperfin/docs/21-database-federation-and-query-translation.md)
-- [`docs/22-vfp-language-reference-coverage.md`](E:/Project-Copperfin/docs/22-vfp-language-reference-coverage.md)
-- [`docs/23-vfp-help-and-component-mining.md`](E:/Project-Copperfin/docs/23-vfp-help-and-component-mining.md)
-- [`docs/23-phase-a-dependency-breakdown.md`](E:/Project-Copperfin/docs/23-phase-a-dependency-breakdown.md)
-- [`docs/24-system-uml.md`](E:/Project-Copperfin/docs/24-system-uml.md)
-- [`docs/25-engine-concurrency-policy.md`](E:/Project-Copperfin/docs/25-engine-concurrency-policy.md)
-- [`docs/26-localization-and-release-readiness.md`](E:/Project-Copperfin/docs/26-localization-and-release-readiness.md)
-- [`docs/27-known-vfp9-bug-exceptions.md`](E:/Project-Copperfin/docs/27-known-vfp9-bug-exceptions.md)
-- [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
+- [`LICENSE.md`](LICENSE.md)
+- [`SOURCE_AVAILABLE_LICENSE.md`](SOURCE_AVAILABLE_LICENSE.md)
+- [`COMMERCIAL_LICENSE.md`](COMMERCIAL_LICENSE.md)
+- [`CLA.md`](CLA.md)
+- [`MIGRATION_NOTICE.md`](MIGRATION_NOTICE.md)
+- [`LEGAL_FAQ.md`](LEGAL_FAQ.md)
+- [`SECURITY.md`](SECURITY.md)
+- [`agents.md`](agents.md)
+- [`agent-handoff.md`](agent-handoff.md)
+- [`docs/01-product-charter.md`](docs/01-product-charter.md)
+- [`docs/02-architecture.md`](docs/02-architecture.md)
+- [`docs/03-compatibility-and-migration.md`](docs/03-compatibility-and-migration.md)
+- [`docs/04-security-model.md`](docs/04-security-model.md)
+- [`docs/05-roadmap.md`](docs/05-roadmap.md)
+- [`docs/06-branding.md`](docs/06-branding.md)
+- [`docs/07-clean-room-rules.md`](docs/07-clean-room-rules.md)
+- [`docs/08-reference-map.md`](docs/08-reference-map.md)
+- [`docs/09-adr-cpp-first.md`](docs/09-adr-cpp-first.md)
+- [`docs/10-dotnet-interop.md`](docs/10-dotnet-interop.md)
+- [`docs/11-engineering-spec-dotnet.md`](docs/11-engineering-spec-dotnet.md)
+- [`docs/12-vfp-asset-editing-and-execution.md`](docs/12-vfp-asset-editing-and-execution.md)
+- [`docs/13-index-format-notes.md`](docs/13-index-format-notes.md)
+- [`docs/14-hybrid-studio-and-visual-studio-host.md`](docs/14-hybrid-studio-and-visual-studio-host.md)
+- [`docs/15-local-product-archeology.md`](docs/15-local-product-archeology.md)
+- [`docs/16-vfp9-equivalent-subsystems.md`](docs/16-vfp9-equivalent-subsystems.md)
+- [`docs/17-modern-designer-direction.md`](docs/17-modern-designer-direction.md)
+- [`docs/18-native-security-and-rbac.md`](docs/18-native-security-and-rbac.md)
+- [`docs/19-polyglot-and-ai-subprojects.md`](docs/19-polyglot-and-ai-subprojects.md)
+- [`docs/20-runtime-build-and-debug-pipeline.md`](docs/20-runtime-build-and-debug-pipeline.md)
+- [`docs/21-database-federation-and-query-translation.md`](docs/21-database-federation-and-query-translation.md)
+- [`docs/22-vfp-language-reference-coverage.md`](docs/22-vfp-language-reference-coverage.md)
+- [`docs/23-vfp-help-and-component-mining.md`](docs/23-vfp-help-and-component-mining.md)
+- [`docs/23-phase-a-dependency-breakdown.md`](docs/23-phase-a-dependency-breakdown.md)
+- [`docs/24-system-uml.md`](docs/24-system-uml.md)
+- [`docs/25-engine-concurrency-policy.md`](docs/25-engine-concurrency-policy.md)
+- [`docs/26-localization-and-release-readiness.md`](docs/26-localization-and-release-readiness.md)
+- [`docs/27-known-vfp9-bug-exceptions.md`](docs/27-known-vfp9-bug-exceptions.md)
+- [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:
 
-1. Maintain the VFP9-compatible data/runtime foundation and avoid reopening closed core lanes without fresh regression evidence.
-2. Finish report/label designer fidelity and section-aware host surfaces under E3/#24 while routing new user-facing text through localization.
-3. Keep Visual Studio and standalone Studio designer surfaces validated through shared host JSON and focused smoke coverage.
-4. Continue release-readiness, localization, security, and evidence-audit cleanup when live issue state makes those slices higher priority.
-5. Preserve modernization, .NET interop, portability, and Requirements Recovery as explicit roadmap goals that follow the compatibility and usability foundation.
+1. Complete the unfinished MVP workstream tree in [`docs/05-roadmap.md`](docs/05-roadmap.md), selecting work by evidence, risk, blockers, and user-visible impact.
+2. Finish report/label fidelity, IDE workflows, runtime compatibility, localization, package/debug contracts, security, and platform seams without treating any one workstream as permanently active.
+3. Validate standalone Studio and Visual Studio through the shared model, stable host contracts, and focused smoke coverage.
+4. Treat implementation completion of the whole MVP tree as RC readiness; perform release evidence and artifact validation afterward.
+5. Preserve modernization, .NET interop, portability, and Requirements Recovery as explicit v1 roadmap goals.
 
 Implementation bias:
 

@@ -613,8 +613,10 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_visual_dynamicfontname.prg";
         write_text(
             main_path,
-            "oButton = CREATEOBJECT('CommandButton')\n"
+            "oButton = CREATEOBJECT('Column')\n"
+            "oControl = CREATEOBJECT('CommandButton')\n"
             "lHas = PEMSTATUS(oButton, 'DynamicFontName', 1)\n"
+            "lControlHas = PEMSTATUS(oControl, 'DynamicFontName', 1)\n"
             "lReadOnly = PEMSTATUS(oButton, 'DynamicFontName', 5)\n"
             "cDefault = oButton.DynamicFontName\n"
             "oButton.DynamicFontName = 'IIF(EMPTY(Value), 999999, 111111)'\n"
@@ -635,7 +637,7 @@ namespace copperfin::runtime_surface_tests
             "oDerived = CREATEOBJECT('DerivedDynamicFontName')\n"
             "cDerived = oDerived.DynamicFontName\n"
             "RETURN\n"
-            "DEFINE CLASS DerivedDynamicFontName AS CommandButton\n"
+            "DEFINE CLASS DerivedDynamicFontName AS Column\n"
             "    PROCEDURE Init\n"
             "        THIS.DynamicFontName = 'IIF(Value > 0, 1, 0)'\n"
             "    ENDPROC\n"
@@ -660,6 +662,7 @@ namespace copperfin::runtime_surface_tests
         };
 
         check("lhas", "true");
+        check("lcontrolhas", "false");
         check("lreadonly", "false");
         check("cdefault", "");
         check("cdirect", "IIF(EMPTY(Value), 999999, 111111)");
@@ -671,7 +674,7 @@ namespace copperfin::runtime_surface_tests
         check("lremoveproperty", "false");
         check("lprophas", "true");
         check("cderived", "IIF(Value > 0, 1, 0)");
-        expect(state.ole_objects.size() == 2U,
+        expect(state.ole_objects.size() == 3U,
                "native DynamicFontName coverage should register the base and derived controls");
 
         fs::remove_all(temp_root, ignored);
@@ -688,8 +691,10 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_visual_dynamicfontsize.prg";
         write_text(
             main_path,
-            "oButton = CREATEOBJECT('CommandButton')\n"
+            "oButton = CREATEOBJECT('Column')\n"
+            "oControl = CREATEOBJECT('CommandButton')\n"
             "lHas = PEMSTATUS(oButton, 'DynamicFontSize', 1)\n"
+            "lControlHas = PEMSTATUS(oControl, 'DynamicFontSize', 1)\n"
             "lReadOnly = PEMSTATUS(oButton, 'DynamicFontSize', 5)\n"
             "cDefault = oButton.DynamicFontSize\n"
             "oButton.DynamicFontSize = 'IIF(EMPTY(Value), 10, 12.5)'\n"
@@ -710,7 +715,7 @@ namespace copperfin::runtime_surface_tests
             "oDerived = CREATEOBJECT('DerivedDynamicFontSize')\n"
             "cDerived = oDerived.DynamicFontSize\n"
             "RETURN\n"
-            "DEFINE CLASS DerivedDynamicFontSize AS CommandButton\n"
+            "DEFINE CLASS DerivedDynamicFontSize AS Column\n"
             "    PROCEDURE Init\n"
             "        THIS.DynamicFontSize = 'IIF(Value > 0, 9.5, 11)'\n"
             "    ENDPROC\n"
@@ -735,6 +740,7 @@ namespace copperfin::runtime_surface_tests
         };
 
         check("lhas", "true");
+        check("lcontrolhas", "false");
         check("lreadonly", "false");
         check("cdefault", "");
         check("cdirect", "IIF(EMPTY(Value), 10, 12.5)");
@@ -746,7 +752,7 @@ namespace copperfin::runtime_surface_tests
         check("lremoveproperty", "false");
         check("lprophas", "true");
         check("cderived", "IIF(Value > 0, 9.5, 11)");
-        expect(state.ole_objects.size() == 2U,
+        expect(state.ole_objects.size() == 3U,
                "native DynamicFontSize coverage should register the base and derived controls");
 
         fs::remove_all(temp_root, ignored);
@@ -763,8 +769,10 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_visual_dynamicfontshadow.prg";
         write_text(
             main_path,
-            "oButton = CREATEOBJECT('CommandButton')\n"
+            "oButton = CREATEOBJECT('Column')\n"
+            "oControl = CREATEOBJECT('CommandButton')\n"
             "lHas = PEMSTATUS(oButton, 'DynamicFontShadow', 1)\n"
+            "lControlHas = PEMSTATUS(oControl, 'DynamicFontShadow', 1)\n"
             "lReadOnly = PEMSTATUS(oButton, 'DynamicFontShadow', 5)\n"
             "cDefault = oButton.DynamicFontShadow\n"
             "oButton.DynamicFontShadow = 'IIF(EMPTY(Value), .F., .T.)'\n"
@@ -785,7 +793,7 @@ namespace copperfin::runtime_surface_tests
             "oDerived = CREATEOBJECT('DerivedDynamicFontShadow')\n"
             "cDerived = oDerived.DynamicFontShadow\n"
             "RETURN\n"
-            "DEFINE CLASS DerivedDynamicFontShadow AS CommandButton\n"
+            "DEFINE CLASS DerivedDynamicFontShadow AS Column\n"
             "    PROCEDURE Init\n"
             "        THIS.DynamicFontShadow = 'IIF(Value > 0, .T., .F.)'\n"
             "    ENDPROC\n"
@@ -810,6 +818,7 @@ namespace copperfin::runtime_surface_tests
         };
 
         check("lhas", "true");
+        check("lcontrolhas", "false");
         check("lreadonly", "false");
         check("cdefault", "");
         check("cdirect", "IIF(EMPTY(Value), .F., .T.)");
@@ -821,7 +830,7 @@ namespace copperfin::runtime_surface_tests
         check("lremoveproperty", "false");
         check("lprophas", "true");
         check("cderived", "IIF(Value > 0, .T., .F.)");
-        expect(state.ole_objects.size() == 2U,
+        expect(state.ole_objects.size() == 3U,
                "native DynamicFontShadow coverage should register the base and derived controls");
 
         fs::remove_all(temp_root, ignored);
@@ -838,8 +847,10 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "native_visual_dynamicfontoutline.prg";
         write_text(
             main_path,
-            "oButton = CREATEOBJECT('CommandButton')\n"
+            "oButton = CREATEOBJECT('Column')\n"
+            "oControl = CREATEOBJECT('CommandButton')\n"
             "lHas = PEMSTATUS(oButton, 'DynamicFontOutline', 1)\n"
+            "lControlHas = PEMSTATUS(oControl, 'DynamicFontOutline', 1)\n"
             "lReadOnly = PEMSTATUS(oButton, 'DynamicFontOutline', 5)\n"
             "cDefault = oButton.DynamicFontOutline\n"
             "oButton.DynamicFontOutline = 'IIF(EMPTY(Value), .F., .T.)'\n"
@@ -860,7 +871,7 @@ namespace copperfin::runtime_surface_tests
             "oDerived = CREATEOBJECT('DerivedDynamicFontOutline')\n"
             "cDerived = oDerived.DynamicFontOutline\n"
             "RETURN\n"
-            "DEFINE CLASS DerivedDynamicFontOutline AS CommandButton\n"
+            "DEFINE CLASS DerivedDynamicFontOutline AS Column\n"
             "    PROCEDURE Init\n"
             "        THIS.DynamicFontOutline = 'IIF(Value > 0, .T., .F.)'\n"
             "    ENDPROC\n"
@@ -885,6 +896,7 @@ namespace copperfin::runtime_surface_tests
         };
 
         check("lhas", "true");
+        check("lcontrolhas", "false");
         check("lreadonly", "false");
         check("cdefault", "");
         check("cdirect", "IIF(EMPTY(Value), .F., .T.)");
@@ -896,7 +908,7 @@ namespace copperfin::runtime_surface_tests
         check("lremoveproperty", "false");
         check("lprophas", "true");
         check("cderived", "IIF(Value > 0, .T., .F.)");
-        expect(state.ole_objects.size() == 2U,
+        expect(state.ole_objects.size() == 3U,
                "native DynamicFontOutline coverage should register the base and derived controls");
 
         fs::remove_all(temp_root, ignored);

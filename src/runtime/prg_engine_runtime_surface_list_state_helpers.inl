@@ -311,7 +311,11 @@ bool native_textbox_inputmask_runtime_object(const RuntimeOleObjectState& runtim
 }
 
 bool native_textbox_dynamicinputmask_runtime_object(const RuntimeOleObjectState& runtime_object) {
-    return native_textbox_inputmask_runtime_object(runtime_object);
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
 }
 
 bool native_textbox_format_runtime_object(const RuntimeOleObjectState& runtime_object) {
