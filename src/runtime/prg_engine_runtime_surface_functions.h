@@ -85,6 +85,8 @@ bool is_native_list_control_disableditembackcolor_member_name(const RuntimeOleOb
 bool is_native_list_control_disableditemforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_list_control_itembackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_list_control_itemforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_list_control_selecteditembackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_list_control_selecteditemforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_strictdateentry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_themes_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -173,6 +175,8 @@ void normalize_native_list_control_disableditembackcolor_invariant(RuntimeOleObj
 void normalize_native_list_control_disableditemforecolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_itembackcolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_itemforecolor_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_list_control_selecteditembackcolor_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_list_control_selecteditemforecolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_themes_invariant(RuntimeOleObjectState& runtime_object);

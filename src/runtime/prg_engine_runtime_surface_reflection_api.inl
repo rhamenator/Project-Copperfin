@@ -281,6 +281,16 @@ bool is_native_list_control_itemforecolor_member_name(const RuntimeOleObjectStat
     return native_list_control_itemforecolor_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_list_control_selecteditembackcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_list_control_selecteditembackcolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_list_control_selecteditemforecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_list_control_selecteditemforecolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_textbox_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_textbox_statusbartext_member_name_matches(runtime_object, normalized_member_name);
@@ -1004,6 +1014,36 @@ void normalize_native_list_control_itemforecolor_invariant(RuntimeOleObjectState
 
     const double value = value_as_number(item_forecolor->second);
     item_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_list_control_selecteditembackcolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_list_control_selecteditembackcolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto selected_item_backcolor = runtime_object.properties.find("selecteditembackcolor");
+    if (selected_item_backcolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(selected_item_backcolor->second);
+    selected_item_backcolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_list_control_selecteditemforecolor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_list_control_selecteditemforecolor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto selected_item_forecolor = runtime_object.properties.find("selecteditemforecolor");
+    if (selected_item_forecolor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(selected_item_forecolor->second);
+    selected_item_forecolor->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
 }
 
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object)

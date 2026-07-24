@@ -184,6 +184,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_list_control_incrementalsearch_property_stays_builtin();
     void test_native_list_controls_disabled_item_colors_stay_builtin();
     void test_native_list_controls_item_colors_stay_builtin();
+    void test_native_list_controls_selected_item_colors_stay_builtin();
     void test_native_listbox_integralheight_property_stays_read_only();
     void test_native_text_controls_integralheight_property_stays_read_only();
     void test_native_list_controls_itemdata_stays_coherent();

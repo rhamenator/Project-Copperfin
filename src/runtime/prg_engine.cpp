@@ -8494,6 +8494,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_list_control_itemforecolor_invariant(runtime_object);
                 }
+                if (normalized_property_name == "selecteditembackcolor")
+                {
+                    normalize_native_list_control_selecteditembackcolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "selecteditemforecolor")
+                {
+                    normalize_native_list_control_selecteditemforecolor_invariant(runtime_object);
+                }
                 if (normalized_property_name == "statusbartext")
                 {
                     normalize_native_textbox_statusbartext_invariant(runtime_object);
