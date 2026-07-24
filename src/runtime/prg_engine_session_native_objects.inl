@@ -154,6 +154,19 @@
                 runtime_object.properties["picture"] = make_string_value("");
             }
 
+            if (is_native_visual_drag_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("dragmode"))
+            {
+                runtime_object.properties["dragmode"] = make_number_value(0.0);
+            }
+
+            if (is_native_visual_drag_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("dragicon"))
+            {
+                // Headless contract: preserve the VFP path property without loading icon bytes.
+                runtime_object.properties["dragicon"] = make_string_value("");
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))

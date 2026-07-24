@@ -82,6 +82,10 @@ bool native_visual_picture_runtime_object(const RuntimeOleObjectState& runtime_o
            normalized_base_class == "toolbar";
 }
 
+bool native_visual_drag_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return is_native_visual_runtime_object(runtime_object);
+}
+
 bool native_visual_alignment_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

@@ -485,6 +485,22 @@ bool native_visual_picture_member_name_matches(
            runtime_object.properties.contains("picture");
 }
 
+bool native_visual_dragmode_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dragmode" &&
+           native_visual_drag_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dragmode");
+}
+
+bool native_visual_dragicon_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dragicon" &&
+           native_visual_drag_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dragicon");
+}
+
 bool native_visual_alignment_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

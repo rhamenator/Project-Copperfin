@@ -196,6 +196,16 @@ bool is_native_visual_picture_member_name(const RuntimeOleObjectState& runtime_o
     return native_visual_picture_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_dragmode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_dragmode_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_visual_dragicon_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_dragicon_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_alignment_member_name_matches(runtime_object, normalized_member_name);
@@ -539,6 +549,22 @@ void normalize_native_visual_mousepointer_invariant(RuntimeOleObjectState& runti
 
     const double value = value_as_number(mouse_pointer->second);
     mouse_pointer->second = make_number_value(
+        std::isfinite(value) && value >= 0.0 ? static_cast<double>(std::llround(value)) : 0.0);
+}
+
+void normalize_native_visual_dragmode_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_drag_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto drag_mode = runtime_object.properties.find("dragmode");
+    if (drag_mode == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(drag_mode->second);
+    drag_mode->second = make_number_value(
         std::isfinite(value) && value >= 0.0 ? static_cast<double>(std::llround(value)) : 0.0);
 }
 

@@ -238,6 +238,8 @@
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
+            is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
@@ -652,6 +654,9 @@
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
             }
+            if (member_name == "dragmode") {
+                normalize_native_visual_dragmode_invariant(*runtime_object);
+            }
             if (member_name == "fontsize") {
                 const double font_size = value_as_number(runtime_object->properties[member_name]);
                 runtime_object->properties[member_name] = make_number_value(
@@ -867,6 +872,9 @@
             runtime_object->properties[member_name] = arguments[2];
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
+            }
+            if (member_name == "dragmode") {
+                normalize_native_visual_dragmode_invariant(*runtime_object);
             }
             if (member_name == "fontsize") {
                 const double font_size = value_as_number(runtime_object->properties[member_name]);
@@ -1126,6 +1134,8 @@
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
+            is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
