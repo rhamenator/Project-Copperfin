@@ -8500,6 +8500,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_grid_gridlinewidth_invariant(runtime_object);
                 }
+                if (normalized_property_name == "highlightstyle")
+                {
+                    normalize_native_grid_highlightstyle_invariant(runtime_object);
+                }
+                if (normalized_property_name == "highlightrowlinewidth")
+                {
+                    normalize_native_grid_highlightrowlinewidth_invariant(runtime_object);
+                }
                 if (normalized_property_name == "scrollbars")
                 {
                     normalize_native_editbox_scrollbars_invariant(runtime_object);

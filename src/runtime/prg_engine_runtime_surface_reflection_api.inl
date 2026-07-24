@@ -1128,6 +1128,42 @@ void normalize_native_grid_gridlinewidth_invariant(RuntimeOleObjectState& runtim
             : 1.0);
 }
 
+void normalize_native_grid_highlightstyle_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_highlightstyle_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto highlight_style = runtime_object.properties.find("highlightstyle");
+    if (highlight_style == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(highlight_style->second);
+    highlight_style->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 2LL))
+            : 0.0);
+}
+
+void normalize_native_grid_highlightrowlinewidth_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_highlightrowlinewidth_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto highlight_row_line_width = runtime_object.properties.find("highlightrowlinewidth");
+    if (highlight_row_line_width == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(highlight_row_line_width->second);
+    highlight_row_line_width->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 7LL))
+            : 1.0);
+}
+
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_editbox_scrollbars_runtime_object(runtime_object)) {
@@ -1873,6 +1909,16 @@ bool is_native_grid_gridlinecolor_member_name(const RuntimeOleObjectState& runti
 bool is_native_grid_gridlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_gridlinewidth_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_highlightstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_highlightstyle_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_highlightrowlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_highlightrowlinewidth_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_grid_activecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

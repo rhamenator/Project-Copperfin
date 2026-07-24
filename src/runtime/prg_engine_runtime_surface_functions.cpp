@@ -290,6 +290,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_allowautocolumnfit_member_name_matches(runtime_object, member_name) ||
                native_grid_gridlinecolor_member_name_matches(runtime_object, member_name) ||
                native_grid_gridlinewidth_member_name_matches(runtime_object, member_name) ||
+               native_grid_highlightstyle_member_name_matches(runtime_object, member_name) ||
+               native_grid_highlightrowlinewidth_member_name_matches(runtime_object, member_name) ||
                native_grid_activecolumn_member_name_matches(runtime_object, member_name) ||
                native_grid_activerow_member_name_matches(runtime_object, member_name) ||
                native_grid_relativecolumn_member_name_matches(runtime_object, member_name) ||

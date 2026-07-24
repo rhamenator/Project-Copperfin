@@ -1184,6 +1184,28 @@ bool native_grid_gridlinewidth_member_name_matches(
     return native_grid_gridlinewidth_runtime_object(runtime_object);
 }
 
+bool native_grid_highlightstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlightstyle" ||
+        !runtime_object.properties.contains("highlightstyle")) {
+        return false;
+    }
+
+    return native_grid_highlightstyle_runtime_object(runtime_object);
+}
+
+bool native_grid_highlightrowlinewidth_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "highlightrowlinewidth" ||
+        !runtime_object.properties.contains("highlightrowlinewidth")) {
+        return false;
+    }
+
+    return native_grid_highlightrowlinewidth_runtime_object(runtime_object);
+}
+
 bool native_grid_activecolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

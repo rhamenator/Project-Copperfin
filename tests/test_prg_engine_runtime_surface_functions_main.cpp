@@ -405,6 +405,7 @@ int main()
     test_native_grid_allowrowsizing_defaults_mutate_and_stay_builtin();
     test_native_grid_allowautocolumnfit_defaults_mutate_and_stay_builtin();
     test_native_grid_gridline_properties_defaults_mutate_and_stay_builtin();
+    test_native_grid_highlight_properties_defaults_mutate_and_stay_builtin();
     test_native_grid_activecolumn_defaults_read_only_and_stays_builtin();
     test_native_grid_activerow_defaults_read_only_and_stays_builtin();
     test_native_grid_relative_focus_defaults_read_only_and_stays_builtin();

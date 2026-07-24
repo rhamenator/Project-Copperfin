@@ -620,6 +620,18 @@
                 runtime_object.properties["gridlinewidth"] = make_number_value(1.0);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlightstyle"))
+            {
+                runtime_object.properties["highlightstyle"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlightrowlinewidth"))
+            {
+                runtime_object.properties["highlightrowlinewidth"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {
