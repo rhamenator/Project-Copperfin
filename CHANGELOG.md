@@ -4637,3 +4637,9 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   automatic-discovery cases to run independently of the global repository
   catalog fixture injected into other native tests. Compile-time fixture
   resolution and locale contracts are unchanged.
+- 2026-07-24: Added #4607 under #3866 as a security evidence slice. Strict
+  native VCX `NEWOBJECT()` coverage now mutates the physical VCX/VCT paths
+  concurrently while the runtime loads the admitted byte snapshots, proving
+  that the object and memo-backed properties remain sourced from verified bytes.
+  This closes the focused concurrent-swap regression gap without claiming that
+  the broader exact-handle parent is complete.

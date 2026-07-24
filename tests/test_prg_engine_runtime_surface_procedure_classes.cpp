@@ -8,11 +8,13 @@
 #include "test_locale_catalog_environment_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string>
 #include <system_error>
+#include <thread>
 
 namespace {
 
@@ -320,9 +322,30 @@ void test_newobject_local_vcx_uses_verified_snapshot() {
     write_text(class_library_path, "tampered VCX bytes");
     fs::remove(memo_path, ignored);
 
+    std::atomic<bool> writer_ready{false};
+    std::atomic<bool> stop_writer{false};
+    std::thread physical_swap_writer([&]()
+    {
+        write_text(class_library_path, "concurrently replaced VCX bytes");
+        write_text(memo_path, "concurrently replaced VCT bytes");
+        writer_ready.store(true);
+        while (!stop_writer.load())
+        {
+            write_text(class_library_path, "concurrently replaced VCX bytes");
+            write_text(memo_path, "concurrently replaced VCT bytes");
+            std::this_thread::yield();
+        }
+    });
+    while (!writer_ready.load())
+    {
+        std::this_thread::yield();
+    }
+
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(options);
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    stop_writer.store(true);
+    physical_swap_writer.join();
     expect(state.completed,
            std::string("strict local VCX NEWOBJECT should use admitted bytes: ") + state.message);
     const auto answer = state.globals.find("nanswer");

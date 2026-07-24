@@ -1,5 +1,11 @@
 # Agent Handoff
 
+- #4607 under #3866 is implemented: strict native VCX `NEWOBJECT()` security
+  coverage now runs while a coordinated writer repeatedly replaces the physical
+  VCX/VCT paths. The runtime still returns the admitted class method and memo
+  property values, and the writer is joined before fixture cleanup. This is
+  evidence for the immutable byte-snapshot path; the broader exact-handle parent
+  remains open for any runtime readers not yet covered and hosted validation.
 - Current execution follows the MVP workstream tree in `docs/05-roadmap.md`, not a permanently active issue lane. Select the highest-value unfinished subgoal from live GitHub state and current evidence; once a subgoal is complete, do not revisit it unless a regression, new compatibility evidence, or release-validation failure creates a new gap. Keep delegated work disjoint by source/test ownership, and keep new user-facing text catalog-backed.
 - #4598 under #25 is implemented: the shared project Builders pane now resolves a selected builder's native `--builder-launch-plan` against the current PJX path and available record/object identity through the same managed control used by standalone Studio and VSIX. Plan-ready and plan-failed status text is catalog-backed across en-US, es-419, pt-BR, and qps-ploc; builder IDs, context tokens, entry points, paths, record indexes, object names, and unique IDs remain invariant. This is a dry planning boundary only; external builder UI, mutation, and execution remain behind the existing native admission/dispatch contracts. Focused `SmokeProjectWorkspaceEntryActivation`, `SmokeManagedToolboxPaletteContract`, both managed builds, catalog parity, and `git diff --check` pass.
 - #4599 under #3217 is implemented: native PRG `Grid` objects now expose the documented `AllowAutoColumnFit` logical property with a `.F.` default through direct access, `GETPEM()` / `SETPEM()` / `PUTPEM()`, reflection, and derived-class initialization. Logical writes normalize to boolean state and built-in protection remains intact. The stack-frugal headless runtime does not claim automatic fitting, interaction, layout, rendering, or designer behavior; hosted Windows VFP9 validation remains a release gate.
