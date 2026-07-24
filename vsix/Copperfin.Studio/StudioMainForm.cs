@@ -301,6 +301,13 @@ internal sealed class StudioMainForm : Form
         }
         else if (!visible && isVisible)
         {
+            if (toolWindowTabs.SelectedTab == page)
+            {
+                var replacementPage = toolWindowTabs.TabPages
+                    .Cast<TabPage>()
+                    .FirstOrDefault(candidate => candidate != page);
+                toolWindowTabs.SelectedTab = replacementPage;
+            }
             toolWindowTabs.TabPages.Remove(page);
         }
 
