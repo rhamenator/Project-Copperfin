@@ -13,6 +13,13 @@ This diagram is kept in its own file because GitHub's Mermaid renderer only
 reliably renders the first diagram on a page; a page with several diagrams
 tends to render only the first and leave the rest blank.
 
+Refreshed 2026-07-24 to add `cf_platform_support`, `cf_licensing`,
+`cf_package_trust`, and `copperfin_launcher_guard`, which were added to
+`CMakeLists.txt` after this diagram was first drawn — see
+[24-system-uml.md](../24-system-uml.md) and
+[28-repository-ontology.md](../28-repository-ontology.md) for the same
+correction at the UML and prose-ontology level.
+
 ```mermaid
 flowchart TB
     classDef real fill:#2f7a52,stroke:#1e5136,color:#ffffff,stroke-width:1px;
@@ -33,6 +40,9 @@ flowchart TB
       L7["cf_design_model"]
       L8["cf_xbase_runtime"]
       L9["cf_runtime_pipeline"]
+      L10["cf_platform_support"]
+      L11["cf_licensing"]
+      L12["cf_package_trust"]
     end
 
     subgraph EXEC["Ground Truth Executables + Managed Hosts"]
@@ -43,6 +53,7 @@ flowchart TB
       X4["copperfin_build_host"]
       X5["Copperfin.VisualStudio (VSIX)"]
       X6["Copperfin.Studio (WinForms)"]
+      X7["copperfin_launcher_guard (Windows-only)"]
     end
 
     subgraph ASPIRATIONAL["Aspirational copperfin-* Modules (docs/02 Top-Level Product Map)"]
@@ -61,6 +72,7 @@ flowchart TB
       A12["copperfin-vsix - ALREADY REAL (label stale)"]
     end
 
+    L1 --> L10
     L2 --> L1
     L3 --> L1
     L4 --> L1
@@ -76,20 +88,30 @@ flowchart TB
     L9 --> L2
     L9 --> L3
     L9 --> L8
+    L9 --> L11
+    L12 --> L11
 
     X1 --> L4
     X1 --> L2
+    X1 --> L11
     X2 --> L7
     X2 --> L2
     X2 --> L3
+    X2 --> L11
     X3 --> L8
     X3 --> L2
     X3 --> L3
+    X3 --> L11
     X4 --> L9
+    X4 --> X7
     X5 --> X2
     X5 --> X3
     X6 --> X2
     X6 --> X3
+    X7 --> L2
+    X7 --> L1
+    X7 --> L10
+    X7 --> L12
 
     A1 -.extract from.-> L1
     A2 -.extract from.-> L4
@@ -109,11 +131,12 @@ flowchart TB
     A9 -.new code entirely.-> L2
     A9 -.requires.-> A8
     A10 -.deepen: policy-profile depth.-> L2
+    A10 -.deepen: policy-profile depth.-> L12
     A11 -.unify existing hosts.-> L9
     A12 -.already implemented as.-> X5
 
-    class L1,L2,L3,L4,L5,L6,L7,L8,L9 ground;
-    class X1,X2,X3,X4,X5,X6 exe;
+    class L1,L2,L3,L4,L5,L6,L7,L8,L9,L10,L11,L12 ground;
+    class X1,X2,X3,X4,X5,X6,X7 exe;
     class A1,A2,A4,A5,A6,A11 none;
     class A3,A8,A10 seed;
     class A7,A9 none;
