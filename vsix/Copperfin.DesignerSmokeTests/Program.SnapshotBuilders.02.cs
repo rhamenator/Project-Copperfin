@@ -273,15 +273,28 @@ internal static partial class Program
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
         var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var resolvedRuntimeHostPath = ResolveLocalToolPath(
+            previousRuntimeHostPath,
+            "copperfin_runtime_host");
         var resolvedStudioHostPath = ResolveLocalToolPath(
             Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH"),
             "copperfin_studio_host");
         var resolvedBuildHostPath = ResolveLocalToolPath(
             Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH"),
             "copperfin_build_host");
-        var resolvedRuntimeHostPath = ResolveLocalToolPath(
-            Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH"),
-            "copperfin_runtime_host");
+
+        // Keep an explicitly selected runtime host with its sibling tools. A
+        // stale alternate build directory must not mix package contracts.
+        if (string.IsNullOrWhiteSpace(previousBuildHostPath))
+        {
+            resolvedBuildHostPath = ResolveSiblingToolPath(resolvedRuntimeHostPath, "copperfin_build_host") ??
+                resolvedBuildHostPath;
+        }
+        if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH")))
+        {
+            resolvedStudioHostPath = ResolveSiblingToolPath(resolvedRuntimeHostPath, "copperfin_studio_host") ??
+                resolvedStudioHostPath;
+        }
 
         if (!string.IsNullOrWhiteSpace(resolvedStudioHostPath))
         {
@@ -331,6 +344,33 @@ internal static partial class Program
         };
 
         return candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate));
+    }
+
+    private static string? ResolveSiblingToolPath(string? runtimeHostPath, string toolName)
+    {
+        if (string.IsNullOrWhiteSpace(runtimeHostPath))
+        {
+            return null;
+        }
+
+        var directory = Path.GetDirectoryName(Path.GetFullPath(runtimeHostPath));
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return null;
+        }
+
+        foreach (var fileName in Path.DirectorySeparatorChar == '\\'
+                     ? new[] { toolName + ".exe", toolName }
+                     : new[] { toolName, toolName + ".exe" })
+        {
+            var candidate = Path.Combine(directory, fileName);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     private static string? TryResolveVfp9InstallAsset(string relativePath)

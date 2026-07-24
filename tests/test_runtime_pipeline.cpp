@@ -152,6 +152,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_startup_asset_is_staged_even_when_marked_excluded();
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
     test_manifest_asset_lines_include_copy_state_contract();
+    test_runtime_package_stages_recursive_prg_include_dependencies();
     test_debug_source_roots_are_unique_when_source_and_content_paths_match();
     test_debug_source_roots_preserve_source_first_and_content_second_order();
     test_fd_backed_binary_reads_accept_direct_descriptor_paths();

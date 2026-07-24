@@ -5,6 +5,8 @@
 #include "runtime_pipeline_support.h"
 #include "copperfin/platform/environment.h"
 
+#include <functional>
+
 #if defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -762,6 +764,87 @@ std::string resolve_project_item_source(
         return copperfin::platform::path_to_utf8_string(resolved->lexically_normal());
     }
     return copperfin::platform::path_to_utf8_string(from_name.lexically_normal());
+}
+
+std::vector<std::filesystem::path> discover_prg_include_source_paths(
+    const std::filesystem::path& source) {
+    std::vector<std::filesystem::path> discovered;
+    std::unordered_set<std::string> visited;
+
+    const auto path_identity = [](const std::filesystem::path& path) {
+        return lowercase_copy(copperfin::platform::path_to_utf8_string(path.lexically_normal()));
+    };
+    const auto is_include_source = [](const std::filesystem::path& path) {
+        const std::string extension = lowercase_copy(
+            copperfin::platform::path_to_utf8_string(path.extension()));
+        return extension == ".prg" || extension == ".mpr" || extension == ".h" ||
+            extension == ".inc" || extension == ".ch" || extension == ".txt";
+    };
+    const auto resolve_include = [](const std::filesystem::path& owner, std::string value) {
+        std::replace(value.begin(), value.end(), '\\', '/');
+        bool ambiguous = false;
+        const auto direct = resolve_existing_path_casefold(
+            (owner.parent_path() / copperfin::platform::path_from_utf8_string(value)).lexically_normal(),
+            ambiguous);
+        if (direct.has_value()) {
+            return direct;
+        }
+
+        ambiguous = false;
+        return resolve_existing_path_casefold(
+            (owner.parent_path() / copperfin::platform::path_from_utf8_string(value).filename()).lexically_normal(),
+            ambiguous);
+    };
+    std::function<void(const std::filesystem::path&)> visit;
+    visit = [&](const std::filesystem::path& current) {
+        const auto normalized = current.lexically_normal();
+        if (!is_include_source(normalized) || !visited.insert(path_identity(normalized)).second) {
+            return;
+        }
+
+        std::ifstream input(normalized);
+        if (!input) {
+            return;
+        }
+
+        std::string line;
+        while (std::getline(input, line)) {
+            const std::string trimmed = trim_copy(line);
+            constexpr char include_directive[] = "#INCLUDE";
+            const bool is_include_directive = trimmed.size() >= 8U &&
+                std::equal(
+                    trimmed.begin(),
+                    trimmed.begin() + 8,
+                    std::begin(include_directive),
+                    [](const char left, const char right) {
+                        return std::tolower(static_cast<unsigned char>(left)) ==
+                            std::tolower(static_cast<unsigned char>(right));
+                    });
+            if (!is_include_directive) {
+                continue;
+            }
+
+            const std::string body = trim_copy(trimmed.substr(8U));
+            if (body.size() < 2U ||
+                !((body.front() == '"' && body.back() == '"') ||
+                  (body.front() == '\'' && body.back() == '\'') ||
+                  (body.front() == '<' && body.back() == '>'))) {
+                continue;
+            }
+
+            const auto resolved = resolve_include(normalized, body.substr(1U, body.size() - 2U));
+            if (!resolved.has_value() || !is_include_source(*resolved)) {
+                continue;
+            }
+            if (path_identity(*resolved) != path_identity(normalized)) {
+                discovered.push_back(resolved->lexically_normal());
+            }
+            visit(*resolved);
+        }
+    };
+
+    visit(source);
+    return discovered;
 }
 
 bool source_path_exists_on_host(const std::string& value) {

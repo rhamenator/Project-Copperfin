@@ -2200,6 +2200,49 @@ RuntimePackagePlan create_runtime_package_plan(
         plan.assets.push_back(std::move(asset));
     }
 
+    std::unordered_set<std::string> known_asset_sources;
+    std::vector<std::string> prg_sources;
+    for (const auto& asset : plan.assets) {
+        known_asset_sources.insert(lowercase_copy(asset.source_path));
+        if (is_prg_path(asset.source_path) && asset.exists) {
+            prg_sources.push_back(asset.source_path);
+        }
+    }
+    const std::filesystem::path project_root =
+        copperfin::platform::path_from_utf8_string(document.path).parent_path();
+    for (const auto& prg_source : prg_sources) {
+        for (const auto& include_source : discover_prg_include_source_paths(
+                 copperfin::platform::path_from_utf8_string(prg_source))) {
+            const std::string source = copperfin::platform::path_to_utf8_string(
+                include_source.lexically_normal());
+            if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
+                continue;
+            }
+
+            const std::filesystem::path relative = include_source.lexically_relative(project_root);
+            bool escapes_project = relative.empty() || relative.is_absolute();
+            for (const auto& component : relative) {
+                if (component == "..") {
+                    escapes_project = true;
+                    break;
+                }
+            }
+            if (escapes_project) {
+                continue;
+            }
+
+            RuntimePackageAsset dependency;
+            dependency.record_index = plan.assets.size();
+            dependency.source_path = source;
+            dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
+            dependency.staged_path = copperfin::platform::path_to_utf8_string(
+                (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
+            dependency.type_title = "PRG Include";
+            dependency.exists = true;
+            plan.assets.push_back(std::move(dependency));
+        }
+    }
+
     std::unordered_map<std::string, std::string> staged_asset_paths;
     const auto duplicate_staged_path = [&](const std::filesystem::path& relative_path)
         -> std::optional<std::string> {

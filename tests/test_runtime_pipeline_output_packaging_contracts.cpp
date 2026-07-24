@@ -258,6 +258,85 @@ void test_manifest_asset_lines_include_copy_state_contract() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_stages_recursive_prg_include_dependencies() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_prg_include_dependencies";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir / "include");
+
+    write_text(project_dir / "main.prg", "#include \"include\\shared.h\"\nRETURN\n");
+    // VFP projects sometimes retain an include directory in the directive
+    // even when the shipped header is beside the owning PRG.
+    write_text(project_dir / "shared.h", "#include \"nested.h\"\n#DEFINE SHARED_VALUE 42\n");
+    write_text(project_dir / "nested.h", "#DEFINE NESTED_VALUE 7\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "include_dependencies.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "IncludeDependencies";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "IncludeDependencies";
+    workspace.build_plan.output_path = (output_dir / "IncludeDependencies.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.build_target = "x64 Windows executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "PRG include dependency plan should be created");
+    const auto has_asset = [&](const std::string& relative_path) {
+        return std::find_if(
+                   plan.assets.begin(),
+                   plan.assets.end(),
+                   [&](const copperfin::runtime::RuntimePackageAsset& asset) {
+                       return asset.relative_path == relative_path && asset.type_title == "PRG Include";
+                   }) != plan.assets.end();
+    };
+    expect(has_asset("shared.h"), "PRG include basename fallback should stage the direct header");
+    expect(has_asset("nested.h"), "PRG include discovery should recurse through headers");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect_materialization(result, "PRG include dependency package should materialize");
+    if (result.ok) {
+        expect(fs::exists(fs::path(result.plan.content_root) / "shared.h"),
+               "direct PRG include dependency should be staged under the content root");
+        expect(fs::exists(fs::path(result.plan.content_root) / "nested.h"),
+               "recursive PRG include dependency should be staged under the content root");
+        const std::string manifest = read_text(result.plan.manifest_path);
+        expect(manifest.find("|shared.h|") != std::string::npos &&
+                   manifest.find("|nested.h|") != std::string::npos,
+               "runtime manifest should identify staged PRG include dependencies");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 
 }  // namespace cf_test_runtime_pipeline

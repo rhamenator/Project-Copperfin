@@ -809,9 +809,22 @@ fs::path resolve_include_path(const fs::path& owning_path, const std::string& in
             ch = '/';
         }
     }
-    return (
+    const fs::path direct = (
         owning_path.parent_path() /
         copperfin::platform::path_from_utf8_string(normalized)).lexically_normal();
+    std::error_code direct_error;
+    if (fs::exists(direct, direct_error) && !direct_error) {
+        return direct;
+    }
+
+    const fs::path fallback = (
+        owning_path.parent_path() /
+        copperfin::platform::path_from_utf8_string(normalized).filename()).lexically_normal();
+    std::error_code fallback_error;
+    if (fs::exists(fallback, fallback_error) && !fallback_error) {
+        return fallback;
+    }
+    return direct;
 }
 
 const std::string* find_source_text_override(

@@ -180,6 +180,21 @@ internal static partial class Program
                 GroupPartnerDeleted = false,
                 GroupPartnerStateDisplay = "Live"
             },
+            expectedUpdatedGrouping: new ExpectedSectionGroupingMetadata
+            {
+                GroupRole = "footer",
+                GroupRoleDisplay = "Footer",
+                SectionExpression = "titles_by_author.last_name",
+                GroupingIndex = 0,
+                GroupingNestingDepth = 0,
+                GroupingExpression = "titles_by_author.author_id",
+                GroupingExpressionFieldIndex = 6,
+                GroupingExpressionMemoBlockNumber = 18,
+                GroupPartnerSectionId = "_RC60MBV9L",
+                GroupPartnerRecordIndex = 3,
+                GroupPartnerDeleted = false,
+                GroupPartnerStateDisplay = "Live"
+            },
             expectedUntouchedSections: new[]
             {
                 CreateByAuthorUntouchedGroupHeaderSection()
