@@ -79,6 +79,7 @@ int main()
     test_native_visual_backstyle_defaults_mutates_and_stays_builtin();
     test_native_form_drawstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillstyle_defaults_mutates_and_stays_builtin();
+    test_native_visual_borderwidth_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_form_titlebar_defaults_mutates_and_stays_builtin();
     test_native_form_desktop_defaults_are_runtime_readonly_and_stay_builtin();

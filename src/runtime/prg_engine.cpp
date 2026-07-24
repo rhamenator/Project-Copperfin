@@ -8421,6 +8421,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_fillstyle_invariant(runtime_object);
                 }
+                if (normalized_property_name == "borderwidth")
+                {
+                    normalize_native_visual_borderwidth_invariant(runtime_object);
+                }
                 if (normalized_property_name == "drawmode")
                 {
                     normalize_native_visual_drawmode_invariant(runtime_object);

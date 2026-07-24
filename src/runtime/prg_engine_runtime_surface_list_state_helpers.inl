@@ -166,6 +166,17 @@ bool native_visual_fillstyle_runtime_object(const RuntimeOleObjectState& runtime
            normalized_base_class == "shape";
 }
 
+bool native_visual_borderwidth_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class != "form" &&
+           is_native_visual_runtime_object(runtime_object);
+}
+
 bool native_visual_alignment_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;
