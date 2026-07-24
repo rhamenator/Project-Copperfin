@@ -725,6 +725,20 @@ void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& 
     column_lines->second = make_boolean_value(value_as_bool(column_lines->second));
 }
 
+void normalize_native_list_control_columnwidths_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto column_widths = runtime_object.properties.find("columnwidths");
+    if (column_widths == runtime_object.properties.end()) {
+        return;
+    }
+
+    column_widths->second = make_string_value(value_as_string(column_widths->second));
+}
+
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!is_native_list_control_runtime_object(runtime_object)) {

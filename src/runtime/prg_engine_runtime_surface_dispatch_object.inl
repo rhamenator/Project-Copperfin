@@ -880,6 +880,9 @@
             if (member_name == "columnlines") {
                 normalize_native_list_control_columnlines_invariant(*runtime_object);
             }
+            if (member_name == "columnwidths") {
+                normalize_native_list_control_columnwidths_invariant(*runtime_object);
+            }
             if (member_name == "itemtips") {
                 normalize_native_list_control_itemtips_invariant(*runtime_object);
             }
@@ -1131,6 +1134,9 @@
             }
             if (member_name == "columnlines") {
                 normalize_native_list_control_columnlines_invariant(*runtime_object);
+            }
+            if (member_name == "columnwidths") {
+                normalize_native_list_control_columnwidths_invariant(*runtime_object);
             }
             if (member_name == "itemtips") {
                 normalize_native_list_control_itemtips_invariant(*runtime_object);

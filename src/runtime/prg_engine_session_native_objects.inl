@@ -831,6 +831,7 @@
 
             normalize_native_combobox_readonly_invariant(runtime_object);
             normalize_native_list_control_sorted_invariant(runtime_object);
+            normalize_native_list_control_columnwidths_invariant(runtime_object);
             normalize_native_listbox_multiselect_invariant(runtime_object);
             normalize_native_pageframe_activepage_invariant(runtime_object);
 

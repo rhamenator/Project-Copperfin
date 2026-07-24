@@ -40,8 +40,14 @@ namespace copperfin::runtime_surface_tests
             "xPlainColumnWidthsGetPemBefore = GETPEM(oPlain, 'ColumnWidths')\n"
             "oPlain.ColumnWidths = '72,0'\n"
             "cPlainColumnWidthsAfterDirectAssign = oPlain.ColumnWidths\n"
+            "oPlain.ColumnWidths = 48\n"
+            "cPlainColumnWidthsAfterNumericAssign = oPlain.ColumnWidths\n"
+            "lPlainColumnWidthsNumericType = VARTYPE(oPlain.ColumnWidths) == 'C'\n"
             "lPlainColumnWidthsSetPem = SETPEM(oPlain, 'ColumnWidths', '60,12')\n"
             "cPlainColumnWidthsAfterSetPem = oPlain.ColumnWidths\n"
+            "lPlainColumnWidthsPutPem = PUTPEM(oPlain, 'ColumnWidths', 36)\n"
+            "cPlainColumnWidthsAfterPutPem = oPlain.ColumnWidths\n"
+            "lPlainColumnWidthsPutPemType = VARTYPE(oPlain.ColumnWidths) == 'C'\n"
             "lPlainColumnWidthsAddProperty = ADDPROPERTY(oPlain, 'ColumnWidths', 'shadow')\n"
             "lPlainColumnWidthsRemoveProperty = REMOVEPROPERTY(oPlain, 'ColumnWidths')\n"
             "oForm = CREATEOBJECT('MainForm')\n"
@@ -109,7 +115,7 @@ namespace copperfin::runtime_surface_tests
             "DEFINE CLASS DateCombo AS ComboBox\n"
             "    BoundColumn = 2\n"
             "    ColumnCount = 2\n"
-            "    ColumnWidths = '90,0'\n"
+            "    ColumnWidths = 90\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -155,8 +161,13 @@ namespace copperfin::runtime_surface_tests
         check("cplaincolumnwidthsbefore", "");
         check("xplaincolumnwidthsgetpembefore", "");
         check("cplaincolumnwidthsafterdirectassign", "72,0");
+        check("cplaincolumnwidthsafternumericassign", "48");
+        check("lplaincolumnwidthsnumerictype", "true");
         check("lplaincolumnwidthssetpem", "true");
         check("cplaincolumnwidthsaftersetpem", "60,12");
+        check("lplaincolumnwidthsputpem", "true");
+        check("cplaincolumnwidthsafterputpem", "36");
+        check("lplaincolumnwidthsputpemtype", "true");
         check("lplaincolumnwidthsaddproperty", "false");
         check("lplaincolumnwidthsremoveproperty", "false");
         check("nchildboundcolumnbefore", "2");
@@ -185,7 +196,7 @@ namespace copperfin::runtime_surface_tests
         check("lprophascolumnwidths", "true");
         check("nderivedboundcolumnbefore", "2");
         check("nderivedcolumncountbefore", "2");
-        check("cderivedcolumnwidthsbefore", "90,0");
+        check("cderivedcolumnwidthsbefore", "90");
 
         fs::remove_all(temp_root, ignored);
     }

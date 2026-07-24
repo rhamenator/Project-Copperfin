@@ -8623,6 +8623,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_list_control_columnlines_invariant(runtime_object);
                 }
+                if (normalized_property_name == "columnwidths")
+                {
+                    normalize_native_list_control_columnwidths_invariant(runtime_object);
+                }
                 if (normalized_property_name == "itemtips")
                 {
                     normalize_native_list_control_itemtips_invariant(runtime_object);
