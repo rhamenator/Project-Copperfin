@@ -209,6 +209,75 @@ internal static class CopperfinStudioSnapshotClient
         };
     }
 
+    public static CopperfinStudioBuilderLaunchPlanResult TryPlanBuilderLaunch(
+        string builderId,
+        string builderContext,
+        string? assetPath = null,
+        int? recordIndex = null,
+        string? objectName = null,
+        string? uniqueId = null,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioBuilderLaunchPlanResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        var commandResult = RunCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildBuilderLaunchPlanArguments(
+                builderId,
+                builderContext,
+                assetPath,
+                recordIndex,
+                objectName,
+                uniqueId),
+            localization);
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioBuilderLaunchPlanResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
+        try
+        {
+            var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+            var envelope = serializer.Deserialize<CopperfinStudioBuilderLaunchPlanEnvelope>(commandResult.Stdout);
+            var payload = envelope?.BuilderLaunchPlan;
+            if (payload is null || !payload.Ok)
+            {
+                return new CopperfinStudioBuilderLaunchPlanResult
+                {
+                    Success = false,
+                    Error = payload?.Error ?? envelope?.Error ?? localization.Text("AssetEditor.Builders.PlanUnavailable")
+                };
+            }
+
+            return new CopperfinStudioBuilderLaunchPlanResult
+            {
+                Success = true,
+                Plan = payload
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CopperfinStudioBuilderLaunchPlanResult
+            {
+                Success = false,
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+            };
+        }
+    }
+
     public static CopperfinStudioToolboxPaletteResult TryLoadToolboxPalette(
         string assetFamily,
         CopperfinLocalization? localization = null,

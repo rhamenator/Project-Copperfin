@@ -102,6 +102,43 @@ internal sealed class CopperfinStudioBuilderCatalogResult
     public List<CopperfinStudioBuilderCatalogEntry> Entries { get; set; } = new();
 }
 
+internal sealed class CopperfinStudioBuilderLaunchPlanEnvelope
+{
+    public string Status { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioBuilderLaunchPlanPayload? BuilderLaunchPlan { get; set; }
+}
+
+internal sealed class CopperfinStudioBuilderLaunchPlanPayload
+{
+    public bool Ok { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string BuilderId { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Kind { get; set; } = string.Empty;
+    public string SelectionContext { get; set; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
+    public string Vfp9EquivalentDisplay { get; set; } = string.Empty;
+    public string CopperfinComponent { get; set; } = string.Empty;
+    public string EntryPoint { get; set; } = string.Empty;
+    public string AssetPath { get; set; } = string.Empty;
+    public int RecordIndex { get; set; }
+    public string ObjectName { get; set; } = string.Empty;
+    public string UniqueId { get; set; } = string.Empty;
+    public bool LaunchReady { get; set; }
+    public List<string> LaunchReadyBuilderIds { get; set; } = new();
+    public List<string> LaunchBlockedBuilderIds { get; set; } = new();
+    public List<string> LaunchBlockedErrors { get; set; } = new();
+    public string Description { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioBuilderLaunchPlanResult
+{
+    public bool Success { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioBuilderLaunchPlanPayload Plan { get; set; } = new();
+}
+
 internal sealed class CopperfinStudioSnapshotDocument
 {
     public string Path { get; set; } = string.Empty;

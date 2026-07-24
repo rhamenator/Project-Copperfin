@@ -14,6 +14,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -359,6 +360,31 @@ internal static partial class Program
                 {
                     Expect(builders.Items.Cast<ListViewItem>().Any(item => item.SubItems[1].Text == "Form Builder"),
                         "project workspace Builders should preserve localized native builder titles");
+                    projectWorkspaceTabs?.SelectTab(7);
+                    Application.DoEvents();
+                    var formBuilder = builders.Items.Cast<ListViewItem>()
+                        .FirstOrDefault(item => item.SubItems[1].Text == "Form Builder");
+                    if (formBuilder is not null)
+                    {
+                        formBuilder.Selected = true;
+                        formBuilder.Focused = true;
+                        builders.Focus();
+                        Application.DoEvents();
+                        Expect(builders.SelectedItems.Count == 1,
+                            "project workspace Builders should retain the selected builder row before planning");
+                        var builderStatus = GetPrivateField<Label>(control, "buildersStatusLabel");
+                        var planTask = typeof(CopperfinAssetEditorControl)
+                            .GetMethod("PlanSelectedBuilderAsync", BindingFlags.Instance | BindingFlags.NonPublic)
+                            ?.Invoke(control, null) as Task;
+                        Expect(planTask is not null,
+                            "project workspace Builders should expose a selection-aware launch-plan action");
+                        var planReady = WaitUntil(
+                            TimeSpan.FromSeconds(12),
+                            () => builderStatus is not null &&
+                                  builderStatus.Text.IndexOf("Launch plan ready", StringComparison.OrdinalIgnoreCase) >= 0);
+                        Expect(planReady,
+                            $"project workspace Builders should resolve the selected builder launch plan (status: {builderStatus?.Text ?? "<missing>"})");
+                    }
                 }
             }
             else

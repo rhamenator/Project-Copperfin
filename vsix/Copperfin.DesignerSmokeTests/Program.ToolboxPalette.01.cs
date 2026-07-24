@@ -48,5 +48,20 @@ internal static partial class Program
                arguments.Contains("--toolbox-context \"form\"", StringComparison.Ordinal) &&
                arguments.Contains("--path \"sample.scx\"", StringComparison.Ordinal),
             "managed toolbox create bridge should preserve stable host command tokens");
+
+        var builderPlanArguments = CopperfinStudioHostBridge.BuildBuilderLaunchPlanArguments(
+            "form-builder",
+            "form",
+            "sample project.pjx",
+            7,
+            "Orders Form",
+            "form-1");
+        Expect(builderPlanArguments.Contains("--builder-launch-plan \"form-builder\"", StringComparison.Ordinal) &&
+               builderPlanArguments.Contains("--builder-context \"form\"", StringComparison.Ordinal) &&
+               builderPlanArguments.Contains("--path \"sample project.pjx\"", StringComparison.Ordinal) &&
+               builderPlanArguments.Contains("--record 7", StringComparison.Ordinal) &&
+               builderPlanArguments.Contains("--object-name \"Orders Form\"", StringComparison.Ordinal) &&
+               builderPlanArguments.Contains("--unique-id \"form-1\"", StringComparison.Ordinal),
+            "managed builder plan bridge should preserve invariant command tokens and selection identity");
     }
 }

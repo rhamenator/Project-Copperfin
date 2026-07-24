@@ -145,6 +145,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
     private readonly ListView buildersView;
+    private readonly Label buildersStatusLabel;
     private readonly RichTextBox coverageSummaryBox;
     private readonly ListView coverageView;
     private readonly RichTextBox databaseSummaryBox;
@@ -954,6 +955,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Builder"), 220);
         buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Context"), 150);
         buildersView.Columns.Add(this.localization.Text("AssetEditor.Builders.Column.Description"), 520);
+        buildersView.DoubleClick += (_, _) => QueueUiAction(PlanSelectedBuilderAsync);
+        buildersView.KeyDown += (_, e) =>
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            QueueUiAction(PlanSelectedBuilderAsync);
+        };
+
+        buildersStatusLabel = new Label
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            Text = this.localization.Text("AssetEditor.Builders.Status.Ready")
+        };
 
         coverageSummaryBox = new RichTextBox
         {
@@ -1221,6 +1241,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buildersSummaryPanel.Controls.Add(buildersSummaryBox);
         buildersPageHost.Controls.Add(buildersView);
         buildersPageHost.Controls.Add(buildersSummaryPanel);
+        buildersPageHost.Controls.Add(buildersStatusLabel);
         buildersPage.Controls.Add(buildersPageHost);
         var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
         var coveragePageHost = new Panel
@@ -1933,6 +1954,50 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 buildersView.EndUpdate();
             }
         });
+    }
+
+    private async Task PlanSelectedBuilderAsync()
+    {
+        if (buildersView.SelectedItems.Count != 1 ||
+            buildersView.SelectedItems[0].Tag is not CopperfinStudioBuilderCatalogEntry entry)
+        {
+            buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.NoSelection");
+            return;
+        }
+
+        var path = currentPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.NoPath");
+            return;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        var recordIndex = selectedObject?.RecordIndex;
+        var objectName = selectedObject?.Title;
+        var uniqueId = selectedObject is null ? null : TryReadObjectUniqueId(selectedObject);
+        buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.Planning");
+        var planResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryPlanBuilderLaunch(
+            entry.BuilderId,
+            entry.Context,
+            path,
+            recordIndex,
+            objectName,
+            uniqueId,
+            localization));
+        if (IsDisposed || Disposing || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        buildersStatusLabel.Text = planResult.Success
+            ? localization.Format(
+                "AssetEditor.Builders.Status.PlanReady",
+                planResult.Plan.Title,
+                planResult.Plan.EntryPoint)
+            : localization.Format(
+                "AssetEditor.Builders.Status.PlanFailed",
+                planResult.Error);
     }
 
     private void HandleCreatedForPendingUiActions(object? sender, EventArgs e)
