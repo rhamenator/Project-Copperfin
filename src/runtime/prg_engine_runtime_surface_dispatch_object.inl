@@ -245,6 +245,7 @@
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_autosize_member_name(*runtime_object, property_name) ||
             is_native_visual_drawmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_backstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
@@ -700,6 +701,9 @@
             if (member_name == "drawmode") {
                 normalize_native_visual_drawmode_invariant(*runtime_object);
             }
+            if (member_name == "backstyle") {
+                normalize_native_visual_backstyle_invariant(*runtime_object);
+            }
             if (member_name == "rowheight") {
                 normalize_native_grid_rowheight_invariant(*runtime_object);
             }
@@ -924,6 +928,9 @@
             }
             if (member_name == "drawmode") {
                 normalize_native_visual_drawmode_invariant(*runtime_object);
+            }
+            if (member_name == "backstyle") {
+                normalize_native_visual_backstyle_invariant(*runtime_object);
             }
             if (member_name == "rowheight") {
                 normalize_native_grid_rowheight_invariant(*runtime_object);
@@ -1158,6 +1165,7 @@
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_autosize_member_name(*runtime_object, property_name) ||
             is_native_visual_drawmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_backstyle_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||

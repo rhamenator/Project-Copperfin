@@ -76,6 +76,11 @@ bool is_native_visual_drawmode_member_name(const RuntimeOleObjectState& runtime_
     return native_visual_drawmode_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_backstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_backstyle_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_borderstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_borderstyle_member_name_matches(runtime_object, normalized_member_name);
@@ -759,6 +764,23 @@ void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_o
     const long long rounded = std::isfinite(value) ? std::llround(value) : 13LL;
     const long long normalized = rounded >= 1LL && rounded <= 16LL ? rounded : 13LL;
     draw_mode->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_visual_backstyle_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_backstyle_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto back_style = runtime_object.properties.find("backstyle");
+    if (back_style == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(back_style->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : 1LL;
+    const long long normalized = rounded == 0LL || rounded == 1LL ? rounded : 1LL;
+    back_style->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object)

@@ -51,6 +51,7 @@ bool is_native_visual_drag_runtime_object(const RuntimeOleObjectState& runtime_o
 bool is_native_visual_button_state_picture_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_autosize_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_drawmode_runtime_object(const RuntimeOleObjectState& runtime_object);
+bool is_native_visual_backstyle_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_olecontrol_creation_time_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_object_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_inspection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -64,6 +65,7 @@ bool is_native_form_showwindow_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_form_windowstate_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_scalemode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_drawmode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_backstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_desktop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -169,6 +171,7 @@ void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectS
 void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_visual_backstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& runtime_object);

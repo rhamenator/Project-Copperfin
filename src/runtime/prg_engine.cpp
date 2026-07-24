@@ -8417,6 +8417,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_drawmode_invariant(runtime_object);
                 }
+                if (normalized_property_name == "backstyle")
+                {
+                    normalize_native_visual_backstyle_invariant(runtime_object);
+                }
                 if (normalized_property_name == "rowheight")
                 {
                     normalize_native_grid_rowheight_invariant(runtime_object);
