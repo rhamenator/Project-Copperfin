@@ -406,6 +406,10 @@ StudioLayoutObjectSnapshot build_layout_object(
     add_highlight("SUPOVFLOW");
     add_highlight("BOTTOM");
     add_highlight("TOP");
+    add_highlight("FLOAT");
+    add_highlight("NOREPEAT");
+    add_highlight("STRETCH");
+    add_highlight("STRETCHTOP");
     add_highlight("FONTFACE");
     add_highlight("FONTSTYLE");
     add_highlight("FONTSIZE");

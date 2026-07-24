@@ -96,7 +96,11 @@ void test_build_report_layout_groups_band_objects() {
                 value("FILLGREEN", "50", 319U),
                 value("FILLBLUE", "60", 320U),
                 value("COMMENT", "Object developer note", 321U),
-                value("USER", "Object user comment", 322U)
+                value("USER", "Object user comment", 322U),
+                value("FLOAT", "T", 323U),
+                value("NOREPEAT", "F", 324U),
+                value("STRETCH", "T", 325U),
+                value("STRETCHTOP", "F", 326U)
             }
         },
         {
@@ -120,7 +124,11 @@ void test_build_report_layout_groups_band_objects() {
                 value("HPOS", "50.000"),
                 value("VPOS", "8000.000"),
                 value("WIDTH", "100.000"),
-                value("HEIGHT", "100.000")
+                value("HEIGHT", "100.000"),
+                value("FLOAT", "T", 501U),
+                value("NOREPEAT", "F", 502U),
+                value("STRETCH", "T", 503U),
+                value("STRETCHTOP", "F", 504U)
             }
         },
         {
@@ -135,7 +143,11 @@ void test_build_report_layout_groups_band_objects() {
                 value("HEIGHT", "300.000", 606U),
                 value("PENRED", "70", 607U),
                 value("PENGREEN", "80", 608U),
-                value("PENBLUE", "90", 609U)
+                value("PENBLUE", "90", 609U),
+                value("FLOAT", "F", 610U),
+                value("NOREPEAT", "T", 611U),
+                value("STRETCH", "F", 612U),
+                value("STRETCHTOP", "T", 613U)
             }
         },
         {
@@ -318,6 +330,29 @@ void test_build_report_layout_groups_band_objects() {
            user_comment_highlight->field_index == 27U &&
            user_comment_highlight->memo_block_number == 322U,
         "#4545: report objects should expose USER highlights with memo provenance");
+    const auto expect_object_flag_highlight = [&](const auto& object,
+                                                  const char* name,
+                                                  const char* expected_value,
+                                                  std::size_t field_index,
+                                                  std::uint32_t memo_block_number) {
+        const auto highlight = std::find_if(
+            object.highlights.begin(),
+            object.highlights.end(),
+            [&](const auto& candidate) { return candidate.name == name; });
+        expect(highlight != object.highlights.end(),
+               std::string("#4554: report layout object highlights should include ") + name);
+        if (highlight != object.highlights.end()) {
+            expect(highlight->value == expected_value &&
+                       highlight->field_index == field_index &&
+                       highlight->memo_block_number == memo_block_number,
+                   std::string("#4554: report layout object highlight should preserve ") + name +
+                       " value and provenance");
+        }
+    };
+    expect_object_flag_highlight(layout.sections[1].objects[0], "FLOAT", "T", 28U, 323U);
+    expect_object_flag_highlight(layout.sections[1].objects[0], "NOREPEAT", "F", 29U, 324U);
+    expect_object_flag_highlight(layout.sections[1].objects[0], "STRETCH", "T", 30U, 325U);
+    expect_object_flag_highlight(layout.sections[1].objects[0], "STRETCHTOP", "F", 31U, 326U);
     const auto print_when_highlight = std::find_if(
         layout.sections[1].objects[0].highlights.begin(),
         layout.sections[1].objects[0].highlights.end(),
@@ -561,6 +596,10 @@ void test_build_report_layout_groups_band_objects() {
             "#1461: unplaced report objects should still carry absolute bottom-edge coordinates");
         expect(layout.unplaced_objects[0].right == 150,
             "#1462: unplaced report objects should still carry right-edge coordinates");
+        expect_object_flag_highlight(layout.unplaced_objects[0], "FLOAT", "T", 5U, 501U);
+        expect_object_flag_highlight(layout.unplaced_objects[0], "NOREPEAT", "F", 6U, 502U);
+        expect_object_flag_highlight(layout.unplaced_objects[0], "STRETCH", "T", 7U, 503U);
+        expect_object_flag_highlight(layout.unplaced_objects[0], "STRETCHTOP", "F", 8U, 504U);
     }
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
@@ -598,11 +637,15 @@ void test_build_report_layout_groups_band_objects() {
             });
         expect(deleted_pen_blue != layout.deleted_objects[0].highlights.end(),
             "#4534: deleted label highlights should preserve PENBLUE");
-    if (deleted_pen_blue != layout.deleted_objects[0].highlights.end()) {
+        if (deleted_pen_blue != layout.deleted_objects[0].highlights.end()) {
             expect(deleted_pen_blue->value == "90" && deleted_pen_blue->field_index == 8U &&
                    deleted_pen_blue->memo_block_number == 609U,
                 "#4534: deleted PENBLUE should preserve value and source provenance");
         }
+        expect_object_flag_highlight(layout.deleted_objects[0], "FLOAT", "F", 9U, 610U);
+        expect_object_flag_highlight(layout.deleted_objects[0], "NOREPEAT", "T", 10U, 611U);
+        expect_object_flag_highlight(layout.deleted_objects[0], "STRETCH", "F", 11U, 612U);
+        expect_object_flag_highlight(layout.deleted_objects[0], "STRETCHTOP", "T", 12U, 613U);
         expect(layout.deleted_objects[0].top_memo_block_number == 604U,
             "#723: deleted report layout objects should retain VPOS memo block provenance");
         expect(layout.deleted_objects[0].width_memo_block_number == 605U,

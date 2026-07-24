@@ -130,16 +130,20 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "HEIGHT", .type = 'N', .length = 10U},
         {.name = "FONTFACE", .type = 'M', .length = 4U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "FLOAT", .type = 'L', .length = 1U},
+        {.name = "NOREPEAT", .type = 'L', .length = 1U},
+        {.name = "STRETCH", .type = 'L', .length = 1U},
+        {.name = "STRETCHTOP", .type = 'L', .length = 1U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
-        {"9", "1", "", "", "0", "", "2000", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
-        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
-        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
-        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "", "", "", "", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid", "T", "F", "T", "F"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid", "", "", "", ""},
+        {"6", "", "", "50", "8000", "100", "100", "", "", "", "", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", "F", "T", "F", "T"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -245,8 +249,20 @@ void test_studio_host_json_preserves_selected_report_objects(const std::string& 
                     "#1462: selected report object JSON should expose object right-edge coordinates");
     expect_contains(object_process.stdout_text, "\"bottom\": 3050",
                     "#1461: selected report object JSON should expose object bottom-edge coordinates");
-    expect_contains(object_process.stdout_text, "\"highlightCount\": 1",
+    expect_contains(object_process.stdout_text, "\"highlightCount\": 6",
                     "#1454: selected report object JSON should expose highlight counts");
+    expect_contains(object_process.stdout_text,
+                    "\"name\": \"FLOAT\", \"recordIndex\": 3, \"fieldIndex\": 10, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"true\"",
+                    "#4554: selected report object JSON should expose FLOAT highlight provenance");
+    expect_contains(object_process.stdout_text,
+                    "\"name\": \"NOREPEAT\", \"recordIndex\": 3, \"fieldIndex\": 11, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"false\"",
+                    "#4554: selected report object JSON should expose NOREPEAT highlight provenance");
+    expect_contains(object_process.stdout_text,
+                    "\"name\": \"STRETCH\", \"recordIndex\": 3, \"fieldIndex\": 12, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"true\"",
+                    "#4554: selected report object JSON should expose STRETCH highlight provenance");
+    expect_contains(object_process.stdout_text,
+                    "\"name\": \"STRETCHTOP\", \"recordIndex\": 3, \"fieldIndex\": 13, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"false\"",
+                    "#4554: selected report object JSON should expose STRETCHTOP highlight provenance");
     expect_contains(object_process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
                     "#1454: selected report object JSON should expose highlight provenance");
     expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
