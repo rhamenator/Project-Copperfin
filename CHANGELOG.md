@@ -4648,3 +4648,4 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   that the object and memo-backed properties remain sourced from verified bytes.
   This closes the focused concurrent-swap regression gap without claiming that
   the broader exact-handle parent is complete.
+- 2026-07-24: Shipped #4615 under #3217. Native PRG `CNTBAR(cMenuName)` now counts defined popup bars, including sparse bar numbers, and returns zero for missing menus. Focused runtime-surface coverage passes; system-menu counts, activation-time prompt menus, rendering, callbacks, and broader menu APIs remain separate.

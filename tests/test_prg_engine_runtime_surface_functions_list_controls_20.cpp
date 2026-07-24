@@ -31,6 +31,8 @@ namespace copperfin::runtime_surface_tests
             "cFirst = oList.List(1)\n"
             "cSecond = oList.List(2)\n"
             "cThird = oList.List(5)\n"
+            "nPopupCount = CNTBAR('choices')\n"
+            "nMissingPopupCount = CNTBAR('missing_popup')\n"
             "cPromptTwo = PRMBAR('choices', 2)\n"
             "cPromptThree = PRMBAR('choices', 3)\n"
             "cPromptDisabled = PRMBAR('choices', 4)\n"
@@ -39,6 +41,7 @@ namespace copperfin::runtime_surface_tests
             "cPromptMissing = PRMBAR('choices', 99)\n"
             "DEFINE POPUP choices\n"
             "DEFINE BAR 1 OF choices PROMPT 'Replacement'\n"
+            "nReplacementPopupCount = CNTBAR('choices')\n"
             "oList.Requery()\n"
             "nReplacementCount = oList.ListCount\n"
             "cReplacement = oList.List(1)\n"
@@ -87,6 +90,8 @@ namespace copperfin::runtime_surface_tests
         check("cfirst", "Two");
         check("csecond", "\\<Three");
         check("cthird", "Twenty");
+        check("npopupcount", "5");
+        check("nmissingpopupcount", "0");
         check("cprompttwo", "Two");
         check("cpromptthree", "Three");
         check("cpromptdisabled", "Disabled");
@@ -94,6 +99,7 @@ namespace copperfin::runtime_surface_tests
         check("cprompttwenty", "Twenty");
         check("cpromptmissing", "");
         check("nreplacementcount", "1");
+        check("nreplacementpopupcount", "1");
         check("creplacement", "Replacement");
         check("nreleasedcount", "0");
         check("nmissingcount", "0");
