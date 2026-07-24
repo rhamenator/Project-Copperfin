@@ -677,6 +677,81 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_visual_dynamicfontsize_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_dynamicfontsize";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_dynamicfontsize.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'DynamicFontSize', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'DynamicFontSize', 5)\n"
+            "cDefault = oButton.DynamicFontSize\n"
+            "oButton.DynamicFontSize = 'IIF(EMPTY(Value), 10, 12.5)'\n"
+            "cDirect = oButton.DynamicFontSize\n"
+            "lSetPem = SETPEM(oButton, 'DynamicFontSize', 'MAX(Value, 8)')\n"
+            "cSetPem = GETPEM(oButton, 'DynamicFontSize')\n"
+            "lPutPem = PUTPEM(oButton, 'DynamicFontSize', 'TRANSFORM(Value)')\n"
+            "cPutPem = GETPEM(oButton, 'DynamicFontSize')\n"
+            "lAddProperty = ADDPROPERTY(oButton, 'DynamicFontSize', 'shadow')\n"
+            "lRemoveProperty = REMOVEPROPERTY(oButton, 'DynamicFontSize')\n"
+            "lPropHas = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'DYNAMICFONTSIZE'\n"
+            "        lPropHas = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedDynamicFontSize')\n"
+            "cDerived = oDerived.DynamicFontSize\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedDynamicFontSize AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.DynamicFontSize = 'IIF(Value > 0, 9.5, 11)'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DynamicFontSize script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("cdefault", "");
+        check("cdirect", "IIF(EMPTY(Value), 10, 12.5)");
+        check("lsetpem", "true");
+        check("csetpem", "MAX(Value, 8)");
+        check("lputpem", "true");
+        check("cputpem", "TRANSFORM(Value)");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lprophas", "true");
+        check("cderived", "IIF(Value > 0, 9.5, 11)");
+        expect(state.ole_objects.size() == 2U,
+               "native DynamicFontSize coverage should register the base and derived controls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;

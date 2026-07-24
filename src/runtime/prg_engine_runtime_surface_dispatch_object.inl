@@ -233,6 +233,7 @@
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||
@@ -1223,6 +1224,7 @@
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||

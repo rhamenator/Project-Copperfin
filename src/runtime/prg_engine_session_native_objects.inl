@@ -68,6 +68,14 @@
 
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("dynamicfontsize"))
+            {
+                // Headless contract: preserve the raw dynamic-font-size expression without evaluating it.
+                runtime_object.properties["dynamicfontsize"] = make_string_value("");
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontsize"))
             {
                 // Headless contract: preserve fractional point sizes without requiring
