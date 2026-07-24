@@ -212,6 +212,7 @@
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_windowstate_member_name(*runtime_object, property_name) ||
+            is_native_form_scalemode_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
@@ -692,6 +693,9 @@
             if (member_name == "alignment") {
                 normalize_native_visual_alignment_invariant(*runtime_object);
             }
+            if (member_name == "scalemode") {
+                normalize_native_form_scalemode_invariant(*runtime_object);
+            }
             if (member_name == "rowheight") {
                 normalize_native_grid_rowheight_invariant(*runtime_object);
             }
@@ -911,6 +915,9 @@
             if (member_name == "alignment") {
                 normalize_native_visual_alignment_invariant(*runtime_object);
             }
+            if (member_name == "scalemode") {
+                normalize_native_form_scalemode_invariant(*runtime_object);
+            }
             if (member_name == "rowheight") {
                 normalize_native_grid_rowheight_invariant(*runtime_object);
             }
@@ -1111,6 +1118,7 @@
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_windowstate_member_name(*runtime_object, property_name) ||
+            is_native_form_scalemode_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
             is_native_form_desktop_member_name(*runtime_object, property_name) ||

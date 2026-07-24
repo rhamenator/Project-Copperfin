@@ -61,6 +61,7 @@ bool is_native_activepage_member_name(const RuntimeOleObjectState& runtime_objec
 bool is_native_form_alwaysontop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_showwindow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_windowstate_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_form_scalemode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_desktop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -164,6 +165,7 @@ void normalize_native_list_control_columnlines_invariant(RuntimeOleObjectState& 
 void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& runtime_object);

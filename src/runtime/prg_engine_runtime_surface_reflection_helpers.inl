@@ -237,6 +237,18 @@ bool native_form_windowstate_member_name_matches(
            runtime_object.properties.contains("windowstate");
 }
 
+bool native_form_scalemode_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "scalemode") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("scalemode");
+}
+
 bool native_form_borderstyle_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

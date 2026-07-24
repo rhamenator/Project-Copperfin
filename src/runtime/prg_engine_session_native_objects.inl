@@ -831,6 +831,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("scalemode"))
+            {
+                // Headless contract: preserve the coordinate mode without converting geometry.
+                runtime_object.properties["scalemode"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("borderstyle"))
             {
                 runtime_object.properties["borderstyle"] = make_number_value(3.0);

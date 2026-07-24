@@ -66,6 +66,11 @@ bool is_native_form_windowstate_member_name(const RuntimeOleObjectState& runtime
     return native_form_windowstate_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_form_scalemode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_scalemode_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_borderstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_borderstyle_member_name_matches(runtime_object, normalized_member_name);
@@ -715,6 +720,23 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
     const long long normalized =
         !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 2LL);
     alignment->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "form") {
+        return;
+    }
+
+    const auto scale_mode = runtime_object.properties.find("scalemode");
+    if (scale_mode == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(scale_mode->second);
+    const long long normalized =
+        !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 3LL);
+    scale_mode->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object)
