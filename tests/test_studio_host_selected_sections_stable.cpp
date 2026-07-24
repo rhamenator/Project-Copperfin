@@ -997,6 +997,101 @@ void run_header_curpos_selection(
                     issue_prefix + " should preserve unrelated header settings");
 }
 
+void write_synthetic_report_table_for_header_unique_json(
+    const std::filesystem::path& report_path,
+    bool deleted) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "RULERLINES", .type = 'N', .length = 8U},
+        {.name = "ADDALIAS", .type = 'L', .length = 1U},
+        {.name = "CURPOS", .type = 'L', .length = 1U},
+        {.name = "UNIQUE", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4542: header UNIQUE fixture should be created");
+    if (deleted) {
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+        expect(delete_result.ok, "#4542: header UNIQUE fixture should preserve deleted state");
+    }
+}
+
+void run_header_unique_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    bool deleted,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_header_unique_json(asset_path, deleted);
+
+    const auto selected_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    expect(selected_process.exit_code == 0, issue_prefix + " should select header UNIQUE settings");
+    expect_contains(selected_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected header UNIQUE settings");
+    expect_contains(selected_process.stdout_text, "\"name\": \"UNIQUE\"",
+                    issue_prefix + " should expose header UNIQUE");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "UNIQUE", "--property-value", "false",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip header UNIQUE edits");
+
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen header UNIQUE after editing");
+    expect_contains(reopened_process.stdout_text, "\"name\": \"UNIQUE\"",
+                    issue_prefix + " should retain UNIQUE after editing");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"false\"",
+                    issue_prefix + " should persist the UNIQUE edit");
+
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "UNIQUE",
+            "--json"
+        },
+        temp_root);
+    expect(clear_process.exit_code == 0,
+           issue_prefix + " should clear header UNIQUE");
+    const auto reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    expect(reopened_clear_process.exit_code == 0,
+           issue_prefix + " should reopen after clearing UNIQUE");
+    const auto settings_start = reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto settings_end = reopened_clear_process.stdout_text.find("]", settings_start);
+    const std::string selected_settings_json = settings_start == std::string::npos
+        ? std::string{}
+        : reopened_clear_process.stdout_text.substr(settings_start, settings_end - settings_start);
+    expect(selected_settings_json.find("\"name\": \"UNIQUE\"") == std::string::npos,
+           issue_prefix + " should remove cleared UNIQUE");
+    expect_contains(selected_settings_json, "\"name\": \"CURPOS\"",
+                    issue_prefix + " should preserve unrelated header settings");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -1256,6 +1351,30 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         "selected_deleted_header_curpos_stable.lbx",
         true,
         "#4541: stable deleted label header CURPOS selection");
+    run_header_unique_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_unique_stable.frx",
+        false,
+        "#4542: stable live report header UNIQUE selection");
+    run_header_unique_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_unique_stable.lbx",
+        false,
+        "#4542: stable live label header UNIQUE selection");
+    run_header_unique_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_unique_stable.frx",
+        true,
+        "#4542: stable deleted report header UNIQUE selection");
+    run_header_unique_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_unique_stable.lbx",
+        true,
+        "#4542: stable deleted label header UNIQUE selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,

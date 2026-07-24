@@ -839,6 +839,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "RULERLINES", LocalizationKey = "AssetEditor.Property.RulerLines", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "ADDALIAS", LocalizationKey = "AssetEditor.Property.AddAlias", Logical = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "CURPOS", LocalizationKey = "AssetEditor.Property.ShowPosition", Logical = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "UNIQUE", LocalizationKey = "AssetEditor.Property.UniqueReport", Logical = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = true };
     }
 

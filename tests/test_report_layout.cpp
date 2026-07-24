@@ -26,6 +26,7 @@ void test_report_header_ruler_lines_provenance();
 void test_report_header_picture_overrides_provenance();
 void test_report_header_add_alias_provenance();
 void test_report_header_curpos_provenance();
+void test_report_header_unique_provenance();
 void test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
 void test_report_layout_default_catalog_refreshes_when_locale_changes();
 void test_report_layout_section_catalog_entries_cover_placeholder_locales();
@@ -72,6 +73,7 @@ int main() {
     test_report_header_picture_overrides_provenance();
     test_report_header_add_alias_provenance();
     test_report_header_curpos_provenance();
+    test_report_header_unique_provenance();
     test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
     test_report_layout_default_catalog_refreshes_when_locale_changes();
     test_report_layout_section_catalog_entries_cover_placeholder_locales();
