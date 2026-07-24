@@ -22,13 +22,27 @@ internal static partial class Program
     {
         WithResolvedRealAssetToolchain(() =>
         {
-            SmokeResolvedRealAssetCoverageClusterPart01();
-            SmokeResolvedRealAssetCoverageClusterPart02();
-            SmokeResolvedRealAssetCoverageClusterPart03();
-            SmokeResolvedRealAssetCoverageClusterPart04();
-            SmokeResolvedRealAssetCoverageClusterPart05();
-            SmokeResolvedRealAssetCoverageClusterPart06();
-            SmokeResolvedRealAssetCoverageClusterPart07();
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart01), SmokeResolvedRealAssetCoverageClusterPart01);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart02), SmokeResolvedRealAssetCoverageClusterPart02);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart03), SmokeResolvedRealAssetCoverageClusterPart03);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart04), SmokeResolvedRealAssetCoverageClusterPart04);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart05), SmokeResolvedRealAssetCoverageClusterPart05);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart06), SmokeResolvedRealAssetCoverageClusterPart06);
+            RunRealAssetCoveragePart(nameof(SmokeResolvedRealAssetCoverageClusterPart07), SmokeResolvedRealAssetCoverageClusterPart07);
         });
+    }
+
+    private static void RunRealAssetCoveragePart(string partName, Action part)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        Console.WriteLine($"START: {partName}");
+        try
+        {
+            part();
+        }
+        finally
+        {
+            Console.WriteLine($"END: {partName} ({stopwatch.Elapsed.TotalSeconds:F1}s)");
+        }
     }
 }
