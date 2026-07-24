@@ -3541,6 +3541,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             BackColor = Color.FromArgb(248, 249, 252);
             ForeColor = Color.FromArgb(28, 32, 39);
+            designSurface.ResetVisualStudioHostTheme();
         }
         else
         {
@@ -3582,6 +3583,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             if (child is CopperfinDesignSurfaceControl)
             {
+                ((CopperfinDesignSurfaceControl)child).ApplyVisualStudioHostTheme(background, foreground);
                 continue;
             }
 

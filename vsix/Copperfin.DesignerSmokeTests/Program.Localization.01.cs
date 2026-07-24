@@ -325,6 +325,28 @@ internal static partial class Program
             "Portuguese Visual Studio host mode should reapply compact chrome after toggling back");
     }
 
+    private static void SmokeVisualStudioHostSurfaceThemeContract()
+    {
+        using var surface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("en-US"))
+        {
+            Size = new Size(420, 280)
+        };
+        var hostBackground = Color.FromArgb(30, 34, 40);
+        var hostForeground = Color.FromArgb(232, 236, 240);
+        surface.ApplyVisualStudioHostTheme(hostBackground, hostForeground);
+        Expect(surface.BackColor == hostBackground,
+            "VSIX host theme should route the shared design-surface background through the host color boundary");
+
+        using var themedBitmap = new Bitmap(surface.Width, surface.Height);
+        surface.DrawToBitmap(themedBitmap, new Rectangle(Point.Empty, surface.Size));
+        Expect(themedBitmap.GetPixel(0, 0) == hostBackground,
+            "VSIX host theme should paint the shared design-surface chrome with the resolved host background");
+
+        surface.ResetVisualStudioHostTheme();
+        Expect(surface.BackColor == Color.White,
+            "standalone surface reset should restore the shared designer palette after VSIX host theming");
+    }
+
     private static void SmokeLocalizedProjectWorkspaceChrome()
     {
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));

@@ -34,6 +34,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeLocalizedAssetEditorChrome), SmokeLocalizedAssetEditorChrome);
         runner.Run(nameof(SmokePseudoLocalizedAssetEditorChrome), SmokePseudoLocalizedAssetEditorChrome);
         runner.Run(nameof(SmokeLocalizedHostModeChromeCompaction), SmokeLocalizedHostModeChromeCompaction);
+        runner.Run(nameof(SmokeVisualStudioHostSurfaceThemeContract), SmokeVisualStudioHostSurfaceThemeContract);
         runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
         runner.Run(nameof(SmokeManagedProjectProcessLaunchContracts), SmokeManagedProjectProcessLaunchContracts);
         runner.Run(nameof(SmokeStandaloneStudioDocumentIdentity), SmokeStandaloneStudioDocumentIdentity);

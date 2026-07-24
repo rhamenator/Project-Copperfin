@@ -52,6 +52,9 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private Rectangle unplacedTrayBounds;
     private Rectangle unplacedTrayHeaderBounds;
     private CopperfinStudioReportLayout? reportLayout;
+    private Color surfaceTextColor = Color.FromArgb(28, 32, 39);
+    private Color surfaceGridColor = Color.FromArgb(236, 239, 244);
+    private bool visualStudioHostTheme;
 
     public event Action<int>? SelectedRecordChanged;
     public event Action<int>? SelectedReportSectionChanged;
@@ -64,6 +67,26 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         DoubleBuffered = true;
         BackColor = Color.White;
         MinimumSize = new Size(400, 260);
+    }
+
+    internal void ApplyVisualStudioHostTheme(Color background, Color foreground)
+    {
+        BackColor = background;
+        surfaceTextColor = foreground;
+        surfaceGridColor = background.GetBrightness() < 0.5F
+            ? ControlPaint.Light(background)
+            : ControlPaint.Dark(background);
+        visualStudioHostTheme = true;
+        Invalidate();
+    }
+
+    internal void ResetVisualStudioHostTheme()
+    {
+        BackColor = Color.White;
+        surfaceTextColor = Color.FromArgb(28, 32, 39);
+        surfaceGridColor = Color.FromArgb(236, 239, 244);
+        visualStudioHostTheme = false;
+        Invalidate();
     }
 
     public void LoadObjects(string assetFamily, IReadOnlyList<CopperfinStudioSnapshotObject> snapshotObjects)
@@ -278,7 +301,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     {
         if (objects.Count == 0)
         {
-            using var brush = new SolidBrush(Color.FromArgb(96, 102, 118));
+            using var brush = new SolidBrush(surfaceTextColor);
             e.Graphics.DrawString(
                 this.localization.Text("AssetEditor.DesignSurface.NoObjectsWithLayout"),
                 Font,
@@ -295,7 +318,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var scaleY = availableHeight / Math.Max(1.0F, logicalBounds.Height);
         var scale = Math.Max(0.2F, Math.Min(scaleX, scaleY));
 
-        using var gridPen = new Pen(Color.FromArgb(236, 239, 244));
+        using var gridPen = new Pen(surfaceGridColor);
         for (var x = padding; x < Width - padding; x += 24)
         {
             e.Graphics.DrawLine(gridPen, x, padding, x, Height - padding);
@@ -324,11 +347,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     {
         using var pageFill = new SolidBrush(Color.FromArgb(248, 249, 252));
         using var pageBorder = new Pen(Color.FromArgb(210, 214, 222));
-        using var textBrush = new SolidBrush(Color.FromArgb(53, 58, 68));
+        using var textBrush = new SolidBrush(surfaceTextColor);
         using var sectionFill = new SolidBrush(Color.FromArgb(255, 255, 255));
         using var sectionBorder = new Pen(Color.FromArgb(212, 218, 228));
         using var sectionHeaderFill = new SolidBrush(Color.FromArgb(233, 238, 247));
-        using var sectionHeaderText = new SolidBrush(Color.FromArgb(44, 52, 64));
+        using var sectionHeaderText = new SolidBrush(visualStudioHostTheme ? surfaceTextColor : Color.FromArgb(44, 52, 64));
         using var deletedSectionFill = new SolidBrush(Color.FromArgb(255, 244, 244));
         using var deletedSectionBorder = new Pen(Color.FromArgb(218, 176, 176));
         using var deletedSectionHeaderFill = new SolidBrush(Color.FromArgb(252, 224, 224));
@@ -429,7 +452,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
                 DrawSurfaceObject(e.Graphics, item, selectedRecordIndex == item.Source.RecordIndex, assetFamily);
             }
 
-            using var gutterBrush = new SolidBrush(Color.FromArgb(118, 128, 142));
+            using var gutterBrush = new SolidBrush(surfaceTextColor);
             e.Graphics.DrawString($"{sectionIndex + 1}", Font, gutterBrush, outerPadding + 6, currentY + 6);
             currentY += sectionBounds.Height + sectionSpacing;
         }
@@ -475,7 +498,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         }
     }
 
-    private static void DrawSurfaceObject(Graphics graphics, SurfaceObject item, bool selected, string assetFamily)
+    private void DrawSurfaceObject(Graphics graphics, SurfaceObject item, bool selected, string assetFamily)
     {
         var deleted = item.Source.Deleted;
         var fillColor = deleted
@@ -497,7 +520,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
         using var fill = new SolidBrush(fillColor);
         using var border = new Pen(borderColor, selected ? 2.2F : 1.4F);
-        using var textBrush = new SolidBrush(Color.FromArgb(28, 32, 39));
+        using var textBrush = new SolidBrush(surfaceTextColor);
         graphics.FillRectangle(fill, item.PixelBounds);
         graphics.DrawRectangle(border, item.PixelBounds);
 
