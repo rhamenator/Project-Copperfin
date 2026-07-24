@@ -379,6 +379,10 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
             const auto result = set_record_deleted_flag(path, change.record_index, change.prior_value == "1");
             return {.ok = result.ok, .error = result.error};
         }
+        std::string property_value = change.prior_value;
+        if (normalize_visual_property_name(change.property_name) == "order") {
+            property_value = encode_report_order_value(change.prior_value);
+        }
         return apply_visual_object_property_change(
             {
                 .path = path,
@@ -386,7 +390,7 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
                 .object_name = {},
                 .unique_id = {},
                 .property_name = change.property_name,
-                .property_value = change.prior_value
+                .property_value = property_value
             },
             false,
             !change.prior_value_exists);

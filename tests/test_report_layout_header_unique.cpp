@@ -20,7 +20,8 @@ void test_report_header_unique_provenance() {
                 value("RULERLINES", "1", 704U),
                 value("ADDALIAS", "T", 709U),
                 value("CURPOS", "T", 713U),
-                value("UNIQUE", "T", 717U)
+                value("UNIQUE", "T", 717U),
+                value("ORDER", "ORDER-BYTES", 721U)
             }
         },
         {
@@ -49,8 +50,12 @@ void test_report_header_unique_provenance() {
         "#4542: live header UNIQUE should preserve value and provenance");
     expect(find_setting(layout.deleted_settings, "UNIQUE") == layout.deleted_settings.end(),
         "#4542: blank deleted UNIQUE should not fabricate a setting");
-    expect(layout.settings.size() == 4U,
-        "#4542: UNIQUE should append without changing earlier header setting order");
+    const auto order = find_setting(layout.settings, "ORDER");
+    expect(order != layout.settings.end() && order->value == "hex:4F524445522D4259544553" &&
+           order->field_index == 5U && order->memo_block_number == 721U,
+        "#4543: binary ORDER should use a stable hex value while preserving provenance");
+    expect(layout.settings.size() == 5U,
+        "#4543: ORDER should append without changing earlier header setting order");
 }
 
 }  // namespace cf_test_report_layout

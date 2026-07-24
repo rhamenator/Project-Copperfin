@@ -305,13 +305,15 @@ VisualAssetEditResult replace_field_value(
     const std::string& table_path,
     std::size_t record_index,
     const RawFieldDescriptor& field,
-    const std::string& new_value);
+    const std::string& new_value,
+    bool raw_memo_value = false);
 std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std::uint8_t>& table_bytes);
 VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& new_value);
+    const std::string& new_value,
+    bool raw_value = false);
 
 // ==== Undo-entry subsystem ====
 std::filesystem::path visual_asset_undo_root_directory(const std::string& path);

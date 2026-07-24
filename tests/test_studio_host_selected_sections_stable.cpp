@@ -1007,10 +1007,11 @@ void write_synthetic_report_table_for_header_unique_json(
         {.name = "RULERLINES", .type = 'N', .length = 8U},
         {.name = "ADDALIAS", .type = 'L', .length = 1U},
         {.name = "CURPOS", .type = 'L', .length = 1U},
-        {.name = "UNIQUE", .type = 'L', .length = 1U}
+        {.name = "UNIQUE", .type = 'L', .length = 1U},
+        {.name = "ORDER", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T."}
+        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T.", "ORDER-BYTES"}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#4542: header UNIQUE fixture should be created");
@@ -1038,6 +1039,84 @@ void run_header_unique_selection(
                     issue_prefix + " should advertise selected header UNIQUE settings");
     expect_contains(selected_process.stdout_text, "\"name\": \"UNIQUE\"",
                     issue_prefix + " should expose header UNIQUE");
+    expect_contains(selected_process.stdout_text, "\"name\": \"ORDER\"",
+                    issue_prefix + " should expose binary-safe header ORDER");
+    expect_contains(selected_process.stdout_text, "\"value\": \"hex:4F524445522D4259544553\"",
+                    issue_prefix + " should encode header ORDER as stable hex");
+
+    const auto order_update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "ORDER", "--property-value", "hex:01A5007F",
+            "--json"
+        },
+        temp_root);
+    expect(order_update_process.exit_code == 0,
+           issue_prefix + " should round-trip binary-safe header ORDER edits");
+
+    const auto order_reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    expect(order_reopened_process.exit_code == 0,
+           issue_prefix + " should reopen header ORDER after editing");
+    expect_contains(order_reopened_process.stdout_text, "\"value\": \"hex:01A5007F\"",
+                    issue_prefix + " should preserve exact binary-safe header ORDER bytes");
+
+    const auto order_undo_process = run_process_capture(
+        studio_host_path,
+        {"--undo-mode", "command", "--path", copperfin::test_support::path_to_utf8_string(asset_path), "--json"},
+        temp_root);
+    expect(order_undo_process.exit_code == 0,
+           issue_prefix + " should undo binary-safe header ORDER edits");
+    const auto order_reopened_undo_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    expect_contains(order_reopened_undo_process.stdout_text, "\"value\": \"hex:4F524445522D4259544553\"",
+                    issue_prefix + " should restore exact prior header ORDER bytes through undo");
+
+    const auto order_reapply_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "ORDER", "--property-value", "hex:01A5007F",
+            "--json"
+        },
+        temp_root);
+    expect(order_reapply_process.exit_code == 0,
+           issue_prefix + " should reapply binary-safe header ORDER before clear");
+
+    const auto order_clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "ORDER",
+            "--json"
+        },
+        temp_root);
+    expect(order_clear_process.exit_code == 0,
+           issue_prefix + " should clear binary-safe header ORDER");
+    const auto order_reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    const auto order_settings_start = order_reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto order_settings_end = order_reopened_clear_process.stdout_text.find("]", order_settings_start);
+    const std::string order_settings_json = order_settings_start == std::string::npos
+        ? std::string{}
+        : order_reopened_clear_process.stdout_text.substr(order_settings_start, order_settings_end - order_settings_start);
+    expect(order_settings_json.find("\"name\": \"ORDER\"") == std::string::npos,
+           issue_prefix + " should remove cleared binary-safe header ORDER");
+    expect_contains(order_settings_json, "\"name\": \"UNIQUE\"",
+                    issue_prefix + " should preserve unrelated header settings after ORDER clear");
 
     const auto update_process = run_process_capture(
         studio_host_path,

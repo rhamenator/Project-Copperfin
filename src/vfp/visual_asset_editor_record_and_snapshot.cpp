@@ -850,9 +850,10 @@ VisualAssetEditResult replace_field_value(
     const std::string& table_path,
     std::size_t record_index,
     const RawFieldDescriptor& field,
-    const std::string& new_value) {
+    const std::string& new_value,
+    bool raw_memo_value) {
     if (field.type == 'M') {
-        return replace_memo_field_value(table_path, record_index, field.name, new_value);
+        return replace_memo_field_value(table_path, record_index, field.name, new_value, raw_memo_value);
     }
 
     return replace_non_memo_field_value(table_path, record_index, field, new_value);
@@ -877,7 +878,8 @@ VisualAssetEditResult replace_memo_field_value(
     const std::string& table_path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& new_value) {
+    const std::string& new_value,
+    bool raw_value) {
     const SidecarPathResolution memo_resolution = infer_memo_sidecar_path(table_path);
     if (memo_resolution.ambiguous) {
         return {.ok = false, .error = ambiguous_memo_sidecar_error(memo_resolution)};
@@ -902,11 +904,17 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = header_result.error};
     }
 
-    const DbfTextConversionResult encoded = encode_dbf_text(
-        header_result.header.code_page_mark,
-        new_value);
-    if (!encoded.ok) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
+    std::vector<std::uint8_t> encoded_bytes;
+    if (raw_value) {
+        encoded_bytes.assign(new_value.begin(), new_value.end());
+    } else {
+        const DbfTextConversionResult encoded = encode_dbf_text(
+            header_result.header.code_page_mark,
+            new_value);
+        if (!encoded.ok) {
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
+        }
+        encoded_bytes.assign(encoded.text.begin(), encoded.text.end());
     }
 
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(table_bytes);
@@ -959,7 +967,7 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarNextFreeBlockInvalid")};
     }
 
-    const auto required_bytes = static_cast<std::size_t>(8U + encoded.text.size());
+    const auto required_bytes = static_cast<std::size_t>(8U + encoded_bytes.size());
     const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
     const std::size_t new_block_offset = static_cast<std::size_t>(next_free_block) * block_size;
     const std::size_t new_total_size = new_block_offset + (static_cast<std::size_t>(required_blocks) * block_size);
@@ -970,14 +978,14 @@ VisualAssetEditResult replace_memo_field_value(
     for (std::size_t index = 0; index < original_block_header.size(); ++index) {
         memo_bytes[new_block_offset + index] = original_block_header[index];
     }
-    write_be_u32(memo_bytes, new_block_offset + 4U, static_cast<std::uint32_t>(encoded.text.size()));
+    write_be_u32(memo_bytes, new_block_offset + 4U, static_cast<std::uint32_t>(encoded_bytes.size()));
     std::fill(
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_block_offset + 8U),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_total_size),
         static_cast<std::uint8_t>(0U));
     std::copy(
-        encoded.text.begin(),
-        encoded.text.end(),
+        encoded_bytes.begin(),
+        encoded_bytes.end(),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_block_offset + 8U));
 
     write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);

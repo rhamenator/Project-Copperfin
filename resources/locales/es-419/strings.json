@@ -2445,6 +2445,7 @@
   "AssetEditor.Property.AddAlias": "Agregar alias de campos",
   "AssetEditor.Property.ShowPosition": "Mostrar posici\u00F3n",
   "AssetEditor.Property.UniqueReport": "Informe \u00FAnico",
+  "AssetEditor.Property.OrderProtectionFlags": "Indicadores de protecci\u00F3n del orden",
   "AssetEditor.Property.SortExpression": "Expresi\u00F3n de orden",
   "AssetEditor.Property.DeletedObjects": "Objetos eliminados",
   "AssetEditor.Property.GroupRole": "Rol del grupo",

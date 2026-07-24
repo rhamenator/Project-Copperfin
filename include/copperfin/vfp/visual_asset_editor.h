@@ -6,7 +6,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::vfp {
@@ -25,6 +27,11 @@ struct VisualObjectEditRequest {
     std::string property_name;
     std::string property_value;
 };
+
+// Report header ORDER is a binary memo, so the public designer contract uses
+// printable hex while storage and undo continue to use the original bytes.
+std::string encode_report_order_value(std::string_view raw_value);
+std::optional<std::string> decode_report_order_value(std::string_view encoded_value);
 
 struct VisualObjectPropertyChange {
     std::string property_name;

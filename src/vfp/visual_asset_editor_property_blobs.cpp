@@ -11,6 +11,53 @@
 #include <set>
 
 namespace copperfin::vfp {
+
+std::string encode_report_order_value(std::string_view raw_value) {
+    static constexpr char digits[] = "0123456789ABCDEF";
+    std::string encoded = "hex:";
+    encoded.reserve(4U + raw_value.size() * 2U);
+    for (const unsigned char byte : raw_value) {
+        encoded.push_back(digits[byte >> 4U]);
+        encoded.push_back(digits[byte & 0x0FU]);
+    }
+    return encoded;
+}
+
+std::optional<std::string> decode_report_order_value(std::string_view encoded_value) {
+    if (encoded_value.size() < 4U || encoded_value.substr(0U, 4U) != "hex:") {
+        return std::nullopt;
+    }
+    const std::string_view digits = encoded_value.substr(4U);
+    if ((digits.size() % 2U) != 0U) {
+        return std::nullopt;
+    }
+
+    const auto hex_value = [](char digit) -> std::optional<unsigned char> {
+        if (digit >= '0' && digit <= '9') {
+            return static_cast<unsigned char>(digit - '0');
+        }
+        if (digit >= 'A' && digit <= 'F') {
+            return static_cast<unsigned char>(digit - 'A' + 10);
+        }
+        if (digit >= 'a' && digit <= 'f') {
+            return static_cast<unsigned char>(digit - 'a' + 10);
+        }
+        return std::nullopt;
+    };
+
+    std::string decoded;
+    decoded.reserve(digits.size() / 2U);
+    for (std::size_t index = 0U; index < digits.size(); index += 2U) {
+        const auto high = hex_value(digits[index]);
+        const auto low = hex_value(digits[index + 1U]);
+        if (!high.has_value() || !low.has_value()) {
+            return std::nullopt;
+        }
+        decoded.push_back(static_cast<char>((*high << 4U) | *low));
+    }
+    return decoded;
+}
+
 namespace {
 
 bool is_report_layout_asset_path(const std::string& path) {
@@ -628,11 +675,26 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
 
     const auto* direct_field_value = find_direct_visual_property_value(record.values, property_name);
     if (direct_field_value != nullptr) {
+        std::string current_value = direct_field_value->display_value;
+        if (is_report_layout_asset_path(path) &&
+            requested_property_name == "order" &&
+            direct_field_value->memo_block_number > 0U) {
+            const auto memo_resolution = infer_memo_sidecar_path(path);
+            if (!memo_resolution.ambiguous) {
+                const std::string memo_path = selected_memo_sidecar_path(memo_resolution);
+                const auto raw_value = read_memo_block_raw(memo_path, direct_field_value->memo_block_number);
+                if (!raw_value.empty()) {
+                    current_value.assign(
+                        reinterpret_cast<const char*>(raw_value.data()),
+                        raw_value.size());
+                }
+            }
+        }
         return VisualPropertyState{
             .exists = true,
             .direct_field = true,
             .property_name = direct_field_value->field_name,
-            .value = direct_field_value->display_value,
+            .value = current_value,
             .record_deleted = record.deleted
         };
     }
@@ -884,13 +946,27 @@ VisualAssetEditResult apply_visual_object_property_change(
         if (!header_result.ok) {
             return {.ok = false, .error = header_result.error};
         }
+        std::string storage_value = request.property_value;
+        if (is_report_layout_asset_path(request.path) &&
+            normalized_property_name == "order" &&
+            direct_field_it->type == 'M') {
+            if (request.property_value.empty() && remove_property_if_missing) {
+                storage_value.clear();
+            } else {
+                const auto decoded = decode_report_order_value(request.property_value);
+                if (!decoded.has_value()) {
+                    return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TextEncodingConversionFailed")};
+                }
+                storage_value = *decoded;
+            }
+        }
         if (direct_field_change_is_noop(
                 request.path,
                 table_bytes,
                 header_result,
                 record_index,
                 *direct_field_it,
-                request.property_value)) {
+                storage_value)) {
             return {.ok = true, .error = {}};
         }
 
@@ -916,7 +992,14 @@ VisualAssetEditResult apply_visual_object_property_change(
             }
         }
 
-        return replace_field_value(request.path, record_index, *direct_field_it, request.property_value);
+        return replace_field_value(
+            request.path,
+            record_index,
+            *direct_field_it,
+            storage_value,
+            is_report_layout_asset_path(request.path) &&
+                normalized_property_name == "order" &&
+                direct_field_it->type == 'M');
     }
 
     if (is_report_layout_asset_path(request.path)) {

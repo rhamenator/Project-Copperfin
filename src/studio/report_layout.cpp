@@ -5,6 +5,7 @@
 #include "copperfin/studio/report_layout.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/vfp/visual_asset_editor.h"
 #include "copperfin/vfp/report_layout_records.h"
 
 #include <algorithm>
@@ -464,7 +465,10 @@ bool is_band_record(const DbfRecord& record) {
     return parse_scaled_int_or_default(record, "OBJTYPE") == 9;
 }
 
-void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValue>& settings) {
+void append_report_settings(
+    const DbfRecord& record,
+    std::vector<StudioNamedValue>& settings,
+    std::string_view memo_sidecar_path = {}) {
     const auto append_name_value_pairs = [&](std::string_view field_name, bool replace_existing) {
         const std::string blob = value_or_empty(record, field_name);
         const std::size_t field_index = field_index_or_missing(record, field_name);
@@ -536,7 +540,22 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_name_value_pairs("EXPR", false);
 
     const auto append_direct_setting = [&](std::string_view field_name) {
-        const std::string value = trim_copy(value_or_empty(record, field_name));
+        std::string value = trim_copy(value_or_empty(record, field_name));
+        if (equals_ignore_case(field_name, "ORDER")) {
+            const auto* order_field = find_value(record, field_name);
+            if (order_field != nullptr && order_field->memo_block_number > 0U && !memo_sidecar_path.empty()) {
+                const auto raw_value = vfp::read_memo_block_raw(
+                    std::string(memo_sidecar_path),
+                    order_field->memo_block_number);
+                if (!raw_value.empty()) {
+                    value = vfp::encode_report_order_value(std::string_view(
+                        reinterpret_cast<const char*>(raw_value.data()),
+                        raw_value.size()));
+                }
+            } else if (!value.empty() && value != "?") {
+                value = vfp::encode_report_order_value(value);
+            }
+        }
         if (!value.empty() && value != "?") {
             settings.push_back({
                 .name = std::string(field_name),
@@ -572,6 +591,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("ADDALIAS");
     append_direct_setting("CURPOS");
     append_direct_setting("UNIQUE");
+    append_direct_setting("ORDER");
     append_name_value_pairs("PICTURE", true);
 }
 
@@ -1117,7 +1137,7 @@ StudioReportLayoutSnapshot build_report_layout(
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
             if (is_report_root_record(record)) {
-                append_report_settings(record, snapshot.deleted_settings);
+                append_report_settings(record, snapshot.deleted_settings, document.sidecar_path);
             }
             if (is_band_record(record)) {
                 StudioReportSectionSnapshot section = build_report_section(record, catalog);
@@ -1134,7 +1154,7 @@ StudioReportLayoutSnapshot build_report_layout(
         }
 
         if (is_report_root_record(record)) {
-            append_report_settings(record, snapshot.settings);
+            append_report_settings(record, snapshot.settings, document.sidecar_path);
             continue;
         }
 
