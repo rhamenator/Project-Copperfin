@@ -312,6 +312,8 @@
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowautocolumnfit_member_name(*runtime_object, property_name) ||
+            is_native_grid_gridlinecolor_member_name(*runtime_object, property_name) ||
+            is_native_grid_gridlinewidth_member_name(*runtime_object, property_name) ||
             is_native_grid_activecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_activerow_member_name(*runtime_object, property_name) ||
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||
@@ -764,6 +766,12 @@
             if (member_name == "allowautocolumnfit") {
                 normalize_native_grid_allowautocolumnfit_invariant(*runtime_object);
             }
+            if (member_name == "gridlinecolor") {
+                normalize_native_grid_gridlinecolor_invariant(*runtime_object);
+            }
+            if (member_name == "gridlinewidth") {
+                normalize_native_grid_gridlinewidth_invariant(*runtime_object);
+            }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
             }
@@ -1030,6 +1038,12 @@
             }
             if (member_name == "allowautocolumnfit") {
                 normalize_native_grid_allowautocolumnfit_invariant(*runtime_object);
+            }
+            if (member_name == "gridlinecolor") {
+                normalize_native_grid_gridlinecolor_invariant(*runtime_object);
+            }
+            if (member_name == "gridlinewidth") {
+                normalize_native_grid_gridlinewidth_invariant(*runtime_object);
             }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
@@ -1334,6 +1348,8 @@
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowautocolumnfit_member_name(*runtime_object, property_name) ||
+            is_native_grid_gridlinecolor_member_name(*runtime_object, property_name) ||
+            is_native_grid_gridlinewidth_member_name(*runtime_object, property_name) ||
             is_native_grid_activecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_activerow_member_name(*runtime_object, property_name) ||
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||

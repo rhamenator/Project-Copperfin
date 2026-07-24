@@ -8492,6 +8492,14 @@ namespace copperfin::runtime
                 {
                     normalize_native_grid_allowautocolumnfit_invariant(runtime_object);
                 }
+                if (normalized_property_name == "gridlinecolor")
+                {
+                    normalize_native_grid_gridlinecolor_invariant(runtime_object);
+                }
+                if (normalized_property_name == "gridlinewidth")
+                {
+                    normalize_native_grid_gridlinewidth_invariant(runtime_object);
+                }
                 if (normalized_property_name == "scrollbars")
                 {
                     normalize_native_editbox_scrollbars_invariant(runtime_object);

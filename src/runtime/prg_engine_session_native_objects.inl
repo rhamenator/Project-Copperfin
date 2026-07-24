@@ -608,6 +608,18 @@
                 runtime_object.properties["allowautocolumnfit"] = make_boolean_value(false);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("gridlinecolor"))
+            {
+                runtime_object.properties["gridlinecolor"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("gridlinewidth"))
+            {
+                runtime_object.properties["gridlinewidth"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {
