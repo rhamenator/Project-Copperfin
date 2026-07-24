@@ -284,6 +284,18 @@ require_text(".github/workflows/build-installers.yml"
     "--retry-count=3 --retry-delay=5"
     "NSIS package-feed retry contract")
 require_text(".github/workflows/build-installers.yml"
+    "https://downloads.sourceforge.net/nsis/nsis-3.12.zip"
+    "checksum-pinned portable NSIS fallback URI")
+require_text(".github/workflows/build-installers.yml"
+    "56581f90db321581c5381193d796fffcf2d24b2f8fed2160a6c6a3baa67f2c4f"
+    "portable NSIS fallback SHA-256 pin")
+require_text(".github/workflows/build-installers.yml"
+    "Get-FileHash -LiteralPath $nsisFallbackArchive -Algorithm SHA256"
+    "portable NSIS fallback checksum verification")
+require_text(".github/workflows/build-installers.yml"
+    "Expand-Archive -LiteralPath $nsisFallbackArchive -DestinationPath $env:RUNNER_TEMP -Force"
+    "portable NSIS fallback extraction")
+require_text(".github/workflows/build-installers.yml"
     "Test-Path -LiteralPath $makensis -PathType Leaf"
     "NSIS compiler availability contract")
 require_text(".github/workflows/build-installers.yml"
