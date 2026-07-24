@@ -9,6 +9,7 @@
 
 namespace cf_test_report_layout {
 void test_build_report_layout_groups_band_objects();
+void test_report_variable_initial_value_tag_provenance();
 void test_report_image_picture_provenance();
 void test_report_expression_ruler_lines_provenance();
 void test_report_expression_offset_provenance();
@@ -56,6 +57,7 @@ void test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 int main() {
     using namespace cf_test_report_layout;
     test_build_report_layout_groups_band_objects();
+    test_report_variable_initial_value_tag_provenance();
     test_report_image_picture_provenance();
     test_report_expression_ruler_lines_provenance();
     test_report_expression_offset_provenance();

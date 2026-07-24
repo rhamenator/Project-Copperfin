@@ -119,7 +119,9 @@ ProcessResult run_process_capture(
     return result;
 }
 
-void write_synthetic_report_table_for_layout_json(const std::filesystem::path& report_path) {
+void write_synthetic_report_table_for_layout_json(
+    const std::filesystem::path& report_path,
+    bool include_variable_record = false) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
@@ -134,17 +136,21 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "FLOAT", .type = 'L', .length = 1U},
         {.name = "NOREPEAT", .type = 'L', .length = 1U},
         {.name = "STRETCH", .type = 'L', .length = 1U},
-        {.name = "STRETCHTOP", .type = 'L', .length = 1U}
+        {.name = "STRETCHTOP", .type = 'L', .length = 1U},
+        {.name = "TAG", .type = 'M', .length = 4U}
     };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "", "", "", "", ""},
-        {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", "", ""},
-        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid", "T", "F", "T", "F"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid", "", "", "", ""},
-        {"6", "", "", "50", "8000", "100", "100", "", "", "", "", "", "", ""},
-        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", "F", "T", "F", "T"}
+    std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "", "", "", "", "", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid", "T", "F", "T", "F", ""},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid", "", "", "", "", ""},
+        {"6", "", "", "50", "8000", "100", "100", "", "", "", "", "", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", "F", "T", "F", "T", ""}
     };
+    if (include_variable_record) {
+        records.push_back({"18", "0", "", "", "", "", "", "", "", "variable-guid", "", "", "", "", "customer.initial"});
+    }
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#2831: layout fixture should be created");
@@ -728,6 +734,39 @@ void test_studio_host_json_preserves_selected_report_objects(const std::string& 
                     "#1970: deleted unplaced report objects should not advertise selected containing-section availability");
     expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportObjectSection\": null",
                     "#1970: deleted unplaced report objects should serialize null selected containing-section JSON");
+
+    const fs::path variable_report_path = temp_root / "variable.frx";
+    write_synthetic_report_table_for_layout_json(variable_report_path, true);
+    const auto variable_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", variable_report_path.string(), "--record", "7", "--json"},
+        temp_root);
+
+    if (variable_object_process.exit_code != 0) {
+        std::cerr << "studio host selected report variable stdout:\n"
+                  << variable_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected report variable stderr:\n"
+                  << variable_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(variable_object_process.exit_code == 0,
+           "#4556: selected report variable JSON should exit successfully");
+    expect_contains_in_order(
+        variable_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 7",
+            "\"objectTypeCode\": 18",
+            "\"objectKind\": \"variable\""
+        },
+        "#4556: selected report variable JSON should expose variable identity");
+    expect_contains(variable_object_process.stdout_text,
+                    "\"name\": \"TAG\", \"recordIndex\": 7, \"fieldIndex\": 14",
+                    "#4556: selected report variable JSON should expose TAG field provenance");
+    expect_contains(variable_object_process.stdout_text,
+                    "\"value\": \"customer.initial\"",
+                    "#4556: selected report variable JSON should expose TAG initial value");
 
     const auto section_process = run_process_capture(
         studio_host_path,

@@ -709,6 +709,57 @@ void test_build_report_layout_groups_band_objects() {
     expect(live_deleted_setting == layout.settings.end(), "#691: deleted report root settings should not mix into live settings");
 }
 
+void test_report_variable_initial_value_tag_provenance() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "variable.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "18", 701U),
+                value("OBJCODE", "0"),
+                value("TAG", "customer.initial", 702U)
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "18", 703U),
+                value("OBJCODE", "0"),
+                value("TAG", "deleted.initial", 704U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "variable report layout should be available");
+    expect(layout.unplaced_objects.size() == 1U,
+           "variable report layout should preserve a live variable as an unplaced object");
+    expect(layout.deleted_objects.size() == 1U,
+           "variable report layout should preserve a deleted variable separately");
+
+    const auto expect_tag = [](const auto& object, const char* expected_value, std::uint32_t memo_block, const char* state) {
+        const auto tag = std::find_if(
+            object.highlights.begin(),
+            object.highlights.end(),
+            [](const auto& highlight) { return highlight.name == "TAG"; });
+        expect(tag != object.highlights.end(),
+               std::string("#4556: ") + state + " report variable should expose TAG");
+        if (tag != object.highlights.end()) {
+            expect(tag->value == expected_value &&
+                       tag->field_index == 2U &&
+                       tag->memo_block_number == memo_block,
+                   std::string("#4556: ") + state + " report variable TAG should preserve value and memo provenance");
+        }
+    };
+    expect_tag(layout.unplaced_objects[0], "customer.initial", 702U, "live");
+    expect_tag(layout.deleted_objects[0], "deleted.initial", 704U, "deleted");
+}
+
 void test_build_report_layout_localizes_section_titles_without_localizing_band_kinds() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "localized.frx";

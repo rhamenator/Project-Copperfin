@@ -395,6 +395,9 @@ StudioLayoutObjectSnapshot build_layout_object(
         object.objtype_code == 8 || object.objtype_code == 10 || object.objtype_code == 17) {
         add_highlight("TAG2");
     }
+    if (object.objtype_code == 18) {
+        add_highlight("TAG");
+    }
     add_highlight("COMMENT");
     add_highlight("USER");
     add_highlight("EXPR");

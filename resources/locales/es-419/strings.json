@@ -2385,6 +2385,7 @@
   "AssetEditor.Property.Type": "Tipo",
   "AssetEditor.Property.Caption": "T\u00EDtulo",
   "AssetEditor.Property.Expression": "Expresi\u00F3n",
+  "AssetEditor.Property.InitialValue": "Valor inicial",
   "AssetEditor.Property.Prompt": "Solicitud",
   "AssetEditor.Property.Command": "Comando",
   "AssetEditor.Property.Procedure": "Procedimiento",

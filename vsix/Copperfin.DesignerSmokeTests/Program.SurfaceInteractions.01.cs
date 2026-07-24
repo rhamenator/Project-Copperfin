@@ -764,6 +764,55 @@ internal static partial class Program
         }
     }
 
+    private static void SmokeReportVariableInitialValuePropertyGrid()
+    {
+        var snapshotObject = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 18,
+            Title = "variable.initial",
+            Subtitle = "variable",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "18" },
+                new() { Name = "OBJCODE", Value = "0" },
+                new() { Name = "TAG", Value = "customer.initial" }
+            }
+        };
+
+        var english = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            snapshotObject,
+            new CopperfinLocalization("en-US"));
+        var spanish = CopperfinDesignerSelection.FromSnapshot(
+            "report",
+            snapshotObject,
+            new CopperfinLocalization("es-419"));
+        var portuguese = CopperfinDesignerSelection.FromSnapshot(
+            "label",
+            snapshotObject,
+            new CopperfinLocalization("pt-BR"));
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudo = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, pseudoLocalization);
+
+        Expect(english is not null &&
+               TypeDescriptor.GetProperties(english)["TAG"] is PropertyDescriptor englishTag &&
+               string.Equals(englishTag.DisplayName, "Initial Value", StringComparison.Ordinal) &&
+               string.Equals(englishTag.GetValue(english)?.ToString(), "customer.initial", StringComparison.Ordinal),
+            "Report variable selection should expose the invariant TAG update as Initial Value");
+        Expect(spanish is not null &&
+               TypeDescriptor.GetProperties(spanish).Cast<PropertyDescriptor>().Any(property =>
+                   string.Equals(property.DisplayName, "Valor inicial", StringComparison.Ordinal)),
+            "Spanish report variable selection should localize Initial Value");
+        Expect(portuguese is not null &&
+               TypeDescriptor.GetProperties(portuguese).Cast<PropertyDescriptor>().Any(property =>
+                   string.Equals(property.DisplayName, "Valor inicial", StringComparison.Ordinal)),
+            "Portuguese label variable selection should localize Initial Value");
+        Expect(pseudo is not null &&
+               TypeDescriptor.GetProperties(pseudo).Cast<PropertyDescriptor>().Any(property =>
+                   string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.InitialValue"), StringComparison.Ordinal)),
+            "Pseudo-localized report variable selection should route Initial Value through the catalog");
+    }
+
     private static void SmokeSharedDesignerSelectionLocalization()
     {
         var formSnapshot = new CopperfinStudioSnapshotObject

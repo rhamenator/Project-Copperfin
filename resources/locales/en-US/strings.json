@@ -2386,6 +2386,7 @@
   "AssetEditor.Property.Type": "Type",
   "AssetEditor.Property.Caption": "Caption",
   "AssetEditor.Property.Expression": "Expression",
+  "AssetEditor.Property.InitialValue": "Initial Value",
   "AssetEditor.Property.Prompt": "Prompt",
   "AssetEditor.Property.Command": "Command",
   "AssetEditor.Property.Procedure": "Procedure",

@@ -144,6 +144,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate), SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate);
         runner.Run(nameof(SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate), SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate);
         runner.Run(nameof(SmokeReportObjectPropertyGridLocalization), SmokeReportObjectPropertyGridLocalization);
+        runner.Run(nameof(SmokeReportVariableInitialValuePropertyGrid), SmokeReportVariableInitialValuePropertyGrid);
         runner.Run(nameof(SmokeSharedDesignerSelectionLocalization), SmokeSharedDesignerSelectionLocalization);
         runner.Run(nameof(SmokeLocalizedCodeReferenceKindLabels), SmokeLocalizedCodeReferenceKindLabels);
         runner.Run(nameof(SmokeLocalizedProjectInsightArtifactKindLabels), SmokeLocalizedProjectInsightArtifactKindLabels);

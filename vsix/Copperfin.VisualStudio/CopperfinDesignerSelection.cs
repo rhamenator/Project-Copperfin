@@ -197,6 +197,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         selection.Read(snapshotObject, "OBJTYPE"),
                         NumberStyles.Integer,
                         CultureInfo.InvariantCulture,
+                        out var variableObjectType) &&
+                    variableObjectType == 18)
+                {
+                    selection.AddEditableString(
+                        "TAG",
+                        L("AssetEditor.Property.InitialValue", "Initial Value"),
+                        selection.Read(snapshotObject, "TAG"));
+                }
+                if (int.TryParse(
+                        selection.Read(snapshotObject, "OBJTYPE"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
                         out var penColorObjectType) &&
                     (penColorObjectType == 5 || penColorObjectType == 8))
                 {
