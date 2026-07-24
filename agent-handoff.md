@@ -1,5 +1,6 @@
 # Agent Handoff
 
+- #4610 under #3217 is implemented: native PRG `CommandButton` objects now expose VFP9 `Default` and `Cancel` logical properties with `.F.` defaults, direct/PEM/reflection coverage, logical normalization, derived-class initialization, and built-in protection from `ADDPROPERTY()` / `REMOVEPROPERTY()`. ENTER-key default routing, ESC-key cancel dispatch, toolbar restrictions, and form-level arbitration among default buttons remain separate event/UI work; the focused runtime-surface CTest passes.
 - #4607 under #3866 is implemented: strict native VCX `NEWOBJECT()` security
   coverage now runs while a coordinated writer repeatedly replaces the physical
   VCX/VCT paths. The runtime still returns the admitted class method and memo

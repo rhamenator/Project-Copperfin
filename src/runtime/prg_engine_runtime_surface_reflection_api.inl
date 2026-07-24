@@ -256,6 +256,11 @@ bool is_native_visual_whatsthishelpid_member_name(const RuntimeOleObjectState& r
     return native_visual_whatsthishelpid_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_commandbutton_default_cancel_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_commandbutton_default_cancel_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_tag_member_name_matches(runtime_object, normalized_member_name);
@@ -1575,6 +1580,20 @@ void normalize_native_visual_whatsthishelpid_invariant(RuntimeOleObjectState& ru
         ? std::llround(value)
         : 0LL;
     whats_this_help_id->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_commandbutton_default_cancel_runtime_object(runtime_object)) {
+        return;
+    }
+
+    for (const char* property_name : {"default", "cancel"}) {
+        const auto property = runtime_object.properties.find(property_name);
+        if (property != runtime_object.properties.end()) {
+            property->second = make_boolean_value(value_as_bool(property->second));
+        }
+    }
 }
 
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object)

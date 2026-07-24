@@ -588,6 +588,14 @@ bool native_visual_caption_member_name_matches(
            runtime_object.properties.contains("caption");
 }
 
+bool native_commandbutton_default_cancel_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return (normalized_member_name == "default" || normalized_member_name == "cancel") &&
+           native_commandbutton_default_cancel_runtime_object(runtime_object) &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
 bool native_visual_picture_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

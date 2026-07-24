@@ -65,6 +65,14 @@ bool native_visual_caption_runtime_object(const RuntimeOleObjectState& runtime_o
            normalized_base_class == "pageframe";
 }
 
+bool native_commandbutton_default_cancel_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "commandbutton";
+}
+
 bool native_visual_picture_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

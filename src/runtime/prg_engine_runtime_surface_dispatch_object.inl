@@ -249,6 +249,7 @@
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
+            is_native_commandbutton_default_cancel_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
@@ -864,6 +865,9 @@
             if (member_name == "whatsthishelpid") {
                 normalize_native_visual_whatsthishelpid_invariant(*runtime_object);
             }
+            if (member_name == "default" || member_name == "cancel") {
+                normalize_native_commandbutton_default_cancel_invariant(*runtime_object);
+            }
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
@@ -1143,6 +1147,9 @@
             if (member_name == "whatsthishelpid") {
                 normalize_native_visual_whatsthishelpid_invariant(*runtime_object);
             }
+            if (member_name == "default" || member_name == "cancel") {
+                normalize_native_commandbutton_default_cancel_invariant(*runtime_object);
+            }
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
@@ -1299,6 +1306,7 @@
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
+            is_native_commandbutton_default_cancel_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||

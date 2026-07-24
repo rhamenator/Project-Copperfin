@@ -161,6 +161,18 @@
                 runtime_object.properties["whatsthishelpid"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "commandbutton" &&
+                !runtime_object.properties.contains("default"))
+            {
+                runtime_object.properties["default"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "commandbutton" &&
+                !runtime_object.properties.contains("cancel"))
+            {
+                runtime_object.properties["cancel"] = make_boolean_value(false);
+            }
+
             if ((normalized_base_class == "checkbox" ||
                  normalized_base_class == "commandbutton" ||
                  normalized_base_class == "commandgroup" ||

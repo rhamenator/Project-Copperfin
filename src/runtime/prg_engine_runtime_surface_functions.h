@@ -91,6 +91,7 @@ bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& run
 bool is_native_visual_whatsthishelpid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_commandbutton_default_cancel_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_picture_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_dragmode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_dragicon_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -244,6 +245,7 @@ void normalize_native_list_control_selecteditemforecolor_invariant(RuntimeOleObj
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_helpcontextid_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_whatsthishelpid_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_dragmode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_themes_invariant(RuntimeOleObjectState& runtime_object);

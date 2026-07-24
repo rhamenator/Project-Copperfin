@@ -4996,6 +4996,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_picture.cpp
     test_prg_engine_runtime_surface_functions_drag.cpp
     test_prg_engine_runtime_surface_functions_button_pictures.cpp
+    test_prg_engine_runtime_surface_functions_command_button_properties.cpp
     test_prg_engine_runtime_surface_functions_autosize.cpp
     test_prg_engine_runtime_surface_functions_properties_13.cpp
     test_prg_engine_runtime_surface_functions_properties_14.cpp
