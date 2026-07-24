@@ -230,6 +230,9 @@ internal sealed class CopperfinStudioReportSection
     public string? Expression { get; set; }
     public int? ExpressionFieldIndex { get; set; }
     public int ExpressionMemoBlockNumber { get; set; }
+    public string Comment { get; set; } = string.Empty;
+    public int? CommentFieldIndex { get; set; }
+    public int CommentMemoBlockNumber { get; set; }
     public int? SectionIndex { get; set; }
     public int? SectionCount { get; set; }
     public bool GroupingContextAvailable { get; set; }

@@ -87,6 +87,9 @@ struct StudioReportSectionSnapshot {
     std::string expression{};
     std::size_t expression_field_index = StudioReportMissingFieldIndex;
     std::uint32_t expression_memo_block_number = 0;
+    std::string comment{};
+    std::size_t comment_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t comment_memo_block_number = 0;
     std::size_t record_index = 0;
     bool deleted = false;
     std::size_t section_index = StudioReportMissingRecordIndex;

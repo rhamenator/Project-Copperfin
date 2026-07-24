@@ -395,6 +395,7 @@ StudioLayoutObjectSnapshot build_layout_object(
         object.objtype_code == 8 || object.objtype_code == 10 || object.objtype_code == 17) {
         add_highlight("TAG2");
     }
+    add_highlight("COMMENT");
     add_highlight("EXPR");
     add_highlight("SUPEXPR");
     add_highlight("SUPGROUP");
@@ -592,6 +593,7 @@ void append_report_settings(
     append_direct_setting("CURPOS");
     append_direct_setting("UNIQUE");
     append_direct_setting("ORDER");
+    append_direct_setting("COMMENT");
     append_name_value_pairs("PICTURE", true);
 }
 
@@ -1063,6 +1065,7 @@ StudioReportSectionSnapshot build_report_section(
     const FieldSelection plain = first_non_empty_selection(record, {"PLAIN"});
     const FieldSelection on_entry_expression = first_non_empty_selection(record, {"TAG"});
     const FieldSelection on_exit_expression = first_non_empty_selection(record, {"TAG2"});
+    const FieldSelection comment = first_non_empty_selection(record, {"COMMENT"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -1078,6 +1081,9 @@ StudioReportSectionSnapshot build_report_section(
         .expression = expression.value,
         .expression_field_index = expression.field_index,
         .expression_memo_block_number = expression.memo_block_number,
+        .comment = comment.value,
+        .comment_field_index = comment.field_index,
+        .comment_memo_block_number = comment.memo_block_number,
         .record_index = record.record_index,
         .deleted = record.deleted,
         .objcode_code = objcode,

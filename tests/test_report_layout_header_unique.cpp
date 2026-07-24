@@ -21,7 +21,8 @@ void test_report_header_unique_provenance() {
                 value("ADDALIAS", "T", 709U),
                 value("CURPOS", "T", 713U),
                 value("UNIQUE", "T", 717U),
-                value("ORDER", "ORDER-BYTES", 721U)
+                value("ORDER", "ORDER-BYTES", 721U),
+                value("COMMENT", "Header developer note", 722U)
             }
         },
         {
@@ -54,8 +55,12 @@ void test_report_header_unique_provenance() {
     expect(order != layout.settings.end() && order->value == "hex:4F524445522D4259544553" &&
            order->field_index == 5U && order->memo_block_number == 721U,
         "#4543: binary ORDER should use a stable hex value while preserving provenance");
-    expect(layout.settings.size() == 5U,
-        "#4543: ORDER should append without changing earlier header setting order");
+    expect(layout.settings.size() == 6U,
+        "#4543/#4544: ORDER and COMMENT should append without changing earlier header setting order");
+    const auto comment = find_setting(layout.settings, "COMMENT");
+    expect(comment != layout.settings.end() && comment->value == "Header developer note" &&
+           comment->field_index == 6U && comment->memo_block_number == 722U,
+        "#4544: live header COMMENT should preserve value and memo provenance");
 }
 
 }  // namespace cf_test_report_layout

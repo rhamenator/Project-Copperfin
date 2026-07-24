@@ -90,12 +90,13 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "PENBLUE", .type = 'N', .length = 8U},
         {.name = "FILLRED", .type = 'N', .length = 8U},
         {.name = "FILLGREEN", .type = 'N', .length = 8U},
-        {.name = "FILLBLUE", .type = 'N', .length = 8U}
+        {.name = "FILLBLUE", .type = 'N', .length = 8U},
+        {.name = "COMMENT", .type = 'M', .length = 4U}
     };
     std::vector<std::vector<std::string>> records{
         {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", ""},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60"},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", "", "", "Band developer note"},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60", "", "Object developer note"},
         {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", ""},
         {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", "", ""}
     };
@@ -326,6 +327,10 @@ void run_live_section_selection(
                     issue_prefix + " should expose TAG entry-expression field provenance");
     expect_contains(section_process.stdout_text, "\"onExitExpression\": \"DO EXIT\"",
                     issue_prefix + " should expose the invariant TAG2 exit expression");
+    expect_contains(section_process.stdout_text, "\"comment\": \"Band developer note\"",
+                    issue_prefix + " should expose the section COMMENT memo value");
+    expect_contains(section_process.stdout_text, "\"commentFieldIndex\": 22",
+                    issue_prefix + " should expose section COMMENT field provenance");
     expect_contains(
         section_process.stdout_text,
         "\"sectionCount\": 1,\n      \"deletedSectionCount\": 0",
@@ -359,6 +364,7 @@ void run_live_section_selection(
             "--property-name", "PLAIN", "--property-value", "false",
             "--property-name", "TAG", "--property-value", "UPDATED ENTRY",
             "--property-name", "TAG2", "--property-value", "UPDATED EXIT",
+            "--property-name", "COMMENT", "--property-value", "UPDATED BAND NOTE",
             "--json"
         },
         temp_root);
@@ -386,6 +392,8 @@ void run_live_section_selection(
                     issue_prefix + " should persist TAG entry-expression edits");
     expect_contains(reopened_process.stdout_text, "\"onExitExpression\": \"UPDATED EXIT\"",
                     issue_prefix + " should persist TAG2 exit-expression edits");
+    expect_contains(reopened_process.stdout_text, "\"comment\": \"UPDATED BAND NOTE\"",
+                    issue_prefix + " should persist section COMMENT edits");
 }
 
 void run_live_object_color_selection(
@@ -413,6 +421,10 @@ void run_live_object_color_selection(
                     issue_prefix + " should expose FILLBLUE in report-object highlights");
     expect_contains(selected_process.stdout_text, "\"value\": \"60\"",
                     issue_prefix + " should expose the live FILLBLUE value");
+    expect_contains(selected_process.stdout_text, "\"name\": \"COMMENT\"",
+                    issue_prefix + " should expose object COMMENT");
+    expect_contains(selected_process.stdout_text, "\"value\": \"Object developer note\"",
+                    issue_prefix + " should expose object COMMENT value");
 
     const auto update_process = run_process_capture(
         studio_host_path,
@@ -426,6 +438,7 @@ void run_live_object_color_selection(
             "--property-name", "FILLRED", "--property-value", "41",
             "--property-name", "FILLGREEN", "--property-value", "51",
             "--property-name", "FILLBLUE", "--property-value", "61",
+            "--property-name", "COMMENT", "--property-value", "UPDATED OBJECT NOTE",
             "--json"
         },
         temp_root);
@@ -445,6 +458,8 @@ void run_live_object_color_selection(
                     issue_prefix + " should preserve FILLBLUE after reopen");
     expect_contains(reopened_process.stdout_text, "\"value\": \"61\"",
                     issue_prefix + " should persist FILLBLUE edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"UPDATED OBJECT NOTE\"",
+                    issue_prefix + " should persist object COMMENT edits");
 }
 
 void run_line_shape_style_selection(
@@ -1008,10 +1023,11 @@ void write_synthetic_report_table_for_header_unique_json(
         {.name = "ADDALIAS", .type = 'L', .length = 1U},
         {.name = "CURPOS", .type = 'L', .length = 1U},
         {.name = "UNIQUE", .type = 'L', .length = 1U},
-        {.name = "ORDER", .type = 'M', .length = 4U}
+        {.name = "ORDER", .type = 'M', .length = 4U},
+        {.name = "COMMENT", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T.", "ORDER-BYTES"}
+        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T.", "ORDER-BYTES", "Header developer note"}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#4542: header UNIQUE fixture should be created");
@@ -1043,6 +1059,10 @@ void run_header_unique_selection(
                     issue_prefix + " should expose binary-safe header ORDER");
     expect_contains(selected_process.stdout_text, "\"value\": \"hex:4F524445522D4259544553\"",
                     issue_prefix + " should encode header ORDER as stable hex");
+    expect_contains(selected_process.stdout_text, "\"name\": \"COMMENT\"",
+                    issue_prefix + " should expose header COMMENT");
+    expect_contains(selected_process.stdout_text, "\"value\": \"Header developer note\"",
+                    issue_prefix + " should expose header COMMENT value");
 
     const auto order_update_process = run_process_capture(
         studio_host_path,
@@ -1125,6 +1145,7 @@ void run_header_unique_selection(
             "--path", copperfin::test_support::path_to_utf8_string(asset_path),
             "--unique-id", "header-unique-guid",
             "--property-name", "UNIQUE", "--property-value", "false",
+            "--property-name", "COMMENT", "--property-value", "Updated header note",
             "--json"
         },
         temp_root);
@@ -1141,6 +1162,8 @@ void run_header_unique_selection(
                     issue_prefix + " should retain UNIQUE after editing");
     expect_contains(reopened_process.stdout_text, "\"value\": \"false\"",
                     issue_prefix + " should persist the UNIQUE edit");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"Updated header note\"",
+                    issue_prefix + " should persist the header COMMENT edit");
 
     const auto clear_process = run_process_capture(
         studio_host_path,

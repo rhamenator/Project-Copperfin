@@ -267,6 +267,7 @@ internal static partial class Program
                         Plain = "true",
                         OnEntryExpression = "DO ENTRY",
                         OnExitExpression = "DO EXIT",
+                        Comment = "Band developer note",
                         DeletedObjectCount = 1,
                         Expression = "customer.company",
                         ExpressionFieldIndex = 3,
@@ -325,6 +326,8 @@ internal static partial class Program
                 "Report section property-grid selection should serialize TAG edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "TAG2", "UPDATED EXIT", "UPDATED EXIT",
                 "Report section property-grid selection should serialize TAG2 edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COMMENT", "UPDATED BAND NOTE", "UPDATED BAND NOTE",
+                "Report section property-grid selection should serialize COMMENT edits through the shared update path");
 
             TypeDescriptor.GetProperties(editableSelection)["EXPR"]?.SetValue(editableSelection, "customer.region");
             Expect(editableSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
@@ -348,6 +351,8 @@ internal static partial class Program
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expresión al entrar", StringComparison.Ordinal)) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expresión al salir", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize band event expression labels");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Comentarios", StringComparison.Ordinal)),
+            "Spanish report section property-grid selection should localize COMMENT labels");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "RECORDINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "41", StringComparison.Ordinal) &&
                spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Registro", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should expose localized record metadata");
