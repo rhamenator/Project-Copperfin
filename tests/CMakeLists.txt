@@ -4484,6 +4484,7 @@ copperfin_add_test(test_report_layout cf_design_model
     test_report_layout_header_view_settings.cpp
     test_report_layout_header_ruler_lines.cpp
     test_report_layout_header_picture_overrides.cpp
+    test_report_layout_header_add_alias.cpp
     test_report_layout_grouping.cpp
     test_report_layout_summary.cpp
 )

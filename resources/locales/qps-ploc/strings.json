@@ -2443,6 +2443,7 @@
   "AssetEditor.Property.GridSnapping": "[!! Ĝŕïð Šñåþþïñğ !!]",
   "AssetEditor.Property.RulerUnits": "[!! Ŕüľëŕ Üñïţš !!]",
   "AssetEditor.Property.RulerLines": "[!! Ŕüľëŕ Ľïñëš !!]",
+  "AssetEditor.Property.AddAlias": "[!! Åðð Føëľð Åľïåšëš !!]",
   "AssetEditor.Property.SortExpression": "Sort Expression",
   "AssetEditor.Property.DeletedObjects": "Deleted Objects",
   "AssetEditor.Property.GroupRole": "Group Role",

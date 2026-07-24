@@ -2443,6 +2443,7 @@
   "AssetEditor.Property.GridSnapping": "Grid Snapping",
   "AssetEditor.Property.RulerUnits": "Ruler Units",
   "AssetEditor.Property.RulerLines": "Ruler Lines",
+  "AssetEditor.Property.AddAlias": "Add Field Aliases",
   "AssetEditor.Property.SortExpression": "Sort Expression",
   "AssetEditor.Property.DeletedObjects": "Deleted Objects",
   "AssetEditor.Property.GroupRole": "Group Role",

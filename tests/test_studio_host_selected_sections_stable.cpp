@@ -810,6 +810,99 @@ void run_header_picture_overrides_selection(
                     issue_prefix + " should preserve unsupported PICTURE content after clearing");
 }
 
+void write_synthetic_report_table_for_header_add_alias_json(
+    const std::filesystem::path& report_path,
+    bool deleted) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "RULERLINES", .type = 'N', .length = 8U},
+        {.name = "ADDALIAS", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "header-add-alias-guid", "1", ".T."}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4540: header ADDALIAS fixture should be created");
+    if (deleted) {
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+        expect(delete_result.ok, "#4540: header ADDALIAS fixture should preserve deleted state");
+    }
+}
+
+void run_header_add_alias_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    bool deleted,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_header_add_alias_json(asset_path, deleted);
+
+    const auto selected_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-add-alias-guid", "--json"},
+        temp_root);
+    expect(selected_process.exit_code == 0, issue_prefix + " should select header ADDALIAS settings");
+    expect_contains(selected_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected header ADDALIAS settings");
+    expect_contains(selected_process.stdout_text, "\"name\": \"ADDALIAS\"",
+                    issue_prefix + " should expose header ADDALIAS");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-add-alias-guid",
+            "--property-name", "ADDALIAS", "--property-value", "false",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip header ADDALIAS edits");
+
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-add-alias-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen header ADDALIAS after editing");
+    expect_contains(reopened_process.stdout_text, "\"name\": \"ADDALIAS\"",
+                    issue_prefix + " should retain ADDALIAS after editing");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"false\"",
+                    issue_prefix + " should persist the ADDALIAS edit");
+
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-add-alias-guid",
+            "--property-name", "ADDALIAS",
+            "--json"
+        },
+        temp_root);
+    expect(clear_process.exit_code == 0,
+           issue_prefix + " should clear header ADDALIAS");
+    const auto reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-add-alias-guid", "--json"},
+        temp_root);
+    expect(reopened_clear_process.exit_code == 0,
+           issue_prefix + " should reopen after clearing ADDALIAS");
+    const auto settings_start = reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto settings_end = reopened_clear_process.stdout_text.find("]", settings_start);
+    const std::string selected_settings_json = settings_start == std::string::npos
+        ? std::string{}
+        : reopened_clear_process.stdout_text.substr(settings_start, settings_end - settings_start);
+    expect(selected_settings_json.find("\"name\": \"ADDALIAS\"") == std::string::npos,
+           issue_prefix + " should remove cleared ADDALIAS");
+    expect_contains(selected_settings_json, "\"name\": \"RULERLINES\"",
+                    issue_prefix + " should preserve unrelated header settings");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -1021,6 +1114,30 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         "selected_deleted_header_picture_overrides_stable.lbx",
         true,
         "#4539: stable deleted label header PICTURE settings selection");
+    run_header_add_alias_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_add_alias_stable.frx",
+        false,
+        "#4540: stable live report header ADDALIAS selection");
+    run_header_add_alias_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_add_alias_stable.lbx",
+        false,
+        "#4540: stable live label header ADDALIAS selection");
+    run_header_add_alias_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_add_alias_stable.frx",
+        true,
+        "#4540: stable deleted report header ADDALIAS selection");
+    run_header_add_alias_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_add_alias_stable.lbx",
+        true,
+        "#4540: stable deleted label header ADDALIAS selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,
