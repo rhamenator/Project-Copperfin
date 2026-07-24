@@ -224,6 +224,24 @@ bool native_visual_bordercolor_runtime_object(const RuntimeOleObjectState& runti
            is_native_visual_runtime_object(runtime_object);
 }
 
+bool native_visual_borderstyle_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "commandgroup" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "image" ||
+           normalized_base_class == "label" ||
+           normalized_base_class == "line" ||
+           normalized_base_class == "optiongroup" ||
+           normalized_base_class == "shape" ||
+           normalized_base_class == "spinner";
+}
+
 bool native_form_drawwidth_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

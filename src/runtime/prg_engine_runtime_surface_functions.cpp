@@ -99,6 +99,10 @@ bool is_native_visual_bordercolor_runtime_object(const RuntimeOleObjectState& ru
     return native_visual_bordercolor_runtime_object(runtime_object);
 }
 
+bool is_native_visual_borderstyle_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_visual_borderstyle_runtime_object(runtime_object);
+}
+
 bool is_native_form_drawwidth_runtime_object(const RuntimeOleObjectState& runtime_object) {
     return native_form_drawwidth_runtime_object(runtime_object);
 }
@@ -276,6 +280,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_fillcolor_member_name_matches(runtime_object, member_name) ||
                native_visual_borderwidth_member_name_matches(runtime_object, member_name) ||
                native_visual_bordercolor_member_name_matches(runtime_object, member_name) ||
+               native_visual_borderstyle_member_name_matches(runtime_object, member_name) ||
                native_form_drawwidth_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||

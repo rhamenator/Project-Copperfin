@@ -894,6 +894,15 @@
                 runtime_object.properties["bordercolor"] = make_int64_value(0);
             }
 
+            if (is_native_visual_borderstyle_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("borderstyle"))
+            {
+                const bool is_borderless_default = normalized_base_class == "image" ||
+                                                   normalized_base_class == "label";
+                runtime_object.properties["borderstyle"] = make_number_value(
+                    is_borderless_default ? 0.0 : 1.0);
+            }
+
             if (is_native_form_drawwidth_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("drawwidth"))
             {

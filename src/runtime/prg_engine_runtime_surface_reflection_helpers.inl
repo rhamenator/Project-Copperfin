@@ -300,6 +300,14 @@ bool native_visual_bordercolor_member_name_matches(
            runtime_object.properties.contains("bordercolor");
 }
 
+bool native_visual_borderstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "borderstyle" &&
+           native_visual_borderstyle_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("borderstyle");
+}
+
 bool native_form_drawwidth_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

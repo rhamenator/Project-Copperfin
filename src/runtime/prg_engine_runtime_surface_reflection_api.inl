@@ -111,6 +111,11 @@ bool is_native_visual_bordercolor_member_name(const RuntimeOleObjectState& runti
     return native_visual_bordercolor_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_borderstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_borderstyle_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_drawwidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_drawwidth_member_name_matches(runtime_object, normalized_member_name);
@@ -914,6 +919,33 @@ void normalize_native_visual_bordercolor_invariant(RuntimeOleObjectState& runtim
 
     const double value = value_as_number(border_color->second);
     border_color->second = make_number_value(std::isfinite(value) ? std::trunc(value) : 0.0);
+}
+
+void normalize_native_visual_borderstyle_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_borderstyle_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto border_style = runtime_object.properties.find("borderstyle");
+    if (border_style == runtime_object.properties.end()) {
+        return;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    const bool is_line_style = normalized_base_class == "line" ||
+                               normalized_base_class == "shape";
+    const long long default_value = is_line_style ||
+                                            (normalized_base_class != "image" &&
+                                             normalized_base_class != "label")
+                                        ? 1LL
+                                        : 0LL;
+    const long long maximum = is_line_style ? 6LL : 1LL;
+    const double value = value_as_number(border_style->second);
+    const long long rounded = std::isfinite(value) ? std::llround(value) : default_value;
+    const long long normalized = rounded >= 0LL && rounded <= maximum ? rounded : default_value;
+    border_style->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_form_drawwidth_invariant(RuntimeOleObjectState& runtime_object)
