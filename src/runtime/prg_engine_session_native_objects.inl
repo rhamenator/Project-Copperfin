@@ -602,6 +602,12 @@
                 runtime_object.properties["allowrowsizing"] = make_boolean_value(true);
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("allowautocolumnfit"))
+            {
+                runtime_object.properties["allowautocolumnfit"] = make_boolean_value(false);
+            }
+
             if (normalized_base_class == "pageframe" &&
                 !runtime_object.properties.contains("pagecount"))
             {

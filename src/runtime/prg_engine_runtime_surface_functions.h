@@ -144,6 +144,7 @@ bool is_native_grid_rowheight_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_grid_headerheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_allowheadersizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_allowrowsizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_grid_allowautocolumnfit_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_deletemark_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_splitbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_leftcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -203,6 +204,7 @@ void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_ob
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_allowrowsizing_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_grid_allowautocolumnfit_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_dynamicinputmask_invariant(RuntimeOleObjectState& runtime_object);
