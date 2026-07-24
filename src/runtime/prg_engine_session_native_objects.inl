@@ -326,6 +326,12 @@
                 runtime_object.properties["dynamicalignment"] = make_string_value("");
             }
 
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("sparse"))
+            {
+                runtime_object.properties["sparse"] = make_boolean_value(true);
+            }
+
             if (normalized_base_class == "textbox" &&
                 !runtime_object.properties.contains("format"))
             {

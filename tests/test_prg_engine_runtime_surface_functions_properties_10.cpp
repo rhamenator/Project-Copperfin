@@ -235,4 +235,82 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_column_sparse_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_column_sparse";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_column_sparse.prg";
+        write_text(
+            main_path,
+            "oColumn = CREATEOBJECT('Column')\n"
+            "oText = CREATEOBJECT('TextBox')\n"
+            "lHas = PEMSTATUS(oColumn, 'Sparse', 1)\n"
+            "lReadOnly = PEMSTATUS(oColumn, 'Sparse', 5)\n"
+            "lTextHas = PEMSTATUS(oText, 'Sparse', 1)\n"
+            "lDefault = oColumn.Sparse\n"
+            "oColumn.Sparse = .F.\n"
+            "lDirect = oColumn.Sparse\n"
+            "lSetPem = SETPEM(oColumn, 'Sparse', 0)\n"
+            "lSetValue = GETPEM(oColumn, 'Sparse')\n"
+            "lPutPem = PUTPEM(oColumn, 'Sparse', 1)\n"
+            "lPutValue = GETPEM(oColumn, 'Sparse')\n"
+            "lAddProperty = ADDPROPERTY(oColumn, 'Sparse', .T.)\n"
+            "lRemoveProperty = REMOVEPROPERTY(oColumn, 'Sparse')\n"
+            "lMember = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oColumn, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'SPARSE'\n"
+            "        lMember = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedSparseColumn')\n"
+            "lDerived = oDerived.Sparse\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedSparseColumn AS Column\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Sparse = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Sparse script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("ltexthas", "false");
+        check("ldefault", "true");
+        check("ldirect", "false");
+        check("lsetpem", "true");
+        check("lsetvalue", "false");
+        check("lputpem", "true");
+        check("lputvalue", "true");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lmember", "true");
+        check("lderived", "false");
+        expect(state.ole_objects.size() == 3U,
+               "native Sparse coverage should register the base, non-owning TextBox, and derived Column");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

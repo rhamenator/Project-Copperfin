@@ -321,6 +321,11 @@ bool is_native_column_dynamicalignment_member_name(const RuntimeOleObjectState& 
     return native_column_dynamicalignment_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_column_sparse_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_column_sparse_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_textbox_format_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_textbox_format_member_name_matches(runtime_object, normalized_member_name);
@@ -1130,6 +1135,20 @@ void normalize_native_column_dynamicalignment_invariant(RuntimeOleObjectState& r
     }
 
     dynamic_alignment->second = make_string_value(value_as_string(dynamic_alignment->second));
+}
+
+void normalize_native_column_sparse_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_column_sparse_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto sparse = runtime_object.properties.find("sparse");
+    if (sparse == runtime_object.properties.end()) {
+        return;
+    }
+
+    sparse->second = make_boolean_value(value_as_bool(sparse->second));
 }
 
 void normalize_native_textbox_format_invariant(RuntimeOleObjectState& runtime_object)

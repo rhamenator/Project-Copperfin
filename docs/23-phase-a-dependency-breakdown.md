@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Latest native PRG parity slice: `#4589` under #3217 exposes the documented
+  `Column.Sparse` property with a VFP9 `.T.` default through direct, PEM,
+  reflection, exclusion, and derived-initialization coverage. Preserve the
+  logical property and Column-only applicability; do not infer CurrentControl
+  selection, grid repaint, rendering, or designer behavior from the headless
+  state contract. The focused runtime-surface test and six-test neighboring
+  runtime group pass locally.
 - Latest native PRG parity slice: `#4588` under #3217 exposes the documented
   `Column.DynamicAlignment` property as a protected raw string with direct,
   PEM, reflection, exclusion, and derived-initialization coverage. Preserve

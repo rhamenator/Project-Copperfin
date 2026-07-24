@@ -132,6 +132,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_textbox_inputmask_defaults_mutate_and_stay_builtin();
     void test_native_textbox_dynamicinputmask_defaults_mutate_and_stay_builtin();
     void test_native_column_dynamicalignment_defaults_mutate_and_stay_builtin();
+    void test_native_column_sparse_defaults_mutate_and_stay_builtin();
     void test_native_textbox_format_defaults_mutate_and_stay_builtin();
     void test_native_textbox_passwordchar_defaults_mutate_and_stay_builtin();
     void test_native_textbox_maxlength_defaults_mutate_and_stay_builtin();
