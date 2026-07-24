@@ -2439,6 +2439,8 @@
   "AssetEditor.Property.ColumnSpacing": "Espa\u00E7amento da coluna",
   "AssetEditor.Property.VerticalGrid": "Grade vertical",
   "AssetEditor.Property.HorizontalGrid": "Grade horizontal",
+  "AssetEditor.Property.GridSnapping": "Ajuste à grade",
+  "AssetEditor.Property.RulerUnits": "Unidades da régua",
   "AssetEditor.Property.SortExpression": "Express\u00E3o de ordena\u00E7\u00E3o",
   "AssetEditor.Property.DeletedObjects": "Objetos exclu\u00EDdos",
   "AssetEditor.Property.GroupRole": "Fun\u00E7\u00E3o do grupo",

@@ -17,6 +17,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         public string Name { get; set; } = string.Empty;
         public string LocalizationKey { get; set; } = string.Empty;
         public bool Numeric { get; set; }
+        public bool Logical { get; set; }
         public bool MaterializeWhenMissing { get; set; }
         public bool RequiresSnapshotPropertyPresence { get; set; }
     }
@@ -587,6 +588,11 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             }
 
             var displayName = BuildReportSettingDisplayText(localization, setting.Name);
+            if (DescriptorForSetting(setting.Name)?.Logical == true)
+            {
+                selection.AddEditableBool(setting.Name, displayName, setting.Value);
+                continue;
+            }
             if (IsNumericReportSetting(setting.Name) &&
                 int.TryParse(setting.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
             {
@@ -608,6 +614,15 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 availablePropertyNameSet is not null &&
                 !availablePropertyNameSet.Contains(settingName.Name))
             {
+                continue;
+            }
+
+            if (settingName.Logical)
+            {
+                selection.AddEditableBool(
+                    settingName.Name,
+                    localization.Text(settingName.LocalizationKey),
+                    string.Empty);
                 continue;
             }
 
@@ -782,6 +797,12 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             string.Equals(candidate.Name, settingName, StringComparison.OrdinalIgnoreCase));
     }
 
+    private static ReportSettingDescriptor? DescriptorForSetting(string settingName)
+    {
+        return GetKnownReportSettingDescriptors().FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, settingName, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static IEnumerable<ReportSettingDescriptor> GetOptionalReportStringSettingNames()
     {
         return GetKnownReportSettingDescriptors().Where(candidate => candidate.MaterializeWhenMissing);
@@ -813,6 +834,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "COLSPACING", LocalizationKey = "AssetEditor.Property.ColumnSpacing", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "GRIDV", LocalizationKey = "AssetEditor.Property.VerticalGrid", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "GRIDH", LocalizationKey = "AssetEditor.Property.HorizontalGrid", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "GRID", LocalizationKey = "AssetEditor.Property.GridSnapping", Logical = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "RULER", LocalizationKey = "AssetEditor.Property.RulerUnits", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = true };
     }
 

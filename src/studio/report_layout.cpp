@@ -502,7 +502,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
 
     const auto append_direct_setting = [&](std::string_view field_name) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
-        if (!value.empty()) {
+        if (!value.empty() && value != "?") {
             settings.push_back({
                 .name = std::string(field_name),
                 .record_index = record.record_index,
@@ -528,6 +528,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("COLS");
     append_direct_setting("COLWIDTH");
     append_direct_setting("COLSPACING");
+    append_direct_setting("GRID");
+    append_direct_setting("RULER");
     append_direct_setting("TAG");
     append_direct_setting("DOUBLE");
     append_direct_setting("RESOID");

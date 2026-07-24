@@ -2440,6 +2440,8 @@
   "AssetEditor.Property.ColumnSpacing": "Column Spacing",
   "AssetEditor.Property.VerticalGrid": "Vertical Grid",
   "AssetEditor.Property.HorizontalGrid": "Horizontal Grid",
+  "AssetEditor.Property.GridSnapping": "Grid Snapping",
+  "AssetEditor.Property.RulerUnits": "Ruler Units",
   "AssetEditor.Property.SortExpression": "Sort Expression",
   "AssetEditor.Property.DeletedObjects": "Deleted Objects",
   "AssetEditor.Property.GroupRole": "Group Role",

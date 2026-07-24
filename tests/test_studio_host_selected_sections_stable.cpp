@@ -184,6 +184,27 @@ void write_synthetic_report_table_for_font_charset_json(const std::filesystem::p
     expect(create_result.ok, "#4536: font-charset host fixture should be created");
 }
 
+void write_synthetic_report_table_for_header_view_settings_json(
+    const std::filesystem::path& report_path,
+    bool deleted) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "GRID", .type = 'L', .length = 1U},
+        {.name = "RULER", .type = 'N', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "header-view-guid", ".T.", "4"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4537: header-view settings host fixture should be created");
+    if (deleted) {
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+        expect(delete_result.ok, "#4537: header-view settings host fixture should preserve deleted state");
+    }
+}
+
 void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_reorder_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
@@ -578,6 +599,83 @@ void run_font_charset_selection(
            issue_prefix + " should not expose font charset fields on lines");
 }
 
+void run_header_view_settings_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    bool deleted,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_header_view_settings_json(asset_path, deleted);
+
+    const auto selected_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-view-guid", "--json"},
+        temp_root);
+    expect(selected_process.exit_code == 0, issue_prefix + " should select the header settings record");
+    expect_contains(selected_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected header settings");
+    expect_contains(selected_process.stdout_text, "\"name\": \"GRID\"",
+                    issue_prefix + " should expose header GRID");
+    expect_contains(selected_process.stdout_text, "\"name\": \"RULER\"",
+                    issue_prefix + " should expose header RULER");
+    expect_contains(selected_process.stdout_text, "\"fieldIndex\": 3",
+                    issue_prefix + " should preserve header GRID field provenance");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-view-guid",
+            "--property-name", "GRID", "--property-value", "false",
+            "--property-name", "RULER", "--property-value", "2",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip header view setting edits");
+
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-view-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen header settings after edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"false\"",
+                    issue_prefix + " should persist GRID edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"2\"",
+                    issue_prefix + " should persist RULER edits");
+
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-view-guid",
+            "--property-name", "GRID",
+            "--json"
+        },
+        temp_root);
+    expect(clear_process.exit_code == 0,
+           issue_prefix + " should clear header GRID through the generic property path");
+    const auto reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-view-guid", "--json"},
+        temp_root);
+    expect(reopened_clear_process.exit_code == 0,
+           issue_prefix + " should reopen header settings after clearing GRID");
+    const auto selected_settings_start = reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto selected_settings_end = reopened_clear_process.stdout_text.find("]", selected_settings_start);
+    const std::string selected_settings_json = selected_settings_start == std::string::npos
+        ? std::string{}
+        : reopened_clear_process.stdout_text.substr(selected_settings_start, selected_settings_end - selected_settings_start);
+    expect(selected_settings_json.find("\"name\": \"GRID\"") == std::string::npos,
+           issue_prefix + " should remove cleared GRID from selected settings");
+    expect_contains(selected_settings_json, "\"name\": \"RULER\"",
+                    issue_prefix + " should preserve unaffected RULER after clearing GRID");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -741,6 +839,30 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         temp_root,
         "selected_font_charset_stable.lbx",
         "#4536: stable live label font charset selection");
+    run_header_view_settings_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_view_settings_stable.frx",
+        false,
+        "#4537: stable live report header-view settings selection");
+    run_header_view_settings_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_view_settings_stable.lbx",
+        false,
+        "#4537: stable live label header-view settings selection");
+    run_header_view_settings_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_view_settings_stable.frx",
+        true,
+        "#4537: stable deleted report header-view settings selection");
+    run_header_view_settings_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_view_settings_stable.lbx",
+        true,
+        "#4537: stable deleted label header-view settings selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,
