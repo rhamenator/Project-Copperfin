@@ -84,15 +84,27 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "EJECTAFTER", .type = 'L', .length = 1U},
         {.name = "PLAIN", .type = 'L', .length = 1U},
         {.name = "TAG", .type = 'M', .length = 4U},
-        {.name = "TAG2", .type = 'M', .length = 4U}
+        {.name = "TAG2", .type = 'M', .length = 4U},
+        {.name = "PENRED", .type = 'N', .length = 8U},
+        {.name = "PENGREEN", .type = 'N', .length = 8U},
+        {.name = "PENBLUE", .type = 'N', .length = 8U},
+        {.name = "FILLRED", .type = 'N', .length = 8U},
+        {.name = "FILLGREEN", .type = 'N', .length = 8U},
+        {.name = "FILLBLUE", .type = 'N', .length = 8U}
     };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT"},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", ""},
-        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", ""},
-        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", ""}
+    std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", ""},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60"},
+        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", ""},
+        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", "", ""}
     };
+
+    for (auto& record : records) {
+        while (record.size() < fields.size()) {
+            record.emplace_back();
+        }
+    }
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#2800: selected-sections layout fixture should be created");
@@ -273,6 +285,65 @@ void run_live_section_selection(
                     issue_prefix + " should persist TAG2 exit-expression edits");
 }
 
+void run_live_object_color_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_stable_section_json(asset_path);
+
+    const auto selected_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "left-field-guid", "--json"},
+        temp_root);
+    expect(selected_process.exit_code == 0, issue_prefix + " should select the color-bearing report object");
+    expect_contains(selected_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    issue_prefix + " should advertise selected report-object availability");
+    expect_contains(selected_process.stdout_text, "\"name\": \"PENRED\"",
+                    issue_prefix + " should expose PENRED in report-object highlights");
+    expect_contains(selected_process.stdout_text, "\"fieldIndex\": 16",
+                    issue_prefix + " should preserve PENRED field provenance");
+    expect_contains(selected_process.stdout_text, "\"value\": \"10\"",
+                    issue_prefix + " should expose the live PENRED value");
+    expect_contains(selected_process.stdout_text, "\"name\": \"FILLBLUE\"",
+                    issue_prefix + " should expose FILLBLUE in report-object highlights");
+    expect_contains(selected_process.stdout_text, "\"value\": \"60\"",
+                    issue_prefix + " should expose the live FILLBLUE value");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "left-field-guid",
+            "--property-name", "PENRED", "--property-value", "11",
+            "--property-name", "PENGREEN", "--property-value", "21",
+            "--property-name", "PENBLUE", "--property-value", "31",
+            "--property-name", "FILLRED", "--property-value", "41",
+            "--property-name", "FILLGREEN", "--property-value", "51",
+            "--property-name", "FILLBLUE", "--property-value", "61",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip RGB channel edits through the host update path");
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "left-field-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen a report object after RGB channel edits");
+    expect_contains(reopened_process.stdout_text, "\"name\": \"PENRED\"",
+                    issue_prefix + " should preserve PENRED after reopen");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"11\"",
+                    issue_prefix + " should persist PENRED edits");
+    expect_contains(reopened_process.stdout_text, "\"name\": \"FILLBLUE\"",
+                    issue_prefix + " should preserve FILLBLUE after reopen");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"61\"",
+                    issue_prefix + " should persist FILLBLUE edits");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -406,6 +477,16 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         "selected_section_stable.lbx",
         "label",
         "#2800: stable live label section selection");
+    run_live_object_color_selection(
+        studio_host_path,
+        temp_root,
+        "selected_object_color_stable.frx",
+        "#4534: stable live report-object color selection");
+    run_live_object_color_selection(
+        studio_host_path,
+        temp_root,
+        "selected_object_color_stable.lbx",
+        "#4534: stable live label-object color selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,

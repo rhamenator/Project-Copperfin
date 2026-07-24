@@ -85,7 +85,13 @@ void test_build_report_layout_groups_band_objects() {
                 value("TOP", "0"),
                 value("FONTSTYLE", "5"),
                 value("MODE", "1"),
-                value("PICTURE", "@J", 314U)
+                value("PICTURE", "@J", 314U),
+                value("PENRED", "10", 315U),
+                value("PENGREEN", "20", 316U),
+                value("PENBLUE", "30", 317U),
+                value("FILLRED", "40", 318U),
+                value("FILLGREEN", "50", 319U),
+                value("FILLBLUE", "60", 320U)
             }
         },
         {
@@ -121,7 +127,10 @@ void test_build_report_layout_groups_band_objects() {
                 value("HPOS", "1000.000", 603U),
                 value("VPOS", "2600.000", 604U),
                 value("WIDTH", "1200.000", 605U),
-                value("HEIGHT", "300.000", 606U)
+                value("HEIGHT", "300.000", 606U),
+                value("PENRED", "70", 607U),
+                value("PENGREEN", "80", 608U),
+                value("PENBLUE", "90", 609U)
             }
         },
         {
@@ -409,6 +418,32 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].picture_field_index == 19U &&
            layout.sections[1].objects[0].picture_memo_block_number == 314U,
         "#4520: report expression PICTURE should preserve field and memo provenance");
+    const auto pen_red = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "PENRED";
+        });
+    expect(pen_red != layout.sections[1].objects[0].highlights.end(),
+        "#4534: report expression highlights should include PENRED");
+    if (pen_red != layout.sections[1].objects[0].highlights.end()) {
+        expect(pen_red->value == "10" && pen_red->field_index == 20U &&
+               pen_red->memo_block_number == 315U,
+            "#4534: PENRED should preserve value and source provenance");
+    }
+    const auto fill_blue = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "FILLBLUE";
+        });
+    expect(fill_blue != layout.sections[1].objects[0].highlights.end(),
+        "#4534: report expression highlights should include FILLBLUE");
+    if (fill_blue != layout.sections[1].objects[0].highlights.end()) {
+        expect(fill_blue->value == "60" && fill_blue->field_index == 25U &&
+               fill_blue->memo_block_number == 320U,
+            "#4534: FILLBLUE should preserve value and source provenance");
+    }
     expect(layout.sections[1].objects[0].left_field_index == 3U, "#665: layout objects should preserve HPOS field provenance");
     expect(layout.sections[1].objects[0].left_memo_block_number == 303U,
         "#723: layout objects should preserve HPOS memo block provenance");
@@ -517,6 +552,19 @@ void test_build_report_layout_groups_band_objects() {
             "#723: deleted report layout objects with missing OBJCODE should expose block zero");
         expect(layout.deleted_objects[0].left_memo_block_number == 603U,
             "#723: deleted report layout objects should retain HPOS memo block provenance");
+        const auto deleted_pen_blue = std::find_if(
+            layout.deleted_objects[0].highlights.begin(),
+            layout.deleted_objects[0].highlights.end(),
+            [](const auto& highlight) {
+                return highlight.name == "PENBLUE";
+            });
+        expect(deleted_pen_blue != layout.deleted_objects[0].highlights.end(),
+            "#4534: deleted label highlights should preserve PENBLUE");
+    if (deleted_pen_blue != layout.deleted_objects[0].highlights.end()) {
+            expect(deleted_pen_blue->value == "90" && deleted_pen_blue->field_index == 8U &&
+                   deleted_pen_blue->memo_block_number == 609U,
+                "#4534: deleted PENBLUE should preserve value and source provenance");
+        }
         expect(layout.deleted_objects[0].top_memo_block_number == 604U,
             "#723: deleted report layout objects should retain VPOS memo block provenance");
         expect(layout.deleted_objects[0].width_memo_block_number == 605U,

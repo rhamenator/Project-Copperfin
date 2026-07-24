@@ -287,6 +287,12 @@ internal static partial class Program
                 new() { Name = "FONTSTYLE", Value = "1" },
                 new() { Name = "FONTSIZE", Value = "10" },
                 new() { Name = "MODE", Value = "1" },
+                new() { Name = "PENRED", Value = "10" },
+                new() { Name = "PENGREEN", Value = "20" },
+                new() { Name = "PENBLUE", Value = "30" },
+                new() { Name = "FILLRED", Value = "40" },
+                new() { Name = "FILLGREEN", Value = "50" },
+                new() { Name = "FILLBLUE", Value = "60" },
                 new() { Name = "FLOAT", Value = "true" },
                 new() { Name = "NOREPEAT", Value = "false" },
                 new() { Name = "STRETCH", Value = "true" },
@@ -386,6 +392,8 @@ internal static partial class Program
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fijar en relación con la parte inferior de la banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fijar en relación con la parte superior de la banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de estilo de fondo/dirección", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Rojo del trazo", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Azul de relleno", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño de fuente", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flotante", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "No repetir", StringComparison.Ordinal)) &&
@@ -417,6 +425,8 @@ internal static partial class Program
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fixar em relação à parte inferior da banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Fixar em relação à parte superior da banda", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Modo de estilo de fundo/direção", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Vermelho do traço", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Azul do preenchimento", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho da fonte", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Flutuar", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Não repetir", StringComparison.Ordinal)) &&
@@ -449,6 +459,8 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.BottomRelativeToBand"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopRelativeToBand"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ReportMode"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PenRed"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FillBlue"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontSize"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Float"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.NoRepeat"), StringComparison.Ordinal)) &&
@@ -474,6 +486,10 @@ internal static partial class Program
                 "Live report object property-grid selection should serialize HPOS edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "VPOS", 2700, "2700",
                 "Live report object property-grid selection should serialize VPOS edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "PENRED", 11, "11",
+                "Live report object property-grid selection should serialize PENRED edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "FILLBLUE", 61, "61",
+                "Live report object property-grid selection should serialize FILLBLUE edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "WIDTH", 4100, "4100",
                 "Live report object property-grid selection should serialize WIDTH edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "HEIGHT", 550, "550",

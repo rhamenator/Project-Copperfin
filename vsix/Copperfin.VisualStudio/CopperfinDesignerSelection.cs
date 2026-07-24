@@ -190,6 +190,23 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         L("AssetEditor.Property.ToolTipText", "ToolTip Text"),
                         selection.Read(snapshotObject, "TAG2"));
                 }
+                if (int.TryParse(
+                        selection.Read(snapshotObject, "OBJTYPE"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var penColorObjectType) &&
+                    (penColorObjectType == 5 || penColorObjectType == 8))
+                {
+                    selection.AddEditableInt("PENRED", L("AssetEditor.Property.PenRed", "Pen Red"), selection.Read(snapshotObject, "PENRED"));
+                    selection.AddEditableInt("PENGREEN", L("AssetEditor.Property.PenGreen", "Pen Green"), selection.Read(snapshotObject, "PENGREEN"));
+                    selection.AddEditableInt("PENBLUE", L("AssetEditor.Property.PenBlue", "Pen Blue"), selection.Read(snapshotObject, "PENBLUE"));
+                }
+                if (penColorObjectType == 8)
+                {
+                    selection.AddEditableInt("FILLRED", L("AssetEditor.Property.FillRed", "Fill Red"), selection.Read(snapshotObject, "FILLRED"));
+                    selection.AddEditableInt("FILLGREEN", L("AssetEditor.Property.FillGreen", "Fill Green"), selection.Read(snapshotObject, "FILLGREEN"));
+                    selection.AddEditableInt("FILLBLUE", L("AssetEditor.Property.FillBlue", "Fill Blue"), selection.Read(snapshotObject, "FILLBLUE"));
+                }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
                 selection.AddEditableBool("SUPALWAYS", L("AssetEditor.Property.PrintWhenRepeated", "Print Repeated Values"), selection.Read(snapshotObject, "SUPALWAYS"));
