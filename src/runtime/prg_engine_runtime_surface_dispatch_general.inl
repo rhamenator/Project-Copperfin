@@ -91,6 +91,14 @@
     if (function == "message") {
         return make_string_value(last_error_message);
     }
+    if (function == "prmbar") {
+        if (popup_prompt_callback) {
+            if (const auto prompt = popup_prompt_callback(arguments); prompt.has_value()) {
+                return *prompt;
+            }
+        }
+        return make_string_value({});
+    }
     if (function == "aerror" && !raw_arguments.empty()) {
         return make_number_value(static_cast<double>(aerror_callback(raw_arguments[0])));
     }

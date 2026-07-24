@@ -18,6 +18,9 @@ namespace copperfin::runtime_surface_tests
             "DEFINE POPUP choices\n"
             "DEFINE BAR 20 OF choices PROMPT 'Twenty'\n"
             "DEFINE BAR 2 OF choices PROMPT 'Two'\n"
+            "DEFINE BAR 3 OF choices PROMPT '\\<Three'\n"
+            "DEFINE BAR 4 OF choices PROMPT '\\Disabled'\n"
+            "DEFINE BAR 5 OF choices PROMPT '\\-'\n"
             "DEFINE POPUP alternate\n"
             "DEFINE BAR 1 OF alternate PROMPT 'Alternate'\n"
             "oList = CREATEOBJECT('ListBox')\n"
@@ -27,6 +30,13 @@ namespace copperfin::runtime_surface_tests
             "nInitialCount = oList.ListCount\n"
             "cFirst = oList.List(1)\n"
             "cSecond = oList.List(2)\n"
+            "cThird = oList.List(5)\n"
+            "cPromptTwo = PRMBAR('choices', 2)\n"
+            "cPromptThree = PRMBAR('choices', 3)\n"
+            "cPromptDisabled = PRMBAR('choices', 4)\n"
+            "cPromptSeparator = PRMBAR('choices', 5)\n"
+            "cPromptTwenty = PRMBAR('choices', 20)\n"
+            "cPromptMissing = PRMBAR('choices', 99)\n"
             "DEFINE POPUP choices\n"
             "DEFINE BAR 1 OF choices PROMPT 'Replacement'\n"
             "oList.Requery()\n"
@@ -73,9 +83,16 @@ namespace copperfin::runtime_surface_tests
             }
         };
 
-        check("ninitialcount", "2");
+        check("ninitialcount", "5");
         check("cfirst", "Two");
-        check("csecond", "Twenty");
+        check("csecond", "\\<Three");
+        check("cthird", "Twenty");
+        check("cprompttwo", "Two");
+        check("cpromptthree", "Three");
+        check("cpromptdisabled", "Disabled");
+        check("cpromptseparator", "");
+        check("cprompttwenty", "Twenty");
+        check("cpromptmissing", "");
         check("nreplacementcount", "1");
         check("creplacement", "Replacement");
         check("nreleasedcount", "0");

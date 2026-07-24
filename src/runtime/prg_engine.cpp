@@ -2548,6 +2548,46 @@ namespace copperfin::runtime
             {
                 assign_array(name, std::move(values));
             },
+            [this](const std::vector<PrgValue> &arguments) -> std::optional<PrgValue>
+            {
+                if (arguments.size() < 2U)
+                {
+                    return std::nullopt;
+                }
+
+                const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
+                const long long bar_number = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+                if (popup_name.empty() || bar_number < 1LL)
+                {
+                    return std::nullopt;
+                }
+
+                const auto popup = current_session_state().popup_bar_prompts.find(popup_name);
+                if (popup == current_session_state().popup_bar_prompts.end())
+                {
+                    return std::nullopt;
+                }
+                const auto bar = popup->second.find(bar_number);
+                if (bar == popup->second.end())
+                {
+                    return std::nullopt;
+                }
+
+                std::string prompt = bar->second;
+                if (prompt.rfind("\\-", 0U) == 0U)
+                {
+                    prompt.clear();
+                }
+                else if (prompt.rfind("\\<", 0U) == 0U)
+                {
+                    prompt.erase(0U, 2U);
+                }
+                else if (prompt.rfind("\\", 0U) == 0U)
+                {
+                    prompt.erase(0U, 1U);
+                }
+                return make_string_value(prompt);
+            },
             [this, &frame](
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::optional<std::string>> &argument_references) -> PrgValue
