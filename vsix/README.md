@@ -85,6 +85,8 @@ scripts/run-designer-smoke-portable.sh --filter SmokeStandaloneStudio
 
 The portable runner builds the same net472 smoke executable with Windows targeting enabled, then runs the shared WinForms controls through Mono. Linux uses Xvfb when available; macOS can use an existing XQuartz display by exporting `DISPLAY`. `scripts/run-designer-smoke-headless.sh` remains a strict Xvfb compatibility entry point. These tests cover shared managed UI behavior only; Visual Studio integration, Win32 rendering, installers, and hosted VFP9 behavior remain Windows validation gates.
 
+Linux pull requests and `main` pushes also run the focused portable shell and property-grid selectors through `.github/workflows/managed-ui-validation-linux.yml`; the workflow retains test-list and selector logs as artifacts.
+
 Repeatable Windows validation:
 
 ```powershell

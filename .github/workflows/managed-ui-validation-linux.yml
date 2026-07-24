@@ -1,0 +1,72 @@
+name: Linux Managed UI Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: managed-ui-linux-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-managed-ui:
+    name: Linux Mono/Xvfb shared UI smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install portable WinForms test dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y mono-complete xvfb
+
+      - name: Discover shared UI smoke tests without a display
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p artifacts/managed-ui-linux
+          scripts/run-designer-smoke-portable.sh \
+            --display-mode offscreen \
+            --list-tests \
+            2>&1 | tee artifacts/managed-ui-linux/test-list.log
+
+      - name: Run standalone shell smoke tests under Xvfb
+        shell: bash
+        run: |
+          set -o pipefail
+          scripts/run-designer-smoke-portable.sh \
+            --display-mode xvfb \
+            --filter SmokeStandaloneStudio \
+            2>&1 | tee artifacts/managed-ui-linux/standalone-shell.log
+
+      - name: Run shared designer property-grid smoke tests under Xvfb
+        shell: bash
+        run: |
+          set -o pipefail
+          scripts/run-designer-smoke-portable.sh \
+            --no-build \
+            --display-mode xvfb \
+            --filter ObjectPropertyGridHostUpdate \
+            2>&1 | tee artifacts/managed-ui-linux/property-grid.log
+
+      - name: Upload portable UI evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-managed-ui-linux
+          path: artifacts/managed-ui-linux
+          if-no-files-found: warn
