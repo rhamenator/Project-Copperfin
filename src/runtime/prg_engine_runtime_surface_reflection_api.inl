@@ -191,6 +191,11 @@ bool is_native_visual_dynamicfontsize_member_name(const RuntimeOleObjectState& r
     return native_visual_dynamicfontsize_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_dynamicfontshadow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_dynamicfontshadow_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_fontsize_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_fontsize_member_name_matches(runtime_object, normalized_member_name);
