@@ -289,6 +289,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_allowrowsizing_member_name_matches(runtime_object, member_name) ||
                native_grid_allowautocolumnfit_member_name_matches(runtime_object, member_name) ||
                native_grid_activecolumn_member_name_matches(runtime_object, member_name) ||
+               native_grid_activerow_member_name_matches(runtime_object, member_name) ||
                native_editbox_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
                native_textbox_dynamicinputmask_member_name_matches(runtime_object, member_name) ||
@@ -355,6 +356,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_splitbar_member_name(runtime_object, member_name) ||
                is_native_leftcolumn_member_name(runtime_object, member_name) ||
                is_native_grid_activecolumn_member_name(runtime_object, member_name) ||
+               is_native_grid_activerow_member_name(runtime_object, member_name) ||
                is_native_form_desktop_member_name(runtime_object, member_name) ||
                is_native_form_scrollbars_member_name(runtime_object, member_name) ||
                is_native_olecontrol_creation_time_member_name(runtime_object, member_name) ||
