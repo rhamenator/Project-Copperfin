@@ -260,6 +260,14 @@ bool native_form_drawstyle_member_name_matches(
            runtime_object.properties.contains("drawstyle");
 }
 
+bool native_visual_fillstyle_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "fillstyle" &&
+           native_visual_fillstyle_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("fillstyle");
+}
+
 bool native_form_borderstyle_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

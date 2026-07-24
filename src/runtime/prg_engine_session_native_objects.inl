@@ -858,6 +858,13 @@
                 runtime_object.properties["drawstyle"] = make_number_value(0.0);
             }
 
+            if (is_native_visual_fillstyle_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("fillstyle"))
+            {
+                // Headless contract: preserve the fill pattern without rasterizing graphics.
+                runtime_object.properties["fillstyle"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("borderstyle"))
             {
