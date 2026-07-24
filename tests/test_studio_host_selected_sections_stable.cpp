@@ -192,10 +192,11 @@ void write_synthetic_report_table_for_header_view_settings_json(
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U},
         {.name = "GRID", .type = 'L', .length = 1U},
-        {.name = "RULER", .type = 'N', .length = 8U}
+        {.name = "RULER", .type = 'N', .length = 8U},
+        {.name = "RULERLINES", .type = 'N', .length = 8U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "header-view-guid", ".T.", "4"}
+        {"1", "53", "header-view-guid", ".T.", "4", "1"}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#4537: header-view settings host fixture should be created");
@@ -619,6 +620,8 @@ void run_header_view_settings_selection(
                     issue_prefix + " should expose header GRID");
     expect_contains(selected_process.stdout_text, "\"name\": \"RULER\"",
                     issue_prefix + " should expose header RULER");
+    expect_contains(selected_process.stdout_text, "\"name\": \"RULERLINES\"",
+                    issue_prefix + " should expose header RULERLINES");
     expect_contains(selected_process.stdout_text, "\"fieldIndex\": 3",
                     issue_prefix + " should preserve header GRID field provenance");
 
@@ -630,6 +633,7 @@ void run_header_view_settings_selection(
             "--unique-id", "header-view-guid",
             "--property-name", "GRID", "--property-value", "false",
             "--property-name", "RULER", "--property-value", "2",
+            "--property-name", "RULERLINES", "--property-value", "0",
             "--json"
         },
         temp_root);
@@ -646,6 +650,8 @@ void run_header_view_settings_selection(
                     issue_prefix + " should persist GRID edits");
     expect_contains(reopened_process.stdout_text, "\"value\": \"2\"",
                     issue_prefix + " should persist RULER edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"0\"",
+                    issue_prefix + " should persist RULERLINES edits");
 
     const auto clear_process = run_process_capture(
         studio_host_path,
@@ -674,6 +680,34 @@ void run_header_view_settings_selection(
            issue_prefix + " should remove cleared GRID from selected settings");
     expect_contains(selected_settings_json, "\"name\": \"RULER\"",
                     issue_prefix + " should preserve unaffected RULER after clearing GRID");
+
+    const auto clear_ruler_lines_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-view-guid",
+            "--property-name", "RULERLINES",
+            "--json"
+        },
+        temp_root);
+    expect(clear_ruler_lines_process.exit_code == 0,
+           issue_prefix + " should clear header RULERLINES through the generic property path");
+    const auto reopened_ruler_lines_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-view-guid", "--json"},
+        temp_root);
+    expect(reopened_ruler_lines_clear_process.exit_code == 0,
+           issue_prefix + " should reopen header settings after clearing RULERLINES");
+    const auto ruler_lines_clear_start = reopened_ruler_lines_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto ruler_lines_clear_end = reopened_ruler_lines_clear_process.stdout_text.find("]", ruler_lines_clear_start);
+    const std::string ruler_lines_clear_settings = ruler_lines_clear_start == std::string::npos
+        ? std::string{}
+        : reopened_ruler_lines_clear_process.stdout_text.substr(
+              ruler_lines_clear_start,
+              ruler_lines_clear_end - ruler_lines_clear_start);
+    expect(ruler_lines_clear_settings.find("\"name\": \"RULERLINES\"") == std::string::npos,
+           issue_prefix + " should remove cleared header RULERLINES from selected settings");
 }
 
 void run_deleted_section_selection(

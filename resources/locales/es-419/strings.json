@@ -2441,6 +2441,7 @@
   "AssetEditor.Property.HorizontalGrid": "Cuadr\u00EDcula horizontal",
   "AssetEditor.Property.GridSnapping": "Ajuste a la cuadr\u00EDcula",
   "AssetEditor.Property.RulerUnits": "Unidades de regla",
+  "AssetEditor.Property.RulerLines": "L\u00EDneas de regla",
   "AssetEditor.Property.SortExpression": "Expresi\u00F3n de orden",
   "AssetEditor.Property.DeletedObjects": "Objetos eliminados",
   "AssetEditor.Property.GroupRole": "Rol del grupo",

@@ -533,6 +533,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("TAG");
     append_direct_setting("DOUBLE");
     append_direct_setting("RESOID");
+    append_direct_setting("RULERLINES");
 }
 
 std::string make_section_id(std::size_t record_index, int objcode) {
