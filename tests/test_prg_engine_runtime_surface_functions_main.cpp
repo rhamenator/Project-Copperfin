@@ -101,6 +101,7 @@ int main()
     test_native_button_state_picture_properties_defaults_mutate_and_stay_builtin();
     test_native_visual_autosize_defaults_mutate_and_stay_builtin();
     test_native_visual_fontname_defaults_mutate_and_stay_builtin();
+    test_native_visual_dynamicfontname_defaults_mutate_and_stay_builtin();
     test_native_visual_fontsize_defaults_mutate_and_stay_builtin();
     test_native_visual_fontbold_defaults_mutate_and_stay_builtin();
     test_native_visual_fontitalic_defaults_mutate_and_stay_builtin();
