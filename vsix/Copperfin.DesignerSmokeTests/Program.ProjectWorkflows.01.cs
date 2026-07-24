@@ -768,6 +768,7 @@ internal static partial class Program
         Directory.CreateDirectory(tempRoot);
         var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
         var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         try
         {
             foreach (var configuredFileName in new[]
@@ -784,6 +785,24 @@ internal static partial class Program
                 Expect(string.Equals(CopperfinProjectWorkflow.ResolveBuildHostPath(tempRoot), configuredHostPath, StringComparison.Ordinal),
                     $"managed project workflow should preserve an explicitly configured host path: {configuredFileName}");
             }
+
+            var directBuildDirectory = Path.Combine(tempRoot, "build");
+            Directory.CreateDirectory(directBuildDirectory);
+            var directStudioHostPath = Path.Combine(
+                directBuildDirectory,
+                "copperfin_studio_host" + (IsWindowsPlatform() ? ".exe" : string.Empty));
+            File.WriteAllText(directStudioHostPath, IsWindowsPlatform() ? "stub" : "#!/bin/sh\nexit 0\n");
+            if (!IsWindowsPlatform())
+            {
+                MakeExecutable(directStudioHostPath);
+            }
+
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", null);
+            Expect(string.Equals(
+                       CopperfinStudioHostBridge.ResolveStudioHostPath(tempRoot),
+                       directStudioHostPath,
+                       IsWindowsPlatform() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal),
+                "managed Studio host discovery should include the repository-style single-level build output");
 
             var missingHostPath = Path.Combine(
                 tempRoot,
@@ -904,6 +923,7 @@ internal static partial class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
             Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
             Directory.Delete(tempRoot, recursive: true);
         }
     }

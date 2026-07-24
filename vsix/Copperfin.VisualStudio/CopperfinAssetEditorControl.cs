@@ -5003,6 +5003,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
+            foreach (var symbol in insights.DefinedSymbols.Take(12))
+            {
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ShortcutLine",
+                        BuildCodeSymbolKindDisplayText(symbol.Kind),
+                        symbol.Name));
+            }
+
             summary.AppendLine(L("AssetEditor.Summary.CodeReferencesActivation"));
         }
 
@@ -5014,6 +5023,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
+            foreach (var reference in insights.RuntimeReferences.Take(12))
+            {
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ShortcutLine",
+                        BuildCodeSymbolKindDisplayText(reference.Kind),
+                        reference.Name));
+            }
+
             summary.AppendLine(L("AssetEditor.Summary.CodeReferencesActivation"));
         }
 
@@ -5049,6 +5067,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
+            foreach (var asset in filteredAssets.Take(12))
+            {
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.DataAssetLine",
+                        BuildProjectInsightArtifactKindDisplayText(asset.Kind),
+                        asset.Title,
+                        asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty));
+            }
+
             summary.AppendLine(L("AssetEditor.Summary.DataExplorerActivation"));
         }
 
@@ -5091,6 +5119,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         else
         {
+            foreach (var node in filteredNodes.Take(12))
+            {
+                var title = string.IsNullOrWhiteSpace(node.GroupTitle)
+                    ? node.Title
+                    : $"{node.Title} {BuildObjectBrowserNodeDetailDisplayText(node)}";
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ObjectNodeLine",
+                        BuildProjectInsightArtifactKindDisplayText(node.Kind),
+                        title));
+            }
+
             summary.AppendLine(L("AssetEditor.Summary.ObjectBrowserActivation"));
         }
 

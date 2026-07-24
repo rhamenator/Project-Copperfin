@@ -313,6 +313,14 @@ internal static class CopperfinStudioHostBridge
                     yield return sameDirectoryCandidate;
                 }
 
+                if (TryAddCandidatePath(
+                        seen,
+                        Path.Combine(searchRoot, "build", fileName),
+                        out var directBuildCandidate))
+                {
+                    yield return directBuildCandidate;
+                }
+
                 foreach (var configuration in HostBuildConfigurations)
                 {
                     if (TryAddCandidatePath(
