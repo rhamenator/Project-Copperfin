@@ -190,6 +190,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_list_controls_itemid_index_conversion_methods_stay_coherent();
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     void test_native_list_control_boundto_and_listbox_list_shape_defaults_mutate_and_stay_builtin();
+    void test_native_list_controls_programmaticchange_dispatches_after_effective_selection_changes();
     void test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     void test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();
     void test_native_visual_backcolor_defaults_mutate_and_stay_builtin();

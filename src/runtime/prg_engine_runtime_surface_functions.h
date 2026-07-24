@@ -259,6 +259,7 @@ void refresh_native_list_control_controlsource_value_kind_hint(
     const RuntimeControlSourceValueResolver& resolver);
 void sync_native_list_control_count(RuntimeOleObjectState& runtime_object);
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object);
+std::optional<std::string> native_list_control_selection_signature(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 
 std::optional<PrgValue> evaluate_runtime_surface_function(

@@ -557,27 +557,20 @@
             is_native_collection_readonly_member_name(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
-        if (const auto selected_slot =
-                parse_native_list_control_selected_member_slot(*runtime_object, member_name);
-            selected_slot.has_value()) {
+        if (parse_native_list_control_selected_member_slot(*runtime_object, member_name).has_value()) {
             return make_boolean_value(
-                write_native_list_control_selected_slot(
-                    *runtime_object,
-                    *selected_slot,
-                    arguments[2]));
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
-        if (const auto selected_item_id =
-                parse_native_list_control_selectedid_member_item_id(*runtime_object, member_name);
-            selected_item_id.has_value()) {
+        if (parse_native_list_control_selectedid_member_item_id(*runtime_object, member_name).has_value()) {
             return make_boolean_value(
-                write_native_list_control_selected_item_id(
-                    *runtime_object,
-                    *selected_item_id,
-                    arguments[2]));
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
         if (is_native_listitemid_member_name(*runtime_object, member_name)) {
             return make_boolean_value(
-                write_native_list_control_item_id(*runtime_object, arguments[2]));
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
         if (is_native_activepage_member_name(*runtime_object, member_name)) {
             runtime_object->properties[member_name] = arguments[2];
@@ -588,7 +581,8 @@
             (normalize_identifier(runtime_object->base_class_name) == "combobox" ||
              normalize_identifier(runtime_object->base_class_name) == "listbox")) {
             return make_boolean_value(
-                write_native_list_control_value(*runtime_object, arguments[2]));
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
         if (is_native_pagecount_member_name(*runtime_object, member_name)) {
             return make_boolean_value(

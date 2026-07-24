@@ -1173,6 +1173,10 @@ namespace copperfin::runtime
             const PrgValue &assigned_value,
             const Frame &source_frame,
             std::optional<std::string> assigned_expression_text = std::nullopt);
+        void invoke_native_list_control_programmatic_change_if_needed(
+            RuntimeOleObjectState &runtime_object,
+            const Frame &source_frame,
+            const std::optional<std::string> &before_signature);
         bool native_member_access_allowed(
             const RuntimeOleObjectState &runtime_object,
             NativeMemberVisibility visibility,
@@ -2841,6 +2845,8 @@ namespace copperfin::runtime
                 return !returned_false;
             };
         }
+        const auto before_list_control_signature =
+            native_list_control_selection_signature(*target_object);
         if (auto list_control_result = invoke_native_list_control_method(
                 *target_object,
                 leaf,
@@ -2862,6 +2868,10 @@ namespace copperfin::runtime
                                   .detail = target_object->prog_id + "." + effective_member_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             }
+            invoke_native_list_control_programmatic_change_if_needed(
+                *target_object,
+                frame,
+                before_list_control_signature);
             return *list_control_result;
         }
         if (leaf == "readexpression" &&
@@ -3212,6 +3222,8 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             return make_boolean_value(true);
         }
+        const auto before_requery_signature =
+            native_list_control_selection_signature(*target_object);
         if (leaf == "requery" && requery_native_list_control(*target_object, frame))
         {
             if (!write_native_list_control_controlsource_target(*target_object, frame))
@@ -3223,6 +3235,10 @@ namespace copperfin::runtime
             events.push_back({.category = "prg.object.requery",
                               .detail = target_object->prog_id + "." + effective_member_path,
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            invoke_native_list_control_programmatic_change_if_needed(
+                *target_object,
+                frame,
+                before_requery_signature);
             return make_empty_value();
         }
         if (is_native_olecontrol_host_object(*target_object) && leaf == "doverb")
@@ -6283,6 +6299,31 @@ namespace copperfin::runtime
         return result;
     }
 
+    void PrgRuntimeSession::Impl::invoke_native_list_control_programmatic_change_if_needed(
+        RuntimeOleObjectState &runtime_object,
+        const Frame &source_frame,
+        const std::optional<std::string> &before_signature)
+    {
+        if (!before_signature.has_value()) {
+            return;
+        }
+
+        const auto after_signature = native_list_control_selection_signature(runtime_object);
+        if (!after_signature.has_value() || *after_signature == *before_signature) {
+            return;
+        }
+
+        bool requested_nodefault = false;
+        (void)invoke_native_object_method_if_present(
+            runtime_object,
+            "programmaticchange",
+            source_frame,
+            {},
+            {},
+            &requested_nodefault);
+        (void)consume_last_popped_frame_requested_nodefault();
+    }
+
     PrgValue PrgRuntimeSession::Impl::bind_native_event(
         const Frame &source_frame,
         const std::vector<PrgValue> &arguments,
@@ -7616,6 +7657,9 @@ namespace copperfin::runtime
             return false;
         }
 
+        const auto before_list_control_signature =
+            native_list_control_selection_signature(runtime_object);
+
         if (const auto visibility = runtime_object.member_visibility.find(normalized_property_name);
             visibility != runtime_object.member_visibility.end())
         {
@@ -8588,10 +8632,23 @@ namespace copperfin::runtime
             invoke_delegates_for_phase(false);
             const bool result = perform_property_write();
             invoke_delegates_for_phase(true);
+            if (result) {
+                invoke_native_list_control_programmatic_change_if_needed(
+                    runtime_object,
+                    source_frame,
+                    before_list_control_signature);
+            }
             return result;
         }
 
-        return perform_property_write();
+        const bool result = perform_property_write();
+        if (result) {
+            invoke_native_list_control_programmatic_change_if_needed(
+                runtime_object,
+                source_frame,
+                before_list_control_signature);
+        }
+        return result;
     }
 
     void PrgRuntimeSession::Impl::discard_native_object_tree_without_destroy(

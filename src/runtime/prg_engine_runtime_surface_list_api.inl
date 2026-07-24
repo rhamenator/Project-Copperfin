@@ -69,6 +69,52 @@ void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState&
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
 }
 
+std::optional<std::string> native_list_control_selection_signature(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+
+    // Use item identities instead of list slots so reordering an unchanged
+    // selection does not look like a value change to ProgrammaticChange.
+    std::string signature;
+    const auto append_part = [&](const std::string& value)
+    {
+        signature.append(std::to_string(value.size()));
+        signature.push_back(':');
+        signature.append(value);
+        signature.push_back('|');
+    };
+
+    const auto selected_slot = native_list_control_selected_slot(runtime_object);
+    if (selected_slot.has_value()) {
+        const std::string item_key = *selected_slot < runtime_object.collection_item_keys.size()
+                                         ? runtime_object.collection_item_keys[*selected_slot]
+                                         : "@" + std::to_string(*selected_slot);
+        append_part("active=" + item_key);
+    } else {
+        append_part("active=");
+    }
+
+    for (std::size_t slot = 0U; slot < runtime_object.list_selected.size(); ++slot) {
+        if (!runtime_object.list_selected[slot]) {
+            continue;
+        }
+        const std::string item_key = slot < runtime_object.collection_item_keys.size()
+                                         ? runtime_object.collection_item_keys[slot]
+                                         : "@" + std::to_string(slot);
+        append_part("selected=" + item_key);
+    }
+
+    const auto value = runtime_object.properties.find("value");
+    append_part("value=" + (value == runtime_object.properties.end()
+                                ? std::string{}
+                                : format_value(value->second)));
+    return signature;
+}
+
 void sync_native_list_control_count(RuntimeOleObjectState& runtime_object)
 {
     sync_native_list_control_count_impl(runtime_object);
