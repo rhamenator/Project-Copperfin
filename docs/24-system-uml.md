@@ -8,7 +8,7 @@ Format choice:
 - Mermaid `classDiagram` is the safest UML-style format available directly on GitHub without requiring generated binaries or external viewers.
 - The current project phase/topic map lives in `docs/05-roadmap.md`, while issue-linked evidence belongs in `agent-handoff.md` and the progress documents.
 
-This file now carries two diagrams that must not be conflated:
+This UML documentation set now carries three diagrams that must not be conflated:
 
 1. **Ground-truth diagram** (below, in this file) — reverse-engineered directly from `CMakeLists.txt`, `src/`, `apps/`, and `vsix/`, the same way `docs/28-repository-ontology.md` was built. This is what actually compiles and links today.
 2. **Aspirational target-state diagram** (in [diagrams/uml-aspirational.md](diagrams/uml-aspirational.md)) — the `copperfin-*` module taxonomy from `docs/02-architecture.md`'s "Top-Level Product Map." `docs/28-repository-ontology.md` §6 is explicit that most of these names "do not exist as separate build targets today." Do not read it as current structure.
