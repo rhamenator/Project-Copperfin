@@ -93,6 +93,104 @@ internal static partial class Program
         TearDownForm(form);
     }
 
+    private static void SmokeStandaloneStudioToolWindowFloating()
+    {
+        var store = new InMemoryStudioShellLayoutStore();
+        using (var form = new StudioMainForm(
+                   new CopperfinLocalization("es-419"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            form.Show();
+            Application.DoEvents();
+            var initialTranscript = form.CommandWindowTranscriptText;
+
+            form.SetCommandWindowFloatingForTest(true);
+            Application.DoEvents();
+            Expect(form.IsCommandWindowVisible && form.IsCommandWindowFloating,
+                "standalone Command window should float without changing its visibility state");
+            Expect(form.FloatCommandWindowMenuText == "Acoplar ventana de comandos",
+                "floating Command window should expose the localized dock command");
+
+            form.SubmitCommandForTest("? x");
+            Application.DoEvents();
+            Expect(form.CommandWindowTranscriptText.StartsWith(initialTranscript, StringComparison.Ordinal) &&
+                   form.CommandWindowTranscriptText.Contains("> ? x", StringComparison.Ordinal),
+                "floating Command window should preserve its existing control and transcript behavior");
+
+            form.SetCommandWindowFloatingForTest(false);
+            Application.DoEvents();
+            Expect(form.IsCommandWindowVisible && !form.IsCommandWindowFloating,
+                "standalone Command window should re-dock without recreating the tool");
+            Expect(form.FloatCommandWindowMenuText == "Flotar ventana de comandos",
+                "docked Command window should expose the localized float command");
+
+            form.SetTerminalWindowFloatingForTest(true);
+            Application.DoEvents();
+            Expect(form.IsTerminalWindowVisible && form.IsTerminalWindowFloating,
+                "standalone Terminal should float without changing its visibility state");
+            form.CloseTerminalFloatingWindowForTest();
+            Application.DoEvents();
+            Expect(form.IsTerminalWindowVisible && !form.IsTerminalWindowFloating,
+                "closing a floating Terminal should return it to the docked pane");
+            form.Close();
+        }
+
+        Expect(store.StoredState is not null &&
+               store.StoredState.CommandWindowFloating == false &&
+               store.StoredState.TerminalWindowFloating == false,
+            "standalone Studio should save the final docked tool-window state");
+
+        using (var firstForm = new StudioMainForm(
+                   new CopperfinLocalization("pt-BR"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            firstForm.Show();
+            Application.DoEvents();
+            firstForm.SetCommandWindowFloatingForTest(true);
+            firstForm.SetTerminalWindowFloatingForTest(true);
+            firstForm.Close();
+        }
+
+        Expect(store.StoredState is not null &&
+               store.StoredState.CommandWindowFloating &&
+               store.StoredState.TerminalWindowFloating,
+            "standalone Studio should persist floating state for both tool windows");
+
+        using (var restoredForm = new StudioMainForm(
+                   new CopperfinLocalization("en-US"),
+                   store)
+               {
+                   Width = 1200,
+                   Height = 800,
+                   ShowInTaskbar = false,
+                   StartPosition = FormStartPosition.Manual,
+                   Location = new Point(-32000, -32000)
+               })
+        {
+            restoredForm.Show();
+            Application.DoEvents();
+            Expect(restoredForm.IsCommandWindowFloating && restoredForm.IsTerminalWindowFloating,
+                "standalone Studio should restore floating tool-window state");
+            restoredForm.SetCommandWindowFloatingForTest(false);
+            restoredForm.SetTerminalWindowFloatingForTest(false);
+            restoredForm.Close();
+        }
+    }
+
     private static void SmokeStandaloneStudioCloseDocumentTabs()
     {
         var root = Path.Combine(

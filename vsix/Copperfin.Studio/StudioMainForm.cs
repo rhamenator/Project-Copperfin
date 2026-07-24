@@ -24,12 +24,18 @@ internal sealed class StudioMainForm : Form
     private readonly ToolStripMenuItem closeDocumentMenuItem;
     private readonly ToolStripMenuItem commandWindowMenuItem;
     private readonly ToolStripMenuItem terminalWindowMenuItem;
+    private readonly ToolStripMenuItem floatCommandWindowMenuItem;
+    private readonly ToolStripMenuItem floatTerminalWindowMenuItem;
     private readonly CopperfinLocalization localization;
     private readonly IStudioShellLayoutStore shellLayoutStore;
     private readonly Dictionary<string, TabPage> openDocuments =
         new(CopperfinDocumentPathIdentity.CreateComparer());
     private const int DefaultSplitterDistance = 720;
     private const int MinimumToolWindowHeight = 160;
+    private string selectedToolWindowKey = StudioShellLayoutState.CommandWindowKey;
+    private Form? commandFloatingForm;
+    private Form? terminalFloatingForm;
+    private bool shellTransitionInProgress;
 
     public StudioMainForm(
         CopperfinLocalization? localization = null,
@@ -71,8 +77,33 @@ internal sealed class StudioMainForm : Form
             Checked = true
         };
         terminalWindowMenuItem.CheckedChanged += (_, _) => SetTerminalWindowVisible(terminalWindowMenuItem.Checked);
+        floatCommandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatCommandWindowMenu"))
+        {
+            CheckOnClick = true
+        };
+        floatCommandWindowMenuItem.CheckedChanged += (_, _) =>
+        {
+            if (!shellTransitionInProgress)
+            {
+                SetCommandWindowFloating(floatCommandWindowMenuItem.Checked);
+            }
+        };
+        floatTerminalWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.FloatTerminalWindowMenu"))
+        {
+            CheckOnClick = true
+        };
+        floatTerminalWindowMenuItem.CheckedChanged += (_, _) =>
+        {
+            if (!shellTransitionInProgress)
+            {
+                SetTerminalWindowFloating(floatTerminalWindowMenuItem.Checked);
+            }
+        };
         viewMenu.DropDownItems.Add(commandWindowMenuItem);
         viewMenu.DropDownItems.Add(terminalWindowMenuItem);
+        viewMenu.DropDownItems.Add(new ToolStripSeparator());
+        viewMenu.DropDownItems.Add(floatCommandWindowMenuItem);
+        viewMenu.DropDownItems.Add(floatTerminalWindowMenuItem);
         menuStrip.Items.Add(viewMenu);
         MainMenuStrip = menuStrip;
 
@@ -103,6 +134,14 @@ internal sealed class StudioMainForm : Form
         toolWindowTabs.TabPages.Add(terminalWindowPage);
         toolWindowTabs.SelectedIndexChanged += (_, _) =>
         {
+            if (toolWindowTabs.SelectedTab == commandWindowPage)
+            {
+                selectedToolWindowKey = StudioShellLayoutState.CommandWindowKey;
+            }
+            else if (toolWindowTabs.SelectedTab == terminalWindowPage)
+            {
+                selectedToolWindowKey = StudioShellLayoutState.TerminalWindowKey;
+            }
             if (toolWindowTabs.SelectedTab == terminalWindowPage)
             {
                 terminalWindowControl.StartShell();
@@ -137,13 +176,23 @@ internal sealed class StudioMainForm : Form
             shellSplitContainer.Panel2MinSize = MinimumToolWindowHeight;
             RestoreShellLayout();
         };
-        FormClosed += (_, _) => SaveShellLayout();
+        FormClosing += (_, _) =>
+        {
+            SaveShellLayout();
+            DockFloatingToolWindows();
+        };
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
-    internal bool IsCommandWindowVisible => toolWindowTabs.TabPages.Contains(commandWindowPage);
+    internal bool IsCommandWindowVisible => toolWindowTabs.TabPages.Contains(commandWindowPage) ||
+                                            commandFloatingForm is not null;
 
-    internal bool IsTerminalWindowVisible => toolWindowTabs.TabPages.Contains(terminalWindowPage);
+    internal bool IsTerminalWindowVisible => toolWindowTabs.TabPages.Contains(terminalWindowPage) ||
+                                             terminalFloatingForm is not null;
+
+    internal bool IsCommandWindowFloating => commandFloatingForm is not null;
+
+    internal bool IsTerminalWindowFloating => terminalFloatingForm is not null;
 
     internal string CommandWindowTabTitle => commandWindowPage.Text;
 
@@ -159,20 +208,60 @@ internal sealed class StudioMainForm : Form
 
     internal string CloseDocumentMenuText => closeDocumentMenuItem.Text;
 
+    internal string FloatCommandWindowMenuText => floatCommandWindowMenuItem.Text;
+
+    internal string FloatTerminalWindowMenuText => floatTerminalWindowMenuItem.Text;
+
     internal int ShellSplitterDistance => shellSplitContainer.SplitterDistance;
 
-    internal string SelectedToolWindowKey => toolWindowTabs.SelectedTab == terminalWindowPage
-        ? StudioShellLayoutState.TerminalWindowKey
-        : StudioShellLayoutState.CommandWindowKey;
+    internal string SelectedToolWindowKey => selectedToolWindowKey;
 
     internal void SetCommandWindowVisible(bool visible)
     {
+        if (!visible && commandFloatingForm is not null)
+        {
+            DockCommandWindow(addPage: false);
+        }
+
         SetToolWindowVisible(commandWindowPage, visible);
+        if (!visible)
+        {
+            SetMenuChecked(floatCommandWindowMenuItem, false);
+        }
     }
 
     internal void SetTerminalWindowVisible(bool visible)
     {
+        if (!visible && terminalFloatingForm is not null)
+        {
+            DockTerminalWindow(addPage: false);
+        }
+
         SetToolWindowVisible(terminalWindowPage, visible);
+        if (!visible)
+        {
+            SetMenuChecked(floatTerminalWindowMenuItem, false);
+        }
+    }
+
+    internal void SetCommandWindowFloatingForTest(bool floating)
+    {
+        SetCommandWindowFloating(floating);
+    }
+
+    internal void SetTerminalWindowFloatingForTest(bool floating)
+    {
+        SetTerminalWindowFloating(floating);
+    }
+
+    internal void CloseCommandFloatingWindowForTest()
+    {
+        commandFloatingForm?.Close();
+    }
+
+    internal void CloseTerminalFloatingWindowForTest()
+    {
+        terminalFloatingForm?.Close();
     }
 
     internal void SelectTerminalWindow()
@@ -239,6 +328,16 @@ internal sealed class StudioMainForm : Form
         {
             toolWindowTabs.SelectedTab = terminalWindowPage;
         }
+
+        if (state.CommandWindowFloating && IsCommandWindowVisible)
+        {
+            SetCommandWindowFloating(true);
+        }
+        if (state.TerminalWindowFloating && IsTerminalWindowVisible)
+        {
+            SetTerminalWindowFloating(true);
+        }
+        selectedToolWindowKey = state.SelectedToolWindow;
     }
 
     private void SaveShellLayout()
@@ -248,17 +347,26 @@ internal sealed class StudioMainForm : Form
             CommandWindowVisible = IsCommandWindowVisible,
             TerminalWindowVisible = IsTerminalWindowVisible,
             SelectedToolWindow = SelectedToolWindowKey,
-            SplitterDistance = NormalizeSplitterDistance(shellSplitContainer.SplitterDistance)
+            SplitterDistance = NormalizeSplitterDistance(shellSplitContainer.SplitterDistance),
+            CommandWindowFloating = IsCommandWindowFloating,
+            TerminalWindowFloating = IsTerminalWindowFloating
         });
     }
 
     private bool IsValidShellLayout(StudioShellLayoutState state)
     {
-        if (state.Version != StudioShellLayoutState.CurrentVersion ||
+        if ((state.Version != 1 && state.Version != StudioShellLayoutState.CurrentVersion) ||
             (state.SelectedToolWindow != StudioShellLayoutState.CommandWindowKey &&
              state.SelectedToolWindow != StudioShellLayoutState.TerminalWindowKey) ||
             state.SplitterDistance < MinimumToolWindowHeight ||
             state.SplitterDistance > MaximumSplitterDistance)
+        {
+            return false;
+        }
+
+        if (state.Version >= StudioShellLayoutState.CurrentVersion &&
+            ((!state.CommandWindowVisible && state.CommandWindowFloating) ||
+             (!state.TerminalWindowVisible && state.TerminalWindowFloating)))
         {
             return false;
         }
@@ -312,6 +420,196 @@ internal sealed class StudioMainForm : Form
         }
 
         shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+    }
+
+    private void SetCommandWindowFloating(bool floating)
+    {
+        if (floating)
+        {
+            if (!IsCommandWindowVisible || commandFloatingForm is not null)
+            {
+                return;
+            }
+
+            selectedToolWindowKey = StudioShellLayoutState.CommandWindowKey;
+            RemoveToolWindowPage(commandWindowPage);
+            commandFloatingForm = CreateFloatingToolWindow(
+                localization.Text("VSIX.CommandWindow.Title"),
+                commandWindowControl,
+                () => DockCommandWindow(addPage: true));
+            SetMenuChecked(floatCommandWindowMenuItem, true);
+            commandFloatingForm.Show(this);
+            return;
+        }
+
+        DockCommandWindow(addPage: true);
+    }
+
+    private void SetTerminalWindowFloating(bool floating)
+    {
+        if (floating)
+        {
+            if (!IsTerminalWindowVisible || terminalFloatingForm is not null)
+            {
+                return;
+            }
+
+            selectedToolWindowKey = StudioShellLayoutState.TerminalWindowKey;
+            RemoveToolWindowPage(terminalWindowPage);
+            terminalFloatingForm = CreateFloatingToolWindow(
+                localization.Text("VSIX.TerminalWindow.Title"),
+                terminalWindowControl,
+                () => DockTerminalWindow(addPage: true));
+            SetMenuChecked(floatTerminalWindowMenuItem, true);
+            terminalFloatingForm.Show(this);
+            return;
+        }
+
+        DockTerminalWindow(addPage: true);
+    }
+
+    private Form CreateFloatingToolWindow(string title, Control control, Action dockAction)
+    {
+        var form = new Form
+        {
+            Text = title,
+            FormBorderStyle = FormBorderStyle.SizableToolWindow,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.CenterParent,
+            MinimumSize = new Size(560, MinimumToolWindowHeight)
+        };
+        form.Controls.Add(control);
+        form.FormClosing += (_, e) =>
+        {
+            if (shellTransitionInProgress)
+            {
+                return;
+            }
+
+            e.Cancel = true;
+            dockAction();
+        };
+        return form;
+    }
+
+    private void RemoveToolWindowPage(TabPage page)
+    {
+        if (toolWindowTabs.SelectedTab == page)
+        {
+            toolWindowTabs.SelectedTab = toolWindowTabs.TabPages
+                .Cast<TabPage>()
+                .FirstOrDefault(candidate => candidate != page);
+        }
+
+        toolWindowTabs.TabPages.Remove(page);
+        shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+    }
+
+    private void DockCommandWindow(bool addPage)
+    {
+        if (commandFloatingForm is null)
+        {
+            if (addPage && !toolWindowTabs.TabPages.Contains(commandWindowPage))
+            {
+                toolWindowTabs.TabPages.Add(commandWindowPage);
+            }
+            SetMenuChecked(floatCommandWindowMenuItem, false);
+            shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+            return;
+        }
+
+        var floatingForm = commandFloatingForm;
+        commandFloatingForm = null;
+        shellTransitionInProgress = true;
+        try
+        {
+            floatingForm.Controls.Remove(commandWindowControl);
+            commandWindowPage.Controls.Add(commandWindowControl);
+            if (addPage && !toolWindowTabs.TabPages.Contains(commandWindowPage))
+            {
+                toolWindowTabs.TabPages.Add(commandWindowPage);
+            }
+            SetMenuChecked(floatCommandWindowMenuItem, false);
+            floatingForm.Hide();
+            floatingForm.Dispose();
+        }
+        finally
+        {
+            shellTransitionInProgress = false;
+        }
+
+        shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+    }
+
+    private void DockTerminalWindow(bool addPage)
+    {
+        if (terminalFloatingForm is null)
+        {
+            if (addPage && !toolWindowTabs.TabPages.Contains(terminalWindowPage))
+            {
+                toolWindowTabs.TabPages.Add(terminalWindowPage);
+            }
+            SetMenuChecked(floatTerminalWindowMenuItem, false);
+            shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+            return;
+        }
+
+        var floatingForm = terminalFloatingForm;
+        terminalFloatingForm = null;
+        shellTransitionInProgress = true;
+        try
+        {
+            floatingForm.Controls.Remove(terminalWindowControl);
+            terminalWindowPage.Controls.Add(terminalWindowControl);
+            if (addPage && !toolWindowTabs.TabPages.Contains(terminalWindowPage))
+            {
+                toolWindowTabs.TabPages.Add(terminalWindowPage);
+            }
+            SetMenuChecked(floatTerminalWindowMenuItem, false);
+            floatingForm.Hide();
+            floatingForm.Dispose();
+        }
+        finally
+        {
+            shellTransitionInProgress = false;
+        }
+
+        shellSplitContainer.Panel2Collapsed = toolWindowTabs.TabPages.Count == 0;
+    }
+
+    private void DockFloatingToolWindows()
+    {
+        DockCommandWindow(addPage: false);
+        DockTerminalWindow(addPage: false);
+    }
+
+    private void SetMenuChecked(ToolStripMenuItem menuItem, bool checkedState)
+    {
+        if (menuItem == floatCommandWindowMenuItem)
+        {
+            menuItem.Text = localization.Text(
+                checkedState ? "Studio.DockCommandWindowMenu" : "Studio.FloatCommandWindowMenu");
+        }
+        else if (menuItem == floatTerminalWindowMenuItem)
+        {
+            menuItem.Text = localization.Text(
+                checkedState ? "Studio.DockTerminalWindowMenu" : "Studio.FloatTerminalWindowMenu");
+        }
+
+        if (menuItem.Checked == checkedState)
+        {
+            return;
+        }
+
+        shellTransitionInProgress = true;
+        try
+        {
+            menuItem.Checked = checkedState;
+        }
+        finally
+        {
+            shellTransitionInProgress = false;
+        }
     }
 
     public void OpenDocument(string path, string? objectName = null, string? uniqueId = null)

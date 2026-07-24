@@ -2745,5 +2745,9 @@
   "AssetEditor.Property.PrintWhenNewPageColumn": "[In First Whole Band of New Page/Column]",
   "AssetEditor.Property.PrintWhenOverflow": "[When Detail Overflows to New Page/Column]",
   "AssetEditor.Property.BottomRelativeToBand": "[Fix Relative to Bottom of Band]",
-  "AssetEditor.Property.TopRelativeToBand": "[Fix Relative to Top of Band]"
+  "AssetEditor.Property.TopRelativeToBand": "[Fix Relative to Top of Band]",
+  "Studio.FloatCommandWindowMenu": "[Float Command Window]",
+  "Studio.DockCommandWindowMenu": "[Dock Command Window]",
+  "Studio.FloatTerminalWindowMenu": "[Float Terminal]",
+  "Studio.DockTerminalWindowMenu": "[Dock Terminal]"
 }

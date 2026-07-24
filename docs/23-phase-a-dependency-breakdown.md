@@ -33,6 +33,7 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Latest standalone shell slice: `#4590` under `#2997` adds localized float/re-dock commands for the existing Command and Terminal panes. The controls are reparented rather than recreated, so transcript/session state survives; closing a floating tool window returns it to the dock. Version-2 shell JSON stores independent floating flags while accepting version-1 state, and existing visibility, selected-tool, splitter, and disposal contracts remain intact. Exact and broad `SmokeStandaloneStudio*` portable UI coverage and managed catalog parity pass locally. Keep live Windows/Visual Studio docking and hosted VSSDK validation as release evidence; do not represent this standalone behavior as Visual Studio shell implementation.
 - Latest native PRG parity slice: `#4589` under #3217 exposes the documented
   `Column.Sparse` property with a VFP9 `.T.` default through direct, PEM,
   reflection, exclusion, and derived-initialization coverage. Preserve the

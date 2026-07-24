@@ -2745,5 +2745,9 @@
   "AssetEditor.Property.PrintWhenNewPageColumn": "Na primeira banda inteira da nova p\u00E1gina/coluna",
   "AssetEditor.Property.PrintWhenOverflow": "Quando o detalhe transborda para uma nova p\u00E1gina/coluna",
   "AssetEditor.Property.BottomRelativeToBand": "Fixar em rela\u00E7\u00E3o \u00E0 parte inferior da banda",
-  "AssetEditor.Property.TopRelativeToBand": "Fixar em rela\u00E7\u00E3o \u00E0 parte superior da banda"
+  "AssetEditor.Property.TopRelativeToBand": "Fixar em rela\u00E7\u00E3o \u00E0 parte superior da banda",
+  "Studio.FloatCommandWindowMenu": "Flutuar janela de comandos",
+  "Studio.DockCommandWindowMenu": "Ancorar janela de comandos",
+  "Studio.FloatTerminalWindowMenu": "Flutuar terminal",
+  "Studio.DockTerminalWindowMenu": "Ancorar terminal"
 }
