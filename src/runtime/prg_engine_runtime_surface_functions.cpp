@@ -67,6 +67,10 @@ bool is_native_visual_button_state_picture_runtime_object(const RuntimeOleObject
     return native_visual_button_state_picture_runtime_object(runtime_object);
 }
 
+bool is_native_visual_autosize_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_visual_autosize_runtime_object(runtime_object);
+}
+
 void update_native_list_control_boundto_index_value_mode(
     RuntimeOleObjectState& runtime_object,
     bool was_boundto) {
@@ -232,6 +236,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_dragicon_member_name_matches(runtime_object, member_name) ||
                native_visual_downpicture_member_name_matches(runtime_object, member_name) ||
                native_visual_disabledpicture_member_name_matches(runtime_object, member_name) ||
+               native_visual_autosize_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||
                native_grid_headerheight_member_name_matches(runtime_object, member_name) ||
