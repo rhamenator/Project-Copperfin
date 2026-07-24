@@ -1234,3 +1234,10 @@ Read only what is needed for the chosen slice:
 - Focused #4578 validation passes the native runtime-surface target; preserve the stack-frugal iterative PRG frame machine and the headless BorderStyle-only contract.
 - #4568 under #3217 is implemented locally: native PRG Form objects now seed built-in `ScaleMode` numeric state with default `0`, preserve derived-class values, normalize direct/`GETPEM()`/`SETPEM()`/`PUTPEM()` writes to `0..3`, and protect the property from `ADDPROPERTY()` / `REMOVEPROPERTY()`. Label and other non-Form visual objects do not receive it. Keep coordinate conversion, geometry recomputation, drawing, and platform rendering separate.
 - Focused #4568 validation passes the rebuilt `test_prg_engine_runtime_surface_functions` target and CTest; preserve the stack-frugal iterative PRG frame machine and the headless coordinate-mode-only contract.
+- #4605 is implemented locally: native `ComboBox`/`ListBox` `RowSourceType = 9`
+  now evaluates macro-backed popup names at `Requery()` time through the
+  existing bounded expression evaluator, so changing the backing variable
+  selects a different popup without changing the literal-name contract.
+  Focused runtime-surface coverage includes nested indirection, deterministic
+  bar order, and missing-popup behavior; popup interaction, callbacks, and UI
+  rendering remain separate. Hosted validation is pending.

@@ -18,6 +18,8 @@ namespace copperfin::runtime_surface_tests
             "DEFINE POPUP choices\n"
             "DEFINE BAR 20 OF choices PROMPT 'Twenty'\n"
             "DEFINE BAR 2 OF choices PROMPT 'Two'\n"
+            "DEFINE POPUP alternate\n"
+            "DEFINE BAR 1 OF alternate PROMPT 'Alternate'\n"
             "oList = CREATEOBJECT('ListBox')\n"
             "oList.RowSourceType = 9\n"
             "oList.RowSource = 'choices'\n"
@@ -30,6 +32,19 @@ namespace copperfin::runtime_surface_tests
             "oList.Requery()\n"
             "nReplacementCount = oList.ListCount\n"
             "cReplacement = oList.List(1)\n"
+            "lcPopup = 'choices'\n"
+            "lcPopupHolder = 'lcPopup'\n"
+            "cMacroEval = &lcPopupHolder\n"
+            "oMacro = CREATEOBJECT('ListBox')\n"
+            "oMacro.RowSourceType = 9\n"
+            "oMacro.RowSource = '&lcPopupHolder'\n"
+            "nMacroType = oMacro.RowSourceType\n"
+            "cMacroRaw = oMacro.RowSource\n"
+            "oMacro.Requery()\n"
+            "cMacroFirst = oMacro.List(1)\n"
+            "lcPopup = 'alternate'\n"
+            "oMacro.Requery()\n"
+            "cMacroChanged = oMacro.List(1)\n"
             "RELEASE POPUP choices\n"
             "oList.Requery()\n"
             "nReleasedCount = oList.ListCount\n"
@@ -65,8 +80,13 @@ namespace copperfin::runtime_surface_tests
         check("creplacement", "Replacement");
         check("nreleasedcount", "0");
         check("nmissingcount", "0");
-        expect(state.ole_objects.size() == 2U,
-               "popup RowSource coverage should register the populated and missing controls");
+        check("cmacroeval", "choices");
+        check("cmacroraw", "&lcPopupHolder");
+        check("nmacrotype", "9");
+        check("cmacrofirst", "Replacement");
+        check("cmacrochanged", "Alternate");
+        expect(state.ole_objects.size() == 3U,
+               "popup RowSource coverage should register the populated, missing, and macro controls");
 
         fs::remove_all(temp_root, ignored);
     }

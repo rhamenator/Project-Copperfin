@@ -5708,8 +5708,13 @@ namespace copperfin::runtime
         }
         case 9:
         {
+            std::string popup_name_text = trim_copy(row_source);
+            if (popup_name_text.find('&') != std::string::npos)
+            {
+                popup_name_text = value_as_string(evaluate_expression(popup_name_text, frame));
+            }
             const std::string popup_name = normalize_identifier(
-                unquote_identifier(trim_copy(row_source)));
+                unquote_identifier(trim_copy(popup_name_text)));
             const auto popup = current_session_state().popup_bar_prompts.find(popup_name);
             if (popup == current_session_state().popup_bar_prompts.end())
             {
