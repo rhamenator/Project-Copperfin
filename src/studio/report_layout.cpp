@@ -383,6 +383,13 @@ StudioLayoutObjectSnapshot build_layout_object(
     if (object.objtype_code == 7) {
         add_highlight("FILLPAT");
     }
+    if (object.objtype_code == 1 || object.objtype_code == 5 || object.objtype_code == 8 ||
+        object.objtype_code == 17) {
+        add_highlight("DOUBLE");
+    }
+    if (object.objtype_code == 1 || object.objtype_code == 5 || object.objtype_code == 8) {
+        add_highlight("RESOID");
+    }
     if (object.objtype_code == 5 || object.objtype_code == 6 || object.objtype_code == 7 ||
         object.objtype_code == 8 || object.objtype_code == 10 || object.objtype_code == 17) {
         add_highlight("TAG2");
@@ -522,6 +529,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("COLWIDTH");
     append_direct_setting("COLSPACING");
     append_direct_setting("TAG");
+    append_direct_setting("DOUBLE");
+    append_direct_setting("RESOID");
 }
 
 std::string make_section_id(std::size_t record_index, int objcode) {

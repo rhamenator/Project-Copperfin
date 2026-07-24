@@ -2727,6 +2727,8 @@
   "AssetEditor.Property.PenSize": "Pen Size",
   "AssetEditor.Property.PenPattern": "Pen Pattern",
   "AssetEditor.Property.FillPattern": "Fill Pattern",
+  "AssetEditor.Property.ExplicitFontCharset": "Explicit Font Charset",
+  "AssetEditor.Property.FontCharset": "Font Charset",
   "AssetEditor.Property.PrintWhen": "Print When",
   "AssetEditor.Property.PrintWhenGroup": "When Group Changes",
   "AssetEditor.Property.PrintWhenRepeated": "Print Repeated Values",

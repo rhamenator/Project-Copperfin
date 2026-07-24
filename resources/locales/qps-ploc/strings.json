@@ -2727,6 +2727,8 @@
   "AssetEditor.Property.PenSize": "[!! Pëñ Šïžë !!]",
   "AssetEditor.Property.PenPattern": "[!! Pëñ Påţţëŕñ !!]",
   "AssetEditor.Property.FillPattern": "[!! Fïľľ Påţţëŕñ !!]",
+  "AssetEditor.Property.ExplicitFontCharset": "[!! Ëxþľïçïţ Føñţ Çħåŕšëţ !!]",
+  "AssetEditor.Property.FontCharset": "[!! Føñţ Çħåŕšëţ !!]",
   "AssetEditor.Property.PrintWhen": "[Print When]",
   "AssetEditor.Property.PrintWhenGroup": "[When Group Changes]",
   "AssetEditor.Property.PrintWhenRepeated": "[Print Repeated Values]",

@@ -154,6 +154,36 @@ void write_synthetic_report_table_for_line_shape_style_json(const std::filesyste
     expect(create_result.ok, "#4535: line/shape host fixture should be created");
 }
 
+void write_synthetic_report_table_for_font_charset_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "DOUBLE", .type = 'L', .length = 1U},
+        {.name = "RESOID", .type = 'N', .length = 8U}
+    };
+    std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "settings-font-guid", ".T.", "0"},
+        {"9", "4", "", "", "0", "", "3000", "", "", ""},
+        {"5", "0", "label.value", "100", "200", "800", "400", "label-font-guid", ".T.", "1"},
+        {"8", "0", "expression.value", "1000", "200", "800", "400", "expression-font-guid", ".T.", "2"},
+        {"17", "0", "", "1900", "200", "800", "400", "picture-font-guid", ".T.", "3"},
+        {"6", "0", "", "2800", "200", "800", "400", "line-font-guid", ".T.", "4"}
+    };
+    for (auto& record : records) {
+        while (record.size() < fields.size()) {
+            record.emplace_back();
+        }
+    }
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4536: font-charset host fixture should be created");
+}
+
 void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_reorder_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
@@ -436,6 +466,118 @@ void run_line_shape_style_selection(
            issue_prefix + " should not expose shape-only FILLPAT on lines");
 }
 
+void run_font_charset_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_font_charset_json(asset_path);
+
+    const auto settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "settings-font-guid", "--json"},
+        temp_root);
+    expect(settings_process.exit_code == 0, issue_prefix + " should select the header settings record");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected header settings");
+    expect_contains(settings_process.stdout_text, "\"name\": \"DOUBLE\"",
+                    issue_prefix + " should expose header DOUBLE");
+    expect_contains(settings_process.stdout_text, "\"name\": \"RESOID\"",
+                    issue_prefix + " should expose header RESOID");
+    expect_contains(settings_process.stdout_text, "\"fieldIndex\": 8",
+                    issue_prefix + " should preserve header DOUBLE field provenance");
+
+    const auto settings_update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "settings-font-guid",
+            "--property-name", "DOUBLE", "--property-value", "false",
+            "--property-name", "RESOID", "--property-value", "5",
+            "--json"
+        },
+        temp_root);
+    expect(settings_update_process.exit_code == 0,
+           issue_prefix + " should round-trip header font charset edits");
+    const auto reopened_settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "settings-font-guid", "--json"},
+        temp_root);
+    expect_contains(reopened_settings_process.stdout_text, "\"value\": \"false\"",
+                    issue_prefix + " should persist header DOUBLE edits");
+    expect_contains(reopened_settings_process.stdout_text, "\"value\": \"5\"",
+                    issue_prefix + " should persist header RESOID edits");
+
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "label-font-guid", "--json"},
+        temp_root);
+    expect(label_process.exit_code == 0, issue_prefix + " should select the label object");
+    expect_contains(label_process.stdout_text, "\"name\": \"DOUBLE\"",
+                    issue_prefix + " should expose label DOUBLE");
+    expect_contains(label_process.stdout_text, "\"name\": \"RESOID\"",
+                    issue_prefix + " should expose label RESOID");
+    expect_contains(label_process.stdout_text, "\"value\": \"1\"",
+                    issue_prefix + " should expose the label font charset value");
+    expect_contains(label_process.stdout_text, "\"fieldIndex\": 9",
+                    issue_prefix + " should preserve label font charset field provenance");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "label-font-guid",
+            "--property-name", "DOUBLE", "--property-value", "false",
+            "--property-name", "RESOID", "--property-value", "4",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip font charset edits through the host update path");
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "label-font-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen a label after font charset edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"false\"",
+                    issue_prefix + " should persist DOUBLE edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"4\"",
+                    issue_prefix + " should persist RESOID edits");
+
+    const auto picture_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "picture-font-guid", "--json"},
+        temp_root);
+    expect(picture_process.exit_code == 0, issue_prefix + " should select the picture object");
+    const auto selected_picture_start = picture_process.stdout_text.find("\"selectedReportObject\": {");
+    const auto selected_picture_end = picture_process.stdout_text.find("\"selectedReportObjectSectionAvailable\"", selected_picture_start);
+    const std::string selected_picture_json = selected_picture_start == std::string::npos
+        ? std::string{}
+        : picture_process.stdout_text.substr(selected_picture_start, selected_picture_end - selected_picture_start);
+    expect(selected_picture_json.find("\"name\": \"DOUBLE\"") != std::string::npos,
+           issue_prefix + " should expose picture DOUBLE");
+    expect(selected_picture_json.find("\"name\": \"RESOID\"") == std::string::npos,
+           issue_prefix + " should not expose picture RESOID");
+
+    const auto line_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "line-font-guid", "--json"},
+        temp_root);
+    expect(line_process.exit_code == 0, issue_prefix + " should select the line object");
+    const auto selected_line_start = line_process.stdout_text.find("\"selectedReportObject\": {");
+    const auto selected_line_end = line_process.stdout_text.find("\"selectedReportObjectSectionAvailable\"", selected_line_start);
+    const std::string selected_line_json = selected_line_start == std::string::npos
+        ? std::string{}
+        : line_process.stdout_text.substr(selected_line_start, selected_line_end - selected_line_start);
+    expect(selected_line_json.find("\"name\": \"DOUBLE\"") == std::string::npos &&
+           selected_line_json.find("\"name\": \"RESOID\"") == std::string::npos,
+           issue_prefix + " should not expose font charset fields on lines");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -589,6 +731,16 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         temp_root,
         "selected_line_shape_style_stable.lbx",
         "#4535: stable live label line/shape styling selection");
+    run_font_charset_selection(
+        studio_host_path,
+        temp_root,
+        "selected_font_charset_stable.frx",
+        "#4536: stable live report font charset selection");
+    run_font_charset_selection(
+        studio_host_path,
+        temp_root,
+        "selected_font_charset_stable.lbx",
+        "#4536: stable live label font charset selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,

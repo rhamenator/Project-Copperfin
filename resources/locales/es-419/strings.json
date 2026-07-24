@@ -2727,6 +2727,8 @@
   "AssetEditor.Property.PenSize": "Tamaño del trazo",
   "AssetEditor.Property.PenPattern": "Patrón del trazo",
   "AssetEditor.Property.FillPattern": "Patrón de relleno",
+  "AssetEditor.Property.ExplicitFontCharset": "Juego de caracteres de fuente explícito",
+  "AssetEditor.Property.FontCharset": "Juego de caracteres de fuente",
   "AssetEditor.Property.PrintWhen": "Imprimir cuando",
   "AssetEditor.Property.PrintWhenGroup": "Cuando cambia el grupo",
   "AssetEditor.Property.PrintWhenRepeated": "Imprimir valores repetidos",

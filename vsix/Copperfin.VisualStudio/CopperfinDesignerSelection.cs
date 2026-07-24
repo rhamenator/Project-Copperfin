@@ -221,6 +221,26 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                         selection.AddEditableInt("FILLPAT", L("AssetEditor.Property.FillPattern", "Fill Pattern"), selection.Read(snapshotObject, "FILLPAT"));
                     }
                 }
+                if (int.TryParse(
+                        selection.Read(snapshotObject, "OBJTYPE"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var fontCharsetObjectType) &&
+                    (fontCharsetObjectType == 1 || fontCharsetObjectType == 5 ||
+                     fontCharsetObjectType == 8 || fontCharsetObjectType == 17))
+                {
+                    selection.AddEditableBool(
+                        "DOUBLE",
+                        L("AssetEditor.Property.ExplicitFontCharset", "Explicit Font Charset"),
+                        selection.Read(snapshotObject, "DOUBLE"));
+                    if (fontCharsetObjectType == 1 || fontCharsetObjectType == 5 || fontCharsetObjectType == 8)
+                    {
+                        selection.AddEditableInt(
+                            "RESOID",
+                            L("AssetEditor.Property.FontCharset", "Font Charset"),
+                            selection.Read(snapshotObject, "RESOID"));
+                    }
+                }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
                 selection.AddEditableBool("SUPALWAYS", L("AssetEditor.Property.PrintWhenRepeated", "Print Repeated Values"), selection.Read(snapshotObject, "SUPALWAYS"));
