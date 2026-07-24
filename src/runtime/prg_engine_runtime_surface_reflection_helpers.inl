@@ -501,6 +501,22 @@ bool native_visual_dragicon_member_name_matches(
            runtime_object.properties.contains("dragicon");
 }
 
+bool native_visual_downpicture_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "downpicture" &&
+           native_visual_button_state_picture_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("downpicture");
+}
+
+bool native_visual_disabledpicture_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "disabledpicture" &&
+           native_visual_button_state_picture_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("disabledpicture");
+}
+
 bool native_visual_alignment_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

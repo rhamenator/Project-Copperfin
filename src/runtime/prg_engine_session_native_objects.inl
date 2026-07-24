@@ -167,6 +167,20 @@
                 runtime_object.properties["dragicon"] = make_string_value("");
             }
 
+            if (is_native_visual_button_state_picture_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("downpicture"))
+            {
+                // Headless contract: preserve the VFP path property without loading image bytes.
+                runtime_object.properties["downpicture"] = make_string_value("");
+            }
+
+            if (is_native_visual_button_state_picture_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("disabledpicture"))
+            {
+                // Headless contract: preserve the VFP path property without loading image bytes.
+                runtime_object.properties["disabledpicture"] = make_string_value("");
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))

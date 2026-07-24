@@ -240,6 +240,8 @@
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
+            is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
+            is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
@@ -1136,6 +1138,8 @@
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
+            is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
+            is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
