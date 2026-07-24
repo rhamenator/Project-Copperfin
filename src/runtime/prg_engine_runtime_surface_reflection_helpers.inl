@@ -537,6 +537,14 @@ bool native_visual_autosize_member_name_matches(
            runtime_object.properties.contains("autosize");
 }
 
+bool native_visual_drawmode_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "drawmode" &&
+           native_visual_drawmode_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("drawmode");
+}
+
 bool native_visual_alignment_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

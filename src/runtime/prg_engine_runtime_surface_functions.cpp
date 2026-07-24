@@ -71,6 +71,10 @@ bool is_native_visual_autosize_runtime_object(const RuntimeOleObjectState& runti
     return native_visual_autosize_runtime_object(runtime_object);
 }
 
+bool is_native_visual_drawmode_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_visual_drawmode_runtime_object(runtime_object);
+}
+
 void update_native_list_control_boundto_index_value_mode(
     RuntimeOleObjectState& runtime_object,
     bool was_boundto) {

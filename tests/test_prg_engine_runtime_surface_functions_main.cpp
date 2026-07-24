@@ -75,6 +75,7 @@ int main()
     test_native_form_windowtype_conditional_preprocessor_branches_drive_runtime_behavior();
     test_native_form_windowstate_defaults_mutates_and_stays_builtin();
     test_native_form_scalemode_defaults_mutates_and_stays_builtin();
+    test_native_visual_drawmode_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_form_titlebar_defaults_mutates_and_stays_builtin();
     test_native_form_desktop_defaults_are_runtime_readonly_and_stay_builtin();

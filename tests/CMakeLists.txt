@@ -5014,6 +5014,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_properties_34.cpp
     test_prg_engine_runtime_surface_functions_properties_35.cpp
     test_prg_engine_runtime_surface_functions_form_scalemode.cpp
+    test_prg_engine_runtime_surface_functions_drawmode.cpp
     test_prg_engine_runtime_surface_functions_grid_rowheight.cpp
     test_prg_engine_runtime_surface_functions_grid_headerheight.cpp
     test_prg_engine_runtime_surface_functions_grid_allowheadersizing.cpp

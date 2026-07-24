@@ -115,6 +115,18 @@ bool native_visual_autosize_runtime_object(const RuntimeOleObjectState& runtime_
            normalized_base_class == "optiongroup";
 }
 
+bool native_visual_drawmode_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" ||
+           normalized_base_class == "line" ||
+           normalized_base_class == "shape";
+}
+
 bool native_visual_alignment_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

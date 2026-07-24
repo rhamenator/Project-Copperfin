@@ -188,6 +188,13 @@
                 runtime_object.properties["autosize"] = make_boolean_value(false);
             }
 
+            if (is_native_visual_drawmode_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("drawmode"))
+            {
+                // Headless contract: expose the drawing mode without compositing pixels.
+                runtime_object.properties["drawmode"] = make_number_value(13.0);
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
