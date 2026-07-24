@@ -385,7 +385,16 @@ internal static partial class Program
                 return;
             }
 
-            smokeTest();
+            var stopwatch = Stopwatch.StartNew();
+            Console.WriteLine($"START: {testName}");
+            try
+            {
+                smokeTest();
+            }
+            finally
+            {
+                Console.WriteLine($"END: {testName} ({stopwatch.Elapsed.TotalSeconds:F1}s)");
+            }
         }
 
         public int Finish()
