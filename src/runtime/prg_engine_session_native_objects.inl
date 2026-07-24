@@ -84,6 +84,14 @@
 
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("dynamicfontoutline"))
+            {
+                // Headless contract: preserve the raw dynamic-font-outline expression without evaluating it.
+                runtime_object.properties["dynamicfontoutline"] = make_string_value("");
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontsize"))
             {
                 // Headless contract: preserve fractional point sizes without requiring

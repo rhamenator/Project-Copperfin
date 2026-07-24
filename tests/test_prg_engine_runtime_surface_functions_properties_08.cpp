@@ -827,6 +827,81 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_visual_dynamicfontoutline_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_dynamicfontoutline";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_dynamicfontoutline.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lHas = PEMSTATUS(oButton, 'DynamicFontOutline', 1)\n"
+            "lReadOnly = PEMSTATUS(oButton, 'DynamicFontOutline', 5)\n"
+            "cDefault = oButton.DynamicFontOutline\n"
+            "oButton.DynamicFontOutline = 'IIF(EMPTY(Value), .F., .T.)'\n"
+            "cDirect = oButton.DynamicFontOutline\n"
+            "lSetPem = SETPEM(oButton, 'DynamicFontOutline', 'Value > 0')\n"
+            "cSetPem = GETPEM(oButton, 'DynamicFontOutline')\n"
+            "lPutPem = PUTPEM(oButton, 'DynamicFontOutline', 'TRANSFORM(Value)')\n"
+            "cPutPem = GETPEM(oButton, 'DynamicFontOutline')\n"
+            "lAddProperty = ADDPROPERTY(oButton, 'DynamicFontOutline', 'shadow')\n"
+            "lRemoveProperty = REMOVEPROPERTY(oButton, 'DynamicFontOutline')\n"
+            "lPropHas = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'DYNAMICFONTOUTLINE'\n"
+            "        lPropHas = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedDynamicFontOutline')\n"
+            "cDerived = oDerived.DynamicFontOutline\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedDynamicFontOutline AS CommandButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.DynamicFontOutline = 'IIF(Value > 0, .T., .F.)'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DynamicFontOutline script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lhas", "true");
+        check("lreadonly", "false");
+        check("cdefault", "");
+        check("cdirect", "IIF(EMPTY(Value), .F., .T.)");
+        check("lsetpem", "true");
+        check("csetpem", "Value > 0");
+        check("lputpem", "true");
+        check("cputpem", "TRANSFORM(Value)");
+        check("laddproperty", "false");
+        check("lremoveproperty", "false");
+        check("lprophas", "true");
+        check("cderived", "IIF(Value > 0, .T., .F.)");
+        expect(state.ole_objects.size() == 2U,
+               "native DynamicFontOutline coverage should register the base and derived controls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_mousepointer_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
