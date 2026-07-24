@@ -52,7 +52,8 @@ internal static partial class Program
             new() { Name = "CURPOS", Value = "true", RecordIndex = 0, FieldIndex = 16, MemoBlockNumber = 0 },
             new() { Name = "UNIQUE", Value = "true", RecordIndex = 0, FieldIndex = 17, MemoBlockNumber = 0 },
             new() { Name = "ORDER", Value = "hex:4F524445522D4259544553", RecordIndex = 0, FieldIndex = 18, MemoBlockNumber = 22 },
-            new() { Name = "COMMENT", Value = "Header developer note", RecordIndex = 0, FieldIndex = 19, MemoBlockNumber = 23 }
+            new() { Name = "COMMENT", Value = "Header developer note", RecordIndex = 0, FieldIndex = 19, MemoBlockNumber = 23 },
+            new() { Name = "USER", Value = "Header user comment", RecordIndex = 0, FieldIndex = 20, MemoBlockNumber = 24 }
         };
         var settingsOnlySnapshot = new CopperfinStudioSnapshotDocument
         {
@@ -130,6 +131,7 @@ internal static partial class Program
                Convert.ToBoolean(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["UNIQUE"]?.GetValue(propertyGrid.SelectedObject), CultureInfo.InvariantCulture) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["ORDER"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "hex:4F524445522D4259544553", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COMMENT"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "Header developer note", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["USER"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "Header user comment", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERLENGTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2794", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2159", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DRIVER"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "winspool", StringComparison.Ordinal) &&
@@ -177,6 +179,8 @@ internal static partial class Program
                 "Report settings property-grid selection should preserve binary-safe order-flag update values");
             ExpectSelectionUpdate(editableSelection, "COMMENT", "Updated header note", "Updated header note",
                 "Report settings property-grid selection should serialize COMMENT edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "USER", "Updated header user comment", "Updated header user comment",
+                "Report settings property-grid selection should serialize USER edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "PAPERLENGTH", 4318, "4318",
                 "Report settings property-grid selection should serialize paper-length edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "PAPERWIDTH", 2794, "2794",
@@ -338,6 +342,7 @@ internal static partial class Program
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.UniqueReport"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.OrderProtectionFlags"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Comments"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.UserComments"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PaperLength"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PaperWidth"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PrinterDriver"), StringComparison.Ordinal)) &&
@@ -446,7 +451,10 @@ internal static partial class Program
                settings[28].MemoBlockNumber == 22 &&
                string.Equals(settings[29].Name, "COMMENT", StringComparison.Ordinal) &&
                settings[29].FieldIndex == 19 &&
-               settings[29].MemoBlockNumber == 23,
+               settings[29].MemoBlockNumber == 23 &&
+               string.Equals(settings[30].Name, "USER", StringComparison.Ordinal) &&
+               settings[30].FieldIndex == 20 &&
+               settings[30].MemoBlockNumber == 24,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
 
         var readOnlySelection = CopperfinDesignerSelection.FromReportSettings(
@@ -461,7 +469,8 @@ internal static partial class Program
                !readOnlySelection.TryGetUpdate("CURPOS", out _, out _) &&
                !readOnlySelection.TryGetUpdate("UNIQUE", out _, out _) &&
                !readOnlySelection.TryGetUpdate("ORDER", out _, out _) &&
-               !readOnlySelection.TryGetUpdate("COMMENT", out _, out _),
+               !readOnlySelection.TryGetUpdate("COMMENT", out _, out _) &&
+               !readOnlySelection.TryGetUpdate("USER", out _, out _),
             "Read-only report settings property-grid selection should protect header view-setting update targets");
     }
 

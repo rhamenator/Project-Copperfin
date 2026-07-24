@@ -267,6 +267,7 @@ internal static partial class Program
                 new() { Name = "RESOID", Value = "1" },
                 new() { Name = "EXPR", Value = "customer.company" },
                 new() { Name = "COMMENT", Value = "Object developer note" },
+                new() { Name = "USER", Value = "Object user comment" },
                 new() { Name = "PICTURE", Value = "@J" },
                 new() { Name = "RULERLINES", Value = "4" },
                 new() { Name = "OFFSET", Value = "1" },
@@ -508,6 +509,7 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectState"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Comments"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.UserComments"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Picture"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExplicitFontCharset"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontCharset"), StringComparison.Ordinal)) &&
@@ -564,6 +566,8 @@ internal static partial class Program
                 "Live report object property-grid selection should serialize FILLBLUE edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "COMMENT", "Updated object note", "Updated object note",
                 "Live report object property-grid selection should serialize COMMENT edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "USER", "Updated object user comment", "Updated object user comment",
+                "Live report object property-grid selection should serialize USER edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "DOUBLE", false, "false",
                 "Live report object property-grid selection should serialize DOUBLE edits through the shared update path");
             ExpectSelectionUpdate(liveSelection, "RESOID", 4, "4",

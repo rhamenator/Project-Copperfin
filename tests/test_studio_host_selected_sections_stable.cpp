@@ -91,12 +91,13 @@ void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem:
         {.name = "FILLRED", .type = 'N', .length = 8U},
         {.name = "FILLGREEN", .type = 'N', .length = 8U},
         {.name = "FILLBLUE", .type = 'N', .length = 8U},
-        {.name = "COMMENT", .type = 'M', .length = 4U}
+        {.name = "COMMENT", .type = 'M', .length = 4U},
+        {.name = "USER", .type = 'M', .length = 4U}
     };
     std::vector<std::vector<std::string>> records{
         {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", "", "", "Band developer note"},
-        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60", "", "Object developer note"},
+        {"9", "4", "", "", "2000", "", "5000", "", ".T.", ".F.", ".T.", ".T.", ".F.", ".T.", "DO ENTRY", "DO EXIT", "", "", "", "", "", "", "Band developer note", "Band user comment"},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid", "", "", "", "", "", "", "", "10", "20", "30", "40", "50", "60", "", "Object developer note", "Object user comment"},
         {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", ""},
         {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid", "", "", "", "", "", "", "", "", "", "", "", "", "", ""}
     };
@@ -331,6 +332,10 @@ void run_live_section_selection(
                     issue_prefix + " should expose the section COMMENT memo value");
     expect_contains(section_process.stdout_text, "\"commentFieldIndex\": 22",
                     issue_prefix + " should expose section COMMENT field provenance");
+    expect_contains(section_process.stdout_text, "\"userComment\": \"Band user comment\"",
+                    issue_prefix + " should expose the section USER memo value");
+    expect_contains(section_process.stdout_text, "\"userCommentFieldIndex\": 23",
+                    issue_prefix + " should expose section USER field provenance");
     expect_contains(
         section_process.stdout_text,
         "\"sectionCount\": 1,\n      \"deletedSectionCount\": 0",
@@ -365,6 +370,7 @@ void run_live_section_selection(
             "--property-name", "TAG", "--property-value", "UPDATED ENTRY",
             "--property-name", "TAG2", "--property-value", "UPDATED EXIT",
             "--property-name", "COMMENT", "--property-value", "UPDATED BAND NOTE",
+            "--property-name", "USER", "--property-value", "UPDATED BAND USER COMMENT",
             "--json"
         },
         temp_root);
@@ -394,6 +400,26 @@ void run_live_section_selection(
                     issue_prefix + " should persist TAG2 exit-expression edits");
     expect_contains(reopened_process.stdout_text, "\"comment\": \"UPDATED BAND NOTE\"",
                     issue_prefix + " should persist section COMMENT edits");
+    expect_contains(reopened_process.stdout_text, "\"userComment\": \"UPDATED BAND USER COMMENT\"",
+                    issue_prefix + " should persist section USER edits");
+    const auto clear_user_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "section-guid",
+            "--property-name", "USER",
+            "--json"
+        },
+        temp_root);
+    expect(clear_user_process.exit_code == 0,
+           issue_prefix + " should clear section USER comments");
+    const auto reopened_clear_user_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "section-guid", "--json"},
+        temp_root);
+    expect_contains(reopened_clear_user_process.stdout_text, "\"userComment\": \"\"",
+                    issue_prefix + " should remove cleared section USER comments on reopen");
 }
 
 void run_live_object_color_selection(
@@ -425,6 +451,10 @@ void run_live_object_color_selection(
                     issue_prefix + " should expose object COMMENT");
     expect_contains(selected_process.stdout_text, "\"value\": \"Object developer note\"",
                     issue_prefix + " should expose object COMMENT value");
+    expect_contains(selected_process.stdout_text, "\"name\": \"USER\"",
+                    issue_prefix + " should expose object USER comment");
+    expect_contains(selected_process.stdout_text, "\"value\": \"Object user comment\"",
+                    issue_prefix + " should expose object USER comment value");
 
     const auto update_process = run_process_capture(
         studio_host_path,
@@ -439,6 +469,7 @@ void run_live_object_color_selection(
             "--property-name", "FILLGREEN", "--property-value", "51",
             "--property-name", "FILLBLUE", "--property-value", "61",
             "--property-name", "COMMENT", "--property-value", "UPDATED OBJECT NOTE",
+            "--property-name", "USER", "--property-value", "UPDATED OBJECT USER COMMENT",
             "--json"
         },
         temp_root);
@@ -460,6 +491,31 @@ void run_live_object_color_selection(
                     issue_prefix + " should persist FILLBLUE edits");
     expect_contains(reopened_process.stdout_text, "\"value\": \"UPDATED OBJECT NOTE\"",
                     issue_prefix + " should persist object COMMENT edits");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"UPDATED OBJECT USER COMMENT\"",
+                    issue_prefix + " should persist object USER edits");
+    const auto clear_user_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "left-field-guid",
+            "--property-name", "USER",
+            "--json"
+        },
+        temp_root);
+    expect(clear_user_process.exit_code == 0,
+           issue_prefix + " should clear object USER comments");
+    const auto reopened_clear_user_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "left-field-guid", "--json"},
+        temp_root);
+    const auto selected_object_start = reopened_clear_user_process.stdout_text.find("\"selectedReportObject\": {");
+    const auto selected_object_end = reopened_clear_user_process.stdout_text.find("\"selectedReportObjectSectionAvailable\"", selected_object_start);
+    const std::string selected_object_json = selected_object_start == std::string::npos
+        ? std::string{}
+        : reopened_clear_user_process.stdout_text.substr(selected_object_start, selected_object_end - selected_object_start);
+    expect(selected_object_json.find("\"name\": \"USER\"") == std::string::npos,
+           issue_prefix + " should remove cleared object USER comments on reopen");
 }
 
 void run_line_shape_style_selection(
@@ -1024,10 +1080,11 @@ void write_synthetic_report_table_for_header_unique_json(
         {.name = "CURPOS", .type = 'L', .length = 1U},
         {.name = "UNIQUE", .type = 'L', .length = 1U},
         {.name = "ORDER", .type = 'M', .length = 4U},
-        {.name = "COMMENT", .type = 'M', .length = 4U}
+        {.name = "COMMENT", .type = 'M', .length = 4U},
+        {.name = "USER", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T.", "ORDER-BYTES", "Header developer note"}
+        {"1", "53", "header-unique-guid", "1", ".T.", ".T.", ".T.", "ORDER-BYTES", "Header developer note", "Header user comment"}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#4542: header UNIQUE fixture should be created");
@@ -1063,6 +1120,10 @@ void run_header_unique_selection(
                     issue_prefix + " should expose header COMMENT");
     expect_contains(selected_process.stdout_text, "\"value\": \"Header developer note\"",
                     issue_prefix + " should expose header COMMENT value");
+    expect_contains(selected_process.stdout_text, "\"name\": \"USER\"",
+                    issue_prefix + " should expose header USER comment");
+    expect_contains(selected_process.stdout_text, "\"value\": \"Header user comment\"",
+                    issue_prefix + " should expose header USER comment value");
 
     const auto order_update_process = run_process_capture(
         studio_host_path,
@@ -1146,6 +1207,7 @@ void run_header_unique_selection(
             "--unique-id", "header-unique-guid",
             "--property-name", "UNIQUE", "--property-value", "false",
             "--property-name", "COMMENT", "--property-value", "Updated header note",
+            "--property-name", "USER", "--property-value", "Updated header user comment",
             "--json"
         },
         temp_root);
@@ -1164,6 +1226,31 @@ void run_header_unique_selection(
                     issue_prefix + " should persist the UNIQUE edit");
     expect_contains(reopened_process.stdout_text, "\"value\": \"Updated header note\"",
                     issue_prefix + " should persist the header COMMENT edit");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"Updated header user comment\"",
+                    issue_prefix + " should persist the header USER edit");
+    const auto user_clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-unique-guid",
+            "--property-name", "USER",
+            "--json"
+        },
+        temp_root);
+    expect(user_clear_process.exit_code == 0,
+           issue_prefix + " should clear header USER comments");
+    const auto user_reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-unique-guid", "--json"},
+        temp_root);
+    const auto user_settings_start = user_reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto user_settings_end = user_reopened_clear_process.stdout_text.find("]", user_settings_start);
+    const std::string user_settings_json = user_settings_start == std::string::npos
+        ? std::string{}
+        : user_reopened_clear_process.stdout_text.substr(user_settings_start, user_settings_end - user_settings_start);
+    expect(user_settings_json.find("\"name\": \"USER\"") == std::string::npos,
+           issue_prefix + " should remove cleared header USER comments on reopen");
 
     const auto clear_process = run_process_capture(
         studio_host_path,

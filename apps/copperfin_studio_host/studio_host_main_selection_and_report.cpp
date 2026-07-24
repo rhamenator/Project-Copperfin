@@ -2862,6 +2862,13 @@ void print_json_report_layout_section(
     print_json_report_field_index_or_null(section.comment_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"commentMemoBlockNumber\": " << section.comment_memo_block_number << ",\n";
+    std::cout << indent << "  \"userComment\": ";
+    print_json_string(section.user_comment);
+    std::cout << ",\n";
+    std::cout << indent << "  \"userCommentFieldIndex\": ";
+    print_json_report_field_index_or_null(section.user_comment_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"userCommentMemoBlockNumber\": " << section.user_comment_memo_block_number << ",\n";
     std::cout << indent << "  \"recordIndex\": " << section.record_index << ",\n";
     std::cout << indent << "  \"deleted\": " << (section.deleted ? "true" : "false") << ",\n";
     std::cout << indent << "  \"sectionIndex\": ";

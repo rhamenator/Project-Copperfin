@@ -2396,6 +2396,7 @@
   "AssetEditor.Property.ProjectItem": "Project Item",
   "AssetEditor.Property.Key": "Key",
   "AssetEditor.Property.Comments": "Comments",
+  "AssetEditor.Property.UserComments": "User Comments",
   "AssetEditor.Property.Exclude": "Exclude",
   "AssetEditor.Property.MainProgram": "Main Program",
   "AssetEditor.Property.Debug": "Debug",

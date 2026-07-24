@@ -123,6 +123,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 selection.AddReadOnlyString("OBJECTSTATE", L("AssetEditor.Property.ObjectState", "Object State"), BuildStateText(localization, snapshotObject.Deleted));
                 selection.AddEditableString("EXPR", L("AssetEditor.Property.Expression", "Expression"), selection.Read(snapshotObject, "EXPR"));
                 selection.AddEditableString("COMMENT", L("AssetEditor.Property.Comments", "Comments"), selection.Read(snapshotObject, "COMMENT"));
+                selection.AddEditableString("USER", L("AssetEditor.Property.UserComments", "User Comments"), selection.Read(snapshotObject, "USER"));
                 if (int.TryParse(
                         selection.Read(snapshotObject, "OBJTYPE"),
                         NumberStyles.Integer,
@@ -380,6 +381,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "COMMENT",
             localization.Text("AssetEditor.Property.Comments"),
             section.Comment);
+        selection.AddEditableString(
+            "USER",
+            localization.Text("AssetEditor.Property.UserComments"),
+            section.UserComment);
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
             section.ExpressionFieldIndex.HasValue ||
@@ -847,6 +852,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "UNIQUE", LocalizationKey = "AssetEditor.Property.UniqueReport", Logical = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "ORDER", LocalizationKey = "AssetEditor.Property.OrderProtectionFlags", MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "COMMENT", LocalizationKey = "AssetEditor.Property.Comments", MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "USER", LocalizationKey = "AssetEditor.Property.UserComments", MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = true };
     }
 

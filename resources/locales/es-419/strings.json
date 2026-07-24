@@ -2395,6 +2395,7 @@
   "AssetEditor.Property.ProjectItem": "Elemento del proyecto",
   "AssetEditor.Property.Key": "Clave",
   "AssetEditor.Property.Comments": "Comentarios",
+  "AssetEditor.Property.UserComments": "Comentarios del usuario",
   "AssetEditor.Property.Exclude": "Excluir",
   "AssetEditor.Property.MainProgram": "Programa principal",
   "AssetEditor.Property.Debug": "Depurar",

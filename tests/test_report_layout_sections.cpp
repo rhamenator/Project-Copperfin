@@ -42,7 +42,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("PLAIN", "T", 49U),
                 value("TAG", "DO ENTRY", 50U),
                 value("TAG2", "DO EXIT", 51U),
-                value("COMMENT", "Band developer note", 52U)
+                value("COMMENT", "Band developer note", 52U),
+                value("USER", "Band user comment", 53U)
             }
         },
         {
@@ -93,7 +94,8 @@ void test_build_report_layout_groups_band_objects() {
                 value("FILLRED", "40", 318U),
                 value("FILLGREEN", "50", 319U),
                 value("FILLBLUE", "60", 320U),
-                value("COMMENT", "Object developer note", 321U)
+                value("COMMENT", "Object developer note", 321U),
+                value("USER", "Object user comment", 322U)
             }
         },
         {
@@ -186,7 +188,8 @@ void test_build_report_layout_groups_band_objects() {
            layout.sections[1].plain.empty() &&
            layout.sections[1].on_entry_expression.empty() &&
            layout.sections[1].on_exit_expression.empty() &&
-           layout.sections[1].comment.empty(),
+           layout.sections[1].comment.empty() &&
+           layout.sections[1].user_comment.empty(),
         "#4531: blank section pagination flags should remain blank without fabricating provenance");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
@@ -231,6 +234,10 @@ void test_build_report_layout_groups_band_objects() {
            layout.sections[0].comment_field_index == 12U &&
            layout.sections[0].comment_memo_block_number == 52U,
         "#4544: report sections should preserve COMMENT values and memo provenance");
+    expect(layout.sections[0].user_comment == "Band user comment" &&
+           layout.sections[0].user_comment_field_index == 13U &&
+           layout.sections[0].user_comment_memo_block_number == 53U,
+        "#4545: report sections should preserve USER values and memo provenance");
     expect(layout.sections[0].reset_page == "T" && layout.sections[0].reset_page_field_index == 6U &&
            layout.sections[0].reset_page_memo_block_number == 46U,
         "#4531: report sections should preserve RESETPAGE values and source provenance");
@@ -296,6 +303,15 @@ void test_build_report_layout_groups_band_objects() {
            comment_highlight->field_index == 26U &&
            comment_highlight->memo_block_number == 321U,
         "#4544: report objects should expose COMMENT highlights with memo provenance");
+    const auto user_comment_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) { return highlight.name == "USER"; });
+    expect(user_comment_highlight != layout.sections[1].objects[0].highlights.end() &&
+           user_comment_highlight->value == "Object user comment" &&
+           user_comment_highlight->field_index == 27U &&
+           user_comment_highlight->memo_block_number == 322U,
+        "#4545: report objects should expose USER highlights with memo provenance");
     const auto print_when_highlight = std::find_if(
         layout.sections[1].objects[0].highlights.begin(),
         layout.sections[1].objects[0].highlights.end(),
