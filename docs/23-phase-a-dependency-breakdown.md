@@ -22,6 +22,15 @@ Each slice remains prompt-sized, independently testable, and assigned a
 disjoint source/test area when delegated. Parent and umbrella issues organize
 the work; only a prompt-sized child is an execution unit.
 
+## Completed E-Series Boundary
+
+The E2 designer-interaction implementation tree and E3 report/label
+implementation tree are complete at the current MVP fidelity. The complete
+portable seven-part DesignerSmoke inventory also passes in one process. The
+remaining hosted Windows mounted-VFP9, Visual Studio, and Win32 UI checks are
+release-evidence work; do not select the completed E2/E3 implementation slices
+again unless a regression or fresh compatibility evidence creates a new gap.
+
 ## Current Evidence Ledger
 
 - Latest UI validation slice: `#4551` under #110 adds `scripts/run-designer-smoke-headless.sh`, which builds and runs the existing net472 WinForms DesignerSmoke executable through a fixed Xvfb screen and provides selector discovery without Xvfb. Preserve selector and exit-code contracts; use it for portable shared/WinForms evidence, while live Visual Studio theme/docking, Win32 rendering, and hosted VFP9 behavior remain Windows evidence gates.

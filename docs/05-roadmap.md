@@ -26,6 +26,11 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+The shared designer-interaction and report/label implementation trees are
+complete at the current MVP fidelity. Their remaining hosted Windows,
+Visual Studio, and mounted-VFP9 checks are release evidence gates, not reasons
+to reopen completed implementation slices.
+
 ## MVP Workstreams
 
 ### Report And Label Fidelity
@@ -40,8 +45,8 @@ Complete section-aware FRX/LBX editing in the shared designer model:
   shell-specific chrome kept outside the shared model
 - stable host JSON with invariant machine fields and optional display fields
 
-The implementation is near the MVP boundary. Hosted Windows validation with
-real VFP9 samples remains part of the acceptance evidence.
+The implementation is complete for the current MVP fidelity. Hosted Windows
+validation with real VFP9 samples remains part of the acceptance evidence.
 
 ### Localization
 
@@ -62,6 +67,10 @@ the same behavior in standalone Studio and the VSIX. Stabilize the MVP utility
 surfaces needed for repeated work: debugger, task list, references, data
 explorer, object browser, toolbox/builders, coverage, database, and
 security/extensibility summaries.
+
+The shared E2 interaction and builder implementation is complete; remaining
+IDE work is the separately owned shell, hosted Visual Studio, and standalone
+product-grade surface work described by the live MVP tree.
 
 ### Runtime And Language Compatibility
 
