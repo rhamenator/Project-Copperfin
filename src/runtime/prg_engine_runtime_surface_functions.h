@@ -93,6 +93,7 @@ bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_objec
 bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_commandbutton_default_cancel_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_commandbutton_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_commandbutton_picture_layout_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_picture_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_dragmode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_dragicon_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -248,6 +249,7 @@ void normalize_native_visual_helpcontextid_invariant(RuntimeOleObjectState& runt
 void normalize_native_visual_whatsthishelpid_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_commandbutton_style_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_commandbutton_picture_layout_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_dragmode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_themes_invariant(RuntimeOleObjectState& runtime_object);

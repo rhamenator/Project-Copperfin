@@ -8626,6 +8626,12 @@ namespace copperfin::runtime
                 {
                     normalize_native_commandbutton_style_invariant(runtime_object);
                 }
+                if (normalized_property_name == "picturemargin" ||
+                    normalized_property_name == "pictureposition" ||
+                    normalized_property_name == "picturespacing")
+                {
+                    normalize_native_commandbutton_picture_layout_invariant(runtime_object);
+                }
                 if (normalized_property_name == "strictdateentry")
                 {
                     normalize_native_textbox_strictdateentry_invariant(runtime_object);

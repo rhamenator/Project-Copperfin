@@ -604,6 +604,16 @@ bool native_commandbutton_style_member_name_matches(
            runtime_object.properties.contains("style");
 }
 
+bool native_commandbutton_picture_layout_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return (normalized_member_name == "picturemargin" ||
+            normalized_member_name == "pictureposition" ||
+            normalized_member_name == "picturespacing") &&
+           native_commandbutton_picture_layout_runtime_object(runtime_object) &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
 bool native_visual_picture_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

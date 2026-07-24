@@ -161,4 +161,110 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_commandbutton_picture_layout_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_commandbutton_picture_layout";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_commandbutton_picture_layout.prg";
+        write_text(
+            main_path,
+            "oButton = CREATEOBJECT('CommandButton')\n"
+            "lMarginHas = PEMSTATUS(oButton, 'PictureMargin', 1)\n"
+            "lPositionHas = PEMSTATUS(oButton, 'PicturePosition', 1)\n"
+            "lSpacingHas = PEMSTATUS(oButton, 'PictureSpacing', 1)\n"
+            "nMarginInitial = oButton.PictureMargin\n"
+            "nPositionInitial = GETPEM(oButton, 'PicturePosition')\n"
+            "nSpacingInitial = oButton.PictureSpacing\n"
+            "oButton.PictureMargin = 42.6\n"
+            "nMarginDirect = oButton.PictureMargin\n"
+            "lSetPosition = SETPEM(oButton, 'PicturePosition', 14)\n"
+            "nPositionAfterSetPem = GETPEM(oButton, 'PicturePosition')\n"
+            "lPutSpacing = PUTPEM(oButton, 'PictureSpacing', 65535)\n"
+            "nSpacingAfterPutPem = GETPEM(oButton, 'PictureSpacing')\n"
+            "lSetMarginInvalid = SETPEM(oButton, 'PictureMargin', -1)\n"
+            "nMarginAfterInvalid = GETPEM(oButton, 'PictureMargin')\n"
+            "lPutPositionInvalid = PUTPEM(oButton, 'PicturePosition', 15)\n"
+            "nPositionAfterInvalid = GETPEM(oButton, 'PicturePosition')\n"
+            "lAddSpacing = ADDPROPERTY(oButton, 'PictureSpacing', 1)\n"
+            "lRemoveMargin = REMOVEPROPERTY(oButton, 'PictureMargin')\n"
+            "lMarginMember = .F.\n"
+            "lPositionMember = .F.\n"
+            "lSpacingMember = .F.\n"
+            "nMembers = AMEMBERS(aMembers, oButton, 1)\n"
+            "FOR i = 1 TO nMembers\n"
+            "    IF UPPER(aMembers[i]) == 'PICTUREMARGIN'\n"
+            "        lMarginMember = .T.\n"
+            "    ENDIF\n"
+            "    IF UPPER(aMembers[i]) == 'PICTUREPOSITION'\n"
+            "        lPositionMember = .T.\n"
+            "    ENDIF\n"
+            "    IF UPPER(aMembers[i]) == 'PICTURESPACING'\n"
+            "        lSpacingMember = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oCheck = CREATEOBJECT('CheckBox')\n"
+            "lCheckMargin = PEMSTATUS(oCheck, 'PictureMargin', 1)\n"
+            "oDerived = CREATEOBJECT('DerivedCommandButtonPictureLayout')\n"
+            "nDerivedMargin = oDerived.PictureMargin\n"
+            "nDerivedPosition = oDerived.PicturePosition\n"
+            "nDerivedSpacing = oDerived.PictureSpacing\n"
+            "RETURN\n"
+            "DEFINE CLASS DerivedCommandButtonPictureLayout AS CommandButton\n"
+            "    PictureMargin = 7\n"
+            "    PicturePosition = 12\n"
+            "    PictureSpacing = 9\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native CommandButton picture-layout script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("lmarginhas", "true");
+        check("lpositionhas", "true");
+        check("lspacinghas", "true");
+        check("nmargininitial", "0");
+        check("npositioninitial", "13");
+        check("nspacinginitial", "0");
+        check("nmargindirect", "43");
+        check("lsetposition", "true");
+        check("npositionaftersetpem", "14");
+        check("lputspacing", "true");
+        check("nspacingafterputpem", "65535");
+        check("lsetmargininvalid", "true");
+        check("nmarginafterinvalid", "0");
+        check("lputpositioninvalid", "true");
+        check("npositionafterinvalid", "13");
+        check("laddspacing", "false");
+        check("lremovemargin", "false");
+        check("lmarginmember", "true");
+        check("lpositionmember", "true");
+        check("lspacingmember", "true");
+        check("lcheckmargin", "false");
+        check("nderivedmargin", "7");
+        check("nderivedposition", "12");
+        check("nderivedspacing", "9");
+        expect(state.ole_objects.size() == 3U,
+               "native CommandButton picture-layout coverage should register the button, check box, and derived objects");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

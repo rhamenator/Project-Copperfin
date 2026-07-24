@@ -77,6 +77,10 @@ bool native_commandbutton_style_runtime_object(const RuntimeOleObjectState& runt
     return native_commandbutton_default_cancel_runtime_object(runtime_object);
 }
 
+bool native_commandbutton_picture_layout_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_commandbutton_default_cancel_runtime_object(runtime_object);
+}
+
 bool native_visual_picture_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

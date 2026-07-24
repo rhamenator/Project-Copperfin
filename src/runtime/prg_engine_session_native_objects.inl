@@ -179,6 +179,22 @@
                 runtime_object.properties["style"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "commandbutton")
+            {
+                if (!runtime_object.properties.contains("picturemargin"))
+                {
+                    runtime_object.properties["picturemargin"] = make_number_value(0.0);
+                }
+                if (!runtime_object.properties.contains("pictureposition"))
+                {
+                    runtime_object.properties["pictureposition"] = make_number_value(13.0);
+                }
+                if (!runtime_object.properties.contains("picturespacing"))
+                {
+                    runtime_object.properties["picturespacing"] = make_number_value(0.0);
+                }
+            }
+
             if ((normalized_base_class == "checkbox" ||
                  normalized_base_class == "commandbutton" ||
                  normalized_base_class == "commandgroup" ||

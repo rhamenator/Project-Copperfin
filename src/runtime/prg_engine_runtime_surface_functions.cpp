@@ -267,6 +267,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_whatsthishelpid_member_name_matches(runtime_object, member_name) ||
                native_visual_tag_member_name_matches(runtime_object, member_name) ||
                native_visual_caption_member_name_matches(runtime_object, member_name) ||
+               native_commandbutton_picture_layout_member_name_matches(runtime_object, member_name) ||
                native_visual_picture_member_name_matches(runtime_object, member_name) ||
                native_visual_dragmode_member_name_matches(runtime_object, member_name) ||
                native_visual_dragicon_member_name_matches(runtime_object, member_name) ||
