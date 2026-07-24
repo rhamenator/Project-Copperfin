@@ -77,12 +77,12 @@ internal static partial class Program
         Application.DoEvents();
         var initialTranscript = form.CommandWindowTranscriptText;
 
-        form.SubmitCommandForTest("LIST");
+        form.SubmitCommandForTest("? x");
         Application.DoEvents();
 
-        Expect(form.CommandWindowTranscriptText.Contains("> LIST", StringComparison.Ordinal) &&
-               form.CommandWindowTranscriptText.Contains("No se pudo abrir el comando de Copperfin.", StringComparison.Ordinal),
-            "standalone Command window should record submitted commands and localize an unavailable executor");
+        Expect(form.CommandWindowTranscriptText.Contains("> ? x", StringComparison.Ordinal) &&
+               form.CommandWindowTranscriptText.Contains("No hay una sesion de depuracion activa de Copperfin.", StringComparison.Ordinal),
+            "standalone Command window should record supported input and localize the no-session response");
         var transcriptAfterCommand = form.CommandWindowTranscriptText;
         form.SubmitCommandForTest("   ");
         Expect(form.CommandWindowTranscriptText == transcriptAfterCommand,
