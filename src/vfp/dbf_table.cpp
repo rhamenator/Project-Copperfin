@@ -122,6 +122,13 @@ std::string trim_right(std::string text) {
     return text;
 }
 
+std::string trim_dbf_text_terminator(std::string text) {
+    if (const auto nul = std::find(text.begin(), text.end(), '\0'); nul != text.end()) {
+        text.erase(nul, text.end());
+    }
+    return trim_right(std::move(text));
+}
+
 std::string trim_both(std::string text) {
     text = trim_right(std::move(text));
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
@@ -1093,9 +1100,10 @@ DecodedDbfValue decode_value(
 
     switch (field_type) {
         case 'C': {
+            std::string value(raw.begin(), raw.end());
             const DbfTextConversionResult decoded = decode_dbf_text(
                 code_page_mark,
-                trim_right(std::string(raw.begin(), raw.end())));
+                trim_dbf_text_terminator(std::move(value)));
             return decoded.ok
                 ? DecodedDbfValue(std::move(decoded.text))
                 : DecodedDbfValue(format_binary_bytes(raw));
@@ -1190,9 +1198,11 @@ DecodedDbfValue decode_value(
                         memo_bytes->size()));
                 if (!decoded.ok) {
                     const auto legacy_display = memo_reader.read_block(block_number);
-                    return legacy_display.has_value() ? DecodedDbfValue(*legacy_display) : DecodedDbfValue{};
+                    return legacy_display.has_value()
+                        ? DecodedDbfValue(trim_dbf_text_terminator(*legacy_display))
+                        : DecodedDbfValue{};
                 }
-                return trim_right(std::move(decoded.text));
+                return trim_dbf_text_terminator(std::move(decoded.text));
             }
             std::ostringstream stream;
             stream << "<memo block " << block_number << ">";
