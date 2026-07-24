@@ -225,6 +225,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_textbox_disabledforecolor_member_name_matches(runtime_object, member_name) ||
                native_list_control_disableditembackcolor_member_name_matches(runtime_object, member_name) ||
                native_list_control_disableditemforecolor_member_name_matches(runtime_object, member_name) ||
+               native_list_control_itembackcolor_member_name_matches(runtime_object, member_name) ||
+               native_list_control_itemforecolor_member_name_matches(runtime_object, member_name) ||
                native_textbox_statusbartext_member_name_matches(runtime_object, member_name) ||
                native_textbox_strictdateentry_member_name_matches(runtime_object, member_name) ||
                native_textbox_themes_member_name_matches(runtime_object, member_name) ||

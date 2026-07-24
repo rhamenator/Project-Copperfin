@@ -605,6 +605,22 @@ bool native_list_control_disableditemforecolor_member_name_matches(
            runtime_object.properties.contains("disableditemforecolor");
 }
 
+bool native_list_control_itembackcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "itembackcolor" &&
+           native_list_control_itembackcolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("itembackcolor");
+}
+
+bool native_list_control_itemforecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "itemforecolor" &&
+           native_list_control_itemforecolor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("itemforecolor");
+}
+
 bool native_textbox_statusbartext_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
