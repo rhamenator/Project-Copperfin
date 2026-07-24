@@ -181,6 +181,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     internal bool SuppressProjectWorkflowDialogs { get; set; }
 
+    internal bool SuppressDebuggerDialogs { get; set; }
+
     public CopperfinAssetEditorControl(CopperfinLocalization? localization = null)
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
@@ -3702,7 +3704,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ShowDebuggerDialog(this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), MessageBoxIcon.Information);
             return;
         }
 
@@ -3732,7 +3734,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UnavailableStatus");
                 debuggerSummaryBox.Text = session.Error;
                 SetDebuggerButtonsEnabled(false);
-                MessageBox.Show(this, session.Error, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ShowDebuggerDialog(session.Error, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -3761,6 +3763,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         catch (System.ComponentModel.Win32Exception)
         {
+        }
+    }
+
+    private void ShowDebuggerDialog(string message, MessageBoxIcon icon)
+    {
+        if (!SuppressDebuggerDialogs)
+        {
+            MessageBox.Show(this, message, DialogTitle, MessageBoxButtons.OK, icon);
         }
     }
 
@@ -3879,7 +3889,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ShowDebuggerDialog(this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), MessageBoxIcon.Information);
             return;
         }
 
@@ -3956,7 +3966,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ShowDebuggerDialog(this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), MessageBoxIcon.Information);
             return;
         }
 
@@ -3968,7 +3978,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ShowDebuggerDialog(this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), MessageBoxIcon.Information);
             return;
         }
 
@@ -3988,7 +3998,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ShowDebuggerDialog(this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), MessageBoxIcon.Information);
             return;
         }
 

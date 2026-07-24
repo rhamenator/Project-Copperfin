@@ -19,6 +19,7 @@ internal static partial class Program
             "breakpoint parsing should preserve Windows drive-letter paths");
 
         using var control = new CopperfinAssetEditorControl(new CopperfinLocalization("qps-ploc"));
+        control.SuppressDebuggerDialogs = true;
         var session = new CopperfinRuntimeDebugSession
         {
             Success = true,
