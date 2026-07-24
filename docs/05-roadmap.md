@@ -398,16 +398,16 @@ flowchart TD
     classDef planned fill:#6b7280,stroke:#484d54,color:#ffffff,stroke-width:1px;
     classDef lane fill:#f2e0cf,stroke:#a85a2a,color:#1b2024,stroke-width:1px;
 
-    subgraph PA["Phase A - Data & Storage Engine (closed) = slice-lane A"]
+    subgraph PA["Phase A - Data and Storage Engine (closed) = slice-lane A"]
       direction LR
-      A1["A1 File & Index Fidelity"]
+      A1["A1 File and Index Fidelity"]
       A2["A2 Work Areas / Sessions"]
-      A3["A3 Command & Expression Surface"]
-      A4["A4 Automation & OLE/COM"]
+      A3["A3 Command and Expression Surface"]
+      A4["A4 Automation and OLE/COM"]
       A1 --> A2 --> A3 --> A4
     end
 
-    subgraph PB["Phase B - Runtime & xAsset Parity (closed, 'reached green') = slice-lane C, root #109"]
+    subgraph PB["Phase B - Runtime and xAsset Parity (closed, 'reached green') = slice-lane C, root #109"]
       direction LR
       C1["C1 Form/Class Lifecycle"]
       C2["C2 Report/Label Execution"]
@@ -420,7 +420,7 @@ flowchart TD
       C4 --> C5
     end
 
-    subgraph PC["Phase C - Designer, IDE & Delivery Pipeline (closed, 'reached green') = slice-lanes D + E + F + G"]
+    subgraph PC["Phase C - Designer, IDE and Delivery Pipeline (closed, 'reached green') = slice-lanes D + E + F + G"]
       direction LR
       D["D: Build/Debug Pipeline<br/>roots #19, #20"]
       E["E: Shared Design Model<br/>+ Designer Fidelity<br/>root #111 (#22/#23/#24)"]
@@ -539,7 +539,7 @@ flowchart TB
 
     subgraph LANEG["Lane G — root #112 'IDE and editor parity' (shared root with F) - IntelliSense"]
       direction LR
-      G1["G1 Semantic Resolution,<br/>Signature Help, Completions<br/>root #27, #178-183 & #395-401"]
+      G1["G1 Semantic Resolution,<br/>Signature Help, Completions<br/>root #27, #178-183 and #395-401"]
       G2["G2 Navigation, References,<br/>Refactoring<br/>root #28"]
       G3["G3 Richer IntelliSense<br/>Metadata Inputs<br/>root #29"]
       G1 --> G2

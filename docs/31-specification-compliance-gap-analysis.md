@@ -50,7 +50,7 @@ flowchart TB
       COMPAT["docs/03 Compatibility And<br/>Migration - 5-layer model,<br/>5 migration modes, 9 tool outputs"]
     end
 
-    subgraph LANG["Language & Data Fidelity"]
+    subgraph LANG["Language and Data Fidelity"]
       direction TB
       LANGCOV["docs/22 VFP Language<br/>Reference Coverage<br/>1411 documented surface items"]
       IDXFMT["docs/13 Index Format Notes<br/>CDX/IDX/NDX/MDX read+inspect;<br/>no write fidelity, no named collation"]
@@ -64,7 +64,7 @@ flowchart TB
       CONCURRENCY["docs/25 Engine Concurrency<br/>Policy - fail-fast lock-order/<br/>no-block-while-held invariants"]
     end
 
-    subgraph SEC["Security & Interop"]
+    subgraph SEC["Security and Interop"]
       direction TB
       SECMODEL["docs/04 Security Model<br/>Entra ID, Shield, hardening tiers<br/>-- entirely forward-looking"]
       RBAC["docs/18 Native Security And RBAC<br/>claims a current code baseline"]

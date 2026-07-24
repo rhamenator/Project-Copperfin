@@ -241,17 +241,17 @@ classDiagram
 
     CopperfinRuntime --> CopperfinCore : uses shared contracts
     CopperfinData --> CopperfinCore : emits diagnostics
-    CopperfinRuntime --> CopperfinData : reads/writes DBF/DBC/index state
+    CopperfinRuntime --> CopperfinData : reads and writes DBF DBC index state
     CopperfinRuntime --> CopperfinConnectors : remote cursor and SQL flow
     CopperfinConnectors --> CopperfinCore : provider contracts
     CopperfinDesignModel --> CopperfinCore : common metadata
     CopperfinDesignHosts --> CopperfinDesignModel : edits assets
-    CopperfinDesignHosts --> CopperfinRuntime : executes/debugs assets
-    CopperfinToolchain --> CopperfinRuntime : build/run/debug
+    CopperfinDesignHosts --> CopperfinRuntime : executes and debugs assets
+    CopperfinToolchain --> CopperfinRuntime : build run and debug
     CopperfinToolchain --> CopperfinDesignModel : compiles packaged assets
     CopperfinInterop --> CopperfinRuntime : automation and runtime bridge
     CopperfinFederation --> CopperfinConnectors : backend access
-    CopperfinFederation --> CopperfinRuntime : query/runtime integration
+    CopperfinFederation --> CopperfinRuntime : query and runtime integration
 ```
 
 ## Runtime Subsystem UML
