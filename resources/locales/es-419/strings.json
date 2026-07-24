@@ -2443,6 +2443,7 @@
   "AssetEditor.Property.RulerUnits": "Unidades de regla",
   "AssetEditor.Property.RulerLines": "L\u00EDneas de regla",
   "AssetEditor.Property.AddAlias": "Agregar alias de campos",
+  "AssetEditor.Property.ShowPosition": "Mostrar posici\u00F3n",
   "AssetEditor.Property.SortExpression": "Expresi\u00F3n de orden",
   "AssetEditor.Property.DeletedObjects": "Objetos eliminados",
   "AssetEditor.Property.GroupRole": "Rol del grupo",

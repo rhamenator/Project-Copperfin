@@ -570,6 +570,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("RESOID");
     append_direct_setting("RULERLINES");
     append_direct_setting("ADDALIAS");
+    append_direct_setting("CURPOS");
     append_name_value_pairs("PICTURE", true);
 }
 
