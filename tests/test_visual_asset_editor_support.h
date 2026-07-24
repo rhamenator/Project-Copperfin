@@ -93,6 +93,7 @@ void test_visual_asset_raw_unicode_path_transaction_round_trip();
 void test_update_visual_object_property_preserves_equals_for_blank_property_values();
 void test_update_visual_object_report_settings_property_preserves_comment_lines();
 void test_report_settings_bottom_margin_memo_round_trips();
+void test_report_printer_duplex_and_winspool_settings_are_admitted();
 void test_report_settings_fallback_root_gridv_round_trips();
 void test_report_settings_case_insensitive_expr_field_round_trips();
 void test_report_settings_topmargin_and_tag_memo_round_trips();
