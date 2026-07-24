@@ -285,6 +285,13 @@
             }
 
             if (normalized_base_class == "textbox" &&
+                !runtime_object.properties.contains("dynamicinputmask"))
+            {
+                // Headless contract: preserve the raw dynamic-mask expression without evaluating it.
+                runtime_object.properties["dynamicinputmask"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "textbox" &&
                 !runtime_object.properties.contains("format"))
             {
                 runtime_object.properties["format"] = make_string_value("");

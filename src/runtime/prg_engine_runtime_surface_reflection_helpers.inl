@@ -644,6 +644,14 @@ bool native_textbox_inputmask_member_name_matches(
            runtime_object.properties.contains("inputmask");
 }
 
+bool native_textbox_dynamicinputmask_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicinputmask" &&
+           native_textbox_dynamicinputmask_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dynamicinputmask");
+}
+
 bool native_textbox_format_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

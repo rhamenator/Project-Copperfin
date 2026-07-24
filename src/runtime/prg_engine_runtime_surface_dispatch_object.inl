@@ -257,6 +257,7 @@
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
+            is_native_textbox_dynamicinputmask_member_name(*runtime_object, property_name) ||
             is_native_textbox_format_member_name(*runtime_object, property_name) ||
             is_native_textbox_passwordchar_member_name(*runtime_object, property_name) ||
             is_native_textbox_maxlength_member_name(*runtime_object, property_name) ||
@@ -751,6 +752,9 @@
             if (member_name == "inputmask") {
                 normalize_native_textbox_inputmask_invariant(*runtime_object);
             }
+            if (member_name == "dynamicinputmask") {
+                normalize_native_textbox_dynamicinputmask_invariant(*runtime_object);
+            }
             if (member_name == "format") {
                 normalize_native_textbox_format_invariant(*runtime_object);
             }
@@ -1006,6 +1010,9 @@
             if (member_name == "inputmask") {
                 normalize_native_textbox_inputmask_invariant(*runtime_object);
             }
+            if (member_name == "dynamicinputmask") {
+                normalize_native_textbox_dynamicinputmask_invariant(*runtime_object);
+            }
             if (member_name == "format") {
                 normalize_native_textbox_format_invariant(*runtime_object);
             }
@@ -1239,6 +1246,7 @@
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
+            is_native_textbox_dynamicinputmask_member_name(*runtime_object, property_name) ||
             is_native_textbox_format_member_name(*runtime_object, property_name) ||
             is_native_textbox_passwordchar_member_name(*runtime_object, property_name) ||
             is_native_textbox_maxlength_member_name(*runtime_object, property_name) ||

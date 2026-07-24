@@ -100,6 +100,7 @@ bool is_native_visual_autosize_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_editbox_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_inputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_textbox_dynamicinputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_format_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_passwordchar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_textbox_maxlength_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -202,6 +203,7 @@ void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& ru
 void normalize_native_grid_allowrowsizing_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_textbox_dynamicinputmask_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_format_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_passwordchar_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_maxlength_invariant(RuntimeOleObjectState& runtime_object);

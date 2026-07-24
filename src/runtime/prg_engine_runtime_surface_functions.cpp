@@ -289,6 +289,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_allowrowsizing_member_name_matches(runtime_object, member_name) ||
                native_editbox_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
+               native_textbox_dynamicinputmask_member_name_matches(runtime_object, member_name) ||
                native_textbox_format_member_name_matches(runtime_object, member_name) ||
                native_textbox_passwordchar_member_name_matches(runtime_object, member_name) ||
                native_textbox_maxlength_member_name_matches(runtime_object, member_name) ||

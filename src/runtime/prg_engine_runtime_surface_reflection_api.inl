@@ -291,6 +291,11 @@ bool is_native_textbox_inputmask_member_name(const RuntimeOleObjectState& runtim
     return native_textbox_inputmask_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_textbox_dynamicinputmask_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_textbox_dynamicinputmask_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_textbox_format_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_textbox_format_member_name_matches(runtime_object, normalized_member_name);
@@ -1072,6 +1077,20 @@ void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime
     }
 
     input_mask->second = make_string_value(value_as_string(input_mask->second));
+}
+
+void normalize_native_textbox_dynamicinputmask_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_textbox_dynamicinputmask_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto dynamic_input_mask = runtime_object.properties.find("dynamicinputmask");
+    if (dynamic_input_mask == runtime_object.properties.end()) {
+        return;
+    }
+
+    dynamic_input_mask->second = make_string_value(value_as_string(dynamic_input_mask->second));
 }
 
 void normalize_native_textbox_format_invariant(RuntimeOleObjectState& runtime_object)
