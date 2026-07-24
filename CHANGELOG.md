@@ -4647,5 +4647,5 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   native VCX `NEWOBJECT()` coverage now mutates the physical VCX/VCT paths
   concurrently while the runtime loads the admitted byte snapshots, proving
   that the object and memo-backed properties remain sourced from verified bytes.
-This closes the focused concurrent-swap regression gap without claiming that
-the broader exact-handle parent is complete.
+  This closes the focused concurrent-swap regression gap without claiming that
+  the broader exact-handle parent is complete.
