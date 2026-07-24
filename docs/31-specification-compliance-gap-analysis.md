@@ -263,21 +263,21 @@ boundary at all, since the current design is explicitly Windows-first here.
 
 ### docs/25 — Engine Concurrency Policy
 
-**Status: the clearest, most testable contract in the review — verification not
-attempted here.** Four hard invariants (named-mutex critical sections, ascending
-lock order across sections, strict LIFO exit, no blocking operations while any
-section is held) are specified with exact event-category names
+**Status: implementation verified by source audit and focused native tests.** Four
+hard invariants (named-mutex critical sections, ascending lock order across
+sections, strict LIFO exit, no blocking operations while any section is held) are
+specified with exact event-category names
 (`runtime.critical.order_violation`, `runtime.critical.blocking_violation`) and a
 4-step implementation-obligation checklist for any new blocking-capable path.
 
-**What it will take:** unlike the other documents in this review, this one makes
-no explicit status admission — it reads as a pure "must" spec. Confirming
-compliance requires source verification this document did not perform: grepping
-for the shared critical-section policy helper the document references, and
-confirming every blocking-capable runtime path (particularly newer ones added
-since this policy was written) actually routes through it rather than open-coding
-its own checks. This is flagged as **unverified, not failing** — a follow-up
-worth doing given how load-bearing the invariant is.
+The shared `ensure_non_blocking_critical_section_policy()` helper is used by
+`AWAIT`, positive-duration `SLEEP`, and lock-retry waits reached from record/file
+mutation paths. The focused `test_prg_engine_control_flow` and
+`test_prg_engine_table_mutation` suites cover ordering, strict-LIFO exits,
+reentrancy, fast-fail blocking violations, cooperative `YIELD`, and cleanup after
+task faults. This is source/test evidence only; hosted cross-platform validation
+remains a separate release gate, and any future blocking path must route through
+the same helper.
 
 ## Security & Interop
 
@@ -418,7 +418,7 @@ excluded from the compliance map above:
 | 20 | Runtime Build And Debug Pipeline | Partial | Engine is PRG-first, not the full command surface |
 | 21 | Database Federation And Query Translation | Partial (real seed) | No live connector execution behind the translator/planner |
 | 22 | VFP Language Reference Coverage | Partial, measured | 1,411 documented items; official surface exceeds current runtime |
-| 25 | Engine Concurrency Policy | Unverified | No source-level audit performed against the four invariants |
+| 25 | Engine Concurrency Policy | Met for current implementation | Shared blocking-policy helper and focused native coverage verify the four invariants; hosted cross-platform evidence remains a release gate |
 | 27 | Known VFP9 Bug Exceptions Registry | Scaffold-only | Zero entries |
 | 29 | Package Trust Contract | Partial | Unsigned fallback is still the default; POSIX/macOS unclaimed |
 | 30 | Runtime Stub Inventory | Self-reporting | 6 registered stubs, each independently closeable |
