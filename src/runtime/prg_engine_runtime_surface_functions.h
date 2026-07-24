@@ -52,6 +52,7 @@ bool is_native_visual_button_state_picture_runtime_object(const RuntimeOleObject
 bool is_native_visual_autosize_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_drawmode_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_backstyle_runtime_object(const RuntimeOleObjectState& runtime_object);
+bool is_native_visual_specialeffect_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_fillstyle_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_fillcolor_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_visual_borderwidth_runtime_object(const RuntimeOleObjectState& runtime_object);
@@ -71,6 +72,7 @@ bool is_native_form_windowstate_member_name(const RuntimeOleObjectState& runtime
 bool is_native_form_scalemode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_drawmode_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_backstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_specialeffect_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_drawstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_fillstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_fillcolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -183,6 +185,7 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
 void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_backstyle_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_visual_specialeffect_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_form_drawstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_fillstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_fillcolor_invariant(RuntimeOleObjectState& runtime_object);

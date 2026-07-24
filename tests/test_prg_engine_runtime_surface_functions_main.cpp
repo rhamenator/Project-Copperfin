@@ -77,6 +77,7 @@ int main()
     test_native_form_scalemode_defaults_mutates_and_stays_builtin();
     test_native_visual_drawmode_defaults_mutates_and_stays_builtin();
     test_native_visual_backstyle_defaults_mutates_and_stays_builtin();
+    test_native_visual_specialeffect_defaults_mutates_and_stays_builtin();
     test_native_form_drawstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_fillcolor_defaults_mutates_and_stays_builtin();

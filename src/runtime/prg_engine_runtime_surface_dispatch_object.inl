@@ -252,6 +252,7 @@
             is_native_visual_autosize_member_name(*runtime_object, property_name) ||
             is_native_visual_drawmode_member_name(*runtime_object, property_name) ||
             is_native_visual_backstyle_member_name(*runtime_object, property_name) ||
+            is_native_visual_specialeffect_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
@@ -758,6 +759,9 @@
             if (member_name == "specialeffect") {
                 normalize_native_textbox_specialeffect_invariant(*runtime_object);
             }
+            if (member_name == "specialeffect") {
+                normalize_native_visual_specialeffect_invariant(*runtime_object);
+            }
             if (member_name == "borderstyle") {
                 normalize_native_textbox_borderstyle_invariant(*runtime_object);
             }
@@ -1004,6 +1008,9 @@
             if (member_name == "specialeffect") {
                 normalize_native_textbox_specialeffect_invariant(*runtime_object);
             }
+            if (member_name == "specialeffect") {
+                normalize_native_visual_specialeffect_invariant(*runtime_object);
+            }
             if (member_name == "borderstyle") {
                 normalize_native_textbox_borderstyle_invariant(*runtime_object);
             }
@@ -1214,6 +1221,7 @@
             is_native_visual_autosize_member_name(*runtime_object, property_name) ||
             is_native_visual_drawmode_member_name(*runtime_object, property_name) ||
             is_native_visual_backstyle_member_name(*runtime_object, property_name) ||
+            is_native_visual_specialeffect_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||

@@ -8485,6 +8485,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_textbox_specialeffect_invariant(runtime_object);
                 }
+                if (normalized_property_name == "specialeffect")
+                {
+                    normalize_native_visual_specialeffect_invariant(runtime_object);
+                }
                 if (normalized_property_name == "borderstyle")
                 {
                     normalize_native_textbox_borderstyle_invariant(runtime_object);

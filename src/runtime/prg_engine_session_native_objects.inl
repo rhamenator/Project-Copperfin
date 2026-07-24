@@ -202,6 +202,14 @@
                 runtime_object.properties["backstyle"] = make_number_value(1.0);
             }
 
+            if (is_native_visual_specialeffect_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("specialeffect"))
+            {
+                // Container has a distinct VFP9 default; other covered controls default to 3D.
+                runtime_object.properties["specialeffect"] = make_number_value(
+                    normalized_base_class == "container" ? 1.0 : 0.0);
+            }
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))

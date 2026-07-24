@@ -79,6 +79,10 @@ bool is_native_visual_backstyle_runtime_object(const RuntimeOleObjectState& runt
     return native_visual_backstyle_runtime_object(runtime_object);
 }
 
+bool is_native_visual_specialeffect_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    return native_visual_specialeffect_runtime_object(runtime_object);
+}
+
 bool is_native_visual_fillstyle_runtime_object(const RuntimeOleObjectState& runtime_object) {
     return native_visual_fillstyle_runtime_object(runtime_object);
 }
@@ -266,6 +270,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_disabledpicture_member_name_matches(runtime_object, member_name) ||
                native_visual_autosize_member_name_matches(runtime_object, member_name) ||
                native_visual_backstyle_member_name_matches(runtime_object, member_name) ||
+               native_visual_specialeffect_member_name_matches(runtime_object, member_name) ||
                native_form_drawstyle_member_name_matches(runtime_object, member_name) ||
                native_visual_fillstyle_member_name_matches(runtime_object, member_name) ||
                native_visual_fillcolor_member_name_matches(runtime_object, member_name) ||

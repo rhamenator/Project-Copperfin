@@ -65,7 +65,7 @@ namespace copperfin::runtime_surface_tests
 
         check("lhas", "true");
         check("lreadonly", "false");
-        check("ledithas", "false");
+        check("ledithas", "true");
         check("ndefault", "0");
         check("ndirect", "2");
         check("lsetpem", "true");
