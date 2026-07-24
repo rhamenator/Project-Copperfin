@@ -689,6 +689,20 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("relativecolumn"))
+            {
+                // Headless contract: no visible relative column exists without hosted focus.
+                runtime_object.properties["relativecolumn"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("relativerow"))
+            {
+                // Headless contract: no visible relative row exists without hosted focus.
+                runtime_object.properties["relativerow"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordmark"))
             {
                 runtime_object.properties["recordmark"] = make_boolean_value(true);

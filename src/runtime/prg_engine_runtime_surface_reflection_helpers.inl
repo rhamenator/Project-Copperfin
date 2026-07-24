@@ -1184,6 +1184,28 @@ bool native_grid_activerow_member_name_matches(
     return native_grid_activerow_runtime_object(runtime_object);
 }
 
+bool native_grid_relativecolumn_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "relativecolumn" ||
+        !runtime_object.properties.contains("relativecolumn")) {
+        return false;
+    }
+
+    return native_grid_relativecolumn_runtime_object(runtime_object);
+}
+
+bool native_grid_relativerow_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "relativerow" ||
+        !runtime_object.properties.contains("relativerow")) {
+        return false;
+    }
+
+    return native_grid_relativerow_runtime_object(runtime_object);
+}
+
 bool native_allowcellselection_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
