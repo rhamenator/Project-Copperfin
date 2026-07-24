@@ -206,6 +206,28 @@ void write_synthetic_report_table_for_header_view_settings_json(
     }
 }
 
+void write_synthetic_report_table_for_header_picture_overrides_json(
+    const std::filesystem::path& report_path,
+    bool deleted) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "PICTURE", .type = 'M', .length = 4U},
+        {.name = "COLOR", .type = 'N', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "header-picture-guid", "COLOR=2\nUNSUPPORTED=expr", "COLOR=1\nCOPIES=3\nUNSUPPORTED=picture", "9"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4539: header PICTURE fixture should be created");
+    if (deleted) {
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+        expect(delete_result.ok, "#4539: header PICTURE fixture should preserve deleted state");
+    }
+}
+
 void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_reorder_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
@@ -710,6 +732,84 @@ void run_header_view_settings_selection(
            issue_prefix + " should remove cleared header RULERLINES from selected settings");
 }
 
+void run_header_picture_overrides_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    bool deleted,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_header_picture_overrides_json(asset_path, deleted);
+
+    const auto selected_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-picture-guid", "--json"},
+        temp_root);
+    expect(selected_process.exit_code == 0, issue_prefix + " should select header PICTURE settings");
+    expect_contains(selected_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected header PICTURE settings");
+    expect_contains(selected_process.stdout_text, "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 4",
+                    issue_prefix + " should expose effective PICTURE COLOR provenance");
+    expect_contains(selected_process.stdout_text, "\"value\": \"1\"",
+                    issue_prefix + " should prefer the PICTURE COLOR value over EXPR");
+    expect_contains(selected_process.stdout_text, "\"name\": \"COPIES\"",
+                    issue_prefix + " should expose unique PICTURE printer settings");
+    expect_contains(selected_process.stdout_text, "\"value\": \"picture\"",
+                    issue_prefix + " should preserve unsupported PICTURE lines");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-picture-guid",
+            "--property-name", "COLOR", "--property-value", "0",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should update the effective PICTURE printer setting");
+
+    const auto reopened_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-picture-guid", "--json"},
+        temp_root);
+    expect(reopened_process.exit_code == 0,
+           issue_prefix + " should reopen header PICTURE settings after editing");
+    expect_contains(reopened_process.stdout_text, "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 4",
+                    issue_prefix + " should retain PICTURE provenance after editing");
+    expect_contains(reopened_process.stdout_text, "\"value\": \"0\"",
+                    issue_prefix + " should persist the PICTURE override edit");
+
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--clear-property",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "header-picture-guid",
+            "--property-name", "COPIES",
+            "--json"
+        },
+        temp_root);
+    expect(clear_process.exit_code == 0,
+           issue_prefix + " should clear a header PICTURE printer setting");
+    const auto reopened_clear_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "header-picture-guid", "--json"},
+        temp_root);
+    expect(reopened_clear_process.exit_code == 0,
+           issue_prefix + " should reopen after clearing a header PICTURE setting");
+    const auto settings_start = reopened_clear_process.stdout_text.find("\"selectedReportSettings\": [");
+    const auto settings_end = reopened_clear_process.stdout_text.find("]", settings_start);
+    const std::string selected_settings_json = settings_start == std::string::npos
+        ? std::string{}
+        : reopened_clear_process.stdout_text.substr(settings_start, settings_end - settings_start);
+    expect(selected_settings_json.find("\"name\": \"COPIES\"") == std::string::npos,
+           issue_prefix + " should remove cleared PICTURE COPIES");
+    expect_contains(selected_settings_json, "\"value\": \"picture\"",
+                    issue_prefix + " should preserve unsupported PICTURE content after clearing");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -897,6 +997,30 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         "selected_deleted_header_view_settings_stable.lbx",
         true,
         "#4537: stable deleted label header-view settings selection");
+    run_header_picture_overrides_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_picture_overrides_stable.frx",
+        false,
+        "#4539: stable live report header PICTURE settings selection");
+    run_header_picture_overrides_selection(
+        studio_host_path,
+        temp_root,
+        "selected_header_picture_overrides_stable.lbx",
+        false,
+        "#4539: stable live label header PICTURE settings selection");
+    run_header_picture_overrides_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_picture_overrides_stable.frx",
+        true,
+        "#4539: stable deleted report header PICTURE settings selection");
+    run_header_picture_overrides_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_header_picture_overrides_stable.lbx",
+        true,
+        "#4539: stable deleted label header PICTURE settings selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,

@@ -465,40 +465,75 @@ bool is_band_record(const DbfRecord& record) {
 }
 
 void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValue>& settings) {
-    const std::string expr = value_or_empty(record, "EXPR");
-    const std::size_t expr_field_index = field_index_or_missing(record, "EXPR");
-    std::size_t start = 0U;
-    std::size_t line_index = 0U;
-    while (start <= expr.size()) {
-        const std::size_t end = expr.find_first_of("\r\n", start);
-        std::string line = end == std::string::npos ? expr.substr(start) : expr.substr(start, end - start);
+    const auto append_name_value_pairs = [&](std::string_view field_name, bool replace_existing) {
+        const std::string blob = value_or_empty(record, field_name);
+        const std::size_t field_index = field_index_or_missing(record, field_name);
+        const std::uint32_t memo_block_number = memo_block_number_or_zero(record, field_name);
+        std::size_t start = 0U;
+        std::size_t line_index = 0U;
+        while (start <= blob.size()) {
+            const std::size_t end = blob.find_first_of("\r\n", start);
+            std::string line = end == std::string::npos ? blob.substr(start) : blob.substr(start, end - start);
 
-        const auto equals = line.find('=');
-        if (equals != std::string::npos) {
-            const std::string name = trim_copy(line.substr(0U, equals));
-            const std::string value = trim_copy(line.substr(equals + 1U));
-            if (!name.empty()) {
-                settings.push_back({
-                    .name = name,
-                    .record_index = record.record_index,
-                    .field_index = expr_field_index,
-                    .source_line_index = line_index,
-                    .memo_block_number = memo_block_number_or_zero(record, "EXPR"),
-                    .value = value
-                });
+            const auto equals = line.find('=');
+            if (equals != std::string::npos) {
+                const std::string name = trim_copy(line.substr(0U, equals));
+                const std::string value = trim_copy(line.substr(equals + 1U));
+                if (!name.empty()) {
+                    StudioNamedValue setting{
+                        .name = name,
+                        .record_index = record.record_index,
+                        .field_index = field_index,
+                        .source_line_index = line_index,
+                        .memo_block_number = memo_block_number,
+                        .value = value
+                    };
+                    if (replace_existing) {
+                        const auto existing = std::find_if(
+                            settings.begin(),
+                            settings.end(),
+                            [&](const StudioNamedValue& candidate) {
+                                return equals_ignore_case(candidate.name, name);
+                            });
+                        if (existing != settings.end()) {
+                            *existing = std::move(setting);
+                            auto duplicate = std::find_if(
+                                std::next(existing),
+                                settings.end(),
+                                [&](const StudioNamedValue& candidate) {
+                                    return equals_ignore_case(candidate.name, name);
+                                });
+                            while (duplicate != settings.end()) {
+                                duplicate = settings.erase(duplicate);
+                                duplicate = std::find_if(
+                                    duplicate,
+                                    settings.end(),
+                                    [&](const StudioNamedValue& candidate) {
+                                        return equals_ignore_case(candidate.name, name);
+                                    });
+                            }
+                        } else {
+                            settings.push_back(std::move(setting));
+                        }
+                    } else {
+                        settings.push_back(std::move(setting));
+                    }
+                }
             }
-        }
 
-        if (end == std::string::npos) {
-            break;
+            if (end == std::string::npos) {
+                break;
+            }
+            start = end + 1U;
+            if (start < blob.size() &&
+                ((blob[end] == '\r' && blob[start] == '\n') || (blob[end] == '\n' && blob[start] == '\r'))) {
+                ++start;
+            }
+            ++line_index;
         }
-        start = end + 1U;
-        if (start < expr.size() &&
-            ((expr[end] == '\r' && expr[start] == '\n') || (expr[end] == '\n' && expr[start] == '\r'))) {
-            ++start;
-        }
-        ++line_index;
-    }
+    };
+
+    append_name_value_pairs("EXPR", false);
 
     const auto append_direct_setting = [&](std::string_view field_name) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
@@ -534,6 +569,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("DOUBLE");
     append_direct_setting("RESOID");
     append_direct_setting("RULERLINES");
+    append_name_value_pairs("PICTURE", true);
 }
 
 std::string make_section_id(std::size_t record_index, int objcode) {
