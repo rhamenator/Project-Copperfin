@@ -316,6 +316,34 @@ internal static partial class Program
             }
         };
         var imageSelection = CopperfinDesignerSelection.FromSnapshot("report", imageSnapshot, new CopperfinLocalization("es-419"));
+        var shapeSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 13,
+            Title = "box.shape",
+            Subtitle = "shape",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "7" },
+                new() { Name = "OBJCODE", Value = "4" },
+                new() { Name = "PENSIZE", Value = "4" },
+                new() { Name = "PENPAT", Value = "8" },
+                new() { Name = "FILLPAT", Value = "2" }
+            }
+        };
+        var shapeSelection = CopperfinDesignerSelection.FromSnapshot("report", shapeSnapshot, new CopperfinLocalization("es-419"));
+        var lineSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 14,
+            Title = "line.object",
+            Subtitle = "line",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "6" },
+                new() { Name = "PENSIZE", Value = "2" },
+                new() { Name = "PENPAT", Value = "3" }
+            }
+        };
+        var lineSelection = CopperfinDesignerSelection.FromSnapshot("report", lineSnapshot, new CopperfinLocalization("pt-BR"));
         var deletedImageSelection = CopperfinDesignerSelection.FromSnapshot(
             "report",
             new CopperfinStudioSnapshotObject
@@ -351,6 +379,16 @@ internal static partial class Program
         Expect(deletedImageSelection is not null &&
                TypeDescriptor.GetProperties(deletedImageSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Texto da dica de ferramenta", StringComparison.Ordinal)),
             "Deleted report image selection should expose localized TAG2 tooltip");
+        Expect(shapeSelection is not null &&
+               TypeDescriptor.GetProperties(shapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño del trazo", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(shapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Patrón del trazo", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(shapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Patrón de relleno", StringComparison.Ordinal)),
+            "Spanish report shape selection should expose localized line and fill styling");
+        Expect(lineSelection is not null &&
+               TypeDescriptor.GetProperties(lineSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho do traço", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(lineSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Padrão do traço", StringComparison.Ordinal)) &&
+               !TypeDescriptor.GetProperties(lineSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Padrão de preenchimento", StringComparison.Ordinal)),
+            "Portuguese report line selection should expose only line styling");
         if (imageSelection is not null && deletedImageSelection is not null)
         {
             ExpectSelectionUpdate(imageSelection, "PICTURE", "images\\hero.bmp", "images\\hero.bmp",
@@ -369,6 +407,19 @@ internal static partial class Program
                 "Live report image property-grid selection should preserve the invariant TAG2 update target");
             ExpectSelectionUpdate(deletedImageSelection, "TAG2", "Updated deleted tooltip", "Updated deleted tooltip",
                 "Deleted report image property-grid selection should preserve the invariant TAG2 update target");
+        }
+        if (shapeSelection is not null && lineSelection is not null)
+        {
+            ExpectSelectionUpdate(shapeSelection, "PENSIZE", 6, "6",
+                "Report shape property-grid selection should preserve the invariant PENSIZE update target");
+            ExpectSelectionUpdate(shapeSelection, "PENPAT", 5, "5",
+                "Report shape property-grid selection should preserve the invariant PENPAT update target");
+            ExpectSelectionUpdate(shapeSelection, "FILLPAT", 3, "3",
+                "Report shape property-grid selection should preserve the invariant FILLPAT update target");
+            ExpectSelectionUpdate(lineSelection, "PENSIZE", 1, "1",
+                "Report line property-grid selection should preserve the invariant PENSIZE update target");
+            ExpectSelectionUpdate(lineSelection, "PENPAT", 2, "2",
+                "Report line property-grid selection should preserve the invariant PENPAT update target");
         }
 
         var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));
@@ -439,6 +490,7 @@ internal static partial class Program
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, pseudoLocalization);
+        var pseudoShapeSelection = CopperfinDesignerSelection.FromSnapshot("report", shapeSnapshot, pseudoLocalization);
         Expect(pseudoSelection is not null &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectType"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectState"), StringComparison.Ordinal)) &&
@@ -467,6 +519,11 @@ internal static partial class Program
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Stretch"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.StretchTop"), StringComparison.Ordinal)),
             "Pseudo-localized report object property-grid selection should route object field labels through the shared catalog");
+        Expect(pseudoShapeSelection is not null &&
+               TypeDescriptor.GetProperties(pseudoShapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PenSize"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoShapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PenPattern"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoShapeSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FillPattern"), StringComparison.Ordinal)),
+            "Pseudo-localized report shape selection should route styling labels through the shared catalog");
 
         if (pseudoSelection is not null)
         {

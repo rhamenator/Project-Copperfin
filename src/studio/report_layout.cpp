@@ -376,6 +376,13 @@ StudioLayoutObjectSnapshot build_layout_object(
         add_highlight("FILLGREEN");
         add_highlight("FILLBLUE");
     }
+    if (object.objtype_code == 6 || object.objtype_code == 7) {
+        add_highlight("PENSIZE");
+        add_highlight("PENPAT");
+    }
+    if (object.objtype_code == 7) {
+        add_highlight("FILLPAT");
+    }
     if (object.objtype_code == 5 || object.objtype_code == 6 || object.objtype_code == 7 ||
         object.objtype_code == 8 || object.objtype_code == 10 || object.objtype_code == 17) {
         add_highlight("TAG2");

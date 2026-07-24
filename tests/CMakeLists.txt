@@ -4479,6 +4479,7 @@ copperfin_add_test(test_report_layout cf_design_model
     test_report_layout_general.cpp
     test_report_layout_image_offset.cpp
     test_report_layout_tooltip.cpp
+    test_report_layout_line_shape_style.cpp
     test_report_layout_grouping.cpp
     test_report_layout_summary.cpp
 )

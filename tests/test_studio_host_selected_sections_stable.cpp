@@ -125,6 +125,35 @@ void write_synthetic_report_table_for_stable_section_json(const std::filesystem:
            "#2800: stable section fixture should preserve the live section state");
 }
 
+void write_synthetic_report_table_for_line_shape_style_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U},
+        {.name = "PENSIZE", .type = 'N', .length = 8U},
+        {.name = "PENPAT", .type = 'N', .length = 8U},
+        {.name = "FILLPAT", .type = 'N', .length = 8U}
+    };
+    std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3000", "", "", "", ""},
+        {"6", "0", "", "100", "200", "800", "400", "line-style-guid", "2", "3", ""},
+        {"7", "4", "", "1000", "200", "800", "400", "shape-style-guid", "4", "8", "2"}
+    };
+    for (auto& record : records) {
+        while (record.size() < fields.size()) {
+            record.emplace_back();
+        }
+    }
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#4535: line/shape host fixture should be created");
+}
+
 void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_reorder_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
@@ -344,6 +373,69 @@ void run_live_object_color_selection(
                     issue_prefix + " should persist FILLBLUE edits");
 }
 
+void run_line_shape_style_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_line_shape_style_json(asset_path);
+
+    const auto shape_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "shape-style-guid", "--json"},
+        temp_root);
+    expect(shape_process.exit_code == 0, issue_prefix + " should select the shape object");
+    expect_contains(shape_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    issue_prefix + " should advertise selected shape availability");
+    expect_contains(shape_process.stdout_text, "\"name\": \"PENSIZE\"",
+                    issue_prefix + " should expose shape PENSIZE");
+    expect_contains(shape_process.stdout_text, "\"name\": \"PENPAT\"",
+                    issue_prefix + " should expose shape PENPAT");
+    expect_contains(shape_process.stdout_text, "\"name\": \"FILLPAT\"",
+                    issue_prefix + " should expose shape FILLPAT");
+    expect_contains(shape_process.stdout_text, "\"value\": \"2\"",
+                    issue_prefix + " should expose the shape FILLPAT value");
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-update-batch",
+            "--path", copperfin::test_support::path_to_utf8_string(asset_path),
+            "--unique-id", "shape-style-guid",
+            "--property-name", "PENSIZE", "--property-value", "6",
+            "--property-name", "PENPAT", "--property-value", "5",
+            "--property-name", "FILLPAT", "--property-value", "7",
+            "--json"
+        },
+        temp_root);
+    expect(update_process.exit_code == 0,
+           issue_prefix + " should round-trip shape styling edits through the host update path");
+    const auto reopened_shape_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "shape-style-guid", "--json"},
+        temp_root);
+    expect_contains(reopened_shape_process.stdout_text, "\"value\": \"7\"",
+                    issue_prefix + " should persist shape FILLPAT edits");
+
+    const auto line_process = run_process_capture(
+        studio_host_path,
+        {"--path", copperfin::test_support::path_to_utf8_string(asset_path), "--unique-id", "line-style-guid", "--json"},
+        temp_root);
+    expect(line_process.exit_code == 0, issue_prefix + " should select the line object");
+    expect_contains(line_process.stdout_text, "\"name\": \"PENSIZE\"",
+                    issue_prefix + " should expose line PENSIZE");
+    expect_contains(line_process.stdout_text, "\"name\": \"PENPAT\"",
+                    issue_prefix + " should expose line PENPAT");
+    const auto selected_line_start = line_process.stdout_text.find("\"selectedReportObject\": {");
+    const auto selected_line_end = line_process.stdout_text.find("\"selectedReportObjectSectionAvailable\"", selected_line_start);
+    const std::string selected_line_json = selected_line_start == std::string::npos
+        ? std::string{}
+        : line_process.stdout_text.substr(selected_line_start, selected_line_end - selected_line_start);
+    expect(selected_line_json.find("\"name\": \"FILLPAT\"") == std::string::npos,
+           issue_prefix + " should not expose shape-only FILLPAT on lines");
+}
+
 void run_deleted_section_selection(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -487,6 +579,16 @@ void test_studio_host_json_preserves_selected_sections_stable_selection(const st
         temp_root,
         "selected_object_color_stable.lbx",
         "#4534: stable live label-object color selection");
+    run_line_shape_style_selection(
+        studio_host_path,
+        temp_root,
+        "selected_line_shape_style_stable.frx",
+        "#4535: stable live report line/shape styling selection");
+    run_line_shape_style_selection(
+        studio_host_path,
+        temp_root,
+        "selected_line_shape_style_stable.lbx",
+        "#4535: stable live label line/shape styling selection");
     run_deleted_section_selection(
         studio_host_path,
         temp_root,

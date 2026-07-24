@@ -207,6 +207,20 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                     selection.AddEditableInt("FILLGREEN", L("AssetEditor.Property.FillGreen", "Fill Green"), selection.Read(snapshotObject, "FILLGREEN"));
                     selection.AddEditableInt("FILLBLUE", L("AssetEditor.Property.FillBlue", "Fill Blue"), selection.Read(snapshotObject, "FILLBLUE"));
                 }
+                if (int.TryParse(
+                        selection.Read(snapshotObject, "OBJTYPE"),
+                        NumberStyles.Integer,
+                        CultureInfo.InvariantCulture,
+                        out var lineShapeObjectType) &&
+                    (lineShapeObjectType == 6 || lineShapeObjectType == 7))
+                {
+                    selection.AddEditableInt("PENSIZE", L("AssetEditor.Property.PenSize", "Pen Size"), selection.Read(snapshotObject, "PENSIZE"));
+                    selection.AddEditableInt("PENPAT", L("AssetEditor.Property.PenPattern", "Pen Pattern"), selection.Read(snapshotObject, "PENPAT"));
+                    if (lineShapeObjectType == 7)
+                    {
+                        selection.AddEditableInt("FILLPAT", L("AssetEditor.Property.FillPattern", "Fill Pattern"), selection.Read(snapshotObject, "FILLPAT"));
+                    }
+                }
                 selection.AddEditableString("SUPEXPR", L("AssetEditor.Property.PrintWhen", "Print When"), selection.Read(snapshotObject, "SUPEXPR"));
                 selection.AddEditableInt("SUPGROUP", L("AssetEditor.Property.PrintWhenGroup", "When Group Changes"), selection.Read(snapshotObject, "SUPGROUP"));
                 selection.AddEditableBool("SUPALWAYS", L("AssetEditor.Property.PrintWhenRepeated", "Print Repeated Values"), selection.Read(snapshotObject, "SUPALWAYS"));
