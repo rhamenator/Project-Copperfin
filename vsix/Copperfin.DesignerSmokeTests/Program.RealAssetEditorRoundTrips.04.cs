@@ -335,8 +335,8 @@ internal static partial class Program
                 });
             Expect(undoneSelection,
                 $"real asset editor deleted-rename smoke should preserve deleted section/object continuity after undoing rename for {sourcePath}");
-            Expect(!control.CanHandleUndoCommand(),
-                $"real asset editor deleted-rename smoke should clear undo after restoring original identity for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor deleted-rename smoke should retain the earlier delete-state undo after restoring original identity for {sourcePath}");
             if (!undoneSelection)
             {
                 return;

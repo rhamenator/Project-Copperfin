@@ -298,8 +298,8 @@ internal static partial class Program
                 });
             Expect(undoneSelection,
                 $"real asset editor deleted-batch smoke should preserve deleted section/object continuity after undo for {sourcePath}");
-            Expect(!control.CanHandleUndoCommand(),
-                $"real asset editor deleted-batch smoke should clear undo after restoring the deleted batch for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor deleted-batch smoke should retain the earlier delete-state undo after restoring the batch for {sourcePath}");
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,

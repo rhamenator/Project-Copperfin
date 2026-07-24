@@ -28,6 +28,11 @@ internal static partial class Program
             Application.SetCompatibleTextRenderingDefault(false);
         }
 
+        if (TryRunResolvedRealAssetCoveragePart(runner, args))
+        {
+            return runner.Finish();
+        }
+
         runner.Run(nameof(SmokeDesignSurfaceWithSyntheticReportLayout), SmokeDesignSurfaceWithSyntheticReportLayout);
         runner.Run(nameof(SmokeInvariantReportGeometryParsing), SmokeInvariantReportGeometryParsing);
         runner.Run(nameof(SmokeLocalizedReportDesignSurfaceContext), SmokeLocalizedReportDesignSurfaceContext);
@@ -174,5 +179,42 @@ internal static partial class Program
 
         return runner.Finish();
         }
+
+    private static bool TryRunResolvedRealAssetCoveragePart(
+        DesignerSmokeTestRunner runner,
+        string[] args)
+    {
+        if (args.Length != 2 || !string.Equals(args[0], "--exact", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        switch (args[1])
+        {
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart01):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart01);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart02):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart02);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart03):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart03);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart04):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart04);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart05):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart05);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart06):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart06);
+                return true;
+            case nameof(SmokeResolvedRealAssetCoverageClusterPart07):
+                runner.Run(args[1], SmokeResolvedRealAssetCoverageClusterPart07);
+                return true;
+            default:
+                return false;
+        }
+    }
 
 }

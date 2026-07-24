@@ -203,8 +203,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 undoResult.Document,
                 $"undone deleted real asset batch snapshot should preserve deleted preview metadata");
-            Expect(!undoResult.Document.CommandUndoAvailable,
-                $"undone deleted batch snapshot should clear command undo for {sourcePath}");
+            Expect(undoResult.Document.CommandUndoAvailable,
+                $"undone deleted batch snapshot should retain the earlier delete-state undo for {sourcePath}");
 
             var restoreResult = CopperfinStudioSnapshotClient.TryRestoreObject(
                 assetPath,
@@ -440,8 +440,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 undoResult.Document,
                 "undone deleted real asset rename snapshot should preserve deleted preview metadata");
-            Expect(!undoResult.Document.CommandUndoAvailable,
-                $"undone deleted rename snapshot should clear command undo for {sourcePath}");
+            Expect(undoResult.Document.CommandUndoAvailable,
+                $"undone deleted rename snapshot should retain the earlier delete-state undo for {sourcePath}");
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
@@ -667,8 +667,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 duplicateResult.Document,
                 "duplicated deleted real asset snapshot should preserve deleted preview metadata");
-            Expect(!duplicateResult.Document.CommandUndoAvailable,
-                $"real deleted duplicate smoke should not expose command undo after duplicating a deleted row for {sourcePath}");
+            Expect(duplicateResult.Document.CommandUndoAvailable,
+                $"real deleted duplicate smoke should retain the earlier delete-state undo after duplicating a deleted row for {sourcePath}");
 
             var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
@@ -713,8 +713,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 reloadedAfterDuplicate.Document,
                 "reloaded duplicated deleted real asset snapshot should preserve deleted preview metadata");
-            Expect(!reloadedAfterDuplicate.Document.CommandUndoAvailable,
-                $"reloaded deleted duplicate snapshot should not expose command undo for {sourcePath}");
+            Expect(reloadedAfterDuplicate.Document.CommandUndoAvailable,
+                $"reloaded deleted duplicate snapshot should retain the earlier delete-state undo for {sourcePath}");
 
             var restoreResult = CopperfinStudioSnapshotClient.TryRestoreObject(
                 assetPath,

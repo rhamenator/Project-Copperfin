@@ -785,8 +785,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 undoResult.Document,
                 $"undone deleted real asset snapshot should preserve deleted preview metadata");
-            Expect(!undoResult.Document.CommandUndoAvailable,
-                $"undone deleted property snapshot should clear command undo for {sourcePath}");
+            Expect(undoResult.Document.CommandUndoAvailable,
+                $"undone deleted property snapshot should retain the earlier delete-state undo for {sourcePath}");
 
             var restoreResult = CopperfinStudioSnapshotClient.TryRestoreObject(
                 assetPath,

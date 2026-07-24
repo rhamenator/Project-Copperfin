@@ -277,8 +277,8 @@ internal static partial class Program
                 });
             Expect(reorderedSelection,
                 $"real asset editor deleted-reorder smoke should preserve deleted section/object continuity after reordering for {sourcePath}");
-            Expect(!control.CanHandleUndoCommand(),
-                $"real asset editor deleted-reorder smoke should not expose undo after reordering a deleted row for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor deleted-reorder smoke should retain the earlier delete-state undo after reordering a deleted row for {sourcePath}");
             if (!reorderedSelection)
             {
                 return;

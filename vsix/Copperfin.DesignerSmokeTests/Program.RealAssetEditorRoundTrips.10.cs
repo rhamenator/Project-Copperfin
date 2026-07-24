@@ -254,8 +254,8 @@ internal static partial class Program
                 });
             Expect(duplicatedSelection,
                 $"real asset editor deleted-duplicate smoke should preserve deleted section/object continuity after duplicating for {sourcePath}");
-            Expect(!control.CanHandleUndoCommand(),
-                $"real asset editor deleted-duplicate smoke should not expose undo after duplicating a deleted row for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor deleted-duplicate smoke should retain the earlier delete-state undo after duplicating a deleted row for {sourcePath}");
             if (!duplicatedSelection)
             {
                 return;

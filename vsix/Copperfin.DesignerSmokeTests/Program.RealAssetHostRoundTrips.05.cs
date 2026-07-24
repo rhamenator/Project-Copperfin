@@ -192,8 +192,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 reorderResult.Document,
                 "reordered deleted real asset snapshot should preserve deleted preview metadata");
-            Expect(!reorderResult.Document.CommandUndoAvailable,
-                $"real deleted reorder smoke should not expose command undo after reordering a deleted row for {sourcePath}");
+            Expect(reorderResult.Document.CommandUndoAvailable,
+                $"real deleted reorder smoke should retain the earlier delete-state undo after reordering a deleted row for {sourcePath}");
 
             var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
@@ -246,8 +246,8 @@ internal static partial class Program
             AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
                 reloadedAfterReorder.Document,
                 "reloaded reordered deleted real asset snapshot should preserve deleted preview metadata");
-            Expect(!reloadedAfterReorder.Document.CommandUndoAvailable,
-                $"reloaded reordered deleted real asset snapshot should not expose command undo for {sourcePath}");
+            Expect(reloadedAfterReorder.Document.CommandUndoAvailable,
+                $"reloaded reordered deleted real asset snapshot should retain the earlier delete-state undo for {sourcePath}");
         }
         finally
         {

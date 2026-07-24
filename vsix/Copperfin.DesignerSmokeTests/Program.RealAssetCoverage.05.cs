@@ -467,10 +467,10 @@ internal static partial class Program
             {
                 Left = 0,
                 Top = 0,
-                Right = 28532,
-                Bottom = 11459,
-                Width = 28532,
-                Height = 11459
+                Right = 96457,
+                Bottom = 33436,
+                Width = 96457,
+                Height = 33436
             });
         SmokeAssetEditorNudgeCommandWithRealAsset(
             TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
