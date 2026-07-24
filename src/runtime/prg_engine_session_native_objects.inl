@@ -121,6 +121,12 @@
                 runtime_object.properties["tag"] = make_string_value("");
             }
 
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("helpcontextid"))
+            {
+                runtime_object.properties["helpcontextid"] = make_number_value(0.0);
+            }
+
             if ((normalized_base_class == "checkbox" ||
                  normalized_base_class == "commandbutton" ||
                  normalized_base_class == "commandgroup" ||

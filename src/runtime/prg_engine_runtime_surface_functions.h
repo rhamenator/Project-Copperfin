@@ -63,6 +63,7 @@ bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_visual_enabled_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_caption_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_alignment_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -178,6 +179,7 @@ void normalize_native_list_control_itemforecolor_invariant(RuntimeOleObjectState
 void normalize_native_list_control_selecteditembackcolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_selecteditemforecolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_visual_helpcontextid_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_themes_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_selectedbackcolor_invariant(RuntimeOleObjectState& runtime_object);

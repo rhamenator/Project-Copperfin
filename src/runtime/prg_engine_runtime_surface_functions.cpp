@@ -201,6 +201,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_listitemid_member_name_matches(runtime_object, member_name) ||
                native_visual_geometry_member_name_matches(runtime_object, member_name) ||
                native_controltiptext_member_name_matches(runtime_object, member_name) ||
+               native_visual_helpcontextid_member_name_matches(runtime_object, member_name) ||
                native_visual_tag_member_name_matches(runtime_object, member_name) ||
                native_visual_caption_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||

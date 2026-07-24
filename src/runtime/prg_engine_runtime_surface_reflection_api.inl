@@ -171,6 +171,11 @@ bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_o
     return native_controltiptext_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_helpcontextid_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_tag_member_name_matches(runtime_object, normalized_member_name);
@@ -1058,6 +1063,24 @@ void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& run
     }
 
     statusbar_text->second = make_string_value(value_as_string(statusbar_text->second));
+}
+
+void normalize_native_visual_helpcontextid_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_helpcontextid_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto help_context_id = runtime_object.properties.find("helpcontextid");
+    if (help_context_id == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(help_context_id->second);
+    const long long normalized = std::isfinite(value) && value >= 0.0
+        ? std::llround(value)
+        : 0LL;
+    help_context_id->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_textbox_strictdateentry_invariant(RuntimeOleObjectState& runtime_object)

@@ -233,6 +233,7 @@
             is_native_visual_fontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
+            is_native_visual_helpcontextid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
@@ -749,6 +750,9 @@
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
+            if (member_name == "helpcontextid") {
+                normalize_native_visual_helpcontextid_invariant(*runtime_object);
+            }
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
@@ -959,6 +963,9 @@
             if (member_name == "statusbartext") {
                 normalize_native_textbox_statusbartext_invariant(*runtime_object);
             }
+            if (member_name == "helpcontextid") {
+                normalize_native_visual_helpcontextid_invariant(*runtime_object);
+            }
             if (member_name == "strictdateentry") {
                 normalize_native_textbox_strictdateentry_invariant(*runtime_object);
             }
@@ -1096,6 +1103,7 @@
             is_native_visual_fontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
+            is_native_visual_helpcontextid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
             is_native_visual_caption_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
