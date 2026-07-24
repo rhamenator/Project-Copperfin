@@ -160,6 +160,7 @@ Current behavior:
 - waiting menu runtimes can now dispatch concrete menu-item actions back into the native runtime
 - deeper menu trees now participate in runtime execution because xAsset bootstrapping reads the full `MNX` table instead of the eight-record Studio preview
 - waiting form/class/report/label xAssets now expose extracted methods as dispatchable runtime actions for debugger-driven invocation
+- `REPORT FORM` and `LABEL FORM` text output now evaluates non-deleted layout-object `EXPR` values per qualifying cursor record and appends them as optional `object_exprs=` row metadata, while preserving existing row/filter output
 - xAsset-backed breakpoints now surface designer-facing action ids and titles both in explicit breakpoint inventories and in ordinary pause-state breakpoint listings, so debugger clients can identify active SCX/VCX/MNX breakpoints without reverse-mapping generated bootstrap file/line pairs
 - `DO FORM` now resolves quoted/space-containing paths through the same normalized asset-path flow used by other surface-launch commands
 - startup assets that legacy projects mark as excluded are now still staged when they are required for runtime startup
@@ -169,10 +170,10 @@ Current behavior:
 Current limitations:
 
 - the native execution engine is `PRG-first`, not yet the full FoxPro/VFP command/runtime surface
-- upcoming runtime-parity gaps such as expression-level user-defined routine calls and native `DEFINE CLASS` / `ENDDEFINE` support must preserve the stack-frugal PRG execution model instead of routing through unbounded native recursion
+- expression-level user-defined routine calls and native `DEFINE CLASS` / `ENDDEFINE` support are implemented through the iterative frame machine; future parity work must preserve that stack-frugal execution model instead of routing through unbounded native recursion
 - xBase code embedded in `SCX/VCX` assets is now partially executable through `METHODS` bootstrapping, but deeper event/lifecycle fidelity still needs work
 - `MNX` startup activation plus first nested submenu dispatch now work, but richer menu navigation, broader command routing, and broader surface parity still need work
-- `FRX/LBX` now launch directly into preview/event-loop mode, but richer report execution semantics, expression evaluation, output generation, and designer/runtime parity still need work
+- `FRX/LBX` now launch directly into preview/event-loop mode, and text output evaluates layout-object expressions, but pagination, printer/device output, memo formatting, grouping/summary evaluation, report variables, event expressions, richer output generation, and designer/runtime parity still need work
 - package manifests are line-based metadata, not the finished long-term runtime format
 - build output planning is still driven by current `PJX` heuristics rather than a fully compatible FoxPro compiler/runtime
 

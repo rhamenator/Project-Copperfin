@@ -1417,6 +1417,7 @@
         std::vector<std::string> render_report_output_rows(
             CursorState &cursor,
             const Frame &frame,
+            const studio::StudioReportLayoutSnapshot &layout,
             const std::vector<vfp::DbfFieldDescriptor> &fields,
             const std::string &for_expression,
             const std::string &while_expression)
@@ -1452,6 +1453,35 @@
                     row += fields[index].name;
                     row += "=";
                     row += record_field_value(*record, fields[index].name).value_or(std::string{});
+                }
+
+                std::vector<std::string> object_expression_values;
+                for (const auto &section : layout.sections)
+                {
+                    for (const auto &object : section.objects)
+                    {
+                        const std::string expression = trim_copy(object.expression);
+                        if (object.deleted || expression.empty())
+                        {
+                            continue;
+                        }
+
+                        object_expression_values.push_back(
+                            std::to_string(object.record_index) + ":" +
+                            format_value(evaluate_expression(expression, frame)));
+                    }
+                }
+                if (!object_expression_values.empty())
+                {
+                    row += "|object_exprs=";
+                    for (std::size_t index = 0U; index < object_expression_values.size(); ++index)
+                    {
+                        if (index > 0U)
+                        {
+                            row += ";";
+                        }
+                        row += object_expression_values[index];
+                    }
                 }
                 rows.push_back(std::move(row));
             }
@@ -1597,6 +1627,7 @@
                 const std::vector<std::string> rendered_rows = render_report_output_rows(
                     *cursor,
                     frame,
+                    layout,
                     fields,
                     trim_copy(statement.quaternary_expression),
                     while_expression);

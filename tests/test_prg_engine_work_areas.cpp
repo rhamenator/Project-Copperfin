@@ -334,8 +334,12 @@ void test_report_and_label_to_file_emit_filtered_data_rows() {
                command + " TO FILE should render only the qualifying rows");
         expect(output_text.find("row[1]=NAME=Alice|AGE=20") != std::string::npos,
                command + " TO FILE should render the first qualifying record");
+        expect(output_text.find("row[1]=NAME=Alice|AGE=20|object_exprs=1:Alice") != std::string::npos,
+               command + " TO FILE should evaluate the layout object expression for the first qualifying record");
         expect(output_text.find("row[3]=NAME=Cara|AGE=32") != std::string::npos,
                command + " TO FILE should render later qualifying records before the WHILE boundary");
+        expect(output_text.find("row[3]=NAME=Cara|AGE=32|object_exprs=1:Cara") != std::string::npos,
+               command + " TO FILE should evaluate the layout object expression for later qualifying records");
         expect(output_text.find("Bob") == std::string::npos,
                command + " TO FILE should exclude rows filtered by FOR");
         expect(output_text.find("Dana") == std::string::npos,
