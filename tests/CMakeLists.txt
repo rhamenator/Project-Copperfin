@@ -367,6 +367,12 @@ add_test(
     NAME test_localization
     COMMAND $<TARGET_FILE:test_localization> $<TARGET_FILE:copperfin_inspect>
 )
+# Discovery cases deliberately exercise an absent override; keep the global
+# native-test catalog fixture from masking those scoped environment tests.
+set_tests_properties(
+    test_localization
+    PROPERTIES ENVIRONMENT "COPPERFIN_LOCALE_DIR="
+)
 
 foreach(runtime_host_test_target IN ITEMS
         test_runtime_host_debug_output_formatting

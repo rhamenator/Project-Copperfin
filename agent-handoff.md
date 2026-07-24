@@ -1241,3 +1241,9 @@ Read only what is needed for the chosen slice:
   Focused runtime-surface coverage includes nested indirection, deterministic
   bar order, and missing-popup behavior; popup interaction, callbacks, and UI
   rendering remain separate. Hosted validation is pending.
+- #4606 is implemented locally: `test_localization` now declares an explicit
+  empty `COPPERFIN_LOCALE_DIR` CTest entry so native-test-wide catalog-root
+  injection cannot mask the test's automatic parent-directory discovery cases.
+  The compile-time `COPPERFIN_TEST_LOCALE_DIR` fixture remains available for
+  tests that need the repository catalogs; locale keys and machine contracts
+  are unchanged.

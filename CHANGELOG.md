@@ -4632,3 +4632,8 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   including nested memory-variable indirection, while preserving literal-name
   and missing-popup behavior. Popup interaction, callbacks, separators, and
   UI rendering remain separate.
+- 2026-07-24: Shipped #4606 under #2348. The native `test_localization` CTest
+  now receives an explicitly empty `COPPERFIN_LOCALE_DIR`, allowing its scoped
+  automatic-discovery cases to run independently of the global repository
+  catalog fixture injected into other native tests. Compile-time fixture
+  resolution and locale contracts are unchanged.
