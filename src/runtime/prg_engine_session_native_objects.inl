@@ -872,6 +872,13 @@
                 runtime_object.properties["borderwidth"] = make_number_value(1.0);
             }
 
+            if (is_native_form_drawwidth_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("drawwidth"))
+            {
+                // Headless contract: preserve line width without rasterizing graphics.
+                runtime_object.properties["drawwidth"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("borderstyle"))
             {

@@ -91,6 +91,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_form_drawstyle_defaults_mutates_and_stays_builtin();
     void test_native_visual_fillstyle_defaults_mutates_and_stays_builtin();
     void test_native_visual_borderwidth_defaults_mutates_and_stays_builtin();
+    void test_native_form_drawwidth_defaults_mutates_and_stays_builtin();
     void test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     void test_native_form_titlebar_defaults_mutates_and_stays_builtin();
     void test_native_form_scrollbars_defaults_are_runtime_readonly_and_stay_builtin();
