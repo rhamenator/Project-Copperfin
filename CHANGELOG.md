@@ -1,3 +1,4 @@
+- 2026-07-24: Shipped #4615 under #3217. Native PRG `CNTBAR(cMenuName)` now counts defined popup bars, including sparse bar numbers, and returns zero for missing menus. Focused runtime-surface coverage passes; system-menu counts, activation-time prompt menus, rendering, callbacks, and broader menu APIs remain separate.
 - 2026-07-24: Shipped #4614 under #3217. Native PRG `PRMBAR()` now looks up defined popup-bar prompts by menu name and bar number, strips VFP access-key and disabled markers, and returns empty text for separators, missing menus, or out-of-range bars. Focused runtime-surface coverage passes; system-menu lookup, rendering, callbacks, and `SET SKIP OF` remain separate.
 - 2026-07-24: Shipped #4613 under #110. `REPORT FORM` and `LABEL FORM` text output now evaluates non-deleted shared-layout object expressions per qualifying cursor record and appends optional invariant `object_exprs=` metadata without changing existing row/filter output. The focused work-area CTest covers both asset families; pagination, printer/device output, memo formatting, grouping/summary evaluation, report variables, event expressions, and pixel rendering remain separate.
 - 2026-07-24: Shipped #4612 under #3217. Native PRG `CommandButton` objects now expose VFP9 `PictureMargin` and `PictureSpacing` with `0..65535` normalization and `0` defaults, plus `PicturePosition` with `0..14` normalization and default `13`, across direct/PEM/reflection access and derived-class initialization. Built-in property protection and focused runtime-surface coverage pass; image loading, picture/caption layout, sizing, alignment, and rendering remain separate host/UI work.
@@ -4646,6 +4647,5 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   native VCX `NEWOBJECT()` coverage now mutates the physical VCX/VCT paths
   concurrently while the runtime loads the admitted byte snapshots, proving
   that the object and memo-backed properties remain sourced from verified bytes.
-  This closes the focused concurrent-swap regression gap without claiming that
-  the broader exact-handle parent is complete.
-- 2026-07-24: Shipped #4615 under #3217. Native PRG `CNTBAR(cMenuName)` now counts defined popup bars, including sparse bar numbers, and returns zero for missing menus. Focused runtime-surface coverage passes; system-menu counts, activation-time prompt menus, rendering, callbacks, and broader menu APIs remain separate.
+This closes the focused concurrent-swap regression gap without claiming that
+the broader exact-handle parent is complete.
