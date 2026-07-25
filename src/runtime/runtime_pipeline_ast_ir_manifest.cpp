@@ -50,6 +50,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "on_selection_bar_command";
         case StatementKind::on_selection_popup_command:
             return "on_selection_popup_command";
+        case StatementKind::deactivate_surface:
+            return "deactivate_surface";
         case StatementKind::activate_surface:
             return "activate_surface";
         case StatementKind::release_surface:

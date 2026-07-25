@@ -2840,6 +2840,12 @@
                                   .detail = statement.expression,
                                   .location = statement.location});
                 return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
+            case StatementKind::deactivate_surface:
+                waiting_for_events = false;
+                events.push_back({.category = statement.identifier + ".deactivate",
+                                  .detail = statement.expression,
+                                  .location = statement.location});
+                return {};
             case StatementKind::release_surface:
                 if (statement.identifier == "popup")
                 {

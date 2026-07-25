@@ -33,6 +33,7 @@ enum class StatementKind {
     define_bar_command,
     on_selection_bar_command,
     on_selection_popup_command,
+    deactivate_surface,
     activate_surface,
     release_surface,
     return_statement,

@@ -177,6 +177,8 @@ namespace copperfin::runtime_surface_tests
             "nSelected = 0\n"
             "cSelected = ''\n"
             "SET SKIP OF BAR 3 OF choices .T.\n"
+            "DEACTIVATE POPUP choices\n"
+            "DEACTIVATE MENU choices\n"
             "ACTIVATE POPUP choices\n"
             "RETURN\n"
             "PROCEDURE FirstHandler\n"
@@ -227,6 +229,24 @@ namespace copperfin::runtime_surface_tests
                            event.detail == "choices bar=1";
                    }),
                "popup callback should emit stable selection telemetry");
+        expect(std::any_of(
+                   state.events.begin(),
+                   state.events.end(),
+                   [](const copperfin::runtime::RuntimeEvent& event)
+                   {
+                       return event.category == "popup.deactivate" &&
+                           event.detail == "choices";
+                   }),
+               "deactivating a popup should emit stable lifecycle telemetry");
+        expect(std::any_of(
+                   state.events.begin(),
+                   state.events.end(),
+                   [](const copperfin::runtime::RuntimeEvent& event)
+                   {
+                       return event.category == "menu.deactivate" &&
+                           event.detail == "choices";
+                   }),
+               "deactivating a menu should emit stable lifecycle telemetry");
 
         expect(session.dispatch_popup_bar_selection("choices", 4),
                "popup selection should fall back when the bar has no specific callback");

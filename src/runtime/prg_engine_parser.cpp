@@ -1856,6 +1856,14 @@ Program parse_program_impl(
             statement.kind = StatementKind::activate_surface;
             statement.identifier = "menu";
             statement.expression = trim_copy(line.substr(14U));
+        } else if (starts_with_insensitive(line, "DEACTIVATE POPUP ")) {
+            statement.kind = StatementKind::deactivate_surface;
+            statement.identifier = "popup";
+            statement.expression = trim_copy(line.substr(17U));
+        } else if (starts_with_insensitive(line, "DEACTIVATE MENU ")) {
+            statement.kind = StatementKind::deactivate_surface;
+            statement.identifier = "menu";
+            statement.expression = trim_copy(line.substr(16U));
         } else if (starts_with_insensitive(line, "RELEASE POPUP ")) {
             statement.kind = StatementKind::release_surface;
             statement.identifier = "popup";
