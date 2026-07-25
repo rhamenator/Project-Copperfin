@@ -398,13 +398,23 @@ namespace copperfin::runtime_surface_tests
         expect(state.waiting_for_events && count != state.globals.end() &&
                    copperfin::runtime::format_value(count->second) == "5",
                "static ON SELECTION BAR assignment should update global state");
+        expect(session.dispatch_popup_bar_selection("actions", 1),
+               "repeated static ON SELECTION BAR assignment should dispatch");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        count = state.globals.find("ncount");
+        expect(state.waiting_for_events && count != state.globals.end() &&
+                   copperfin::runtime::format_value(count->second) == "6",
+               "repeated static ON SELECTION BAR assignment should reuse its action routine");
         expect(session.dispatch_popup_bar_selection("actions", 4),
                "static ON SELECTION BAR expression should dispatch");
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         count = state.globals.find("ncount");
         expect(state.waiting_for_events && count != state.globals.end() &&
-                   copperfin::runtime::format_value(count->second) == "8",
-               "static ON SELECTION BAR expression should invoke a PRG function");
+                   copperfin::runtime::format_value(count->second) == "9",
+               "static ON SELECTION BAR expression should invoke a PRG function (got " +
+                   (count == state.globals.end()
+                        ? std::string{"<missing>"}
+                        : copperfin::runtime::format_value(count->second)) + ")");
 
         fs::remove_all(temp_root, ignored);
     }

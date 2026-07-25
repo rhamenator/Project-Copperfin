@@ -2778,6 +2778,7 @@
                     current_session_state().popup_bar_mark_states[popup_name].clear();
                     current_session_state().popup_bar_selection_handlers[popup_name].clear();
                     current_session_state().popup_bar_selection_actions[popup_name].clear();
+                    current_session_state().popup_bar_action_routines[popup_name].clear();
                     current_session_state().popup_bar_activation_targets[popup_name].clear();
                     current_session_state().popup_selection_handlers.erase(popup_name);
                 }
@@ -2847,6 +2848,8 @@
 
                 current_session_state().popup_bar_selection_actions[popup_name][
                     static_cast<long long>(std::llround(*bar_number))] = action_text;
+                current_session_state().popup_bar_action_routines[popup_name].erase(
+                    static_cast<long long>(std::llround(*bar_number)));
                 return {};
             }
             case StatementKind::on_selection_popup_command:
@@ -2892,6 +2895,7 @@
                     current_session_state().popup_bar_mark_states.erase(popup_name);
                     current_session_state().popup_bar_selection_handlers.erase(popup_name);
                     current_session_state().popup_bar_selection_actions.erase(popup_name);
+                    current_session_state().popup_bar_action_routines.erase(popup_name);
                     current_session_state().popup_bar_activation_targets.erase(popup_name);
                     current_session_state().popup_selection_handlers.erase(popup_name);
                 }

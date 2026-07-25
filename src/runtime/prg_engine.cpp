@@ -764,6 +764,13 @@ namespace copperfin::runtime
 
         struct DataSessionState
         {
+            struct PopupActionRoutine
+            {
+                std::string action_text;
+                std::string source_path;
+                std::string routine_name;
+            };
+
             int selected_work_area = 1;
             int next_work_area = 1;
             std::map<int, std::string> aliases;
@@ -778,6 +785,7 @@ namespace copperfin::runtime
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
             std::map<std::string, std::map<long long, std::string>> popup_bar_selection_handlers;
             std::map<std::string, std::map<long long, std::string>> popup_bar_selection_actions;
+            std::map<std::string, std::map<long long, PopupActionRoutine>> popup_bar_action_routines;
             std::map<std::string, std::map<long long, std::string>> popup_bar_activation_targets;
             std::map<std::string, std::string> popup_selection_handlers;
             std::vector<RuntimeDatabaseState> databases;
@@ -9927,25 +9935,47 @@ namespace copperfin::runtime
             }
 
             Program &source_program = load_program(stack.back().file_path);
-            const std::string action_routine_name =
-                "__copperfin_popup_action_" + std::to_string(runtime_instance_id) + "_" +
-                std::to_string(++next_popup_action_id);
-            const Program action_program = parse_program_source(
-                source_program.path,
-                "PROCEDURE " + action_routine_name + "\n" + action_text +
-                    "\nRETURN\nENDPROC\n");
-            const auto action_found = action_program.routines.find(
-                normalize_identifier(action_routine_name));
-            if (action_found == action_program.routines.end())
+            const long long normalized_bar_number = static_cast<long long>(bar_number);
+            auto &cached_action = current_session_state().popup_bar_action_routines[
+                normalized_popup_name][normalized_bar_number];
+            const Routine *action_routine = nullptr;
+            if (cached_action.action_text == action_text &&
+                cached_action.source_path == source_program.path)
             {
-                return false;
+                const auto cached_routine = source_program.routines.find(
+                    normalize_identifier(cached_action.routine_name));
+                if (cached_routine != source_program.routines.end())
+                {
+                    action_routine = &cached_routine->second;
+                }
             }
-            auto [action_routine, inserted] = source_program.routines.emplace(
-                normalize_identifier(action_routine_name),
-                action_found->second);
-            if (!inserted)
+
+            if (action_routine == nullptr)
             {
-                return false;
+                const std::string action_routine_name =
+                    "__copperfin_popup_action_" + std::to_string(runtime_instance_id) + "_" +
+                    std::to_string(++next_popup_action_id);
+                const Program action_program = parse_program_source(
+                    source_program.path,
+                    "PROCEDURE " + action_routine_name + "\n" + action_text +
+                        "\nRETURN\nENDPROC\n");
+                const auto action_found = action_program.routines.find(
+                    normalize_identifier(action_routine_name));
+                if (action_found == action_program.routines.end())
+                {
+                    return false;
+                }
+                auto [inserted_routine, inserted] = source_program.routines.emplace(
+                    normalize_identifier(action_routine_name),
+                    action_found->second);
+                if (!inserted)
+                {
+                    return false;
+                }
+                cached_action.action_text = action_text;
+                cached_action.source_path = source_program.path;
+                cached_action.routine_name = action_routine_name;
+                action_routine = &inserted_routine->second;
             }
             waiting_for_events = false;
             event_dispatch_return_depth = stack.size();
@@ -9953,7 +9983,7 @@ namespace copperfin::runtime
             events.push_back({.category = "runtime.popup.selection",
                               .detail = normalized_popup_name + " bar=" + std::to_string(bar_number),
                               .location = {}});
-            push_routine_frame(source_program.path, action_routine->second);
+            push_routine_frame(source_program.path, *action_routine);
             return true;
         }
 
