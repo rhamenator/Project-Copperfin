@@ -178,34 +178,7 @@ set(legacy_workflow "${SOURCE_DIR}/.github/workflows/native-validation.yml")
 set(legacy_reusable_workflow
     "${SOURCE_DIR}/.github/workflows/native-validation-reusable.yml")
 
-if(EXISTS "${legacy_workflow}")
-    message(FATAL_ERROR
-        ".github/workflows/native-validation.yml must be removed after splitting native validation")
-endif()
-if(EXISTS "${legacy_reusable_workflow}")
-    message(FATAL_ERROR
-        "The reusable-workflow form changes required-check identities; use the shared composite action")
-endif()
-
-check_caller(
-    ".github/workflows/native-validation-linux.yml"
-    "Linux Native Validation"
-    "linux"
-    "ubuntu-latest"
-    "Linux GCC")
-check_caller(
-    ".github/workflows/native-validation-macos.yml"
-    "macOS Native Validation"
-    "macos"
-    "macos-latest"
-    "macOS Clang")
-check_caller(
-    ".github/workflows/native-validation-windows.yml"
-    "Windows Native Validation"
-    "windows"
-    "windows-latest"
-    "Windows MSVC"
-    [=[on:
+set(native_trigger_with_ignored_non_product_inputs [=[on:
   push:
     branches: [main]
     paths-ignore:
@@ -221,6 +194,57 @@ check_caller(
       - "**/*.md"
       - "**/*.txt"
   workflow_dispatch:]=])
+set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
+  workflow_dispatch:]=])
+
+if(EXISTS "${legacy_workflow}")
+    message(FATAL_ERROR
+        ".github/workflows/native-validation.yml must be removed after splitting native validation")
+endif()
+if(EXISTS "${legacy_reusable_workflow}")
+    message(FATAL_ERROR
+        "The reusable-workflow form changes required-check identities; use the shared composite action")
+endif()
+
+check_caller(
+    ".github/workflows/native-validation-linux.yml"
+    "Linux Native Validation"
+    "linux"
+    "ubuntu-latest"
+    "Linux GCC"
+    "${native_trigger_with_ignored_non_product_inputs}")
+check_caller(
+    ".github/workflows/native-validation-macos.yml"
+    "macOS Native Validation"
+    "macos"
+    "macos-latest"
+    "macOS Clang"
+    "${native_trigger_with_ignored_non_product_inputs}")
+check_caller(
+    ".github/workflows/native-validation-windows.yml"
+    "Windows Native Validation"
+    "windows"
+    "windows-latest"
+    "Windows MSVC"
+    "${windows_native_trigger_with_ignored_non_product_inputs}")
 
 set(release_workflow ".github/workflows/native-release-readiness.yml")
 require_text("${release_workflow}" [=[name: Native Release Readiness
