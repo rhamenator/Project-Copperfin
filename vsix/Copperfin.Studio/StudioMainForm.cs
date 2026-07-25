@@ -179,13 +179,17 @@ internal sealed class StudioMainForm : Form
             shellSplitContainer.Panel2MinSize = MinimumToolWindowHeight;
             RestoreShellLayout();
         };
-        FormClosing += (_, _) =>
-        {
-            formClosing = true;
-            SaveShellLayout();
-            DockFloatingToolWindows();
-        };
         UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        // Capture the floating state before Form's owner teardown closes the
+        // owned tool windows and their close handlers re-dock the controls.
+        formClosing = true;
+        SaveShellLayout();
+        DockFloatingToolWindows();
+        base.OnFormClosing(e);
     }
 
     internal bool IsCommandWindowVisible => toolWindowTabs.TabPages.Contains(commandWindowPage) ||
@@ -559,6 +563,11 @@ internal sealed class StudioMainForm : Form
         form.Controls.Add(control);
         form.FormClosing += (_, e) =>
         {
+            if (formClosing)
+            {
+                return;
+            }
+
             if (shellTransitionInProgress)
             {
                 return;
