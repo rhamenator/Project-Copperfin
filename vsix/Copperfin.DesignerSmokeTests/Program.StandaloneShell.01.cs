@@ -172,6 +172,8 @@ internal static partial class Program
             firstForm.SetCommandWindowFloatingBoundsForTest(new Rectangle(140, 150, 660, 380));
             firstForm.SetTerminalWindowFloatingBoundsForTest(new Rectangle(220, 190, 700, 400));
             firstForm.Close();
+            Expect(firstForm.IsCommandWindowFloating && firstForm.IsTerminalWindowFloating,
+                "owner teardown should preserve the logical floating state after owned forms close");
         }
 
         Expect(store.StoredState is not null &&

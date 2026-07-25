@@ -200,9 +200,9 @@ internal sealed class StudioMainForm : Form
     internal bool IsTerminalWindowVisible => toolWindowTabs.TabPages.Contains(terminalWindowPage) ||
                                              terminalFloatingForm is not null;
 
-    internal bool IsCommandWindowFloating => commandFloatingForm is not null;
+    internal bool IsCommandWindowFloating => commandWindowFloatingState;
 
-    internal bool IsTerminalWindowFloating => terminalFloatingForm is not null;
+    internal bool IsTerminalWindowFloating => terminalWindowFloatingState;
 
     internal Rectangle? CommandWindowFloatingBoundsForTest =>
         commandFloatingForm?.Bounds ?? commandFloatingBounds;
