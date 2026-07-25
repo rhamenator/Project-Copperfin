@@ -33,8 +33,8 @@ flowchart LR
 **What's done:** all five sub-lanes shipped and closed in a single May 2026
 batch — form/class, report/label, and menu xAsset lifecycle sequencing, plus
 the build-inclusion and workflow-diagnostics work that depends on all three.
-**What's left:** per `docs/22-vfp-language-reference-coverage.md:978`, "host
-stability and debugger fault containment" are named explicitly as remaining
-runtime-safety work in this area, now that the automation lane (Phase A) is
-closed — this is tracked more as depth work in lane D's debugger sub-lane
-(`D2`) than as a reopening of lane C itself.
+**What's left:** the implementation work formerly named as "host stability and
+debugger fault containment" is complete through #4623 and its focused child
+slices for the runtime host, PRG debugger, forms/classes/menus, and
+reports/labels. Hosted Windows, mounted-VFP9, and Visual Studio validation
+remains release evidence under #4621, not unfinished Phase B implementation.
