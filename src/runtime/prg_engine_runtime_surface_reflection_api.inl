@@ -196,6 +196,11 @@ bool is_native_visual_righttoleft_member_name(const RuntimeOleObjectState& runti
     return native_visual_righttoleft_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_wordwrap_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_wordwrap_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_dynamicfontname_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_dynamicfontname_member_name_matches(runtime_object, normalized_member_name);
@@ -936,6 +941,20 @@ void normalize_native_visual_righttoleft_invariant(RuntimeOleObjectState& runtim
     }
 
     right_to_left->second = make_boolean_value(value_as_bool(right_to_left->second));
+}
+
+void normalize_native_visual_wordwrap_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_wordwrap_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto word_wrap = runtime_object.properties.find("wordwrap");
+    if (word_wrap == runtime_object.properties.end()) {
+        return;
+    }
+
+    word_wrap->second = make_boolean_value(value_as_bool(word_wrap->second));
 }
 
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object)

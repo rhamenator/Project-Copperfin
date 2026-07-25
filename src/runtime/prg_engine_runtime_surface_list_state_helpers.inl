@@ -136,6 +136,19 @@ bool native_visual_righttoleft_runtime_object(const RuntimeOleObjectState& runti
            normalized_base_class == "textbox";
 }
 
+bool native_visual_wordwrap_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "checkbox" ||
+           normalized_base_class == "commandbutton" ||
+           normalized_base_class == "label" ||
+           normalized_base_class == "optionbutton";
+}
+
 bool native_visual_button_state_picture_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

@@ -84,6 +84,16 @@
                 runtime_object.properties["righttoleft"] = make_boolean_value(true);
             }
 
+            if ((normalized_base_class == "checkbox" ||
+                 normalized_base_class == "commandbutton" ||
+                 normalized_base_class == "label" ||
+                 normalized_base_class == "optionbutton") &&
+                !runtime_object.properties.contains("wordwrap"))
+            {
+                // VFP9 documents false as the default; text measurement is host-owned.
+                runtime_object.properties["wordwrap"] = make_boolean_value(false);
+            }
+
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontname"))
             {

@@ -8557,6 +8557,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_righttoleft_invariant(runtime_object);
                 }
+                if (normalized_property_name == "wordwrap")
+                {
+                    normalize_native_visual_wordwrap_invariant(runtime_object);
+                }
                 if (normalized_property_name == "fontbold")
                 {
                     runtime_object.properties[normalized_property_name] = make_boolean_value(
@@ -8880,6 +8884,12 @@ namespace copperfin::runtime
                     runtime_object.properties.contains("righttoleft"))
                 {
                     normalize_native_visual_righttoleft_invariant(runtime_object);
+                }
+                if (normalized_property_name == "wordwrap" &&
+                    is_native_visual_wordwrap_member_name(runtime_object, normalized_property_name) &&
+                    runtime_object.properties.contains("wordwrap"))
+                {
+                    normalize_native_visual_wordwrap_invariant(runtime_object);
                 }
                 if (normalized_property_name == "sorted")
                 {

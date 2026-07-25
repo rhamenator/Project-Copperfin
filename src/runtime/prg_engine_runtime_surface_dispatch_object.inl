@@ -258,6 +258,7 @@
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_righttoleft_member_name(*runtime_object, property_name) ||
+            is_native_visual_wordwrap_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
@@ -315,6 +316,7 @@
             is_native_movable_member_name(*runtime_object, property_name) ||
             is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_righttoleft_member_name(*runtime_object, property_name) ||
+            is_native_visual_wordwrap_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
@@ -706,6 +708,9 @@
             if (member_name == "righttoleft") {
                 normalize_native_visual_righttoleft_invariant(*runtime_object);
             }
+            if (member_name == "wordwrap") {
+                normalize_native_visual_wordwrap_invariant(*runtime_object);
+            }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
             }
@@ -1008,6 +1013,9 @@
             }
             if (member_name == "righttoleft") {
                 normalize_native_visual_righttoleft_invariant(*runtime_object);
+            }
+            if (member_name == "wordwrap") {
+                normalize_native_visual_wordwrap_invariant(*runtime_object);
             }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
@@ -1367,6 +1375,7 @@
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
             is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_righttoleft_member_name(*runtime_object, property_name) ||
+            is_native_visual_wordwrap_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
@@ -1424,6 +1433,7 @@
             is_native_movable_member_name(*runtime_object, property_name) ||
             is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_righttoleft_member_name(*runtime_object, property_name) ||
+            is_native_visual_wordwrap_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||

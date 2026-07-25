@@ -87,6 +87,7 @@ bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_visual_enabled_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_fontcharset_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_righttoleft_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_visual_wordwrap_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -206,6 +207,7 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
 void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_fontcharset_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_righttoleft_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_visual_wordwrap_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_backstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_specialeffect_invariant(RuntimeOleObjectState& runtime_object);

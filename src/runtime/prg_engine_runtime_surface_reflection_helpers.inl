@@ -480,6 +480,14 @@ bool native_visual_righttoleft_member_name_matches(
            runtime_object.properties.contains("righttoleft");
 }
 
+bool native_visual_wordwrap_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "wordwrap" &&
+           native_visual_wordwrap_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("wordwrap");
+}
+
 bool native_visual_dynamicfontname_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
