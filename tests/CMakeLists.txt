@@ -367,11 +367,12 @@ add_test(
     NAME test_localization
     COMMAND $<TARGET_FILE:test_localization> $<TARGET_FILE:copperfin_inspect>
 )
-# Discovery cases deliberately exercise an absent override; keep the global
-# native-test catalog fixture from masking those scoped environment tests.
+# The product-catalog parity checks run from an out-of-tree build on Windows,
+# so provide the checkout's catalog fixture explicitly. Discovery cases
+# deliberately exercise an absent override and clear this scoped environment.
 set_tests_properties(
     test_localization
-    PROPERTIES ENVIRONMENT "COPPERFIN_LOCALE_DIR="
+    PROPERTIES ENVIRONMENT "COPPERFIN_LOCALE_DIR=${CMAKE_SOURCE_DIR}/resources/locales"
 )
 
 foreach(runtime_host_test_target IN ITEMS
