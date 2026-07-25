@@ -4,6 +4,62 @@
 
 #include "test_runtime_host_debug_output_support.h"
 
+namespace {
+
+void write_synthetic_faulting_xasset(
+    const std::filesystem::path& table_path,
+    copperfin::studio::StudioAssetKind kind) {
+    if (kind == copperfin::studio::StudioAssetKind::menu) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 3U},
+            {.name = "NAME", .type = 'M', .length = 4U},
+            {.name = "PROMPT", .type = 'M', .length = 4U},
+            {.name = "COMMAND", .type = 'M', .length = 4U},
+            {.name = "LEVELNAME", .type = 'C', .length = 24U},
+            {.name = "ITEMNUM", .type = 'C', .length = 8U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            fields,
+            {
+                {"2", "MainMenu", "", "", "", ""},
+                {"3", "FaultItem", "Fault", "before_action = \"kept\"\nfault_value = LOG(-1)\nafter_action = \"continued\"", "MainMenu", "1"}
+            });
+        expect(create_result.ok, "synthetic MNX fault fixture should be created");
+        return;
+    }
+
+    const std::string object_name = kind == copperfin::studio::StudioAssetKind::class_library
+        ? "clsFault"
+        : "frmFault";
+    const std::string base_class = kind == copperfin::studio::StudioAssetKind::class_library
+        ? "custom"
+        : "form";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "PLATFORM", .type = 'C', .length = 16U},
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::string methods =
+        "PROCEDURE Load\n"
+        "startup_value = \"ready\"\n"
+        "ENDPROC\n"
+        "PROCEDURE HandleFault\n"
+        "before_action = \"kept\"\n"
+        "fault_value = LOG(-1)\n"
+        "after_action = \"continued\"\n"
+        "ENDPROC\n";
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"WINDOWS", object_name, "", base_class, methods}});
+    expect(create_result.ok, "synthetic SCX/VCX fault fixture should be created");
+}
+
+}  // namespace
+
 void test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -779,4 +835,89 @@ void test_runtime_host_cleans_failed_xasset_bootstrap_write(const std::string& r
     expect(!bootstrap_leaked,
            "failed xAsset bootstrap writes should remove the partial temporary source");
     fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_host_contains_executable_xasset_action_faults(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    struct FaultingAssetCase {
+        const char* filename;
+        copperfin::studio::StudioAssetKind kind;
+        const char* action_id;
+    };
+    const FaultingAssetCase cases[]{
+        {"fault.scx", copperfin::studio::StudioAssetKind::form, "frmfault.handlefault"},
+        {"fault.vcx", copperfin::studio::StudioAssetKind::class_library, "clsfault.handlefault"},
+        {"fault.mnx", copperfin::studio::StudioAssetKind::menu, "faultitem"}
+    };
+
+    for (const auto& asset_case : cases) {
+        const fs::path temp_root = fs::temp_directory_path() /
+            (std::string("copperfin_runtime_host_xasset_action_fault_") + asset_case.filename);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / asset_case.filename;
+        const fs::path manifest_path = temp_root / "app.cfmanifest";
+        const fs::path locale_root = temp_root / "locales";
+        write_synthetic_faulting_xasset(table_path, asset_case.kind);
+        write_runtime_host_usage_catalogs(locale_root);
+        write_text(
+            manifest_path,
+            "manifest_version=1\n"
+            "project_title=XAssetFaultRecovery\n"
+            "startup_item=" + std::string(asset_case.filename) + "\n"
+            "startup_source=" + table_path.string() + "\n"
+            "working_directory=" + temp_root.string() + "\n"
+            "security_enabled=false\n"
+            "security_role=\n"
+            "security_mode=native\n"
+            "dotnet_story=none\n");
+
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "continue",
+                "--debug-command", std::string("invoke:") + asset_case.action_id,
+                "--debug-command", "watch:before_action",
+                "--debug-command", "continue",
+                "--debug-command", "watch:after_action"
+            },
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << asset_case.filename << " xAsset fault stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << asset_case.filename << " xAsset fault stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        const std::string prefix = std::string("#4626 ") + asset_case.filename + ": ";
+        expect(process.exit_code == 0, prefix + "xAsset action fault should recover in the same host process");
+        expect(process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
+               prefix + "xAsset action fault should use the executable xAsset bootstrap");
+        expect(process.stdout_text.find("debug.command[1]: invoke:" + std::string(asset_case.action_id)) != std::string::npos,
+               prefix + "xAsset action invocation should preserve its command identity");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               prefix + "xAsset action fault should emit structured error status");
+        expect(process.stdout_text.find("debug.reason: error") != std::string::npos,
+               prefix + "xAsset action fault should preserve the error pause state");
+        expect(process.stdout_text.find("debug.watch.value: kept") != std::string::npos,
+               prefix + "xAsset action fault should preserve pre-fault watch state");
+        expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+               prefix + "xAsset action fault should return to the event loop after continue");
+        expect(process.stdout_text.find("after_action = \"continued\"") != std::string::npos,
+               prefix + "xAsset action fault should execute post-fault code after continue");
+        expect(process.stdout_text.find("terminate called") == std::string::npos,
+               prefix + "xAsset action fault should not terminate the runtime host");
+
+        if (failures == 0) {
+            fs::remove_all(temp_root, ignored);
+        }
+    }
 }
