@@ -239,6 +239,9 @@ public:
     void clear_breakpoints();
     [[nodiscard]] std::vector<RuntimeBreakpoint> list_breakpoints() const;
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);
+    [[nodiscard]] bool dispatch_popup_bar_selection(
+        const std::string& popup_name,
+        std::int64_t bar_number);
     [[nodiscard]] std::optional<std::intptr_t> dispatch_windows_message(
         std::intptr_t hwnd,
         std::uint32_t message,

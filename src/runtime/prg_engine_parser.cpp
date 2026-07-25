@@ -1318,6 +1318,33 @@ bool parse_storage_statement(const std::string& line, Statement& statement) {
 }
 
 bool parse_popup_statement(const std::string& line, Statement& statement) {
+    const std::string selection_bar_prefix = "ON SELECTION BAR ";
+    if (starts_with_insensitive(line, selection_bar_prefix)) {
+        const std::string body = trim_copy(line.substr(selection_bar_prefix.size()));
+        const auto [bar_number, bar_tail] = split_first_word(body);
+        const std::size_t of_position = find_keyword_top_level(bar_tail, "OF");
+        const std::size_t do_position = of_position == std::string::npos
+            ? std::string::npos
+            : find_keyword_top_level_from(bar_tail, "DO", of_position + 2U);
+        if (of_position == std::string::npos || do_position == std::string::npos) {
+            return false;
+        }
+
+        const std::string popup_name = unquote_identifier(trim_copy(
+            bar_tail.substr(of_position + 2U, do_position - of_position - 2U)));
+        const std::string routine_text = trim_copy(bar_tail.substr(do_position + 2U));
+        const std::string routine_name = unquote_identifier(take_first_token(routine_text));
+        if (bar_number.empty() || popup_name.empty() || routine_name.empty() ||
+            routine_name != routine_text) {
+            return false;
+        }
+
+        statement.kind = StatementKind::on_selection_bar_command;
+        statement.secondary_expression = trim_copy(bar_number);
+        statement.identifier = popup_name;
+        statement.expression = routine_name;
+        return true;
+    }
     if (starts_with_insensitive(line, "DEFINE POPUP ")) {
         statement.kind = StatementKind::define_popup_command;
         const std::string body = trim_copy(line.substr(13U));

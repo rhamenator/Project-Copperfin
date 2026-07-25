@@ -776,6 +776,7 @@ namespace copperfin::runtime
             std::map<std::string, std::map<long long, std::string>> popup_bar_prompts;
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
+            std::map<std::string, std::map<long long, std::string>> popup_bar_selection_handlers;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
         };
@@ -1094,6 +1095,7 @@ namespace copperfin::runtime
 #include "prg_engine_flow.inl"
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
+        bool dispatch_popup_bar_selection(const std::string &popup_name, std::int64_t bar_number);
         void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
         [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
         [[nodiscard]] std::optional<std::intptr_t> whandle_from_hwnd(std::intptr_t hwnd) const;
@@ -9820,6 +9822,62 @@ namespace copperfin::runtime
         return false;
     }
 
+    bool PrgRuntimeSession::Impl::dispatch_popup_bar_selection(
+        const std::string &popup_name,
+        std::int64_t bar_number)
+    {
+        if (!waiting_for_events || stack.empty() || bar_number < 1)
+        {
+            return false;
+        }
+
+        const std::string normalized_popup_name = normalize_identifier(popup_name);
+        if (normalized_popup_name.empty())
+        {
+            return false;
+        }
+
+        const auto popup = current_session_state().popup_bar_prompts.find(normalized_popup_name);
+        if (popup == current_session_state().popup_bar_prompts.end())
+        {
+            return false;
+        }
+
+        const auto bar = popup->second.find(static_cast<long long>(bar_number));
+        if (bar == popup->second.end() || bar->second.rfind("\\-", 0U) == 0U)
+        {
+            return false;
+        }
+
+        const auto skip_popup = current_session_state().popup_bar_skip_states.find(normalized_popup_name);
+        if (skip_popup != current_session_state().popup_bar_skip_states.end())
+        {
+            const auto skip_bar = skip_popup->second.find(static_cast<long long>(bar_number));
+            if (skip_bar != skip_popup->second.end() && skip_bar->second)
+            {
+                return false;
+            }
+        }
+
+        const auto handler_popup = current_session_state().popup_bar_selection_handlers.find(
+            normalized_popup_name);
+        if (handler_popup == current_session_state().popup_bar_selection_handlers.end())
+        {
+            return false;
+        }
+        const auto handler = handler_popup->second.find(static_cast<long long>(bar_number));
+        if (handler == handler_popup->second.end() || handler->second.empty() ||
+            !find_event_handler_routine_lookup(handler->second).has_value())
+        {
+            return false;
+        }
+
+        events.push_back({.category = "runtime.popup.selection",
+                          .detail = normalized_popup_name + " bar=" + std::to_string(bar_number),
+                          .location = {}});
+        return dispatch_event_handler(handler->second);
+    }
+
     std::optional<std::intptr_t> PrgRuntimeSession::Impl::dispatch_windows_message(
         std::intptr_t hwnd,
         std::uint32_t message,
@@ -10560,6 +10618,13 @@ namespace copperfin::runtime
     bool PrgRuntimeSession::dispatch_event_handler(const std::string &routine_name)
     {
         return impl_->dispatch_event_handler(routine_name);
+    }
+
+    bool PrgRuntimeSession::dispatch_popup_bar_selection(
+        const std::string &popup_name,
+        std::int64_t bar_number)
+    {
+        return impl_->dispatch_popup_bar_selection(popup_name, bar_number);
     }
 
     std::optional<std::intptr_t> PrgRuntimeSession::dispatch_windows_message(

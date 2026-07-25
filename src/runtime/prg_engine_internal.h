@@ -31,6 +31,7 @@ enum class StatementKind {
     label_form,
     define_popup_command,
     define_bar_command,
+    on_selection_bar_command,
     activate_surface,
     release_surface,
     return_statement,

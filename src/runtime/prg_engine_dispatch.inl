@@ -2776,6 +2776,7 @@
                     current_session_state().popup_bar_prompts[popup_name].clear();
                     current_session_state().popup_bar_skip_states[popup_name].clear();
                     current_session_state().popup_bar_mark_states[popup_name].clear();
+                    current_session_state().popup_bar_selection_handlers[popup_name].clear();
                 }
                 return {};
             }
@@ -2794,6 +2795,23 @@
                     static_cast<long long>(std::llround(*bar_number))] = value_as_string(prompt_value);
                 return {};
             }
+            case StatementKind::on_selection_bar_command:
+            {
+                const auto bar_number = try_parse_numeric_index_value(statement.secondary_expression);
+                const std::string popup_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                const std::string handler_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.expression)));
+                if (!bar_number.has_value() || *bar_number < 1.0 ||
+                    popup_name.empty() || handler_name.empty())
+                {
+                    return {};
+                }
+
+                current_session_state().popup_bar_selection_handlers[popup_name][
+                    static_cast<long long>(std::llround(*bar_number))] = handler_name;
+                return {};
+            }
             case StatementKind::activate_surface:
                 waiting_for_events = true;
                 events.push_back({.category = statement.identifier + ".activate",
@@ -2808,6 +2826,7 @@
                     current_session_state().popup_bar_prompts.erase(popup_name);
                     current_session_state().popup_bar_skip_states.erase(popup_name);
                     current_session_state().popup_bar_mark_states.erase(popup_name);
+                    current_session_state().popup_bar_selection_handlers.erase(popup_name);
                 }
                 waiting_for_events = false;
                 events.push_back({.category = statement.identifier + ".release",

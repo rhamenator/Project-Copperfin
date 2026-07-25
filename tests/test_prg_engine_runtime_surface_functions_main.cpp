@@ -454,6 +454,7 @@ int main()
     test_native_list_controls_field_structure_rowsource_materializes_fields();
     test_native_list_controls_collection_rowsource_materializes_members();
     test_native_list_controls_popup_rowsource_materializes_static_bars();
+    test_native_popup_bar_selection_dispatches_registered_callback();
     test_native_listbox_moveitem_preserves_row_identity_and_state();
     test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto();
     test_native_list_controls_itemid_index_conversion_methods_stay_coherent();

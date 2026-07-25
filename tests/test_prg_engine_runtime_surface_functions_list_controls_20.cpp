@@ -149,4 +149,79 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_popup_bar_selection_dispatches_registered_callback()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+            "copperfin_native_popup_bar_selection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "popup_selection.prg";
+        write_text(
+            main_path,
+            "DEFINE POPUP choices\n"
+            "DEFINE BAR 1 OF choices PROMPT 'Run'\n"
+            "DEFINE BAR 2 OF choices PROMPT '\\-'\n"
+            "DEFINE BAR 3 OF choices PROMPT 'Skipped'\n"
+            "ON SELECTION BAR 1 OF choices DO FirstHandler\n"
+            "ON SELECTION BAR 1 OF choices DO ReplacedHandler\n"
+            "ON SELECTION BAR 2 OF choices DO ReplacedHandler\n"
+            "ON SELECTION BAR 3 OF choices DO ReplacedHandler\n"
+            "PUBLIC nSelected\n"
+            "PUBLIC cSelected\n"
+            "nSelected = 0\n"
+            "cSelected = ''\n"
+            "SET SKIP OF BAR 3 OF choices .T.\n"
+            "ACTIVATE POPUP choices\n"
+            "RETURN\n"
+            "PROCEDURE FirstHandler\n"
+            "nSelected = -1\n"
+            "RETURN\n"
+            "PROCEDURE ReplacedHandler\n"
+            "nSelected = nSelected + 1\n"
+            "cSelected = 'replaced'\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events,
+               "popup selection script should pause in the popup event loop");
+        expect(!session.dispatch_popup_bar_selection("missing", 1),
+               "missing popup selection should fail without dispatch");
+        expect(!session.dispatch_popup_bar_selection("choices", 99),
+               "missing popup bar selection should fail without dispatch");
+        expect(!session.dispatch_popup_bar_selection("choices", 2),
+               "separator popup bar selection should fail without dispatch");
+        expect(!session.dispatch_popup_bar_selection("choices", 3),
+               "skipped popup bar selection should fail without dispatch");
+        expect(session.dispatch_popup_bar_selection("CHOICES", 1),
+               "popup bar selection should dispatch a registered callback case-insensitively");
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events,
+               "popup callback should return to the event loop after its frame completes");
+        const auto selected = state.globals.find("nselected");
+        expect(selected != state.globals.end() &&
+                   copperfin::runtime::format_value(selected->second) == "1",
+               "re-registering a popup bar should replace its earlier callback");
+        const auto selected_text = state.globals.find("cselected");
+        expect(selected_text != state.globals.end() &&
+                   copperfin::runtime::format_value(selected_text->second) == "replaced",
+               "popup callback should run through the selected routine");
+        expect(std::any_of(
+                   state.events.begin(),
+                   state.events.end(),
+                   [](const copperfin::runtime::RuntimeEvent& event)
+                   {
+                       return event.category == "runtime.popup.selection" &&
+                           event.detail == "choices bar=1";
+                   }),
+               "popup callback should emit stable selection telemetry");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }
