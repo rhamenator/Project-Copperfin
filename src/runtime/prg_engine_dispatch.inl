@@ -2777,6 +2777,7 @@
                     current_session_state().popup_bar_skip_states[popup_name].clear();
                     current_session_state().popup_bar_mark_states[popup_name].clear();
                     current_session_state().popup_bar_selection_handlers[popup_name].clear();
+                    current_session_state().popup_selection_handlers.erase(popup_name);
                 }
                 return {};
             }
@@ -2812,6 +2813,27 @@
                     static_cast<long long>(std::llround(*bar_number))] = handler_name;
                 return {};
             }
+            case StatementKind::on_selection_popup_command:
+            {
+                const std::string popup_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                if (popup_name.empty())
+                {
+                    return {};
+                }
+
+                const std::string handler_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.expression)));
+                if (handler_name.empty())
+                {
+                    current_session_state().popup_selection_handlers.erase(popup_name);
+                }
+                else
+                {
+                    current_session_state().popup_selection_handlers[popup_name] = handler_name;
+                }
+                return {};
+            }
             case StatementKind::activate_surface:
                 waiting_for_events = true;
                 events.push_back({.category = statement.identifier + ".activate",
@@ -2827,6 +2849,7 @@
                     current_session_state().popup_bar_skip_states.erase(popup_name);
                     current_session_state().popup_bar_mark_states.erase(popup_name);
                     current_session_state().popup_bar_selection_handlers.erase(popup_name);
+                    current_session_state().popup_selection_handlers.erase(popup_name);
                 }
                 waiting_for_events = false;
                 events.push_back({.category = statement.identifier + ".release",

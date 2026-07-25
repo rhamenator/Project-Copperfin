@@ -166,10 +166,12 @@ namespace copperfin::runtime_surface_tests
             "DEFINE BAR 1 OF choices PROMPT 'Run'\n"
             "DEFINE BAR 2 OF choices PROMPT '\\-'\n"
             "DEFINE BAR 3 OF choices PROMPT 'Skipped'\n"
+            "DEFINE BAR 4 OF choices PROMPT 'Fallback'\n"
             "ON SELECTION BAR 1 OF choices DO FirstHandler\n"
             "ON SELECTION BAR 1 OF choices DO ReplacedHandler\n"
             "ON SELECTION BAR 2 OF choices DO ReplacedHandler\n"
             "ON SELECTION BAR 3 OF choices DO ReplacedHandler\n"
+            "ON SELECTION POPUP choices DO PopupHandler\n"
             "PUBLIC nSelected\n"
             "PUBLIC cSelected\n"
             "nSelected = 0\n"
@@ -183,6 +185,10 @@ namespace copperfin::runtime_surface_tests
             "PROCEDURE ReplacedHandler\n"
             "nSelected = nSelected + 1\n"
             "cSelected = 'replaced'\n"
+            "RETURN\n"
+            "PROCEDURE PopupHandler\n"
+            "nSelected = nSelected + 100\n"
+            "cSelected = 'popup'\n"
             "RETURN\n");
 
         auto session = copperfin::runtime::PrgRuntimeSession::create(
@@ -221,6 +227,38 @@ namespace copperfin::runtime_surface_tests
                            event.detail == "choices bar=1";
                    }),
                "popup callback should emit stable selection telemetry");
+
+        expect(session.dispatch_popup_bar_selection("choices", 4),
+               "popup selection should fall back when the bar has no specific callback");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events,
+               "popup-level callback should return to the event loop after its frame completes");
+        const auto popup_selected = state.globals.find("nselected");
+        expect(popup_selected != state.globals.end() &&
+                   copperfin::runtime::format_value(state.globals.at("nselected")) == "101",
+               "popup-level callback should execute after bar-specific callback");
+        const auto popup_selected_text = state.globals.find("cselected");
+        expect(popup_selected_text != state.globals.end() &&
+                   copperfin::runtime::format_value(state.globals.at("cselected")) == "popup",
+               "popup-level callback should run through the selected routine");
+
+        const fs::path clear_path = temp_root / "popup_selection_clear.prg";
+        write_text(
+            clear_path,
+            "DEFINE POPUP choices\n"
+            "DEFINE BAR 1 OF choices PROMPT 'Run'\n"
+            "ON SELECTION POPUP choices DO ReplacedHandler\n"
+            "ON SELECTION POPUP choices\n"
+            "ACTIVATE POPUP choices\n"
+            "RETURN\n"
+            "PROCEDURE ReplacedHandler\n"
+            "RETURN\n");
+        auto cleared_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(clear_path, temp_root));
+        const auto cleared_state = cleared_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(cleared_state.waiting_for_events &&
+                   !cleared_session.dispatch_popup_bar_selection("choices", 1),
+               "popup-level no-command form should clear the registered callback");
 
         fs::remove_all(temp_root, ignored);
     }

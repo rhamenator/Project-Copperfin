@@ -1318,6 +1318,34 @@ bool parse_storage_statement(const std::string& line, Statement& statement) {
 }
 
 bool parse_popup_statement(const std::string& line, Statement& statement) {
+    const std::string selection_popup_prefix = "ON SELECTION POPUP ";
+    if (starts_with_insensitive(line, selection_popup_prefix)) {
+        const std::string body = trim_copy(line.substr(selection_popup_prefix.size()));
+        const auto [popup_name, command_text] = split_first_word(body);
+        if (popup_name.empty()) {
+            return false;
+        }
+
+        if (command_text.empty()) {
+            statement.kind = StatementKind::on_selection_popup_command;
+            statement.identifier = unquote_identifier(popup_name);
+            return true;
+        }
+
+        if (!starts_with_insensitive(command_text, "DO ")) {
+            return false;
+        }
+        const std::string routine_text = trim_copy(command_text.substr(3U));
+        const std::string routine_name = unquote_identifier(take_first_token(routine_text));
+        if (routine_name.empty() || routine_name != routine_text) {
+            return false;
+        }
+
+        statement.kind = StatementKind::on_selection_popup_command;
+        statement.identifier = unquote_identifier(popup_name);
+        statement.expression = routine_name;
+        return true;
+    }
     const std::string selection_bar_prefix = "ON SELECTION BAR ";
     if (starts_with_insensitive(line, selection_bar_prefix)) {
         const std::string body = trim_copy(line.substr(selection_bar_prefix.size()));

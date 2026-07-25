@@ -777,6 +777,7 @@ namespace copperfin::runtime
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
             std::map<std::string, std::map<long long, std::string>> popup_bar_selection_handlers;
+            std::map<std::string, std::string> popup_selection_handlers;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
         };
@@ -9859,23 +9860,40 @@ namespace copperfin::runtime
             }
         }
 
+        std::string handler_name;
         const auto handler_popup = current_session_state().popup_bar_selection_handlers.find(
             normalized_popup_name);
-        if (handler_popup == current_session_state().popup_bar_selection_handlers.end())
+        if (handler_popup != current_session_state().popup_bar_selection_handlers.end())
         {
-            return false;
+            const auto handler = handler_popup->second.find(static_cast<long long>(bar_number));
+            if (handler != handler_popup->second.end())
+            {
+                if (handler->second.empty() ||
+                    !find_event_handler_routine_lookup(handler->second).has_value())
+                {
+                    return false;
+                }
+                handler_name = handler->second;
+            }
         }
-        const auto handler = handler_popup->second.find(static_cast<long long>(bar_number));
-        if (handler == handler_popup->second.end() || handler->second.empty() ||
-            !find_event_handler_routine_lookup(handler->second).has_value())
+
+        if (handler_name.empty())
         {
-            return false;
+            const auto popup_handler = current_session_state().popup_selection_handlers.find(
+                normalized_popup_name);
+            if (popup_handler == current_session_state().popup_selection_handlers.end() ||
+                popup_handler->second.empty() ||
+                !find_event_handler_routine_lookup(popup_handler->second).has_value())
+            {
+                return false;
+            }
+            handler_name = popup_handler->second;
         }
 
         events.push_back({.category = "runtime.popup.selection",
                           .detail = normalized_popup_name + " bar=" + std::to_string(bar_number),
                           .location = {}});
-        return dispatch_event_handler(handler->second);
+        return dispatch_event_handler(handler_name);
     }
 
     std::optional<std::intptr_t> PrgRuntimeSession::Impl::dispatch_windows_message(
