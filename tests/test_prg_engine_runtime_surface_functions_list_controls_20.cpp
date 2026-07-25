@@ -343,4 +343,69 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_on_selection_bar_executes_static_action_command()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+            "copperfin_native_on_selection_bar_action";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "on_selection_bar_action.prg";
+        write_text(
+            main_path,
+            "DEFINE POPUP actions\n"
+            "DEFINE BAR 1 OF actions PROMPT 'Increment'\n"
+            "DEFINE BAR 2 OF actions PROMPT 'Callback'\n"
+            "DEFINE BAR 3 OF actions PROMPT 'Macro'\n"
+            "DEFINE BAR 4 OF actions PROMPT 'Function'\n"
+            "ON SELECTION BAR 1 OF actions nCount = nCount + 1\n"
+            "ON SELECTION BAR 2 OF actions nCount = nCount + 2\n"
+            "ON SELECTION BAR 3 OF actions &cAction\n"
+            "ON SELECTION BAR 4 OF actions nCount = AddValue(nCount)\n"
+            "ON SELECTION BAR 2 OF actions DO SelectedHandler\n"
+            "PUBLIC nCount\n"
+            "nCount = 0\n"
+            "ACTIVATE POPUP actions\n"
+            "RETURN\n"
+            "FUNCTION AddValue\n"
+            "LPARAMETERS nValue\n"
+            "RETURN nValue + 3\n"
+            "PROCEDURE SelectedHandler\n"
+            "nCount = nCount + 4\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events,
+               "static ON SELECTION BAR actions should pause in the popup event loop");
+        expect(session.dispatch_popup_bar_selection("actions", 3) == false,
+               "macro-backed ON SELECTION BAR actions should remain outside the static lane");
+        expect(session.dispatch_popup_bar_selection("actions", 2),
+               "bar-specific DO callback should remain dispatchable");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        auto count = state.globals.find("ncount");
+        expect(state.waiting_for_events && count != state.globals.end() &&
+                   copperfin::runtime::format_value(count->second) == "4",
+               "bar-specific callback should take precedence over a static action");
+        expect(session.dispatch_popup_bar_selection("actions", 1),
+               "static ON SELECTION BAR assignment should dispatch");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        count = state.globals.find("ncount");
+        expect(state.waiting_for_events && count != state.globals.end() &&
+                   copperfin::runtime::format_value(count->second) == "5",
+               "static ON SELECTION BAR assignment should update global state");
+        expect(session.dispatch_popup_bar_selection("actions", 4),
+               "static ON SELECTION BAR expression should dispatch");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        count = state.globals.find("ncount");
+        expect(state.waiting_for_events && count != state.globals.end() &&
+                   copperfin::runtime::format_value(count->second) == "8",
+               "static ON SELECTION BAR expression should invoke a PRG function");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

@@ -777,6 +777,7 @@ namespace copperfin::runtime
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
             std::map<std::string, std::map<long long, std::string>> popup_bar_selection_handlers;
+            std::map<std::string, std::map<long long, std::string>> popup_bar_selection_actions;
             std::map<std::string, std::map<long long, std::string>> popup_bar_activation_targets;
             std::map<std::string, std::string> popup_selection_handlers;
             std::vector<RuntimeDatabaseState> databases;
@@ -1059,6 +1060,7 @@ namespace copperfin::runtime
         std::size_t max_loop_iterations = 200000;
         std::filesystem::path runtime_temp_directory;
         std::uint64_t runtime_instance_id = 0;
+        std::size_t next_popup_action_id = 0;
         std::vector<std::filesystem::path> owned_xasset_bootstrap_paths;
         std::size_t scheduler_yield_statement_interval = 4096;
         std::size_t scheduler_yield_sleep_ms = 1;
@@ -9862,6 +9864,7 @@ namespace copperfin::runtime
         }
 
         std::string handler_name;
+        std::string action_text;
         const auto handler_popup = current_session_state().popup_bar_selection_handlers.find(
             normalized_popup_name);
         if (handler_popup != current_session_state().popup_bar_selection_handlers.end())
@@ -9880,6 +9883,24 @@ namespace copperfin::runtime
 
         if (handler_name.empty())
         {
+            const auto action_popup = current_session_state().popup_bar_selection_actions.find(
+                normalized_popup_name);
+            if (action_popup != current_session_state().popup_bar_selection_actions.end())
+            {
+                const auto action = action_popup->second.find(static_cast<long long>(bar_number));
+                if (action != action_popup->second.end())
+                {
+                    if (action->second.empty() || action->second.find('&') != std::string::npos)
+                    {
+                        return false;
+                    }
+                    action_text = action->second;
+                }
+            }
+        }
+
+        if (handler_name.empty() && action_text.empty())
+        {
             const auto popup_handler = current_session_state().popup_selection_handlers.find(
                 normalized_popup_name);
             if (popup_handler != current_session_state().popup_selection_handlers.end())
@@ -9891,6 +9912,49 @@ namespace copperfin::runtime
                 }
                 handler_name = popup_handler->second;
             }
+        }
+
+        if (handler_name.empty() && !action_text.empty())
+        {
+            if (!can_push_frame())
+            {
+                waiting_for_events = true;
+                last_error_message = call_depth_limit_message();
+                events.push_back({.category = "runtime.error",
+                                  .detail = last_error_message,
+                                  .location = {}});
+                return false;
+            }
+
+            Program &source_program = load_program(stack.back().file_path);
+            const std::string action_routine_name =
+                "__copperfin_popup_action_" + std::to_string(runtime_instance_id) + "_" +
+                std::to_string(++next_popup_action_id);
+            const Program action_program = parse_program_source(
+                source_program.path,
+                "PROCEDURE " + action_routine_name + "\n" + action_text +
+                    "\nRETURN\nENDPROC\n");
+            const auto action_found = action_program.routines.find(
+                normalize_identifier(action_routine_name));
+            if (action_found == action_program.routines.end())
+            {
+                return false;
+            }
+            auto [action_routine, inserted] = source_program.routines.emplace(
+                normalize_identifier(action_routine_name),
+                action_found->second);
+            if (!inserted)
+            {
+                return false;
+            }
+            waiting_for_events = false;
+            event_dispatch_return_depth = stack.size();
+            restore_event_loop_after_dispatch = true;
+            events.push_back({.category = "runtime.popup.selection",
+                              .detail = normalized_popup_name + " bar=" + std::to_string(bar_number),
+                              .location = {}});
+            push_routine_frame(source_program.path, action_routine->second);
+            return true;
         }
 
         if (handler_name.empty())
