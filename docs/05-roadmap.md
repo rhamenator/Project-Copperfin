@@ -354,13 +354,15 @@ same rendering reason as above.
 **What's done:** lane E (shared design model, designer interactions, and
 report/label fidelity) closed on 2026-07-24 — the newest closure in the whole
 repo. Lane D's packaging pipeline and debugger, lane F's VS/standalone hosts,
-and lane G's language service are all substantially shipped, though none carry
-an explicit closure statement the way lane E and lane C do. **What's left:**
-hosted Windows, mounted-VFP9, and Visual Studio validation remain release-
-evidence gates for lane E's closed implementation work (per
-`agent-handoff.md`); lane F has been dormant since `#1714` with no closure
-recorded, which is worth a fresh look before assuming it is done; lane G's
-IntelliSense work is still active as of `#395`-`#401`.
+and lane G's language service are substantially shipped in focused slices.
+Recent F1 utility-pane slices made Task List, Code References, Data Explorer,
+and Object Browser workflows interactive in both host modes; recent G1/G2/G3
+slices tightened project symbol resolution, references, rename, signature
+help, completions, and source-derived metadata. **What's left:** hosted
+Windows, mounted-VFP9, and Visual Studio validation remain release-evidence
+gates for lane E and the host surfaces; broader product-grade shell and
+language-service scope remains open under the live MVP tree and must not be
+treated as complete merely because these focused slices shipped.
 
 ### v1 — Post-MVP Roadmap (slice-lanes H + I + J)
 
