@@ -433,7 +433,8 @@ void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_
         return;
     }
 
-    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    const std::string bootstrap =
+        copperfin::runtime::build_xasset_bootstrap_source(model, true, {}, true);
     const std::size_t breakpoint_line = find_breakpoint_line_for_routine_statement(
         bootstrap,
         page_activate->routine_name,
@@ -476,6 +477,8 @@ void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_
     expect(process.exit_code == 0, "runtime host xAsset debugger smoke should exit successfully");
     expect(process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
            "runtime host should report xasset-bootstrap mode");
+    expect(process.stdout_text.find(".detail: __cf_xasset_instance.__cf_frmDemo_Load()") != std::string::npos,
+           "runtime host should invoke packaged form lifecycle methods on the generated form instance");
     expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
            "runtime host should pause on the nested xAsset breakpoint");
     expect(process.stdout_text.find("debug.command[1]: select:frmdemo.pgfmain.page2.activate") != std::string::npos,
@@ -530,7 +533,8 @@ void test_runtime_host_supports_xasset_action_breakpoint_commands(const std::str
         return;
     }
 
-    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    const std::string bootstrap =
+        copperfin::runtime::build_xasset_bootstrap_source(model, true, {}, true);
     const std::size_t first_breakpoint_line =
         find_first_breakpoint_line_for_routine(bootstrap, page_activate->routine_name);
     expect(first_breakpoint_line != 0U, "xAsset action-breakpoint fixture should resolve the first executable line");
@@ -652,7 +656,8 @@ void test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(const
         return;
     }
 
-    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    const std::string bootstrap =
+        copperfin::runtime::build_xasset_bootstrap_source(model, true, {}, true);
     const std::size_t first_breakpoint_line =
         find_first_breakpoint_line_for_routine(bootstrap, page_activate->routine_name);
     expect(first_breakpoint_line != 0U, "xAsset pause-breakpoint fixture should resolve the first executable line");

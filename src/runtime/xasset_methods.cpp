@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <string_view>
 #include <unordered_set>
@@ -765,9 +766,17 @@ std::string build_xasset_bootstrap_source(
     {
         // Packaged form execution needs VFP's method context so THIS, THISFORM,
         // and native object dispatch resolve to the live form object.
+        std::set<std::string> lifecycle_routines(
+            model.startup_routines.begin(),
+            model.startup_routines.end());
+        lifecycle_routines.insert(model.shutdown_routines.begin(), model.shutdown_routines.end());
         stream << "DEFINE CLASS __cf_xasset_root AS form\n";
         for (const auto& method : model.methods)
         {
+            if (lifecycle_routines.find(method.routine_name) == lifecycle_routines.end())
+            {
+                continue;
+            }
             stream << "PROCEDURE " << method.routine_name << "\n";
             if (!method.source_text.empty())
             {

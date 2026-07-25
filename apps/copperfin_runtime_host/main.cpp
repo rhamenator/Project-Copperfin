@@ -2600,7 +2600,8 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
         copperfin::runtime::build_xasset_bootstrap_source(
             result.model,
             include_read_events,
-            logical_startup_source);
+            logical_startup_source,
+            true);
 
     struct ScopedXAssetBootstrapFileCleanup {
         std::filesystem::path path;

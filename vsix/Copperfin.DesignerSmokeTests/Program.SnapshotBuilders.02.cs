@@ -383,21 +383,41 @@ internal static partial class Program
             ? @"C:\Program Files (x86)\Microsoft Visual FoxPro 9"
             : null;
 
-        foreach (var root in new[] { configuredRoot, defaultRoot })
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
         {
-            if (string.IsNullOrWhiteSpace(root))
+            var configuredCandidate = TryResolveAssetUnderRoot(configuredRoot!, normalizedRelativePath);
+            if (!string.IsNullOrWhiteSpace(configuredCandidate))
             {
-                continue;
-            }
-
-            var candidate = TryResolveAssetUnderRoot(root!, normalizedRelativePath);
-            if (!string.IsNullOrWhiteSpace(candidate))
-            {
-                return candidate;
+                return configuredCandidate;
             }
         }
 
-        var zipPath = ResolveVfp9ZipPath();
+        var configuredZipPath = ResolveFirstExistingRealAssetPath(
+            ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ZIP")));
+        var configuredZipCandidate = TryResolveVfp9ZipAsset(configuredZipPath, normalizedRelativePath);
+        if (!string.IsNullOrWhiteSpace(configuredZipCandidate))
+        {
+            return configuredZipCandidate;
+        }
+
+        if (!string.IsNullOrWhiteSpace(defaultRoot))
+        {
+            var defaultCandidate = TryResolveAssetUnderRoot(defaultRoot!, normalizedRelativePath);
+            if (!string.IsNullOrWhiteSpace(defaultCandidate))
+            {
+                return defaultCandidate;
+            }
+        }
+
+        var zipPath = ResolveFirstExistingRealAssetPath(
+            ExpandUserPath("~/Downloads/VFP9Samples.zip"),
+            ExpandUserPath("~/Downloads/VFP9-Samples.zip"),
+            ExpandUserPath("~/Downloads/VFP9.zip"));
+        return TryResolveVfp9ZipAsset(zipPath, normalizedRelativePath);
+    }
+
+    private static string? TryResolveVfp9ZipAsset(string? zipPath, string normalizedRelativePath)
+    {
         if (!string.IsNullOrWhiteSpace(zipPath))
         {
             var extractedRoot = TryExtractArchive(zipPath!);

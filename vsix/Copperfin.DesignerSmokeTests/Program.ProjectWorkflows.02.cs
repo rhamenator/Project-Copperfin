@@ -871,7 +871,7 @@ internal static partial class Program
         {
             if (Directory.Exists(extractionBaseRoot))
             {
-                Directory.Delete(extractionBaseRoot, recursive: true);
+                DeleteReadOnlyDirectoryTree(extractionBaseRoot);
             }
 
             using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
