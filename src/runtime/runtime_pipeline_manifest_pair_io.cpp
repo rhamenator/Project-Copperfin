@@ -4,6 +4,8 @@
 
 #include "runtime_pipeline_manifest_pair_io.h"
 
+#include "copperfin/platform/path.h"
+
 #include <algorithm>
 #include <cerrno>
 #include <cstddef>
@@ -42,7 +44,7 @@ struct FdBackedPath {
 };
 
 FdBackedPath parse_fd_backed_path(const std::filesystem::path& path) {
-    const std::string value = path.string();
+    const std::string value = copperfin::platform::path_to_utf8_string(path);
     constexpr std::string_view proc_prefix = "/proc/self/fd/";
     constexpr std::string_view dev_prefix = "/dev/fd/";
     const std::string_view prefix = value.rfind(proc_prefix, 0U) == 0U
@@ -104,7 +106,7 @@ bool open_fd_backed_directory(
     if (!parsed.relative_path.empty()) {
         const std::filesystem::path relative_path(parsed.relative_path);
         for (const auto& component : relative_path) {
-            const std::string name = component.string();
+            const std::string name = copperfin::platform::path_to_utf8_string(component);
             if (name.empty() || name == ".") {
                 continue;
             }

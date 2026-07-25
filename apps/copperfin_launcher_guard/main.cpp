@@ -393,7 +393,7 @@ bool verify_artifacts(
                 return false;
             }
         }
-        if (is_required_name(relative.filename().string())) {
+        if (is_required_name(copperfin::platform::path_to_utf8_string(relative.filename()))) {
             if (!same_name(record.role, "runtime_required")) {
                 error = localized_message(catalog, "Runtime.Package.LauncherGuard.Error.InventoryInvalid", record.relative_path);
                 return false;
