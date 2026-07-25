@@ -979,8 +979,20 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             IsReadOnly = false,
             CurrentValue = NormalizeInt(value),
             Deserialize = static text => ParseInt(text),
-            Serialize = static input => Convert.ToInt32(input ?? 0, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture),
-            Store = static input => Convert.ToInt32(input ?? 0, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture)
+            Serialize = static input =>
+            {
+                var text = input?.ToString() ?? string.Empty;
+                return string.IsNullOrWhiteSpace(text)
+                    ? string.Empty
+                    : Convert.ToInt32(input, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            },
+            Store = static input =>
+            {
+                var text = input?.ToString() ?? string.Empty;
+                return string.IsNullOrWhiteSpace(text)
+                    ? string.Empty
+                    : Convert.ToInt32(input, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            }
         });
     }
 
@@ -996,7 +1008,13 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 ? parsed.ToString(CultureInfo.InvariantCulture)
                 : string.Empty,
             Deserialize = static text => text,
-            Serialize = static input => ParseInt(input?.ToString() ?? string.Empty).ToString(CultureInfo.InvariantCulture),
+            Serialize = static input =>
+            {
+                var text = input?.ToString() ?? string.Empty;
+                return string.IsNullOrWhiteSpace(text)
+                    ? string.Empty
+                    : ParseInt(text).ToString(CultureInfo.InvariantCulture);
+            },
             Store = static input => input?.ToString() ?? string.Empty
         });
     }

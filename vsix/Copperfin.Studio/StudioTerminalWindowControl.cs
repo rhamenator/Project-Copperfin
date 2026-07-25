@@ -20,6 +20,9 @@ internal sealed class StudioTerminalWindowControl : UserControl
     private readonly Label stateLabel;
     private Process? terminalProcess;
     private StreamWriter? terminalInputWriter;
+    private bool handleCreationInProgress;
+    private bool disposePending;
+    private bool disposeStarted;
 
     public StudioTerminalWindowControl(CopperfinLocalization localization)
     {
@@ -240,10 +243,43 @@ internal sealed class StudioTerminalWindowControl : UserControl
         }
     }
 
+    // A floating tool window can be torn down while WinForms is still creating
+    // this control's handle. Defer disposal until that synchronous operation
+    // has completed instead of asking Control to dispose during CreateHandle.
+    protected override void CreateHandle()
+    {
+        handleCreationInProgress = true;
+        try
+        {
+            base.CreateHandle();
+        }
+        finally
+        {
+            handleCreationInProgress = false;
+            if (disposePending && !disposeStarted)
+            {
+                disposePending = false;
+                Dispose(disposing: true);
+            }
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
+            if (handleCreationInProgress)
+            {
+                disposePending = true;
+                return;
+            }
+
+            if (disposeStarted)
+            {
+                return;
+            }
+
+            disposeStarted = true;
             StopShell();
         }
 
