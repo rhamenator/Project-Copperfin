@@ -368,6 +368,7 @@ int main()
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
     test_native_form_alwaysontop_defaults_mutates_and_stays_builtin();
+    test_native_form_keypreview_defaults_mutate_and_stay_builtin();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();

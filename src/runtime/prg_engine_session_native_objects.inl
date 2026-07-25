@@ -1082,6 +1082,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("keypreview"))
+            {
+                // Headless contract: preserve the logical setting without claiming keyboard dispatch.
+                runtime_object.properties["keypreview"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("lockscreen"))
             {
                 runtime_object.properties["lockscreen"] = make_boolean_value(false);

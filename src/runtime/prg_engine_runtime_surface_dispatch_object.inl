@@ -209,6 +209,7 @@
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
+            is_native_form_keypreview_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_windowstate_member_name(*runtime_object, property_name) ||
@@ -688,6 +689,10 @@
                 return make_boolean_value(false);
             }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "keypreview") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
+            }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
             }
@@ -978,6 +983,10 @@
                 return make_boolean_value(false);
             }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "keypreview") {
+                runtime_object->properties[member_name] = make_boolean_value(
+                    value_as_bool(runtime_object->properties[member_name]));
+            }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
             }
@@ -1284,6 +1293,7 @@
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
+            is_native_form_keypreview_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_windowstate_member_name(*runtime_object, property_name) ||

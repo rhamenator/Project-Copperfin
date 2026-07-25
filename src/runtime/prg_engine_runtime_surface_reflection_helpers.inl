@@ -201,6 +201,18 @@ bool native_form_alwaysontop_member_name_matches(
            runtime_object.properties.contains("alwaysontop");
 }
 
+bool native_form_keypreview_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "keypreview") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("keypreview");
+}
+
 bool native_form_showwindow_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
