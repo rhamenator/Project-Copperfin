@@ -320,7 +320,10 @@
                     normalized_base_class == "container" ? 1.0 : 0.0);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            const bool is_header_or_column_color_object =
+                normalized_base_class == "column" || normalized_base_class == "header";
+
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_color_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("backcolor"))
             {
@@ -329,7 +332,7 @@
                 runtime_object.properties["backcolor"] = make_int64_value(16777215);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_color_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("forecolor"))
             {

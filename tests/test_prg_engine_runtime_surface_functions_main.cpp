@@ -378,6 +378,7 @@ int main()
     test_native_grid_column_header_materializes_lazily_and_stays_coherent();
     test_native_header_caption_defaults_mutate_and_stay_builtin();
     test_native_header_column_alignment_defaults_mutate_and_stay_builtin();
+    test_native_header_column_colors_defaults_mutate_and_stay_builtin();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();

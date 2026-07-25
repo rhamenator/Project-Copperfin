@@ -1043,7 +1043,8 @@ bool native_visual_backcolor_member_name_matches(
         normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
         normalize_identifier(runtime_object.prog_id) == "olecontrol";
     return normalized_member_name == "backcolor" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            native_header_column_color_runtime_object(runtime_object)) &&
            !is_olecontrol &&
            runtime_object.properties.contains("backcolor");
 }
@@ -1055,7 +1056,8 @@ bool native_visual_forecolor_member_name_matches(
         normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
         normalize_identifier(runtime_object.prog_id) == "olecontrol";
     return normalized_member_name == "forecolor" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            native_header_column_color_runtime_object(runtime_object)) &&
            !is_olecontrol &&
            runtime_object.properties.contains("forecolor");
 }
