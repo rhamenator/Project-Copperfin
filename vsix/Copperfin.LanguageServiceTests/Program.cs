@@ -532,6 +532,12 @@ internal static partial class Program
         Expect(reportExpressionSelection?.TryGetUpdate("RULERLINES", out var rulerLinesTarget, out var rulerLinesValue) == true &&
                rulerLinesTarget == "RULERLINES" && rulerLinesValue == "2",
             "report-expression RULERLINES edits should preserve the invariant update target");
+        reportRulerLinesProperty?.SetValue(reportExpressionSelection, string.Empty);
+        Expect(reportExpressionSelection?.TryGetMutation("RULERLINES", out var clearedRulerLinesTarget, out var clearedRulerLinesValue, out var clearRulerLines) == true &&
+               clearedRulerLinesTarget == "RULERLINES" &&
+               clearedRulerLinesValue == string.Empty &&
+               clearRulerLines,
+            "report-expression empty numeric edits should preserve explicit clear intent instead of serializing zero");
         reportOffsetProperty?.SetValue(reportExpressionSelection, 2);
         Expect(reportExpressionSelection?.TryGetUpdate("OFFSET", out var offsetTarget, out var offsetValue) == true &&
                offsetTarget == "OFFSET" && offsetValue == "2",

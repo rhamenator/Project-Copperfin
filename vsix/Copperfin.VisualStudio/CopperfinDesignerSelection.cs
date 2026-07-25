@@ -900,8 +900,13 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         }
 
         targetName = string.IsNullOrWhiteSpace(field.TargetName) ? field.Name : field.TargetName;
+        clearProperty = field.ClearWhenEmpty && string.IsNullOrWhiteSpace(field.CurrentValue);
+        if (clearProperty)
+        {
+            return true;
+        }
+
         serializedValue = field.Serialize(field.Deserialize(field.CurrentValue));
-        clearProperty = field.ClearWhenEmpty && string.IsNullOrWhiteSpace(serializedValue);
         return true;
     }
 

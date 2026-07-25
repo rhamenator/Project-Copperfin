@@ -23,6 +23,8 @@ internal sealed class StudioTerminalWindowControl : UserControl
     private bool handleCreationInProgress;
     private bool disposePending;
     private bool disposeStarted;
+    private bool disposeCompleted;
+    private bool callbacksStopped;
 
     public StudioTerminalWindowControl(CopperfinLocalization localization)
     {
@@ -156,7 +158,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     internal void StartShell()
     {
-        if (IsShellRunning)
+        if (disposeStarted || disposePending || IsShellRunning)
         {
             return;
         }
@@ -173,6 +175,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
                 StartInfo = CreateShellStartInfo(),
                 EnableRaisingEvents = true
             };
+            callbacksStopped = false;
             process.OutputDataReceived += OnOutputDataReceived;
             process.ErrorDataReceived += OnOutputDataReceived;
             process.Exited += OnProcessExited;
@@ -213,6 +216,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     internal void StopShell()
     {
+        callbacksStopped = true;
         var process = terminalProcess;
         terminalProcess = null;
         var inputWriter = terminalInputWriter;
@@ -222,8 +226,13 @@ internal sealed class StudioTerminalWindowControl : UserControl
             return;
         }
 
+        process.OutputDataReceived -= OnOutputDataReceived;
+        process.ErrorDataReceived -= OnOutputDataReceived;
+        process.Exited -= OnProcessExited;
         try
         {
+            process.CancelOutputRead();
+            process.CancelErrorRead();
             inputWriter?.Close();
             if (!process.HasExited)
             {
@@ -256,7 +265,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
         finally
         {
             handleCreationInProgress = false;
-            if (disposePending && !disposeStarted)
+            if (disposePending && !disposeCompleted)
             {
                 disposePending = false;
                 Dispose(disposing: true);
@@ -268,19 +277,22 @@ internal sealed class StudioTerminalWindowControl : UserControl
     {
         if (disposing)
         {
+            if (disposeCompleted)
+            {
+                return;
+            }
+
+            disposeStarted = true;
+            callbacksStopped = true;
             if (handleCreationInProgress)
             {
                 disposePending = true;
                 return;
             }
 
-            if (disposeStarted)
-            {
-                return;
-            }
-
-            disposeStarted = true;
+            disposePending = false;
             StopShell();
+            disposeCompleted = true;
         }
 
         base.Dispose(disposing);
@@ -332,7 +344,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     private void UpdateState(string text)
     {
-        if (IsDisposed || Disposing)
+        if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
         {
             return;
         }
@@ -354,7 +366,7 @@ internal sealed class StudioTerminalWindowControl : UserControl
 
     private void AppendTranscript(string text)
     {
-        if (IsDisposed || Disposing)
+        if (callbacksStopped || IsDisposed || Disposing || !IsHandleCreated)
         {
             return;
         }
