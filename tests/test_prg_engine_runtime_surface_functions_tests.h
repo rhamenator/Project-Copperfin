@@ -479,6 +479,7 @@ namespace copperfin::runtime_surface_tests
     void test_runtime_application_forms_aliases_invoke_builtin_and_custom_methods();
     void test_runtime_application_caption_aliases_track_representative_caption();
     void test_runtime_application_windowstate_aliases_track_representative_state();
+    void test_runtime_application_righttoleft_aliases_track_representative_state();
     void test_native_release_thisform_command_releases_owner_form();
     void test_native_release_thisformset_command_releases_owner_alias();
     void test_native_release_override_runs_before_builtin_release_path();

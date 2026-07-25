@@ -1037,6 +1037,7 @@ namespace copperfin::runtime
         std::optional<int> representative_application_forms_collection_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
         int representative_application_window_state = 0;
+        bool representative_application_right_to_left = true;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -1766,6 +1767,11 @@ namespace copperfin::runtime
                     normalized_property_path == "_vfp.windowstate")
                 {
                     return make_int64_value(static_cast<std::int64_t>(representative_application_window_state));
+                }
+                if (normalized_property_path == "_screen.righttoleft" ||
+                    normalized_property_path == "_vfp.righttoleft")
+                {
+                    return make_boolean_value(representative_application_right_to_left);
                 }
                 if (normalized_property_path == "_screen.formcount" ||
                     normalized_property_path == "_vfp.formcount")

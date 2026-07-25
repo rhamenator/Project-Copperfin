@@ -399,6 +399,7 @@ int main()
     test_runtime_application_forms_aliases_invoke_builtin_and_custom_methods();
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
+    test_runtime_application_righttoleft_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_currentcontrol_defaults_mutates_and_stays_builtin();
     test_native_dynamiccurrentcontrol_defaults_mutates_and_stays_builtin();

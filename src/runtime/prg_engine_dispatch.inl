@@ -1324,6 +1324,15 @@
                                               .location = statement.location});
                             return {};
                         }
+                        if (normalized_member_path == "righttoleft")
+                        {
+                            representative_application_right_to_left = value_as_bool(assignment_value);
+                            events.push_back({.category = "ole.set",
+                                              .detail = object_part + ".RightToLeft = " +
+                                                            (representative_application_right_to_left ? "true" : "false"),
+                                              .location = statement.location});
+                            return {};
+                        }
                     }
                     const PrgValue object_value = lookup_variable(frame, object_part);
                     auto object = resolve_ole_object(object_value);
