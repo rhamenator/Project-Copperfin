@@ -186,7 +186,8 @@ set(native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-macos.yml"
+      - ".github/workflows/native-validation-windows.yml"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -194,7 +195,28 @@ set(native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-macos.yml"
+      - ".github/workflows/native-validation-windows.yml"
+  workflow_dispatch:]=])
+set(macos_native_trigger_with_ignored_non_product_inputs [=[on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-windows.yml"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-windows.yml"
   workflow_dispatch:]=])
 set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
   push:
@@ -204,7 +226,8 @@ set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -212,7 +235,8 @@ set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
   workflow_dispatch:]=])
 
 if(EXISTS "${legacy_workflow}")
@@ -237,7 +261,7 @@ check_caller(
     "macos"
     "macos-latest"
     "macOS Clang"
-    "${native_trigger_with_ignored_non_product_inputs}")
+    "${macos_native_trigger_with_ignored_non_product_inputs}")
 check_caller(
     ".github/workflows/native-validation-windows.yml"
     "Windows Native Validation"

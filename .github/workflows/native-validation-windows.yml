@@ -8,7 +8,8 @@ on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -16,7 +17,8 @@ on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/**"
+      - ".github/workflows/native-validation-linux.yml"
+      - ".github/workflows/native-validation-macos.yml"
   workflow_dispatch:
 
 permissions:

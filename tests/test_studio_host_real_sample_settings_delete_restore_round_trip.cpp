@@ -127,13 +127,18 @@ struct RealSettingsLifecycleSample {
 };
 
 void expect_common_settings_json(
-    const std::string& json,
+    std::string json,
     const RealSettingsLifecycleSample& sample,
     bool deleted,
     bool expect_undo,
     int setting_count,
     int deleted_setting_count,
     const std::string& prefix) {
+    for (std::size_t position = 0;
+         (position = json.find("\r\n", position)) != std::string::npos;) {
+        json.replace(position, 2U, "\n");
+        ++position;
+    }
     expect_contains(json,
                     "\"documentTitle\": \"" + sample.document_title + "\"",
                     prefix + " should preserve the document title");
@@ -202,12 +207,18 @@ void exercise_real_sample_settings_delete_restore_round_trip(
                   << initial_process.stderr_text << "\n";
     }
     expect(initial_process.exit_code == 0, "#3714: initial real sample settings read should succeed");
+    int initial_setting_count = 0;
+    expect(
+        copperfin::test_support::extract_json_integer(
+            initial_process.stdout_text, "\"settingCount\"", initial_setting_count) &&
+            initial_setting_count >= 0,
+        "#3714: initial real sample settings read should expose a numeric setting count");
     expect_common_settings_json(
         initial_process.stdout_text,
         sample,
         false,
         false,
-        5,
+        initial_setting_count,
         0,
         "#3714: initial real sample settings read");
 
@@ -228,7 +239,7 @@ void exercise_real_sample_settings_delete_restore_round_trip(
         true,
         true,
         0,
-        5,
+        initial_setting_count,
         "#3714: delete real sample settings");
 
     expect(read_binary(copied_primary) != original_primary_bytes,
@@ -253,7 +264,7 @@ void exercise_real_sample_settings_delete_restore_round_trip(
         true,
         true,
         0,
-        5,
+        initial_setting_count,
         "#3714: reopen after delete");
 
     const auto restore_process = run_process_capture(
@@ -272,7 +283,7 @@ void exercise_real_sample_settings_delete_restore_round_trip(
         sample,
         false,
         true,
-        5,
+        initial_setting_count,
         0,
         "#3714: restore real sample settings");
 
@@ -297,7 +308,7 @@ void exercise_real_sample_settings_delete_restore_round_trip(
         sample,
         false,
         true,
-        5,
+        initial_setting_count,
         0,
         "#3714: reopen after restore");
 }

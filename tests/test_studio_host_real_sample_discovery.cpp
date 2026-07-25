@@ -74,8 +74,8 @@ int main() {
             "COPPERFIN_VFP9_REPORTS_ROOT", invalid_override.string());
         const fs::path discovered = copperfin::test_support::find_vfp9_reports_root();
         expect(
-            discovered != invalid_override,
-            "regular-file override is ignored without throwing");
+            discovered.empty(),
+            "regular-file override is authoritative and rejects discovery without throwing");
     }
 
     fs::remove_all(temp_root, error);

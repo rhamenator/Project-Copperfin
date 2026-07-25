@@ -73,6 +73,7 @@ inline std::filesystem::path find_vfp9_reports_root() {
         if (contains_report_samples(candidate)) {
             return candidate;
         }
+        return {};
     }
 
     const fs::path windows_candidate =

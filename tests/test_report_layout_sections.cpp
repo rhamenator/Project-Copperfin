@@ -486,11 +486,20 @@ void test_build_report_layout_groups_band_objects() {
                mode_highlight->memo_block_number == 0U,
             "#4519: MODE highlights should preserve value and source field provenance");
     }
-    expect(layout.sections[1].objects[0].picture == "@J",
-        "#4520: report expression objects should preserve PICTURE formatting values");
-    expect(layout.sections[1].objects[0].picture_field_index == 19U &&
-           layout.sections[1].objects[0].picture_memo_block_number == 314U,
-        "#4520: report expression PICTURE should preserve field and memo provenance");
+    expect(layout.sections[1].objects[0].picture.empty() &&
+           layout.sections[1].objects[0].picture_field_index == copperfin::studio::StudioReportMissingFieldIndex &&
+           layout.sections[1].objects[0].picture_memo_block_number == 0U,
+        "#4621: field-object PICTURE should remain raw property data instead of visual metadata");
+    const auto field_picture_highlight = std::find_if(
+        layout.sections[1].objects[0].highlights.begin(),
+        layout.sections[1].objects[0].highlights.end(),
+        [](const auto& highlight) {
+            return highlight.name == "PICTURE";
+        });
+    expect(field_picture_highlight != layout.sections[1].objects[0].highlights.end() &&
+           field_picture_highlight->value == "@J" && field_picture_highlight->field_index == 19U &&
+           field_picture_highlight->memo_block_number == 314U,
+        "#4621: field-object PICTURE should retain raw value and provenance in highlights");
     const auto pen_red = std::find_if(
         layout.sections[1].objects[0].highlights.begin(),
         layout.sections[1].objects[0].highlights.end(),
