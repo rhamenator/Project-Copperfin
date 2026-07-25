@@ -58,6 +58,31 @@ void write_synthetic_faulting_xasset(
     expect(create_result.ok, "synthetic SCX/VCX fault fixture should be created");
 }
 
+void write_synthetic_faulting_layout(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "PLATFORM", .type = 'C', .length = 16U},
+        {.name = "OBJTYPE", .type = 'N', .length = 3U},
+        {.name = "OBJCODE", .type = 'N', .length = 3U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::string methods =
+        "PROCEDURE HandleFault\n"
+        "before_action = \"kept\"\n"
+        "fault_value = LOG(-1)\n"
+        "after_action = \"continued\"\n"
+        "ENDPROC\n";
+    const std::vector<std::vector<std::string>> records{
+        {"WINDOWS", "1", "0", "ENVIRONMENT = 1", methods},
+        {"WINDOWS", "9", "4", "", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        records);
+    expect(create_result.ok, "synthetic FRX/LBX fault fixture should be created");
+}
+
 }  // namespace
 
 void test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(const std::string& runtime_host_path) {
@@ -915,6 +940,82 @@ void test_runtime_host_contains_executable_xasset_action_faults(const std::strin
                prefix + "xAsset action fault should execute post-fault code after continue");
         expect(process.stdout_text.find("terminate called") == std::string::npos,
                prefix + "xAsset action fault should not terminate the runtime host");
+
+        if (failures == 0) {
+            fs::remove_all(temp_root, ignored);
+        }
+    }
+}
+
+void test_runtime_host_contains_report_label_action_faults(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const char* filenames[]{"fault.frx", "fault.lbx"};
+    for (const char* filename : filenames) {
+        const fs::path temp_root = fs::temp_directory_path() /
+            (std::string("copperfin_runtime_host_report_label_action_fault_") + filename);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / filename;
+        const fs::path manifest_path = temp_root / "app.cfmanifest";
+        const fs::path locale_root = temp_root / "locales";
+        write_synthetic_faulting_layout(table_path);
+        write_runtime_host_usage_catalogs(locale_root);
+        write_text(
+            manifest_path,
+            "manifest_version=1\n"
+            "project_title=ReportLabelFaultRecovery\n"
+            "startup_item=" + std::string(filename) + "\n"
+            "startup_source=" + table_path.string() + "\n"
+            "working_directory=" + temp_root.string() + "\n"
+            "security_enabled=false\n"
+            "security_role=\n"
+            "security_mode=native\n"
+            "dotnet_story=none\n");
+
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "continue",
+                "--debug-command", "invoke:handlefault",
+                "--debug-command", "watch:before_action",
+                "--debug-command", "continue",
+                "--debug-command", "watch:after_action"
+            },
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << filename << " report/label fault stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << filename << " report/label fault stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        const std::string prefix = std::string("#4627 ") + filename + ": ";
+        expect(process.exit_code == 0, prefix + "report/label action fault should recover in the same host process");
+        expect(process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
+               prefix + "report/label action fault should use the executable xAsset bootstrap");
+        expect(process.stdout_text.find("debug.command[1]: invoke:handlefault") != std::string::npos,
+               prefix + "report/label action invocation should preserve its command identity");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               prefix + "report/label action fault should emit structured error status");
+        expect(process.stdout_text.find("debug.reason: error") != std::string::npos,
+               prefix + "report/label action fault should preserve the error pause state");
+        expect(process.stdout_text.find("debug.watch.value: kept") != std::string::npos,
+               prefix + "report/label action fault should preserve pre-fault watch state");
+        expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+               prefix + "report/label action fault should return to the preview event loop after continue");
+        expect(process.stdout_text.find("after_action = \"continued\"") != std::string::npos,
+               prefix + "report/label action fault should execute post-fault code after continue");
+        expect(process.stdout_text.find("terminate called") == std::string::npos,
+               prefix + "report/label action fault should not terminate the runtime host");
 
         if (failures == 0) {
             fs::remove_all(temp_root, ignored);

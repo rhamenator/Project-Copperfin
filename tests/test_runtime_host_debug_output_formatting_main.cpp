@@ -38,6 +38,7 @@ void test_runtime_host_escapes_multiline_debug_values(const std::string& runtime
 void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(const std::string& runtime_host_path);
 void test_runtime_host_preserves_debug_state_across_prg_fault(const std::string& runtime_host_path);
 void test_runtime_host_contains_executable_xasset_action_faults(const std::string& runtime_host_path);
+void test_runtime_host_contains_report_label_action_faults(const std::string& runtime_host_path);
 void test_runtime_host_contains_unexpected_process_fault(const std::string& runtime_host_path);
 
 void run_runtime_host_test(
@@ -89,6 +90,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);
     run_runtime_host_test("PRG fault debugger recovery", runtime_host_path, test_runtime_host_preserves_debug_state_across_prg_fault);
     run_runtime_host_test("xAsset action fault containment", runtime_host_path, test_runtime_host_contains_executable_xasset_action_faults);
+    run_runtime_host_test("report/label action fault containment", runtime_host_path, test_runtime_host_contains_report_label_action_faults);
     run_runtime_host_test("unexpected process fault containment", runtime_host_path, test_runtime_host_contains_unexpected_process_fault);
 
     if (failures != 0) {
