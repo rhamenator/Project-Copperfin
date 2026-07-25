@@ -563,6 +563,21 @@ require_text("scripts/run-windows-deep-smoke.ps1"
 require_text("scripts/run-required-designer-smoke.ps1"
     "fixture-dependent skip(s)"
     "fixture-aware designer smoke launcher")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "[ValidateRange(1, 7200)]"
+    "bounded designer smoke timeout parameter")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "WaitForExit($timeoutMilliseconds)"
+    "bounded designer smoke process wait")
+require_text("scripts/validate-windows.ps1"
+    "\"-TimeoutSeconds\", \"1800\""
+    "explicit local designer smoke timeout")
+require_text(".github/workflows/windows-deep-validation.yml"
+    "'-TimeoutSeconds', '1800'"
+    "explicit hosted designer smoke timeout")
+require_text("vsix/Copperfin.DesignerSmokeTests/Program.EntryPoint.01.cs"
+    "Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);"
+    "non-modal designer smoke exception boundary")
 require_text(".github/workflows/windows-x86-declare-validation.yml"
     "name: Windows DECLARE ABI Validation"
     "focused DECLARE workflow identity")

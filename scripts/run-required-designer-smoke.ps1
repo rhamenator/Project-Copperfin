@@ -6,7 +6,10 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$ExecutablePath
+    [string]$ExecutablePath,
+
+    [ValidateRange(1, 7200)]
+    [int]$TimeoutSeconds = 1800
 )
 
 Set-StrictMode -Version Latest
@@ -20,9 +23,24 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("copperfin-designer-smo
 New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
 $stdoutPath = Join-Path $tempRoot "stdout.log"
 $stderrPath = Join-Path $tempRoot "stderr.log"
+$process = $null
 
 try {
-    $process = Start-Process -FilePath $ExecutablePath -ArgumentList @() -Wait -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    $process = Start-Process -FilePath $ExecutablePath -ArgumentList @() -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    $timeoutMilliseconds = $TimeoutSeconds * 1000
+    $timedOut = -not $process.WaitForExit($timeoutMilliseconds)
+    if ($timedOut) {
+        try {
+            $process.Kill()
+        }
+        catch {
+            Write-Warning ("Unable to terminate timed-out designer smoke process {0}: {1}" -f $process.Id, $_.Exception.Message)
+        }
+        [void]$process.WaitForExit(5000)
+    }
+    if (-not $timedOut) {
+        $process.WaitForExit()
+    }
     $stdout = if (Test-Path -LiteralPath $stdoutPath) { Get-Content -Raw -LiteralPath $stdoutPath } else { "" }
     $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -Raw -LiteralPath $stderrPath } else { "" }
     if (-not [string]::IsNullOrEmpty($stdout)) {
@@ -30,6 +48,9 @@ try {
     }
     if (-not [string]::IsNullOrEmpty($stderr)) {
         Write-Output $stderr.TrimEnd()
+    }
+    if ($timedOut) {
+        throw "Designer smoke executable timed out after $TimeoutSeconds second(s)."
     }
     if ($process.ExitCode -ne 0) {
         throw "Designer smoke executable failed with exit code $($process.ExitCode)."

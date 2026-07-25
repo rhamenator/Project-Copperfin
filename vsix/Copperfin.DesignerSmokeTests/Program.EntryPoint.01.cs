@@ -24,6 +24,7 @@ internal static partial class Program
         DesignerSmokeTestRunner runner = new DesignerSmokeTestRunner(args);
         if (runner.ShouldInitializeUi)
         {
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
         }

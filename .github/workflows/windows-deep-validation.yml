@@ -192,7 +192,7 @@ jobs:
           -Name 'Run designer smoke tests'
           -Category managed-test
           -FilePath pwsh
-          -CommandArguments @('-NoProfile', '-File', './scripts/run-required-designer-smoke.ps1', '-ExecutablePath', 'vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe')
+          -CommandArguments @('-NoProfile', '-File', './scripts/run-required-designer-smoke.ps1', '-ExecutablePath', 'vsix/Copperfin.DesignerSmokeTests/bin/${{ inputs.build_configuration }}/net472/Copperfin.DesignerSmokeTests.exe', '-TimeoutSeconds', '1800')
           -SampleResources
 
       - name: Run runtime package smoke test

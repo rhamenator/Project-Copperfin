@@ -131,7 +131,8 @@ Invoke-Step -Name "Build designer smoke tests" -Action {
 
 Invoke-Step -Name "Run designer smoke tests" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
-        "-NoProfile", "-File", $requiredDesignerSmokeScript, "-ExecutablePath", $smokeExe
+        "-NoProfile", "-File", $requiredDesignerSmokeScript, "-ExecutablePath", $smokeExe,
+        "-TimeoutSeconds", "1800"
     )
 }
 
