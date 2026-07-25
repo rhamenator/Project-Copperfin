@@ -849,8 +849,9 @@
         }
 
         // AFONT(aName [, cFontName [, nSize]]) — populate with available font names.
-        // In a headless runtime we return a fixed stub set.  VFP returns a 1- or
-        // 2-column array depending on whether cFontName is supplied.
+        // Scan the host font directories when possible and retain a deterministic
+        // fallback for headless hosts. VFP returns a 1- or 2-column array depending
+        // on whether cFontName is supplied.
         PrgValue populate_font_array(const std::string &target_name,
                                      const std::string &font_name_filter,
                                      int size_filter)
