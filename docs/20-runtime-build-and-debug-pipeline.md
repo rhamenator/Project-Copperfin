@@ -139,7 +139,7 @@ Use this walkthrough for the release evidence ledger before tagging an MVP build
 4. Verify the recovery and localization boundaries independently:
 
    - Confirm failed package publication removes only its owned temporary outputs and leaves unrelated `runtime-temp` content untouched.
-   - Repeat the focused test set with `COPPERFIN_LOCALE=es-419`, `pt-BR`, and `qps-ploc` where the host supports environment selection; record the human diagnostic language separately from invariant codes, JSON keys, and debugger command names.
+   - Run the focused contract set once with its default `en-US` catalog, then run the locale-specific localization target with `COPPERFIN_LOCALE=es-419`, `pt-BR`, and `qps-ploc` where the host supports environment selection. Do not apply a non-English process-wide override to the entire recovery set: several runtime-host tests intentionally assert invariant `en-US` baseline text while separately checking localized catalogs. Record human diagnostic language separately from invariant codes, JSON keys, and debugger command names.
    - Archive the command transcript, manifest excerpts, test output, package/VSIX artifact names, and the reviewer sign-off with the DQ/DV/HZ issue ledger.
 
 This walkthrough is evidence for `DQ-MVP-release-4403-runtime-recovery`, `DQ-MVP-release-4403-localized-operator-guidance`, `DV-MVP-release-4403-cross-platform-validation`, and `DV-MVP-release-4403-recovery-walkthrough`; it does not satisfy `DV-MVP-release-4403-independent-review` by itself.
