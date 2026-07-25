@@ -533,6 +533,29 @@ internal static class CopperfinStudioSnapshotClient
             localization);
     }
 
+    public static CopperfinStudioSnapshotResult TryClearProperty(
+        string assetPath,
+        int recordIndex,
+        string propertyName,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildPropertyClearArguments(assetPath, recordIndex, propertyName),
+            localization);
+    }
+
     public static CopperfinStudioSnapshotResult TryUpdateProperties(
         string assetPath,
         int recordIndex,

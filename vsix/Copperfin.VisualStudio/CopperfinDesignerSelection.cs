@@ -33,6 +33,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         public Func<string, object?> Deserialize { get; set; } = static value => value;
         public Func<object?, string> Serialize { get; set; } = static value => value?.ToString() ?? string.Empty;
         public Func<object?, string> Store { get; set; } = static value => value?.ToString() ?? string.Empty;
+        public bool ClearWhenEmpty { get; set; }
     }
 
     private sealed class SelectionPropertyDescriptor : PropertyDescriptor
@@ -880,8 +881,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)
     {
+        return TryGetMutation(propertyName, out targetName, out serializedValue, out _);
+    }
+
+    public bool TryGetMutation(
+        string propertyName,
+        out string targetName,
+        out string serializedValue,
+        out bool clearProperty)
+    {
         targetName = string.Empty;
         serializedValue = string.Empty;
+        clearProperty = false;
 
         if (!fieldMap.TryGetValue(propertyName, out var field) || field.IsReadOnly)
         {
@@ -890,6 +901,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         targetName = string.IsNullOrWhiteSpace(field.TargetName) ? field.Name : field.TargetName;
         serializedValue = field.Serialize(field.Deserialize(field.CurrentValue));
+        clearProperty = field.ClearWhenEmpty && string.IsNullOrWhiteSpace(serializedValue);
         return true;
     }
 
@@ -948,6 +960,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             ValueType = typeof(string),
             IsReadOnly = false,
             CurrentValue = value,
+            ClearWhenEmpty = true,
             Deserialize = static text => text,
             Serialize = requiresFoxStringLiteral
                 ? static value => SerializeFoxString(value?.ToString() ?? string.Empty)
@@ -978,6 +991,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             ValueType = typeof(int),
             IsReadOnly = false,
             CurrentValue = NormalizeInt(value),
+            ClearWhenEmpty = true,
             Deserialize = static text => ParseInt(text),
             Serialize = static input =>
             {
@@ -1007,6 +1021,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             CurrentValue = TryParseNormalizedInt(value, out var parsed)
                 ? parsed.ToString(CultureInfo.InvariantCulture)
                 : string.Empty,
+            ClearWhenEmpty = true,
             Deserialize = static text => text,
             Serialize = static input =>
             {

@@ -38,6 +38,7 @@ internal sealed class StudioMainForm : Form
     private Rectangle? commandFloatingBounds;
     private Rectangle? terminalFloatingBounds;
     private bool shellTransitionInProgress;
+    private bool formClosing;
 
     public StudioMainForm(
         CopperfinLocalization? localization = null,
@@ -180,6 +181,7 @@ internal sealed class StudioMainForm : Form
         };
         FormClosing += (_, _) =>
         {
+            formClosing = true;
             SaveShellLayout();
             DockFloatingToolWindows();
         };
@@ -608,7 +610,7 @@ internal sealed class StudioMainForm : Form
             }
             SetMenuChecked(floatCommandWindowMenuItem, false);
             floatingForm.Hide();
-            floatingForm.Dispose();
+            DisposeFloatingToolWindow(floatingForm);
         }
         finally
         {
@@ -645,7 +647,7 @@ internal sealed class StudioMainForm : Form
             }
             SetMenuChecked(floatTerminalWindowMenuItem, false);
             floatingForm.Hide();
-            floatingForm.Dispose();
+            DisposeFloatingToolWindow(floatingForm);
         }
         finally
         {
@@ -659,6 +661,42 @@ internal sealed class StudioMainForm : Form
     {
         DockCommandWindow(addPage: false);
         DockTerminalWindow(addPage: false);
+    }
+
+    private void DisposeFloatingToolWindow(Form floatingForm)
+    {
+        if (floatingForm.IsDisposed)
+        {
+            return;
+        }
+
+        if (formClosing)
+        {
+            floatingForm.Dispose();
+            return;
+        }
+
+        try
+        {
+            if (IsHandleCreated && !IsDisposed)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (!floatingForm.IsDisposed)
+                    {
+                        floatingForm.Dispose();
+                    }
+                }));
+                return;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // The owner may be between handle teardown and disposal; use the
+            // normal form path when no UI queue remains available.
+        }
+
+        floatingForm.Dispose();
     }
 
     private void SetMenuChecked(ToolStripMenuItem menuItem, bool checkedState)

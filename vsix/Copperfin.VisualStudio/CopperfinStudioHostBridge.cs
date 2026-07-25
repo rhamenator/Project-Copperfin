@@ -54,6 +54,11 @@ internal static class CopperfinStudioHostBridge
         return $"--from-vs --json --set-property --record {recordIndex} --property-name {Quote(propertyName)} --property-value {Quote(propertyValue)} --path {Quote(documentPath)}";
     }
 
+    public static string BuildPropertyClearArguments(string documentPath, int recordIndex, string propertyName)
+    {
+        return $"--from-vs --json --clear-property --record {recordIndex} --property-name {Quote(propertyName)} --path {Quote(documentPath)}";
+    }
+
     public static string BuildToolboxPaletteQueryArguments(string toolboxContext)
     {
         return $"--json --toolbox-palette-query --toolbox-context {Quote(toolboxContext)}";

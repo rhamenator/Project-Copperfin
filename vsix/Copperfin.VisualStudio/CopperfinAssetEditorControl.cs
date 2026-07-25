@@ -2470,9 +2470,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        if (selection.TryGetUpdate(propertyName, out var targetName, out var serializedValue))
+        if (selection.TryGetMutation(
+                propertyName,
+                out var targetName,
+                out var serializedValue,
+                out var clearProperty))
         {
-            ApplyVisualPropertyChange(selection.RecordIndex, targetName, serializedValue);
+            if (clearProperty)
+            {
+                ApplyVisualPropertyClear(selection.RecordIndex, targetName);
+            }
+            else
+            {
+                ApplyVisualPropertyChange(selection.RecordIndex, targetName, serializedValue);
+            }
         }
     }
 
@@ -2483,7 +2494,42 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             new[]
             {
                 new KeyValuePair<string, string>(propertyName, propertyValue)
-            });
+        });
+    }
+
+    private void ApplyVisualPropertyClear(int recordIndex, string propertyName)
+    {
+        if (string.IsNullOrWhiteSpace(currentPath) || !CanMutateCurrentDocument())
+        {
+            return;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
+        var statusLabel = ResolvePropertyStatusLabels(new[] { propertyName });
+        snapshotStatusLabel.Text = BuildPropertyApplyingStatusLabel(statusLabel);
+        var clearResult = CopperfinStudioSnapshotClient.TryClearProperty(
+            currentPath!,
+            recordIndex,
+            propertyName,
+            localization);
+        if (!clearResult.Success || clearResult.Document is null)
+        {
+            snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(clearResult.Error);
+            return;
+        }
+
+        currentSnapshot = clearResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = BuildPropertyUpdatedStatusLabel(statusLabel, currentSnapshot);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        if (selectedObjectRecordIndex >= 0)
+        {
+            designSurface.SelectRecord(selectedObjectRecordIndex);
+            SyncSelectionFromSurface(selectedObjectRecordIndex);
+        }
     }
 
     private void ApplyVisualPropertyChanges(int recordIndex, IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
