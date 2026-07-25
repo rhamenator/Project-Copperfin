@@ -2777,6 +2777,7 @@
                     current_session_state().popup_bar_skip_states[popup_name].clear();
                     current_session_state().popup_bar_mark_states[popup_name].clear();
                     current_session_state().popup_bar_selection_handlers[popup_name].clear();
+                    current_session_state().popup_bar_selection_actions[popup_name].clear();
                     current_session_state().popup_bar_activation_targets[popup_name].clear();
                     current_session_state().popup_selection_handlers.erase(popup_name);
                 }
@@ -2831,6 +2832,23 @@
                     static_cast<long long>(std::llround(*bar_number))] = handler_name;
                 return {};
             }
+            case StatementKind::on_selection_bar_action_command:
+            {
+                const auto bar_number = try_parse_numeric_index_value(statement.secondary_expression);
+                const std::string popup_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                const std::string action_text = trim_copy(statement.expression);
+                if (!bar_number.has_value() || *bar_number < 1.0 ||
+                    popup_name.empty() || action_text.empty() ||
+                    action_text.find('&') != std::string::npos)
+                {
+                    return {};
+                }
+
+                current_session_state().popup_bar_selection_actions[popup_name][
+                    static_cast<long long>(std::llround(*bar_number))] = action_text;
+                return {};
+            }
             case StatementKind::on_selection_popup_command:
             {
                 const std::string popup_name = normalize_identifier(
@@ -2873,6 +2891,7 @@
                     current_session_state().popup_bar_skip_states.erase(popup_name);
                     current_session_state().popup_bar_mark_states.erase(popup_name);
                     current_session_state().popup_bar_selection_handlers.erase(popup_name);
+                    current_session_state().popup_bar_selection_actions.erase(popup_name);
                     current_session_state().popup_bar_activation_targets.erase(popup_name);
                     current_session_state().popup_selection_handlers.erase(popup_name);
                 }

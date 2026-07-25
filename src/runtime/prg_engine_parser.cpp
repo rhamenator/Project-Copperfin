@@ -1493,23 +1493,41 @@ bool parse_popup_statement(const std::string& line, Statement& statement) {
         const std::size_t do_position = of_position == std::string::npos
             ? std::string::npos
             : find_keyword_top_level_from(bar_tail, "DO", of_position + 2U);
-        if (of_position == std::string::npos || do_position == std::string::npos) {
+        if (of_position == std::string::npos) {
             return false;
         }
 
-        const std::string popup_name = unquote_identifier(trim_copy(
-            bar_tail.substr(of_position + 2U, do_position - of_position - 2U)));
-        const std::string routine_text = trim_copy(bar_tail.substr(do_position + 2U));
-        const std::string routine_name = unquote_identifier(take_first_token(routine_text));
-        if (bar_number.empty() || popup_name.empty() || routine_name.empty() ||
-            routine_name != routine_text) {
+        if (do_position != std::string::npos) {
+            const std::string popup_name = unquote_identifier(trim_copy(
+                bar_tail.substr(of_position + 2U, do_position - of_position - 2U)));
+            const std::string routine_text = trim_copy(bar_tail.substr(do_position + 2U));
+            const std::string routine_name = unquote_identifier(take_first_token(routine_text));
+            if (bar_number.empty() || popup_name.empty() || routine_name.empty() ||
+                routine_name != routine_text) {
+                return false;
+            }
+
+            statement.kind = StatementKind::on_selection_bar_command;
+            statement.secondary_expression = trim_copy(bar_number);
+            statement.identifier = popup_name;
+            statement.expression = routine_name;
+            return true;
+        }
+
+        const auto [popup_token, action_text] = split_first_word(
+            trim_copy(bar_tail.substr(of_position + 2U)));
+        const std::string popup_name = unquote_identifier(popup_token);
+        if (bar_number.empty() || popup_name.empty() || action_text.empty() ||
+            action_text.find('&') != std::string::npos ||
+            action_text.find('\n') != std::string::npos ||
+            action_text.find('\r') != std::string::npos) {
             return false;
         }
 
-        statement.kind = StatementKind::on_selection_bar_command;
+        statement.kind = StatementKind::on_selection_bar_action_command;
         statement.secondary_expression = trim_copy(bar_number);
         statement.identifier = popup_name;
-        statement.expression = routine_name;
+        statement.expression = action_text;
         return true;
     }
     if (starts_with_insensitive(line, "DEFINE POPUP ")) {
