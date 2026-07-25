@@ -319,6 +319,8 @@ void exercise_real_sample_object_round_trip(
             temp_root);
         expect(picture_set_process.exit_code == 0,
                "#4291: real LBX PICTURE set should succeed for the selected field object");
+        const std::string picture_set_json =
+            copperfin::test_support::normalize_json_line_endings(picture_set_process.stdout_text);
         expect_contains(
             picture_set_process.stdout_text,
             "\"name\": \"PICTURE\", \"type\": \"M\", \"isNull\": false, \"value\": \"@I\", \"fieldIndex\": 12, \"memoBlockNumber\": ",
@@ -328,7 +330,7 @@ void exercise_real_sample_object_round_trip(
             "\"objectKind\": \"field\"",
             "#4291: real LBX PICTURE set should preserve the field object kind");
         expect_contains(
-            picture_set_process.stdout_text,
+            picture_set_json,
             "\"picture\": \"\",\n      \"pictureFieldIndex\": null,\n      \"pictureMemoBlockNumber\": 0",
             "#4291: field-object PICTURE should not be reinterpreted as label alignment metadata");
 
@@ -364,12 +366,14 @@ void exercise_real_sample_object_round_trip(
             temp_root);
         expect(picture_clear_process.exit_code == 0,
                "#4291: real LBX PICTURE clear should succeed for the selected field object");
+        const std::string picture_clear_json =
+            copperfin::test_support::normalize_json_line_endings(picture_clear_process.stdout_text);
         expect_contains(
             picture_clear_process.stdout_text,
             "\"name\": \"PICTURE\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 12, \"memoBlockNumber\": ",
             "#4291: real LBX PICTURE clear should retain field and memo provenance");
         expect_contains(
-            picture_clear_process.stdout_text,
+            picture_clear_json,
             "\"picture\": \"\",\n      \"pictureFieldIndex\": null,\n      \"pictureMemoBlockNumber\": 0",
             "#4291: cleared field-object PICTURE should remain outside label alignment metadata");
 

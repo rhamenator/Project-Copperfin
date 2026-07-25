@@ -12,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace copperfin::test_support {
@@ -50,6 +51,15 @@ inline bool json_integer_delta(
     return extract_json_integer(updated_json, key, updated_value) &&
            extract_json_integer(restored_json, key, restored_value) &&
            updated_value - restored_value == expected_delta;
+}
+
+inline std::string normalize_json_line_endings(std::string json) {
+    for (std::size_t position = 0;
+         (position = json.find("\r\n", position)) != std::string::npos;) {
+        json.replace(position, 2U, "\n");
+        ++position;
+    }
+    return json;
 }
 
 inline std::filesystem::path find_vfp9_reports_root() {

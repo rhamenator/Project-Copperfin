@@ -134,11 +134,7 @@ void expect_common_settings_json(
     int setting_count,
     int deleted_setting_count,
     const std::string& prefix) {
-    for (std::size_t position = 0;
-         (position = json.find("\r\n", position)) != std::string::npos;) {
-        json.replace(position, 2U, "\n");
-        ++position;
-    }
+    json = copperfin::test_support::normalize_json_line_endings(std::move(json));
     expect_contains(json,
                     "\"documentTitle\": \"" + sample.document_title + "\"",
                     prefix + " should preserve the document title");
