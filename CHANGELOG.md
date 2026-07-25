@@ -4667,3 +4667,4 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   This closes the focused concurrent-swap regression gap without claiming that
   the broader exact-handle parent is complete.
 - 2026-07-25: Hardened the Windows deep-smoke package harness under #4621. Secure runtime-package validation now selects the explicit `build-engineer` role required by `build.execute`, and xAsset/report/menu stages copy their startup assets plus VFP memo sidecars under the declared package root before writing manifests. Source/debug path separation and package containment contracts remain unchanged.
+- 2026-07-25: Hardened the Windows process-runner timeout fixtures under #4621/#4634. The managed and net472 Windows fixtures now allow slow hosts to start their child/grandchild processes before the timeout while retaining bounded cleanup, output-capture, timeout, and descendant-exit assertions; POSIX timing is unchanged.

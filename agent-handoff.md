@@ -1278,3 +1278,4 @@ Read only what is needed for the chosen slice:
   tests that need the repository catalogs; locale keys and machine contracts
   are unchanged.
 #4621 follow-up is implemented in the Windows deep-smoke harness: the secure RuntimePackage stage now sets `COPPERFIN_SECURITY_ROLE=build-engineer`, and XAsset/Report/Menu stages copy each VFP startup asset plus its `.sct`/`.vct`/`.frt`/`.mnt` sidecar into the declared package root before launching. This addresses harness-level security-role and missing-staged-asset failures reported by the Windows client; the broader exact-head Windows/Visual Studio gate remains open.
+#4634 under #4621 is implemented locally: Windows process-runner timeout fixtures now use a 5-second startup budget instead of 1.5 seconds, while retaining bounded cleanup and PID/descendant assertions; the POSIX fixture remains at 300 ms. Focused managed validation and exact Windows rerun are still required.

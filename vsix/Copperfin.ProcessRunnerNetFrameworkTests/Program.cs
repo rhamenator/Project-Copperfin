@@ -11,6 +11,8 @@ namespace Copperfin.VisualStudio;
 
 internal static class Program
 {
+    private const int WindowsTimeoutFixtureMilliseconds = 5000;
+
     [STAThread]
     private static int Main()
     {
@@ -47,12 +49,12 @@ internal static class Program
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 },
-                timeoutMilliseconds: 1500);
+                timeoutMilliseconds: WindowsTimeoutFixtureMilliseconds);
             stopwatch.Stop();
 
             Assert(result.Started, "net472 process runner should start the timeout fixture");
             Assert(result.TimedOut, "net472 process runner should report the root timeout");
-            Assert(stopwatch.ElapsedMilliseconds < 7000,
+            Assert(stopwatch.ElapsedMilliseconds < WindowsTimeoutFixtureMilliseconds + 5000,
                 "net472 process runner should return within the bounded cleanup grace period");
             Assert(result.StandardOutput.Contains("before-timeout-stdout"),
                 "net472 process runner should retain stdout produced before timeout");

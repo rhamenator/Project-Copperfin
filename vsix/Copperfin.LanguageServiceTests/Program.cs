@@ -1931,7 +1931,8 @@ internal static partial class Program
                     "wait \"$child_pid\""
                 ]);
 
-            var timeoutMilliseconds = OperatingSystem.IsWindows() ? 1500 : 300;
+            // Allow the Windows fixture to start cmd.exe and both PowerShell processes before timing out.
+            var timeoutMilliseconds = OperatingSystem.IsWindows() ? 5000 : 300;
             var stopwatch = Stopwatch.StartNew();
             var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds);
             stopwatch.Stop();
