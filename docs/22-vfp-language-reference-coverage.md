@@ -989,7 +989,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Automation And Compatibility Utilities
 
-- keep host stability and debugger fault containment mandatory as the remaining Phase B runtime-safety work, now that the dedicated Phase A automation lane is closed; the process-boundary implementation and regression slice is tracked under #4623
+- keep host stability and debugger fault containment mandatory as the remaining Phase B runtime-safety work, now that the dedicated Phase A automation lane is closed; the process-boundary implementation and debugger recovery regression are tracked under #4623/#4625
 
 ## How To Use The References
 

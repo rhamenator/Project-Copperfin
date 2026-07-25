@@ -134,7 +134,7 @@ Use this walkthrough for the release evidence ledger before tagging an MVP build
      --debug-command out
    ```
 
-   Capture the pause state, call-stack/local-variable output, runtime event records, exit code, and final process state. A fault or rejected command must remain a structured runtime/debug result; the operator must not resume blindly after the runtime host has exited.
+   Capture the pause state, call-stack/local-variable output, runtime event records, exit code, and final process state. A fault or rejected command must remain a structured runtime/debug result; the operator must not resume blindly after the runtime host has exited. For a resumable PRG fault, the host must retain the pause state and accept subsequent watch/breakpoint/continue commands in the same process, returning to the event loop or completion after recovery (#4623/#4625).
 
 4. Verify the recovery and localization boundaries independently:
 

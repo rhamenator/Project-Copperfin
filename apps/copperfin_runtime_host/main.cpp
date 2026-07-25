@@ -3994,6 +3994,10 @@ int run_runtime_host_main_impl(int argc, char** argv) {
                 std::cout << "debug.command[" << server_command_index << "]: " << server_command << "\n";
                 const auto breakpoints = session.list_breakpoints();
                 print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
+                if (state.reason == copperfin::runtime::DebugPauseReason::error) {
+                    std::cout << "status: error\n";
+                    print_error_line(catalog, localized_message(catalog, state.message));
+                }
             }
             std::cout << "debug.response.end\n";
             std::cout.flush();
@@ -4013,6 +4017,10 @@ int run_runtime_host_main_impl(int argc, char** argv) {
         state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         const auto breakpoints = session.list_breakpoints();
         print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
+        if (state.reason == copperfin::runtime::DebugPauseReason::error) {
+            std::cout << "status: error\n";
+            print_error_line(catalog, localized_message(catalog, state.message));
+        }
     } else {
         for (std::size_t index = 0; index < debug_commands.size(); ++index) {
             const std::string& command = debug_commands[index];
@@ -4211,7 +4219,11 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             std::cout << "debug.command[" << index << "]: " << command << "\n";
             const auto breakpoints = session.list_breakpoints();
             print_pause_state(state, &xasset_model, &breakpoints, effective_startup_source, xasset_bootstrap_source);
-            if (state.completed || state.reason == copperfin::runtime::DebugPauseReason::error) {
+            if (state.reason == copperfin::runtime::DebugPauseReason::error) {
+                std::cout << "status: error\n";
+                print_error_line(catalog, localized_message(catalog, state.message));
+            }
+            if (state.completed) {
                 break;
             }
         }

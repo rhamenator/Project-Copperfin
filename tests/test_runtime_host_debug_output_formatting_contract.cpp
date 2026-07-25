@@ -4,6 +4,87 @@
 
 #include "test_runtime_host_debug_output_support.h"
 
+void test_runtime_host_preserves_debug_state_across_prg_fault(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_host_debug_fault_recovery_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "fault_recovery.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    write_text(
+        source_path,
+        "before_fault = \"kept\"\n"
+        "fault_value = LOG(-1)\n"
+        "after_fault = \"continued\"\n"
+        "READ EVENTS\n");
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=DebugFaultRecovery\n"
+        "startup_item=fault_recovery.prg\n"
+        "startup_source=" + source_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--breakpoint", source_path.string() + ":2",
+            "--debug-command", "continue",
+            "--debug-command", "watch:before_fault",
+            "--debug-command", "continue",
+            "--debug-command", "watch:before_fault",
+            "--debug-command", "continue",
+            "--debug-command", "watch:after_fault"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "debug fault recovery stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "debug fault recovery stderr:\n" << process.stderr_text << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "runtime-host debug fault recovery should exit cleanly after continuing the same session");
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + source_path.string() + ":2") != std::string::npos,
+           "runtime-host debug fault recovery should preserve the breakpoint inventory");
+    expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+           "runtime-host debug fault recovery should pause at the configured breakpoint");
+    expect(process.stdout_text.find("status: error") != std::string::npos,
+           "runtime-host debug fault recovery should expose a structured runtime fault");
+    expect(process.stdout_text.find("debug.reason: error") != std::string::npos,
+           "runtime-host debug fault recovery should preserve the error pause reason");
+    expect(process.stdout_text.find("debug.location: " + source_path.string() + ":2") != std::string::npos,
+           "runtime-host debug fault recovery should preserve the faulting source location");
+    expect(process.stdout_text.find("debug.frame[0]: main@" + source_path.string() + ":2") != std::string::npos,
+           "runtime-host debug fault recovery should preserve the faulting stack frame");
+    expect(process.stdout_text.find("debug.watch.value: kept") != std::string::npos,
+           "runtime-host debug fault recovery should keep watch evaluation available at the fault pause");
+    expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+           "runtime-host debug fault recovery should return to the event loop after continue");
+    expect(process.stdout_text.find("debug.watch.value: continued") != std::string::npos,
+           "runtime-host debug fault recovery should execute post-fault code in the same session");
+    expect(process.stdout_text.find("terminate called") == std::string::npos,
+           "runtime-host debug fault recovery should not terminate the host process");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_contains_unexpected_process_fault(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
