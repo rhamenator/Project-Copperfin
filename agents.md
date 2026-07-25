@@ -74,3 +74,7 @@ Apply these rules whenever a change touches operator-facing or procedure-definin
 - Do not create extra prompt files unless explicitly requested.
 - If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.
 - Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive the report artifact.
+
+## Live Agent Channel
+
+When Claude Code is also active on this repo (e.g. covering after a weekly/session limit handoff), check `.agent-channel/log.jsonl` at the start of a turn and before picking new work, per `.agent-channel/README.md`. This is a live scratch channel for coordination, not a substitute for `agent-handoff.md` or `CHANGELOG.md`.
