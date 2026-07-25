@@ -1318,6 +1318,37 @@ bool parse_storage_statement(const std::string& line, Statement& statement) {
 }
 
 bool parse_popup_statement(const std::string& line, Statement& statement) {
+    const std::string on_bar_prefix = "ON BAR ";
+    if (starts_with_insensitive(line, on_bar_prefix)) {
+        const std::string body = trim_copy(line.substr(on_bar_prefix.size()));
+        const auto [bar_number, bar_tail] = split_first_word(body);
+        const std::size_t of_position = find_keyword_top_level(bar_tail, "OF");
+        const std::size_t activate_position = of_position == std::string::npos
+            ? std::string::npos
+            : find_keyword_top_level_from(bar_tail, "ACTIVATE", of_position + 2U);
+        if (of_position == std::string::npos || activate_position == std::string::npos) {
+            return false;
+        }
+
+        const std::string popup_name = unquote_identifier(trim_copy(
+            bar_tail.substr(of_position + 2U, activate_position - of_position - 2U)));
+        const std::string activation_text = trim_copy(bar_tail.substr(activate_position + 8U));
+        if (!starts_with_insensitive(activation_text, "POPUP ")) {
+            return false;
+        }
+        const std::string submenu_text = trim_copy(activation_text.substr(6U));
+        const std::string submenu_name = unquote_identifier(take_first_token(submenu_text));
+        if (bar_number.empty() || popup_name.empty() || submenu_name.empty() ||
+            submenu_name != submenu_text) {
+            return false;
+        }
+
+        statement.kind = StatementKind::on_bar_activate_popup_command;
+        statement.secondary_expression = trim_copy(bar_number);
+        statement.identifier = popup_name;
+        statement.expression = submenu_name;
+        return true;
+    }
     const std::string selection_popup_prefix = "ON SELECTION POPUP ";
     if (starts_with_insensitive(line, selection_popup_prefix)) {
         const std::string body = trim_copy(line.substr(selection_popup_prefix.size()));

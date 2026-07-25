@@ -282,4 +282,65 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_on_bar_activates_static_popup_submenu()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+            "copperfin_native_on_bar_popup_activation";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "on_bar_popup_activation.prg";
+        write_text(
+            main_path,
+            "DEFINE POPUP parent\n"
+            "DEFINE POPUP child\n"
+            "DEFINE BAR 1 OF parent PROMPT 'Open'\n"
+            "DEFINE BAR 2 OF parent PROMPT 'Missing'\n"
+            "DEFINE BAR 3 OF parent PROMPT 'Callback'\n"
+            "DEFINE BAR 1 OF child PROMPT 'Leaf'\n"
+            "ON BAR 1 OF parent ACTIVATE POPUP child\n"
+            "ON BAR 2 OF parent ACTIVATE POPUP missing\n"
+            "ON BAR 3 OF parent ACTIVATE POPUP child\n"
+            "ON SELECTION BAR 3 OF parent DO SelectedHandler\n"
+            "PUBLIC nSelected\n"
+            "nSelected = 0\n"
+            "ACTIVATE POPUP parent\n"
+            "RETURN\n"
+            "PROCEDURE SelectedHandler\n"
+            "nSelected = nSelected + 1\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events,
+               "ON BAR script should pause in the parent popup event loop");
+        expect(!session.dispatch_popup_bar_selection("parent", 2),
+               "ON BAR should reject an activation target for a missing submenu");
+        expect(session.dispatch_popup_bar_selection("parent", 3),
+               "bar-specific selection should take precedence over ON BAR activation");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        const auto selected = state.globals.find("nselected");
+        expect(state.waiting_for_events && selected != state.globals.end() &&
+                   copperfin::runtime::format_value(selected->second) == "1",
+               "bar-specific selection should execute without activating its ON BAR submenu");
+        expect(session.dispatch_popup_bar_selection("parent", 1),
+               "ON BAR should activate an existing child popup");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.waiting_for_events &&
+                   std::any_of(
+                       state.events.begin(),
+                       state.events.end(),
+                       [](const copperfin::runtime::RuntimeEvent& event)
+                       {
+                           return event.category == "popup.activate" &&
+                               event.detail == "child";
+                       }),
+               "ON BAR should emit child popup activation telemetry");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

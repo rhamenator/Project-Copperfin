@@ -46,6 +46,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "define_popup_command";
         case StatementKind::define_bar_command:
             return "define_bar_command";
+        case StatementKind::on_bar_activate_popup_command:
+            return "on_bar_activate_popup_command";
         case StatementKind::on_selection_bar_command:
             return "on_selection_bar_command";
         case StatementKind::on_selection_popup_command:

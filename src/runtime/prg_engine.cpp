@@ -777,6 +777,7 @@ namespace copperfin::runtime
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
             std::map<std::string, std::map<long long, std::string>> popup_bar_selection_handlers;
+            std::map<std::string, std::map<long long, std::string>> popup_bar_activation_targets;
             std::map<std::string, std::string> popup_selection_handlers;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
@@ -9881,13 +9882,40 @@ namespace copperfin::runtime
         {
             const auto popup_handler = current_session_state().popup_selection_handlers.find(
                 normalized_popup_name);
-            if (popup_handler == current_session_state().popup_selection_handlers.end() ||
-                popup_handler->second.empty() ||
-                !find_event_handler_routine_lookup(popup_handler->second).has_value())
+            if (popup_handler != current_session_state().popup_selection_handlers.end())
             {
-                return false;
+                if (popup_handler->second.empty() ||
+                    !find_event_handler_routine_lookup(popup_handler->second).has_value())
+                {
+                    return false;
+                }
+                handler_name = popup_handler->second;
             }
-            handler_name = popup_handler->second;
+        }
+
+        if (handler_name.empty())
+        {
+            const auto activation_popup = current_session_state().popup_bar_activation_targets.find(
+                normalized_popup_name);
+            if (activation_popup != current_session_state().popup_bar_activation_targets.end())
+            {
+                const auto activation = activation_popup->second.find(static_cast<long long>(bar_number));
+                if (activation != activation_popup->second.end() && !activation->second.empty() &&
+                    current_session_state().popup_bar_prompts.find(activation->second) !=
+                        current_session_state().popup_bar_prompts.end())
+                {
+                    waiting_for_events = true;
+                    events.push_back({.category = "popup.activate",
+                                      .detail = activation->second,
+                                      .location = {}});
+                    return true;
+                }
+            }
+        }
+
+        if (handler_name.empty())
+        {
+            return false;
         }
 
         events.push_back({.category = "runtime.popup.selection",
