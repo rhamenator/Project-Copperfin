@@ -1317,6 +1317,114 @@ bool parse_storage_statement(const std::string& line, Statement& statement) {
         parse_table_transfer_statement(line, statement);
 }
 
+bool parse_control_flow_statement(
+    const std::string& line,
+    const std::string& upper,
+    Statement& statement) {
+    if (starts_with_insensitive(line, "IF ")) {
+        statement.kind = StatementKind::if_statement;
+        statement.expression = trim_copy(line.substr(3U));
+    } else if (starts_with_insensitive(line, "ELSEIF ")) {
+        statement.kind = StatementKind::else_statement;
+        statement.expression = trim_copy(line.substr(7U));
+    } else if (upper == "DO CASE") {
+        statement.kind = StatementKind::do_case_statement;
+    } else if (starts_with_insensitive(line, "CASE ")) {
+        statement.kind = StatementKind::case_statement;
+        statement.expression = trim_copy(line.substr(5U));
+    } else if (upper == "OTHERWISE") {
+        statement.kind = StatementKind::otherwise_statement;
+    } else if (upper == "ELSE") {
+        statement.kind = StatementKind::else_statement;
+    } else if (upper == "ENDIF") {
+        statement.kind = StatementKind::endif_statement;
+    } else if (starts_with_insensitive(line, "FOR EACH ")) {
+        // FOR EACH <element> IN <collection>
+        statement.kind = StatementKind::for_each_statement;
+        const std::string body = trim_copy(line.substr(9U));
+        const std::size_t in_pos = find_keyword_top_level(body, "IN");
+        if (in_pos != std::string::npos) {
+            statement.identifier = trim_copy(body.substr(0U, in_pos));
+            statement.expression = trim_copy(body.substr(in_pos + 2U));
+            const std::string upper_expression = uppercase_copy(statement.expression);
+            static constexpr std::string_view foxobject_suffix = " FOXOBJECT";
+            if (upper_expression.size() > foxobject_suffix.size() &&
+                upper_expression.compare(
+                    upper_expression.size() - foxobject_suffix.size(),
+                    foxobject_suffix.size(),
+                    foxobject_suffix) == 0)
+            {
+                statement.expression = trim_copy(
+                    statement.expression.substr(
+                        0U,
+                        statement.expression.size() - foxobject_suffix.size()));
+            }
+        }
+    } else if (starts_with_insensitive(line, "FOR ")) {
+        statement.kind = StatementKind::for_statement;
+        const std::string body = trim_copy(line.substr(4U));
+        const auto equals = body.find('=');
+        const auto to_position = uppercase_copy(body).find(" TO ");
+        if (equals != std::string::npos && to_position != std::string::npos && to_position > equals) {
+            statement.identifier = trim_copy(body.substr(0U, equals));
+            statement.expression = trim_copy(body.substr(equals + 1U, to_position - equals - 1U));
+            const auto step_position = uppercase_copy(body).find(" STEP ", to_position + 4U);
+            if (step_position == std::string::npos) {
+                statement.secondary_expression = trim_copy(body.substr(to_position + 4U));
+            } else {
+                statement.secondary_expression = trim_copy(body.substr(to_position + 4U, step_position - to_position - 4U));
+                statement.tertiary_expression = trim_copy(body.substr(step_position + 6U));
+            }
+        }
+    } else if (starts_with_insensitive(line, "DO WHILE ")) {
+        statement.kind = StatementKind::do_while_statement;
+        statement.expression = trim_copy(line.substr(9U));
+    } else if (upper == "ENDFOR") {
+        statement.kind = StatementKind::endfor_statement;
+    } else if (upper == "ENDDO") {
+        statement.kind = StatementKind::enddo_statement;
+    } else if (upper == "ENDCASE") {
+        statement.kind = StatementKind::endcase_statement;
+    } else if (upper == "LOOP") {
+        statement.kind = StatementKind::loop_statement;
+    } else if (upper == "CONTINUE") {
+        statement.kind = StatementKind::continue_command;
+    } else if (upper == "EXIT") {
+        statement.kind = StatementKind::exit_statement;
+    } else if (starts_with_insensitive(line, "WITH ")) {
+        statement.kind = StatementKind::with_statement;
+        statement.expression = trim_copy(line.substr(5U));
+    } else if (upper == "ENDWITH") {
+        statement.kind = StatementKind::endwith_statement;
+    } else if (upper == "TRY") {
+        statement.kind = StatementKind::try_statement;
+    } else if (starts_with_insensitive(line, "CATCH")) {
+        statement.kind = StatementKind::catch_statement;
+        const std::string catch_tail = trim_copy(line.substr(5U));
+        const std::size_t when_position = find_keyword_top_level(catch_tail, "WHEN");
+        const std::string catch_head = trim_copy(
+            when_position == std::string::npos
+                ? catch_tail
+                : catch_tail.substr(0U, when_position));
+        if (when_position != std::string::npos)
+        {
+            statement.secondary_expression = trim_copy(catch_tail.substr(when_position + 4U));
+        }
+        statement.identifier = catch_head;
+        if (starts_with_insensitive(statement.identifier, "TO "))
+        {
+            statement.identifier = trim_copy(statement.identifier.substr(3U));
+        }
+    } else if (upper == "FINALLY") {
+        statement.kind = StatementKind::finally_statement;
+    } else if (upper == "ENDTRY") {
+        statement.kind = StatementKind::endtry_statement;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool parse_popup_statement(const std::string& line, Statement& statement) {
     const std::string on_bar_prefix = "ON BAR ";
     if (starts_with_insensitive(line, on_bar_prefix)) {
@@ -1747,104 +1855,7 @@ Program parse_program_impl(
         }
 
         Statement statement = make_statement(StatementKind::no_op, path, line_number, line);
-        if (starts_with_insensitive(line, "IF ")) {
-            statement.kind = StatementKind::if_statement;
-            statement.expression = trim_copy(line.substr(3U));
-        } else if (starts_with_insensitive(line, "ELSEIF ")) {
-            statement.kind = StatementKind::else_statement;
-            statement.expression = trim_copy(line.substr(7U));
-        } else if (upper == "DO CASE") {
-            statement.kind = StatementKind::do_case_statement;
-        } else if (starts_with_insensitive(line, "CASE ")) {
-            statement.kind = StatementKind::case_statement;
-            statement.expression = trim_copy(line.substr(5U));
-        } else if (upper == "OTHERWISE") {
-            statement.kind = StatementKind::otherwise_statement;
-        } else if (upper == "ELSE") {
-            statement.kind = StatementKind::else_statement;
-        } else if (upper == "ENDIF") {
-            statement.kind = StatementKind::endif_statement;
-        } else if (starts_with_insensitive(line, "FOR EACH ")) {
-            // FOR EACH <element> IN <collection>
-            statement.kind = StatementKind::for_each_statement;
-            const std::string body = trim_copy(line.substr(9U));
-            const std::size_t in_pos = find_keyword_top_level(body, "IN");
-            if (in_pos != std::string::npos) {
-                statement.identifier = trim_copy(body.substr(0U, in_pos));
-                statement.expression = trim_copy(body.substr(in_pos + 2U));
-                const std::string upper_expression = uppercase_copy(statement.expression);
-                static constexpr std::string_view foxobject_suffix = " FOXOBJECT";
-                if (upper_expression.size() > foxobject_suffix.size() &&
-                    upper_expression.compare(
-                        upper_expression.size() - foxobject_suffix.size(),
-                        foxobject_suffix.size(),
-                        foxobject_suffix) == 0)
-                {
-                    statement.expression = trim_copy(
-                        statement.expression.substr(
-                            0U,
-                            statement.expression.size() - foxobject_suffix.size()));
-                }
-            }
-        } else if (starts_with_insensitive(line, "FOR ")) {
-            statement.kind = StatementKind::for_statement;
-            const std::string body = trim_copy(line.substr(4U));
-            const auto equals = body.find('=');
-            const auto to_position = uppercase_copy(body).find(" TO ");
-            if (equals != std::string::npos && to_position != std::string::npos && to_position > equals) {
-                statement.identifier = trim_copy(body.substr(0U, equals));
-                statement.expression = trim_copy(body.substr(equals + 1U, to_position - equals - 1U));
-                const auto step_position = uppercase_copy(body).find(" STEP ", to_position + 4U);
-                if (step_position == std::string::npos) {
-                    statement.secondary_expression = trim_copy(body.substr(to_position + 4U));
-                } else {
-                    statement.secondary_expression = trim_copy(body.substr(to_position + 4U, step_position - to_position - 4U));
-                    statement.tertiary_expression = trim_copy(body.substr(step_position + 6U));
-                }
-            }
-        } else if (starts_with_insensitive(line, "DO WHILE ")) {
-            statement.kind = StatementKind::do_while_statement;
-            statement.expression = trim_copy(line.substr(9U));
-        } else if (upper == "ENDFOR") {
-            statement.kind = StatementKind::endfor_statement;
-        } else if (upper == "ENDDO") {
-            statement.kind = StatementKind::enddo_statement;
-        } else if (upper == "ENDCASE") {
-            statement.kind = StatementKind::endcase_statement;
-        } else if (upper == "LOOP") {
-            statement.kind = StatementKind::loop_statement;
-        } else if (upper == "CONTINUE") {
-            statement.kind = StatementKind::continue_command;
-        } else if (upper == "EXIT") {
-            statement.kind = StatementKind::exit_statement;
-        } else if (starts_with_insensitive(line, "WITH ")) {
-            statement.kind = StatementKind::with_statement;
-            statement.expression = trim_copy(line.substr(5U));
-        } else if (upper == "ENDWITH") {
-            statement.kind = StatementKind::endwith_statement;
-        } else if (upper == "TRY") {
-            statement.kind = StatementKind::try_statement;
-        } else if (starts_with_insensitive(line, "CATCH")) {
-            statement.kind = StatementKind::catch_statement;
-            const std::string catch_tail = trim_copy(line.substr(5U));
-            const std::size_t when_position = find_keyword_top_level(catch_tail, "WHEN");
-            const std::string catch_head = trim_copy(
-                when_position == std::string::npos
-                    ? catch_tail
-                    : catch_tail.substr(0U, when_position));
-            if (when_position != std::string::npos)
-            {
-                statement.secondary_expression = trim_copy(catch_tail.substr(when_position + 4U));
-            }
-            statement.identifier = catch_head;
-            if (starts_with_insensitive(statement.identifier, "TO "))
-            {
-                statement.identifier = trim_copy(statement.identifier.substr(3U));
-            }
-        } else if (upper == "FINALLY") {
-            statement.kind = StatementKind::finally_statement;
-        } else if (upper == "ENDTRY") {
-            statement.kind = StatementKind::endtry_statement;
+        if (parse_control_flow_statement(line, upper, statement)) {
         } else if (upper == "THROW" || starts_with_insensitive(line, "THROW ")) {
             statement.kind = StatementKind::throw_statement;
             statement.expression = upper == "THROW" ? std::string{} : trim_copy(line.substr(6U));
