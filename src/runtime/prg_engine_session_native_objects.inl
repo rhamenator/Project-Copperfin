@@ -1204,6 +1204,45 @@
             }
         }
 
+        RuntimeOleObjectState *ensure_native_column_header_surface(RuntimeOleObjectState &column)
+        {
+            if (!is_native_column_runtime_object(column))
+            {
+                return nullptr;
+            }
+
+            const auto existing_header = column.properties.find("header");
+            if (existing_header != column.properties.end())
+            {
+                const auto nested = resolve_ole_object(existing_header->second);
+                return nested.has_value() ? *nested : nullptr;
+            }
+
+            const int handle = next_ole_handle++;
+            RuntimeOleObjectState header{
+                .handle = handle,
+                .prog_id = "Header",
+                .source = {},
+                .last_action = "column.header",
+                .action_count = 1};
+            header.properties["parent"] =
+                make_string_value("object:" + column.prog_id + "#" + std::to_string(column.handle));
+            header.base_class_name = "Header";
+            header.class_hierarchy = {"HEADER", "OBJECT"};
+            assign_native_runtime_object_name(header, "Header");
+            assign_native_window_metadata(header);
+            seed_native_visual_properties(header);
+            append_builtin_native_olecontrol_methods(header);
+            header.default_properties = header.properties;
+            header.default_properties.erase("parent");
+
+            auto [header_it, _] = ole_objects.emplace(handle, std::move(header));
+            column.properties["header"] =
+                make_string_value("object:" + header_it->second.prog_id + "#" +
+                                  std::to_string(header_it->second.handle));
+            return &header_it->second;
+        }
+
         void seed_native_olecontrol_verb_inspection_properties(RuntimeOleObjectState &runtime_object)
         {
             if (!is_native_olecontrol_host_object(runtime_object))

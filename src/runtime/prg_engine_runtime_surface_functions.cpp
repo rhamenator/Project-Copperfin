@@ -244,6 +244,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const auto reflectable_member_exists_locally = [](const RuntimeOleObjectState& runtime_object,
                                                       const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
+               (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column" &&
+                member_name == "header") ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_pagecount_member_name_matches(runtime_object, member_name) ||
                native_activepage_member_name_matches(runtime_object, member_name) ||

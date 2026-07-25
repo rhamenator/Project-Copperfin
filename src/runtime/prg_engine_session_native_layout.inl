@@ -259,6 +259,7 @@
             }
 
             runtime_object.properties["columnorder"] = make_number_value(static_cast<double>(target_order));
+            (void)sync_native_owned_children_collection(parent_found->second);
             return true;
         }
 

@@ -407,7 +407,14 @@
             for (std::size_t index = 0U; index + 1U < segments.size(); ++index)
             {
                 const std::string property_name = normalize_identifier(segments[index]);
-                const auto property = current_object->properties.find(property_name);
+                auto property = current_object->properties.find(property_name);
+                if (property == current_object->properties.end() &&
+                    property_name == "header" &&
+                    is_native_column_runtime_object(*current_object))
+                {
+                    (void)ensure_native_column_header_surface(*current_object);
+                    property = current_object->properties.find(property_name);
+                }
                 if (property == current_object->properties.end())
                 {
                     break;

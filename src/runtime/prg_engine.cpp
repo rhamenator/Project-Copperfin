@@ -2450,12 +2450,20 @@ namespace copperfin::runtime
 
                 const auto property = resolved_path.runtime_object->properties.find(
                     normalize_identifier(effective_member_path));
-                if (property == resolved_path.runtime_object->properties.end())
+                auto resolved_property = property;
+                if (resolved_property == resolved_path.runtime_object->properties.end() &&
+                    normalize_identifier(effective_member_path) == "header" &&
+                    is_native_column_runtime_object(*resolved_path.runtime_object))
+                {
+                    (void)ensure_native_column_header_surface(*resolved_path.runtime_object);
+                    resolved_property = resolved_path.runtime_object->properties.find("header");
+                }
+                if (resolved_property == resolved_path.runtime_object->properties.end())
                 {
                     return nullptr;
                 }
 
-                auto object = resolve_ole_object(property->second);
+                auto object = resolve_ole_object(resolved_property->second);
                 return object.has_value() ? *object : nullptr;
             },
             [this, &frame](const PrgValue &value, const std::string &member_name) -> std::optional<PrgValue>
@@ -2493,7 +2501,15 @@ namespace copperfin::runtime
 
                 for (std::size_t index = 0U; index + 1U < segments.size(); ++index)
                 {
-                    const auto property = target_object->properties.find(normalize_identifier(segments[index]));
+                    const std::string normalized_segment = normalize_identifier(segments[index]);
+                    auto property = target_object->properties.find(normalized_segment);
+                    if (property == target_object->properties.end() &&
+                        normalized_segment == "header" &&
+                        is_native_column_runtime_object(*target_object))
+                    {
+                        (void)ensure_native_column_header_surface(*target_object);
+                        property = target_object->properties.find(normalized_segment);
+                    }
                     if (property == target_object->properties.end())
                     {
                         return std::nullopt;
@@ -7130,6 +7146,12 @@ namespace copperfin::runtime
         if (normalized_property_name.empty())
         {
             return std::nullopt;
+        }
+
+        if (normalized_property_name == "header" &&
+            is_native_column_runtime_object(runtime_object))
+        {
+            (void)ensure_native_column_header_surface(runtime_object);
         }
 
         if (const auto visibility = runtime_object.member_visibility.find(normalized_property_name);

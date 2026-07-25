@@ -1,6 +1,8 @@
 # Agent Handoff
 
-#4645 under #3217 is implemented locally: explicit native PRG `Header` objects now expose VFP9 `WordWrap` with default `.F.`, direct/reflective logical state, derived-class preservation, and built-in reflection protection. Focused Linux and exact-head Windows validation are required before closure. `Grid.Column.Header` materialization remains #4644; host text measurement and rendering remain separate.
+#4644 under #3217 is implemented locally: native PRG `Grid` columns now lazily materialize a `Header` child on explicit access or reflection, preserve the parent/reference relationship, expose the existing VFP9 `WordWrap` contract, retain derived `Column`/`Header` declarations, and refresh `Columns(n)` order after `ColumnOrder` changes. Focused Linux CTest passes; exact-head Windows validation is required before closure. Text measurement, AutoSize, caption layout, and rendering remain separate.
+
+#4645 under #3217 is implemented and validated: explicit native PRG `Header` objects expose VFP9 `WordWrap` with default `.F.`, direct/reflective logical state, derived-class preservation, and built-in reflection protection. Focused Linux CTest passes, and exact-head Windows validation passed at `c42bf786` in channel seq113 with artifacts under `artifacts/windows-validation-c42bf786/`. `Grid.Column.Header` materialization is tracked separately under #4644; host text measurement and rendering remain separate.
 
 #4643 under #3217 is implemented and validated: native PRG `_SCREEN.RightToLeft` and `_VFP.RightToLeft` share a VFP9-default-true logical state through direct alias reads and dotted assignments. Focused Linux CTest passed, and exact-head Windows validation passed at `0019bb9b` in channel seq109 with artifacts under `artifacts/windows-validation-0019bb9b/`. `GETPEM()` / `SETPEM()` object-reference reflection and host rendering remain separate.
 
