@@ -44,7 +44,15 @@ namespace copperfin::runtime_surface_tests
             "cPromptSeparator = PRMBAR('choices', 5)\n"
             "cPromptTwenty = PRMBAR('choices', 20)\n"
             "cPromptMissing = PRMBAR('choices', 99)\n"
+            "SET SKIP OF BAR 4 OF choices .T.\n"
+            "lDisabled = SKPBAR('choices', 4)\n"
+            "lEnabled = SKPBAR('choices', 2)\n"
+            "lMissingSkip = SKPBAR('choices', 99)\n"
+            "SET SKIP OF BAR 4 OF choices .F.\n"
+            "lEnabledAfterSet = SKPBAR('choices', 4)\n"
+            "SET SKIP OF BAR 4 OF choices .T.\n"
             "DEFINE POPUP choices\n"
+            "lRedefinedSkip = SKPBAR('choices', 4)\n"
             "DEFINE BAR 1 OF choices PROMPT 'Replacement'\n"
             "nReplacementPopupCount = CNTBAR('choices')\n"
             "oList.Requery()\n"
@@ -108,6 +116,11 @@ namespace copperfin::runtime_surface_tests
         check("cpromptseparator", "");
         check("cprompttwenty", "Twenty");
         check("cpromptmissing", "");
+        check("ldisabled", "true");
+        check("lenabled", "false");
+        check("lmissingskip", "false");
+        check("lenabledafterset", "false");
+        check("lredefinedskip", "false");
         check("nreplacementcount", "1");
         check("nreplacementpopupcount", "1");
         check("creplacement", "Replacement");

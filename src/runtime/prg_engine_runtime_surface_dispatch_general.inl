@@ -115,6 +115,14 @@
         }
         return make_number_value(0.0);
     }
+    if (function == "skpbar") {
+        if (popup_bar_skip_callback) {
+            if (const auto skipped = popup_bar_skip_callback(arguments); skipped.has_value()) {
+                return *skipped;
+            }
+        }
+        return make_boolean_value(false);
+    }
     if (function == "aerror" && !raw_arguments.empty()) {
         return make_number_value(static_cast<double>(aerror_callback(raw_arguments[0])));
     }

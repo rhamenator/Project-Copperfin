@@ -2774,6 +2774,7 @@
                 if (!popup_name.empty())
                 {
                     current_session_state().popup_bar_prompts[popup_name].clear();
+                    current_session_state().popup_bar_skip_states[popup_name].clear();
                 }
                 return {};
             }
@@ -2804,6 +2805,7 @@
                     const std::string popup_name = normalize_identifier(
                         unquote_identifier(trim_copy(statement.expression)));
                     current_session_state().popup_bar_prompts.erase(popup_name);
+                    current_session_state().popup_bar_skip_states.erase(popup_name);
                 }
                 waiting_for_events = false;
                 events.push_back({.category = statement.identifier + ".release",
@@ -4629,6 +4631,34 @@
 
                     return raw_value;
                 };
+
+                if (starts_with_insensitive(statement.expression, "SKIP OF BAR "))
+                {
+                    const std::string body = trim_copy(statement.expression.substr(12U));
+                    const auto [bar_text, bar_tail] = split_first_word(body);
+                    const std::size_t of_position = find_keyword_top_level(bar_tail, "OF");
+                    if (of_position != std::string::npos)
+                    {
+                        const auto [popup_text, skip_expression] = split_first_word(
+                            trim_copy(bar_tail.substr(of_position + 2U)));
+                        const auto bar_number = try_parse_numeric_index_value(bar_text);
+                        const std::string popup_name = normalize_identifier(unquote_identifier(popup_text));
+                        if (bar_number.has_value() && !popup_name.empty())
+                        {
+                            const bool disabled = skip_expression.empty()
+                                ? false
+                                : value_as_bool(evaluate_expression(skip_expression, frame));
+                            current_session_state().popup_bar_skip_states[popup_name][
+                                static_cast<long long>(std::llround(*bar_number))] = disabled;
+                            events.push_back({.category = "runtime.set_skip",
+                                              .detail = "popup=" + popup_name +
+                                                        " bar=" + std::to_string(static_cast<long long>(std::llround(*bar_number))) +
+                                                        " disabled=" + (disabled ? "true" : "false"),
+                                              .location = statement.location});
+                            return {};
+                        }
+                    }
+                }
 
                 if (normalized_name == "database")
                 {
