@@ -85,6 +85,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     void test_native_form_alwaysontop_defaults_mutates_and_stays_builtin();
     void test_native_form_keypreview_defaults_mutate_and_stay_builtin();
+    void test_native_visual_fontcharset_defaults_mutate_and_stay_builtin();
     void test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     void test_native_form_windowtype_defaults_mutates_and_stays_builtin();
     void test_native_form_windowtype_include_define_constants_drive_modal_checks();

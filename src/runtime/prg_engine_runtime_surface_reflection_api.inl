@@ -186,6 +186,11 @@ bool is_native_visual_fontname_member_name(const RuntimeOleObjectState& runtime_
     return native_visual_fontname_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_fontcharset_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_fontcharset_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_dynamicfontname_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_dynamicfontname_member_name_matches(runtime_object, normalized_member_name);
@@ -856,6 +861,23 @@ void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_ob
     const long long normalized =
         !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 3LL);
     scale_mode->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_visual_fontcharset_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_visual_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto font_charset = runtime_object.properties.find("fontcharset");
+    if (font_charset == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(font_charset->second);
+    const long long normalized =
+        !std::isfinite(value) ? 1LL : std::max(0LL, std::llround(value));
+    font_charset->second = make_number_value(static_cast<double>(normalized));
 }
 
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object)

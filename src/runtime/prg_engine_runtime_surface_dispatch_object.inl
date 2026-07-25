@@ -233,6 +233,7 @@
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontcharset_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||
@@ -693,6 +694,9 @@
                 runtime_object->properties[member_name] = make_boolean_value(
                     value_as_bool(runtime_object->properties[member_name]));
             }
+            if (member_name == "fontcharset") {
+                normalize_native_visual_fontcharset_invariant(*runtime_object);
+            }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
             }
@@ -986,6 +990,9 @@
             if (member_name == "keypreview") {
                 runtime_object->properties[member_name] = make_boolean_value(
                     value_as_bool(runtime_object->properties[member_name]));
+            }
+            if (member_name == "fontcharset") {
+                normalize_native_visual_fontcharset_invariant(*runtime_object);
             }
             if (member_name == "mousepointer") {
                 normalize_native_visual_mousepointer_invariant(*runtime_object);
@@ -1317,6 +1324,7 @@
             is_native_form_autocenter_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_fontcharset_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||

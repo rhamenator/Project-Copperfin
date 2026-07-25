@@ -58,6 +58,14 @@
                 runtime_object.properties["fontname"] = make_string_value("Arial");
             }
 
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("fontcharset"))
+            {
+                // Headless contract: value 1 selects the documented default setting.
+                runtime_object.properties["fontcharset"] = make_number_value(1.0);
+            }
+
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontname"))
             {
