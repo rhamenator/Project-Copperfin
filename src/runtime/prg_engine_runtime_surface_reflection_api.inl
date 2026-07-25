@@ -191,6 +191,11 @@ bool is_native_visual_fontcharset_member_name(const RuntimeOleObjectState& runti
     return native_visual_fontcharset_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_righttoleft_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_righttoleft_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_dynamicfontname_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_dynamicfontname_member_name_matches(runtime_object, normalized_member_name);
@@ -917,6 +922,20 @@ void normalize_native_visual_fontcharset_invariant(RuntimeOleObjectState& runtim
     const long long normalized =
         !std::isfinite(value) ? 1LL : std::max(0LL, std::llround(value));
     font_charset->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_visual_righttoleft_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_righttoleft_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto right_to_left = runtime_object.properties.find("righttoleft");
+    if (right_to_left == runtime_object.properties.end()) {
+        return;
+    }
+
+    right_to_left->second = make_boolean_value(value_as_bool(right_to_left->second));
 }
 
 void normalize_native_visual_drawmode_invariant(RuntimeOleObjectState& runtime_object)

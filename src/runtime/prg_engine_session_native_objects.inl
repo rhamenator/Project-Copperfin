@@ -66,6 +66,24 @@
                 runtime_object.properties["fontcharset"] = make_number_value(1.0);
             }
 
+            if ((normalized_base_class == "checkbox" ||
+                 normalized_base_class == "combobox" ||
+                 normalized_base_class == "commandbutton" ||
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "form" ||
+                 normalized_base_class == "grid" ||
+                 normalized_base_class == "label" ||
+                 normalized_base_class == "listbox" ||
+                 normalized_base_class == "optionbutton" ||
+                 normalized_base_class == "pageframe" ||
+                 normalized_base_class == "spinner" ||
+                 normalized_base_class == "textbox") &&
+                !runtime_object.properties.contains("righttoleft"))
+            {
+                // VFP9 documents true as the default, independent of host text direction.
+                runtime_object.properties["righttoleft"] = make_boolean_value(true);
+            }
+
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontname"))
             {
