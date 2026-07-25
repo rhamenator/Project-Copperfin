@@ -391,6 +391,13 @@ internal static partial class Program
             {
                 smokeTest();
             }
+            catch (Exception exception)
+            {
+                ++failures;
+                Console.Error.WriteLine(
+                    $"FAIL: {testName} threw {exception.GetType().FullName}: {exception.Message}");
+                Console.Error.WriteLine(exception.ToString());
+            }
             finally
             {
                 Console.WriteLine($"END: {testName} ({stopwatch.Elapsed.TotalSeconds:F1}s)");
