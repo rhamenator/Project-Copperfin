@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Copperfin.VisualStudio;
 
 if (args.Length != 1 && args.Length != 2)
@@ -19,6 +20,44 @@ var locales = new Dictionary<string, string>(StringComparer.Ordinal)
 };
 
 var options = new JsonSerializerOptions { WriteIndented = true };
+var managedCatalogSourcePath = Path.Combine(
+    repositoryRoot,
+    "vsix",
+    "Copperfin.VisualStudio",
+    "CopperfinLocalization.cs");
+var managedCatalogSection = string.Empty;
+var managedCatalogKeys = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal)
+{
+    [CopperfinLocalization.DefaultLocale] = new HashSet<string>(StringComparer.Ordinal),
+    [CopperfinLocalization.SpanishLatinAmericaLocale] = new HashSet<string>(StringComparer.Ordinal),
+    [CopperfinLocalization.PortugueseBrazilLocale] = new HashSet<string>(StringComparer.Ordinal)
+};
+var managedKeyPattern = new Regex("^\\s*\\[\\\"(?<key>[^\\\"]+)\\\"\\]\\s*=", RegexOptions.Compiled);
+foreach (var line in File.ReadLines(managedCatalogSourcePath))
+{
+    if (line.Contains("[DefaultLocale] = new Dictionary", StringComparison.Ordinal))
+    {
+        managedCatalogSection = CopperfinLocalization.DefaultLocale;
+    }
+    else if (line.Contains("[SpanishLatinAmericaLocale] = new Dictionary", StringComparison.Ordinal))
+    {
+        managedCatalogSection = CopperfinLocalization.SpanishLatinAmericaLocale;
+    }
+    else if (line.Contains("[PortugueseBrazilLocale] = new Dictionary", StringComparison.Ordinal))
+    {
+        managedCatalogSection = CopperfinLocalization.PortugueseBrazilLocale;
+    }
+
+    var match = managedKeyPattern.Match(line);
+    if (match.Success &&
+        managedCatalogKeys.TryGetValue(managedCatalogSection, out var keys) &&
+        !keys.Add(match.Groups["key"].Value))
+    {
+        throw new InvalidDataException(
+            $"Managed catalog contains a duplicate key: {managedCatalogSection}/{match.Groups["key"].Value}");
+    }
+}
+
 foreach (var locale in locales)
 {
     var isPseudoLocale = string.Equals(locale.Key, "qps-ploc", StringComparison.Ordinal);
