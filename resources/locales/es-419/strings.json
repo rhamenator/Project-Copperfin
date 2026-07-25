@@ -501,6 +501,7 @@
   "RuntimeHost.Error.StartupAssetDigestMissing": "Al inicio con seguridad habilitada le falta un digest de paquete verificado: {fileName}",
   "RuntimeHost.Error.UnknownArgument": "Argumento desconocido: {argument}",
   "RuntimeHost.Error.UnknownFederationBackend": "Backend de federacion desconocido: {backend}",
+  "RuntimeHost.Error.UnhandledFault": "Se contuvo una falla del host de runtime: {detail}",
   "RuntimeHost.Prompt.QuitConfirm": "Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: ",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "advertencia: ",

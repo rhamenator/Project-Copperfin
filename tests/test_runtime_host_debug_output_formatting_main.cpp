@@ -36,6 +36,7 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(co
 void test_runtime_host_watch_errors_localize_without_changing_watch_fields(const std::string& runtime_host_path);
 void test_runtime_host_escapes_multiline_debug_values(const std::string& runtime_host_path);
 void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(const std::string& runtime_host_path);
+void test_runtime_host_contains_unexpected_process_fault(const std::string& runtime_host_path);
 
 void run_runtime_host_test(
     const char* name,
@@ -84,6 +85,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("watch localization", runtime_host_path, test_runtime_host_watch_errors_localize_without_changing_watch_fields);
     run_runtime_host_test("multiline debug values", runtime_host_path, test_runtime_host_escapes_multiline_debug_values);
     run_runtime_host_test("quit prompt localization", runtime_host_path, test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens);
+    run_runtime_host_test("unexpected process fault containment", runtime_host_path, test_runtime_host_contains_unexpected_process_fault);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

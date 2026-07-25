@@ -3060,7 +3060,7 @@ std::string resolve_implicit_manifest_path(
 
 }  // namespace
 
-int run_runtime_host_main(int argc, char** argv) {
+int run_runtime_host_main_impl(int argc, char** argv) {
     const std::filesystem::path invocation_path =
         argc > 0 && argv[0] != nullptr ? path_from_utf8(argv[0]) : std::filesystem::path();
     const std::filesystem::path running_executable_path =
@@ -3068,6 +3068,13 @@ int run_runtime_host_main(int argc, char** argv) {
     const std::string explicit_locale = explicit_locale_from_arguments(argc, argv);
     const copperfin::localization::LocalizedCatalog catalog =
         load_localization(running_executable_path, explicit_locale);
+
+#if defined(COPPERFIN_RUNTIME_HOST_TEST_HOOKS)
+    if (copperfin::platform::read_environment_variable_or_empty(
+            "COPPERFIN_TEST_THROW_RUNTIME_HOST") == "1") {
+        throw std::runtime_error("test-injected host fault");
+    }
+#endif
 
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
@@ -4224,6 +4231,45 @@ int run_runtime_host_main(int argc, char** argv) {
     }
 
     return state.reason == copperfin::runtime::DebugPauseReason::error ? 5 : 0;
+}
+
+int report_contained_runtime_host_fault(
+    int argc,
+    char** argv,
+    const std::string& detail) noexcept {
+    try {
+        const std::filesystem::path invocation_path =
+            argc > 0 && argv[0] != nullptr ? path_from_utf8(argv[0]) : std::filesystem::path();
+        const std::filesystem::path running_executable_path =
+            copperfin::platform::resolve_running_executable_path(invocation_path);
+        const std::string explicit_locale = explicit_locale_from_arguments(argc, argv);
+        const auto catalog = load_localization(running_executable_path, explicit_locale);
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            localized_message(
+                catalog,
+                "RuntimeHost.Error.UnhandledFault",
+                {{"detail", detail}}));
+    } catch (...) {
+        // Preserve the machine-readable failure boundary even if localization
+        // or diagnostic formatting is unavailable during fault recovery.
+        std::cout << "status: error\n";
+        std::cout << "error: RuntimeHost.Error.UnhandledFault\n";
+    }
+    return 5;
+}
+
+int run_runtime_host_main(int argc, char** argv) noexcept {
+    try {
+        return run_runtime_host_main_impl(argc, argv);
+    } catch (const std::bad_alloc&) {
+        return report_contained_runtime_host_fault(argc, argv, "out of memory");
+    } catch (const std::exception& error) {
+        return report_contained_runtime_host_fault(argc, argv, error.what());
+    } catch (...) {
+        return report_contained_runtime_host_fault(argc, argv, "unknown exception");
+    }
 }
 
 #if defined(_WIN32)

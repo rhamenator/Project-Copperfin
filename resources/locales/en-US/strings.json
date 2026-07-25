@@ -841,6 +841,7 @@
   "RuntimeHost.Error.StartupAssetDigestMissing": "Security-enabled startup is missing a verified package digest: {fileName}",
   "RuntimeHost.Error.UnknownArgument": "Unknown argument: {argument}",
   "RuntimeHost.Error.UnknownFederationBackend": "Unknown federation backend: {backend}",
+  "RuntimeHost.Error.UnhandledFault": "Runtime host fault was contained: {detail}",
   "RuntimeHost.Prompt.QuitConfirm": "Do you want to quit this application? [{yesToken}/{defaultNoToken}]: ",
   "Runtime.IndexSeek.Field.Compound": "compound",
   "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch": "high-confidence Rushmore match",

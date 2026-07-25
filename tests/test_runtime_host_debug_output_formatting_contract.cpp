@@ -4,6 +4,40 @@
 
 #include "test_runtime_host_debug_output_support.h"
 
+void test_runtime_host_contains_unexpected_process_fault(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_host_unexpected_fault_containment_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+    ScopedEnvironmentValue injected_fault("COPPERFIN_TEST_THROW_RUNTIME_HOST", "1");
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {"--manifest", (temp_root / "unused.cfmanifest").string()},
+        temp_root);
+
+    expect(process.exit_code == 5,
+           "unexpected runtime-host exceptions should use the runtime error exit code");
+    expect(process.stdout_text.find("status: error") != std::string::npos,
+           "unexpected runtime-host exceptions should preserve machine-readable error status");
+    expect(process.stdout_text.find(
+               "error: Runtime host fault was contained: test-injected host fault") != std::string::npos,
+           "unexpected runtime-host exceptions should emit the localized containment diagnostic");
+    expect(process.stdout_text.find("terminate called") == std::string::npos,
+           "contained runtime-host exceptions should not terminate without a diagnostic");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_rejects_nested_bridge_parameter_values_for_nonzero_arity(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
