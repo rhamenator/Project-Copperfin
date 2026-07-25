@@ -6,12 +6,51 @@
 
 #include "test_environment_support.h"
 
+#include <charconv>
+#include <cctype>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
 namespace copperfin::test_support {
+
+inline bool extract_json_integer(
+    const std::string& json_text,
+    std::string_view key,
+    int& value) {
+    const std::size_t key_position = json_text.find(key);
+    if (key_position == std::string::npos) {
+        return false;
+    }
+
+    const std::size_t colon_position = json_text.find(':', key_position + key.size());
+    if (colon_position == std::string::npos) {
+        return false;
+    }
+
+    const char* begin = json_text.data() + colon_position + 1U;
+    const char* end = json_text.data() + json_text.size();
+    while (begin != end && std::isspace(static_cast<unsigned char>(*begin)) != 0) {
+        ++begin;
+    }
+
+    const auto parsed = std::from_chars(begin, end, value);
+    return parsed.ec == std::errc{};
+}
+
+inline bool json_integer_delta(
+    const std::string& updated_json,
+    const std::string& restored_json,
+    std::string_view key,
+    int expected_delta) {
+    int updated_value = 0;
+    int restored_value = 0;
+    return extract_json_integer(updated_json, key, updated_value) &&
+           extract_json_integer(restored_json, key, restored_value) &&
+           updated_value - restored_value == expected_delta;
+}
 
 inline std::filesystem::path find_vfp9_reports_root() {
     namespace fs = std::filesystem;

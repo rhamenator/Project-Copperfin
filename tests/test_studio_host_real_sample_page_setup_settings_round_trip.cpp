@@ -250,6 +250,26 @@ void exercise_real_sample_page_setup_setting_round_trip(
     const std::string original_primary_bytes = read_binary(copied_primary);
     const std::string original_sidecar_bytes = read_binary(copied_sidecar);
 
+    const auto initial_process = run_process_capture(
+        studio_host_path,
+        {"--path", copied_primary.string(), "--record", "0", "--json"},
+        work_root);
+    if (initial_process.exit_code != 0) {
+        std::cerr << "studio host sample " << setting_case.property_name << " initial read stdout:\n"
+                  << initial_process.stdout_text << "\n";
+        std::cerr << "studio host sample " << setting_case.property_name << " initial read stderr:\n"
+                  << initial_process.stderr_text << "\n";
+    }
+    expect(initial_process.exit_code == 0,
+           "#3760: real sample " + setting_case.property_name + " initial read should succeed");
+    int initial_setting_count = 0;
+    expect(copperfin::test_support::extract_json_integer(
+               initial_process.stdout_text,
+               "\"settingCount\"",
+               initial_setting_count),
+           "#3760: real sample " + setting_case.property_name +
+               " initial read should expose a numeric setting count");
+
     const auto set_process = run_process_capture(
         studio_host_path,
         {
@@ -353,7 +373,6 @@ void exercise_real_sample_page_setup_setting_round_trip(
         setting_case.original_value,
         "#3760",
         "undone real sample " + setting_case.property_name + " read");
-
     const auto restored_property = copperfin::vfp::query_visual_object_property({
         .path = copied_primary.string(),
         .record_index = 0U,
@@ -387,6 +406,20 @@ void exercise_real_sample_page_setup_setting_round_trip(
                         "#3760: reopened undone real sample " + setting_case.property_name +
                             " read should restore page-setup metadata");
     }
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_set.stdout_text,
+               initial_process.stdout_text,
+               "\"settingCount\"",
+               0),
+           "#3760: real sample " + setting_case.property_name +
+               " update should preserve the baseline setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_undo.stdout_text,
+               initial_process.stdout_text,
+               "\"settingCount\"",
+               0),
+           "#3760: real sample " + setting_case.property_name +
+               " command undo should restore the baseline setting count");
     expect_selected_setting_value(
         reopen_after_undo.stdout_text,
         setting_case,

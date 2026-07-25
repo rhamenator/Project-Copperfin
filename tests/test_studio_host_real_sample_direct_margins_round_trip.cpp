@@ -322,6 +322,12 @@ void exercise_real_sample_direct_margins_round_trip(
     expect_contains(reopen_after_bottom.stdout_text,
                     "\"settingCount\":",
                     "#3761: real sample BOTMARGIN update should expose a live root setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_bottom.stdout_text,
+               reopen_after_top.stdout_text,
+               "\"settingCount\"",
+               1),
+           "#3761: real sample BOTMARGIN update should add one setting after TOPMARGIN");
     expect_contains(reopen_after_bottom.stdout_text,
                     "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 62, \"sourceLineIndex\": null",
                     "#3761: real sample BOTMARGIN update should preserve TOPMARGIN provenance");
@@ -414,6 +420,12 @@ void exercise_real_sample_direct_margins_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\":",
                     "#3761: real sample direct-margin clear should preserve a live root setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_top.stdout_text,
+               reopen_after_clear.stdout_text,
+               "\"settingCount\"",
+               1),
+           "#3761: real sample direct-margin clear should restore the count after removing two settings");
     const std::string selected_settings = selected_settings_segment(reopen_after_clear.stdout_text);
     expect(!selected_settings.empty(),
            "#3761: real sample direct-margin clear should expose a selected-settings JSON block");

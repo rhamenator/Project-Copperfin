@@ -324,6 +324,12 @@ void exercise_real_sample_copies_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\":",
                     "#3773: real sample COPIES clear should preserve a live root setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_set.stdout_text,
+               reopen_after_clear.stdout_text,
+               "\"settingCount\"",
+               1),
+           "#3773: real sample COPIES clear should restore the setting count after one added setting");
     expect_contains(reopen_after_clear.stdout_text,
                     "\"copiesAvailable\": false",
                     "#3806: real sample COPIES clear should restore missing copies summary availability");

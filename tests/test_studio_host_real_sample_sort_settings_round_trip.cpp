@@ -293,6 +293,12 @@ void exercise_real_sample_sort_setting_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\":",
                     "#3602: real sample TAG clear should preserve a live root setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_set.stdout_text,
+               reopen_after_clear.stdout_text,
+               "\"settingCount\"",
+               1),
+           "#3602: real sample TAG clear should restore the setting count after one added setting");
     expect_contains(reopen_after_clear.stdout_text,
                     "\"deletedSettingCount\": 0",
                     "#3602: real sample TAG clear should keep deleted root setting count empty");

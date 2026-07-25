@@ -339,6 +339,12 @@ void exercise_real_sample_driver_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\":",
                     "#3764: real sample DRIVER clear should preserve a live root setting count");
+    expect(copperfin::test_support::json_integer_delta(
+               reopen_after_set.stdout_text,
+               reopen_after_clear.stdout_text,
+               "\"settingCount\"",
+               1),
+           "#3764: real sample DRIVER clear should restore the setting count after one added setting");
     const std::string selected_settings = selected_settings_segment(reopen_after_clear.stdout_text);
     expect(!selected_settings.empty(),
            "#3764: real sample DRIVER clear should expose a selected-settings JSON block");
