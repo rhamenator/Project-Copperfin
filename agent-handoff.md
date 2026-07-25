@@ -1,5 +1,7 @@
 # Agent Handoff
 
+#4647 under #3217 is implemented locally: native PRG explicit and derived `Header` and `Column` objects, including lazily materialized `Grid.Column.Header` children, now expose VFP9 `Alignment` with Automatic default `3`, direct/reflective writes across the documented `0..9` state range, and built-in reflection protection. Focused Linux runtime-surface CTest passes; exact-head Windows validation is required. Alignment rendering, text measurement, and layout remain separate.
+
 #4646 under #3217 is implemented locally: native PRG explicit and derived `Header` objects, including lazily materialized `Grid.Column.Header` children, now expose VFP9 `Caption` with an empty protected string default, direct/reflective writes, declarative initialization, and built-in reflection protection. Focused Linux runtime-surface CTest passes; exact-head Windows validation is requested. Caption measurement, layout, and rendering remain separate.
 
 #4644 under #3217 is implemented and validated: native PRG `Grid` columns lazily materialize a `Header` child on explicit access or reflection, preserve the parent/reference relationship, expose the VFP9 `WordWrap` contract, retain derived `Column`/`Header` declarations, and refresh `Columns(n)` order after `ColumnOrder` changes. Focused Linux CTest and exact-head Windows validation passed at `41d2f4c26500fe8a8fa483cde4b556b1315fcdad` in channel seq115 with artifacts under `artifacts/windows-validation-41d2f4c2/`. Text measurement, AutoSize, caption layout, and rendering remain separate.

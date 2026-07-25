@@ -889,9 +889,13 @@ void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_
         return;
     }
 
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    const long long maximum_alignment =
+        normalized_base_class == "column" || normalized_base_class == "header" ? 9LL : 2LL;
     const double value = value_as_number(alignment->second);
     const long long normalized =
-        !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 2LL);
+        !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, maximum_alignment);
     alignment->second = make_number_value(static_cast<double>(normalized));
 }
 

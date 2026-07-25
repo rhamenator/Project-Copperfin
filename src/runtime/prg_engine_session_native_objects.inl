@@ -374,12 +374,16 @@
                 runtime_object.properties["selecteditemforecolor"] = make_int64_value(16777215);
             }
 
-            if ((normalized_base_class == "editbox" ||
+            if ((normalized_base_class == "column" ||
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "header" ||
                  normalized_base_class == "label" ||
                  normalized_base_class == "textbox") &&
                 !runtime_object.properties.contains("alignment"))
             {
-                runtime_object.properties["alignment"] = make_number_value(0.0);
+                const double default_alignment =
+                    normalized_base_class == "column" || normalized_base_class == "header" ? 3.0 : 0.0;
+                runtime_object.properties["alignment"] = make_number_value(default_alignment);
             }
 
             if (normalized_base_class == "editbox" &&

@@ -322,7 +322,9 @@ bool native_visual_alignment_runtime_object(const RuntimeOleObjectState& runtime
 
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
-    return normalized_base_class == "editbox" ||
+    return normalized_base_class == "column" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "header" ||
            normalized_base_class == "label" ||
            normalized_base_class == "textbox";
 }

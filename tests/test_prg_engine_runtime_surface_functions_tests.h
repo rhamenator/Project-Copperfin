@@ -93,6 +93,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_header_wordwrap_defaults_mutate_and_stay_builtin();
     void test_native_grid_column_header_materializes_lazily_and_stays_coherent();
     void test_native_header_caption_defaults_mutate_and_stay_builtin();
+    void test_native_header_column_alignment_defaults_mutate_and_stay_builtin();
     void test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     void test_native_form_windowtype_defaults_mutates_and_stays_builtin();
     void test_native_form_windowtype_include_define_constants_drive_modal_checks();
