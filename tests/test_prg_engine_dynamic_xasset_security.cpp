@@ -6,6 +6,7 @@
 #include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -114,7 +115,14 @@ void test_dynamic_xasset_uses_verified_snapshot() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason != copperfin::runtime::DebugPauseReason::error,
            "dynamic xAsset should execute from its verified primary and memo snapshots");
-    expect(has_runtime_event(state.events, "prg.object.setall", "__cf_xasset_root.fontname:0"),
+    const auto setall_event_count = static_cast<std::size_t>(std::count_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "prg.object.setall" &&
+                   event.detail == "__cf_xasset_root.fontname:0";
+        }));
+    expect(setall_event_count == 1U,
            "dynamic xAsset form methods should invoke SetAll with a live THIS form context");
     expect(has_runtime_event(state.events, "form.open", form_path.string()),
            "dynamic xAsset should retain the logical asset path in runtime events");
