@@ -1,9 +1,10 @@
-# Local open-issue snapshot exported from GitHub. Use live GitHub state for planning.
-# Wishlist and future-facing rows are preserved roadmap work, not active noise.
-# Columns: issue number, state, title, labels, updated_at.
-4623	OPEN	Phase B: track 'host stability and debugger fault containment' as the stated remaining runtime-safety work	safety,runtime	2026-07-25T00:50:10Z
-4621	OPEN	Track hosted Windows + mounted-VFP9 + Visual Studio release-evidence validation execution (Phase C / lane E RC gate)	testing,E3	2026-07-25T00:28:51Z
-4595	OPEN	#3217 slice: materialize legacy popup RowSourceType 9 entries		2026-07-24T20:24:06Z
+# Local open-issue snapshot exported from GitHub. Use live GitHub state for planning. Wishlist and future-facing rows are preserved roadmap work, not active noise. Columns: issue number, state, title, labels, updated_at.
+4636	OPEN	#4621 slice: make real VFP9 setting-count tests sample-tolerant		2026-07-25T03:22:20Z
+4635	OPEN	#4621 slice: give Studio host JSON test its Windows runtime budget		2026-07-25T03:07:49Z
+4634	OPEN	#4621 slice: make Windows process-timeout fixtures startup-tolerant		2026-07-25T03:05:54Z
+4633	OPEN	#3217 slice: execute static ON SELECTION BAR commands		2026-07-25T03:00:14Z
+4632	OPEN	#110 slice: split PRG parser control-flow dispatch for MSVC		2026-07-25T03:00:19Z
+4621	OPEN	Track hosted Windows + mounted-VFP9 + Visual Studio release-evidence validation execution (Phase C / lane E RC gate)	testing,E3	2026-07-25T03:25:29Z
 4409	OPEN	Provision external launcher-trust registry for enforced Windows release validation	security,portability	2026-07-22T19:14:00Z
 4403	OPEN	[docs-safety] MVP release - archive runtime recovery traceability evidence	documentation,safety	2026-07-23T08:00:10Z
 4387	OPEN	#4041 slice: authenticate the Windows generated-launcher inventory		2026-07-22T19:13:44Z
