@@ -374,6 +374,7 @@ int main()
     test_native_visual_anchor_defaults_mutate_and_stay_builtin();
     test_native_visual_righttoleft_defaults_mutate_and_stay_builtin();
     test_native_visual_wordwrap_defaults_mutate_and_stay_builtin();
+    test_native_header_wordwrap_defaults_mutate_and_stay_builtin();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();

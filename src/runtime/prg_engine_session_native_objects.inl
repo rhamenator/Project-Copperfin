@@ -87,7 +87,8 @@
             if ((normalized_base_class == "checkbox" ||
                  normalized_base_class == "commandbutton" ||
                  normalized_base_class == "label" ||
-                 normalized_base_class == "optionbutton") &&
+                 normalized_base_class == "optionbutton" ||
+                 normalized_base_class == "header") &&
                 !runtime_object.properties.contains("wordwrap"))
             {
                 // VFP9 documents false as the default; text measurement is host-owned.

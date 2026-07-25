@@ -146,7 +146,8 @@ bool native_visual_wordwrap_runtime_object(const RuntimeOleObjectState& runtime_
     return normalized_base_class == "checkbox" ||
            normalized_base_class == "commandbutton" ||
            normalized_base_class == "label" ||
-           normalized_base_class == "optionbutton";
+           normalized_base_class == "optionbutton" ||
+           normalized_base_class == "header";
 }
 
 bool native_visual_button_state_picture_runtime_object(const RuntimeOleObjectState& runtime_object) {

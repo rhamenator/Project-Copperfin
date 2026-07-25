@@ -1,5 +1,7 @@
 # Agent Handoff
 
+#4645 under #3217 is implemented locally: explicit native PRG `Header` objects now expose VFP9 `WordWrap` with default `.F.`, direct/reflective logical state, derived-class preservation, and built-in reflection protection. Focused Linux and exact-head Windows validation are required before closure. `Grid.Column.Header` materialization remains #4644; host text measurement and rendering remain separate.
+
 #4643 under #3217 is implemented and validated: native PRG `_SCREEN.RightToLeft` and `_VFP.RightToLeft` share a VFP9-default-true logical state through direct alias reads and dotted assignments. Focused Linux CTest passed, and exact-head Windows validation passed at `0019bb9b` in channel seq109 with artifacts under `artifacts/windows-validation-0019bb9b/`. `GETPEM()` / `SETPEM()` object-reference reflection and host rendering remain separate.
 
 #4642 under #3217 is implemented locally: native PRG `WordWrap` now follows the mounted VFP9 applies-to set for CheckBox, CommandButton, Label, and OptionButton. It defaults to `.F.`, normalizes direct/`GETPEM()`/`SETPEM()`/`PUTPEM()` writes to logical state, preserves derived declarations, keeps `PEMSTATUS()`/`AMEMBERS()` coherent, and rejects shadowing/removal. Grid Column Header objects are intentionally separate; host text measurement and rendering are not claimed. Focused Linux CTest passes; exact-head Windows validation is requested.

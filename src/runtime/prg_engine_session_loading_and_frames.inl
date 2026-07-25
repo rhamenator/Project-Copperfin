@@ -325,6 +325,7 @@
                    normalized_class_name == "editbox" ||
                    normalized_class_name == "form" ||
                    normalized_class_name == "grid" ||
+                   normalized_class_name == "header" ||
                    normalized_class_name == "image" ||
                    normalized_class_name == "label" ||
                    normalized_class_name == "line" ||
