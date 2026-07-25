@@ -8865,6 +8865,12 @@ namespace copperfin::runtime
                     runtime_object.properties["resizable"] =
                         make_boolean_value(value_as_bool(runtime_object.properties["resizable"]));
                 }
+                if (normalized_property_name == "anchor" &&
+                    is_native_visual_anchor_member_name(runtime_object, normalized_property_name) &&
+                    runtime_object.properties.contains("anchor"))
+                {
+                    normalize_native_visual_anchor_invariant(runtime_object);
+                }
                 if (normalized_property_name == "sorted")
                 {
                     if (!write_native_list_control_controlsource_target(runtime_object, source_frame))

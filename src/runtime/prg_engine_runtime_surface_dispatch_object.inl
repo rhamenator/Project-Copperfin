@@ -256,6 +256,7 @@
             is_native_commandbutton_picture_layout_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
@@ -311,6 +312,7 @@
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_resizable_member_name(*runtime_object, property_name) ||
             is_native_movable_member_name(*runtime_object, property_name) ||
+            is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
@@ -705,6 +707,9 @@
             if (member_name == "dragmode") {
                 normalize_native_visual_dragmode_invariant(*runtime_object);
             }
+            if (member_name == "anchor") {
+                normalize_native_visual_anchor_invariant(*runtime_object);
+            }
             if (member_name == "fontsize") {
                 const double font_size = value_as_number(runtime_object->properties[member_name]);
                 runtime_object->properties[member_name] = make_number_value(
@@ -1001,6 +1006,9 @@
             }
             if (member_name == "dragmode") {
                 normalize_native_visual_dragmode_invariant(*runtime_object);
+            }
+            if (member_name == "anchor") {
+                normalize_native_visual_anchor_invariant(*runtime_object);
             }
             if (member_name == "fontsize") {
                 const double font_size = value_as_number(runtime_object->properties[member_name]);
@@ -1349,6 +1357,7 @@
             is_native_commandbutton_picture_layout_member_name(*runtime_object, property_name) ||
             is_native_visual_picture_member_name(*runtime_object, property_name) ||
             is_native_visual_dragmode_member_name(*runtime_object, property_name) ||
+            is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_visual_dragicon_member_name(*runtime_object, property_name) ||
             is_native_visual_downpicture_member_name(*runtime_object, property_name) ||
             is_native_visual_disabledpicture_member_name(*runtime_object, property_name) ||
@@ -1404,6 +1413,7 @@
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_resizable_member_name(*runtime_object, property_name) ||
             is_native_movable_member_name(*runtime_object, property_name) ||
+            is_native_visual_anchor_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||

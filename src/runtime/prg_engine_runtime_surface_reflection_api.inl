@@ -301,6 +301,11 @@ bool is_native_visual_dragmode_member_name(const RuntimeOleObjectState& runtime_
     return native_visual_dragmode_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_anchor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_anchor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_dragicon_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_dragicon_member_name_matches(runtime_object, normalized_member_name);
@@ -696,6 +701,40 @@ void normalize_native_visual_dragmode_invariant(RuntimeOleObjectState& runtime_o
     const double value = value_as_number(drag_mode->second);
     drag_mode->second = make_number_value(
         std::isfinite(value) && value >= 0.0 ? static_cast<double>(std::llround(value)) : 0.0);
+}
+
+void normalize_native_visual_anchor_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_visual_anchor_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto anchor = runtime_object.properties.find("anchor");
+    if (anchor == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(anchor->second);
+    if (!std::isfinite(value) || value < 0.0 || value > 1023.0) {
+        anchor->second = make_number_value(0.0);
+        return;
+    }
+
+    const long long bits = std::llround(value);
+    const bool has_conflicting_border_bits =
+        ((bits & 1LL) != 0 && (bits & 16LL) != 0) ||
+        ((bits & 2LL) != 0 && (bits & 32LL) != 0) ||
+        ((bits & 4LL) != 0 && (bits & 64LL) != 0) ||
+        ((bits & 8LL) != 0 && (bits & 128LL) != 0);
+    const bool has_conflicting_horizontal_fixed_size =
+        (bits & 256LL) != 0 && (bits & (2LL | 8LL | 32LL | 128LL)) != 0;
+    const bool has_conflicting_vertical_fixed_size =
+        (bits & 512LL) != 0 && (bits & (1LL | 4LL | 16LL | 64LL)) != 0;
+    const bool valid = bits <= 1023LL &&
+                       !has_conflicting_border_bits &&
+                       !has_conflicting_horizontal_fixed_size &&
+                       !has_conflicting_vertical_fixed_size;
+    anchor->second = make_number_value(valid ? static_cast<double>(bits) : 0.0);
 }
 
 void normalize_native_list_control_array_range_invariants(RuntimeOleObjectState& runtime_object)

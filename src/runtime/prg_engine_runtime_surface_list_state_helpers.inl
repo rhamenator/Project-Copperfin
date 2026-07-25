@@ -102,6 +102,19 @@ bool native_visual_drag_runtime_object(const RuntimeOleObjectState& runtime_obje
     return is_native_visual_runtime_object(runtime_object);
 }
 
+bool native_visual_anchor_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_visual_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    // VFP documents Anchor for visual controls, not Form itself, and
+    // explicitly disregards it for ToolBar and Column objects. Column is not
+    // a visual runtime object; keep the other exclusions explicit here.
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class != "form" && normalized_base_class != "toolbar";
+}
+
 bool native_visual_button_state_picture_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;

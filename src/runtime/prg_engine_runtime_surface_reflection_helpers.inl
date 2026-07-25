@@ -650,6 +650,14 @@ bool native_visual_dragmode_member_name_matches(
            runtime_object.properties.contains("dragmode");
 }
 
+bool native_visual_anchor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "anchor" &&
+           native_visual_anchor_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("anchor");
+}
+
 bool native_visual_dragicon_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

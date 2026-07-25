@@ -230,6 +230,16 @@
                 runtime_object.properties["dragmode"] = make_number_value(0.0);
             }
 
+            if (is_native_visual_runtime_object(runtime_object) &&
+                normalized_base_class != "form" &&
+                normalized_base_class != "toolbar" &&
+                !runtime_object.properties.contains("anchor"))
+            {
+                // Headless contract: preserve the documented default without
+                // claiming host resize/reflow behavior.
+                runtime_object.properties["anchor"] = make_number_value(0.0);
+            }
+
             if (is_native_visual_drag_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("dragicon"))
             {
