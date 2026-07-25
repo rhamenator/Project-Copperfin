@@ -58,6 +58,7 @@ bool native_visual_caption_runtime_object(const RuntimeOleObjectState& runtime_o
            normalized_base_class == "commandbutton" ||
            normalized_base_class == "commandgroup" ||
            normalized_base_class == "form" ||
+           normalized_base_class == "header" ||
            normalized_base_class == "label" ||
            normalized_base_class == "optionbutton" ||
            normalized_base_class == "optiongroup" ||
