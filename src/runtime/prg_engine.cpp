@@ -775,6 +775,7 @@ namespace copperfin::runtime
             std::vector<std::string> popup_stack;
             std::map<std::string, std::map<long long, std::string>> popup_bar_prompts;
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
+            std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;
             std::vector<RuntimeDatabaseState> databases;
             std::string current_database_path;
         };
@@ -2650,6 +2651,28 @@ namespace copperfin::runtime
 
                 const auto popup = current_session_state().popup_bar_skip_states.find(popup_name);
                 if (popup == current_session_state().popup_bar_skip_states.end())
+                {
+                    return make_boolean_value(false);
+                }
+                const auto bar = popup->second.find(bar_number);
+                return make_boolean_value(bar != popup->second.end() && bar->second);
+            },
+            [this](const std::vector<PrgValue> &arguments) -> std::optional<PrgValue>
+            {
+                if (arguments.size() < 2U)
+                {
+                    return std::nullopt;
+                }
+
+                const std::string popup_name = normalize_identifier(value_as_string(arguments[0]));
+                const long long bar_number = static_cast<long long>(std::llround(value_as_number(arguments[1])));
+                if (popup_name.empty() || bar_number < 1LL)
+                {
+                    return std::nullopt;
+                }
+
+                const auto popup = current_session_state().popup_bar_mark_states.find(popup_name);
+                if (popup == current_session_state().popup_bar_mark_states.end())
                 {
                     return make_boolean_value(false);
                 }

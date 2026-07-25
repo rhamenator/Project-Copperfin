@@ -51,8 +51,16 @@ namespace copperfin::runtime_surface_tests
             "SET SKIP OF BAR 4 OF choices .F.\n"
             "lEnabledAfterSet = SKPBAR('choices', 4)\n"
             "SET SKIP OF BAR 4 OF choices .T.\n"
+            "SET MARK OF BAR 4 OF choices TO .T.\n"
+            "lMarked = MRKBAR('choices', 4)\n"
+            "lUnmarked = MRKBAR('choices', 2)\n"
+            "lMissingMark = MRKBAR('choices', 99)\n"
+            "SET MARK OF BAR 4 OF choices TO .F.\n"
+            "lUnmarkedAfterSet = MRKBAR('choices', 4)\n"
+            "SET MARK OF BAR 4 OF choices TO .T.\n"
             "DEFINE POPUP choices\n"
             "lRedefinedSkip = SKPBAR('choices', 4)\n"
+            "lRedefinedMark = MRKBAR('choices', 4)\n"
             "DEFINE BAR 1 OF choices PROMPT 'Replacement'\n"
             "nReplacementPopupCount = CNTBAR('choices')\n"
             "oList.Requery()\n"
@@ -121,6 +129,11 @@ namespace copperfin::runtime_surface_tests
         check("lmissingskip", "false");
         check("lenabledafterset", "false");
         check("lredefinedskip", "false");
+        check("lmarked", "true");
+        check("lunmarked", "false");
+        check("lmissingmark", "false");
+        check("lunmarkedafterset", "false");
+        check("lredefinedmark", "false");
         check("nreplacementcount", "1");
         check("nreplacementpopupcount", "1");
         check("creplacement", "Replacement");

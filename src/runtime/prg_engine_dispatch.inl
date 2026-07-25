@@ -2775,6 +2775,7 @@
                 {
                     current_session_state().popup_bar_prompts[popup_name].clear();
                     current_session_state().popup_bar_skip_states[popup_name].clear();
+                    current_session_state().popup_bar_mark_states[popup_name].clear();
                 }
                 return {};
             }
@@ -2806,6 +2807,7 @@
                         unquote_identifier(trim_copy(statement.expression)));
                     current_session_state().popup_bar_prompts.erase(popup_name);
                     current_session_state().popup_bar_skip_states.erase(popup_name);
+                    current_session_state().popup_bar_mark_states.erase(popup_name);
                 }
                 waiting_for_events = false;
                 events.push_back({.category = statement.identifier + ".release",
@@ -4654,6 +4656,34 @@
                                               .detail = "popup=" + popup_name +
                                                         " bar=" + std::to_string(static_cast<long long>(std::llround(*bar_number))) +
                                                         " disabled=" + (disabled ? "true" : "false"),
+                                              .location = statement.location});
+                            return {};
+                        }
+                    }
+                }
+
+                if (starts_with_insensitive(statement.expression, "MARK OF BAR "))
+                {
+                    const std::string body = trim_copy(statement.expression.substr(12U));
+                    const auto [bar_text, bar_tail] = split_first_word(body);
+                    const std::size_t of_position = find_keyword_top_level(bar_tail, "OF");
+                    if (of_position != std::string::npos)
+                    {
+                        const auto [popup_text, mark_tail] = split_first_word(
+                            trim_copy(bar_tail.substr(of_position + 2U)));
+                        const std::size_t to_position = find_keyword_top_level(mark_tail, "TO");
+                        const auto bar_number = try_parse_numeric_index_value(bar_text);
+                        const std::string popup_name = normalize_identifier(unquote_identifier(popup_text));
+                        if (to_position != std::string::npos && bar_number.has_value() && !popup_name.empty())
+                        {
+                            const bool marked = value_as_bool(evaluate_expression(
+                                trim_copy(mark_tail.substr(to_position + 2U)), frame));
+                            current_session_state().popup_bar_mark_states[popup_name][
+                                static_cast<long long>(std::llround(*bar_number))] = marked;
+                            events.push_back({.category = "runtime.set_mark",
+                                              .detail = "popup=" + popup_name +
+                                                        " bar=" + std::to_string(static_cast<long long>(std::llround(*bar_number))) +
+                                                        " marked=" + (marked ? "true" : "false"),
                                               .location = statement.location});
                             return {};
                         }

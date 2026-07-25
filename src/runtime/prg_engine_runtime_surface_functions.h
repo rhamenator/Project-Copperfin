@@ -380,6 +380,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_count_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_position_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_skip_callback,
+    const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_mark_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
 }  // namespace copperfin::runtime
