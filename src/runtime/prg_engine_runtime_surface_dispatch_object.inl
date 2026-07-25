@@ -310,6 +310,7 @@
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_resizable_member_name(*runtime_object, property_name) ||
+            is_native_movable_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
@@ -599,6 +600,7 @@
             is_native_grid_relativerow_member_name(*runtime_object, member_name) ||
             is_native_form_desktop_member_name(*runtime_object, member_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, member_name) ||
+            is_native_movable_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, member_name) ||
@@ -1401,6 +1403,7 @@
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_selectonentry_member_name(*runtime_object, property_name) ||
             is_native_resizable_member_name(*runtime_object, property_name) ||
+            is_native_movable_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||

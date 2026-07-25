@@ -370,6 +370,7 @@ int main()
     test_native_form_alwaysontop_defaults_mutates_and_stays_builtin();
     test_native_form_keypreview_defaults_mutate_and_stay_builtin();
     test_native_visual_fontcharset_defaults_mutate_and_stay_builtin();
+    test_native_movable_defaults_are_runtime_readonly_and_stay_builtin();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();

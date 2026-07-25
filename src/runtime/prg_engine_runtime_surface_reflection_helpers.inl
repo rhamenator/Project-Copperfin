@@ -1112,6 +1112,19 @@ bool native_resizable_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
 }
 
+bool native_movable_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "movable" ||
+        !runtime_object.properties.contains("movable")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" || normalized_base_class == "column";
+}
+
 bool native_controlsource_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

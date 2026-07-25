@@ -589,6 +589,14 @@
                 runtime_object.properties["resizable"] = make_boolean_value(false);
             }
 
+            if ((normalized_base_class == "form" ||
+                 normalized_base_class == "column") &&
+                !runtime_object.properties.contains("movable"))
+            {
+                // Headless contract: preserve the documented default without user-drag behavior.
+                runtime_object.properties["movable"] = make_boolean_value(true);
+            }
+
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("currentcontrol"))
             {

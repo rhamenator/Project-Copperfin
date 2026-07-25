@@ -1966,6 +1966,11 @@ bool is_native_resizable_member_name(const RuntimeOleObjectState& runtime_object
     return native_resizable_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_movable_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_movable_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_controlsource_member_name_matches(runtime_object, normalized_member_name);

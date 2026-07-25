@@ -8285,6 +8285,7 @@ namespace copperfin::runtime
                 !is_native_grid_relativerow_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_desktop_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_scrollbars_member_name(runtime_object, normalized_property_name) &&
+                !is_native_movable_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) &&
