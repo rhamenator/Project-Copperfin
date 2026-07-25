@@ -714,6 +714,9 @@ add_test(
     NAME test_studio_host_json
     COMMAND $<TARGET_FILE:test_studio_host_json> $<TARGET_FILE:copperfin_studio_host>
 )
+# This aggregate host contract exceeds the ordinary Windows test budget on the
+# hosted VFP9 machine; keep the default bounded timeout for all other tests.
+set_tests_properties(test_studio_host_json PROPERTIES TIMEOUT 600)
 
 add_executable(test_studio_host_toolbox_create_lifecycle
     test_studio_host_toolbox_create_lifecycle.cpp
