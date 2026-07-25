@@ -8,6 +8,7 @@ on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -15,6 +16,7 @@ on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 permissions:

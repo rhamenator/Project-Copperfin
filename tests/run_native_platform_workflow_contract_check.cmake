@@ -186,6 +186,7 @@ set(native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -193,6 +194,7 @@ set(native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
+      - ".github/workflows/**"
   workflow_dispatch:]=])
 set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
   push:
@@ -202,8 +204,7 @@ set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/native-validation-linux.yml"
-      - ".github/workflows/native-validation-macos.yml"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -211,8 +212,7 @@ set(windows_native_trigger_with_ignored_non_product_inputs [=[on:
       - "docs/**"
       - "**/*.md"
       - "**/*.txt"
-      - ".github/workflows/native-validation-linux.yml"
-      - ".github/workflows/native-validation-macos.yml"
+      - ".github/workflows/**"
   workflow_dispatch:]=])
 
 if(EXISTS "${legacy_workflow}")

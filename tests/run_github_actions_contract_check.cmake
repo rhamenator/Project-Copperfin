@@ -51,6 +51,36 @@ if(external_action_count EQUAL 0)
     message(FATAL_ERROR "No external GitHub Actions were found to audit")
 endif()
 
+set(non_product_trigger_filter [=[on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+]=])
+foreach(filtered_workflow IN ITEMS
+        .github/workflows/build-installers.yml
+        .github/workflows/build-vsix.yml
+        .github/workflows/managed-ui-validation-linux.yml
+        .github/workflows/security-supply-chain.yml)
+    file(READ "${SOURCE_DIR}/${filtered_workflow}" filtered_contents)
+    string(REPLACE "\r\n" "\n" filtered_contents "${filtered_contents}")
+    string(FIND "${filtered_contents}" "${non_product_trigger_filter}" filter_index)
+    if(filter_index EQUAL -1)
+        message(FATAL_ERROR
+            "${filtered_workflow} must ignore docs, text, and agent-channel-only changes")
+    endif()
+endforeach()
+
 file(GLOB workflow_files
     "${SOURCE_DIR}/.github/workflows/*.yml"
     "${SOURCE_DIR}/.github/workflows/*.yaml")
