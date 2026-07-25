@@ -624,6 +624,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
                 !object_path.empty() &&
                 trim_copy(value_or_empty(record, "PARENT")).empty()) {
                 model.root_object_path = object_path;
+                model.root_is_form = document.kind == studio::StudioAssetKind::form || baseclass == "form";
             }
         }
     }
@@ -751,11 +752,42 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 std::string build_xasset_bootstrap_source(
     const XAssetExecutableModel& model,
     bool include_read_events,
-    const std::string& execution_asset_path) {
+    const std::string& execution_asset_path,
+    bool bind_form_lifecycle) {
     std::ostringstream stream;
     stream << "* Copperfin generated xAsset bootstrap\n";
+
+    const bool has_form_lifecycle = bind_form_lifecycle &&
+        model.root_is_form &&
+        !model.root_object_path.empty() &&
+        !model.startup_routines.empty();
+    if (has_form_lifecycle)
+    {
+        // Packaged form execution needs VFP's method context so THIS, THISFORM,
+        // and native object dispatch resolve to the live form object.
+        stream << "DEFINE CLASS __cf_xasset_root AS form\n";
+        for (const auto& method : model.methods)
+        {
+            stream << "PROCEDURE " << method.routine_name << "\n";
+            if (!method.source_text.empty())
+            {
+                stream << method.source_text;
+                if (method.source_text.back() != '\n')
+                {
+                    stream << "\n";
+                }
+            }
+            stream << "ENDPROC\n";
+        }
+        stream << "ENDDEFINE\n";
+        stream << "LOCAL __cf_xasset_instance\n";
+        stream << "__cf_xasset_instance = CREATEOBJECT('__cf_xasset_root')\n";
+    }
+
     for (const auto& line : model.startup_lines) {
-        if (!execution_asset_path.empty() && starts_with_insensitive(line, "REPORT FORM ")) {
+        if (has_form_lifecycle && starts_with_insensitive(line, "DO ")) {
+            stream << "__cf_xasset_instance." << trim_copy(line.substr(3U)) << "()\n";
+        } else if (!execution_asset_path.empty() && starts_with_insensitive(line, "REPORT FORM ")) {
             stream << "REPORT FORM '" << execution_asset_path << "' PREVIEW\n";
         } else if (!execution_asset_path.empty() && starts_with_insensitive(line, "LABEL FORM ")) {
             stream << "LABEL FORM '" << execution_asset_path << "' PREVIEW\n";
@@ -767,10 +799,15 @@ std::string build_xasset_bootstrap_source(
         stream << "READ EVENTS\n";
     }
     for (const auto& line : model.shutdown_lines) {
-        stream << line << "\n";
+        if (has_form_lifecycle && starts_with_insensitive(line, "DO ")) {
+            stream << "__cf_xasset_instance." << trim_copy(line.substr(3U)) << "()\n";
+        } else {
+            stream << line << "\n";
+        }
     }
     stream << "RETURN\n";
 
+    // Keep free routines available to the existing action/event bridge.
     for (const auto& method : model.methods) {
         stream << "PROCEDURE " << method.routine_name << "\n";
         if (!method.source_text.empty()) {

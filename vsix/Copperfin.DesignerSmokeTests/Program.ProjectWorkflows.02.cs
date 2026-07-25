@@ -797,7 +797,7 @@ internal static partial class Program
         {
             if (Directory.Exists(extractionBaseRoot))
             {
-                Directory.Delete(extractionBaseRoot, recursive: true);
+                DeleteReadOnlyDirectoryTree(extractionBaseRoot);
             }
         }
         catch (IOException)
@@ -920,6 +920,11 @@ internal static partial class Program
                 "configured VFP9 zip discovery should surface invoice.frx during report/label asset enumeration");
             Expect(enumeratedReportAssets.Any(path => string.Equals(path, resolvedLabel, StringComparison.OrdinalIgnoreCase)),
                 "configured VFP9 zip discovery should surface cust.lbx during report/label asset enumeration");
+
+            DeleteReadOnlyDirectoryTree(extractionBaseRoot);
+            var repeatedResolvedLabel = TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx");
+            Expect(string.Equals(repeatedResolvedLabel, resolvedLabel, StringComparison.OrdinalIgnoreCase),
+                "configured VFP9 zip discovery should repeat after clearing read-only extracted entries");
         }
         finally
         {
@@ -930,7 +935,7 @@ internal static partial class Program
             {
                 if (Directory.Exists(extractionBaseRoot))
                 {
-                    Directory.Delete(extractionBaseRoot, recursive: true);
+                    DeleteReadOnlyDirectoryTree(extractionBaseRoot);
                 }
             }
             catch (IOException)

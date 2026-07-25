@@ -13,6 +13,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -628,10 +630,39 @@ internal static partial class Program
 
     private static string GetArchiveExtractionBaseRoot(string zipPath)
     {
+        var canonicalZipPath = Path.GetFullPath(zipPath);
+        byte[] pathBytes = Encoding.UTF8.GetBytes(canonicalZipPath);
+        byte[] pathHash;
+        using (var sha256 = SHA256.Create())
+        {
+            pathHash = sha256.ComputeHash(pathBytes);
+        }
+
+        var pathHashText = BitConverter.ToString(pathHash).Replace("-", string.Empty).ToLowerInvariant();
         return Path.Combine(
             Path.GetTempPath(),
             "CopperfinDesignerSmokeRealAssets",
-            Path.GetFileNameWithoutExtension(zipPath));
+            Path.GetFileNameWithoutExtension(zipPath) + "-" + pathHashText.Substring(0, 16));
+    }
+
+    private static void DeleteReadOnlyDirectoryTree(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath))
+        {
+            return;
+        }
+
+        foreach (var filePath in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(filePath, FileAttributes.Normal);
+        }
+
+        foreach (var nestedDirectoryPath in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
+        {
+            File.SetAttributes(nestedDirectoryPath, FileAttributes.Normal);
+        }
+
+        Directory.Delete(directoryPath, recursive: true);
     }
 
     private static void CreateArchiveEntry(ZipArchive archive, string entryPath, string content)

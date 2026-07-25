@@ -53,6 +53,7 @@ struct XAssetExecutableModel {
     bool startup_enters_event_loop = false;
     std::string asset_path;
     std::string root_object_path;
+    bool root_is_form = false;
     std::string activation_kind;
     std::string activation_target;
     std::string error;
@@ -70,6 +71,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
 std::string build_xasset_bootstrap_source(
     const XAssetExecutableModel& model,
     bool include_read_events,
-    const std::string& execution_asset_path = {});
+    const std::string& execution_asset_path = {},
+    bool bind_form_lifecycle = false);
 
 }  // namespace copperfin::runtime

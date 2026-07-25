@@ -32,7 +32,7 @@ void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
 void write_form_fixture(
     const fs::path& form_path,
     const fs::path& memo_path,
-    const std::string& method_source = "PROCEDURE Init\nRETURN\nENDPROC") {
+    const std::string& method_source = "PROCEDURE Init\nTHIS.SETALL('fontname', 'Tahoma')\nRETURN\nENDPROC") {
     constexpr std::size_t field_count = 3U;
     constexpr std::size_t header_length = 32U + (field_count * 32U) + 1U;
     constexpr std::size_t record_length = 1U + (field_count * 4U);
@@ -114,6 +114,8 @@ void test_dynamic_xasset_uses_verified_snapshot() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason != copperfin::runtime::DebugPauseReason::error,
            "dynamic xAsset should execute from its verified primary and memo snapshots");
+    expect(has_runtime_event(state.events, "prg.object.setall", "__cf_xasset_root.fontname:0"),
+           "dynamic xAsset form methods should invoke SetAll with a live THIS form context");
     expect(has_runtime_event(state.events, "form.open", form_path.string()),
            "dynamic xAsset should retain the logical asset path in runtime events");
     fs::remove_all(root, ignored);

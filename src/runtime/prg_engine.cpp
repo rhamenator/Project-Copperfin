@@ -9579,7 +9579,7 @@ namespace copperfin::runtime
             runtime_instance_id);
 
         const std::string bootstrap_source =
-            build_xasset_bootstrap_source(model, include_read_events, asset_path);
+            build_xasset_bootstrap_source(model, include_read_events, asset_path, true);
         struct ScopedXAssetBootstrapFileCleanup
         {
             std::filesystem::path path;
