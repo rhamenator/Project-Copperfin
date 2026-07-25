@@ -1277,3 +1277,4 @@ Read only what is needed for the chosen slice:
   The compile-time `COPPERFIN_TEST_LOCALE_DIR` fixture remains available for
   tests that need the repository catalogs; locale keys and machine contracts
   are unchanged.
+#4621 follow-up is implemented in the Windows deep-smoke harness: the secure RuntimePackage stage now sets `COPPERFIN_SECURITY_ROLE=build-engineer`, and XAsset/Report/Menu stages copy each VFP startup asset plus its `.sct`/`.vct`/`.frt`/`.mnt` sidecar into the declared package root before launching. This addresses harness-level security-role and missing-staged-asset failures reported by the Windows client; the broader exact-head Windows/Visual Studio gate remains open.

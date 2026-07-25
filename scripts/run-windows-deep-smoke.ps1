@@ -59,6 +59,36 @@ function New-SmokeRoot {
     return $root
 }
 
+function Stage-SmokeAsset {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourcePath,
+        [Parameter(Mandatory = $true)][string]$DestinationRoot
+    )
+
+    Require-File $SourcePath
+    $assetName = Split-Path -Leaf $SourcePath
+    $destinationPath = Join-Path $DestinationRoot $assetName
+    Copy-Item -LiteralPath $SourcePath -Destination $destinationPath -Force
+
+    $sidecarExtension = switch ([System.IO.Path]::GetExtension($SourcePath).ToLowerInvariant()) {
+        ".scx" { ".sct"; break }
+        ".vcx" { ".vct"; break }
+        ".frx" { ".frt"; break }
+        ".lbx" { ".lbt"; break }
+        ".mnx" { ".mnt"; break }
+        ".pjx" { ".pjt"; break }
+        default { $null }
+    }
+    if ($null -ne $sidecarExtension) {
+        $sourceSidecar = [System.IO.Path]::ChangeExtension($SourcePath, $sidecarExtension)
+        if (Test-Path -LiteralPath $sourceSidecar -PathType Leaf) {
+            Copy-Item -LiteralPath $sourceSidecar -Destination (Join-Path $DestinationRoot (Split-Path -Leaf $sourceSidecar)) -Force
+        }
+    }
+
+    return $destinationPath
+}
+
 function Write-DebugManifest {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -98,6 +128,8 @@ switch ($Stage) {
     "RuntimePackage" {
         Require-File $sampleProject
         $smokeRoot = New-SmokeRoot "runtime-smoke-validation"
+        # The secure build contract requires a role that includes build.execute.
+        $env:COPPERFIN_SECURITY_ROLE = "build-engineer"
         Invoke-Checked -FilePath $buildHostExe -ArgumentList @(
             "build", "--project", $sampleProject, "--output-dir", $smokeRoot,
             "--configuration", "debug", "--enable-security", "--emit-dotnet-launcher",
@@ -134,8 +166,9 @@ switch ($Stage) {
     "XAsset" {
         Require-File $booksForm
         $smokeRoot = New-SmokeRoot "xasset-debug-smoke"
+        $stagedBooksForm = Stage-SmokeAsset $booksForm $smokeRoot
         $manifestPath = Join-Path $smokeRoot "app.cfmanifest"
-        Write-DebugManifest $manifestPath "XASSETDEBUG" "E:\Project-Copperfin\xasset-smoke.pjx" $smokeRoot (Split-Path -Parent $booksForm) "books.scx" $booksForm
+        Write-DebugManifest $manifestPath "XASSETDEBUG" "E:\Project-Copperfin\xasset-smoke.pjx" $smokeRoot $smokeRoot (Split-Path -Leaf $stagedBooksForm) $stagedBooksForm
         Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
             "--manifest", $manifestPath, "--debug", "--debug-command", "continue",
             "--debug-command", "invoke:frmbooks.release"
@@ -144,8 +177,9 @@ switch ($Stage) {
     "Report" {
         Require-File $invoiceReport
         $smokeRoot = New-SmokeRoot "report-debug-smoke"
+        $stagedInvoiceReport = Stage-SmokeAsset $invoiceReport $smokeRoot
         $manifestPath = Join-Path $smokeRoot "app.cfmanifest"
-        Write-DebugManifest $manifestPath "REPORTDEBUG" "E:\Project-Copperfin\report-smoke.pjx" $smokeRoot (Split-Path -Parent $invoiceReport) "invoice.frx" $invoiceReport
+        Write-DebugManifest $manifestPath "REPORTDEBUG" "E:\Project-Copperfin\report-smoke.pjx" $smokeRoot $smokeRoot (Split-Path -Leaf $stagedInvoiceReport) $stagedInvoiceReport
         Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
             "--manifest", $manifestPath, "--debug", "--debug-command", "continue"
         )
@@ -153,8 +187,9 @@ switch ($Stage) {
     "Menu" {
         Require-File $menuFile
         $smokeRoot = New-SmokeRoot "menu-debug-smoke"
+        $stagedMenuFile = Stage-SmokeAsset $menuFile $smokeRoot
         $manifestPath = Join-Path $smokeRoot "app.cfmanifest"
-        Write-DebugManifest $manifestPath "MENUDEBUG" "E:\Project-Copperfin\menu-smoke.pjx" $smokeRoot (Split-Path -Parent $menuFile) "systray_shortcut.mnx" $menuFile
+        Write-DebugManifest $manifestPath "MENUDEBUG" "E:\Project-Copperfin\menu-smoke.pjx" $smokeRoot $smokeRoot (Split-Path -Leaf $stagedMenuFile) $stagedMenuFile
         Invoke-Checked -FilePath $runtimeHostExe -ArgumentList @(
             "--manifest", $manifestPath, "--debug", "--debug-command", "continue",
             "--debug-command", "select:shortcut.item1", "--debug-command", "select:shortcut.item3",

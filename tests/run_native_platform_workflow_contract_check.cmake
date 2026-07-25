@@ -482,6 +482,15 @@ endforeach()
 require_text("scripts/run-windows-deep-smoke.ps1"
     "[ValidateSet(\"RuntimePackage\", \"PrgDebugger\", \"XAsset\", \"Report\", \"Menu\")]"
     "shared Windows deep-smoke stage inventory")
+require_text("scripts/run-windows-deep-smoke.ps1"
+    "COPPERFIN_SECURITY_ROLE = \"build-engineer\""
+    "secure runtime-package smoke build role")
+require_text("scripts/run-windows-deep-smoke.ps1"
+    "function Stage-SmokeAsset"
+    "staged VFP asset smoke helper")
+require_text("scripts/run-windows-deep-smoke.ps1"
+    "ChangeExtension($SourcePath, $sidecarExtension)"
+    "VFP asset memo-sidecar staging")
 require_text("scripts/run-required-designer-smoke.ps1"
     "fixture-dependent skip(s)"
     "fixture-aware designer smoke launcher")

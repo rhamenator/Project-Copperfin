@@ -4666,3 +4666,4 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   that the object and memo-backed properties remain sourced from verified bytes.
   This closes the focused concurrent-swap regression gap without claiming that
   the broader exact-handle parent is complete.
+- 2026-07-25: Hardened the Windows deep-smoke package harness under #4621. Secure runtime-package validation now selects the explicit `build-engineer` role required by `build.execute`, and xAsset/report/menu stages copy their startup assets plus VFP memo sidecars under the declared package root before writing manifests. Source/debug path separation and package containment contracts remain unchanged.
