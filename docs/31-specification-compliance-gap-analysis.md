@@ -364,7 +364,8 @@ entries exist today: `AMEMBERS()`/`ACLASS()` and `PEMSTATUS()`/`GETPEM()`/
 `SETPEM()`/`ADDPROPERTY()`/`REMOVEPROPERTY()` (both in
 `prg_engine_runtime_surface_dispatch_object.inl`, host-capability fallbacks),
 `CURSORTOXML()`/`XMLTOCURSOR()` (same file), `AFONT()` (`prg_engine_variables.inl`,
-deliberate portability fallback returning a fixed headless font set), generated
+host-aware platform font-directory discovery with a fixed headless fallback when
+no host fonts are found), generated
 runtime bridge exports (`runtime_pipeline_library_export_manifest.cpp`, a
 deliberate interop boundary), and unsupported optimizer/query shapes
 (`index_seek_optimizer.h`/`rushmore_planning.h`, a deliberate semantic boundary).
