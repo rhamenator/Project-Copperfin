@@ -130,16 +130,21 @@ function(validate_artifact_upload_paths relative_path)
 endfunction()
 
 function(check_caller relative_path workflow_name platform runner check_name)
-    require_regex("${relative_path}"
-        "^name:[ \t]*${workflow_name}[ \t]*\n"
-        "the stable top-level name '${workflow_name}'")
-
-    require_text("${relative_path}" [=[on:
+    set(trigger_contract [=[on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:]=]
+  workflow_dispatch:]=])
+    if(ARGC GREATER 5)
+        set(trigger_contract "${ARGV5}")
+    endif()
+
+    require_regex("${relative_path}"
+        "^name:[ \t]*${workflow_name}[ \t]*\n"
+        "the stable top-level name '${workflow_name}'")
+
+    require_text("${relative_path}" "${trigger_contract}"
         "push/pull_request main and workflow_dispatch triggers")
     require_text("${relative_path}" [=[permissions:
   contents: read]=]
@@ -199,7 +204,23 @@ check_caller(
     "Windows Native Validation"
     "windows"
     "windows-latest"
-    "Windows MSVC")
+    "Windows MSVC"
+    [=[on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".agent-channel/**"
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.txt"
+  workflow_dispatch:]=])
 
 set(release_workflow ".github/workflows/native-release-readiness.yml")
 require_text("${release_workflow}" [=[name: Native Release Readiness
