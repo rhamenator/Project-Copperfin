@@ -39,6 +39,8 @@ internal sealed class StudioMainForm : Form
     private Rectangle? terminalFloatingBounds;
     private bool shellTransitionInProgress;
     private bool formClosing;
+    private bool commandWindowFloatingState;
+    private bool terminalWindowFloatingState;
 
     public StudioMainForm(
         CopperfinLocalization? localization = null,
@@ -234,6 +236,7 @@ internal sealed class StudioMainForm : Form
     {
         if (!visible && commandFloatingForm is not null)
         {
+            commandWindowFloatingState = false;
             DockCommandWindow(addPage: false);
         }
 
@@ -248,6 +251,7 @@ internal sealed class StudioMainForm : Form
     {
         if (!visible && terminalFloatingForm is not null)
         {
+            terminalWindowFloatingState = false;
             DockTerminalWindow(addPage: false);
         }
 
@@ -354,6 +358,8 @@ internal sealed class StudioMainForm : Form
             state.TerminalWindowFloatingY,
             state.TerminalWindowFloatingWidth,
             state.TerminalWindowFloatingHeight);
+        commandWindowFloatingState = state.CommandWindowFloating;
+        terminalWindowFloatingState = state.TerminalWindowFloating;
         commandWindowMenuItem.Checked = state.CommandWindowVisible;
         terminalWindowMenuItem.Checked = state.TerminalWindowVisible;
 
@@ -392,8 +398,8 @@ internal sealed class StudioMainForm : Form
             TerminalWindowVisible = IsTerminalWindowVisible,
             SelectedToolWindow = SelectedToolWindowKey,
             SplitterDistance = NormalizeSplitterDistance(shellSplitContainer.SplitterDistance),
-            CommandWindowFloating = IsCommandWindowFloating,
-            TerminalWindowFloating = IsTerminalWindowFloating,
+            CommandWindowFloating = commandWindowFloatingState,
+            TerminalWindowFloating = terminalWindowFloatingState,
             CommandWindowFloatingX = commandBounds?.X,
             CommandWindowFloatingY = commandBounds?.Y,
             CommandWindowFloatingWidth = commandBounds?.Width,
@@ -499,21 +505,27 @@ internal sealed class StudioMainForm : Form
         {
             if (!IsCommandWindowVisible || commandFloatingForm is not null)
             {
+                if (commandFloatingForm is not null)
+                {
+                    commandWindowFloatingState = true;
+                }
                 return;
             }
 
+            commandWindowFloatingState = true;
             selectedToolWindowKey = StudioShellLayoutState.CommandWindowKey;
             RemoveToolWindowPage(commandWindowPage);
             commandFloatingForm = CreateFloatingToolWindow(
                 localization.Text("VSIX.CommandWindow.Title"),
                 commandWindowControl,
-                () => DockCommandWindow(addPage: true),
+                () => SetCommandWindowFloating(false),
                 commandFloatingBounds);
             SetMenuChecked(floatCommandWindowMenuItem, true);
             commandFloatingForm.Show(this);
             return;
         }
 
+        commandWindowFloatingState = false;
         DockCommandWindow(addPage: true);
     }
 
@@ -523,21 +535,27 @@ internal sealed class StudioMainForm : Form
         {
             if (!IsTerminalWindowVisible || terminalFloatingForm is not null)
             {
+                if (terminalFloatingForm is not null)
+                {
+                    terminalWindowFloatingState = true;
+                }
                 return;
             }
 
+            terminalWindowFloatingState = true;
             selectedToolWindowKey = StudioShellLayoutState.TerminalWindowKey;
             RemoveToolWindowPage(terminalWindowPage);
             terminalFloatingForm = CreateFloatingToolWindow(
                 localization.Text("VSIX.TerminalWindow.Title"),
                 terminalWindowControl,
-                () => DockTerminalWindow(addPage: true),
+                () => SetTerminalWindowFloating(false),
                 terminalFloatingBounds);
             SetMenuChecked(floatTerminalWindowMenuItem, true);
             terminalFloatingForm.Show(this);
             return;
         }
 
+        terminalWindowFloatingState = false;
         DockTerminalWindow(addPage: true);
     }
 
@@ -563,7 +581,7 @@ internal sealed class StudioMainForm : Form
         form.Controls.Add(control);
         form.FormClosing += (_, e) =>
         {
-            if (formClosing)
+            if (formClosing || e.CloseReason == CloseReason.FormOwnerClosing)
             {
                 return;
             }
