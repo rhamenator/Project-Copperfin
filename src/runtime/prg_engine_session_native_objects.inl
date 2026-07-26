@@ -7,7 +7,7 @@
         {
             const std::string normalized_base_class =
                 normalize_identifier(trim_copy(runtime_object.base_class_name));
-            const bool is_header_or_column_font_object =
+            const bool is_header_or_column_object =
                 normalized_base_class == "column" || normalized_base_class == "header";
 
             if (is_native_visual_runtime_object(runtime_object) &&
@@ -44,14 +44,14 @@
                 runtime_object.properties["enabled"] = make_boolean_value(true);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("mousepointer"))
             {
                 runtime_object.properties["mousepointer"] = make_number_value(0.0);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontname"))
             {
@@ -60,7 +60,7 @@
                 runtime_object.properties["fontname"] = make_string_value("Arial");
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontcharset"))
             {
@@ -125,7 +125,7 @@
                 runtime_object.properties["dynamicfontoutline"] = make_string_value("");
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontsize"))
             {
@@ -134,42 +134,42 @@
                 runtime_object.properties["fontsize"] = make_number_value(10.0);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontbold"))
             {
                 runtime_object.properties["fontbold"] = make_boolean_value(false);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontitalic"))
             {
                 runtime_object.properties["fontitalic"] = make_boolean_value(false);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontunderline"))
             {
                 runtime_object.properties["fontunderline"] = make_boolean_value(false);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontstrikethru"))
             {
                 runtime_object.properties["fontstrikethru"] = make_boolean_value(false);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontoutline"))
             {
                 runtime_object.properties["fontoutline"] = make_boolean_value(false);
             }
 
-            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontshadow"))
             {

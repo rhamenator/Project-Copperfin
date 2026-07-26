@@ -683,7 +683,10 @@ void normalize_native_listbox_autohidescrollbar_invariant(RuntimeOleObjectState&
 
 void normalize_native_visual_mousepointer_invariant(RuntimeOleObjectState& runtime_object)
 {
-    if (!is_native_visual_runtime_object(runtime_object)) {
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    if (!is_native_visual_runtime_object(runtime_object) &&
+        normalized_base_class != "column" && normalized_base_class != "header") {
         return;
     }
 
