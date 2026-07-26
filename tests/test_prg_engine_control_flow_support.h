@@ -236,6 +236,7 @@ void test_quit_closes_open_database_and_runtime_handles();
 
 // ==== Routine call and parameter-passing tests (DO/CALL with parameters, by-reference) ====
 void test_do_with_parameters_binds_arguments_in_called_routine();
+void test_proc_abbreviation_registers_same_file_do_routine();
 void test_call_with_parameters_binds_arguments_in_called_routine();
 void test_unsupplied_parameters_initialize_to_logical_false();
 void test_parameter_defaults_use_heap_backed_expression_continuations();

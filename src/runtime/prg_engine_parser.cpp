@@ -1788,6 +1788,7 @@ Program parse_program_impl(
                     ? NativeMemberVisibility::protected_member
                     : NativeMemberVisibility::hidden_member;
                 if (starts_with_insensitive(remainder, "PROCEDURE ") ||
+                    starts_with_insensitive(remainder, "PROC ") ||
                     starts_with_insensitive(remainder, "FUNCTION ")) {
                     routine_line = remainder;
                 } else if (!remainder.empty()) {
@@ -1802,6 +1803,7 @@ Program parse_program_impl(
             }
         }
         if (starts_with_insensitive(routine_line, "PROCEDURE ") ||
+            starts_with_insensitive(routine_line, "PROC ") ||
             starts_with_insensitive(routine_line, "FUNCTION ")) {
             finalize_open_routine(line_number);
             const auto separator = routine_line.find(' ');

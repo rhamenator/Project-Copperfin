@@ -43,6 +43,41 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_proc_abbreviation_registers_same_file_do_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_proc_abbreviation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "proc_abbreviation.prg";
+    write_text(
+        main_path,
+        "PUBLIC cleanup_result\n"
+        "DO cleanup WITH 6\n"
+        "RETURN\n"
+        "PROC cleanup\n"
+        "LPARAMETERS value\n"
+        "cleanup_result = value + 1\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PROC abbreviation same-file DO script should complete: " + state.message);
+
+    const auto result = state.globals.find("cleanup_result");
+    expect(result != state.globals.end(), "PROC routine should assign the caller-visible result");
+    if (result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(result->second) == "7",
+               "same-file DO should dispatch to a PROC abbreviation routine");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_call_with_parameters_binds_arguments_in_called_routine() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_with_parameters";
