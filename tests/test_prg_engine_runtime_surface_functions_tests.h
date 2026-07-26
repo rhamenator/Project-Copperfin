@@ -577,5 +577,5 @@ namespace copperfin::runtime_surface_tests
     void test_scripting_dictionary_collection_methods();
     void test_newobject_preserves_library_and_server_targeting();
     void test_getobject_reuses_existing_class_and_source_targets();
-    void test_reportlistener_getconfigtable_resolves_existing_casefolded_table_only_for_report_listeners();
+    void test_reportlistener_configuration_contracts_are_scoped_and_deterministic();
 }

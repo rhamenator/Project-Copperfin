@@ -2,7 +2,7 @@
 
 namespace copperfin::runtime_surface_tests
 {
-    void test_reportlistener_getconfigtable_resolves_existing_casefolded_table_only_for_report_listeners()
+    void test_reportlistener_configuration_contracts_are_scoped_and_deterministic()
     {
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() /
@@ -12,7 +12,19 @@ namespace copperfin::runtime_surface_tests
         fs::create_directories(temp_root);
 
         const fs::path config_path = temp_root / "_reportoutputconfig.dbf";
-        write_text(config_path, "fixture");
+        const auto config_create = copperfin::vfp::create_dbf_table_file(
+            config_path.string(),
+            {
+                {.name = "OBJTYPE", .type = 'I', .length = 4U},
+                {.name = "OBJCODE", .type = 'I', .length = 4U},
+                {.name = "OBJNAME", .type = 'V', .length = 60U},
+                {.name = "OBJVALUE", .type = 'V', .length = 60U},
+                {.name = "OBJINFO", .type = 'M', .length = 4U}
+            },
+            {});
+        expect(config_create.ok, "ReportListener configuration table fixture should be writable");
+        const fs::path unsupported_path = temp_root / "unsupported.dbf";
+        write_text(unsupported_path, "not a DBF table");
         const fs::path main_path = temp_root / "reportlistener_config.prg";
         write_text(
             main_path,
@@ -25,9 +37,25 @@ namespace copperfin::runtime_surface_tests
             "oListener = CREATEOBJECT('ReportListenerShim')\n"
             "cConfig = oListener.GetConfigTable()\n"
             "cProperty = oListener.ConfigurationTable\n"
+            "lValid = oListener.VerifyConfigTable('OutputConfig')\n"
+            "lValidHadError = oListener.HadError\n"
+            "oMissing = CREATEOBJECT('ReportListenerShim')\n"
+            "oMissing.ConfigurationTable = 'missing.dbf'\n"
+            "lMissing = oMissing.VerifyConfigTable('OutputConfig')\n"
+            "lMissingHadError = oMissing.HadError\n"
+            "oUnsupported = CREATEOBJECT('ReportListenerShim')\n"
+            "oUnsupported.ConfigurationTable = 'unsupported.dbf'\n"
+            "lUnsupported = oUnsupported.VerifyConfigTable('OutputConfig')\n"
+            "lUnsupportedHadError = oUnsupported.HadError\n"
             "oPlain = CREATEOBJECT('PlainShim')\n"
             "cPlainConfig = oPlain.GetConfigTable()\n"
             "cPlainProperty = oPlain.ConfigurationTable\n"
+            "lPlainVerify = .T.\n"
+            "TRY\n"
+            "    lPlainVerify = oPlain.VerifyConfigTable('OutputConfig')\n"
+            "CATCH\n"
+            "    lPlainVerify = .F.\n"
+            "ENDTRY\n"
             "RETURN\n"
             "DEFINE CLASS ReportListenerShim AS ReportListener\n"
             "    PROCEDURE Init\n"
@@ -80,8 +108,23 @@ namespace copperfin::runtime_surface_tests
         const auto local_do_type = state.globals.find("clocaldotype");
         const auto local_do_config = state.globals.find("clocaldoconfig");
         const auto property = state.globals.find("cproperty");
+        const auto valid = state.globals.find("lvalid");
+        const auto valid_had_error = state.globals.find("lvalidhaderror");
+        const auto missing = state.globals.find("lmissing");
+        const auto missing_had_error = state.globals.find("lmissinghaderror");
+        const auto unsupported = state.globals.find("lunsupported");
+        const auto unsupported_had_error = state.globals.find("lunsupportedhaderror");
         const auto plain_config = state.globals.find("cplainconfig");
         const auto plain_property = state.globals.find("cplainproperty");
+        const auto plain_verify = state.globals.find("lplainverify");
+        const auto is_true = [&state](const auto iterator) {
+            return iterator != state.globals.end() &&
+                iterator->second.kind == copperfin::runtime::PrgValueKind::boolean &&
+                iterator->second.boolean_value;
+        };
+        const auto is_false = [&state, &is_true](const auto iterator) {
+            return iterator != state.globals.end() && !is_true(iterator);
+        };
         expect(config != state.globals.end(), "ReportListener GetConfigTable result should be present");
         std::string global_names;
         for (const auto &[name, value] : state.globals)
@@ -113,8 +156,29 @@ namespace copperfin::runtime_surface_tests
                    "local DO object assignment should preserve the ReportListener reference");
         }
         expect(property != state.globals.end(), "ReportListener ConfigurationTable should be present");
+        expect(is_true(valid),
+               "valid ReportListener configuration table should verify");
+        expect(is_false(valid_had_error),
+               "valid ReportListener configuration table should clear HadError");
+        expect(is_false(missing),
+               "missing ReportListener configuration table should fail verification");
+        expect(is_true(missing_had_error),
+               "missing ReportListener configuration table should set HadError");
+        expect(is_false(unsupported),
+               "unsupported ReportListener configuration table should fail verification");
+        expect(is_true(unsupported_had_error),
+               "unsupported ReportListener configuration table should set HadError");
         expect(plain_config != state.globals.end(), "non-ReportListener method result should be present");
         expect(plain_property != state.globals.end(), "non-ReportListener ConfigurationTable result should be present");
+        expect(is_false(plain_verify), "non-ReportListener objects should not verify configuration tables");
+        const bool plain_verify_event = std::any_of(
+            state.events.begin(),
+            state.events.end(),
+            [](const copperfin::runtime::RuntimeEvent &event) {
+                return event.category == "prg.object.reportlistener.verifyconfigtable" &&
+                    event.detail.find("PlainShim:") == 0U;
+            });
+        expect(!plain_verify_event, "non-ReportListener objects should not emit ReportListener verification events");
         if (config != state.globals.end() && property != state.globals.end())
         {
             const fs::path expected = fs::weakly_canonical(config_path);

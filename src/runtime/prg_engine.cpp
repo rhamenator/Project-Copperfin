@@ -3143,6 +3143,73 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             return make_string_value(config_path);
         }
+        if (is_report_listener_object && leaf == "verifyconfigtable")
+        {
+            const auto configured = target_object->properties.find("configurationtable");
+            const std::string configured_path = configured == target_object->properties.end()
+                ? std::string{}
+                : trim_copy(value_as_string(configured->second));
+            std::string result_code = "missing";
+            bool valid = false;
+            if (!configured_path.empty())
+            {
+                const auto requested_path = copperfin::platform::path_from_utf8_string(configured_path);
+                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(requested_path);
+                if (!resolution.ambiguous && resolution.path.has_value())
+                {
+                    const auto table = copperfin::vfp::parse_dbf_table_from_file(
+                        copperfin::platform::path_to_utf8_string(*resolution.path),
+                        std::numeric_limits<std::size_t>::max());
+                    if (table.ok)
+                    {
+                        const auto has_exactly_one_field = [&](const std::string &name) {
+                            const std::string normalized_name = normalize_identifier(name);
+                            return std::count_if(
+                                       table.table.fields.begin(),
+                                       table.table.fields.end(),
+                                       [&](const copperfin::vfp::DbfFieldDescriptor &field)
+                                       {
+                                           return normalize_identifier(field.name) == normalized_name;
+                                       }) == 1;
+                        };
+                        const auto field_matches = [&](const std::string &name, const std::string &types) {
+                            const std::string normalized_name = normalize_identifier(name);
+                            const auto field = std::find_if(
+                                table.table.fields.begin(),
+                                table.table.fields.end(),
+                                [&](const copperfin::vfp::DbfFieldDescriptor &candidate)
+                                {
+                                    return normalize_identifier(candidate.name) == normalized_name;
+                                });
+                            return field != table.table.fields.end() &&
+                                types.find(field->type) != std::string::npos;
+                        };
+                        valid = has_exactly_one_field("OBJTYPE") &&
+                            has_exactly_one_field("OBJCODE") &&
+                            has_exactly_one_field("OBJNAME") &&
+                            has_exactly_one_field("OBJVALUE") &&
+                            has_exactly_one_field("OBJINFO") &&
+                            field_matches("OBJTYPE", "IN") &&
+                            field_matches("OBJCODE", "IN") &&
+                            field_matches("OBJNAME", "CV") &&
+                            field_matches("OBJVALUE", "CV") &&
+                            field_matches("OBJINFO", "MCV");
+                        result_code = valid ? "valid" : "unsupported";
+                    }
+                    else
+                    {
+                        result_code = "unsupported";
+                    }
+                }
+            }
+            target_object->properties["haderror"] = make_boolean_value(!valid);
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.reportlistener.verifyconfigtable",
+                              .detail = target_object->prog_id + ":" + result_code,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_boolean_value(valid);
+        }
         std::function<bool(const std::vector<PrgValue>&)> before_list_control_move;
         if (leaf == "moveitem")
         {
