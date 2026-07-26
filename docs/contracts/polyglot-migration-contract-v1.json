@@ -1,0 +1,46 @@
+{
+  "contract_version": "1.0",
+  "protocol_version": "1.0.0",
+  "capability_id": "reports.invoice.render",
+  "input": {
+    "schema_id": "copperfin.reports.invoice.request.v1",
+    "content_type": "application/json"
+  },
+  "output": {
+    "schema_id": "copperfin.reports.invoice.result.v1",
+    "content_type": "application/json"
+  },
+  "error": {
+    "schema_id": "copperfin.polyglot.error.v1",
+    "content_type": "application/json"
+  },
+  "invocation": {
+    "decision": "require-audit",
+    "reason_code": "policy.user_selected_modernization",
+    "require_audit": true
+  },
+  "budget": {
+    "timeout_ms": 5000,
+    "latency_budget_ms": 4500,
+    "cancellation": "propagate"
+  },
+  "fallback": {
+    "mode": "fallback-native",
+    "max_attempts": 1
+  },
+  "reproducibility": {
+    "runtime": "dotnet",
+    "runtime_version": "8.0.0",
+    "artifact_sha256": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "dependency_lock_sha256": "sha256:abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+  },
+  "observability": {
+    "event_namespace": "copperfin.polyglot",
+    "events": [
+      "route.selected",
+      "parity.mismatch",
+      "fallback.reason",
+      "invocation.outcome"
+    ]
+  }
+}

@@ -278,6 +278,13 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_launcher_trust_provisioning_contract_check.cmake
 )
 
+add_test(
+    NAME test_polyglot_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_contract_check.cmake
+)
+
 if(UNIX)
     add_test(
         NAME test_validate_posix_build_type

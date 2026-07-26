@@ -1,0 +1,11 @@
+{
+  "envelope_version": "1.0",
+  "kind": "success",
+  "capability_id": "reports.invoice.render",
+  "correlation_id": "example-correlation-001",
+  "protocol_version": "1.0.0",
+  "payload": {
+    "artifact_id": "invoice-preview-001",
+    "content_type": "application/pdf"
+  }
+}

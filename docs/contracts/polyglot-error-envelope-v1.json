@@ -1,0 +1,12 @@
+{
+  "envelope_version": "1.0",
+  "kind": "error",
+  "capability_id": "reports.invoice.render",
+  "correlation_id": "example-correlation-002",
+  "protocol_version": "1.0.0",
+  "error": {
+    "code": "bridge.timeout",
+    "message": "The candidate invocation exceeded its execution budget.",
+    "retryable": true
+  }
+}

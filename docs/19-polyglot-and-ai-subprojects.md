@@ -23,6 +23,30 @@ Current maturity:
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
+## Migration Contract v1
+
+Polyglot modernization uses an artifact-first contract boundary. A candidate capability
+must describe its input, output, error, invocation decision, execution budget, fallback
+mode, reproducibility hashes, and observability events before a runtime route is exposed.
+The canonical machine-readable schema and examples are maintained at:
+
+- `docs/contracts/polyglot-migration-contract-v1.schema.json`
+- `docs/contracts/polyglot-migration-contract-v1.json`
+- `docs/contracts/polyglot-success-envelope-v1.json`
+- `docs/contracts/polyglot-error-envelope-v1.json`
+
+The contract version uses `1.x`: changing the major version means an incompatible
+contract and requires a new capability contract; additive backward-compatible fields
+advance the minor version; protocol corrections that do not change compatibility use
+the protocol patch component. The protocol version remains a semantic `major.minor.patch`
+value and is separate from the contract version.
+
+Success and error envelopes keep machine fields stable: envelope kind, capability ID,
+correlation ID, protocol version, error code, retryability, and payload structure are
+not localized. Human-readable error messages are display text and must use the normal
+localization path at the host boundary. This contract slice defines validation and
+examples only; it does not route .NET, Python, R, AI, or MCP execution.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.

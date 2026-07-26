@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://project-copperfin.dev/contracts/polyglot-migration-contract-v1.schema.json",
+  "title": "Copperfin Polyglot Migration Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "protocol_version",
+    "capability_id",
+    "input",
+    "output",
+    "error",
+    "invocation",
+    "budget",
+    "fallback",
+    "reproducibility",
+    "observability"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$"
+    },
+    "protocol_version": {
+      "$ref": "#/$defs/semanticVersion"
+    },
+    "capability_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]*$"
+    },
+    "input": {
+      "$ref": "#/$defs/typedEnvelope"
+    },
+    "output": {
+      "$ref": "#/$defs/typedEnvelope"
+    },
+    "error": {
+      "$ref": "#/$defs/typedEnvelope"
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reason_code", "require_audit"],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": ["allow", "deny", "require-audit"]
+        },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "require_audit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeout_ms", "latency_budget_ms", "cancellation"],
+      "properties": {
+        "timeout_ms": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "latency_budget_ms": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "cancellation": {
+          "type": "string",
+          "enum": ["propagate", "ignore"]
+        }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["fail-fast", "fallback-native", "fallback-artifact"]
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "runtime_version", "artifact_sha256", "dependency_lock_sha256"],
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "runtime_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "dependency_lock_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event_namespace", "events"],
+      "properties": {
+        "event_namespace": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "events": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semanticVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "typedEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "content_type"],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "content_type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9.+-]*/[a-z][a-z0-9.+-]*$"
+        }
+      }
+    },
+    "successEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["envelope_version", "kind", "capability_id", "correlation_id", "protocol_version", "payload"],
+      "properties": {
+        "envelope_version": {"const": "1.0"},
+        "kind": {"const": "success"},
+        "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"},
+        "correlation_id": {"type": "string", "minLength": 1},
+        "protocol_version": {"$ref": "#/$defs/semanticVersion"},
+        "payload": {"type": "object"}
+      }
+    },
+    "errorEnvelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["envelope_version", "kind", "capability_id", "correlation_id", "protocol_version", "error"],
+      "properties": {
+        "envelope_version": {"const": "1.0"},
+        "kind": {"const": "error"},
+        "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"},
+        "correlation_id": {"type": "string", "minLength": 1},
+        "protocol_version": {"$ref": "#/$defs/semanticVersion"},
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message", "retryable"],
+          "properties": {
+            "code": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"},
+            "message": {"type": "string"},
+            "retryable": {"type": "boolean"}
+          }
+        }
+      }
+    }
+  }
+}
