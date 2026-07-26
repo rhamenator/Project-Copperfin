@@ -2209,76 +2209,70 @@ RuntimePackagePlan create_runtime_package_plan(
     }
 
     std::unordered_set<std::string> known_asset_sources;
-    std::vector<std::string> prg_sources;
+    std::vector<std::filesystem::path> dependency_scan_sources;
+    const auto is_class_library_source = [](const std::string& source) {
+        return lowercase_copy(trim_copy(
+            copperfin::platform::path_to_utf8_string(
+                copperfin::platform::path_from_utf8_string(source).extension()))) == ".vcx";
+    };
     for (const auto& asset : plan.assets) {
         known_asset_sources.insert(lowercase_copy(asset.source_path));
-        if (is_prg_path(asset.source_path) && asset.exists) {
-            prg_sources.push_back(asset.source_path);
+        if (asset.exists && (is_prg_path(asset.source_path) || is_class_library_source(asset.source_path))) {
+            dependency_scan_sources.push_back(
+                copperfin::platform::path_from_utf8_string(asset.source_path));
         }
     }
     const std::filesystem::path project_root =
         copperfin::platform::path_from_utf8_string(document.path).parent_path();
-    for (const auto& prg_source : prg_sources) {
-        for (const auto& include_source : discover_prg_include_source_paths(
-                 copperfin::platform::path_from_utf8_string(prg_source))) {
-            const std::string source = copperfin::platform::path_to_utf8_string(
-                include_source.lexically_normal());
-            if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
-                continue;
+    const auto enqueue_dependency = [&](const std::filesystem::path& candidate,
+                                        const char* type_title) {
+        const std::filesystem::path source_path = candidate.lexically_normal();
+        const std::filesystem::path relative = source_path.lexically_relative(project_root);
+        bool escapes_project = relative.empty() || relative.is_absolute();
+        for (const auto& component : relative) {
+            if (component == "..") {
+                escapes_project = true;
+                break;
             }
-
-            const std::filesystem::path relative = include_source.lexically_relative(project_root);
-            bool escapes_project = relative.empty() || relative.is_absolute();
-            for (const auto& component : relative) {
-                if (component == "..") {
-                    escapes_project = true;
-                    break;
-                }
-            }
-            if (escapes_project) {
-                continue;
-            }
-
-            RuntimePackageAsset dependency;
-            dependency.record_index = plan.assets.size();
-            dependency.source_path = source;
-            dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
-            dependency.staged_path = copperfin::platform::path_to_utf8_string(
-                (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
-            dependency.type_title = "PRG Include";
-            dependency.exists = true;
-            plan.assets.push_back(std::move(dependency));
+        }
+        if (escapes_project) {
+            return;
         }
 
-        for (const auto& library_source : discover_prg_literal_library_source_paths(
-                 copperfin::platform::path_from_utf8_string(prg_source))) {
-            const std::string source = copperfin::platform::path_to_utf8_string(
-                library_source.lexically_normal());
-            if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
-                continue;
-            }
+        const std::string source = copperfin::platform::path_to_utf8_string(source_path);
+        if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
+            return;
+        }
 
-            const std::filesystem::path relative = library_source.lexically_relative(project_root);
-            bool escapes_project = relative.empty() || relative.is_absolute();
-            for (const auto& component : relative) {
-                if (component == "..") {
-                    escapes_project = true;
-                    break;
-                }
-            }
-            if (escapes_project) {
-                continue;
-            }
+        RuntimePackageAsset dependency;
+        dependency.record_index = plan.assets.size();
+        dependency.source_path = source;
+        dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
+        dependency.staged_path = copperfin::platform::path_to_utf8_string(
+            (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
+        dependency.type_title = type_title;
+        dependency.exists = true;
+        plan.assets.push_back(std::move(dependency));
+        if (is_prg_path(source) || is_class_library_source(source)) {
+            dependency_scan_sources.push_back(source_path);
+        }
+    };
 
-            RuntimePackageAsset dependency;
-            dependency.record_index = plan.assets.size();
-            dependency.source_path = source;
-            dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
-            dependency.staged_path = copperfin::platform::path_to_utf8_string(
-                (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
-            dependency.type_title = "PRG Runtime Dependency";
-            dependency.exists = true;
-            plan.assets.push_back(std::move(dependency));
+    for (std::size_t source_index = 0U;
+         source_index < dependency_scan_sources.size();
+         ++source_index) {
+        const auto& source = dependency_scan_sources[source_index];
+        if (is_prg_path(copperfin::platform::path_to_utf8_string(source))) {
+            for (const auto& include_source : discover_prg_include_source_paths(source)) {
+                enqueue_dependency(include_source, "PRG Include");
+            }
+            for (const auto& library_source : discover_prg_literal_library_source_paths(source)) {
+                enqueue_dependency(library_source, "PRG Runtime Dependency");
+            }
+        } else if (is_class_library_source(copperfin::platform::path_to_utf8_string(source))) {
+            for (const auto& library_source : discover_vcx_literal_library_source_paths(source)) {
+                enqueue_dependency(library_source, "xAsset Runtime Dependency");
+            }
         }
     }
 

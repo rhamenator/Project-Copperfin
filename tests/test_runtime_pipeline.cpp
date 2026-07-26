@@ -156,6 +156,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_runtime_package_stages_recursive_prg_include_dependencies();
     test_runtime_package_stages_unicode_prg_include_dependencies();
     test_runtime_package_stages_literal_newobject_library_dependencies();
+    test_runtime_package_stages_nested_vcx_newobject_dependencies();
     test_debug_source_roots_are_unique_when_source_and_content_paths_match();
     test_debug_source_roots_preserve_source_first_and_content_second_order();
     test_fd_backed_binary_reads_accept_direct_descriptor_paths();

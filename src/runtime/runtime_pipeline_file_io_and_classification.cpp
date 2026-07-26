@@ -4,8 +4,10 @@
 
 #include "runtime_pipeline_support.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/vfp/dbf_table.h"
 
 #include <functional>
+#include <limits>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -847,14 +849,11 @@ std::vector<std::filesystem::path> discover_prg_include_source_paths(
     return discovered;
 }
 
-std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
-    const std::filesystem::path& source) {
+std::vector<std::filesystem::path> discover_literal_library_source_paths(
+    const std::filesystem::path& source,
+    std::istream& input) {
     std::vector<std::filesystem::path> discovered;
     std::unordered_set<std::string> identities;
-    std::ifstream input(source);
-    if (!input) {
-        return discovered;
-    }
 
     const auto skip_space = [](const std::string& line, std::size_t offset) {
         while (offset < line.size() &&
@@ -990,6 +989,47 @@ std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
                 copperfin::platform::path_to_utf8_string(resolved->lexically_normal()));
             if (identities.insert(identity).second) {
                 discovered.push_back(resolved->lexically_normal());
+            }
+        }
+    }
+    return discovered;
+}
+
+std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
+    const std::filesystem::path& source) {
+    std::ifstream input(source);
+    if (!input) {
+        return {};
+    }
+    return discover_literal_library_source_paths(source, input);
+}
+
+std::vector<std::filesystem::path> discover_vcx_literal_library_source_paths(
+    const std::filesystem::path& source) {
+    const auto table = copperfin::vfp::parse_dbf_table_from_file(
+        copperfin::platform::path_to_utf8_string(source),
+        std::numeric_limits<std::size_t>::max());
+    if (!table.ok) {
+        return {};
+    }
+
+    std::vector<std::filesystem::path> discovered;
+    std::unordered_set<std::string> identities;
+    for (const auto& record : table.table.records) {
+        for (const auto& value : record.values) {
+            if (lowercase_copy(value.field_name) != "methods" ||
+                value.display_value.rfind("<memo block ", 0U) == 0U ||
+                value.display_value.empty()) {
+                continue;
+            }
+
+            std::istringstream input(value.display_value);
+            for (const auto& candidate : discover_literal_library_source_paths(source, input)) {
+                const std::string identity = lowercase_copy(
+                    copperfin::platform::path_to_utf8_string(candidate.lexically_normal()));
+                if (identities.insert(identity).second) {
+                    discovered.push_back(candidate.lexically_normal());
+                }
             }
         }
     }
