@@ -15,8 +15,8 @@ flowchart TB
 
     subgraph LANED["Lane D - root #110 'Build/compiler/debug pipeline'"]
       direction LR
-      D1["D1 Packaging Pipeline<br/>DLL/FLL/OCX/APP/FXP outputs,<br/>AST/IR/.transpiled.cs contracts<br/>root #19, active through #637"]
-      D2["D2 Debugger<br/>breakpoints, watch/locals,<br/>step, xAsset action-id mapping<br/>root #20, active through #416"]
+      D1["D1 Packaging Pipeline<br/>DLL/FLL/OCX/APP/FXP outputs,<br/>AST/IR/.transpiled.cs contracts<br/>root #19, recorded slices closed"]
+      D2["D2 Debugger<br/>breakpoints, watch/locals,<br/>step, xAsset action-id mapping<br/>root #20, recorded slices closed"]
     end
 
     subgraph LANEE["Lane E - root #111 'Shared design model and designer fidelity' (closed 2026-07-24)"]
@@ -37,9 +37,9 @@ flowchart TB
 
     subgraph LANEG["Lane G - root #112 'IDE and editor parity' (shared root with F) - IntelliSense"]
       direction LR
-      G1["G1 Semantic Resolution,<br/>Signature Help, Completions<br/>root #27, #178-183 and #395-401"]
-      G2["G2 Navigation, References,<br/>Refactoring<br/>root #28"]
-      G3["G3 Richer IntelliSense<br/>Metadata Inputs<br/>root #29"]
+      G1["G1 Semantic Resolution,<br/>Signature Help, Completions<br/>root #27, recorded slices closed"]
+      G2["G2 Navigation, References,<br/>Refactoring<br/>root #28, recorded slices closed"]
+      G3["G3 Richer IntelliSense<br/>Metadata Inputs<br/>root #29, recorded slices closed"]
       G1 --> G2
       G1 --> G3
     end
@@ -59,11 +59,10 @@ flowchart TB
 
 **What's done:** lane E (shared design model, designer interactions, and
 report/label fidelity) closed on 2026-07-24 — the newest closure in the whole
-repo. Lane D's packaging pipeline and debugger, lane F's VS/standalone hosts,
-and lane G's language service are all substantially shipped, though none carry
-an explicit closure statement the way lane E and lane C do. **What's left:**
-hosted Windows, mounted-VFP9, and Visual Studio validation remain release-
-evidence gates for lane E's closed implementation work (per
-`agent-handoff.md`); lane F has been dormant since `#1714` with no closure
-recorded, which is worth a fresh look before assuming it is done; lane G's
-IntelliSense work is still active as of `#395`-`#401`.
+repo. The cited D1/D2 and G1/G2/G3 slices are also closed in live GitHub state,
+while lane F has substantial shipped host and utility-pane slices. **What's
+left:** hosted Windows, mounted-VFP9, and Visual Studio validation remain
+release-evidence gates for the completed implementation slices (per
+`agent-handoff.md`); the broader D, F, and G umbrella scopes remain open under
+the current MVP subgoal tree and must not be inferred complete from the cited
+slice closures.
