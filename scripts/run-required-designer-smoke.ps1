@@ -27,7 +27,7 @@ $statusPath = Join-Path $tempRoot "status.txt"
 $process = $null
 
 try {
-    $process = Start-Process -FilePath $ExecutablePath -ArgumentList @("--status-file", $statusPath) -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    $process = Start-Process -FilePath $ExecutablePath -ArgumentList @("--status-file", ('"' + $statusPath + '"')) -PassThru -NoNewWindow -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
     $timeoutMilliseconds = $TimeoutSeconds * 1000
     $timedOut = -not $process.WaitForExit($timeoutMilliseconds)
     if ($timedOut) {

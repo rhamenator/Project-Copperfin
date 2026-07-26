@@ -578,6 +578,12 @@ require_text("scripts/run-required-designer-smoke.ps1"
 require_text("scripts/run-required-designer-smoke.ps1"
     "\"interrupted\""
     "designer smoke incomplete-process interruption classification")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "('\"' + $statusPath + '\"')"
+    "quoted designer smoke status path")
+require_text("vsix/Copperfin.DesignerSmokeTests/Program.Shared.cs"
+    "[--status-file <path>]"
+    "designer smoke status-file usage")
 require_text("vsix/Copperfin.DesignerSmokeTests/Program.EntryPoint.01.cs"
     "runner.MarkStarted();"
     "designer smoke status start marker")

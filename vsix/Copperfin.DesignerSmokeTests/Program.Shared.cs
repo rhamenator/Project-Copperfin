@@ -445,8 +445,8 @@ internal static partial class Program
         private static void PrintUsage()
         {
             Console.Error.WriteLine(
-                "usage: Copperfin.DesignerSmokeTests [--list-tests] [--filter <substring>] [--exact <name>]\n" +
-                "       Copperfin.DesignerSmokeTests --list-tests [--filter <substring>] [--exact <name>]");
+                "usage: Copperfin.DesignerSmokeTests [--list-tests] [--filter <substring>] [--exact <name>] [--status-file <path>]\n" +
+                "       Copperfin.DesignerSmokeTests --list-tests [--filter <substring>] [--exact <name>] [--status-file <path>]");
         }
 
         private void FailUsage(string message, int code = 2)
