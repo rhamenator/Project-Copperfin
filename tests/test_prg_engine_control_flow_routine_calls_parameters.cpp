@@ -43,6 +43,76 @@ void test_do_with_parameters_binds_arguments_in_called_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parenthesized_dynamic_do_targets_use_heap_backed_frames() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_parenthesized_dynamic_do";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path external_path = temp_root / "dynamic_target.prg";
+    write_text(
+        external_path,
+        "LPARAMETERS a, b\n"
+        "PUBLIC external_result\n"
+        "external_result = a + b\n"
+        "RETURN\n");
+
+    const fs::path main_path = temp_root / "parenthesized_dynamic_do.prg";
+    write_text(
+        main_path,
+        std::string("PUBLIC direct_result, nested_result\n") +
+            "cTarget = 'add_direct'\n"
+            "DO (cTarget) WITH 4, 5\n"
+            "cTargetHolder = 'add_nested'\n"
+            "DO (&cTargetHolder) WITH 6, 7\n"
+            "cExternalTarget = '" + external_path.string() + "'\n"
+            "DO (cExternalTarget) WITH 8, 9\n"
+            "RETURN\n"
+            "PROCEDURE add_direct\n"
+            "LPARAMETERS a, b\n"
+            "direct_result = a + b\n"
+            "RETURN\n"
+            "PROCEDURE add_nested\n"
+            "LPARAMETERS a, b\n"
+            "nested_result = a + b\n"
+            "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "parenthesized dynamic DO targets should complete: " + state.message);
+
+    const auto direct_result = state.globals.find("direct_result");
+    expect(direct_result != state.globals.end() &&
+               copperfin::runtime::format_value(direct_result->second) == "9",
+           "DO (cTarget) should dispatch a same-file routine with arguments");
+    const auto nested_result = state.globals.find("nested_result");
+    expect(nested_result != state.globals.end() &&
+               copperfin::runtime::format_value(nested_result->second) == "13",
+           "DO (&cTargetHolder) should evaluate a nested macro target");
+    const auto external_result = state.globals.find("external_result");
+    expect(external_result != state.globals.end() &&
+               copperfin::runtime::format_value(external_result->second) == "17",
+           "DO (cExternalTarget) should dispatch a project-local PRG target");
+
+    const fs::path missing_path = temp_root / "parenthesized_dynamic_do_missing.prg";
+    write_text(
+        missing_path,
+        "DO ('missing_dynamic_target')\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession missing_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(missing_path.string(), temp_root.string(), false));
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               missing_state.message == "Unable to resolve DO target: missing_dynamic_target",
+           "parenthesized dynamic DO missing targets should preserve the deterministic diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_proc_abbreviation_registers_same_file_do_routine() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_proc_abbreviation";

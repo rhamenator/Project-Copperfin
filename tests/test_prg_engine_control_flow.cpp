@@ -66,6 +66,7 @@ int main() {
     test_elseif_control_flow_executes_matching_branch();
     test_block_terminators_ignore_trailing_annotations();
     test_do_with_parameters_binds_arguments_in_called_routine();
+    test_parenthesized_dynamic_do_targets_use_heap_backed_frames();
     test_proc_abbreviation_registers_same_file_do_routine();
     test_store_expands_defined_indirect_target_without_changing_array_targets();
     test_call_with_parameters_binds_arguments_in_called_routine();

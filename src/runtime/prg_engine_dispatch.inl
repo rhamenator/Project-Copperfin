@@ -1821,7 +1821,9 @@
                 -> std::optional<std::string>
             {
                 std::string target = trim_copy(command_statement.identifier);
-                if (target.empty() || target.front() != '&')
+                const bool parenthesized_expression = target.size() >= 2U &&
+                    target.front() == '(' && target.back() == ')';
+                if (target.empty() || (target.front() != '&' && !parenthesized_expression))
                 {
                     return target;
                 }
@@ -1829,7 +1831,9 @@
                 if (!frame.command_target_continuation.has_value())
                 {
                     Statement target_statement = command_statement;
-                    target_statement.expression = target;
+                    target_statement.expression = parenthesized_expression
+                        ? trim_copy(target.substr(1U, target.size() - 2U))
+                        : target;
                     frame.command_target_continuation = CommandTargetContinuation{
                         .statement = std::move(target_statement)};
                 }
