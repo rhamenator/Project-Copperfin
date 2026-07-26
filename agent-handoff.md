@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- VFP9 compatibility boundary recorded at `dd3975f1`: mounted `dv_foxhelp.chm` documents `NODEFAULT` in `KeyPress` preventing keyboard-buffer insertion, while Copperfin currently has no modeled `KeyPress` dispatch or keyboard-buffer default action. `KeyPreview` property coverage under #3217/#4637 must not be described as keyboard-event parity. The evidence and per-modeled-action triage are recorded in #4126; do not add a blanket NODEFAULT check.
+
 Hosted Linux native validation run `30189768708` passed all `308/308` CTest cases at workflow head `191a9b54`; the only skips were the two expected Linux-only launcher tests (`test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`), with CTest real time 218.88 seconds. Windows native validation remains active as the final platform-matrix job.
 
 Hosted macOS native validation run `30189768686` passed at workflow head `191a9b54`. Linux and Windows native validation from the same matrix remain active; preserve this as a partial hosted result until both required platform checks complete.
