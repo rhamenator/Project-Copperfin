@@ -84,6 +84,21 @@ attempt limit but does not claim that a process was started or retried; process
 execution, cancellation tokens, and adapter-specific retry mechanics remain outside
 this contract slice.
 
+## Shadow Parity v1
+
+Shadow comparison is caller-neutral: the comparison result always preserves the native
+return path. A comparison can inspect native/candidate success state, invariant error
+codes, typed fields, field order, and bounded mismatch samples. Exact values are the
+default; integer/number fields may use an explicit non-negative tolerance, and order
+comparison can be disabled explicitly. Mismatch categories and telemetry reasons are
+machine identifiers, not localized text.
+
+Every comparison emits `polyglot.parity.checked`; a mismatch additionally emits
+`polyglot.parity.mismatch` with the capability ID, first reason, and aggregate count.
+Samples are bounded by policy and include the capability ID and reason. This is a
+deterministic comparator contract only; it does not route traffic, invoke a candidate,
+or change the caller's native behavior.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.

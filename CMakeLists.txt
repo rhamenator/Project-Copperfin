@@ -218,6 +218,7 @@ add_library(cf_platform_profile
     src/platform/federation_execution.cpp
     src/platform/localized_text.cpp
     src/platform/polyglot_bridge_invocation.cpp
+    src/platform/polyglot_parity_comparator.cpp
     src/platform/polyglot_route_registry.cpp
     src/platform/query_translator.cpp
 )
