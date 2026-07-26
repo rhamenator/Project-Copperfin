@@ -1,6 +1,6 @@
 # Agent Handoff
 
-#4654 under #3217 is implemented locally at `2599a3ee`: native PRG explicit and derived `Header` and `Column` objects, including lazily materialized `Grid.Column.Header` children, now expose VFP9 `StatusBarText` with deterministic empty-string defaults, direct/reflective mutation, and built-in reflection protection. Focused Linux runtime-surface CTest passes; exact-head Windows validation is requested. Status-bar rendering, host UI integration, and designer serialization remain separate.
+#4654 under #3217 is implemented locally at `901e48a8`: native PRG explicit and derived `Header` and `Column` objects, including lazily materialized `Grid.Column.Header` children, now expose VFP9 `StatusBarText` with deterministic empty-string defaults, direct/reflective mutation, and built-in reflection protection. Focused Linux runtime-surface CTest passes; exact-head Windows validation is requested. Status-bar rendering, host UI integration, and designer serialization remain separate.
 
 #4653 under #3217 is implemented and validated at `153d999e`: native PRG explicit and derived `Header` and `Column` objects, including lazily materialized `Grid.Column.Header` children, expose VFP9 `ToolTipText` with deterministic empty-string defaults, direct/reflective mutation, and built-in reflection protection. Focused Linux runtime-surface CTest and exact-head Windows validation passed in channel seq138 with artifacts under `artifacts/windows-validation-153d999e/`. Tooltip rendering, host UI integration, and designer serialization remain separate.
 
