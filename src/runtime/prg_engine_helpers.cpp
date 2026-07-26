@@ -239,14 +239,19 @@ std::pair<std::string, std::string> split_first_word(std::string value) {
         return {};
     }
 
-    const auto separator = value.find(' ');
-    if (separator == std::string::npos) {
+    const auto separator = std::find_if(
+        value.begin(),
+        value.end(),
+        [](const unsigned char character) {
+            return std::isspace(character) != 0;
+        });
+    if (separator == value.end()) {
         return {value, {}};
     }
 
     return {
-        value.substr(0U, separator),
-        trim_copy(value.substr(separator + 1U))
+        value.substr(0U, static_cast<std::size_t>(separator - value.begin())),
+        trim_copy(value.substr(static_cast<std::size_t>(separator - value.begin()) + 1U))
     };
 }
 

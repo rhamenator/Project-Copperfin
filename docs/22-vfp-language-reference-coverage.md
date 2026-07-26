@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Runtime preprocessor whitespace note: VFP headers commonly separate `#define` names and values with tabs. Copperfin now treats all whitespace as a `#define` token separator, preserving lowercase directives and expanding tab-delimited constants inside class methods and TRY/CATCH error formatting. The real VFPSource ReportBuilder package completes normal and debug Linux launches after this fix; Windows exact-head validation remains separate under #4698.
+
 - Runtime typed-local object note: VFPSource `foxrefstart.prg` declares `oFoxRef AS FoxRef OF foxref.prg` and invokes it through `m.oFoxRef`. Copperfin now strips the declaration type suffix for local binding and resolves `m.name.Method()` against the local object under #3217/#4691. The local `foxref.PJX` package completes `SetProject()`, `SearchCount()`, and `ShowResults()` without a runtime fault. Full FoxRef project/editor integration and hosted UI behavior remain separate.
 
 - Runtime `_SCREEN.MousePointer` note: VFPSource `foxrefstart.prg` reads and writes this application property during startup. Copperfin now exposes a shared headless `_SCREEN` / `_VFP` state contract with numeric `0` default, direct and `GETPEM()` / `SETPEM()` reflection, nonnegative integer normalization, and built-in protection under #3217/#4690. The local VFPSource `foxref.PJX` run advances through the property and typed-local object startup boundaries. OS cursor selection, rendering, hit testing, and hosted UI behavior remain separate.

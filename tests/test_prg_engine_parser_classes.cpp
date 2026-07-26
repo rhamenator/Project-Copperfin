@@ -457,9 +457,10 @@ void test_parse_include_and_define_constants_expand_before_class_body_parsing() 
     const fs::path header_path = temp_root / "ui.h";
     copperfin::test_support::write_text(
         header_path,
-        "#DEFINE WINDOWTYPE_MODELESS 0\n"
-        "#DEFINE WINDOWTYPE_MODAL 1\n"
-        "#DEFINE FORM_CAPTION 'IncludedDemo'\n");
+        "#define WINDOWTYPE_MODELESS 0\n"
+        "#define WINDOWTYPE_MODAL 1\n"
+        "#define FORM_CAPTION 'IncludedDemo'\n"
+        "#define LINE_BREAK\tchr(13)\n");
 
     const fs::path program_path = temp_root / "include_define_demo.prg";
     copperfin::test_support::write_text(
@@ -468,10 +469,16 @@ void test_parse_include_and_define_constants_expand_before_class_body_parsing() 
         "DEFINE CLASS DemoForm AS Form\n"
         "    Caption = FORM_CAPTION\n"
         "    WindowType = WINDOWTYPE_MODAL\n"
+        "    PROCEDURE DisplayCaption\n"
+        "        result = FORM_CAPTION + LINE_BREAK\n"
+        "    ENDPROC\n"
         "ENDDEFINE\n"
         "nWindowType = WINDOWTYPE_MODELESS\n");
 
     const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const copperfin::runtime::Program source_program = copperfin::runtime::parse_program_source(
+        program_path.string(),
+        copperfin::test_support::read_text(program_path));
     const auto class_found = program.classes.find("demoform");
     copperfin::test_support::expect(class_found != program.classes.end(),
                                     "include/define constant parser test should parse the owning class definition");
@@ -488,6 +495,32 @@ void test_parse_include_and_define_constants_expand_before_class_body_parsing() 
                                             "include/define constant parser test should preserve the class windowtype property name");
             copperfin::test_support::expect(class_definition.property_statements[1].expression == "1",
                                             "include/define constant parser test should expand included numeric constants in class assignments");
+        }
+        const auto method_found = class_definition.methods.find("displaycaption");
+        copperfin::test_support::expect(method_found != class_definition.methods.end(),
+                                        "include/define constant parser test should preserve class methods");
+        if (method_found != class_definition.methods.end()) {
+            copperfin::test_support::expect(method_found->second.statements.size() == 1U,
+                                            "include/define constant parser test should preserve the method assignment");
+            if (method_found->second.statements.size() == 1U) {
+                copperfin::test_support::expect(
+                    method_found->second.statements[0].expression == "'IncludedDemo' + chr(13)",
+                    "include/define constant parser test should expand included constants inside class methods");
+            }
+        }
+    }
+
+    const auto source_class_found = source_program.classes.find("demoform");
+    copperfin::test_support::expect(source_class_found != source_program.classes.end(),
+                                    "source-override include/define parser test should parse the owning class definition");
+    if (source_class_found != source_program.classes.end()) {
+        const auto method_found = source_class_found->second.methods.find("displaycaption");
+        copperfin::test_support::expect(method_found != source_class_found->second.methods.end(),
+                                        "source-override include/define parser test should preserve class methods");
+        if (method_found != source_class_found->second.methods.end() && method_found->second.statements.size() == 1U) {
+            copperfin::test_support::expect(
+                method_found->second.statements[0].expression == "'IncludedDemo' + chr(13)",
+                "source-override include/define parser test should expand included constants inside class methods");
         }
     }
 

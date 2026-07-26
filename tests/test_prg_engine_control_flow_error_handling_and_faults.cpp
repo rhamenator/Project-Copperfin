@@ -1083,12 +1083,12 @@ void test_try_catch_finally_handles_runtime_errors() {
     fs::create_directories(temp_root);
 
     const fs::path header_path = temp_root / "error_constants.h";
-    write_text(header_path, "#DEFINE c_CR chr(13)\n");
+    write_text(header_path, "#define c_CR chr(13)\n");
 
     const fs::path main_path = temp_root / "try_catch_finally.prg";
     write_text(
         main_path,
-        "#INCLUDE error_constants.h\n"
+        "#include error_constants.h\n"
         "TRY\n"
         "  DO missing_routine\n"
         "CATCH TO err_text\n"
