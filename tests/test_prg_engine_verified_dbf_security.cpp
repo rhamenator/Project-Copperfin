@@ -8,8 +8,10 @@
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <filesystem>
 #include <string>
+#include <thread>
 
 namespace {
 
@@ -200,6 +202,75 @@ void test_filetostr_reads_verified_bytes_and_fails_closed_without_admission()
            "non-strict FILETOSTR should retain ordinary filesystem behavior");
     expect(global_text(non_strict_state, "cchunk") == "TAM",
            "non-strict FREAD should retain ordinary filesystem behavior");
+    fs::remove_all(root, ignored);
+}
+
+void test_strict_fopen_uses_admitted_bytes_during_replacement()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_fopen_replacement";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path payload_path = root / "payload.txt";
+    write_text(payload_path, "DISK-PAYLOAD");
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(payload_path.string(), "ADMITTED-PAYLOAD");
+    options.require_verified_file_byte_overrides = true;
+
+    std::atomic<bool> stop_writer{false};
+    std::atomic<unsigned int> writes{0U};
+    std::thread replacement_writer([&]() {
+        while (!stop_writer.load(std::memory_order_relaxed))
+        {
+            write_text(payload_path, "REPLACED-PAYLOAD");
+            writes.fetch_add(1U, std::memory_order_relaxed);
+            std::this_thread::yield();
+        }
+    });
+    for (unsigned int attempt = 0U;
+         attempt < 10000U && writes.load(std::memory_order_relaxed) == 0U;
+         ++attempt)
+    {
+        std::this_thread::yield();
+    }
+
+    const auto state = run_program(
+        root,
+        "verified_fopen_replacement.prg",
+        "hRead = FOPEN('payload.txt', 0)\n"
+        "cValue = FREAD(hRead, 64)\n"
+        "nClose = FCLOSE(hRead)\n"
+        "RETURN\n",
+        options);
+    stop_writer.store(true, std::memory_order_relaxed);
+    replacement_writer.join();
+
+    expect(state.completed,
+           "strict FOPEN should complete from admitted bytes during replacement: " + state.message);
+    expect(global_text(state, "cvalue") == "ADMITTED-PAYLOAD",
+           "strict FOPEN should not observe a concurrently replaced physical payload");
+    expect(global_text(state, "nclose") == "0",
+           "strict admitted FOPEN handles should close successfully");
+    expect(writes.load(std::memory_order_relaxed) > 0U,
+           "strict FOPEN replacement coverage should perform a physical pathname replacement");
+
+    copperfin::runtime::RuntimeSessionOptions missing_options;
+    missing_options.require_verified_file_byte_overrides = true;
+    const auto missing_state = run_program(
+        root,
+        "missing_fopen_replacement.prg",
+        "hRead = FOPEN('payload.txt', 0)\n"
+        "nError = FERROR()\n"
+        "RETURN\n",
+        missing_options);
+    expect(missing_state.completed,
+           "strict FOPEN without admission should fail safely: " + missing_state.message);
+    expect(global_text(missing_state, "hread") == "-1",
+           "strict FOPEN without admission should fail closed");
+    expect(global_text(missing_state, "nerror") == "5",
+           "strict FOPEN without admission should preserve the access error contract");
+
     fs::remove_all(root, ignored);
 }
 
@@ -786,6 +857,7 @@ int main()
     test_initial_use_reads_verified_dbf_bytes();
     test_initial_use_fails_closed_without_verified_dbf_bytes();
     test_filetostr_reads_verified_bytes_and_fails_closed_without_admission();
+    test_strict_fopen_uses_admitted_bytes_during_replacement();
     test_initial_use_reads_verified_index_metadata();
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
