@@ -22,6 +22,7 @@ internal static partial class Program
     private static int Main(string[] args)
     {
         DesignerSmokeTestRunner runner = new DesignerSmokeTestRunner(args);
+        runner.MarkStarted();
         if (runner.ShouldInitializeUi)
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);

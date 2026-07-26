@@ -371,6 +371,11 @@ internal static partial class Program
 
         public bool ShouldInitializeUi => ready_ && !listOnly_;
 
+        public void MarkStarted()
+        {
+            WriteStatus("started");
+        }
+
         public void Run(string testName, Action smokeTest)
         {
             if (!ready_ || !MatchesFilters(testName))
@@ -408,27 +413,32 @@ internal static partial class Program
         {
             if (!ready_)
             {
+                WriteStatus("invalid");
                 return exitCode_;
             }
 
             if (!matchedAnyTest_)
             {
                 Console.Error.WriteLine("no tests matched the requested selection");
+                WriteStatus("completed");
                 return 3;
             }
 
             if (listOnly_)
             {
+                WriteStatus("completed");
                 return 0;
             }
 
             if (failures != 0)
             {
                 Console.Error.WriteLine($"{failures} UI smoke test(s) failed.");
+                WriteStatus("completed");
                 return 1;
             }
 
             Console.WriteLine("All UI smoke tests passed.");
+            WriteStatus("completed");
             return 0;
         }
 
@@ -486,6 +496,17 @@ internal static partial class Program
                     exactFilter_ = args[++index];
                     continue;
                 }
+                if (argument == "--status-file")
+                {
+                    if (index + 1 >= args.Length)
+                    {
+                        FailUsage("missing value for --status-file");
+                        return;
+                    }
+
+                    statusFile_ = args[++index];
+                    continue;
+                }
                 if (argument.StartsWith("-", StringComparison.Ordinal))
                 {
                     FailUsage("unknown option: " + argument);
@@ -520,6 +541,24 @@ internal static partial class Program
         private bool matchedAnyTest_;
         private string substringFilter_ = string.Empty;
         private string exactFilter_ = string.Empty;
+        private string statusFile_ = string.Empty;
+
+        private void WriteStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(statusFile_))
+            {
+                return;
+            }
+
+            try
+            {
+                File.WriteAllText(statusFile_, status + Environment.NewLine);
+            }
+            catch
+            {
+                // Status reporting must never change the smoke result.
+            }
+        }
     }
 
 

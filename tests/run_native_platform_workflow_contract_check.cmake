@@ -569,6 +569,21 @@ require_text("scripts/run-required-designer-smoke.ps1"
 require_text("scripts/run-required-designer-smoke.ps1"
     "WaitForExit($timeoutMilliseconds)"
     "bounded designer smoke process wait")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "DESIGNER_SMOKE_RESULT: kind=timeout"
+    "designer smoke timeout classification")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "\"product-failure\""
+    "designer smoke completed-process failure classification")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "\"interrupted\""
+    "designer smoke incomplete-process interruption classification")
+require_text("vsix/Copperfin.DesignerSmokeTests/Program.EntryPoint.01.cs"
+    "runner.MarkStarted();"
+    "designer smoke status start marker")
+require_text("vsix/Copperfin.DesignerSmokeTests/Program.Shared.cs"
+    "WriteStatus(\"completed\");"
+    "designer smoke status completion marker")
 require_text("scripts/validate-windows.ps1"
     "\"-TimeoutSeconds\", \"1800\""
     "explicit local designer smoke timeout")
