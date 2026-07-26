@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Roadmap status correction: live GitHub state confirms the cited D1/D2 packaging/debugger slices and G1/G2/G3 language-service slices are closed. `docs/05-roadmap.md` and `docs/diagrams/roadmap-phase-c-lanes-defg.md` now describe those historical slices as closed while keeping the broader D/F/G umbrellas open under the current MVP subgoal tree; this is not a claim that the full umbrellas or hosted evidence are complete.
+
 - Windows native CI run `30193979300` at `2411bb10` was stale: GitHub exposed no logs and had not updated it since `2026-07-26T08:05:44Z`, beyond the workflow's 120-minute bound. It was cancelled, not classified as a product failure, and a fresh manual run `30194948185` was dispatched at synchronized head `42bd9ccb`. The Windows host also has the VFPSource corpus available for the separate live Visual Studio/VFP9 sample gate under #4621.
 
 - Hosted Linux native validation run `30193979292` passed at product head `2411bb10`: `308/308` CTest cases passed in 215.67 seconds with only the expected skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`. This independently confirms the current native matrix on Linux; the hosted Windows native run and live Visual Studio #4621 evidence remain separate gates.
