@@ -142,7 +142,8 @@ void write_synthetic_project(
         project_path.string(),
         fields,
         {
-            {"H", project_title, project_dir.string(), output_path.string(), "", "false"},
+            {"H", project_title, project_dir.string(),
+             output_path.empty() ? "<Source>" : output_path.string(), "", "false"},
             {"K", "", "", "", "main program.prg", "true"}
         });
     expect(result.ok, "POSIX launcher test should create its synthetic PJX");
