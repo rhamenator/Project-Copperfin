@@ -626,6 +626,14 @@ bool native_header_column_statusbartext_member_name_matches(
            runtime_object.properties.contains("statusbartext");
 }
 
+bool native_header_column_mouseicon_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "mouseicon" &&
+           native_header_column_mouseicon_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("mouseicon");
+}
+
 bool native_visual_helpcontextid_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

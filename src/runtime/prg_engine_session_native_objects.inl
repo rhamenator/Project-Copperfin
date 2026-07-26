@@ -194,6 +194,12 @@
                 runtime_object.properties["statusbartext"] = make_string_value("");
             }
 
+            if (is_header_or_column_object &&
+                !runtime_object.properties.contains("mouseicon"))
+            {
+                runtime_object.properties["mouseicon"] = make_string_value("");
+            }
+
             if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !runtime_object.properties.contains("tag"))
             {
