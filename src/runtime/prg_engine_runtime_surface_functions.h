@@ -159,6 +159,7 @@ bool is_native_grid_gridlinecolor_member_name(const RuntimeOleObjectState& runti
 bool is_native_grid_gridlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_highlightstyle_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_highlightrowlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_grid_view_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_activecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_activerow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_relativecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -230,6 +231,7 @@ void normalize_native_grid_gridlinecolor_invariant(RuntimeOleObjectState& runtim
 void normalize_native_grid_gridlinewidth_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_highlightstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_highlightrowlinewidth_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_grid_view_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_inputmask_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_dynamicinputmask_invariant(RuntimeOleObjectState& runtime_object);

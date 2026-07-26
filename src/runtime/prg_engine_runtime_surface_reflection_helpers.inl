@@ -1385,6 +1385,17 @@ bool native_grid_highlightrowlinewidth_member_name_matches(
     return native_grid_highlightrowlinewidth_runtime_object(runtime_object);
 }
 
+bool native_grid_view_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "view" ||
+        !runtime_object.properties.contains("view")) {
+        return false;
+    }
+
+    return native_grid_view_runtime_object(runtime_object);
+}
+
 bool native_grid_activecolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

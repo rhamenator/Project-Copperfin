@@ -200,6 +200,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_grid_allowautocolumnfit_defaults_mutate_and_stay_builtin();
     void test_native_grid_gridline_properties_defaults_mutate_and_stay_builtin();
     void test_native_grid_highlight_properties_defaults_mutate_and_stay_builtin();
+    void test_native_grid_view_defaults_mutate_and_stay_builtin();
     void test_native_grid_activecolumn_defaults_read_only_and_stays_builtin();
     void test_native_grid_activerow_defaults_read_only_and_stays_builtin();
     void test_native_grid_relative_focus_defaults_read_only_and_stays_builtin();

@@ -856,6 +856,13 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("view"))
+            {
+                // VFP9 documents Browse as the default view for an unsplit Grid.
+                runtime_object.properties["view"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("leftcolumn"))
             {
                 runtime_object.properties["leftcolumn"] = make_number_value(1.0);

@@ -337,6 +337,7 @@
             is_native_grid_gridlinewidth_member_name(*runtime_object, property_name) ||
             is_native_grid_highlightstyle_member_name(*runtime_object, property_name) ||
             is_native_grid_highlightrowlinewidth_member_name(*runtime_object, property_name) ||
+            is_native_grid_view_member_name(*runtime_object, property_name) ||
             is_native_grid_activecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_activerow_member_name(*runtime_object, property_name) ||
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||
@@ -818,6 +819,9 @@
             if (member_name == "highlightrowlinewidth") {
                 normalize_native_grid_highlightrowlinewidth_invariant(*runtime_object);
             }
+            if (member_name == "view") {
+                normalize_native_grid_view_invariant(*runtime_object);
+            }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
             }
@@ -1128,6 +1132,9 @@
             }
             if (member_name == "highlightrowlinewidth") {
                 normalize_native_grid_highlightrowlinewidth_invariant(*runtime_object);
+            }
+            if (member_name == "view") {
+                normalize_native_grid_view_invariant(*runtime_object);
             }
             if (member_name == "scrollbars") {
                 normalize_native_editbox_scrollbars_invariant(*runtime_object);
@@ -1473,6 +1480,7 @@
             is_native_grid_gridlinewidth_member_name(*runtime_object, property_name) ||
             is_native_grid_highlightstyle_member_name(*runtime_object, property_name) ||
             is_native_grid_highlightrowlinewidth_member_name(*runtime_object, property_name) ||
+            is_native_grid_view_member_name(*runtime_object, property_name) ||
             is_native_grid_activecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_activerow_member_name(*runtime_object, property_name) ||
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||

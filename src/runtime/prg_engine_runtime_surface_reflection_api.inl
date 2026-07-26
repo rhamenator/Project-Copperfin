@@ -1335,7 +1335,30 @@ void normalize_native_grid_highlightrowlinewidth_invariant(RuntimeOleObjectState
     highlight_row_line_width->second = make_number_value(
         std::isfinite(value)
             ? static_cast<double>(std::clamp(std::llround(value), 0LL, 7LL))
-            : 1.0);
+        : 1.0);
+}
+
+void normalize_native_grid_view_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_grid_view_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto view = runtime_object.properties.find("view");
+    if (view == runtime_object.properties.end()) {
+        return;
+    }
+
+    const auto partition = runtime_object.properties.find("partition");
+    const double partition_value = partition == runtime_object.properties.end()
+        ? 0.0
+        : value_as_number(partition->second);
+    const long long maximum = std::isfinite(partition_value) && partition_value > 0.0 ? 3LL : 1LL;
+    const double value = value_as_number(view->second);
+    view->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, maximum))
+            : 0.0);
 }
 
 void normalize_native_editbox_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
@@ -2203,6 +2226,11 @@ bool is_native_grid_highlightstyle_member_name(const RuntimeOleObjectState& runt
 bool is_native_grid_highlightrowlinewidth_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_highlightrowlinewidth_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_view_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_view_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_grid_activecolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
