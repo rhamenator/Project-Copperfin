@@ -38,7 +38,8 @@
                 runtime_object.properties["visible"] = make_boolean_value(true);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) ||
+                 normalized_base_class == "column") &&
                 !runtime_object.properties.contains("enabled"))
             {
                 runtime_object.properties["enabled"] = make_boolean_value(true);

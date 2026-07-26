@@ -452,7 +452,7 @@ bool native_visual_enabled_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     return normalized_member_name == "enabled" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           native_visual_enabled_runtime_object(runtime_object) &&
            runtime_object.properties.contains("enabled");
 }
 
