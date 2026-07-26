@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4685 follow-up is implemented in the working tree: `CopperfinAssetEditorPane` now handles standard `CloseDocument`/`FileClose` commands, obtains the active `IVsWindowFrame` from `SVsShellMonitorSelection`, and calls `CloseFrame(FRAMECLOSE_PromptSave)` so the frame can release its document-tab/RDT ownership. The source-contract test passes on Linux; push and exact hosted Windows verification are required before closing #4685/#4621.
+
 - #4686 under #3217 adds first-pass VFP9 `SET SKIP TO` one-to-many navigation on top of existing local `SET RELATION` links. Relation skip state is data-session scoped, multiple child aliases are supported, `SET SKIP TO` clears only the skip flag, and child-side forward/reverse `SKIP` advances the parent across matching groups through the existing iterative frame machine. `test_prg_engine_relations` passes. Interactive BROWSE repetition, persistent DBC relations, relation mutation refresh, and broader multi-level/`ADDITIVE` behavior remain separate.
 
 - #4685 under #4621 changes unsupported `IOleCommandTarget` results in `CopperfinAssetEditorPane` from raw `E_NOTIMPL` to an accessible local copy of the VSSDK `OLECMDERR_E_NOTSUPPORTED` HRESULT, allowing Visual Studio to route standard document-close commands to the shell. Copperfin Undo handling is unchanged. The fix is pushed at `f88631dd`; exact hosted Windows build and close/reopen UI evidence is pending. Linux cannot complete the VSIX build because the VSSDK package invokes Windows-only `vsct.exe`.

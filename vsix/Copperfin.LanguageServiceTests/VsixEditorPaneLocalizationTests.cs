@@ -31,6 +31,11 @@ internal static partial class Program
                paneSource.Contains("return OleCmdErrNotSupported;", StringComparison.Ordinal) &&
                !paneSource.Contains("NativeMethods.OLECMDERR_E_NOTSUPPORTED", StringComparison.Ordinal),
             "VSIX editor command routing should use an accessible OLE unsupported-command HRESULT");
+        Expect(paneSource.Contains("VSConstants.VSStd97CmdID.CloseDocument", StringComparison.Ordinal) &&
+               paneSource.Contains("SVsShellMonitorSelection", StringComparison.Ordinal) &&
+               paneSource.Contains("VSConstants.VSSELELEMID.SEID_WindowFrame", StringComparison.Ordinal) &&
+               paneSource.Contains("windowFrame.CloseFrame", StringComparison.Ordinal),
+            "VSIX editor command routing should close the active document frame and release its tab/RDT ownership");
         Expect(paneSource.Contains(
                 "new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture())",
                 StringComparison.Ordinal),

@@ -211,8 +211,39 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         ErrorHandler.ThrowOnFailure(textView.CenterLines(targetLine, 1));
     }
 
+    private static bool IsDocumentCloseCommand(Guid commandGroup, uint commandId)
+    {
+        return commandGroup == VSConstants.GUID_VSStandardCommandSet97 &&
+               (commandId == (uint)VSConstants.VSStd97CmdID.CloseDocument ||
+                commandId == (uint)VSConstants.VSStd97CmdID.FileClose);
+    }
+
+    private int CloseActiveDocumentFrame()
+    {
+        ThreadHelper.ThrowIfNotOnUIThread();
+        var monitorSelection = GetService(typeof(SVsShellMonitorSelection)) as IVsMonitorSelection;
+        if (monitorSelection is null ||
+            monitorSelection.GetCurrentElementValue(
+                (uint)VSConstants.VSSELELEMID.SEID_WindowFrame,
+                out object frameValue) != VSConstants.S_OK ||
+            frameValue is not IVsWindowFrame windowFrame)
+        {
+            return OleCmdErrNotSupported;
+        }
+
+        // IVsPersistDocData.Close releases the document data; the frame owns the
+        // tab/RDT edit lock and must also be closed explicitly for this view.
+        return windowFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_PromptSave);
+    }
+
     public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
     {
+        if (cCmds > 0 && IsDocumentCloseCommand(pguidCmdGroup, prgCmds[0].cmdID))
+        {
+            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+            return VSConstants.S_OK;
+        }
+
         if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97 &&
             cCmds > 0 &&
             prgCmds[0].cmdID == (uint)VSConstants.VSStd97CmdID.Undo)
@@ -231,6 +262,11 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
+        if (IsDocumentCloseCommand(pguidCmdGroup, nCmdID))
+        {
+            return CloseActiveDocumentFrame();
+        }
+
         if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97 &&
             nCmdID == (uint)VSConstants.VSStd97CmdID.Undo)
         {
