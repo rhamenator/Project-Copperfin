@@ -1,5 +1,9 @@
 # Agent Handoff
 
+- #4311 high-contrast hardening is pushed at `cab1e427`. `CopperfinDesignSurfaceTheme.FromHostColors(..., highContrast: true)` now uses explicit system-role colors for background, foreground, borders, and selected states; the VSIX host path passes `SystemInformation.HighContrast` through the shared editor and nested design surfaces. The focused managed build passed with zero warnings/errors, and `SmokeVisualStudioHostSurfaceThemeContract` passed all 7 assertions live on Linux/Mono. This is portable evidence; Windows must still verify actual Visual Studio High Contrast rendering, first-open package load, and docking under #4621.
+
+- At capture, corrected-theme native runs `30191811435` (macOS), `30191811438` (Windows), `30191811443` (Linux), and installer jobs `89766243971`/`89766244047` remained reported as `in_progress` after the workflow's documented 120-minute job timeout. GitHub exposed no logs while those jobs remain active. Do not treat this stale/overlong workflow state as pass evidence; investigate the workflow runner state separately.
+
 - Hosted release checks at corrected theme head `bdf22423`: Build Visual Studio VSIX run `30191811462`, Linux Managed UI Validation run `30191811451`, and Security Supply Chain Gate run `30191811453` passed. Linux/macOS/Windows native validation and standalone installer runs were still active when captured; do not treat this partial result as RC evidence completion.
 
 - `SmokeVisualStudioHostSurfaceThemeContract` passed all 5 assertions in 0.4 seconds against theme head `bdf22423` with `DISPLAY=:0`: host background routing, host-derived report chrome, rendered host surface pixels, direct surface reset, and full editor standalone restoration. GTK accessibility-module warnings were emitted but did not affect the test. This is portable live WinForms evidence only; Windows must still verify Visual Studio/VSSDK dark/high-contrast rendering, package first-open, and docking.
