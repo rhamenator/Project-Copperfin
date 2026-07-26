@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -116,5 +117,28 @@ internal static partial class Program
                watches.Items.Count == 0 &&
                breakpoints.Items.Count == 0,
             "failed debugger sessions should clear stale detail and breakpoint rows");
+
+        using var hostForm = new Form
+        {
+            Width = 900,
+            Height = 700,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new System.Drawing.Point(-32000, -32000)
+        };
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        var threadedApply = Task.Run(() => InvokeAssetEditorVoid(control, "ApplyDebugSession", session));
+        var expectedCallStackHeader = new CopperfinLocalization("qps-ploc")
+            .Text("AssetEditor.Summary.CallStack");
+        var threadedSummaryUpdated = WaitUntil(
+            TimeSpan.FromSeconds(3),
+            () => GetPrivateField<RichTextBox>(control, "debuggerSummaryBox").Text.Contains(
+                expectedCallStackHeader,
+                StringComparison.Ordinal));
+        threadedApply.GetAwaiter().GetResult();
+        Expect(threadedSummaryUpdated,
+            "debugger session application should marshal the summary update to the WinForms control thread");
     }
 }

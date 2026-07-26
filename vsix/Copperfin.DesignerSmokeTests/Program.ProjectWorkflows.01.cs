@@ -511,9 +511,23 @@ internal static partial class Program
                            !string.Equals(restartedSession.DebugManifestPath, initialDebugManifestPath, StringComparison.Ordinal);
                 });
             var observedRestartSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+            var sameSession = ReferenceEquals(observedRestartSession, debugSession);
+            var successfulRestart = observedRestartSession?.Success == true;
+            var restartCommandIsContinue = string.Equals(
+                observedRestartSession?.Commands.LastOrDefault(),
+                "continue",
+                StringComparison.Ordinal);
+            var restartManifestIsDistinct = observedRestartSession is not null &&
+                                            !string.IsNullOrWhiteSpace(observedRestartSession.DebugManifestPath) &&
+                                            !string.Equals(
+                                                observedRestartSession.DebugManifestPath,
+                                                initialDebugManifestPath,
+                                                StringComparison.Ordinal);
             Expect(restarted,
                 $"project debugger restart should materialize a fresh debug session for {path} " +
-                $"({DescribeDebugSession(observedRestartSession)})");
+                $"(sameSession={sameSession}; success={successfulRestart}; " +
+                $"lastCommandContinue={restartCommandIsContinue}; distinctDebugManifest={restartManifestIsDistinct}; " +
+                $"{DescribeDebugSession(observedRestartSession)})");
 
             var restartedSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
             Expect(restartedSession is not null, $"project debugger restart should retain the refreshed debug session for {path}");

@@ -3854,6 +3854,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 return;
             }
 
+            if (InvokeRequired && IsHandleCreated)
+            {
+                BeginInvoke(new Action(() => ApplyDebugSession(session)));
+                return;
+            }
+
             currentDebugSession = session;
             PopulateDebuggerDetails(session);
             if (!session.Success)
