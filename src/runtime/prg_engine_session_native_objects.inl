@@ -7,6 +7,8 @@
         {
             const std::string normalized_base_class =
                 normalize_identifier(trim_copy(runtime_object.base_class_name));
+            const bool is_header_or_column_font_object =
+                normalized_base_class == "column" || normalized_base_class == "header";
 
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object))
@@ -49,7 +51,7 @@
                 runtime_object.properties["mousepointer"] = make_number_value(0.0);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontname"))
             {
@@ -58,7 +60,7 @@
                 runtime_object.properties["fontname"] = make_string_value("Arial");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontcharset"))
             {
@@ -123,7 +125,7 @@
                 runtime_object.properties["dynamicfontoutline"] = make_string_value("");
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontsize"))
             {
