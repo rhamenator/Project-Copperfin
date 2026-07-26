@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4688 under #3217 refreshes local relation children after successful parent field mutation. `REPLACE`/`UPDATE` writes in remote, buffered, and ordinary local cursor branches now invoke the existing relation synchronizer after commit; focused relation coverage proves match change, missing-key EOF, and key restoration. Persistent DBC relations, child-side mutation policy, DELETE/RECALL behavior, interactive BROWSE refresh, and broader multi-level graphs remain separate.
+
 - #4687 under #3217 extends the local `SET RELATION` runtime slice without changing the iterative, stack-frugal frame machine. Multiple `expression INTO child` clauses, `ADDITIVE` composition, explicit parent targets with `IN`, and bare `SET RELATION TO` clearing now work alongside the existing replacement and `OFF INTO child` forms. `test_prg_engine_relations` plus four neighboring work-area/SQL-cursor CTest regressions pass. Persistent DBC relations, mutation-triggered refresh, interactive BROWSE repetition, and broader multi-level graphs remain separate.
 
 - #4685 follow-up is implemented in the working tree: `CopperfinAssetEditorPane` now handles standard `CloseDocument`/`FileClose` commands, obtains the active `IVsWindowFrame` from `SVsShellMonitorSelection`, and calls `CloseFrame(FRAMECLOSE_PromptSave)` so the frame can release its document-tab/RDT ownership. The source-contract test passes on Linux; push and exact hosted Windows verification are required before closing #4685/#4621.

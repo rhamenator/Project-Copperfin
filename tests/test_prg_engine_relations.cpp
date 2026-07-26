@@ -162,6 +162,59 @@ void test_local_set_skip_tracks_child_group_navigation()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_local_set_relation_refreshes_after_parent_mutation()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_relation_mutation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}});
+    write_people_dbf(child_path, {{"CHILD10", 10}, {"CHILD20", 20}});
+
+    const fs::path main_path = temp_root / "relation_mutation.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "SET ORDER TO AGE IN Parent\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SELECT Parent\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "GO TOP IN Parent\n"
+        "nBeforeMutation = RECNO('Child')\n"
+        "REPLACE AGE WITH 20 IN Parent\n"
+        "nAfterMutation = RECNO('Child')\n"
+        "REPLACE AGE WITH 99 IN Parent\n"
+        "nAfterMissing = RECNO('Child')\n"
+        "REPLACE AGE WITH 10 IN Parent\n"
+        "nAfterRestore = RECNO('Child')\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "SET RELATION mutation script should complete");
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message)
+    {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end())
+        {
+            expect(format_value(found->second) == expected, message);
+        }
+    };
+    check("nbeforemutation", "1", "relation mutation should preserve the initial child match");
+    check("naftermutation", "2", "parent key mutation should refresh the child relation match");
+    check("naftermissing", "3", "a missing mutated parent key should move the child to EOF");
+    check("nafterrestore", "1", "restoring a parent key should refresh the child relation again");
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_local_set_relation_additive_and_explicit_parent()
 {
     namespace fs = std::filesystem;
@@ -233,6 +286,7 @@ int main()
 {
     test_local_set_relation_tracks_parent_navigation();
     test_local_set_skip_tracks_child_group_navigation();
+    test_local_set_relation_refreshes_after_parent_mutation();
     test_local_set_relation_additive_and_explicit_parent();
     if (copperfin::test_support::test_failures() != 0)
     {

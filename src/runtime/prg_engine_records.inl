@@ -1282,6 +1282,7 @@
                     }
                     field->display_value = assignment.serialized_value;
                 }
+                synchronize_relations_for_parent(cursor, frame);
                 return true;
             }
 
@@ -1391,6 +1392,7 @@
                     }
                     field->is_null = false;
                 }
+                synchronize_relations_for_parent(cursor, frame);
                 return true;
             }
 
@@ -1476,6 +1478,7 @@
             {
                 unlock_cursor_record_lock(cursor, cursor.recno);
             }
+            synchronize_relations_for_parent(cursor, frame);
             return true;
         }
 
