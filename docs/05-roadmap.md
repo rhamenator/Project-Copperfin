@@ -277,7 +277,7 @@ flowchart TD
       C4 --> C5
     end
 
-    subgraph PC["Phase C - Designer, IDE and Delivery Pipeline (closed, 'reached green') = slice-lanes D + E + F + G"]
+    subgraph PC["Phase C - Designer, IDE and Delivery Pipeline (historical reached-green record; MVP breadth remains) = slice-lanes D + E + F + G"]
       direction LR
       D["D: Build/Debug Pipeline<br/>roots #19, #20"]
       E["E: Shared Design Model<br/>+ Designer Fidelity<br/>root #111 (#22/#23/#24)"]
@@ -288,7 +288,7 @@ flowchart TD
       E --> D
     end
 
-    MVP["MVP implementation-complete RC"]
+    MVP["MVP implementation-complete RC target"]
 
     subgraph V1["v1 Roadmap (not started as a workstream) = slice-lanes H + I + J + 2 continuations"]
       direction LR
@@ -308,7 +308,8 @@ flowchart TD
     PA --> PB --> PC --> MVP --> V1
 
     class A1,A2,A3,A4,C1,C2,C3,C4,C5 done;
-    class D,E,F,G done;
+    class E done;
+    class D,F,G,MVP partial;
     class RUNTIME,WORKFLOWS partial;
     class H,I partial;
     class J,TRACE planned;
