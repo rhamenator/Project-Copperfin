@@ -262,6 +262,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
+        ThreadHelper.ThrowIfNotOnUIThread();
         if (IsDocumentCloseCommand(pguidCmdGroup, nCmdID))
         {
             return CloseActiveDocumentFrame();
