@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Independent current-tree POSIX validation at synchronized head `33d48036` passed `308/308` CTest cases in 330.66 seconds. The only skips were the expected `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; no native, report/label, PRG/runtime, localization, security, package, or workflow-contract test failed. This does not replace hosted Windows/VFP9/Visual Studio, installer, trust-provisioning, or safety closure evidence.
+
 - #4664 classification correction is pushed in the current tree. A malformed DesignerSmoke invocation that writes `status=invalid` is now classified as `harness-failure`; only an incomplete non-invalid process remains `interrupted`. The CMake workflow contract passes, and the exact-head Windows/VFPSource rerun remains required.
 
 - #4664 path-handling follow-up is pushed in the current tree. The DesignerSmoke executable documents `--status-file`, and `run-required-designer-smoke.ps1` quotes the temporary marker path before invoking `Start-Process`, covering Windows profiles/temp roots with spaces. The focused host-theme smoke passed with `status=completed`, PowerShell parsing passed, and `test_native_platform_workflow_contract` passed. Windows must still rerun the current head with VFPSource and confirm the marker/classification and independent stage evidence.
