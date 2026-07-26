@@ -224,7 +224,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
             return VSConstants.S_OK;
         }
 
-        return VSConstants.E_NOTIMPL;
+        return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
     }
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
@@ -235,7 +235,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
             return control.TryHandleUndoCommand() ? VSConstants.S_OK : VSConstants.E_FAIL;
         }
 
-        return VSConstants.E_NOTIMPL;
+        return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
     }
 
     protected override void Dispose(bool disposing)

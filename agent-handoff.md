@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4685 under #4621 changes unsupported `IOleCommandTarget` results in `CopperfinAssetEditorPane` from raw `E_NOTIMPL` to the VSSDK `OLECMDERR_E_NOTSUPPORTED` result, allowing Visual Studio to route standard document-close commands to the shell. Copperfin Undo handling is unchanged. Linux cannot complete the VSIX build because the VSSDK package invokes Windows-only `vsct.exe`; exact hosted Windows build and close/reopen UI evidence is pending.
+
 - Windows seq321 provides exact focused validation for #4680/#4681/#4682/#4683 at product head `1ee5b3d6`: MSVC Release rebuilt and ran the procedure-class, dynamic-xAsset, and report-security executables successfully with exit 0. Evidence is under `artifacts/windows-strict-readers-1ee5b3d6/`; those four implementation children are closed. #4684 is newer and still requires its own exact-head Windows pass.
 
 - Windows seq320 keeps #4621 open. At the requested hosted checkout `716bbdcc`, VSIX, standalone Studio, DesignerSmoke, direct `E:\\VFPSource` Part07, installed-VFP9 report/label open, and runtime/debug stages passed, but closing a Copperfin document or the IDE returned `The operation could not be completed. Not implemented`, including targeted Ctrl+W. Evidence is under `artifacts/windows-rc-4621-716bbdcc/hosted-close-blocker.json`; the unrelated IncredibuildMenu Serilog dialog was dismissed. Fix the custom editor close path before claiming hosted RC completion.
