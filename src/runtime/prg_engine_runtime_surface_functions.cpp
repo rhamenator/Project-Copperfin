@@ -249,6 +249,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_pagecount_member_name_matches(runtime_object, member_name) ||
                native_activepage_member_name_matches(runtime_object, member_name) ||
+               native_form_mdiform_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_listitem_member_name_matches(runtime_object, member_name) ||
                native_itemdata_member_name_matches(runtime_object, member_name) ||
