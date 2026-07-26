@@ -203,6 +203,9 @@
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
+            ((normalize_identifier(runtime_object->prog_id) == "_screen" ||
+              normalize_identifier(runtime_object->prog_id) == "_vfp") &&
+             property_name == "mousepointer") ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_pagecount_member_name(*runtime_object, property_name) ||
             is_native_activepage_member_name(*runtime_object, property_name) ||
@@ -1361,6 +1364,9 @@
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
+            ((normalize_identifier(runtime_object->prog_id) == "_screen" ||
+              normalize_identifier(runtime_object->prog_id) == "_vfp") &&
+             property_name == "mousepointer") ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_pagecount_member_name(*runtime_object, property_name) ||
             is_native_activepage_member_name(*runtime_object, property_name) ||

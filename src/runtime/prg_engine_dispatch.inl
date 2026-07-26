@@ -1333,6 +1333,27 @@
                                               .location = statement.location});
                             return {};
                         }
+                        if (normalized_member_path == "mousepointer")
+                        {
+                            RuntimeOleObjectState *application_surface =
+                                representative_application_surface_object();
+                            if (application_surface != nullptr)
+                            {
+                                const double mouse_pointer = value_as_number(assignment_value);
+                                application_surface->properties["mousepointer"] = make_number_value(
+                                    std::isfinite(mouse_pointer) && mouse_pointer >= 0.0
+                                        ? static_cast<double>(std::llround(mouse_pointer))
+                                        : 0.0);
+                                application_surface->last_action = "MousePointer = " +
+                                    value_as_string(application_surface->properties["mousepointer"]);
+                                ++application_surface->action_count;
+                            }
+                            events.push_back({.category = "ole.set",
+                                              .detail = object_part + ".MousePointer = " +
+                                                            value_as_string(assignment_value),
+                                              .location = statement.location});
+                            return {};
+                        }
                     }
                     const PrgValue object_value = lookup_variable(frame, object_part);
                     auto object = resolve_ole_object(object_value);

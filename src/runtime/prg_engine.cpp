@@ -1044,6 +1044,7 @@ namespace copperfin::runtime
         std::map<std::string, std::string> native_method_source_text_by_key;
         std::optional<int> representative_active_form_handle;
         std::optional<int> representative_application_forms_collection_handle;
+        std::optional<int> representative_application_surface_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
         int representative_application_window_state = 0;
         bool representative_application_right_to_left = true;
@@ -1127,6 +1128,7 @@ namespace copperfin::runtime
         void note_representative_active_form(const RuntimeOleObjectState &runtime_object);
         std::vector<int> representative_application_window_handles() const;
         std::size_t representative_application_form_count() const;
+        RuntimeOleObjectState *representative_application_surface_object();
         RuntimeOleObjectState *ensure_representative_application_forms_collection_object();
         bool consume_last_popped_frame_requested_nodefault();
         std::optional<std::intptr_t> dispatch_windows_message(
@@ -1782,6 +1784,25 @@ namespace copperfin::runtime
                     normalized_property_path == "_vfp.righttoleft")
                 {
                     return make_boolean_value(representative_application_right_to_left);
+                }
+                if (normalized_property_path == "_screen.mousepointer" ||
+                    normalized_property_path == "_vfp.mousepointer")
+                {
+                    if (representative_application_surface_handle.has_value())
+                    {
+                        const auto application_surface = ole_objects.find(
+                            *representative_application_surface_handle);
+                        if (application_surface != ole_objects.end())
+                        {
+                            const auto mouse_pointer =
+                                application_surface->second.properties.find("mousepointer");
+                            if (mouse_pointer != application_surface->second.properties.end())
+                            {
+                                return mouse_pointer->second;
+                            }
+                        }
+                    }
+                    return make_number_value(0.0);
                 }
                 if (normalized_property_path == "_screen.formcount" ||
                     normalized_property_path == "_vfp.formcount")
@@ -3723,6 +3744,16 @@ namespace copperfin::runtime
     std::size_t PrgRuntimeSession::Impl::representative_application_form_count() const
     {
         return representative_application_window_handles().size();
+    }
+
+    RuntimeOleObjectState *PrgRuntimeSession::Impl::representative_application_surface_object()
+    {
+        if (!representative_application_surface_handle.has_value())
+        {
+            return nullptr;
+        }
+        const auto found = ole_objects.find(*representative_application_surface_handle);
+        return found == ole_objects.end() ? nullptr : &found->second;
     }
 
     RuntimeOleObjectState *PrgRuntimeSession::Impl::ensure_representative_application_forms_collection_object()
@@ -10769,6 +10800,22 @@ namespace copperfin::runtime
         impl->startup_default_directory = effective.working_directory;
         impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
         impl->data_sessions.try_emplace(1);
+        const int application_surface_handle =
+            impl->register_ole_object("_SCREEN", "runtime application surface");
+        if (const auto application_surface = impl->ole_objects.find(application_surface_handle);
+            application_surface != impl->ole_objects.end())
+        {
+            application_surface->second.hidden_runtime_surface = true;
+            application_surface->second.base_class_name = "Screen";
+            application_surface->second.class_hierarchy = {"SCREEN", "OBJECT"};
+            application_surface->second.properties["mousepointer"] = make_number_value(0.0);
+            impl->representative_application_surface_handle = application_surface_handle;
+            const PrgValue application_surface_reference = make_string_value(
+                "object:" + application_surface->second.prog_id + "#" +
+                std::to_string(application_surface->second.handle));
+            impl->globals["_screen"] = application_surface_reference;
+            impl->globals["_vfp"] = application_surface_reference;
+        }
         impl->events.push_back({.category = "runtime.config",
                                 .detail = "temp=" + copperfin::platform::path_to_utf8_string(impl->runtime_temp_directory) +
                                           ";max_call_depth=" + std::to_string(impl->max_call_depth) +
