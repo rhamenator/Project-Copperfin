@@ -78,6 +78,48 @@ void test_proc_abbreviation_registers_same_file_do_routine() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_store_expands_defined_indirect_target_without_changing_array_targets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_store_indirect_macro_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "store_indirect_macro_target.prg";
+    write_text(
+        main_path,
+        "#DEFINE target_name oItems\n"
+        "#DEFINE collection_class \"Collection\"\n"
+        "PUBLIC oItems, nCount, nArrayValue\n"
+        "DIMENSION aValues[1]\n"
+        "STORE CREATEOBJECT(collection_class) TO ([target_name])\n"
+        "STORE 7 TO aValues[1]\n"
+        "nCount = oItems.Count\n"
+        "nArrayValue = aValues[1]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "indirect STORE macro target script should complete: " + state.message);
+
+    const auto expect_value = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should remain visible");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " should equal " + expected + ", got " +
+                       copperfin::runtime::format_value(found->second));
+        }
+    };
+
+    expect_value("ncount", "0");
+    expect_value("narrayvalue", "7");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_call_with_parameters_binds_arguments_in_called_routine() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_call_with_parameters";

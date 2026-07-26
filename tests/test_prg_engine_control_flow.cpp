@@ -67,6 +67,7 @@ int main() {
     test_block_terminators_ignore_trailing_annotations();
     test_do_with_parameters_binds_arguments_in_called_routine();
     test_proc_abbreviation_registers_same_file_do_routine();
+    test_store_expands_defined_indirect_target_without_changing_array_targets();
     test_call_with_parameters_binds_arguments_in_called_routine();
     test_unsupplied_parameters_initialize_to_logical_false();
     test_parameter_defaults_use_heap_backed_expression_continuations();

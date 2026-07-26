@@ -436,6 +436,64 @@ std::string substitute_preprocessor_constants(const std::string& text, const Pre
     return substitute_preprocessor_constants(text, defines, expansion_stack);
 }
 
+std::string expand_indirect_store_target_macros(
+    const std::string& line,
+    const PreprocessorDefineMap& defines) {
+    const std::string trimmed_line = trim_copy(line);
+    if (!starts_with_insensitive(trimmed_line, "STORE ")) {
+        return line;
+    }
+
+    const std::string body = trim_copy(trimmed_line.substr(6U));
+    const std::size_t to_position = find_keyword_top_level(body, "TO");
+    if (to_position == std::string::npos) {
+        return line;
+    }
+
+    const std::string expression = trim_copy(body.substr(0U, to_position));
+    const std::vector<std::string> raw_targets =
+        split_csv_like(trim_copy(body.substr(to_position + 2U)));
+    std::vector<std::string> targets;
+    targets.reserve(raw_targets.size());
+    bool changed = false;
+    for (const std::string& raw_target : raw_targets) {
+        std::string target = trim_copy(raw_target);
+        if (target.size() >= 4U && target.front() == '(' && target.back() == ')') {
+            const std::string indirect_name = trim_copy(target.substr(1U, target.size() - 2U));
+            if (indirect_name.size() >= 2U &&
+                indirect_name.front() == '[' &&
+                indirect_name.back() == ']') {
+                const std::string macro_name =
+                    trim_copy(indirect_name.substr(1U, indirect_name.size() - 2U));
+                if (is_bare_identifier_text(macro_name) &&
+                    defines.contains(normalize_identifier(macro_name))) {
+                    std::set<std::string> expansion_stack;
+                    target = expand_preprocessor_identifier(
+                        macro_name,
+                        defines,
+                        expansion_stack);
+                    changed = true;
+                }
+            }
+        }
+        targets.push_back(std::move(target));
+    }
+
+    if (!changed) {
+        return line;
+    }
+
+    std::ostringstream expanded;
+    expanded << "STORE " << expression << " TO ";
+    for (std::size_t index = 0U; index < targets.size(); ++index) {
+        if (index != 0U) {
+            expanded << ", ";
+        }
+        expanded << targets[index];
+    }
+    return expanded.str();
+}
+
 bool is_preprocessor_active(const PreprocessorState& state) {
     return state.conditionals.empty() || state.conditionals.back().current_active;
 }
@@ -975,6 +1033,7 @@ void append_preprocessed_logical_lines(
 
         LogicalLine expanded_line = logical_line;
         expanded_line.text = substitute_preprocessor_constants(logical_line.text, state.defines);
+        expanded_line.text = expand_indirect_store_target_macros(expanded_line.text, state.defines);
         output_lines.push_back(std::move(expanded_line));
     }
 }
