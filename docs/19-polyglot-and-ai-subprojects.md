@@ -47,6 +47,26 @@ not localized. Human-readable error messages are display text and must use the n
 localization path at the host boundary. This contract slice defines validation and
 examples only; it does not route .NET, Python, R, AI, or MCP execution.
 
+## Route Registry v1
+
+The route registry is a separate decision layer above the migration contract. Its
+machine state values are invariant and are intentionally not localized:
+
+- `off`: invoke the native path only.
+- `shadow`: invoke native and candidate paths, but return native; comparison belongs to
+  the shadow-parity slice.
+- `canary`: select the candidate from a deterministic `0..99` sample when the sample is
+  below the configured percentage; otherwise select native.
+- `on`: select the candidate with native fallback permitted by policy.
+- `retire-legacy`: select the candidate with native fallback disabled.
+
+`load_polyglot_route_registry` validates decoded capability records before creating the
+registry. Capability IDs use the lower-case machine identifier syntax from the migration
+contract, duplicate IDs are rejected, canary percentages are limited to `0..100`, and
+non-canary states cannot carry a percentage. Missing configuration creates an empty
+registry, whose lookup is safely `off`; invalid configuration returns stable machine
+error codes. This slice defines selection only and does not invoke either bridge.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.

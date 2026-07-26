@@ -1,0 +1,14 @@
+{
+  "registry_version": "1.0",
+  "routes": [
+    {
+      "capability_id": "reports.invoice.render",
+      "state": "canary",
+      "canary_percentage": 25
+    },
+    {
+      "capability_id": "reports.invoice.preview",
+      "state": "off"
+    }
+  ]
+}

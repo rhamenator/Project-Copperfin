@@ -4524,6 +4524,22 @@ copperfin_add_test(test_platform_models "cf_security;cf_platform_profile"
     test_platform_models.cpp
 )
 
+copperfin_add_test(test_polyglot_route_registry cf_platform_profile
+    test_polyglot_route_registry.cpp
+)
+target_compile_definitions(
+    test_polyglot_route_registry
+    PRIVATE
+        COPPERFIN_ROUTE_REGISTRY_EXAMPLE_PATH="${CMAKE_SOURCE_DIR}/docs/contracts/polyglot-route-registry-v1.json"
+)
+
+add_test(
+    NAME test_polyglot_route_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_polyglot_route_contract_check.cmake
+)
+
 add_executable(test_platform_environment
     test_platform_environment.cpp
 )
