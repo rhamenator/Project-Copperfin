@@ -537,48 +537,60 @@ bool native_visual_fontsize_member_name_matches(
 bool native_visual_fontbold_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontbold" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontbold");
 }
 
 bool native_visual_fontitalic_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontitalic" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontitalic");
 }
 
 bool native_visual_fontunderline_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontunderline" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontunderline");
 }
 
 bool native_visual_fontstrikethru_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontstrikethru" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontstrikethru");
 }
 
 bool native_visual_fontoutline_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontoutline" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontoutline");
 }
 
 bool native_visual_fontshadow_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "fontshadow" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("fontshadow");
 }
 

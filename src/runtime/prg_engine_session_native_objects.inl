@@ -134,42 +134,42 @@
                 runtime_object.properties["fontsize"] = make_number_value(10.0);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontbold"))
             {
                 runtime_object.properties["fontbold"] = make_boolean_value(false);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontitalic"))
             {
                 runtime_object.properties["fontitalic"] = make_boolean_value(false);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontunderline"))
             {
                 runtime_object.properties["fontunderline"] = make_boolean_value(false);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontstrikethru"))
             {
                 runtime_object.properties["fontstrikethru"] = make_boolean_value(false);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontoutline"))
             {
                 runtime_object.properties["fontoutline"] = make_boolean_value(false);
             }
 
-            if (is_native_visual_runtime_object(runtime_object) &&
+            if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_font_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("fontshadow"))
             {
