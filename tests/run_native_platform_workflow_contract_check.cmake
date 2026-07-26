@@ -572,6 +572,15 @@ require_text("scripts/run-required-designer-smoke.ps1"
 require_text("scripts/validate-windows.ps1"
     "\"-TimeoutSeconds\", \"1800\""
     "explicit local designer smoke timeout")
+require_text("scripts/validate-windows.ps1"
+    "$validationFailures = [System.Collections.Generic.List[string]]::new()"
+    "Windows validation failure ledger")
+require_text("scripts/validate-windows.ps1"
+    "Write-Warning (\"Continuing after [$Name]; the final validation result will remain failed.\")"
+    "Windows validation independent-stage continuation")
+require_text("scripts/validate-windows.ps1"
+    "Validation completed with $($validationFailures.Count) failure(s):"
+    "Windows validation aggregate failure result")
 require_text(".github/workflows/windows-deep-validation.yml"
     "'-TimeoutSeconds', '1800'"
     "explicit hosted designer smoke timeout")

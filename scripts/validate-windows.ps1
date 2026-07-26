@@ -23,18 +23,33 @@ $smokeProject = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\Copperfin.Desig
 $smokeExe = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe"
 $requiredDesignerSmokeScript = Join-Path $repoRoot "scripts\run-required-designer-smoke.ps1"
 $deepSmokeScript = Join-Path $repoRoot "scripts\run-windows-deep-smoke.ps1"
+$validationFailures = [System.Collections.Generic.List[string]]::new()
 
 function Invoke-Step {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Name,
         [Parameter(Mandatory = $true)]
-        [scriptblock]$Action
+        [scriptblock]$Action,
+        [switch]$ContinueOnFailure
     )
 
     Write-Host ""
     Write-Host "==> $Name" -ForegroundColor Cyan
-    & $Action
+    try {
+        & $Action
+        return $true
+    }
+    catch {
+        $detail = $_.Exception.Message
+        $validationFailures.Add("${Name}: $detail")
+        Write-Host ("VALIDATION FAILURE [$Name]: $detail") -ForegroundColor Red
+        if (-not $ContinueOnFailure) {
+            throw
+        }
+        Write-Warning ("Continuing after [$Name]; the final validation result will remain failed.")
+        return $false
+    }
 }
 
 function Invoke-Checked {
@@ -134,36 +149,45 @@ Invoke-Step -Name "Run designer smoke tests" -Action {
         "-NoProfile", "-File", $requiredDesignerSmokeScript, "-ExecutablePath", $smokeExe,
         "-TimeoutSeconds", "1800"
     )
-}
+} -ContinueOnFailure
 
 Invoke-Step -Name "Run runtime package smoke test" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
         "-NoProfile", "-File", $deepSmokeScript, "-Stage", "RuntimePackage"
     )
-}
+} -ContinueOnFailure
 
 Invoke-Step -Name "Run PRG debugger smoke test" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
         "-NoProfile", "-File", $deepSmokeScript, "-Stage", "PrgDebugger"
     )
-}
+} -ContinueOnFailure
 
 Invoke-Step -Name "Run xAsset bootstrap smoke test" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
         "-NoProfile", "-File", $deepSmokeScript, "-Stage", "XAsset"
     )
-}
+} -ContinueOnFailure
 
 Invoke-Step -Name "Run report xAsset smoke test" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
         "-NoProfile", "-File", $deepSmokeScript, "-Stage", "Report"
     )
-}
+} -ContinueOnFailure
 
 Invoke-Step -Name "Run menu xAsset smoke test" -Action {
     Invoke-Checked -FilePath "pwsh" -ArgumentList @(
         "-NoProfile", "-File", $deepSmokeScript, "-Stage", "Menu"
     )
+} -ContinueOnFailure
+
+if ($validationFailures.Count -gt 0) {
+    Write-Host ""
+    Write-Host "Validation completed with $($validationFailures.Count) failure(s):" -ForegroundColor Red
+    foreach ($failure in $validationFailures) {
+        Write-Host " - $failure" -ForegroundColor Red
+    }
+    exit 1
 }
 
 Write-Host ""
