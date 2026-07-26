@@ -51,15 +51,15 @@
                     override != options.source_text_overrides.end() &&
                     !override->second.empty();
             };
-            if (std::filesystem::exists(default_directory_candidate, ignored) ||
-                has_admitted_source(default_directory_candidate))
-            {
-                return copperfin::platform::path_to_utf8_string(default_directory_candidate);
-            }
             if (const auto casefolded = resolve_existing_casefolded(default_directory_candidate);
                 casefolded.has_value())
             {
                 return copperfin::platform::path_to_utf8_string(*casefolded);
+            }
+            if (std::filesystem::exists(default_directory_candidate, ignored) ||
+                has_admitted_source(default_directory_candidate))
+            {
+                return copperfin::platform::path_to_utf8_string(default_directory_candidate);
             }
 
             const std::string normalized_fallback_path = normalize_path(fallback_path);
@@ -68,15 +68,15 @@
                 const std::filesystem::path fallback_directory_candidate =
                     (copperfin::platform::path_from_utf8_string(normalized_fallback_path).parent_path() /
                      program_path).lexically_normal();
-                if (std::filesystem::exists(fallback_directory_candidate, ignored) ||
-                    has_admitted_source(fallback_directory_candidate))
-                {
-                    return copperfin::platform::path_to_utf8_string(fallback_directory_candidate);
-                }
                 if (const auto casefolded = resolve_existing_casefolded(fallback_directory_candidate);
                     casefolded.has_value())
                 {
                     return copperfin::platform::path_to_utf8_string(*casefolded);
+                }
+                if (std::filesystem::exists(fallback_directory_candidate, ignored) ||
+                    has_admitted_source(fallback_directory_candidate))
+                {
+                    return copperfin::platform::path_to_utf8_string(fallback_directory_candidate);
                 }
             }
 
