@@ -161,12 +161,79 @@ void test_local_set_skip_tracks_child_group_navigation()
            "SET SKIP TO with no aliases should emit a clear event");
     fs::remove_all(temp_root, ignored);
 }
+
+void test_local_set_relation_additive_and_explicit_parent()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_relation_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    const fs::path second_child_path = temp_root / "second_child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}, {"PARENT30", 30}});
+    write_people_dbf(child_path, {{"CHILD10", 10}, {"CHILD20", 20}, {"CHILD30", 30}});
+    write_people_dbf(second_child_path, {{"SECOND10", 10}, {"SECOND20", 20}, {"SECOND30", 30}});
+
+    const fs::path main_path = temp_root / "relation_additive.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "USE '" + second_child_path.string() + "' ALIAS SecondChild IN 0\n"
+        "SET ORDER TO AGE IN Parent\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SET ORDER TO AGE IN SecondChild\n"
+        "SELECT Parent\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "SET RELATION TO AGE INTO SecondChild, AGE INTO Child ADDITIVE\n"
+        "GO TOP IN Parent\n"
+        "nBothAfterAdditive = RECNO('SecondChild')\n"
+        "SELECT Child\n"
+        "SET RELATION TO AGE INTO Child IN Parent\n"
+        "GO TOP IN Parent\n"
+        "SKIP 1 IN Parent\n"
+        "nChildAfterExplicitParent = RECNO('Child')\n"
+        "nSecondChildAfterReplacement = RECNO('SecondChild')\n"
+        "SELECT Parent\n"
+        "SET RELATION TO\n"
+        "SKIP 1 IN Parent\n"
+        "nChildAfterClear = RECNO('Child')\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "SET RELATION ADDITIVE script should complete");
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message)
+    {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end())
+        {
+            expect(format_value(found->second) == expected, message);
+        }
+    };
+    check("nbothafteradditive", "1", "ADDITIVE should retain and synchronize the second child relation");
+    check("nchildafterexplicitparent", "2", "explicit parent target should replace and synchronize its child relation");
+    check("nsecondchildafterreplacement", "1", "non-ADDITIVE replacement should remove the prior second-child relation");
+    check("nchildafterclear", "2", "SET RELATION TO should clear all relations for the selected parent");
+    expect(has_runtime_event(state.events, "runtime.relation", "AGE -> SecondChild"),
+           "ADDITIVE relation should emit a stable second-child event");
+    expect(has_runtime_event(state.events, "runtime.relation", "OFF -> Parent"),
+           "SET RELATION TO should emit a stable clear event");
+    fs::remove_all(temp_root, ignored);
+}
 }
 
 int main()
 {
     test_local_set_relation_tracks_parent_navigation();
     test_local_set_skip_tracks_child_group_navigation();
+    test_local_set_relation_additive_and_explicit_parent();
     if (copperfin::test_support::test_failures() != 0)
     {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4687 under #3217 extends the local `SET RELATION` runtime slice without changing the iterative, stack-frugal frame machine. Multiple `expression INTO child` clauses, `ADDITIVE` composition, explicit parent targets with `IN`, and bare `SET RELATION TO` clearing now work alongside the existing replacement and `OFF INTO child` forms. `test_prg_engine_relations` plus four neighboring work-area/SQL-cursor CTest regressions pass. Persistent DBC relations, mutation-triggered refresh, interactive BROWSE repetition, and broader multi-level graphs remain separate.
+
 - #4685 follow-up is implemented in the working tree: `CopperfinAssetEditorPane` now handles standard `CloseDocument`/`FileClose` commands, obtains the active `IVsWindowFrame` from `SVsShellMonitorSelection`, and calls `CloseFrame(FRAMECLOSE_PromptSave)` so the frame can release its document-tab/RDT ownership. The source-contract test passes on Linux; push and exact hosted Windows verification are required before closing #4685/#4621.
 
 - #4686 under #3217 adds first-pass VFP9 `SET SKIP TO` one-to-many navigation on top of existing local `SET RELATION` links. Relation skip state is data-session scoped, multiple child aliases are supported, `SET SKIP TO` clears only the skip flag, and child-side forward/reverse `SKIP` advances the parent across matching groups through the existing iterative frame machine. `test_prg_engine_relations` passes. Interactive BROWSE repetition, persistent DBC relations, relation mutation refresh, and broader multi-level/`ADDITIVE` behavior remain separate.
