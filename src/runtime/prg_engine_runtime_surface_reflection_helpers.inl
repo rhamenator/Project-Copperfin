@@ -1320,6 +1320,17 @@ bool native_grid_linkmaster_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_grid_childorder_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "childorder" ||
+        !runtime_object.properties.contains("childorder")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_grid_headerheight_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

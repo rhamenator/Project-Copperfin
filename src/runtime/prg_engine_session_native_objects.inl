@@ -821,6 +821,13 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("childorder"))
+            {
+                // An unconfigured headless Grid has no child index tag.
+                runtime_object.properties["childorder"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowcellselection"))
             {
                 runtime_object.properties["allowcellselection"] = make_boolean_value(true);

@@ -331,6 +331,7 @@
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_grid_linkmaster_member_name(*runtime_object, property_name) ||
+            is_native_grid_childorder_member_name(*runtime_object, property_name) ||
             is_native_grid_headerheight_member_name(*runtime_object, property_name) ||
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||
@@ -613,6 +614,7 @@
             is_native_name_member_name(*runtime_object, member_name) ||
             is_native_splitbar_member_name(*runtime_object, member_name) ||
             is_native_leftcolumn_member_name(*runtime_object, member_name) ||
+            is_native_grid_childorder_member_name(*runtime_object, member_name) ||
             is_native_grid_activecolumn_member_name(*runtime_object, member_name) ||
             is_native_grid_activerow_member_name(*runtime_object, member_name) ||
             is_native_grid_relativecolumn_member_name(*runtime_object, member_name) ||
@@ -1477,6 +1479,7 @@
             is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_grid_linkmaster_member_name(*runtime_object, property_name) ||
+            is_native_grid_childorder_member_name(*runtime_object, property_name) ||
             is_native_grid_headerheight_member_name(*runtime_object, property_name) ||
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||
