@@ -2,6 +2,8 @@
 
 Copperfin now has a first real runtime/build/debug pipeline slice instead of only design-time inspection.
 
+Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. Dynamic `DO (&name)`, control-flow forms, and xAsset commands remain separate runtime boundaries.
+
 Current native components:
 
 - `copperfin_build_host.exe`

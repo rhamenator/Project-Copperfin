@@ -1998,15 +1998,34 @@
                     return {};
                 }
 
-                std::filesystem::path target_path = copperfin::platform::path_from_utf8_string(target);
-                if (target_path.extension().empty())
+                std::filesystem::path target_candidate =
+                    copperfin::platform::path_from_utf8_string(target);
+                if (target_candidate.extension().empty())
                 {
-                    target_path += ".prg";
+                    target_candidate += ".prg";
                 }
-                if (target_path.is_relative())
+                std::filesystem::path target_path;
+                if (options.require_source_text_overrides)
                 {
-                    target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
-                        target_path;
+                    target_path = target_candidate;
+                    if (target_path.is_relative())
+                    {
+                        target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                            target_path;
+                    }
+                    target_path = target_path.lexically_normal();
+                    const auto admitted_target = find_source_text_override(
+                        copperfin::platform::path_to_utf8_string(target_path));
+                    if (admitted_target != options.source_text_overrides.end())
+                    {
+                        target_path = copperfin::platform::path_from_utf8_string(admitted_target->first);
+                    }
+                }
+                else
+                {
+                    target_path = copperfin::platform::path_from_utf8_string(
+                        resolve_native_prg_program_path(
+                            copperfin::platform::path_to_utf8_string(target_candidate)));
                 }
                 const std::string target_path_text =
                     copperfin::platform::path_to_utf8_string(target_path.lexically_normal());

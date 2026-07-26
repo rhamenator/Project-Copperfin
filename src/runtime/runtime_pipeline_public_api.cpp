@@ -2287,6 +2287,9 @@ RuntimePackagePlan create_runtime_package_plan(
             for (const auto& library_source : discover_prg_literal_library_source_paths(source)) {
                 enqueue_dependency(library_source, "PRG Runtime Dependency");
             }
+            for (const auto& do_source : discover_prg_literal_do_source_paths(source)) {
+                enqueue_dependency(do_source, "PRG DO Dependency");
+            }
         } else if (is_class_library_source(copperfin::platform::path_to_utf8_string(source))) {
             for (const auto& library_source : discover_vcx_literal_library_source_paths(source)) {
                 enqueue_dependency(library_source, "xAsset Runtime Dependency");

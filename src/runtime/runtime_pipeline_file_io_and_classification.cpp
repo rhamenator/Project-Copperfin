@@ -1016,6 +1016,109 @@ std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
     return discover_literal_library_source_paths(source, input);
 }
 
+std::vector<std::filesystem::path> discover_prg_literal_do_source_paths(
+    const std::filesystem::path& source) {
+    std::ifstream input(source);
+    if (!input) {
+        return {};
+    }
+
+    std::vector<std::filesystem::path> discovered;
+    std::unordered_set<std::string> identities;
+    const auto resolve_target = [&](std::string value) -> std::optional<std::filesystem::path> {
+        std::replace(value.begin(), value.end(), '\\', '/');
+        std::filesystem::path relative = copperfin::platform::path_from_utf8_string(value);
+        if (relative.extension().empty()) {
+            relative += ".prg";
+        }
+
+        bool ambiguous = false;
+        const auto resolved = resolve_existing_path_casefold(
+            (source.parent_path() / relative).lexically_normal(),
+            ambiguous);
+        if (ambiguous || !resolved.has_value()) {
+            return std::nullopt;
+        }
+        const std::string extension = lowercase_copy(
+            copperfin::platform::path_to_utf8_string(resolved->extension()));
+        if (extension != ".prg" && extension != ".mpr") {
+            return std::nullopt;
+        }
+        return resolved;
+    };
+    const auto strip_inline_comment = [](std::string line) {
+        bool in_string = false;
+        char quote = '\0';
+        for (std::size_t index = 0U; index + 1U < line.size(); ++index) {
+            const char character = line[index];
+            if (in_string) {
+                if (character == quote) {
+                    if (line[index + 1U] == quote) {
+                        ++index;
+                    } else {
+                        in_string = false;
+                    }
+                }
+                continue;
+            }
+            if (character == '\'' || character == '"') {
+                in_string = true;
+                quote = character;
+            } else if (character == '&' && line[index + 1U] == '&') {
+                line.resize(index);
+                break;
+            }
+        }
+        return line;
+    };
+    const auto starts_with_do = [](const std::string& value) {
+        constexpr std::string_view keyword = "DO ";
+        return value.size() >= keyword.size() &&
+            std::equal(
+                keyword.begin(),
+                keyword.end(),
+                value.begin(),
+                [](const char left, const char right) {
+                    return std::tolower(static_cast<unsigned char>(left)) ==
+                        std::tolower(static_cast<unsigned char>(right));
+                });
+    };
+
+    std::string line;
+    while (std::getline(input, line)) {
+        const std::string trimmed = trim_copy(strip_inline_comment(line));
+        if (trimmed.empty() || trimmed.front() == '*' ||
+            !starts_with_do(trimmed)) {
+            continue;
+        }
+
+        const std::string body = trim_copy(trimmed.substr(3U));
+        if (body.empty() || body.front() == '&' || body.front() == '(' ||
+            body.front() == '\'' || body.front() == '"') {
+            continue;
+        }
+        const std::size_t token_end = body.find_first_of(" \t");
+        const std::string target = body.substr(0U, token_end);
+        const std::string normalized_target = lowercase_copy(target);
+        if (normalized_target == "case" || normalized_target == "while" ||
+            normalized_target == "form" || normalized_target == "report" ||
+            normalized_target == "label" || normalized_target == "menu") {
+            continue;
+        }
+
+        const auto resolved = resolve_target(target);
+        if (!resolved.has_value()) {
+            continue;
+        }
+        const std::string identity = lowercase_copy(
+            copperfin::platform::path_to_utf8_string(resolved->lexically_normal()));
+        if (identities.insert(identity).second) {
+            discovered.push_back(resolved->lexically_normal());
+        }
+    }
+    return discovered;
+}
+
 std::vector<std::filesystem::path> discover_vcx_literal_library_source_paths(
     const std::filesystem::path& source) {
     const auto table = copperfin::vfp::parse_dbf_table_from_file(

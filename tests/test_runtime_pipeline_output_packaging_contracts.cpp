@@ -338,6 +338,88 @@ void test_runtime_package_stages_recursive_prg_include_dependencies() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_stages_literal_do_dependencies() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_literal_do_dependencies";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+        "DO helper WITH 1\n"
+        "DO ..\\outside WITH 1\n"
+        "RETURN\n");
+    write_text(project_dir / "Helper.PRG", "LPARAMETERS tnValue\nRETURN tnValue\n");
+    write_text(temp_root / "outside.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "literal_do_dependencies.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LiteralDoDependencies";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = (output_dir / "LiteralDoDependencies.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "literal DO dependency plan should be created");
+    const auto helper_asset = std::find_if(
+        plan.assets.begin(),
+        plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.type_title == "PRG DO Dependency" &&
+                copperfin::platform::path_from_utf8_string(asset.relative_path).filename() ==
+                    copperfin::platform::path_from_utf8_string("Helper.PRG");
+        });
+    expect(helper_asset != plan.assets.end(),
+           "literal DO helper should be added to the package plan");
+    expect(std::none_of(
+               plan.assets.begin(),
+               plan.assets.end(),
+               [](const copperfin::runtime::RuntimePackageAsset& asset) {
+                   return asset.source_path.find("outside.prg") != std::string::npos;
+               }),
+           "literal DO dependency outside the project root must not be staged");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect_materialization(result, "literal DO dependency package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "Helper.PRG"),
+               "literal DO helper should be staged under content");
+        expect(read_text(result.plan.manifest_path).find("|Helper.PRG|") != std::string::npos,
+               "runtime manifest should identify literal DO dependencies");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_package_stages_unicode_prg_include_dependencies() {
     namespace fs = std::filesystem;
     const std::string unicode_suffix = "caf\xC3\xA9";
