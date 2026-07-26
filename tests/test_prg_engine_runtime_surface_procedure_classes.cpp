@@ -22,7 +22,11 @@ using namespace copperfin::test_support;
 
 void write_synthetic_vcx_class_library(
     const std::filesystem::path& table_path,
-    const std::string& base_class = "Custom") {
+    const std::string& base_class = "Custom",
+    const std::string& answer_method =
+        "FUNCTION Answer\r\n"
+        "RETURN THIS.nSeed + 1\r\n"
+        "ENDFUNC\r\n") {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 32U},
         {.name = "PARENT", .type = 'C', .length = 32U},
@@ -41,9 +45,7 @@ void write_synthetic_vcx_class_library(
             "LPARAMETERS seed\r\n"
             "THIS.nSeed = seed\r\n"
             "ENDPROC\r\n"
-            "FUNCTION Answer\r\n"
-            "RETURN THIS.nSeed + 1\r\n"
-            "ENDFUNC\r\n",
+            + answer_method,
             "Caption = 'vcx-default'\r\n"
         }
     };
@@ -289,6 +291,45 @@ void test_newobject_local_vcx_materializes_native_class() {
                state.events.end(),
                [](const auto& event) { return event.category == "prg.object.newobject"; }),
            "local VCX NEWOBJECT should emit the native object activation event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_newobject_local_vcx_generated_source_consumes_companion_header() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_companion_header";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path class_library_path = temp_root / "headerclass.vcx";
+    write_synthetic_vcx_class_library(
+        class_library_path,
+        "Custom",
+        "FUNCTION Answer\r\n"
+        "RETURN INCLUDED_VALUE\r\n"
+        "ENDFUNC\r\n");
+    write_text(temp_root / "headerclass.h", "#DEFINE INCLUDED_VALUE 42\n");
+    const fs::path main_path = temp_root / "newobject_local_vcx_companion_header.prg";
+    write_text(
+        main_path,
+        "oWidget = NEWOBJECT('MyWidget', 'headerclass.vcx', 40)\n"
+        "nAnswer = oWidget.Answer()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("VCX generated source should consume its companion header: ") + state.message);
+    const auto answer = state.globals.find("nanswer");
+    expect(answer != state.globals.end(),
+           "VCX companion-header test should expose the generated method result");
+    if (answer != state.globals.end()) {
+        expect(copperfin::runtime::format_value(answer->second) == "42",
+               "VCX generated methods should see macros from the companion header");
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -708,6 +749,7 @@ void test_scope_exit_releases_unreferenced_objects_and_preserves_returns() {
 int main() {
     test_set_procedure_classes_follow_vfp_activation_precedence();
     test_newobject_local_vcx_materializes_native_class();
+    test_newobject_local_vcx_generated_source_consumes_companion_header();
     test_newobject_local_vcx_uses_verified_snapshot();
     test_newobject_local_vcx_requires_verified_snapshot();
     test_newobject_external_prg_uses_admitted_source_when_path_is_absent();

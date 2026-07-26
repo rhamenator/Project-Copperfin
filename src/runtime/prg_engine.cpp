@@ -9899,8 +9899,23 @@ namespace copperfin::runtime
         }
 
         std::ostringstream source;
-        source << "* Copperfin generated VCX class bridge\n"
-               << "DEFINE CLASS " << trimmed_class_name << " AS " << base_class_name << "\n";
+        const std::filesystem::path include_root = open_library_path->parent_path();
+        const std::filesystem::path companion_header_candidate =
+            include_root / library_file.stem();
+        auto companion_header = companion_header_candidate;
+        companion_header.replace_extension(".h");
+        const auto companion_header_resolution = copperfin::vfp::resolve_unique_casefold_path(
+            companion_header);
+
+        source << "* Copperfin generated VCX class bridge\n";
+        if (!companion_header_resolution.ambiguous && companion_header_resolution.path.has_value())
+        {
+            source << "#include \""
+                   << copperfin::platform::path_to_utf8_string(
+                          companion_header_resolution.path->lexically_normal())
+                   << "\"\n";
+        }
+        source << "DEFINE CLASS " << trimmed_class_name << " AS " << base_class_name << "\n";
         for (const auto &property : root_object->properties)
         {
             if (!property.derived_from_property_blob ||

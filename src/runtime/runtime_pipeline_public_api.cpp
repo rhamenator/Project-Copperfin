@@ -2240,7 +2240,25 @@ RuntimePackagePlan create_runtime_package_plan(
         }
 
         const std::string source = copperfin::platform::path_to_utf8_string(source_path);
-        if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
+        if (source.empty()) {
+            return;
+        }
+
+        const std::string source_identity = lowercase_copy(source);
+        if (!known_asset_sources.insert(source_identity).second) {
+            // A project may mark a compile-time header excluded even though a
+            // staged PRG or generated VCX bridge requires it. Dependency
+            // discovery is an explicit admission for that contained file.
+            for (auto& existing : plan.assets) {
+                if (lowercase_copy(existing.source_path) != source_identity || !existing.exists) {
+                    continue;
+                }
+                if (existing.excluded) {
+                    existing.excluded = false;
+                    existing.type_title = type_title;
+                }
+                return;
+            }
             return;
         }
 

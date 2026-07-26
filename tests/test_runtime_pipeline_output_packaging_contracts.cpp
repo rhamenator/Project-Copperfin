@@ -291,7 +291,8 @@ void test_runtime_package_stages_recursive_prg_include_dependencies() {
     workspace.build_plan.startup_item = "main.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
-        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = "shared.h", .relative_path = "shared.h", .type_title = "Header", .excluded = true}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
