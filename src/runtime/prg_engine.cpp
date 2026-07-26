@@ -2060,6 +2060,10 @@ namespace copperfin::runtime
                 {
                     return std::to_string(current_transaction_level());
                 }
+                if (normalized_name == "datasession")
+                {
+                    return std::to_string(current_data_session);
+                }
                 if (normalized_name == "udfparms")
                 {
                     return udfparms_mode;

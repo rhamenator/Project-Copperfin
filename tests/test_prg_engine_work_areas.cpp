@@ -89,9 +89,11 @@ void test_use_and_data_session_isolation() {
         "nRec1 = RECNO()\n"
         "lEof1 = EOF()\n"
         "lBof1 = BOF()\n"
+        "cDataSessionBefore = SET('DATASESSION')\n"
         "SELECT People\n"
         "nDataSessionCalls = 0\n"
         "SET DATASESSION TO data_session_id(2)\n"
+        "cDataSessionAfter = SET('DATASESSION')\n"
         "cAlias2 = ALIAS()\n"
         "nCount2 = RECCOUNT()\n"
         "USE '" + table_path.string() + "' ALIAS SessionTwo IN 0\n"
@@ -119,6 +121,18 @@ void test_use_and_data_session_isolation() {
     if (data_session_calls != state.globals.end()) {
         expect(copperfin::runtime::format_value(data_session_calls->second) == "1",
                "SET DATASESSION should evaluate the session UDF exactly once");
+    }
+    const auto data_session_before = state.globals.find("cdatasessionbefore");
+    const auto data_session_after = state.globals.find("cdatasessionafter");
+    expect(data_session_before != state.globals.end(), "SET(DATASESSION) before switching should be captured");
+    expect(data_session_after != state.globals.end(), "SET(DATASESSION) after switching should be captured");
+    if (data_session_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(data_session_before->second) == "1",
+               "SET(DATASESSION) should report the initial data session");
+    }
+    if (data_session_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(data_session_after->second) == "2",
+               "SET(DATASESSION) should report the active data session");
     }
 
     const auto alias1 = state.globals.find("calias1");
