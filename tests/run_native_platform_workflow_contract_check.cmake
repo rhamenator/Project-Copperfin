@@ -579,6 +579,9 @@ require_text("scripts/run-required-designer-smoke.ps1"
     "\"interrupted\""
     "designer smoke incomplete-process interruption classification")
 require_text("scripts/run-required-designer-smoke.ps1"
+    "\"invalid\""
+    "designer smoke invalid-invocation harness classification")
+require_text("scripts/run-required-designer-smoke.ps1"
     "('\"' + $statusPath + '\"')"
     "quoted designer smoke status path")
 require_text("vsix/Copperfin.DesignerSmokeTests/Program.Shared.cs"

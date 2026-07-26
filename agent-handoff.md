@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4664 classification correction is pushed in the current tree. A malformed DesignerSmoke invocation that writes `status=invalid` is now classified as `harness-failure`; only an incomplete non-invalid process remains `interrupted`. The CMake workflow contract passes, and the exact-head Windows/VFPSource rerun remains required.
+
 - #4664 path-handling follow-up is pushed in the current tree. The DesignerSmoke executable documents `--status-file`, and `run-required-designer-smoke.ps1` quotes the temporary marker path before invoking `Start-Process`, covering Windows profiles/temp roots with spaces. The focused host-theme smoke passed with `status=completed`, PowerShell parsing passed, and `test_native_platform_workflow_contract` passed. Windows must still rerun the current head with VFPSource and confirm the marker/classification and independent stage evidence.
 
 - #4664 classification follow-up is implemented in the current tree. `Program.Shared.cs` accepts an optional `--status-file` and writes `started`/`completed` markers without affecting smoke results. `run-required-designer-smoke.ps1` now distinguishes timeout, completed-process product failure, incomplete-process interruption, successful completion, and missing completion markers; the stage-isolation ledger still preserves the final nonzero result. PowerShell syntax, `test_native_platform_workflow_contract`, and the focused host-theme smoke pass. Windows must validate the status marker and exact stage classifications on the hosted rerun.

@@ -61,7 +61,11 @@ try {
         else {
             ""
         }
-        $kind = if ($status -eq "completed") { "product-failure" } else { "interrupted" }
+        $kind = switch ($status) {
+            "completed" { "product-failure"; break }
+            "invalid" { "harness-failure"; break }
+            default { "interrupted" }
+        }
         Write-Output ("DESIGNER_SMOKE_RESULT: kind={0}; exit_code={1}; status={2}" -f $kind, $process.ExitCode, ($status -replace "\s+", "<none>"))
         throw "Designer smoke executable failed with classified result '$kind' and exit code $($process.ExitCode)."
     }
