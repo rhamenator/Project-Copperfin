@@ -764,6 +764,13 @@ namespace copperfin::runtime
 
         struct DataSessionState
         {
+            struct RelationState
+            {
+                int parent_work_area = 0;
+                int child_work_area = 0;
+                std::string expression;
+            };
+
             struct PopupActionRoutine
             {
                 std::string action_text;
@@ -775,6 +782,7 @@ namespace copperfin::runtime
             int next_work_area = 1;
             std::map<int, std::string> aliases;
             std::map<int, CursorState> cursors;
+            std::vector<RelationState> relations;
             std::set<int> table_locks;
             std::map<int, std::set<std::size_t>> record_locks;
             std::vector<std::string> key_stack;
@@ -1082,6 +1090,7 @@ namespace copperfin::runtime
         // Index seek optimizer - pattern cache
         std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
         std::vector<std::pair<const CursorState *, const vfp::DbfRecord *>> record_evaluation_overrides;
+        bool relation_synchronization_active = false;
 
 #include "prg_engine_session.inl"
 #include "prg_engine_verified_file_security.inl"

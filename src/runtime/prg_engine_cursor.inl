@@ -151,11 +151,78 @@
                 session.selected_work_area = cursor->work_area;
             }
             release_shared_lock_ownership_for_cursor(*cursor, session, current_data_session);
+            session.relations.erase(
+                std::remove_if(
+                    session.relations.begin(),
+                    session.relations.end(),
+                    [&](const DataSessionState::RelationState &relation)
+                    {
+                        return relation.parent_work_area == closed_work_area ||
+                               relation.child_work_area == closed_work_area;
+                    }),
+                session.relations.end());
             session.aliases.erase(cursor->work_area);
             session.table_locks.erase(cursor->work_area);
             session.record_locks.erase(cursor->work_area);
             session.cursors.erase(cursor->work_area);
             session.next_work_area = std::min(session.next_work_area, closed_work_area);
+        }
+
+        void synchronize_relations_for_parent(CursorState &parent, const Frame &frame)
+        {
+            if (relation_synchronization_active)
+            {
+                return;
+            }
+
+            struct RelationSynchronizationGuard
+            {
+                bool &active;
+
+                explicit RelationSynchronizationGuard(bool &active_value)
+                    : active(active_value)
+                {
+                    active = true;
+                }
+
+                ~RelationSynchronizationGuard()
+                {
+                    active = false;
+                }
+            } guard(relation_synchronization_active);
+
+            const auto relations = current_session_state().relations;
+            for (const auto &relation : relations)
+            {
+                if (relation.parent_work_area != parent.work_area)
+                {
+                    continue;
+                }
+
+                CursorState *child = find_cursor_by_area(relation.child_work_area);
+                if (child == nullptr)
+                {
+                    continue;
+                }
+
+                if (parent.bof || parent.eof || parent.recno == 0U)
+                {
+                    child->found = false;
+                    (void)move_cursor_to(*child, static_cast<long long>(child->record_count + 1U));
+                    continue;
+                }
+
+                const std::string search_key = value_as_string(
+                    evaluate_expression(relation.expression, frame, &parent));
+                if (child->active_order_expression.empty() && child->orders.empty())
+                {
+                    child->found = false;
+                    (void)move_cursor_to(*child, static_cast<long long>(child->record_count + 1U));
+                    continue;
+                }
+
+                (void)seek_in_cursor(*child, search_key, frame);
+            }
         }
 
         vfp::DbfTableParseResult parse_table_path(

@@ -4656,6 +4656,11 @@ copperfin_add_test(test_prg_engine_work_areas cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_relations cf_xbase_runtime
+    test_prg_engine_relations.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_ordered_iteration cf_xbase_runtime
     test_prg_engine_ordered_iteration.cpp
     prg_engine_test_support.cpp

@@ -3578,6 +3578,7 @@
                     &used_order_normalization_hint,
                     &used_order_collation_hint,
                     &used_order_descending);
+                synchronize_relations_for_parent(*cursor, frame);
                 events.push_back({.category = "runtime.seek",
                                   .detail = format_order_metadata_detail(
                                                 used_order_name.empty() ? std::string{"<default>"} : used_order_name,
@@ -4262,6 +4263,7 @@
                     move_cursor_to(*cursor, requested);
                 }
 
+                synchronize_relations_for_parent(*cursor, frame);
                 events.push_back({.category = "runtime.go",
                                   .detail = destination.empty() ? statement.expression : destination,
                                   .location = statement.location});
@@ -4291,6 +4293,7 @@
                 {
                     cursor->found = false;
                 }
+                synchronize_relations_for_parent(*cursor, frame);
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
                                   .location = statement.location});
@@ -4800,6 +4803,74 @@
                     }
                     events.push_back({.category = "runtime.database.current",
                                       .detail = current_database_path(),
+                                      .location = statement.location});
+                    return {};
+                }
+
+                if (normalized_name == "relation")
+                {
+                    const std::string relation_clause = strip_set_to_value(option_value);
+                    const std::size_t into_position = find_keyword_top_level(relation_clause, "INTO");
+                    if (into_position == std::string::npos)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                            {{"command", "SET RELATION"}, {"target", relation_clause}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const std::string relation_source = trim_copy(relation_clause.substr(0U, into_position));
+                    const std::string child_designator = evaluate_cursor_designator_expression(
+                        trim_copy(relation_clause.substr(into_position + 4U)), frame);
+                    CursorState *parent = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    CursorState *child = resolve_cursor_target(child_designator);
+                    if (parent == nullptr || child == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                            {{"command", "SET RELATION"}, {"target", child_designator}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    auto &relations = current_session_state().relations;
+                    relations.erase(
+                        std::remove_if(
+                            relations.begin(),
+                            relations.end(),
+                            [&](const DataSessionState::RelationState &relation)
+                            {
+                                return relation.parent_work_area == parent->work_area &&
+                                       relation.child_work_area == child->work_area;
+                            }),
+                        relations.end());
+
+                    if (normalize_identifier(relation_source) != "off")
+                    {
+                        const std::string expression = strip_set_to_value(relation_source);
+                        if (expression.empty())
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                                {{"command", "SET RELATION"}, {"target", relation_source}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        relations.push_back({
+                            .parent_work_area = parent->work_area,
+                            .child_work_area = child->work_area,
+                            .expression = expression});
+                        synchronize_relations_for_parent(*parent, frame);
+                    }
+
+                    events.push_back({.category = "runtime.relation",
+                                      .detail = normalize_identifier(relation_source) == "off"
+                                          ? "OFF -> " + child->alias
+                                          : relation_source + " -> " + child->alias,
                                       .location = statement.location});
                     return {};
                 }
