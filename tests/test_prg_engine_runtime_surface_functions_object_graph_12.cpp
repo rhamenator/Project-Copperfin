@@ -2,6 +2,46 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_typed_local_newobject_method_invocation_uses_local_storage()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_typed_local_newobject";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "typed_local_newobject.prg";
+        write_text(
+            main_path,
+            "LOCAL oWidget AS TypedWidget OF typed_local_newobject.prg\n"
+            "m.oWidget = NEWOBJECT('TypedWidget', 'typed_local_newobject.prg')\n"
+            "cResult = m.oWidget.Rename('Updated')\n"
+            "RETURN\n"
+            "DEFINE CLASS TypedWidget AS Custom\n"
+            "    Caption = 'Demo'\n"
+            "    FUNCTION Rename\n"
+            "        LPARAMETERS tcCaption\n"
+            "        THIS.Caption = tcCaption\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("typed local NEWOBJECT method script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto result = state.globals.find("cresult");
+        expect(result != state.globals.end() && copperfin::runtime::format_value(result->second) == "Updated",
+               "typed local NEWOBJECT method invocation should use the local object");
+        expect(state.globals.find("owidget") == state.globals.end(),
+               "m-qualified typed local assignment should not create a global object variable");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_prg_object_methods_bind_this_and_persist_instance_state()
     {
         namespace fs = std::filesystem;

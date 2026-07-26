@@ -103,6 +103,13 @@ bool looks_like_array_declaration_body(const std::string& body) {
     return false;
 }
 
+std::string local_declaration_name(const std::string& declaration) {
+    const std::size_t as_position = find_keyword_top_level(declaration, "AS");
+    return trim_copy(as_position == std::string::npos
+                         ? declaration
+                         : declaration.substr(0U, as_position));
+}
+
 std::pair<std::string, std::string> split_declare_library_expression(const std::string& text) {
     const std::string trimmed = trim_copy(text);
     if (trimmed.empty()) {
@@ -2715,6 +2722,9 @@ Program parse_program_impl(
                 statement.names = split_csv_like(body.substr(6U));
             } else {
                 statement.names = split_csv_like(body);
+                for (std::string &name : statement.names) {
+                    name = local_declaration_name(name);
+                }
             }
         } else if (upper == "PRIVATE ALL" || starts_with_insensitive(line, "PRIVATE ALL ")) {
             // PRIVATE ALL [LIKE <pattern> | EXCEPT <pattern>]

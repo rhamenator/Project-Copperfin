@@ -1622,9 +1622,20 @@ namespace copperfin::runtime
                 };
                 ResolvedRuntimeObjectMemberPath resolved_path;
                 const std::string normalized_base_name = normalize_identifier(base_name);
+                std::string object_base_name = base_name;
+                std::string object_member_path = member_path;
+                if (normalized_base_name == "m")
+                {
+                    const std::size_t separator = member_path.find('.');
+                    if (separator != std::string::npos)
+                    {
+                        object_base_name = "m." + member_path.substr(0U, separator);
+                        object_member_path = member_path.substr(separator + 1U);
+                    }
+                }
                 if (const auto direct_result = invoke_runtime_object_reference_member(
-                        make_string_value(base_name),
-                        member_path,
+                        make_string_value(object_base_name),
+                        object_member_path,
                         frame,
                         arguments,
                         argument_references);
@@ -1662,7 +1673,10 @@ namespace copperfin::runtime
                 }
                 if (resolved_path.runtime_object == nullptr)
                 {
-                    resolved_path = resolve_runtime_object_member_path(frame, base_name, member_path);
+                    resolved_path = resolve_runtime_object_member_path(
+                        frame,
+                        object_base_name,
+                        object_member_path);
                 }
                 if (resolved_path.runtime_object == nullptr)
                 {
