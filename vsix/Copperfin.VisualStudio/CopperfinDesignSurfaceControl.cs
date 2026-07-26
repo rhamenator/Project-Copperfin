@@ -11,6 +11,200 @@ using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
+internal sealed class CopperfinDesignSurfaceTheme
+{
+    private CopperfinDesignSurfaceTheme(
+        Color background,
+        Color foreground,
+        Color grid,
+        Color pageFill,
+        Color pageBorder,
+        Color sectionFill,
+        Color sectionBorder,
+        Color sectionHeaderFill,
+        Color deletedFill,
+        Color deletedBorder,
+        Color deletedHeaderFill,
+        Color deletedHeaderText,
+        Color selectedBorder,
+        Color selectedDeletedBorder,
+        Color selectedHeaderFill,
+        Color selectedDeletedHeaderFill,
+        Color reportObjectFill,
+        Color reportObjectSelectedFill,
+        Color reportObjectBorder,
+        Color reportObjectSelectedBorder,
+        Color labelObjectFill,
+        Color labelObjectSelectedFill,
+        Color labelObjectBorder,
+        Color labelObjectSelectedBorder,
+        Color genericObjectFill,
+        Color genericObjectSelectedFill,
+        Color genericObjectBorder,
+        Color genericObjectSelectedBorder,
+        Color deletedObjectFill,
+        Color deletedObjectSelectedFill,
+        Color deletedObjectBorder,
+        Color deletedObjectSelectedBorder)
+    {
+        Background = background;
+        Foreground = foreground;
+        Grid = grid;
+        PageFill = pageFill;
+        PageBorder = pageBorder;
+        SectionFill = sectionFill;
+        SectionBorder = sectionBorder;
+        SectionHeaderFill = sectionHeaderFill;
+        DeletedFill = deletedFill;
+        DeletedBorder = deletedBorder;
+        DeletedHeaderFill = deletedHeaderFill;
+        DeletedHeaderText = deletedHeaderText;
+        SelectedBorder = selectedBorder;
+        SelectedDeletedBorder = selectedDeletedBorder;
+        SelectedHeaderFill = selectedHeaderFill;
+        SelectedDeletedHeaderFill = selectedDeletedHeaderFill;
+        ReportObjectFill = reportObjectFill;
+        ReportObjectSelectedFill = reportObjectSelectedFill;
+        ReportObjectBorder = reportObjectBorder;
+        ReportObjectSelectedBorder = reportObjectSelectedBorder;
+        LabelObjectFill = labelObjectFill;
+        LabelObjectSelectedFill = labelObjectSelectedFill;
+        LabelObjectBorder = labelObjectBorder;
+        LabelObjectSelectedBorder = labelObjectSelectedBorder;
+        GenericObjectFill = genericObjectFill;
+        GenericObjectSelectedFill = genericObjectSelectedFill;
+        GenericObjectBorder = genericObjectBorder;
+        GenericObjectSelectedBorder = genericObjectSelectedBorder;
+        DeletedObjectFill = deletedObjectFill;
+        DeletedObjectSelectedFill = deletedObjectSelectedFill;
+        DeletedObjectBorder = deletedObjectBorder;
+        DeletedObjectSelectedBorder = deletedObjectSelectedBorder;
+    }
+
+    public Color Background { get; }
+    public Color Foreground { get; }
+    public Color Grid { get; }
+    public Color PageFill { get; }
+    public Color PageBorder { get; }
+    public Color SectionFill { get; }
+    public Color SectionBorder { get; }
+    public Color SectionHeaderFill { get; }
+    public Color DeletedFill { get; }
+    public Color DeletedBorder { get; }
+    public Color DeletedHeaderFill { get; }
+    public Color DeletedHeaderText { get; }
+    public Color SelectedBorder { get; }
+    public Color SelectedDeletedBorder { get; }
+    public Color SelectedHeaderFill { get; }
+    public Color SelectedDeletedHeaderFill { get; }
+    public Color ReportObjectFill { get; }
+    public Color ReportObjectSelectedFill { get; }
+    public Color ReportObjectBorder { get; }
+    public Color ReportObjectSelectedBorder { get; }
+    public Color LabelObjectFill { get; }
+    public Color LabelObjectSelectedFill { get; }
+    public Color LabelObjectBorder { get; }
+    public Color LabelObjectSelectedBorder { get; }
+    public Color GenericObjectFill { get; }
+    public Color GenericObjectSelectedFill { get; }
+    public Color GenericObjectBorder { get; }
+    public Color GenericObjectSelectedBorder { get; }
+    public Color DeletedObjectFill { get; }
+    public Color DeletedObjectSelectedFill { get; }
+    public Color DeletedObjectBorder { get; }
+    public Color DeletedObjectSelectedBorder { get; }
+
+    public static CopperfinDesignSurfaceTheme Default { get; } = new(
+        Color.White,
+        Color.FromArgb(28, 32, 39),
+        Color.FromArgb(236, 239, 244),
+        Color.FromArgb(248, 249, 252),
+        Color.FromArgb(210, 214, 222),
+        Color.White,
+        Color.FromArgb(212, 218, 228),
+        Color.FromArgb(233, 238, 247),
+        Color.FromArgb(255, 244, 244),
+        Color.FromArgb(218, 176, 176),
+        Color.FromArgb(252, 224, 224),
+        Color.FromArgb(130, 41, 41),
+        Color.FromArgb(174, 86, 24),
+        Color.FromArgb(140, 52, 52),
+        Color.FromArgb(255, 239, 220),
+        Color.FromArgb(249, 212, 212),
+        Color.FromArgb(214, 230, 250),
+        Color.FromArgb(254, 220, 188),
+        Color.FromArgb(52, 97, 164),
+        Color.FromArgb(174, 86, 24),
+        Color.FromArgb(224, 239, 214),
+        Color.FromArgb(255, 230, 192),
+        Color.FromArgb(64, 122, 70),
+        Color.FromArgb(152, 86, 12),
+        Color.FromArgb(205, 223, 247),
+        Color.FromArgb(255, 211, 171),
+        Color.FromArgb(68, 114, 196),
+        Color.FromArgb(201, 96, 36),
+        Color.FromArgb(246, 228, 225),
+        Color.FromArgb(252, 220, 216),
+        Color.FromArgb(166, 91, 84),
+        Color.FromArgb(163, 63, 54));
+
+    public static CopperfinDesignSurfaceTheme FromHostColors(Color background, Color foreground)
+    {
+        var dark = background.GetBrightness() < 0.5F;
+        var light = dark ? Color.White : Color.Black;
+        var accent = Color.FromArgb(86, 156, 214);
+        var selection = Color.FromArgb(224, 139, 54);
+        var deleted = Color.FromArgb(205, 80, 80);
+        var green = Color.FromArgb(105, 180, 115);
+
+        Color Blend(Color color, float amount) => BlendColors(background, color, amount);
+
+        return new CopperfinDesignSurfaceTheme(
+            background,
+            foreground,
+            Blend(foreground, dark ? 0.22F : 0.16F),
+            Blend(light, dark ? 0.08F : 0.035F),
+            Blend(foreground, dark ? 0.34F : 0.22F),
+            Blend(light, dark ? 0.06F : 0.02F),
+            Blend(foreground, dark ? 0.30F : 0.20F),
+            Blend(accent, dark ? 0.32F : 0.16F),
+            Blend(deleted, dark ? 0.24F : 0.12F),
+            Blend(deleted, dark ? 0.60F : 0.48F),
+            Blend(deleted, dark ? 0.34F : 0.18F),
+            Blend(deleted, dark ? 0.86F : 0.68F),
+            Blend(selection, dark ? 0.78F : 0.58F),
+            Blend(deleted, dark ? 0.78F : 0.62F),
+            Blend(selection, dark ? 0.32F : 0.18F),
+            Blend(deleted, dark ? 0.32F : 0.18F),
+            Blend(accent, dark ? 0.42F : 0.22F),
+            Blend(selection, dark ? 0.68F : 0.42F),
+            Blend(accent, dark ? 0.80F : 0.58F),
+            Blend(selection, dark ? 0.86F : 0.72F),
+            Blend(green, dark ? 0.42F : 0.20F),
+            Blend(selection, dark ? 0.76F : 0.50F),
+            Blend(green, dark ? 0.78F : 0.56F),
+            Blend(selection, dark ? 0.82F : 0.58F),
+            Blend(accent, dark ? 0.35F : 0.18F),
+            Blend(selection, dark ? 0.76F : 0.48F),
+            Blend(accent, dark ? 0.74F : 0.52F),
+            Blend(selection, dark ? 0.88F : 0.70F),
+            Blend(deleted, dark ? 0.32F : 0.16F),
+            Blend(deleted, dark ? 0.58F : 0.38F),
+            Blend(deleted, dark ? 0.72F : 0.52F),
+            Blend(deleted, dark ? 0.90F : 0.76F));
+    }
+
+    private static Color BlendColors(Color background, Color foreground, float amount)
+    {
+        amount = Math.Max(0.0F, Math.Min(1.0F, amount));
+        return Color.FromArgb(
+            255,
+            (int)Math.Round(background.R + ((foreground.R - background.R) * amount)),
+            (int)Math.Round(background.G + ((foreground.G - background.G) * amount)),
+            (int)Math.Round(background.B + ((foreground.B - background.B) * amount)));
+    }
+}
+
 internal sealed class CopperfinDesignSurfaceControl : Control
 {
     private readonly CopperfinLocalization localization;
@@ -52,9 +246,9 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private Rectangle unplacedTrayBounds;
     private Rectangle unplacedTrayHeaderBounds;
     private CopperfinStudioReportLayout? reportLayout;
-    private Color surfaceTextColor = Color.FromArgb(28, 32, 39);
-    private Color surfaceGridColor = Color.FromArgb(236, 239, 244);
-    private bool visualStudioHostTheme;
+    private Color surfaceTextColor = CopperfinDesignSurfaceTheme.Default.Foreground;
+    private Color surfaceGridColor = CopperfinDesignSurfaceTheme.Default.Grid;
+    private CopperfinDesignSurfaceTheme theme = CopperfinDesignSurfaceTheme.Default;
 
     public event Action<int>? SelectedRecordChanged;
     public event Action<int>? SelectedReportSectionChanged;
@@ -65,27 +259,25 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
         DoubleBuffered = true;
-        BackColor = Color.White;
+        BackColor = theme.Background;
         MinimumSize = new Size(400, 260);
     }
 
     internal void ApplyVisualStudioHostTheme(Color background, Color foreground)
     {
+        theme = CopperfinDesignSurfaceTheme.FromHostColors(background, foreground);
         BackColor = background;
         surfaceTextColor = foreground;
-        surfaceGridColor = background.GetBrightness() < 0.5F
-            ? ControlPaint.Light(background)
-            : ControlPaint.Dark(background);
-        visualStudioHostTheme = true;
+        surfaceGridColor = theme.Grid;
         Invalidate();
     }
 
     internal void ResetVisualStudioHostTheme()
     {
-        BackColor = Color.White;
-        surfaceTextColor = Color.FromArgb(28, 32, 39);
-        surfaceGridColor = Color.FromArgb(236, 239, 244);
-        visualStudioHostTheme = false;
+        theme = CopperfinDesignSurfaceTheme.Default;
+        BackColor = theme.Background;
+        surfaceTextColor = theme.Foreground;
+        surfaceGridColor = theme.Grid;
         Invalidate();
     }
 
@@ -345,21 +537,21 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
     private void PaintReportLayout(PaintEventArgs e)
     {
-        using var pageFill = new SolidBrush(Color.FromArgb(248, 249, 252));
-        using var pageBorder = new Pen(Color.FromArgb(210, 214, 222));
+        using var pageFill = new SolidBrush(theme.PageFill);
+        using var pageBorder = new Pen(theme.PageBorder);
         using var textBrush = new SolidBrush(surfaceTextColor);
-        using var sectionFill = new SolidBrush(Color.FromArgb(255, 255, 255));
-        using var sectionBorder = new Pen(Color.FromArgb(212, 218, 228));
-        using var sectionHeaderFill = new SolidBrush(Color.FromArgb(233, 238, 247));
-        using var sectionHeaderText = new SolidBrush(visualStudioHostTheme ? surfaceTextColor : Color.FromArgb(44, 52, 64));
-        using var deletedSectionFill = new SolidBrush(Color.FromArgb(255, 244, 244));
-        using var deletedSectionBorder = new Pen(Color.FromArgb(218, 176, 176));
-        using var deletedSectionHeaderFill = new SolidBrush(Color.FromArgb(252, 224, 224));
-        using var deletedSectionHeaderText = new SolidBrush(Color.FromArgb(130, 41, 41));
-        using var selectedSectionBorder = new Pen(Color.FromArgb(174, 86, 24), 2.0F);
-        using var selectedDeletedSectionBorder = new Pen(Color.FromArgb(140, 52, 52), 2.0F);
-        using var selectedSectionHeaderFill = new SolidBrush(Color.FromArgb(255, 239, 220));
-        using var selectedDeletedSectionHeaderFill = new SolidBrush(Color.FromArgb(249, 212, 212));
+        using var sectionFill = new SolidBrush(theme.SectionFill);
+        using var sectionBorder = new Pen(theme.SectionBorder);
+        using var sectionHeaderFill = new SolidBrush(theme.SectionHeaderFill);
+        using var sectionHeaderText = new SolidBrush(surfaceTextColor);
+        using var deletedSectionFill = new SolidBrush(theme.DeletedFill);
+        using var deletedSectionBorder = new Pen(theme.DeletedBorder);
+        using var deletedSectionHeaderFill = new SolidBrush(theme.DeletedHeaderFill);
+        using var deletedSectionHeaderText = new SolidBrush(theme.DeletedHeaderText);
+        using var selectedSectionBorder = new Pen(theme.SelectedBorder, 2.0F);
+        using var selectedDeletedSectionBorder = new Pen(theme.SelectedDeletedBorder, 2.0F);
+        using var selectedSectionHeaderFill = new SolidBrush(theme.SelectedHeaderFill);
+        using var selectedDeletedSectionHeaderFill = new SolidBrush(theme.SelectedDeletedHeaderFill);
 
         const int outerPadding = 24;
         const int headerHeight = 28;
@@ -502,21 +694,21 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     {
         var deleted = item.Source.Deleted;
         var fillColor = deleted
-            ? (selected ? Color.FromArgb(252, 220, 216) : Color.FromArgb(246, 228, 225))
+            ? (selected ? theme.DeletedObjectSelectedFill : theme.DeletedObjectFill)
             : assetFamily switch
-        {
-            "report" => selected ? Color.FromArgb(254, 220, 188) : Color.FromArgb(214, 230, 250),
-            "label" => selected ? Color.FromArgb(255, 230, 192) : Color.FromArgb(224, 239, 214),
-            _ => selected ? Color.FromArgb(255, 211, 171) : Color.FromArgb(205, 223, 247)
-        };
+            {
+            "report" => selected ? theme.ReportObjectSelectedFill : theme.ReportObjectFill,
+            "label" => selected ? theme.LabelObjectSelectedFill : theme.LabelObjectFill,
+            _ => selected ? theme.GenericObjectSelectedFill : theme.GenericObjectFill
+            };
         var borderColor = deleted
-            ? (selected ? Color.FromArgb(163, 63, 54) : Color.FromArgb(166, 91, 84))
+            ? (selected ? theme.DeletedObjectSelectedBorder : theme.DeletedObjectBorder)
             : assetFamily switch
-        {
-            "report" => selected ? Color.FromArgb(174, 86, 24) : Color.FromArgb(52, 97, 164),
-            "label" => selected ? Color.FromArgb(152, 86, 12) : Color.FromArgb(64, 122, 70),
-            _ => selected ? Color.FromArgb(201, 96, 36) : Color.FromArgb(68, 114, 196)
-        };
+            {
+            "report" => selected ? theme.ReportObjectSelectedBorder : theme.ReportObjectBorder,
+            "label" => selected ? theme.LabelObjectSelectedBorder : theme.LabelObjectBorder,
+            _ => selected ? theme.GenericObjectSelectedBorder : theme.GenericObjectBorder
+            };
 
         using var fill = new SolidBrush(fillColor);
         using var border = new Pen(borderColor, selected ? 2.2F : 1.4F);

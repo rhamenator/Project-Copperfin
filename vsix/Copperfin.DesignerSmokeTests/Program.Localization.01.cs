@@ -334,8 +334,13 @@ internal static partial class Program
         var hostBackground = Color.FromArgb(30, 34, 40);
         var hostForeground = Color.FromArgb(232, 236, 240);
         surface.ApplyVisualStudioHostTheme(hostBackground, hostForeground);
+        var hostTheme = CopperfinDesignSurfaceTheme.FromHostColors(hostBackground, hostForeground);
         Expect(surface.BackColor == hostBackground,
             "VSIX host theme should route the shared design-surface background through the host color boundary");
+        Expect(hostTheme.PageFill != Color.FromArgb(248, 249, 252) &&
+               hostTheme.SectionFill != Color.White &&
+               hostTheme.SectionHeaderFill != Color.FromArgb(233, 238, 247),
+            "VSIX host theme should replace fixed light report chrome with host-derived colors");
 
         using var themedBitmap = new Bitmap(surface.Width, surface.Height);
         surface.DrawToBitmap(themedBitmap, new Rectangle(Point.Empty, surface.Size));

@@ -3688,8 +3688,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreground = SystemColors.ControlText;
         }
 
+        ApplyHostTheme(background, foreground);
+    }
+#else
+    private void ApplyVisualStudioHostTheme()
+    {
+        // Smoke tests and non-VSSDK builds still exercise the same safe fallback
+        // boundary used when Visual Studio theme services are unavailable.
+        ApplyHostTheme(SystemColors.Control, SystemColors.ControlText);
+    }
+#endif
+
+    private void ApplyHostTheme(Color background, Color foreground)
+    {
         BackColor = background;
         ForeColor = foreground;
+        designSurface.ApplyVisualStudioHostTheme(background, foreground);
         ApplyVisualStudioHostThemeToChildren(this, background, foreground);
     }
 
@@ -3718,12 +3732,6 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ApplyVisualStudioHostThemeToChildren(child, background, foreground);
         }
     }
-#else
-    private void ApplyVisualStudioHostTheme()
-    {
-        // The standalone shell owns its styling and does not reference the VSSDK.
-    }
-#endif
 
     private void QueueUiAction(Func<Task> action)
     {
