@@ -505,6 +505,53 @@ void test_strict_do_and_call_use_admitted_source_when_paths_are_absent() {
     fs::remove_all(root, ignored);
 }
 
+void test_strict_spawn_uses_admitted_source_when_path_is_absent() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_spawn_admitted_without_path";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path main_path = root / "main.prg";
+    const fs::path worker_path = root / "worker.prg";
+    const std::string startup_source =
+        "SPAWN worker TO nTask\n"
+        "AWAIT nTask TO lDone\n"
+        "RETURN\n";
+    const std::string worker_source = "RETURN\n";
+    write_text(main_path, startup_source);
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.startup_source_text = startup_source;
+    options.source_text_overrides.emplace(worker_path.string(), worker_source);
+    options.require_source_text_overrides = true;
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "strict SPAWN should use admitted source without a physical file: " + state.message);
+    const auto done = state.globals.find("ldone");
+    expect(done != state.globals.end() && done->second.boolean_value,
+           "strict SPAWN/AWAIT should report completion for the admitted child source");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent& event) {
+                   return event.category == "runtime.task.await" &&
+                       event.detail.find("state=completed") != std::string::npos;
+               }),
+           "strict SPAWN/AWAIT should emit a completed task event");
+
+    auto missing_options = make_runtime_session_options(main_path, root);
+    missing_options.startup_source_text = startup_source;
+    missing_options.require_source_text_overrides = true;
+    auto missing_session = copperfin::runtime::PrgRuntimeSession::create(missing_options);
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               missing_state.message.find("Verified package source is unavailable") != std::string::npos,
+           "strict SPAWN should fail closed when child admission is missing: " + missing_state.message);
+
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -517,5 +564,6 @@ int main() {
     test_dynamic_xasset_failed_write_cleanup();
     test_strict_do_uses_verified_source_during_replacement();
     test_strict_do_and_call_use_admitted_source_when_paths_are_absent();
+    test_strict_spawn_uses_admitted_source_when_path_is_absent();
     return test_failures() == 0 ? 0 : 1;
 }

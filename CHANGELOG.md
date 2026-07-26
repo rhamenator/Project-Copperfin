@@ -1,3 +1,5 @@
+- 2026-07-27: Implemented strict asynchronous PRG source admission under #3866/#4684. `SPAWN` now consumes a non-empty admitted `.PRG` source when the physical path is absent, while missing admission fails closed in the child runtime and non-strict/debug behavior remains pathname-based. Focused `SPAWN`/`AWAIT` coverage passes; exact-head Windows validation is pending.
+
 - 2026-07-27: Implemented strict report/label xAsset admission under #3866/#4683. `REPORT FORM` and `LABEL FORM` now consume admitted FRX/FRT or LBX/LBT bytes when physical asset paths are absent, while missing admission fails closed through the verified-bytes diagnostic and non-strict/debug behavior remains unchanged. Added portable coverage for both formats; exact-head Windows validation is pending.
 
 - 2026-07-27: Implemented strict `DO FORM` xAsset admission under #3866/#4682. Security-enabled form startup now consumes admitted SCX/SCT bytes even when the physical paths are absent, while missing admission fails closed and non-strict/debug behavior remains unchanged. Focused dynamic xAsset tests pass; exact-head Windows validation is pending.
