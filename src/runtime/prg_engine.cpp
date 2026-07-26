@@ -85,6 +85,8 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
         constexpr std::uint32_t kCopperfinWindowCloseMessage = 0x0010U;
+        constexpr std::uint32_t kWindowsKeyDownMessage = 0x0100U;
+        constexpr std::intptr_t kWindowsAltContextBit = static_cast<std::intptr_t>(1) << 29;
 
         class PrgCompatibilityError final : public std::runtime_error
         {
@@ -10170,6 +10172,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> keypress_target;
+        if (message == kWindowsKeyDownMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    keypress_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -10191,7 +10207,7 @@ namespace copperfin::runtime
                 }
             }
         }
-        if (bindings.empty() && !window_close_target.has_value())
+        if (bindings.empty() && !window_close_target.has_value() && !keypress_target.has_value())
         {
             return std::nullopt;
         }
@@ -10281,6 +10297,37 @@ namespace copperfin::runtime
                 result.has_value())
             {
                 last_result = result_to_intptr(*result);
+            }
+        }
+
+        if (keypress_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*keypress_target);
+            if (target_found != ole_objects.end())
+            {
+                // WM_KEYDOWN carries Alt in bit 29. Shift and Ctrl state are
+                // supplied by the platform adapter in a future host-specific
+                // bridge because they are not encoded in this message.
+                const std::int64_t shift_alt_ctrl =
+                    (lparam & kWindowsAltContextBit) != 0 ? 4 : 0;
+                bool requested_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "KeyPress",
+                        stack.back(),
+                        {make_int64_value(static_cast<std::int64_t>(wparam)),
+                         make_int64_value(shift_alt_ctrl)},
+                        {std::nullopt, std::nullopt},
+                        &requested_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.keypress",
+                                      .detail = target_found->second.prog_id +
+                                                    " key=" + std::to_string(wparam),
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = requested_nodefault ? 1 : 0;
+                }
             }
         }
 
