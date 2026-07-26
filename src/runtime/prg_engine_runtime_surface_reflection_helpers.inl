@@ -508,6 +508,30 @@ bool native_visual_dynamicfontbold_member_name_matches(
            runtime_object.properties.contains("dynamicfontbold");
 }
 
+bool native_visual_dynamicfontitalic_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicfontitalic" &&
+           normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column" &&
+           runtime_object.properties.contains("dynamicfontitalic");
+}
+
+bool native_visual_dynamicfontstrikethru_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicfontstrikethru" &&
+           normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column" &&
+           runtime_object.properties.contains("dynamicfontstrikethru");
+}
+
+bool native_visual_dynamicfontunderline_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicfontunderline" &&
+           normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column" &&
+           runtime_object.properties.contains("dynamicfontunderline");
+}
+
 bool native_visual_dynamicfontsize_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

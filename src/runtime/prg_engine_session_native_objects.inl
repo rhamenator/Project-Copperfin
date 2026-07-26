@@ -114,6 +114,27 @@
             }
 
             if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicfontitalic"))
+            {
+                // VFP9 documents false as the default; preserve the raw logical expression.
+                runtime_object.properties["dynamicfontitalic"] = make_string_value(".F.");
+            }
+
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicfontstrikethru"))
+            {
+                // VFP9 documents false as the default; preserve the raw logical expression.
+                runtime_object.properties["dynamicfontstrikethru"] = make_string_value(".F.");
+            }
+
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicfontunderline"))
+            {
+                // VFP9 documents false as the default; preserve the raw logical expression.
+                runtime_object.properties["dynamicfontunderline"] = make_string_value(".F.");
+            }
+
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontsize"))
             {
                 // Headless contract: preserve the raw dynamic-font-size expression without evaluating it.

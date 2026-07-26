@@ -109,6 +109,7 @@ int main()
     test_native_visual_fontname_defaults_mutate_and_stay_builtin();
     test_native_visual_dynamicfontname_defaults_mutate_and_stay_builtin();
     test_native_visual_dynamicfontbold_defaults_mutate_and_stay_builtin();
+    test_native_visual_dynamicfontstyle_defaults_mutate_and_stay_builtin();
     test_native_visual_dynamicfontsize_defaults_mutate_and_stay_builtin();
     test_native_visual_dynamicfontshadow_defaults_mutate_and_stay_builtin();
     test_native_visual_dynamicfontoutline_defaults_mutate_and_stay_builtin();
