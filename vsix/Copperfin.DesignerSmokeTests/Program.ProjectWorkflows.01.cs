@@ -34,7 +34,9 @@ internal static partial class Program
 
         return $"success={session.Success}; error={error}; commands={string.Join(",", session.Commands)}; " +
                $"manifest={session.ManifestPath}; debugManifest={session.DebugManifestPath}; " +
-               $"reason={session.State.Reason}; frames={session.State.Frames.Count}; events={session.State.Events.Count}";
+               $"reason={session.State.Reason}; frames={session.State.Frames.Count}; events={session.State.Events.Count}; " +
+               $"transportPid={session.TransportProcessId}; transportLive={session.Transport is not null}; " +
+               $"transportStopCompleted={session.TransportStopCompleted}";
     }
 
     private static void SmokeProjectEditorWithRealAsset(

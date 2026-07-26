@@ -1669,7 +1669,11 @@ internal static partial class Program
                    string.Equals(steppedSession.Commands[0], "continue", StringComparison.Ordinal) &&
                    string.Equals(steppedSession.Commands[1], "step", StringComparison.Ordinal),
                 "runtime debug client should preserve live command history without adding an exit handshake");
+            Expect(steppedSession.TransportProcessId > 0,
+                "runtime debug client should retain the live runtime-host process identity for diagnostics");
             CopperfinRuntimeDebugClient.Stop(steppedSession);
+            Expect(steppedSession.TransportStopCompleted,
+                "runtime debug client should confirm that the live runtime-host process stopped");
 
             var capturedArgs = File.ReadAllText(runtimeArgsPath);
             var capturedEnv = File.ReadAllText(runtimeEnvPath);

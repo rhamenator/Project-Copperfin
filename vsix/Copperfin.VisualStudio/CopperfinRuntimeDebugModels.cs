@@ -33,6 +33,8 @@ internal sealed class CopperfinRuntimeDebugSession
     public List<string> Commands { get; set; } = new();
     public bool StopOnEntry { get; set; }
     public CopperfinRuntimePauseState State { get; set; } = new();
+    internal int TransportProcessId { get; set; }
+    internal bool TransportStopCompleted { get; set; }
     internal CopperfinRuntimeDebugTransport? Transport { get; set; }
     internal string TransportManifestPath { get; set; } = string.Empty;
 }
@@ -106,6 +108,11 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
     private readonly object standardErrorLock = new();
     private readonly SemaphoreSlim commandGate = new(1, 1);
     private bool disposed;
+    private bool processExitedAfterDispose;
+
+    internal int ProcessId => process.Id;
+
+    internal bool ProcessExitedAfterDispose => processExitedAfterDispose;
 
     private CopperfinRuntimeDebugTransport(Process process, CopperfinLocalization localization)
     {
@@ -390,6 +397,8 @@ internal sealed class CopperfinRuntimeDebugTransport : IDisposable
                 process.Kill();
                 _ = process.WaitForExit(2000);
             }
+
+            processExitedAfterDispose = process.HasExited;
         }
         catch (Exception)
         {

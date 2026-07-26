@@ -153,7 +153,13 @@ internal static class CopperfinRuntimeDebugClient
 
     internal static void Stop(CopperfinRuntimeDebugSession session)
     {
-        session.Transport?.Dispose();
+        var transport = session.Transport;
+        if (transport is not null)
+        {
+            session.TransportProcessId = transport.ProcessId;
+            transport.Dispose();
+            session.TransportStopCompleted = transport.ProcessExitedAfterDispose;
+        }
         session.Transport = null;
         TryDeleteReplayManifest(session.DebugManifestPath, session.TransportManifestPath);
         session.TransportManifestPath = string.Empty;
@@ -187,6 +193,8 @@ internal static class CopperfinRuntimeDebugClient
         }
 
         session.Transport = transport;
+        session.TransportProcessId = transport.ProcessId;
+        session.TransportStopCompleted = false;
         session.TransportManifestPath = effectiveDebugManifestPath;
         try
         {
