@@ -7,10 +7,12 @@
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -293,6 +295,58 @@ void test_dynamic_xasset_failed_write_cleanup() {
     fs::remove_all(root, ignored);
 }
 
+void test_strict_do_uses_verified_source_during_replacement() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_do_verified";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path main_path = root / "main.prg";
+    const fs::path child_path = root / "child.prg";
+    const std::string child_target = copperfin::platform::path_to_utf8_string(child_path);
+    const std::string startup_source = "PUBLIC cMarker\nDO " + child_target + "\nRETURN\n";
+    const std::string admitted_child_source =
+        "PUBLIC cMarker\ncMarker = 'admitted-child'\nRETURN\n";
+    write_text(main_path, startup_source);
+    write_text(child_path, "PUBLIC cMarker\ncMarker = 'disk-child'\nRETURN\n");
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.startup_source_text = startup_source;
+    options.source_text_overrides.emplace(child_path.string(), admitted_child_source);
+    options.require_source_text_overrides = true;
+
+    std::atomic<bool> stop_writer{false};
+    std::thread replacement_writer([&]() {
+        while (!stop_writer.load(std::memory_order_relaxed)) {
+            write_text(child_path, "PUBLIC cMarker\ncMarker = 'replaced-child'\nRETURN\n");
+            std::this_thread::yield();
+        }
+    });
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    stop_writer.store(true, std::memory_order_relaxed);
+    replacement_writer.join();
+
+    expect(state.completed,
+           "strict DO should complete from admitted child source bytes: " + state.message);
+    const auto marker = state.globals.find("cmarker");
+    expect(marker != state.globals.end() &&
+               copperfin::runtime::format_value(marker->second) == "admitted-child",
+           "strict DO should preserve the admitted child result during pathname replacement");
+
+    auto missing_options = make_runtime_session_options(main_path, root);
+    missing_options.startup_source_text = startup_source;
+    missing_options.require_source_text_overrides = true;
+    auto missing_session = copperfin::runtime::PrgRuntimeSession::create(missing_options);
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               missing_state.message.find("Verified package source is unavailable") != std::string::npos,
+           "strict DO should fail closed when the child source admission is missing: " + missing_state.message);
+
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -301,5 +355,6 @@ int main() {
     test_dynamic_xasset_bootstrap_paths_are_session_unique();
     test_dynamic_xasset_bootstrap_cleanup();
     test_dynamic_xasset_failed_write_cleanup();
+    test_strict_do_uses_verified_source_during_replacement();
     return test_failures() == 0 ? 0 : 1;
 }
