@@ -4541,6 +4541,10 @@ copperfin_add_test(test_polyglot_parity_comparator cf_platform_profile
     test_polyglot_parity_comparator.cpp
 )
 
+copperfin_add_test(test_polyglot_migration_telemetry cf_platform_profile
+    test_polyglot_migration_telemetry.cpp
+)
+
 add_test(
     NAME test_polyglot_route_contract
     COMMAND ${CMAKE_COMMAND}

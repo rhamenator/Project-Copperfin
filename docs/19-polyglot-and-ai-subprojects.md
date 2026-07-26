@@ -99,6 +99,24 @@ Samples are bounded by policy and include the capability ID and reason. This is 
 deterministic comparator contract only; it does not route traffic, invoke a candidate,
 or change the caller's native behavior.
 
+## Migration Event Taxonomy v1
+
+The adapter-neutral telemetry stream uses the same `category`/`detail` shape as the
+runtime event stream, with invariant fields for capability, reason, latency, and
+mismatch count:
+
+| Category | Required meaning | Key fields |
+| --- | --- | --- |
+| `polyglot.route.selected` | Route registry selected native, shadow, canary, on, or retire-legacy | `capability_id`, `reason_code`, `detail` |
+| `polyglot.fallback.applied` | A configured native or artifact fallback was selected | `capability_id`, `reason_code`, `detail` |
+| `polyglot.parity.checked` | Native/candidate comparison completed | `capability_id`, `reason_code`, `mismatch_count` |
+| `polyglot.parity.mismatch` | Comparison found a parity difference | `capability_id`, `reason_code`, `mismatch_count` |
+| `polyglot.latency.outcome` | Invocation latency or terminal outcome was classified | `capability_id`, `reason_code`, `latency_ms`, `detail` |
+
+These event names, fields, reason codes, and enum values are machine contracts and are
+not localized. The telemetry model only records decisions; it does not make a route,
+start a bridge, or alter existing PRG runtime events by itself.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.
