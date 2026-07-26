@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Fresh Windows Native Validation run `30196086991` is executing at current synchronized head `e3ee2fb40b031830f182f2fdba0e46dd43ed6bdb`; the `Windows MSVC` job started at `2026-07-26T09:14:18Z` in the shared native validation step. This replaces the cancelled stale run as the current native RC evidence attempt; no result is claimed until GitHub finalizes the job.
+
 - Windows Native Validation run `30194948185` at head `42bd9ccbe2183dff78388ff359896d69cd7e755e` was cancelled after remaining stale beyond the workflow's 120-minute bound. GitHub exposed no job logs or completed test steps; it is infrastructure/workflow-state evidence only, not a native product pass or failure. The separate hosted Visual Studio/VFP9 evidence in #4621 remains valid, and a fresh Windows native dispatch is still required for the RC matrix.
 
 - #2996 hosted acceptance classification from Windows seq256 is explicit: NOT PROVEN. Existing #4621 artifacts identify the `invoice.frx`/`cust.lbx` document tabs and shared designer bounds, but contain no UIA record naming `Copperfin Command`, no tool-window tab/group bounds, and no direct observation that the Command pane is bottom-tabbed by default. The source/package contract and portable language-service tests pass, but standalone floating-window evidence is not equivalent; keep #2996 open until a clean/current Visual Studio run records the Command pane identity and bottom-group placement before layout mutation.

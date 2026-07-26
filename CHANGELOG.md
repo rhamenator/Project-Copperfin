@@ -1,3 +1,5 @@
+- 2026-07-26: Dispatched fresh Windows Native Validation run `30196086991` at synchronized head `e3ee2fb40b031830f182f2fdba0e46dd43ed6bdb` after the preceding run was classified stale and cancelled. The `Windows MSVC` job started in the shared native validation step; no pass or failure is claimed until it completes.
+
 - 2026-07-26: Classified hosted Windows Native Validation run `30194948185` at head `42bd9ccbe2183dff78388ff359896d69cd7e755e` as cancelled infrastructure evidence after it remained stale beyond the workflow's 120-minute bound. GitHub exposed no completed native test steps, so this is neither a product pass nor a product failure; a fresh Windows native RC-matrix run remains required under #4621.
 
 - 2026-07-26: Classified the remaining #2996 hosted acceptance from Windows seq256: existing Visual Studio artifacts do not directly identify or locate the Copperfin Command tool window, so bottom-tabbed first-open placement remains unproven. The source/package contract and portable language-service tests pass; standalone Studio floating evidence is intentionally not substituted for live Visual Studio observation.
