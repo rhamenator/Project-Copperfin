@@ -311,10 +311,7 @@ internal static partial class Program
         // class dependency and deterministic debugger startup contract. Keep
         // installed solution.pjx coverage in the dedicated VFP9 asset stages;
         // do not feed its different project shape into these expectations.
-        var projectWorkflowPath = ResolveFirstExistingRealAssetPath(
-            TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
-            TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
-            TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX"));
+        var projectWorkflowPath = TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx");
         SmokeProjectEditorWithRealAsset(
             projectWorkflowPath,
             expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });

@@ -783,38 +783,49 @@ internal static partial class Program
 
     private static void SmokeFreshRunVfpSourceStartupPaths()
     {
+        var configuredVfpSourceRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ROOT"));
         var vfpSourceZipPath = ResolveFirstExistingRealAssetPath(
             ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ZIP")),
             ExpandUserPath("~/Downloads/VFPSource.zip"));
-        if (string.IsNullOrWhiteSpace(vfpSourceZipPath) || !File.Exists(vfpSourceZipPath))
+        var hasConfiguredRoot = !string.IsNullOrWhiteSpace(configuredVfpSourceRoot) &&
+                                Directory.Exists(configuredVfpSourceRoot);
+        if (!hasConfiguredRoot &&
+            (string.IsNullOrWhiteSpace(vfpSourceZipPath) || !File.Exists(vfpSourceZipPath)))
         {
-            Console.WriteLine("SKIP: fresh-run VFPSource startup-path smoke requires a VFPSource.zip archive.");
+            Console.WriteLine("SKIP: fresh-run VFPSource startup-path smoke requires COPPERFIN_VFPSOURCE_ROOT or a VFPSource.zip archive.");
             return;
         }
 
-        var extractionBaseRoot = GetArchiveExtractionBaseRoot(vfpSourceZipPath!);
-        try
+        string? extractionBaseRoot = null;
+        string? extractedVfpSourceRoot = configuredVfpSourceRoot;
+        if (!hasConfiguredRoot)
         {
-            if (Directory.Exists(extractionBaseRoot))
+            extractionBaseRoot = GetArchiveExtractionBaseRoot(vfpSourceZipPath!);
+            try
             {
-                DeleteReadOnlyDirectoryTree(extractionBaseRoot);
+                if (Directory.Exists(extractionBaseRoot))
+                {
+                    DeleteReadOnlyDirectoryTree(extractionBaseRoot);
+                }
             }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
 
-        var extractedVfpSourceRoot = EnumerateResolvedRealAssetRoots()
-            .FirstOrDefault(root =>
-                string.Equals(
-                    root,
-                    Path.Combine(extractionBaseRoot, "VFPSource"),
-                    StringComparison.OrdinalIgnoreCase));
+            extractedVfpSourceRoot = EnumerateResolvedRealAssetRoots()
+                .FirstOrDefault(root =>
+                    string.Equals(
+                        root,
+                        Path.Combine(extractionBaseRoot!, "VFPSource"),
+                        StringComparison.OrdinalIgnoreCase));
+        }
         Expect(!string.IsNullOrWhiteSpace(extractedVfpSourceRoot),
-            "fresh-run VFPSource startup-path smoke should materialize an extracted VFPSource root during root enumeration");
+            hasConfiguredRoot
+                ? "fresh-run VFPSource startup-path smoke should use the configured extracted VFPSource root"
+                : "fresh-run VFPSource startup-path smoke should materialize an extracted VFPSource root during root enumeration");
         if (string.IsNullOrWhiteSpace(extractedVfpSourceRoot))
         {
             return;
