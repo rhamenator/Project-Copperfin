@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4667 under #3866 adds strict `DO FORM`/xAsset concurrent-replacement coverage. The test repeatedly replaces the physical `.scx`/`.sct` paths while a strict session loads admitted primary/memo bytes, then proves the admitted form method executes and the physical replacement occurred. Five direct repetitions plus the dynamic-xAsset and procedure-class CTest targets pass. The broader #3866 exact-handle/transitive-reader and hosted acceptance remains open.
+
 - Hosted Windows MSVC validation run `30196086991` passed all `307/307` CTest cases at workflow head `e3ee2fb40b031830f182f2fdba0e46dd43ed6bdb`, with no CTest skips. CTest real time was 628.49 seconds; finalized workflow metrics reported 00:56:02 across three phases. This is exact-head Windows native evidence only. The current synchronized head `156cee50` still needs a current-head native rerun, and hosted VS/VFP9/installers/safety evidence remains under #4621.
 
 - Full POSIX validation at synchronized head `b15c2bd2` passed all `308/308` CTest cases in 504.91 seconds. Only the established conditional `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` tests skipped. A prior full-run report marked #271 transiently failed, but the dynamic-xAsset target passed in isolation, in the adjacent #270-#272 sequence, and in this complete rerun; no reproducible regression is currently present.

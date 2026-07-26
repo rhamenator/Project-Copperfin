@@ -131,6 +131,63 @@ void test_dynamic_xasset_uses_verified_snapshot() {
     fs::remove_all(root, ignored);
 }
 
+void test_dynamic_xasset_uses_admitted_snapshot_during_replacement() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_replacement";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path form_path = root / "dynamic.scx";
+    const fs::path memo_path = root / "dynamic.sct";
+    const fs::path main_path = root / "main.prg";
+    write_form_fixture(form_path, memo_path, "PROCEDURE Init\nTHIS.SETALL('fontname', 'AdmittedFont')\nRETURN\nENDPROC");
+    const std::string form_bytes = read_text(form_path);
+    const std::string memo_bytes = read_text(memo_path);
+    write_text(main_path, "DO FORM '" + form_path.string() + "'\n");
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.verified_file_byte_overrides.emplace(form_path.string(), form_bytes);
+    options.verified_file_byte_overrides.emplace(memo_path.string(), memo_bytes);
+    options.require_verified_file_byte_overrides = true;
+
+    std::atomic<bool> stop_writer{false};
+    std::atomic<unsigned int> replacements{0U};
+    std::thread replacement_writer([&]() {
+        while (!stop_writer.load(std::memory_order_relaxed))
+        {
+            write_text(form_path, "REPLACED-FORM");
+            write_text(memo_path, "REPLACED-MEMO");
+            replacements.fetch_add(1U, std::memory_order_relaxed);
+            std::this_thread::yield();
+        }
+    });
+    for (unsigned int attempt = 0U;
+         attempt < 10000U && replacements.load(std::memory_order_relaxed) == 0U;
+         ++attempt)
+    {
+        std::this_thread::yield();
+    }
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    stop_writer.store(true, std::memory_order_relaxed);
+    replacement_writer.join();
+
+    expect(state.reason != copperfin::runtime::DebugPauseReason::error,
+           "strict DO FORM should execute from admitted xAsset bytes during replacement: " + state.message);
+    const auto setall_event_count = static_cast<std::size_t>(std::count_if(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "prg.object.setall" &&
+                   event.detail == "__cf_xasset_root.fontname:0";
+        }));
+    expect(setall_event_count == 1U,
+           "strict DO FORM replacement coverage should execute the admitted form method");
+    expect(replacements.load(std::memory_order_relaxed) > 0U,
+           "strict DO FORM replacement coverage should replace the physical xAsset paths");
+    fs::remove_all(root, ignored);
+}
+
 void test_dynamic_xasset_requires_verified_snapshot() {
     const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_unverified";
     std::error_code ignored;
@@ -351,6 +408,7 @@ void test_strict_do_uses_verified_source_during_replacement() {
 
 int main() {
     test_dynamic_xasset_uses_verified_snapshot();
+    test_dynamic_xasset_uses_admitted_snapshot_during_replacement();
     test_dynamic_xasset_requires_verified_snapshot();
     test_dynamic_xasset_bootstrap_paths_are_session_unique();
     test_dynamic_xasset_bootstrap_cleanup();

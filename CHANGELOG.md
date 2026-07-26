@@ -1,3 +1,5 @@
+- 2026-07-26: Added #4667 under #3866: strict `DO FORM`/xAsset loading now has concurrent-replacement regression coverage proving admitted `.scx`/`.sct` bytes execute the admitted form method while both physical paths are replaced. The dynamic-xAsset and procedure-class targets pass; broader exact-handle/transitive-reader work and hosted current-head validation remain open.
+
 - 2026-07-26: Hosted Windows MSVC validation run `30196086991` passed all `307/307` CTest cases at workflow head `e3ee2fb40b031830f182f2fdba0e46dd43ed6bdb`, with no CTest skips. CTest real time was 628.49 seconds and finalized workflow metrics reported 00:56:02 across three phases. This is exact-head Windows native evidence; the current synchronized head and the separate hosted VS/VFP9/release gates remain under #4621.
 
 - 2026-07-26: Full POSIX validation at synchronized head `b15c2bd2` passed all `308/308` CTest cases in 504.91 seconds. The only skips were the established conditional `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` cases; the earlier isolated dynamic-xAsset CTest anomaly did not reproduce in the complete rerun or focused sequence.
