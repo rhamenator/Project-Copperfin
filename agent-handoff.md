@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- `SmokeVisualStudioHostSurfaceThemeContract` passed all 5 assertions in 0.4 seconds against theme head `bdf22423` with `DISPLAY=:0`: host background routing, host-derived report chrome, rendered host surface pixels, direct surface reset, and full editor standalone restoration. GTK accessibility-module warnings were emitted but did not affect the test. This is portable live WinForms evidence only; Windows must still verify Visual Studio/VSSDK dark/high-contrast rendering, package first-open, and docking.
+
 - #4311 review correction: the default design-surface palette now retains the prior standalone section-header text color (`44,52,64`), while host-derived palettes use the resolved Visual Studio foreground. No standalone visual drift is intended.
 
 - #4311 transition hardening now captures original standalone control styles before host theming and restores them when the shared editor returns to standalone mode; the focused theme smoke checks the shared design-surface reset. Hosted dark/high-contrast Visual Studio evidence is still required.
