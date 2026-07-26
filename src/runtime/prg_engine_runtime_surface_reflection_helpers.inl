@@ -629,8 +629,10 @@ bool native_visual_whatsthishelpid_member_name_matches(
 bool native_visual_tag_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_member_name == "tag" &&
-           is_native_visual_runtime_object(runtime_object) &&
+           (is_native_visual_runtime_object(runtime_object) ||
+            normalized_base_class == "column" || normalized_base_class == "header") &&
            runtime_object.properties.contains("tag");
 }
 
