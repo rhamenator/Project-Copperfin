@@ -44,31 +44,35 @@ void run_xasset_startup_companion_stage_smoke(
     const std::string& companion_extension,
     const std::string& project_title) {
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / temp_name;
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(temp_name);
     const fs::path project_dir = temp_root / "project";
     const fs::path output_dir = temp_root / "output";
     const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    const fs::path startup_path = copperfin::platform::path_from_utf8_string(startup_name);
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
 
-    write_text(project_dir / startup_name, "synthetic xasset table");
-    fs::path companion_path = project_dir / startup_name;
+    write_text(project_dir / startup_path, "synthetic xasset table");
+    fs::path companion_path = project_dir / startup_path;
     companion_path.replace_extension(companion_extension);
     write_text(companion_path, "synthetic xasset companion");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
-    document.path = (project_dir / (project_title + ".pjx")).string();
+    document.path = copperfin::platform::path_to_utf8_string(
+        project_dir / (project_title + ".pjx"));
 
     copperfin::studio::StudioProjectWorkspace workspace;
     workspace.available = true;
     workspace.project_title = project_title;
-    workspace.home_directory = project_dir.string();
+    workspace.home_directory = copperfin::platform::path_to_utf8_string(project_dir);
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = project_title;
-    workspace.build_plan.output_path = (output_dir / (project_title + ".exe")).string();
+    workspace.build_plan.output_path = copperfin::platform::path_to_utf8_string(
+        output_dir / (project_title + ".exe"));
     workspace.build_plan.startup_item = startup_name;
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -80,13 +84,14 @@ void run_xasset_startup_companion_stage_smoke(
         workspace,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
-        output_dir.string(),
+        copperfin::platform::path_to_utf8_string(output_dir),
         copperfin::runtime::BuildConfiguration::debug,
         false,
         false);
 
     expect(plan.ok, startup_type_title + " startup contract plan should be created");
-    expect(plan.debug_plan.startup_source_path == (project_dir / startup_name).string(),
+    expect(plan.debug_plan.startup_source_path == copperfin::platform::path_to_utf8_string(
+               project_dir / startup_path),
            startup_type_title + " startup contract should preserve source-side startup path");
     expect(plan.debug_plan.supports_breakpoints,
            startup_type_title + " startup contract should advertise breakpoint support through xasset bootstrap");
@@ -97,28 +102,33 @@ void run_xasset_startup_companion_stage_smoke(
         plan,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile(),
-        runtime_host.string());
+        copperfin::platform::path_to_utf8_string(runtime_host));
 
     expect_materialization(result, startup_type_title + " startup package should materialize");
     if (result.ok) {
-        const fs::path content_root(result.plan.content_root);
-        const std::string runtime_manifest = read_text(result.plan.manifest_path);
-        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        const fs::path content_root = copperfin::platform::path_from_utf8_string(
+            result.plan.content_root);
+        const std::string runtime_manifest = read_text(
+            copperfin::platform::path_from_utf8_string(result.plan.manifest_path));
+        const std::string debug_manifest = read_text(
+            copperfin::platform::path_from_utf8_string(result.plan.debug_manifest_path));
 
-        expect(fs::exists(content_root / startup_name),
+        expect(fs::exists(content_root / startup_path),
                startup_type_title + " startup asset should be staged even when marked excluded");
         expect(fs::exists(content_root / companion_path.filename()),
                startup_type_title + " startup companion sidecar should be staged");
         expect(
             runtime_manifest.find(
                 "extension_payload=" +
-                    quote_manifest_value((content_root / companion_path.filename()).string()) + "|") !=
+                    quote_manifest_value(copperfin::platform::path_to_utf8_string(
+                        content_root / companion_path.filename())) + "|") !=
                 std::string::npos,
             startup_type_title + " startup companion sidecar should carry a package digest");
         expect(
             debug_manifest.find(
                 "extension_payload=" +
-                    quote_manifest_value((content_root / companion_path.filename()).string()) + "|") !=
+                    quote_manifest_value(copperfin::platform::path_to_utf8_string(
+                        content_root / companion_path.filename())) + "|") !=
                 std::string::npos,
             startup_type_title + " startup debug manifest should carry the companion digest");
         expect_manifest_reports_startup_asset_copied(
@@ -127,7 +137,9 @@ void run_xasset_startup_companion_stage_smoke(
             startup_type_title + " startup manifest line should report the staged startup asset as copied");
         expect(manifest_value_for_key(debug_manifest, "startup_item") == quote_manifest_value(startup_name),
                startup_type_title + " debug manifest should preserve startup_item");
-        expect(manifest_value_for_key(debug_manifest, "startup_source") == quote_manifest_value((project_dir / startup_name).string()),
+        expect(manifest_value_for_key(debug_manifest, "startup_source") ==
+                   quote_manifest_value(copperfin::platform::path_to_utf8_string(
+                       project_dir / startup_path)),
                startup_type_title + " debug manifest should preserve source-side startup provenance");
         expect(manifest_value_for_key(debug_manifest, "supports_breakpoints") == "true",
                startup_type_title + " debug manifest should preserve breakpoint support");
@@ -859,6 +871,24 @@ void test_label_startup_assets_are_staged() {
         "Label",
         ".lbt",
         "LabelStartupDemo");
+}
+
+void test_unicode_report_and_label_startup_assets_are_staged() {
+    const std::string unicode_suffix = "caf\xC3\xA9";
+    const std::string report_name = "factur\xC3\xA9-\xC3\xA9t\xC3\xA9.frx";
+    const std::string label_name = "\xC3\xA9tiquette-\xC3\xA9t\xC3\xA9.lbx";
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_unicode_report_" + unicode_suffix,
+        report_name,
+        "Report",
+        ".frt",
+        "UnicodeReportStartup");
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_unicode_label_" + unicode_suffix,
+        label_name,
+        "Label",
+        ".lbt",
+        "UnicodeLabelStartup");
 }
 
 void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root() {

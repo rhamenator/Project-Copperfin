@@ -442,8 +442,9 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
     workspace.build_plan.available = true;
     workspace.build_plan.can_build = true;
     workspace.build_plan.project_title = "DotNetFinalize";
-    workspace.build_plan.output_path =
-        (output_dir / "Copperfin.GeneratedLauncher.exe").string();
+    const std::string unicode_launcher_name = "caf\xC3\xA9-launcher.exe";
+    workspace.build_plan.output_path = copperfin::platform::path_to_utf8_string(
+        output_dir / copperfin::platform::path_from_utf8_string(unicode_launcher_name));
     workspace.build_plan.startup_item = "main.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
@@ -493,9 +494,11 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
 
         expect(
             fs::is_regular_file(result.plan.ast_manifest_path) &&
-                fs::path(result.plan.ast_manifest_path).filename().string().starts_with(
-                    "Copperfin.GeneratedLauncher."),
-            "#4052: a valid public OUTFILE may give Copperfin-owned compiler artifacts the internal launcher prefix");
+                copperfin::platform::path_to_utf8_string(
+                    copperfin::platform::path_from_utf8_string(
+                        result.plan.ast_manifest_path).filename()) ==
+                    unicode_launcher_name + ".ast.json",
+            "#3873: a Unicode public OUTFILE should preserve its UTF-8 identity in compiler artifacts");
 
         const auto missing_sidecars = copperfin::runtime::finalize_runtime_package_primary_output(
             result.plan,
@@ -566,7 +569,7 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                    "#4052: finalized package plans should retain the exact admitted launcher inventory");
             if (finalize_result.plan.launcher_artifacts.size() == expected_required_launcher_artifacts) {
                 expect(finalize_result.plan.launcher_artifacts[0].package_relative_path ==
-                           launcher_output.filename().generic_string() &&
+                           copperfin::platform::path_to_utf8_string(launcher_output.filename()) &&
                            finalize_result.plan.launcher_artifacts[0].role ==
                                copperfin::runtime::RuntimeLauncherArtifactRole::public_apphost,
                        "#4052: the first plan artifact should preserve the configured public apphost identity");
@@ -584,9 +587,10 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
             expect(launcher_artifacts.size() == expected_required_launcher_artifacts,
                    "#4052: debug provenance should inventory one apphost and three required internal sidecars");
             expect(debug_manifest.find(
-                       "launcher_artifact=" + quote_manifest_value(launcher_output.filename().generic_string()) +
+                       "launcher_artifact=" + quote_manifest_value(
+                           copperfin::platform::path_to_utf8_string(launcher_output.filename())) +
                        "|public_apphost|") != std::string::npos,
-                   "#4052: debug provenance should classify the configured public apphost");
+                   "#3873: debug provenance should preserve and classify the Unicode public apphost");
             for (const auto& required_name : {
                      std::string("Copperfin.GeneratedLauncher.dll"),
                      std::string("Copperfin.GeneratedLauncher.deps.json"),

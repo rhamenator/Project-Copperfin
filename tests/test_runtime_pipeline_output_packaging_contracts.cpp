@@ -337,6 +337,118 @@ void test_runtime_package_stages_recursive_prg_include_dependencies() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_stages_unicode_prg_include_dependencies() {
+    namespace fs = std::filesystem;
+    const std::string unicode_suffix = "caf\xC3\xA9";
+    const std::string include_directory_name = "include-" + unicode_suffix;
+    const std::string header_name = "partag\xC3\xA9.h";
+    const std::string nested_header_name = "nested-\xC3\xA9.h";
+    const std::string startup_name = "d\xC3\xA9part.prg";
+    const fs::path temp_root = fs::temp_directory_path() /
+        copperfin::platform::path_from_utf8_string(
+            "copperfin_runtime_pipeline_prg_include_" + unicode_suffix);
+    const fs::path project_dir = temp_root /
+        copperfin::platform::path_from_utf8_string("projet-" + unicode_suffix);
+    const fs::path include_dir = project_dir /
+        copperfin::platform::path_from_utf8_string(include_directory_name);
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    const fs::path startup_path = project_dir /
+        copperfin::platform::path_from_utf8_string(startup_name);
+    const fs::path header_path = include_dir /
+        copperfin::platform::path_from_utf8_string(header_name);
+    const fs::path nested_header_path = include_dir /
+        copperfin::platform::path_from_utf8_string(nested_header_name);
+    const std::string header_relative = copperfin::platform::path_to_utf8_string(
+        header_path.lexically_relative(project_dir));
+    const std::string nested_header_relative = copperfin::platform::path_to_utf8_string(
+        nested_header_path.lexically_relative(project_dir));
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(include_dir);
+
+    write_text(
+        startup_path,
+        "#include \"" + include_directory_name + "\\" + header_name + "\"\n"
+        "RETURN\n");
+    write_text(
+        header_path,
+        "#include \"" + nested_header_name + "\"\n"
+        "#DEFINE UNICODE_INCLUDE_VALUE 42\n");
+    write_text(nested_header_path, "#DEFINE UNICODE_NESTED_VALUE 7\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = copperfin::platform::path_to_utf8_string(
+        project_dir / "UnicodeIncludes.pjx");
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "UnicodeIncludes";
+    workspace.home_directory = copperfin::platform::path_to_utf8_string(project_dir);
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = copperfin::platform::path_to_utf8_string(
+        output_dir / "UnicodeIncludes.exe");
+    workspace.build_plan.startup_item = startup_name;
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U,
+         .name = startup_name,
+         .relative_path = startup_name,
+         .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        copperfin::platform::path_to_utf8_string(output_dir),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "#3873: Unicode PRG include package plan should be created");
+    const auto has_asset = [&](const std::string& relative_path) {
+        return std::find_if(
+                   plan.assets.begin(),
+                   plan.assets.end(),
+                   [&](const copperfin::runtime::RuntimePackageAsset& asset) {
+                       return asset.type_title == "PRG Include" &&
+                           asset.relative_path == relative_path;
+                   }) != plan.assets.end();
+    };
+    expect(has_asset(header_relative),
+           "#3873: Unicode direct #INCLUDE path should be discovered and staged");
+    expect(has_asset(nested_header_relative),
+           "#3873: Unicode recursive #INCLUDE path should be discovered and staged");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        copperfin::platform::path_to_utf8_string(runtime_host));
+    expect_materialization(result, "#3873: Unicode PRG include package should materialize");
+    if (result.ok) {
+        const fs::path content_root = copperfin::platform::path_from_utf8_string(
+            result.plan.content_root);
+        const std::string runtime_manifest = read_text(
+            copperfin::platform::path_from_utf8_string(result.plan.manifest_path));
+        expect(fs::exists(content_root /
+                              copperfin::platform::path_from_utf8_string(header_relative)) &&
+                   fs::exists(content_root /
+                              copperfin::platform::path_from_utf8_string(nested_header_relative)),
+               "#3873: Unicode #INCLUDE files should be staged under their relative paths");
+        expect(runtime_manifest.find(header_relative) != std::string::npos &&
+                   runtime_manifest.find(nested_header_relative) != std::string::npos,
+               "#3873: runtime manifest should preserve Unicode #INCLUDE identities");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 
 }  // namespace cf_test_runtime_pipeline

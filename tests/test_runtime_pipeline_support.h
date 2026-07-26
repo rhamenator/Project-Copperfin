@@ -173,6 +173,7 @@ void test_runtime_package_emits_csharp_transpilation_for_class_library_objects()
 void test_runtime_manifest_records_generated_compiler_contract_digests();
 void test_manifest_asset_lines_include_copy_state_contract();
 void test_runtime_package_stages_recursive_prg_include_dependencies();
+void test_runtime_package_stages_unicode_prg_include_dependencies();
 void test_runtime_package_license_fields_stay_debug_only();
 
 // ==== Runtime package materialization and asset-staging tests ====
@@ -193,6 +194,7 @@ void test_class_library_startup_assets_are_staged();
 void test_menu_startup_assets_are_staged();
 void test_report_startup_assets_are_staged();
 void test_label_startup_assets_are_staged();
+void test_unicode_report_and_label_startup_assets_are_staged();
 void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
 void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
 void test_startup_dbf_companion_assets_are_staged();
