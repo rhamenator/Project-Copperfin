@@ -71,7 +71,7 @@ runs:
     - name: Run native test suite
       if: ${{ inputs.platform != 'windows' }}
       shell: bash
-      run: ctest --test-dir build --output-on-failure --timeout 180
+      run: ctest --test-dir build --output-on-failure --timeout 180 --parallel 2
 
     - name: Run native test suite
       if: ${{ inputs.platform == 'windows' }}

@@ -621,8 +621,8 @@ require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
     "bounded non-Windows build command")
 require_text("${shared_action}" [=[if: ${{ inputs.platform != 'windows' }}
       shell: bash
-      run: ctest --test-dir build --output-on-failure --timeout 180]=]
-    "full non-Windows CTest command")
+      run: ctest --test-dir build --output-on-failure --timeout 180 --parallel 2]=]
+    "bounded full non-Windows CTest command")
 require_text("${shared_action}"
     "-Name 'Configure native build'"
     "measured Windows configure phase")
