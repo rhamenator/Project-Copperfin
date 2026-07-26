@@ -1498,7 +1498,12 @@
                 ? copperfin::platform::path_to_utf8_string(asset_path)
                 : display_alias->second;
             std::error_code asset_exists_error;
-            if (!std::filesystem::exists(asset_path, asset_exists_error) || asset_exists_error)
+            const auto admitted_asset = find_verified_file_byte_override(asset_path);
+            const bool has_admitted_asset = options.require_verified_file_byte_overrides &&
+                admitted_asset != options.verified_file_byte_overrides.end() &&
+                !admitted_asset->second.empty();
+            if ((!std::filesystem::exists(asset_path, asset_exists_error) || asset_exists_error) &&
+                !has_admitted_asset && !options.require_verified_file_byte_overrides)
             {
                 last_error_message = report_asset_resolve_message(asset_path);
                 last_fault_location = statement.location;

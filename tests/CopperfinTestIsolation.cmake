@@ -230,6 +230,7 @@ function(copperfin_configure_native_test_isolation)
 
     foreach(test_name IN ITEMS
             test_prg_engine_dynamic_xasset_security
+            test_prg_engine_report_security
             test_prg_engine_macro_expressions
             test_prg_engine_native_focus_move_events
             test_prg_engine_native_lifecycle_events
