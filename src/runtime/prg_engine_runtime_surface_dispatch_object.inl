@@ -278,6 +278,7 @@
             is_native_visual_specialeffect_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
+            is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
             is_native_textbox_dynamicinputmask_member_name(*runtime_object, property_name) ||
             is_native_column_dynamicalignment_member_name(*runtime_object, property_name) ||
@@ -623,6 +624,7 @@
             is_native_grid_relativerow_member_name(*runtime_object, member_name) ||
             is_native_form_desktop_member_name(*runtime_object, member_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, member_name) ||
+            is_native_grid_scrollbars_member_name(*runtime_object, member_name) ||
             is_native_movable_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
@@ -804,6 +806,9 @@
             }
             if (member_name == "headerheight") {
                 normalize_native_grid_headerheight_invariant(*runtime_object);
+            }
+            if (member_name == "scrollbars") {
+                normalize_native_grid_scrollbars_invariant(*runtime_object);
             }
             if (member_name == "allowheadersizing") {
                 normalize_native_grid_allowheadersizing_invariant(*runtime_object);
@@ -1119,6 +1124,9 @@
             if (member_name == "headerheight") {
                 normalize_native_grid_headerheight_invariant(*runtime_object);
             }
+            if (member_name == "scrollbars") {
+                normalize_native_grid_scrollbars_invariant(*runtime_object);
+            }
             if (member_name == "allowheadersizing") {
                 normalize_native_grid_allowheadersizing_invariant(*runtime_object);
             }
@@ -1376,6 +1384,7 @@
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
+            is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
             is_native_form_closable_member_name(*runtime_object, property_name) ||
@@ -1428,6 +1437,7 @@
             is_native_visual_specialeffect_member_name(*runtime_object, property_name) ||
             is_native_visual_alignment_member_name(*runtime_object, property_name) ||
             is_native_editbox_scrollbars_member_name(*runtime_object, property_name) ||
+            is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_textbox_inputmask_member_name(*runtime_object, property_name) ||
             is_native_textbox_dynamicinputmask_member_name(*runtime_object, property_name) ||
             is_native_column_dynamicalignment_member_name(*runtime_object, property_name) ||

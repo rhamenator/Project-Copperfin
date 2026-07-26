@@ -1309,6 +1309,17 @@ bool native_grid_rowheight_member_name_matches(
     return native_grid_rowheight_runtime_object(runtime_object);
 }
 
+bool native_grid_scrollbars_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "scrollbars" ||
+        !runtime_object.properties.contains("scrollbars")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_grid_linkmaster_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

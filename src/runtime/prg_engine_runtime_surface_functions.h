@@ -152,6 +152,7 @@ bool is_native_tabstop_runtime_object(const RuntimeOleObjectState& runtime_objec
 bool is_native_tabstop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_allowaddnew_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_panellink_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_grid_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_rowheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_linkmaster_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_grid_childorder_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -228,6 +229,7 @@ void normalize_native_visual_borderwidth_invariant(RuntimeOleObjectState& runtim
 void normalize_native_visual_bordercolor_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_borderstyle_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_form_drawwidth_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_grid_scrollbars_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_grid_allowheadersizing_invariant(RuntimeOleObjectState& runtime_object);

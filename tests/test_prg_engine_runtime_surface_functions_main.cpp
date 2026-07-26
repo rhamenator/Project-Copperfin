@@ -427,6 +427,7 @@ int main()
     test_native_allowaddnew_default_mutates_and_stays_builtin();
     test_native_grid_rowheight_defaults_mutate_and_stay_builtin();
     test_native_grid_headerheight_defaults_mutate_and_stay_builtin();
+    test_native_grid_scrollbars_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_grid_allowheadersizing_defaults_mutate_and_stay_builtin();
     test_native_grid_allowrowsizing_defaults_mutate_and_stay_builtin();
     test_native_grid_allowautocolumnfit_defaults_mutate_and_stay_builtin();

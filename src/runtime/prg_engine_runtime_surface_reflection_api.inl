@@ -1211,6 +1211,24 @@ void normalize_native_grid_rowheight_invariant(RuntimeOleObjectState& runtime_ob
             : -1.0);
 }
 
+void normalize_native_grid_scrollbars_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "grid") {
+        return;
+    }
+
+    const auto scroll_bars = runtime_object.properties.find("scrollbars");
+    if (scroll_bars == runtime_object.properties.end()) {
+        return;
+    }
+
+    const double value = value_as_number(scroll_bars->second);
+    scroll_bars->second = make_number_value(
+        std::isfinite(value)
+            ? static_cast<double>(std::clamp(std::llround(value), 0LL, 3LL))
+            : 3.0);
+}
+
 void normalize_native_grid_headerheight_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_grid_headerheight_runtime_object(runtime_object)) {
@@ -2216,6 +2234,11 @@ bool is_native_relation_onetomany_member_name(const RuntimeOleObjectState& runti
 bool is_native_grid_headerheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_headerheight_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_grid_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_scrollbars_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_grid_allowheadersizing_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)

@@ -843,6 +843,12 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("scrollbars"))
+            {
+                runtime_object.properties["scrollbars"] = make_number_value(3.0);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowcellselection"))
             {
                 runtime_object.properties["allowcellselection"] = make_boolean_value(true);

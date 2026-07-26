@@ -298,6 +298,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_borderstyle_member_name_matches(runtime_object, member_name) ||
                native_form_drawwidth_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
+               native_grid_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||
                native_grid_linkmaster_member_name_matches(runtime_object, member_name) ||
                native_grid_childorder_member_name_matches(runtime_object, member_name) ||
@@ -395,6 +396,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_grid_relativerow_member_name(runtime_object, member_name) ||
                is_native_form_desktop_member_name(runtime_object, member_name) ||
                is_native_form_scrollbars_member_name(runtime_object, member_name) ||
+               is_native_grid_scrollbars_member_name(runtime_object, member_name) ||
                is_native_movable_member_name(runtime_object, member_name) ||
                is_native_olecontrol_creation_time_member_name(runtime_object, member_name) ||
                is_native_olecontrol_object_member_name(runtime_object, member_name) ||
