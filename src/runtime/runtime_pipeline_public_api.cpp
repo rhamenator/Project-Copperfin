@@ -2261,7 +2261,7 @@ RuntimePackagePlan create_runtime_package_plan(
     for (std::size_t source_index = 0U;
          source_index < dependency_scan_sources.size();
          ++source_index) {
-        const auto& source = dependency_scan_sources[source_index];
+        const std::filesystem::path source = dependency_scan_sources[source_index];
         if (is_prg_path(copperfin::platform::path_to_utf8_string(source))) {
             for (const auto& include_source : discover_prg_include_source_paths(source)) {
                 enqueue_dependency(include_source, "PRG Include");
