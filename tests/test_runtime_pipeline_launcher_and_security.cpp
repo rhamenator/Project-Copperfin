@@ -486,14 +486,17 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         expect(pre_debug_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") == std::string::npos,
                "dotnet-finalize debug manifest should not claim a launcher payload before publish");
 
-        const fs::path package_root(result.plan.package_root);
-        const fs::path launcher_output(result.plan.launcher_output_path);
+        const fs::path package_root = copperfin::platform::path_from_utf8_string(
+            result.plan.package_root);
+        const fs::path launcher_output = copperfin::platform::path_from_utf8_string(
+            result.plan.launcher_output_path);
         const fs::path launcher_dll = package_root / "Copperfin.GeneratedLauncher.dll";
         const fs::path launcher_deps = package_root / "Copperfin.GeneratedLauncher.deps.json";
         const fs::path launcher_pdb = package_root / "Copperfin.GeneratedLauncher.pdb";
 
         expect(
-            fs::is_regular_file(result.plan.ast_manifest_path) &&
+            fs::is_regular_file(copperfin::platform::path_from_utf8_string(
+                result.plan.ast_manifest_path)) &&
                 copperfin::platform::path_to_utf8_string(
                     copperfin::platform::path_from_utf8_string(
                         result.plan.ast_manifest_path).filename()) ==
@@ -518,8 +521,10 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
             return;
         }
         result.plan = retry_materialized.plan;
-        const fs::path retry_package_root(result.plan.package_root);
-        const fs::path retry_launcher_output(result.plan.launcher_output_path);
+        const fs::path retry_package_root = copperfin::platform::path_from_utf8_string(
+            result.plan.package_root);
+        const fs::path retry_launcher_output = copperfin::platform::path_from_utf8_string(
+            result.plan.launcher_output_path);
         const fs::path retry_launcher_dll = retry_package_root / "Copperfin.GeneratedLauncher.dll";
         const fs::path retry_launcher_deps = retry_package_root / "Copperfin.GeneratedLauncher.deps.json";
         const fs::path retry_launcher_runtimeconfig =
@@ -741,12 +746,16 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                 expect(!rematerialized.plan.primary_output_materialized &&
                            rematerialized.plan.launcher_artifacts.empty(),
                        "#4052: rematerialization should clear launcher materialization state and inventory");
-                expect(!fs::exists(rematerialized.plan.launcher_output_path) &&
-                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                expect(!fs::exists(copperfin::platform::path_from_utf8_string(
+                               rematerialized.plan.launcher_output_path)) &&
+                           !fs::exists(copperfin::platform::path_from_utf8_string(
+                               rematerialized.plan.package_root) /
                                        "Copperfin.GeneratedLauncher.dll") &&
-                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                           !fs::exists(copperfin::platform::path_from_utf8_string(
+                               rematerialized.plan.package_root) /
                                        "Copperfin.GeneratedLauncher.deps.json") &&
-                           !fs::exists(fs::path(rematerialized.plan.package_root) /
+                           !fs::exists(copperfin::platform::path_from_utf8_string(
+                               rematerialized.plan.package_root) /
                                        "Copperfin.GeneratedLauncher.runtimeconfig.json"),
                        "#4052: rematerialization should remove the previous launcher publish set");
                 const std::string rematerialized_debug =
