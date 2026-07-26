@@ -271,6 +271,11 @@ bool is_native_header_column_tooltiptext_member_name(const RuntimeOleObjectState
     return native_header_column_tooltiptext_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_header_column_statusbartext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_header_column_statusbartext_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_helpcontextid_member_name_matches(runtime_object, normalized_member_name);
@@ -1522,6 +1527,20 @@ void normalize_native_header_column_tooltiptext_invariant(RuntimeOleObjectState&
     }
 
     tooltip_text->second = make_string_value(value_as_string(tooltip_text->second));
+}
+
+void normalize_native_header_column_statusbartext_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_header_column_statusbartext_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto status_bar_text = runtime_object.properties.find("statusbartext");
+    if (status_bar_text == runtime_object.properties.end()) {
+        return;
+    }
+
+    status_bar_text->second = make_string_value(value_as_string(status_bar_text->second));
 }
 
 void normalize_native_textbox_margin_invariant(RuntimeOleObjectState& runtime_object)

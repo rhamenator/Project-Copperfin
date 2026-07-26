@@ -248,6 +248,7 @@
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_header_column_tooltiptext_member_name(*runtime_object, property_name) ||
+            is_native_header_column_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_visual_helpcontextid_member_name(*runtime_object, property_name) ||
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||
@@ -856,6 +857,9 @@
                 normalize_native_textbox_tooltiptext_invariant(*runtime_object);
                 normalize_native_header_column_tooltiptext_invariant(*runtime_object);
             }
+            if (member_name == "statusbartext") {
+                normalize_native_header_column_statusbartext_invariant(*runtime_object);
+            }
             if (member_name == "margin") {
                 normalize_native_textbox_margin_invariant(*runtime_object);
             }
@@ -1163,6 +1167,9 @@
                 normalize_native_textbox_tooltiptext_invariant(*runtime_object);
                 normalize_native_header_column_tooltiptext_invariant(*runtime_object);
             }
+            if (member_name == "statusbartext") {
+                normalize_native_header_column_statusbartext_invariant(*runtime_object);
+            }
             if (member_name == "margin") {
                 normalize_native_textbox_margin_invariant(*runtime_object);
             }
@@ -1368,6 +1375,7 @@
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_controltiptext_member_name(*runtime_object, property_name) ||
             is_native_header_column_tooltiptext_member_name(*runtime_object, property_name) ||
+            is_native_header_column_statusbartext_member_name(*runtime_object, property_name) ||
             is_native_visual_helpcontextid_member_name(*runtime_object, property_name) ||
             is_native_visual_whatsthishelpid_member_name(*runtime_object, property_name) ||
             is_native_visual_tag_member_name(*runtime_object, property_name) ||

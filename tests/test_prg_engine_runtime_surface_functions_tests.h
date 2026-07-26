@@ -127,6 +127,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_visual_visible_defaults_mutates_and_stays_builtin();
     void test_native_visual_controltiptext_defaults_mutate_and_stay_builtin();
     void test_native_header_column_tooltiptext_defaults_mutate_and_stay_builtin();
+    void test_native_header_column_statusbartext_defaults_mutate_and_stay_builtin();
     void test_native_visual_helpcontextid_defaults_mutate_and_stay_builtin();
     void test_native_visual_whatsthishelpid_defaults_mutate_and_stay_builtin();
     void test_native_visual_tag_defaults_mutate_and_stay_builtin();

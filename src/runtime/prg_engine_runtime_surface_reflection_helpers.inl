@@ -618,6 +618,14 @@ bool native_header_column_tooltiptext_member_name_matches(
            runtime_object.properties.contains("tooltiptext");
 }
 
+bool native_header_column_statusbartext_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "statusbartext" &&
+           native_header_column_statusbartext_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("statusbartext");
+}
+
 bool native_visual_helpcontextid_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

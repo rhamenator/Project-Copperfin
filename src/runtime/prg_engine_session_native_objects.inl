@@ -188,6 +188,12 @@
                 runtime_object.properties["tooltiptext"] = make_string_value("");
             }
 
+            if (is_header_or_column_object &&
+                !runtime_object.properties.contains("statusbartext"))
+            {
+                runtime_object.properties["statusbartext"] = make_string_value("");
+            }
+
             if ((is_native_visual_runtime_object(runtime_object) || is_header_or_column_object) &&
                 !runtime_object.properties.contains("tag"))
             {
