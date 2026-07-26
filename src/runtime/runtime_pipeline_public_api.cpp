@@ -2102,9 +2102,15 @@ RuntimePackagePlan create_runtime_package_plan(
     const std::filesystem::path output_file_name =
         copperfin::platform::path_from_utf8_string(
             resolve_output_file_name(workspace, plan.project_title));
-    plan.ast_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ast.json"));
-    plan.ir_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ir.json"));
-    plan.transpiled_csharp_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".transpiled.cs"));
+    std::filesystem::path ast_manifest_file_name = output_file_name;
+    ast_manifest_file_name += ".ast.json";
+    std::filesystem::path ir_manifest_file_name = output_file_name;
+    ir_manifest_file_name += ".ir.json";
+    std::filesystem::path transpiled_csharp_file_name = output_file_name;
+    transpiled_csharp_file_name += ".transpiled.cs";
+    plan.ast_manifest_path = copperfin::platform::path_to_utf8_string(package_root / ast_manifest_file_name);
+    plan.ir_manifest_path = copperfin::platform::path_to_utf8_string(package_root / ir_manifest_file_name);
+    plan.transpiled_csharp_path = copperfin::platform::path_to_utf8_string(package_root / transpiled_csharp_file_name);
     std::filesystem::path module_definition_file_name = output_file_name;
     module_definition_file_name.replace_extension(".def");
     plan.launcher_output_path = copperfin::platform::path_to_utf8_string(package_root / output_file_name);
