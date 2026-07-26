@@ -526,7 +526,7 @@ void test_parse_conditional_preprocessor_branches_and_header_guards() {
     copperfin::test_support::write_text(
         program_path,
         "#DEFINE FORM_CAPTION 'CallerCaption'\n"
-        "#INCLUDE \"include\\\\ui.h\"\n"
+        "#INCLUDE include\\\\UI.H\n"
         "DEFINE CLASS DemoForm AS Form\n"
         "    Caption = FORM_CAPTION\n"
         "    WindowType = WINDOWTYPE_MODAL\n"

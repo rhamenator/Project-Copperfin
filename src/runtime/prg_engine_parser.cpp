@@ -5,6 +5,7 @@
 #include "prg_engine_internal.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/vfp/sidecar_path.h"
 #include "localized_text.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
@@ -777,16 +778,25 @@ bool try_parse_include_directive(const std::string& line, std::string& include_p
     }
 
     const std::string body = trim_copy(trimmed.substr(8U));
-    if (body.size() < 2U) {
-        return false;
-    }
-    if ((body.front() == '"' && body.back() == '"') ||
-        (body.front() == '\'' && body.back() == '\'') ||
-        (body.front() == '<' && body.back() == '>')) {
+    if (body.size() >= 2U &&
+        ((body.front() == '"' && body.back() == '"') ||
+         (body.front() == '\'' && body.back() == '\'') ||
+         (body.front() == '<' && body.back() == '>'))) {
         include_path_text = body.substr(1U, body.size() - 2U);
         return !include_path_text.empty();
     }
-    return false;
+    if (body.empty() ||
+        std::any_of(
+            body.begin(),
+            body.end(),
+            [](const char character) {
+                return std::isspace(static_cast<unsigned char>(character)) != 0;
+            })) {
+        return false;
+    }
+    // VFP accepts the common unquoted form: #include frxBuilder.h.
+    include_path_text = body;
+    return true;
 }
 
 bool try_parse_define_directive(
@@ -824,12 +834,27 @@ fs::path resolve_include_path(const fs::path& owning_path, const std::string& in
         return direct;
     }
 
+    const auto resolve_casefold = [](const fs::path& candidate) -> std::optional<fs::path> {
+        const copperfin::vfp::SidecarPathResolution resolution =
+            copperfin::vfp::resolve_unique_casefold_path(candidate);
+        if (!resolution.ambiguous && resolution.path.has_value()) {
+            return resolution.path;
+        }
+        return std::nullopt;
+    };
+    if (const auto resolved = resolve_casefold(direct); resolved.has_value()) {
+        return *resolved;
+    }
+
     const fs::path fallback = (
         owning_path.parent_path() /
         copperfin::platform::path_from_utf8_string(normalized).filename()).lexically_normal();
     std::error_code fallback_error;
     if (fs::exists(fallback, fallback_error) && !fallback_error) {
         return fallback;
+    }
+    if (const auto resolved = resolve_casefold(fallback); resolved.has_value()) {
+        return *resolved;
     }
     return direct;
 }

@@ -268,7 +268,7 @@ void test_runtime_package_stages_recursive_prg_include_dependencies() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir / "include");
 
-    write_text(project_dir / "main.prg", "#include \"include\\shared.h\"\nRETURN\n");
+    write_text(project_dir / "main.prg", "#include include\\shared.h\nRETURN\n");
     // VFP projects sometimes retain an include directory in the directive
     // even when the shipped header is beside the owning PRG.
     write_text(project_dir / "shared.h", "#include \"nested.h\"\n#DEFINE SHARED_VALUE 42\n");

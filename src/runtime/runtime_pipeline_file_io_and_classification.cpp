@@ -827,14 +827,26 @@ std::vector<std::filesystem::path> discover_prg_include_source_paths(
             }
 
             const std::string body = trim_copy(trimmed.substr(8U));
-            if (body.size() < 2U ||
-                !((body.front() == '"' && body.back() == '"') ||
-                  (body.front() == '\'' && body.back() == '\'') ||
-                  (body.front() == '<' && body.back() == '>'))) {
+            std::string include_value;
+            if (body.size() >= 2U &&
+                ((body.front() == '"' && body.back() == '"') ||
+                 (body.front() == '\'' && body.back() == '\'') ||
+                 (body.front() == '<' && body.back() == '>'))) {
+                include_value = body.substr(1U, body.size() - 2U);
+            } else if (!body.empty() &&
+                       std::none_of(
+                           body.begin(),
+                           body.end(),
+                           [](const char character) {
+                               return std::isspace(static_cast<unsigned char>(character)) != 0;
+                           })) {
+                // VFP accepts the common unquoted form: #include frxBuilder.h.
+                include_value = body;
+            } else {
                 continue;
             }
 
-            const auto resolved = resolve_include(normalized, body.substr(1U, body.size() - 2U));
+            const auto resolved = resolve_include(normalized, include_value);
             if (!resolved.has_value() || !is_include_source(*resolved)) {
                 continue;
             }
