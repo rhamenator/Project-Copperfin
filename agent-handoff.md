@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- The Windows validation host now has the extracted VFPSource corpus at `E:\VFPSource`, in addition to the mounted/installed VFP9 reference material. Use it for #4621 hosted compatibility validation and record the exact projects, PRGs, and assets exercised; do not copy the reference source into the product tree or treat unsupported-surface results as product failures.
+
 - #4685 under #4621 is implementation-complete. Windows seq340 validated exact VSIX commit `b9483785`: Release rebuild had 0 errors and only the established CS8604 nullable warning, VSTHRD010 was absent, clean VS2022/VS2026 uninstall/reinstall produced matching DLL hashes, installed-VFP9 `invoice.frx` closed, and VS2026 shut down cleanly. Evidence: `artifacts/windows-editor-close-b9483785/`. Keep #4621 open for the broader hosted Windows, mounted-VFP9, installer, native-matrix, safety, and RC evidence audit.
 
 - #4689 under #2348 routes standalone Studio toolbox-palette text-mode status and labels through the localization catalogs for launch-plan, launch-catalog, and query output. JSON field names, enum tokens, item identifiers, paths, and exit statuses remain invariant. English and qps-ploc direct smoke checks pass, all four catalog files have the new keys, and `test_studio_host_json` passes. This slice is committed at the current head; continue auditing other native text-mode surfaces without reopening the completed JSON contract.
