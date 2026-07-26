@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Runtime documentation correction: parent `#4068` is closed. Its shipped continuation series covers the previously pending compound, argument-nested, recursive, command-argument, predicate, assignment, object/member, and related expression contexts. Preserve heap-backed resumable evaluation, the configured call-depth diagnostic, and the hard stack-frugal constraint; do not treat a larger executable stack reserve as the fix. Hosted Windows release evidence remains a separate gate.
+
 - Independent current-tree POSIX validation at synchronized head `33d48036` passed `308/308` CTest cases in 330.66 seconds. The only skips were the expected `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; no native, report/label, PRG/runtime, localization, security, package, or workflow-contract test failed. This does not replace hosted Windows/VFP9/Visual Studio, installer, trust-provisioning, or safety closure evidence.
 
 - #4664 classification correction is pushed in the current tree. A malformed DesignerSmoke invocation that writes `status=invalid` is now classified as `harness-failure`; only an incomplete non-invalid process remains `interrupted`. The CMake workflow contract passes, and the exact-head Windows/VFPSource rerun remains required.
