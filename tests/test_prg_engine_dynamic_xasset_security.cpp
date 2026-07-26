@@ -404,6 +404,62 @@ void test_strict_do_uses_verified_source_during_replacement() {
     fs::remove_all(root, ignored);
 }
 
+void test_strict_do_and_call_use_admitted_source_when_paths_are_absent() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_prg_admitted_without_paths";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path main_path = root / "main.prg";
+    const fs::path do_path = root / "child.prg";
+    const fs::path call_path = root / "helper.prg";
+    const std::string startup_source =
+        "PUBLIC cDoMarker\n"
+        "PUBLIC cCallMarker\n"
+        "DO child\n"
+        "CALL helper\n"
+        "RETURN\n";
+    const std::string admitted_do_source =
+        "PUBLIC cDoMarker\n"
+        "cDoMarker = 'admitted-do'\n"
+        "RETURN\n";
+    const std::string admitted_call_source =
+        "PUBLIC cCallMarker\n"
+        "cCallMarker = 'admitted-call'\n"
+        "RETURN\n";
+    write_text(main_path, startup_source);
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.startup_source_text = startup_source;
+    options.source_text_overrides.emplace(do_path.string(), admitted_do_source);
+    options.source_text_overrides.emplace(call_path.string(), admitted_call_source);
+    options.require_source_text_overrides = true;
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "strict DO and CALL should use admitted source without physical files: " + state.message);
+    const auto do_marker = state.globals.find("cdomarker");
+    expect(do_marker != state.globals.end() &&
+               copperfin::runtime::format_value(do_marker->second) == "admitted-do",
+           "strict DO should execute its admitted source");
+    const auto call_marker = state.globals.find("ccallmarker");
+    expect(call_marker != state.globals.end() &&
+               copperfin::runtime::format_value(call_marker->second) == "admitted-call",
+           "strict CALL should execute its admitted source");
+
+    auto missing_options = make_runtime_session_options(main_path, root);
+    missing_options.startup_source_text = startup_source;
+    missing_options.source_text_overrides.emplace(do_path.string(), admitted_do_source);
+    missing_options.require_source_text_overrides = true;
+    auto missing_session = copperfin::runtime::PrgRuntimeSession::create(missing_options);
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               missing_state.message.find("Verified package source is unavailable") != std::string::npos,
+           "strict CALL should fail closed when its source admission is missing: " + missing_state.message);
+
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -414,5 +470,6 @@ int main() {
     test_dynamic_xasset_bootstrap_cleanup();
     test_dynamic_xasset_failed_write_cleanup();
     test_strict_do_uses_verified_source_during_replacement();
+    test_strict_do_and_call_use_admitted_source_when_paths_are_absent();
     return test_failures() == 0 ? 0 : 1;
 }

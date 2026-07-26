@@ -1987,8 +1987,16 @@
                     target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
                         target_path;
                 }
+                const std::string target_path_text =
+                    copperfin::platform::path_to_utf8_string(target_path.lexically_normal());
+                const auto admitted_target_source = find_source_text_override(target_path_text);
+                const bool has_admitted_target_source =
+                    options.require_source_text_overrides &&
+                    admitted_target_source != options.source_text_overrides.end() &&
+                    !admitted_target_source->second.empty();
                 std::error_code target_exists_error;
-                if (!std::filesystem::exists(target_path, target_exists_error) || target_exists_error)
+                if ((!std::filesystem::exists(target_path, target_exists_error) || target_exists_error) &&
+                    !has_admitted_target_source && !options.require_source_text_overrides)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
@@ -2449,13 +2457,21 @@
                     {
                         target_path += ".prg";
                     }
-                    if (target_path.is_relative())
-                    {
-                        target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
-                            target_path;
-                    }
+                if (target_path.is_relative())
+                {
+                    target_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        target_path;
+                }
+                    const std::string target_path_text =
+                        copperfin::platform::path_to_utf8_string(target_path.lexically_normal());
+                    const auto admitted_target_source = find_source_text_override(target_path_text);
+                    const bool has_admitted_target_source =
+                        options.require_source_text_overrides &&
+                        admitted_target_source != options.source_text_overrides.end() &&
+                        !admitted_target_source->second.empty();
                     std::error_code target_exists_error;
-                    if (std::filesystem::exists(target_path, target_exists_error) && !target_exists_error)
+                    if ((std::filesystem::exists(target_path, target_exists_error) && !target_exists_error) ||
+                        has_admitted_target_source || options.require_source_text_overrides)
                     {
                         if (!can_push_frame())
                         {
