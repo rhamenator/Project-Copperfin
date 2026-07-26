@@ -17,6 +17,7 @@
     <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
     <VisualStudioVersion>17.0</VisualStudioVersion>
     <VSSDKTargetPlatformRegRootSuffix>Exp</VSSDKTargetPlatformRegRootSuffix>
+    <UseCodebase>true</UseCodebase>
     <DeployVSTemplates>false</DeployVSTemplates>
     <TemplateOutputDirectory>$(BaseIntermediateOutputPath)vsix-templates\</TemplateOutputDirectory>
     <CreatePkgDefAssemblyToProcess>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).dll</CreatePkgDefAssemblyToProcess>

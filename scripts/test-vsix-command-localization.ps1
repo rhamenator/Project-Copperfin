@@ -57,6 +57,14 @@ try {
     Assert-Condition (Test-Path -LiteralPath $mainAssemblyPath -PathType Leaf) `
         "VSIX is missing Copperfin.VisualStudio.dll: $resolvedVsixPath"
 
+    $pkgdefPath = Join-Path $extractRoot "Copperfin.VisualStudio.pkgdef"
+    Assert-Condition (Test-Path -LiteralPath $pkgdefPath -PathType Leaf) `
+        "VSIX is missing Copperfin.VisualStudio.pkgdef: $resolvedVsixPath"
+    $pkgdefText = Get-Content -LiteralPath $pkgdefPath -Raw
+    $expectedCodeBasePattern = '(?m)^\s*"CodeBase"\s*=\s*"\$PackageFolder\$\\Copperfin\.VisualStudio\.dll"\s*$'
+    Assert-Condition ($pkgdefText -match $expectedCodeBasePattern) `
+        "VSIX pkgdef is missing the exact Copperfin.VisualStudio.dll CodeBase registration: $pkgdefPath"
+
     foreach ($expected in $expectedSatellites) {
         $relativePath = $expected.RelativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
         $satellitePath = Join-Path $extractRoot $relativePath

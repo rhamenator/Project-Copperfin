@@ -42,6 +42,20 @@ set(package_source "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/Copperfi
 if(NOT EXISTS "${package_source}")
     message(FATAL_ERROR "Visual Studio package source is missing: ${package_source}")
 endif()
+
+set(vsix_project "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj")
+if(NOT EXISTS "${vsix_project}")
+    message(FATAL_ERROR "Visual Studio project is missing: ${vsix_project}")
+endif()
+file(READ "${vsix_project}" vsix_project_text)
+string(REGEX MATCH
+    "<UseCodebase>[ \t]*true[ \t]*</UseCodebase>"
+    use_codebase_match "${vsix_project_text}")
+if(NOT use_codebase_match)
+    message(FATAL_ERROR
+        "Visual Studio project must enable UseCodebase so the generated pkgdef registers the package DLL by CodeBase")
+endif()
+
 file(READ "${package_source}" package_text)
 string(FIND "${package_text}" "\"${package_version}\")]" registration_version_offset)
 if(registration_version_offset EQUAL -1)
