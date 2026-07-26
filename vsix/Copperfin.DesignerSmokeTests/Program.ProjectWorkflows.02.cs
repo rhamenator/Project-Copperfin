@@ -784,11 +784,19 @@ internal static partial class Program
     private static void SmokeFreshRunVfpSourceStartupPaths()
     {
         var configuredVfpSourceRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ROOT"));
+        var configuredVfpSourceCorpusRoot = string.IsNullOrWhiteSpace(configuredVfpSourceRoot)
+            ? null
+            : new[]
+            {
+                configuredVfpSourceRoot,
+                Path.Combine(configuredVfpSourceRoot!, "VFPSource")
+            }.FirstOrDefault(root =>
+                Directory.Exists(root) &&
+                File.Exists(Path.Combine(root, "tasklist", "tasklist.PJX")));
         var vfpSourceZipPath = ResolveFirstExistingRealAssetPath(
             ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ZIP")),
             ExpandUserPath("~/Downloads/VFPSource.zip"));
-        var hasConfiguredRoot = !string.IsNullOrWhiteSpace(configuredVfpSourceRoot) &&
-                                Directory.Exists(configuredVfpSourceRoot);
+        var hasConfiguredRoot = !string.IsNullOrWhiteSpace(configuredVfpSourceCorpusRoot);
         if (!hasConfiguredRoot &&
             (string.IsNullOrWhiteSpace(vfpSourceZipPath) || !File.Exists(vfpSourceZipPath)))
         {
@@ -797,7 +805,7 @@ internal static partial class Program
         }
 
         string? extractionBaseRoot = null;
-        string? extractedVfpSourceRoot = configuredVfpSourceRoot;
+        string? extractedVfpSourceRoot = configuredVfpSourceCorpusRoot;
         if (!hasConfiguredRoot)
         {
             extractionBaseRoot = GetArchiveExtractionBaseRoot(vfpSourceZipPath!);
