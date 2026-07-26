@@ -708,6 +708,46 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
            "#715: unresolved entry comments should retain source memo block provenance");
 }
 
+void test_build_project_workspace_suppresses_vfp_source_output_sentinel() {
+    const std::vector<std::string> sentinels = {"<Source>", " <sOuRcE> "};
+    for (const auto& sentinel : sentinels) {
+        copperfin::studio::StudioDocumentModel document;
+        document.path = R"(E:\VFPSource\tasklist\tasklist.PJX)";
+        document.kind = copperfin::studio::StudioAssetKind::project;
+        document.table_preview_available = true;
+        document.table_preview.records = {
+            make_record(0, {
+                {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+                {.field_name = "KEY", .field_type = 'C', .display_value = "TASKLIST"},
+                {.field_name = "OUTFILE", .field_type = 'M', .display_value = sentinel, .memo_block_number = 42U}
+            }),
+            make_record(1, {
+                {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+                {.field_name = "NAME", .field_type = 'M', .display_value = "twips.prg"},
+                {.field_name = "MAINPROG", .field_type = 'L', .display_value = "true"}
+            })
+        };
+
+        const auto workspace = copperfin::studio::build_project_workspace(document);
+        expect(
+            workspace.output_path == expected_default_workspace_output_path(document.path, "TASKLIST"),
+            "#4672: VFP <Source> OUTFILE sentinels should synthesize the platform default output path");
+        expect(
+            workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+            "#4672: VFP <Source> OUTFILE sentinels should not retain source field provenance");
+        expect(
+            workspace.output_path_memo_block_number == 0U,
+            "#4672: VFP <Source> OUTFILE sentinels should not retain memo provenance");
+        expect(
+            workspace.build_plan.output_path == workspace.output_path &&
+                workspace.build_plan.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
+            "#4672: build plans should inherit normalized VFP <Source> output semantics");
+        expect(
+            workspace.build_plan.startup_item == "twips.prg",
+            "#4672: output sentinel normalization should preserve the project startup item");
+    }
+}
+
 void test_build_project_workspace_normalizes_vfp_absolute_item_paths() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\paths.pjx)";
@@ -1088,6 +1128,7 @@ int main() {
     test_project_workspace_default_catalog_refreshes_after_locale_switch();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
+    test_build_project_workspace_suppresses_vfp_source_output_sentinel();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
     test_build_project_workspace_normalizes_unc_item_paths();
     test_build_project_workspace_normalizes_vfp_logical_flags();

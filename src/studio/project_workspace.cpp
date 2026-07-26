@@ -101,6 +101,11 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
+bool looks_like_unresolved_output_path(const std::string& value) {
+    const std::string normalized = lowercase_copy(trim_copy(value));
+    return normalized == "<source>" || looks_like_unresolved_memo(normalized);
+}
+
 std::string uppercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return uppercase_ascii_byte(ch);
@@ -393,7 +398,7 @@ StudioProjectWorkspace build_project_workspace(
         workspace.output_path = trim_copy(value_or_empty(*header_record, "OUTFILE"));
         workspace.output_path_field_index = field_index_or_missing(*header_record, "OUTFILE");
         workspace.output_path_memo_block_number = memo_block_number_or_zero(*header_record, "OUTFILE");
-        if (looks_like_unresolved_memo(workspace.output_path)) {
+        if (looks_like_unresolved_output_path(workspace.output_path)) {
             workspace.output_path.clear();
             workspace.output_path_field_index = StudioProjectMissingFieldIndex;
             workspace.output_path_memo_block_number = 0U;
