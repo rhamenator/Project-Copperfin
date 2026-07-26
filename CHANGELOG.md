@@ -1,3 +1,5 @@
+- 2026-07-26: Full POSIX validation at synchronized head `b15c2bd2` passed all `308/308` CTest cases in 504.91 seconds. The only skips were the established conditional `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` cases; the earlier isolated dynamic-xAsset CTest anomaly did not reproduce in the complete rerun or focused sequence.
+
 - 2026-07-26: Added #4666 under #3866: strict read-only `FOPEN()`/`FREAD()` now has concurrent-replacement regression coverage proving admitted bytes are used instead of mutable pathname contents, with missing-admission access-error coverage. No production or non-strict behavior changed; the focused verified-file security target passes.
 
 - 2026-07-26: Added #4665 under #3866: strict dynamic `DO <program>` execution now has a concurrent-replacement regression proving the session uses admitted source bytes rather than mutable pathname contents, plus a missing-admission fail-closed assertion. The test preserves existing localized diagnostics, non-strict behavior, and runtime contracts; related verified xAsset/VCX tests also pass.
