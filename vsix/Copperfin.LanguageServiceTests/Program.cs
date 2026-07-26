@@ -25,6 +25,7 @@ internal static partial class Program
         TestVsixCommandTableLocalizesCommandCaptions();
         TestVsixLongLivedSurfacesRefreshLocalization();
         TestVsixEditorHostThemeContract();
+        TestVsixDebuggerRestartInvalidatesStaleSessions();
         TestVsixCommandWindowRegistration();
         TestVsixInstalledProductRegistrationLocalizesMetadata();
         TestVsixEditorRegistrationLocalizesName();

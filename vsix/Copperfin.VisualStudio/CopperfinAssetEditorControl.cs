@@ -163,6 +163,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private CopperfinRuntimeDebugSession? currentDebugSession;
     private CopperfinProjectExecutionResult? currentProjectWorkflowResult;
     private CopperfinProjectInsights? currentProjectInsights;
+    private int debugSessionGeneration;
     private bool suppressSelectionSync;
     private bool suppressToolboxContextChange;
     private bool embeddedStudioShell;
@@ -1641,10 +1642,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && currentDebugSession is not null)
+        if (disposing)
         {
-            CopperfinRuntimeDebugClient.Stop(currentDebugSession);
-            currentDebugSession = null;
+            debugSessionGeneration++;
+            if (currentDebugSession is not null)
+            {
+                CopperfinRuntimeDebugClient.Stop(currentDebugSession);
+                currentDebugSession = null;
+            }
         }
 
         base.Dispose(disposing);
@@ -1653,6 +1658,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     public void LoadDocument(string path, string? objectName = null, string? uniqueId = null)
     {
         loadGeneration++;
+        debugSessionGeneration++;
         if (!string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase) ||
             objectName is not null ||
             uniqueId is not null)
@@ -3792,20 +3798,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private async Task StartDebugSessionAsync()
     {
-        if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath))
+        var projectPath = currentPath;
+        if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(projectPath))
         {
             return;
         }
 
+        var requestGeneration = ++debugSessionGeneration;
         debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.StartingStatus");
         SetDebuggerButtonsEnabled(false);
         if (currentDebugSession is not null)
         {
             CopperfinRuntimeDebugClient.Stop(currentDebugSession);
+            currentDebugSession = null;
         }
-        var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!, localization);
+        var session = await CopperfinRuntimeDebugClient.StartSessionAsync(projectPath!, localization);
+        if (requestGeneration != debugSessionGeneration ||
+            !string.Equals(currentPath, projectPath, StringComparison.OrdinalIgnoreCase))
+        {
+            CopperfinRuntimeDebugClient.Stop(session);
+            return;
+        }
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
         {
+            CopperfinRuntimeDebugClient.Stop(session);
             return;
         }
         ApplyDebugSession(session);

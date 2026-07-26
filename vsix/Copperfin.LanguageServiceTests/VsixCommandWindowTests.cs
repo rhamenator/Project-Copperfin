@@ -10,6 +10,31 @@ namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private static void TestVsixDebuggerRestartInvalidatesStaleSessions()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        Expect(repositoryRoot is not null,
+            "VSIX debugger lifecycle test should locate the repository root");
+        if (repositoryRoot is null)
+        {
+            return;
+        }
+
+        var editorSource = File.ReadAllText(Path.Combine(
+            repositoryRoot,
+            "vsix",
+            "Copperfin.VisualStudio",
+            "CopperfinAssetEditorControl.cs"));
+        Expect(editorSource.Contains("private int debugSessionGeneration", StringComparison.Ordinal) &&
+               editorSource.Contains("var requestGeneration = ++debugSessionGeneration", StringComparison.Ordinal) &&
+               editorSource.Contains("requestGeneration != debugSessionGeneration", StringComparison.Ordinal) &&
+               editorSource.Contains("CopperfinRuntimeDebugClient.Stop(session)", StringComparison.Ordinal),
+            "VSIX debugger restart should discard stale asynchronous sessions instead of applying them after a newer request");
+        Expect(editorSource.Contains("debugSessionGeneration++;", StringComparison.Ordinal) &&
+               editorSource.Contains("public void LoadDocument", StringComparison.Ordinal),
+            "VSIX document loading should invalidate an in-flight debugger session request");
+    }
+
     private static void TestVsixEditorHostThemeContract()
     {
         var repositoryRoot = FindRepositoryRoot();
