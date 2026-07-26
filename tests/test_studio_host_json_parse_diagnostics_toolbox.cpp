@@ -57,6 +57,39 @@ void test_studio_host_toolbox_palette_parse_diagnostics_localize(const std::stri
         "Unknown toolbox context token: menu_item",
         "#2398: pseudo-localized unknown-toolbox-context diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "form"},
+        temp_root);
+
+    expect(process.exit_code == 0,
+        "#4689: English toolbox-palette text output should preserve success status");
+    expect_contains(process.stdout_text,
+        "status: ok",
+        "#4689: English toolbox-palette text output should preserve the status display contract");
+    expect_contains(process.stdout_text,
+        "toolbox_context: form",
+        "#4689: English toolbox-palette text output should preserve invariant context tokens");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "form"},
+        temp_root);
+
+    expect(process.exit_code == 0,
+        "#4689: pseudo-localized toolbox-palette text output should preserve success status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#4689: pseudo-localized toolbox-palette text output should decorate display labels");
+    expect_contains(process.stdout_text,
+        "form",
+        "#4689: pseudo-localized toolbox-palette text output should preserve invariant context tokens");
+    expect_not_contains(process.stdout_text,
+        "toolbox_context:",
+        "#4689: pseudo-localized toolbox-palette text output should not retain the raw English label");
+
     process = run_process_capture(
         studio_host_path,
         {"--toolbox-palette-query", "--toolbox-context", "form", "--toolbox-search", "--json"},

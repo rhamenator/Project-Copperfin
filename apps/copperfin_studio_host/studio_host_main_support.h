@@ -1944,10 +1944,13 @@ void print_json_toolbox_palette_launch_catalog_entry(
 void print_json_toolbox_palette_launch_catalog_result(
     const copperfin::studio::StudioToolboxPaletteLaunchCatalogResult& result);
 void print_text_toolbox_palette_launch_plan_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteLaunchPlanResult& result);
 void print_text_toolbox_palette_launch_catalog_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteLaunchCatalogResult& result);
 void print_text_toolbox_palette_query_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteQueryResult& result);
 std::optional<int> try_handle_toolbox_palette_query(
     const copperfin::localization::LocalizedCatalog& catalog,

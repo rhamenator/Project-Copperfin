@@ -443,71 +443,83 @@ void print_json_toolbox_palette_launch_catalog_result(
 }
 
 void print_text_toolbox_palette_launch_plan_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteLaunchPlanResult& result) {
-    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    std::cout << catalog.translate(result.ok ? "StudioHost.ToolboxPalette.Text.Status.Ok" :
+                                   "StudioHost.ToolboxPalette.Text.Status.Error") << "\n";
     if (!result.error.empty()) {
-        std::cout << studio_error_prefix() << result.error << "\n";
+        std::cout << catalog.translate("StudioHost.Prefix.Error") << result.error << "\n";
     }
     if (!result.ok) {
         return;
     }
     const auto& plan = result.plan;
-    std::cout << "selection_context: "
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.SelectionContext") << ": "
               << copperfin::studio::studio_editor_selection_context_name(plan.selection_context) << "\n";
-    std::cout << "toolbox_context: " << copperfin::studio::studio_toolbox_context_name(plan.toolbox_context) << "\n";
-    std::cout << "asset_path: " << plan.asset_path << "\n";
-    std::cout << "record_index: " << plan.record_index << "\n";
-    std::cout << "object_name: " << plan.object_name << "\n";
-    std::cout << "unique_id: " << plan.unique_id << "\n";
-    std::cout << "item_count: " << plan.item_count << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ToolboxContext") << ": "
+              << copperfin::studio::studio_toolbox_context_name(plan.toolbox_context) << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.AssetPath") << ": " << plan.asset_path << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.RecordIndex") << ": " << plan.record_index << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ObjectName") << ": " << plan.object_name << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.UniqueId") << ": " << plan.unique_id << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ItemCount") << ": " << plan.item_count << "\n";
     for (const auto& item : plan.items) {
-        std::cout << "item: " << item.id << " " << item.title << "\n";
+        std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.Item") << ": "
+                  << item.id << " " << item.title << "\n";
     }
 }
 
 void print_text_toolbox_palette_launch_catalog_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteLaunchCatalogResult& result) {
-    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    std::cout << catalog.translate(result.ok ? "StudioHost.ToolboxPalette.Text.Status.Ok" :
+                                   "StudioHost.ToolboxPalette.Text.Status.Error") << "\n";
     if (!result.error.empty()) {
-        std::cout << studio_error_prefix() << result.error << "\n";
+        std::cout << catalog.translate("StudioHost.Prefix.Error") << result.error << "\n";
     }
     if (!result.ok) {
         return;
     }
-    std::cout << "context_count: " << result.context_count << "\n";
-    std::cout << "launch_plan_count: " << result.launch_plan_count << "\n";
-    std::cout << "error_count: " << result.error_count << "\n";
-    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
-    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ContextCount") << ": " << result.context_count << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.LaunchPlanCount") << ": " << result.launch_plan_count << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ErrorCount") << ": " << result.error_count << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.DryRun") << ": " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.MutatesAsset") << ": " << (result.mutates_asset ? "true" : "false") << "\n";
     for (const auto& entry : result.entries) {
-        std::cout << "entry_selection_context: "
+        std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.EntrySelectionContext") << ": "
                   << copperfin::studio::studio_editor_selection_context_name(entry.selection_context) << "\n";
-        std::cout << "entry_toolbox_available: " << (entry.toolbox_available ? "true" : "false") << "\n";
-        std::cout << "entry_item_count: " << entry.item_count << "\n";
+        std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.EntryToolboxAvailable") << ": "
+                  << (entry.toolbox_available ? "true" : "false") << "\n";
+        std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.EntryItemCount") << ": "
+                  << entry.item_count << "\n";
         if (!entry.error.empty()) {
-            std::cout << "entry_error: " << entry.error << "\n";
+            std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.EntryError") << ": "
+                      << entry.error << "\n";
         }
     }
 }
 
 void print_text_toolbox_palette_query_result(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const copperfin::studio::StudioToolboxPaletteQueryResult& result) {
-    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    std::cout << catalog.translate(result.ok ? "StudioHost.ToolboxPalette.Text.Status.Ok" :
+                                   "StudioHost.ToolboxPalette.Text.Status.Error") << "\n";
     if (!result.error.empty()) {
-        std::cout << studio_error_prefix() << result.error << "\n";
+        std::cout << catalog.translate("StudioHost.Prefix.Error") << result.error << "\n";
     }
     if (!result.ok) {
         return;
     }
-    std::cout << "toolbox_context: "
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ToolboxContext") << ": "
               << copperfin::studio::studio_toolbox_context_name(result.toolbox_context) << "\n";
-    std::cout << "search_text: " << result.search_text << "\n";
-    std::cout << "category: " << result.category << "\n";
-    std::cout << "item_count: " << result.item_count << "\n";
-    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
-    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.SearchText") << ": " << result.search_text << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.Category") << ": " << result.category << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.ItemCount") << ": " << result.item_count << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.DryRun") << ": " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.MutatesAsset") << ": " << (result.mutates_asset ? "true" : "false") << "\n";
     for (const auto& item : result.items) {
-        std::cout << "item: " << item.id << " " << item.title << "\n";
+        std::cout << catalog.translate("StudioHost.ToolboxPalette.Text.Label.Item") << ": "
+                  << item.id << " " << item.title << "\n";
     }
 }
 
@@ -534,7 +546,7 @@ std::optional<int> try_handle_toolbox_palette_query(
             if (toolbox_palette_query_parse.output_json) {
                 print_json_toolbox_palette_query_result(result);
             } else {
-                print_text_toolbox_palette_query_result(result);
+                print_text_toolbox_palette_query_result(catalog, result);
                 print_usage(catalog);
             }
             return 2;
@@ -545,7 +557,7 @@ std::optional<int> try_handle_toolbox_palette_query(
         if (toolbox_palette_query_parse.output_json) {
             print_json_toolbox_palette_query_result(result);
         } else {
-            print_text_toolbox_palette_query_result(result);
+            print_text_toolbox_palette_query_result(catalog, result);
         }
         return result.ok ? 0 : 4;
     }
@@ -567,7 +579,7 @@ std::optional<int> try_handle_toolbox_palette_launch(
             if (toolbox_palette_launch_parse.output_json) {
                 print_json_toolbox_palette_launch_plan_result(result);
             } else {
-                print_text_toolbox_palette_launch_plan_result(result);
+                print_text_toolbox_palette_launch_plan_result(catalog, result);
                 print_usage(catalog);
             }
             return 2;
@@ -578,7 +590,7 @@ std::optional<int> try_handle_toolbox_palette_launch(
         if (toolbox_palette_launch_parse.output_json) {
             print_json_toolbox_palette_launch_plan_result(result);
         } else {
-            print_text_toolbox_palette_launch_plan_result(result);
+            print_text_toolbox_palette_launch_plan_result(catalog, result);
         }
         return result.ok ? 0 : 4;
     }
@@ -605,7 +617,7 @@ std::optional<int> try_handle_toolbox_palette_launch_catalog(
             if (toolbox_palette_launch_catalog_parse.output_json) {
                 print_json_toolbox_palette_launch_catalog_result(result);
             } else {
-                print_text_toolbox_palette_launch_catalog_result(result);
+                print_text_toolbox_palette_launch_catalog_result(catalog, result);
                 print_usage(catalog);
             }
             return 2;
@@ -616,7 +628,7 @@ std::optional<int> try_handle_toolbox_palette_launch_catalog(
         if (toolbox_palette_launch_catalog_parse.output_json) {
             print_json_toolbox_palette_launch_catalog_result(result);
         } else {
-            print_text_toolbox_palette_launch_catalog_result(result);
+            print_text_toolbox_palette_launch_catalog_result(catalog, result);
         }
         return result.ok ? 0 : 4;
     }
