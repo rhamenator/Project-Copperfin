@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Hosted Windows MSVC validation run `30196086991` passed all `307/307` CTest cases at workflow head `e3ee2fb40b031830f182f2fdba0e46dd43ed6bdb`, with no CTest skips. CTest real time was 628.49 seconds; finalized workflow metrics reported 00:56:02 across three phases. This is exact-head Windows native evidence only. The current synchronized head `156cee50` still needs a current-head native rerun, and hosted VS/VFP9/installers/safety evidence remains under #4621.
+
 - Full POSIX validation at synchronized head `b15c2bd2` passed all `308/308` CTest cases in 504.91 seconds. Only the established conditional `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` tests skipped. A prior full-run report marked #271 transiently failed, but the dynamic-xAsset target passed in isolation, in the adjacent #270-#272 sequence, and in this complete rerun; no reproducible regression is currently present.
 
 - #4666 under #3866 adds strict read-only `FOPEN()`/`FREAD()` security coverage. A writer repeatedly replaces the physical payload while the runtime reads an admitted byte override; the test proves the admitted payload is returned and preserves the existing missing-admission access-error contract. `test_prg_engine_verified_dbf_security` passes, with no production or non-strict behavior change. The broader #3866 exact-handle/transitive-reader and hosted POSIX/Windows acceptance remains open.
