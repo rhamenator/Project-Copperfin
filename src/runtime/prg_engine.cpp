@@ -3083,6 +3083,66 @@ namespace copperfin::runtime
         {
             return *native_result;
         }
+        const bool is_report_listener_object = std::any_of(
+            target_object->class_hierarchy.begin(),
+            target_object->class_hierarchy.end(),
+            [](const std::string &class_name)
+            {
+                return normalize_identifier(trim_copy(class_name)) == "reportlistener";
+            }) ||
+            normalize_identifier(trim_copy(target_object->base_class_name)) == "reportlistener";
+        if (is_report_listener_object && leaf == "getconfigtable")
+        {
+            const std::filesystem::path working_directory =
+                copperfin::platform::path_from_utf8_string(current_default_directory());
+            std::filesystem::path requested_path;
+            if (const auto configured = target_object->properties.find("configurationtable");
+                configured != target_object->properties.end() &&
+                !trim_copy(value_as_string(configured->second)).empty())
+            {
+                requested_path = copperfin::platform::path_from_utf8_string(
+                    value_as_string(configured->second));
+                if (requested_path.is_relative())
+                {
+                    requested_path = working_directory / requested_path;
+                }
+            }
+            else
+            {
+                const std::array<std::filesystem::path, 2U> candidates = {
+                    working_directory / "OutputConfig.dbf",
+                    working_directory / "_ReportOutputConfig.dbf"};
+                for (const auto &candidate : candidates)
+                {
+                    const auto resolution = copperfin::vfp::resolve_unique_casefold_path(candidate);
+                    if (!resolution.ambiguous && resolution.path.has_value())
+                    {
+                        requested_path = *resolution.path;
+                        break;
+                    }
+                }
+            }
+
+            std::optional<std::filesystem::path> resolved_path;
+            if (!requested_path.empty())
+            {
+                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(requested_path);
+                if (!resolution.ambiguous && resolution.path.has_value())
+                {
+                    resolved_path = resolution.path;
+                }
+            }
+            const std::string config_path = resolved_path.has_value()
+                ? copperfin::platform::path_to_utf8_string(resolved_path->lexically_normal())
+                : std::string{};
+            target_object->properties["configurationtable"] = make_string_value(config_path);
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.reportlistener.getconfigtable",
+                              .detail = target_object->prog_id + ":" + config_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_string_value(config_path);
+        }
         std::function<bool(const std::vector<PrgValue>&)> before_list_control_move;
         if (leaf == "moveitem")
         {
@@ -9436,6 +9496,24 @@ namespace copperfin::runtime
                 &base_defining_class_name);
         if (!base_method.has_value())
         {
+            const bool is_report_listener_object = std::any_of(
+                (*runtime_object)->class_hierarchy.begin(),
+                (*runtime_object)->class_hierarchy.end(),
+                [](const std::string &class_name)
+                {
+                    return normalize_identifier(trim_copy(class_name)) == "reportlistener";
+                }) ||
+                normalize_identifier(trim_copy((*runtime_object)->base_class_name)) == "reportlistener";
+            if (is_report_listener_object &&
+                normalize_identifier(source_frame.native_method_name) == "init")
+            {
+                (*runtime_object)->last_action = "dodefault:ReportListener.Init";
+                ++(*runtime_object)->action_count;
+                events.push_back({.category = "prg.object.baseinvoke",
+                                  .detail = "ReportListener.Init",
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                return make_boolean_value(true);
+            }
             return std::nullopt;
         }
 

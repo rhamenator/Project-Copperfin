@@ -2,6 +2,8 @@
 
 Copperfin now has a first real runtime/build/debug pipeline slice instead of only design-time inspection.
 
+The ReportListener bridge now supplies the VFP9 default `HadError` state, a built-in `DODEFAULT()` result for an inherited `Init` with no source-defined base method, and existing-file resolution for `GetConfigTable()` through `OutputConfig.dbf` or `_ReportOutputConfig.dbf` under #3217/#4717/#4718. This is intentionally an MVP compatibility boundary: missing-table creation, `VerifyConfigTable()`, error-object parity, and complete report configuration behavior remain separate slices.
+
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Dynamic `DO (&name)`, control-flow forms, and xAsset commands remain separate runtime boundaries.
 
 Current native components:

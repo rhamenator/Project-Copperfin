@@ -151,6 +151,19 @@
                 object_state.class_hierarchy.push_back("OBJECT");
             }
 
+            const bool is_report_listener_object = std::any_of(
+                object_state.class_hierarchy.begin(),
+                object_state.class_hierarchy.end(),
+                [](const std::string &class_name)
+                {
+                    return normalize_identifier(trim_copy(class_name)) == "reportlistener";
+                }) ||
+                normalize_identifier(trim_copy(object_state.base_class_name)) == "reportlistener";
+            if (is_report_listener_object && !object_state.properties.contains("haderror"))
+            {
+                object_state.properties["haderror"] = make_boolean_value(false);
+            }
+
             assign_native_window_metadata(object_state);
 
             std::map<std::string, std::string> effective_methods;

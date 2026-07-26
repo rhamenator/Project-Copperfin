@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Runtime ReportListener initialization/configuration note: VFPSource UtilityReportListener calls `DODEFAULT()` and reads `HadError` during initialization, then invokes `GetConfigTable()` for an existing `_ReportOutputConfig.dbf`. Copperfin now supplies the inherited initialization default and resolves the existing configuration file case-insensitively under #3217/#4717/#4718. Missing-table creation, `VerifyConfigTable()`, error-object parity, and complete report configuration semantics remain separate; this does not claim full ReportListener parity.
+
 - Runtime literal `DO` dependency note: VFPSource projects may invoke a beside-project PRG that is not listed in the PJX, such as `DO wzastart` from `Wizards/wzapp/wzapp.PRG`. Copperfin now discovers and stages contained literal targets with VFP case-insensitive resolution under #110/#4714. The real `wzapp.PJX` package completes normal and debug Linux launches; dynamic DO expressions and xAsset forms remain separate.
 
 - Runtime routine declaration note: VFP9 accepts `PROC name` as an abbreviation for `PROCEDURE name`. Copperfin now registers that form for same-file `DO` dispatch under #3217/#4715. The real VFPSource `ReportOutput/reportoutput.PJX` package reaches `PROC ReportOutputCleanup` in both normal and debug modes; the sample's caught OLE `Collection.Count` behavior remains a separate compatibility boundary.

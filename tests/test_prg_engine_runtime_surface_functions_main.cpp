@@ -573,6 +573,7 @@ int main()
     test_scripting_dictionary_collection_methods();
     test_newobject_preserves_library_and_server_targeting();
     test_getobject_reuses_existing_class_and_source_targets();
+    test_reportlistener_getconfigtable_resolves_existing_casefolded_table_only_for_report_listeners();
 
     if (test_failures() != 0)
     {
