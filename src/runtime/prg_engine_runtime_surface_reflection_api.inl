@@ -2258,6 +2258,11 @@ bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runti
     return native_allowcellselection_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_panellink_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_panellink_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_gridlines_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_gridlines_member_name_matches(runtime_object, normalized_member_name);

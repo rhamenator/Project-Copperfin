@@ -2,6 +2,93 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_panellink_default_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_panellink";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_panellink.prg";
+        write_text(
+            main_path,
+            "oBaseGrid = CREATEOBJECT('Grid')\n"
+            "lBaseHasPanelLink = PEMSTATUS(oBaseGrid, 'PanelLink', 1)\n"
+            "lBasePanelLinkReadOnly = PEMSTATUS(oBaseGrid, 'PanelLink', 5)\n"
+            "lBaseBefore = oBaseGrid.PanelLink\n"
+            "xBaseGetPemBefore = GETPEM(oBaseGrid, 'PanelLink')\n"
+            "oBaseGrid.PanelLink = .F.\n"
+            "lBaseAfterDirectAssign = oBaseGrid.PanelLink\n"
+            "lBaseSetPem = SETPEM(oBaseGrid, 'PanelLink', .T.)\n"
+            "lBaseAfterSetPem = oBaseGrid.PanelLink\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseGrid, 'PanelLink', .F.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseGrid, 'PanelLink')\n"
+            "oDerived = CREATEOBJECT('DemoGrid')\n"
+            "lDerivedBefore = oDerived.PanelLink\n"
+            "lChildBefore = oDerived.cmdProbe.ReadPanelLink()\n"
+            "oDerived.cmdProbe.DisablePanelLink()\n"
+            "lDerivedAfterChild = oDerived.PanelLink\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'PanelLink')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasPanelLink = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'PANELLINK'\n"
+            "        lPropHasPanelLink = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadPanelLink\n"
+            "        RETURN THIS.Parent.PanelLink\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisablePanelLink\n"
+            "        THIS.Parent.PanelLink = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoGrid AS Grid\n"
+            "    PanelLink = .T.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native PanelLink property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehaspanellink", "true");
+        check("lbasepanellinkreadonly", "false");
+        check("lbasebefore", "true");
+        check("xbasegetpembefore", "true");
+        check("lbaseafterdirectassign", "false");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "true");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "true");
+        check("lchildbefore", "true");
+        check("lderivedafterchild", "false");
+        check("xderivedgetpem", "false");
+        check("lprophaspanellink", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_readonly_defaults_mutate_and_honor_style_guard()
     {
         namespace fs = std::filesystem;

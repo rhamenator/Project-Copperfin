@@ -1451,6 +1451,17 @@ bool native_allowcellselection_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_panellink_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "panellink" ||
+        !runtime_object.properties.contains("panellink")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_gridlines_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

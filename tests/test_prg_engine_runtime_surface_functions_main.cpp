@@ -417,6 +417,7 @@ int main()
     test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_grid_display_properties_default_mutate_and_stay_builtin();
     test_native_deletemark_default_mutates_and_stays_builtin();
+    test_native_panellink_default_mutates_and_stays_builtin();
     test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_allowaddnew_default_mutates_and_stays_builtin();
     test_native_grid_rowheight_defaults_mutate_and_stay_builtin();

@@ -343,6 +343,7 @@
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_relativerow_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
+            is_native_panellink_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||
             is_native_highlightrow_member_name(*runtime_object, property_name) ||
@@ -1486,6 +1487,7 @@
             is_native_grid_relativecolumn_member_name(*runtime_object, property_name) ||
             is_native_grid_relativerow_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
+            is_native_panellink_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||
             is_native_highlightrow_member_name(*runtime_object, property_name) ||

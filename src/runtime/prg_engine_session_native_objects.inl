@@ -820,6 +820,13 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("panellink"))
+            {
+                // VFP9 defaults PanelLink to true for a Grid.
+                runtime_object.properties["panellink"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowaddnew"))
             {
                 runtime_object.properties["allowaddnew"] = make_boolean_value(false);
