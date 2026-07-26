@@ -58,13 +58,33 @@ internal static partial class Program
 
         foreach (var root in EnumerateResolvedRealAssetRoots())
         {
-            IEnumerable<string> files;
+            foreach (var path in EnumerateAccessibleRealAssetFiles(root))
+            {
+                if ((path.EndsWith(".frx", StringComparison.OrdinalIgnoreCase) ||
+                     path.EndsWith(".lbx", StringComparison.OrdinalIgnoreCase)) &&
+                    yielded.Add(path))
+                {
+                    yield return path;
+                }
+            }
+        }
+    }
+
+    // Keep enumeration failures local to one directory. Directory.EnumerateFiles
+    // is lazy on net472, so wrapping only its construction does not contain an
+    // access failure raised while the iterator advances.
+    private static IEnumerable<string> EnumerateAccessibleRealAssetFiles(string root)
+    {
+        var pendingDirectories = new Stack<string>();
+        pendingDirectories.Push(root);
+
+        while (pendingDirectories.Count > 0)
+        {
+            var currentDirectory = pendingDirectories.Pop();
+            FileInfo[] files;
             try
             {
-                files = Directory.EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
-                    .Where(path =>
-                        path.EndsWith(".frx", StringComparison.OrdinalIgnoreCase) ||
-                        path.EndsWith(".lbx", StringComparison.OrdinalIgnoreCase));
+                files = new DirectoryInfo(currentDirectory).GetFiles("*.*", SearchOption.TopDirectoryOnly);
             }
             catch (IOException)
             {
@@ -75,11 +95,41 @@ internal static partial class Program
                 continue;
             }
 
-            foreach (var path in files)
+            foreach (var file in files)
             {
-                if (yielded.Add(path))
+                yield return file.FullName;
+            }
+
+            DirectoryInfo[] childDirectories;
+            try
+            {
+                childDirectories = new DirectoryInfo(currentDirectory).GetDirectories();
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            foreach (var childDirectory in childDirectories)
+            {
+                try
                 {
-                    yield return path;
+                    if ((childDirectory.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    {
+                        continue;
+                    }
+
+                    pendingDirectories.Push(childDirectory.FullName);
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
                 }
             }
         }
