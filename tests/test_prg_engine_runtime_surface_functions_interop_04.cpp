@@ -358,6 +358,65 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_assigner_same_property_write_uses_raw_storage()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_reentrant_assign";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_reentrant_assign.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ReportBuilderLike')\n"
+            "oCreate.QuietMode = !INLIST(1, 0, 4)\n"
+            "lQuietMode = oCreate.QuietMode\n"
+            "RETURN\n"
+            "DEFINE CLASS ReportBuilderLike AS Custom\n"
+            "    QuietMode = .F.\n"
+            "    PROCEDURE QuietMode_Assign\n"
+            "        LPARAMETERS tvNewVal\n"
+            "        IF VARTYPE(tvNewVal) = 'L'\n"
+            "            THIS.quietmode = m.tvNewVal\n"
+            "        ENDIF\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("same-property ASSIGN script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto quiet_mode = state.globals.find("lquietmode");
+        expect(quiet_mode != state.globals.end(),
+               "same-property ASSIGN script should expose the assigned value");
+        if (quiet_mode != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(quiet_mode->second) == "true",
+                   "same-property ASSIGN should commit the value through raw storage");
+        }
+
+        expect(state.ole_objects.size() == 1U,
+               "same-property ASSIGN script should create one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto property = state.ole_objects[0].properties.find("quietmode");
+            expect(property != state.ole_objects[0].properties.end(),
+                   "same-property ASSIGN should materialize the raw property value");
+            if (property != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(property->second) == "true",
+                       "same-property ASSIGN should preserve the logical value");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers()
     {
         namespace fs = std::filesystem;

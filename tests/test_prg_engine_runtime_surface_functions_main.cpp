@@ -551,6 +551,7 @@ int main()
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_bindevent_property_handler_fault_does_not_disable_future_dispatch();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
+    test_native_assigner_same_property_write_uses_raw_storage();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
     test_native_accessor_backed_properties_setpem_routes_through_assign_methods();

@@ -877,6 +877,28 @@ namespace copperfin::runtime
             }
         };
 
+        struct ActiveNativePropertyAssignmentGuard
+        {
+            std::set<std::string> &active_keys;
+            std::string key;
+            bool engaged = false;
+
+            ActiveNativePropertyAssignmentGuard(std::set<std::string> &keys, std::string property_key)
+                : active_keys(keys),
+                  key(std::move(property_key))
+            {
+                engaged = active_keys.insert(key).second;
+            }
+
+            ~ActiveNativePropertyAssignmentGuard()
+            {
+                if (engaged)
+                {
+                    active_keys.erase(key);
+                }
+            }
+        };
+
 #include "prg_engine_free_functions.inl"
 
         std::filesystem::path make_prg_engine_xasset_bootstrap_path(
@@ -1052,6 +1074,7 @@ namespace copperfin::runtime
         bool representative_application_right_to_left = true;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
+        std::set<std::string> active_native_property_assignments;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
         std::vector<WindowMessageBinding> window_message_bindings;
         std::vector<CurrentWindowMessageContext> active_window_message_contexts;
@@ -7915,6 +7938,9 @@ namespace copperfin::runtime
             return false;
         }
 
+        const std::string property_assignment_key =
+            std::to_string(runtime_object.handle) + ":" + normalized_property_name;
+
         const auto before_list_control_signature =
             native_list_control_selection_signature(runtime_object);
 
@@ -8339,15 +8365,24 @@ namespace copperfin::runtime
             {
                 return false;
             }
-            if (invoke_native_object_method_body_if_present(
-                    runtime_object,
-                    normalized_property_name + "_assign",
-                    source_frame,
-                    {assigned_value},
-                    {}).has_value())
+            const bool assigner_reentrant =
+                active_native_property_assignments.find(property_assignment_key) !=
+                active_native_property_assignments.end();
+            if (!assigner_reentrant)
             {
-                remember_property_expression();
-                return true;
+                ActiveNativePropertyAssignmentGuard active_property_assignment_guard(
+                    active_native_property_assignments,
+                    property_assignment_key);
+                if (invoke_native_object_method_body_if_present(
+                        runtime_object,
+                        normalized_property_name + "_assign",
+                        source_frame,
+                        {assigned_value},
+                        {}).has_value())
+                {
+                    remember_property_expression();
+                    return true;
+                }
             }
             if (is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains(normalized_property_name))
