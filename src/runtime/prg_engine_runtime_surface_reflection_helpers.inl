@@ -500,6 +500,14 @@ bool native_visual_dynamicfontname_member_name_matches(
            runtime_object.properties.contains("dynamicfontname");
 }
 
+bool native_visual_dynamicfontbold_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicfontbold" &&
+           normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column" &&
+           runtime_object.properties.contains("dynamicfontbold");
+}
+
 bool native_visual_dynamicfontsize_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

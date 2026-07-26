@@ -106,6 +106,13 @@
             }
 
             if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicfontbold"))
+            {
+                // Headless contract: preserve the raw dynamic-font-bold expression without evaluating it.
+                runtime_object.properties["dynamicfontbold"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontsize"))
             {
                 // Headless contract: preserve the raw dynamic-font-size expression without evaluating it.

@@ -235,6 +235,7 @@
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_fontcharset_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_dynamicfontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontoutline_member_name(*runtime_object, property_name) ||
@@ -1367,6 +1368,7 @@
             is_native_visual_fontname_member_name(*runtime_object, property_name) ||
             is_native_visual_fontcharset_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontname_member_name(*runtime_object, property_name) ||
+            is_native_visual_dynamicfontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontoutline_member_name(*runtime_object, property_name) ||

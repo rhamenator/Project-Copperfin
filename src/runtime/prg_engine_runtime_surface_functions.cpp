@@ -316,6 +316,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_column_dynamicalignment_member_name_matches(runtime_object, member_name) ||
                native_column_sparse_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontname_member_name_matches(runtime_object, member_name) ||
+               native_visual_dynamicfontbold_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontsize_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontshadow_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontoutline_member_name_matches(runtime_object, member_name) ||
