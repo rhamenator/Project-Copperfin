@@ -152,8 +152,49 @@ internal sealed class CopperfinDesignSurfaceTheme
         Color.FromArgb(166, 91, 84),
         Color.FromArgb(163, 63, 54));
 
-    public static CopperfinDesignSurfaceTheme FromHostColors(Color background, Color foreground)
+    public static CopperfinDesignSurfaceTheme FromHostColors(
+        Color background,
+        Color foreground,
+        bool highContrast = false)
     {
+        if (highContrast)
+        {
+            return new CopperfinDesignSurfaceTheme(
+                background,
+                foreground,
+                foreground,
+                background,
+                foreground,
+                background,
+                foreground,
+                background,
+                foreground,
+                background,
+                foreground,
+                background,
+                foreground,
+                SystemColors.Highlight,
+                SystemColors.Highlight,
+                background,
+                background,
+                background,
+                SystemColors.Highlight,
+                foreground,
+                SystemColors.Highlight,
+                background,
+                SystemColors.Highlight,
+                foreground,
+                SystemColors.Highlight,
+                background,
+                SystemColors.Highlight,
+                foreground,
+                SystemColors.Highlight,
+                background,
+                SystemColors.Highlight,
+                foreground,
+                SystemColors.Highlight);
+        }
+
         var dark = background.GetBrightness() < 0.5F;
         var light = dark ? Color.White : Color.Black;
         var accent = Color.FromArgb(86, 156, 214);
@@ -268,9 +309,12 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         MinimumSize = new Size(400, 260);
     }
 
-    internal void ApplyVisualStudioHostTheme(Color background, Color foreground)
+    internal void ApplyVisualStudioHostTheme(
+        Color background,
+        Color foreground,
+        bool highContrast = false)
     {
-        theme = CopperfinDesignSurfaceTheme.FromHostColors(background, foreground);
+        theme = CopperfinDesignSurfaceTheme.FromHostColors(background, foreground, highContrast);
         BackColor = background;
         surfaceTextColor = foreground;
         surfaceGridColor = theme.Grid;

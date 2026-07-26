@@ -349,6 +349,24 @@ internal static partial class Program
         Expect(themedBitmap.GetPixel(0, 0) == hostBackground,
             "VSIX host theme should paint the shared design-surface chrome with the resolved host background");
 
+        var highContrastBackground = Color.FromArgb(255, 255, 255);
+        var highContrastForeground = Color.FromArgb(0, 0, 0);
+        surface.ApplyVisualStudioHostTheme(highContrastBackground, highContrastForeground, true);
+        var highContrastTheme = CopperfinDesignSurfaceTheme.FromHostColors(
+            highContrastBackground,
+            highContrastForeground,
+            true);
+        Expect(highContrastTheme.PageFill == highContrastBackground &&
+               highContrastTheme.SectionFill == highContrastBackground &&
+               highContrastTheme.SectionBorder == highContrastForeground &&
+               highContrastTheme.SectionHeaderText == highContrastForeground &&
+               highContrastTheme.SelectedBorder == SystemColors.Highlight,
+            "VSIX host theme should use system high-contrast roles instead of blended designer colors");
+        using var highContrastBitmap = new Bitmap(surface.Width, surface.Height);
+        surface.DrawToBitmap(highContrastBitmap, new Rectangle(Point.Empty, surface.Size));
+        Expect(highContrastBitmap.GetPixel(0, 0) == highContrastBackground,
+            "VSIX host theme should paint high-contrast surfaces with the host background");
+
         surface.ResetVisualStudioHostTheme();
         Expect(surface.BackColor == Color.White,
             "standalone surface reset should restore the shared designer palette after VSIX host theming");

@@ -3689,23 +3689,26 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreground = SystemColors.ControlText;
         }
 
-        ApplyHostTheme(background, foreground);
+        ApplyHostTheme(background, foreground, SystemInformation.HighContrast);
     }
 #else
     private void ApplyVisualStudioHostTheme()
     {
         // Smoke tests and non-VSSDK builds still exercise the same safe fallback
         // boundary used when Visual Studio theme services are unavailable.
-        ApplyHostTheme(SystemColors.Control, SystemColors.ControlText);
+        ApplyHostTheme(
+            SystemColors.Control,
+            SystemColors.ControlText,
+            SystemInformation.HighContrast);
     }
 #endif
 
-    private void ApplyHostTheme(Color background, Color foreground)
+    private void ApplyHostTheme(Color background, Color foreground, bool highContrast = false)
     {
         BackColor = background;
         ForeColor = foreground;
-        designSurface.ApplyVisualStudioHostTheme(background, foreground);
-        ApplyVisualStudioHostThemeToChildren(this, background, foreground);
+        designSurface.ApplyVisualStudioHostTheme(background, foreground, highContrast);
+        ApplyVisualStudioHostThemeToChildren(this, background, foreground, highContrast);
     }
 
     private void CaptureStandaloneControlStyles()
@@ -3742,13 +3745,17 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private static void ApplyVisualStudioHostThemeToChildren(
         Control parent,
         Color background,
-        Color foreground)
+        Color foreground,
+        bool highContrast)
     {
         foreach (Control child in parent.Controls)
         {
             if (child is CopperfinDesignSurfaceControl)
             {
-                ((CopperfinDesignSurfaceControl)child).ApplyVisualStudioHostTheme(background, foreground);
+                ((CopperfinDesignSurfaceControl)child).ApplyVisualStudioHostTheme(
+                    background,
+                    foreground,
+                    highContrast);
                 continue;
             }
 
@@ -3761,7 +3768,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             child.ForeColor = foreground;
 
-            ApplyVisualStudioHostThemeToChildren(child, background, foreground);
+            ApplyVisualStudioHostThemeToChildren(child, background, foreground, highContrast);
         }
     }
 
