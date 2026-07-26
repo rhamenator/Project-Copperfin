@@ -2099,7 +2099,9 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.debug_manifest_path = copperfin::platform::path_to_utf8_string(package_root / "app.cfdebug");
     plan.launcher_project_path = copperfin::platform::path_to_utf8_string(package_root / "launcher" / "Copperfin.GeneratedLauncher.csproj");
     plan.launcher_source_path = copperfin::platform::path_to_utf8_string(package_root / "launcher" / "Program.cs");
-    const std::filesystem::path output_file_name(resolve_output_file_name(workspace, plan.project_title));
+    const std::filesystem::path output_file_name =
+        copperfin::platform::path_from_utf8_string(
+            resolve_output_file_name(workspace, plan.project_title));
     plan.ast_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ast.json"));
     plan.ir_manifest_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".ir.json"));
     plan.transpiled_csharp_path = copperfin::platform::path_to_utf8_string(package_root / (copperfin::platform::path_to_utf8_string(output_file_name) + ".transpiled.cs"));

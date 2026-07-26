@@ -441,8 +441,8 @@ void test_runtime_package_stages_unicode_prg_include_dependencies() {
                    fs::exists(content_root /
                               copperfin::platform::path_from_utf8_string(nested_header_relative)),
                "#3873: Unicode #INCLUDE files should be staged under their relative paths");
-        expect(runtime_manifest.find(header_relative) != std::string::npos &&
-                   runtime_manifest.find(nested_header_relative) != std::string::npos,
+        expect(runtime_manifest.find(quote_manifest_value(header_relative)) != std::string::npos &&
+                   runtime_manifest.find(quote_manifest_value(nested_header_relative)) != std::string::npos,
                "#3873: runtime manifest should preserve Unicode #INCLUDE identities");
     }
 
