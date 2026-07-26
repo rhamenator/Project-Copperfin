@@ -3095,6 +3095,21 @@ namespace copperfin::runtime
         {
             const std::filesystem::path working_directory =
                 copperfin::platform::path_from_utf8_string(current_default_directory());
+            const auto resolve_configuration_path = [&](const std::filesystem::path &candidate)
+                -> std::optional<std::filesystem::path>
+            {
+                if (options.require_verified_file_byte_overrides)
+                {
+                    bool ambiguous = false;
+                    return resolve_verified_file_byte_override_path(candidate, ambiguous);
+                }
+                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(candidate);
+                if (resolution.ambiguous || !resolution.path.has_value())
+                {
+                    return std::nullopt;
+                }
+                return resolution.path;
+            };
             std::filesystem::path requested_path;
             if (const auto configured = target_object->properties.find("configurationtable");
                 configured != target_object->properties.end() &&
@@ -3114,10 +3129,10 @@ namespace copperfin::runtime
                     working_directory / "_ReportOutputConfig.dbf"};
                 for (const auto &candidate : candidates)
                 {
-                    const auto resolution = copperfin::vfp::resolve_unique_casefold_path(candidate);
-                    if (!resolution.ambiguous && resolution.path.has_value())
+                    if (const auto resolved = resolve_configuration_path(candidate);
+                        resolved.has_value())
                     {
-                        requested_path = *resolution.path;
+                        requested_path = *resolved;
                         break;
                     }
                 }
@@ -3126,11 +3141,7 @@ namespace copperfin::runtime
             std::optional<std::filesystem::path> resolved_path;
             if (!requested_path.empty())
             {
-                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(requested_path);
-                if (!resolution.ambiguous && resolution.path.has_value())
-                {
-                    resolved_path = resolution.path;
-                }
+                resolved_path = resolve_configuration_path(requested_path);
             }
             const std::string config_path = resolved_path.has_value()
                 ? copperfin::platform::path_to_utf8_string(resolved_path->lexically_normal())
@@ -3154,12 +3165,35 @@ namespace copperfin::runtime
             if (!configured_path.empty())
             {
                 const auto requested_path = copperfin::platform::path_from_utf8_string(configured_path);
-                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(requested_path);
-                if (!resolution.ambiguous && resolution.path.has_value())
+                std::optional<std::filesystem::path> resolved_path;
+                if (options.require_verified_file_byte_overrides)
                 {
-                    const auto table = copperfin::vfp::parse_dbf_table_from_file(
-                        copperfin::platform::path_to_utf8_string(*resolution.path),
-                        std::numeric_limits<std::size_t>::max());
+                    bool ambiguous = false;
+                    resolved_path = resolve_verified_file_byte_override_path(requested_path, ambiguous);
+                    if (ambiguous)
+                    {
+                        resolved_path.reset();
+                    }
+                }
+                else
+                {
+                    const auto resolution = copperfin::vfp::resolve_unique_casefold_path(requested_path);
+                    if (!resolution.ambiguous && resolution.path.has_value())
+                    {
+                        resolved_path = resolution.path;
+                    }
+                }
+                if (resolved_path.has_value())
+                {
+                    std::filesystem::path snapshot_root;
+                    const auto table_path = options.require_verified_file_byte_overrides
+                        ? materialize_verified_table_snapshot(*resolved_path, snapshot_root)
+                        : resolved_path;
+                    const auto table = table_path.has_value()
+                        ? copperfin::vfp::parse_dbf_table_from_file(
+                              copperfin::platform::path_to_utf8_string(*table_path),
+                              std::numeric_limits<std::size_t>::max())
+                        : copperfin::vfp::DbfTableParseResult{};
                     if (table.ok)
                     {
                         const auto has_exactly_one_field = [&](const std::string &name) {
@@ -3199,6 +3233,11 @@ namespace copperfin::runtime
                     else
                     {
                         result_code = "unsupported";
+                    }
+                    if (!snapshot_root.empty())
+                    {
+                        std::error_code snapshot_error;
+                        std::filesystem::remove_all(snapshot_root, snapshot_error);
                     }
                 }
             }

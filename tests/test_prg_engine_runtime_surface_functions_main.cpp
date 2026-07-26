@@ -574,6 +574,7 @@ int main()
     test_newobject_preserves_library_and_server_targeting();
     test_getobject_reuses_existing_class_and_source_targets();
     test_reportlistener_configuration_contracts_are_scoped_and_deterministic();
+    test_reportlistener_strict_configuration_uses_admitted_bytes();
 
     if (test_failures() != 0)
     {

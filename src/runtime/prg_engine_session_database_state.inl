@@ -172,7 +172,6 @@
             {
                 return exact;
             }
-#if defined(_WIN32)
             return std::find_if(
                 options.verified_file_byte_overrides.begin(),
                 options.verified_file_byte_overrides.end(),
@@ -180,9 +179,6 @@
                 {
                     return paths_equal_insensitive(candidate.first, normalized);
                 });
-#else
-            return options.verified_file_byte_overrides.end();
-#endif
         }
 
         bool database_paths_equal(const std::string &left, const std::string &right) const

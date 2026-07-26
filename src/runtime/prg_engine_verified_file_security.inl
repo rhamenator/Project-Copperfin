@@ -1,6 +1,36 @@
 // prg_engine_verified_file_security.inl
 // Verified immutable file materialization helpers. Included inside Impl.
 
+        std::optional<std::filesystem::path> resolve_verified_file_byte_override_path(
+            const std::filesystem::path &file_path,
+            bool &ambiguous) const
+        {
+            ambiguous = false;
+            const std::string normalized_path = copperfin::platform::path_to_utf8_string(
+                file_path.lexically_normal());
+            const auto exact = options.verified_file_byte_overrides.find(normalized_path);
+            if (exact != options.verified_file_byte_overrides.end() && !exact->second.empty())
+            {
+                return copperfin::platform::path_from_utf8_string(exact->first);
+            }
+
+            std::optional<std::filesystem::path> resolved_path;
+            for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+            {
+                if (bytes.empty() || !paths_equal_insensitive(candidate_name, normalized_path))
+                {
+                    continue;
+                }
+                if (resolved_path.has_value())
+                {
+                    ambiguous = true;
+                    return std::nullopt;
+                }
+                resolved_path = copperfin::platform::path_from_utf8_string(candidate_name);
+            }
+            return resolved_path;
+        }
+
         std::optional<std::filesystem::path> materialize_verified_file_snapshot(
             const std::filesystem::path &file_path,
             std::filesystem::path &snapshot_root,
@@ -13,8 +43,15 @@
                 return file_path;
             }
 
-            const auto primary = find_verified_file_byte_override(file_path);
-            if (primary == options.verified_file_byte_overrides.end() || primary->second.empty())
+            bool primary_ambiguous = false;
+            const auto resolved_primary_path = resolve_verified_file_byte_override_path(
+                file_path,
+                primary_ambiguous);
+            const auto primary = resolved_primary_path.has_value()
+                ? find_verified_file_byte_override(*resolved_primary_path)
+                : options.verified_file_byte_overrides.end();
+            if (primary_ambiguous ||
+                primary == options.verified_file_byte_overrides.end() || primary->second.empty())
             {
                 last_error_message = runtime_text(
                     diagnostic_key,
@@ -37,9 +74,15 @@
             if (sidecar_resolution.path.has_value() ||
                 (options.require_verified_file_byte_overrides && !sidecar_candidate.empty()))
             {
-                const auto verified_sidecar = find_verified_file_byte_override(sidecar_candidate);
+                bool sidecar_ambiguous = false;
+                const auto resolved_sidecar_path = resolve_verified_file_byte_override_path(
+                    sidecar_candidate,
+                    sidecar_ambiguous);
+                const auto verified_sidecar = resolved_sidecar_path.has_value()
+                    ? find_verified_file_byte_override(*resolved_sidecar_path)
+                    : options.verified_file_byte_overrides.end();
                 if (verified_sidecar == options.verified_file_byte_overrides.end() ||
-                    verified_sidecar->second.empty())
+                    verified_sidecar->second.empty() || sidecar_ambiguous)
                 {
                     if (require_memo_sidecar)
                     {

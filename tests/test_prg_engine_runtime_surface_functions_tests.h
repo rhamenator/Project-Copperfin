@@ -578,4 +578,5 @@ namespace copperfin::runtime_surface_tests
     void test_newobject_preserves_library_and_server_targeting();
     void test_getobject_reuses_existing_class_and_source_targets();
     void test_reportlistener_configuration_contracts_are_scoped_and_deterministic();
+    void test_reportlistener_strict_configuration_uses_admitted_bytes();
 }

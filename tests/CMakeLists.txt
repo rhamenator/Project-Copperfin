@@ -4965,6 +4965,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_lifecycle_07.cpp
     test_prg_engine_runtime_surface_functions_lifecycle_08.cpp
     test_prg_engine_runtime_surface_functions_report_listener.cpp
+    test_prg_engine_runtime_surface_functions_report_listener_security.cpp
     test_prg_engine_runtime_surface_functions_list_controls_01.cpp
     test_prg_engine_runtime_surface_functions_list_controls_02.cpp
     test_prg_engine_runtime_surface_functions_list_controls_03.cpp
