@@ -835,6 +835,13 @@
                 runtime_object.properties["relationalexpr"] = make_string_value("");
             }
 
+            if (normalized_base_class == "relation" &&
+                !runtime_object.properties.contains("onetomany"))
+            {
+                // VFP9 defaults a relation to ordinary parent/child movement.
+                runtime_object.properties["onetomany"] = make_boolean_value(false);
+            }
+
             if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowcellselection"))
             {

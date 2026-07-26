@@ -302,6 +302,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_linkmaster_member_name_matches(runtime_object, member_name) ||
                native_grid_childorder_member_name_matches(runtime_object, member_name) ||
                native_grid_relation_relationalexpr_member_name_matches(runtime_object, member_name) ||
+               native_relation_onetomany_member_name_matches(runtime_object, member_name) ||
                native_grid_headerheight_member_name_matches(runtime_object, member_name) ||
                native_grid_allowheadersizing_member_name_matches(runtime_object, member_name) ||
                native_grid_allowrowsizing_member_name_matches(runtime_object, member_name) ||
@@ -387,6 +388,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_splitbar_member_name(runtime_object, member_name) ||
                is_native_leftcolumn_member_name(runtime_object, member_name) ||
                is_native_grid_childorder_member_name(runtime_object, member_name) ||
+               is_native_relation_onetomany_member_name(runtime_object, member_name) ||
                is_native_grid_activecolumn_member_name(runtime_object, member_name) ||
                is_native_grid_activerow_member_name(runtime_object, member_name) ||
                is_native_grid_relativecolumn_member_name(runtime_object, member_name) ||
