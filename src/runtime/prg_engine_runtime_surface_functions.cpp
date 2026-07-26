@@ -299,6 +299,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_form_drawwidth_member_name_matches(runtime_object, member_name) ||
                native_visual_alignment_member_name_matches(runtime_object, member_name) ||
                native_grid_rowheight_member_name_matches(runtime_object, member_name) ||
+               native_grid_linkmaster_member_name_matches(runtime_object, member_name) ||
                native_grid_headerheight_member_name_matches(runtime_object, member_name) ||
                native_grid_allowheadersizing_member_name_matches(runtime_object, member_name) ||
                native_grid_allowrowsizing_member_name_matches(runtime_object, member_name) ||

@@ -2193,6 +2193,11 @@ bool is_native_grid_rowheight_member_name(const RuntimeOleObjectState& runtime_o
     return native_grid_rowheight_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_grid_linkmaster_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_grid_linkmaster_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_grid_headerheight_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_grid_headerheight_member_name_matches(runtime_object, normalized_member_name);

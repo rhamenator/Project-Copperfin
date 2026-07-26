@@ -86,6 +86,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_form_alwaysontop_defaults_mutates_and_stays_builtin();
     void test_native_form_keypreview_defaults_mutate_and_stay_builtin();
     void test_native_form_mdiform_defaults_mutate_and_stay_builtin();
+    void test_native_grid_linkmaster_defaults_mutate_and_stay_builtin();
     void test_native_visual_fontcharset_defaults_mutate_and_stay_builtin();
     void test_native_movable_defaults_are_runtime_readonly_and_stay_builtin();
     void test_native_visual_anchor_defaults_mutate_and_stay_builtin();

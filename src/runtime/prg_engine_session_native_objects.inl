@@ -814,6 +814,13 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("linkmaster"))
+            {
+                // An unlinked headless Grid has no parent alias.
+                runtime_object.properties["linkmaster"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowcellselection"))
             {
                 runtime_object.properties["allowcellselection"] = make_boolean_value(true);
