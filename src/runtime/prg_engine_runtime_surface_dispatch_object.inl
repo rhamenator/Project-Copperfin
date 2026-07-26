@@ -238,6 +238,8 @@
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontoutline_member_name(*runtime_object, property_name) ||
+            is_native_column_dynamicbackcolor_member_name(*runtime_object, property_name) ||
+            is_native_column_dynamicforecolor_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||
@@ -1368,6 +1370,8 @@
             is_native_visual_dynamicfontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontshadow_member_name(*runtime_object, property_name) ||
             is_native_visual_dynamicfontoutline_member_name(*runtime_object, property_name) ||
+            is_native_column_dynamicbackcolor_member_name(*runtime_object, property_name) ||
+            is_native_column_dynamicforecolor_member_name(*runtime_object, property_name) ||
             is_native_visual_fontsize_member_name(*runtime_object, property_name) ||
             is_native_visual_fontbold_member_name(*runtime_object, property_name) ||
             is_native_visual_fontitalic_member_name(*runtime_object, property_name) ||

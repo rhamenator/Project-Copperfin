@@ -489,6 +489,7 @@ int main()
     test_native_column_enabled_defaults_mutate_and_stay_builtin();
     test_native_column_inputmask_defaults_mutate_and_stay_builtin();
     test_native_column_format_defaults_mutate_and_stay_builtin();
+    test_native_column_dynamic_color_defaults_mutate_and_stay_builtin();
     test_native_tabindex_defaults_mutate_and_stay_builtin();
     test_native_tabstop_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();

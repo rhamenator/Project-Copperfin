@@ -256,6 +256,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_column_enabled_defaults_mutate_and_stay_builtin();
     void test_native_column_inputmask_defaults_mutate_and_stay_builtin();
     void test_native_column_format_defaults_mutate_and_stay_builtin();
+    void test_native_column_dynamic_color_defaults_mutate_and_stay_builtin();
     void test_native_tabindex_defaults_mutate_and_stay_builtin();
     void test_native_tabstop_defaults_mutate_and_stay_builtin();
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();

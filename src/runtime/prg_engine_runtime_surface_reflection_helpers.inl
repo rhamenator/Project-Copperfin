@@ -524,6 +524,22 @@ bool native_visual_dynamicfontoutline_member_name_matches(
            runtime_object.properties.contains("dynamicfontoutline");
 }
 
+bool native_column_dynamicbackcolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicbackcolor" &&
+           native_column_dynamic_color_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dynamicbackcolor");
+}
+
+bool native_column_dynamicforecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "dynamicforecolor" &&
+           native_column_dynamic_color_runtime_object(runtime_object) &&
+           runtime_object.properties.contains("dynamicforecolor");
+}
+
 bool native_visual_fontsize_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

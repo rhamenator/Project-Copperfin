@@ -319,6 +319,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_visual_dynamicfontsize_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontshadow_member_name_matches(runtime_object, member_name) ||
                native_visual_dynamicfontoutline_member_name_matches(runtime_object, member_name) ||
+               native_column_dynamicbackcolor_member_name_matches(runtime_object, member_name) ||
+               native_column_dynamicforecolor_member_name_matches(runtime_object, member_name) ||
                native_textbox_format_member_name_matches(runtime_object, member_name) ||
                native_textbox_passwordchar_member_name_matches(runtime_object, member_name) ||
                native_textbox_maxlength_member_name_matches(runtime_object, member_name) ||

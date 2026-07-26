@@ -431,6 +431,20 @@
             }
 
             if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicbackcolor"))
+            {
+                // Headless contract: preserve the raw color expression without evaluating it.
+                runtime_object.properties["dynamicbackcolor"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamicforecolor"))
+            {
+                // Headless contract: preserve the raw color expression without evaluating it.
+                runtime_object.properties["dynamicforecolor"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicalignment"))
             {
                 // Headless contract: preserve the raw dynamic-alignment expression without evaluating it.
