@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4713 under #4700 is implementation-complete as a documentation slice. `docs/19-polyglot-and-ai-subprojects.md` now defines leaf-capability prerequisites, explicit promotion gates for `off`, `shadow`, `canary`, `on`, and `retire-legacy`, rollback procedures, invariant safety thresholds, a report migration example, and a reproducible evidence package. No automatic migration tooling was added.
+
 - #4712 under #4700 is implementation-complete for migration telemetry and diagnostics. `cf_platform_profile` now adapts route, bridge, and parity decisions into an invariant category/detail event stream with route-selected, fallback-applied, latency-outcome, parity-checked, and parity-mismatch events. Capability IDs, reason codes, latency, mismatch counts, and enum values remain machine-stable; `test_polyglot_migration_telemetry` passes on Linux. No PRG runtime event stream or bridge execution was changed.
 
 - #4711 under #4700 is implementation-complete for the shadow parity comparator slice. `cf_platform_profile` now compares native/candidate success and error state, typed fields, bounded integer tolerance, order policy, and mismatch categories; it emits checked/mismatch telemetry and bounded samples containing capability ID and reason while always preserving the native return path. `test_polyglot_parity_comparator` passes on Linux. No candidate or native implementation is invoked by this comparator.

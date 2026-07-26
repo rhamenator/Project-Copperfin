@@ -117,6 +117,83 @@ These event names, fields, reason codes, and enum values are machine contracts a
 not localized. The telemetry model only records decisions; it does not make a route,
 start a bridge, or alter existing PRG runtime events by itself.
 
+## Developer Migration Playbook v1
+
+Migrations are performed one leaf capability at a time. A leaf capability has one
+stable capability ID, one contract revision, one candidate artifact, and one rollback
+owner. Do not promote a group of capabilities as a single change when their contracts,
+failure modes, or evidence differ.
+
+### Prerequisites
+
+Before changing a route state, record all of the following in the migration evidence:
+
+- the capability ID and contract/protocol versions
+- native and candidate artifact or source hashes
+- the route and bridge policy revisions
+- the expected parity fields, error codes, and latency budget
+- the owner, date, environment, and rollback contact
+
+The native path must pass its existing focused tests before a migration starts. The
+candidate must pass contract validation and produce bounded, machine-readable events.
+No state transition is automatic; a human or an approved release process must review
+the evidence and select the next state.
+
+### State transitions and gates
+
+| Transition | Required evidence and promotion threshold | Rollback action |
+| --- | --- | --- |
+| `off` -> `shadow` | Contract validation passes; native baseline passes; candidate can be invoked without changing the native return path; zero contract violations or crashes | Return to `off` and preserve the failed candidate evidence |
+| `shadow` -> `canary` | Shadow sample meets the declared parity policy; zero unclassified mismatches; `p95` latency is within the configured budget; no new native failures | Set canary percentage to `0` or return to `off` |
+| `canary` -> higher percentage | The current percentage meets the same parity, latency, error, and fallback thresholds over the declared sample window; no unexplained `polyglot.fallback.applied` events | Lower the percentage to the last passing value or return to `off` |
+| `canary` -> `on` | The `100%` canary window passes the declared thresholds and the rollback owner accepts the evidence; candidate and native error identities remain contract-compatible | Return to `canary` or `off` |
+| `on` -> `retire-legacy` | The candidate has passed the complete migration window, no native fallback is required, and the owner has archived the final evidence | Return to `on`; use `off` only when the candidate itself is unsafe |
+
+The default safe threshold is zero contract violations, zero crashes, and zero
+unclassified parity mismatches. Latency must remain at or below the configured
+budget at the declared percentile, and candidate error/fallback rates must not exceed
+the approved baseline or a stricter capability-specific threshold. A threshold may be
+made stricter for a capability; relaxing it requires a recorded compatibility exception
+and reviewer approval. Known VFP9 behavior exceptions are not silently converted into
+polyglot parity passes.
+
+### Rollback procedure
+
+1. Stop promotion and capture the latest invariant telemetry, candidate hash, route
+   configuration, policy configuration, and failing request or parity sample.
+2. Select `off` for crashes, contract violations, security failures, or unexplained
+   behavior. Select the last passing canary percentage for an isolated rate or latency
+   regression when the native path remains healthy.
+3. Re-run the native baseline and the focused candidate/parity tests before attempting
+   another promotion. Do not delete failed evidence.
+4. Classify the failure as a candidate defect, contract incompatibility, environment
+   problem, or documented VFP9 exception. Reopen the migration only after the owner
+   records the correction and a fresh artifact hash.
+
+For a `retire-legacy` rollback, restore `on` first so the native path is again an
+approved reactive fallback. Use `off` when the candidate must not receive traffic.
+Route state, reason codes, capability IDs, and telemetry categories remain invariant;
+only operator-facing summaries use localized display text.
+
+### Example leaf migration
+
+For `reports.invoice.render`, begin with `off`, validate the contract and native
+baseline, then select `shadow`. After the declared shadow window has zero unclassified
+mismatches and stays within the report latency budget, promote through `canary` at
+the approved percentages, for example `10`, `50`, and `100`. Review each window before
+the next change, then select `on` and finally `retire-legacy` only after the complete
+evidence package is archived. Any failed gate follows the rollback procedure rather
+than silently advancing the route.
+
+### Evidence package
+
+Each transition records the route decision, `polyglot.latency.outcome`, parity events,
+fallback events, test results, sample counts, percentile calculations, artifact hashes,
+configuration revisions, and reviewer decision. Machine fields are stored exactly as
+emitted; localized summaries are supplementary and must not replace the invariant
+record. The package is sufficient for a later operator to reproduce the decision or
+restore the previous route state.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.
