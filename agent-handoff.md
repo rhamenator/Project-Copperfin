@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Hosted release checks at corrected theme head `bdf22423`: Build Visual Studio VSIX run `30191811462`, Linux Managed UI Validation run `30191811451`, and Security Supply Chain Gate run `30191811453` passed. Linux/macOS/Windows native validation and standalone installer runs were still active when captured; do not treat this partial result as RC evidence completion.
+
 - `SmokeVisualStudioHostSurfaceThemeContract` passed all 5 assertions in 0.4 seconds against theme head `bdf22423` with `DISPLAY=:0`: host background routing, host-derived report chrome, rendered host surface pixels, direct surface reset, and full editor standalone restoration. GTK accessibility-module warnings were emitted but did not affect the test. This is portable live WinForms evidence only; Windows must still verify Visual Studio/VSSDK dark/high-contrast rendering, package first-open, and docking.
 
 - #4311 review correction: the default design-surface palette now retains the prior standalone section-header text color (`44,52,64`), while host-derived palettes use the resolved Visual Studio foreground. No standalone visual drift is intended.
