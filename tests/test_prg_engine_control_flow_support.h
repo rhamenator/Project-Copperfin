@@ -163,6 +163,7 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages();
 void test_sql_runtime_errors_localize_without_changing_runtime_behavior();
 void test_on_error_do_handler_dispatches_routine();
 void test_bare_on_error_restores_default_error_handling();
+void test_bare_null_expression_preserves_null_error_sentinels();
 void test_on_error_do_with_handler_receives_error_metadata();
 void test_aerror_populates_structured_runtime_error_array();
 void test_aerror_exposes_sql_and_ole_specific_rows();

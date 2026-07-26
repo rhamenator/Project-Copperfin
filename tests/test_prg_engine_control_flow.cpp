@@ -102,6 +102,7 @@ int main() {
     test_set_procedure_registers_external_error_handler();
     test_on_error_do_handler_dispatches_routine();
     test_bare_on_error_restores_default_error_handling();
+    test_bare_null_expression_preserves_null_error_sentinels();
     test_on_error_do_with_handler_receives_error_metadata();
     test_aerror_populates_structured_runtime_error_array();
     test_aerror_exposes_sql_and_ole_specific_rows();

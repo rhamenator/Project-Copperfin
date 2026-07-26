@@ -845,6 +845,11 @@
                 }
 
                 skip_whitespace();
+                if (normalize_identifier(identifier) == "null")
+                {
+                    return make_null_value();
+                }
+
                     if (match("["))
                     {
                         if (suppress_evaluation_)
