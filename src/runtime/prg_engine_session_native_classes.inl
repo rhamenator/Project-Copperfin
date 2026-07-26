@@ -22,7 +22,16 @@
             const std::filesystem::path default_directory_candidate =
                 (copperfin::platform::path_from_utf8_string(current_default_directory()) / program_path).lexically_normal();
             std::error_code ignored;
-            if (std::filesystem::exists(default_directory_candidate, ignored))
+            const auto has_admitted_source = [&](const std::filesystem::path &candidate)
+            {
+                const auto override = find_source_text_override(
+                    copperfin::platform::path_to_utf8_string(candidate));
+                return options.require_source_text_overrides &&
+                    override != options.source_text_overrides.end() &&
+                    !override->second.empty();
+            };
+            if (std::filesystem::exists(default_directory_candidate, ignored) ||
+                has_admitted_source(default_directory_candidate))
             {
                 return copperfin::platform::path_to_utf8_string(default_directory_candidate);
             }
@@ -33,7 +42,8 @@
                 const std::filesystem::path fallback_directory_candidate =
                     (copperfin::platform::path_from_utf8_string(normalized_fallback_path).parent_path() /
                      program_path).lexically_normal();
-                if (std::filesystem::exists(fallback_directory_candidate, ignored))
+                if (std::filesystem::exists(fallback_directory_candidate, ignored) ||
+                    has_admitted_source(fallback_directory_candidate))
                 {
                     return copperfin::platform::path_to_utf8_string(fallback_directory_candidate);
                 }

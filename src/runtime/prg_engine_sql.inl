@@ -1387,10 +1387,17 @@
                 program_path = program_path.lexically_normal();
 
                 std::error_code ignored;
-                if (std::filesystem::exists(program_path, ignored))
+                const std::string program_path_text =
+                    copperfin::platform::path_to_utf8_string(program_path);
+                const auto admitted_source = find_source_text_override(
+                    program_path_text);
+                const bool has_admitted_source =
+                    options.require_source_text_overrides &&
+                    admitted_source != options.source_text_overrides.end() &&
+                    !admitted_source->second.empty();
+                if (std::filesystem::exists(program_path, ignored) ||
+                    has_admitted_source || options.require_source_text_overrides)
                 {
-                    const std::string program_path_text =
-                        copperfin::platform::path_to_utf8_string(program_path);
                     Program &program = load_program(program_path_text);
                     const bool native_class_found = find_native_class_lookup(program, prog_id).has_value();
                     RuntimeOleObjectState *runtime_object = instantiate_native_class_object(

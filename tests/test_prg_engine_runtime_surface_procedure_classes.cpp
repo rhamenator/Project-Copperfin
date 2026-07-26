@@ -388,6 +388,67 @@ void test_newobject_local_vcx_requires_verified_snapshot() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_newobject_external_prg_uses_admitted_source_when_path_is_absent() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_external_prg_verified";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path external_path = temp_root / "external_worker.prg";
+    const fs::path main_path = temp_root / "newobject_external_prg_verified.prg";
+    write_text(
+        main_path,
+        "oWorker = NEWOBJECT('ExternalWorker', 'external_worker.prg', 41)\n"
+        "nAnswer = oWorker.Answer()\n"
+        "RETURN\n");
+    const std::string admitted_source =
+        "DEFINE CLASS ExternalWorker AS Custom\n"
+        "    PROCEDURE Init\n"
+        "        LPARAMETERS seed\n"
+        "        THIS.nSeed = seed\n"
+        "    ENDPROC\n"
+        "    FUNCTION Answer\n"
+        "        RETURN THIS.nSeed + 1\n"
+        "    ENDFUNC\n"
+        "ENDDEFINE\n";
+
+    auto options = make_runtime_session_options(main_path, temp_root);
+    options.startup_source_text = read_text(main_path);
+    options.source_text_overrides.emplace(external_path.string(), admitted_source);
+    options.require_source_text_overrides = true;
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("strict external PRG NEWOBJECT should use admitted source bytes: ") + state.message);
+    const auto answer = state.globals.find("nanswer");
+    expect(answer != state.globals.end() && copperfin::runtime::format_value(answer->second) == "42",
+           "strict external PRG NEWOBJECT should execute the admitted class method");
+    expect(state.ole_objects.size() == 1U,
+           "strict external PRG NEWOBJECT should register one native object");
+    if (state.ole_objects.size() == 1U)
+    {
+        expect(state.ole_objects.front().source == external_path.string(),
+               "strict external PRG NEWOBJECT should retain the logical source path");
+    }
+
+    auto missing_options = make_runtime_session_options(main_path, temp_root);
+    missing_options.startup_source_text = read_text(main_path);
+    missing_options.require_source_text_overrides = true;
+    copperfin::runtime::PrgRuntimeSession missing_session =
+        copperfin::runtime::PrgRuntimeSession::create(missing_options);
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!missing_state.completed,
+           "strict external PRG NEWOBJECT should fail without admitted source bytes");
+    expect(missing_state.message.find("Verified package source is unavailable") != std::string::npos,
+           "strict external PRG NEWOBJECT should preserve the verified-source diagnostic");
+    expect(missing_state.ole_objects.empty(),
+           "unverified external PRG NEWOBJECT should not register a runtime object");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_newobject_local_vcx_rejects_missing_class() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_local_vcx_missing_class";
@@ -649,6 +710,7 @@ int main() {
     test_newobject_local_vcx_materializes_native_class();
     test_newobject_local_vcx_uses_verified_snapshot();
     test_newobject_local_vcx_requires_verified_snapshot();
+    test_newobject_external_prg_uses_admitted_source_when_path_is_absent();
     test_newobject_local_vcx_rejects_missing_class();
     test_newobject_local_vcx_rejects_missing_library();
     test_newobject_local_vcx_fallback_details_localize();
