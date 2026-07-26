@@ -69,7 +69,7 @@ namespace copperfin::runtime_surface_tests
         check("lheaderhas", "false");
         check("lcontrolhas", "false");
         check("lreadonly", "false");
-        check("cdefault", "");
+        check("cdefault", ".T.");
         check("cdirect", "IIF(Value > 0, .T., .F.)");
         check("lsetpem", "true");
         check("csetpem", "Value = 1");

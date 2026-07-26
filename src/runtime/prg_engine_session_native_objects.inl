@@ -108,8 +108,9 @@
             if (normalized_base_class == "column" &&
                 !runtime_object.properties.contains("dynamicfontbold"))
             {
-                // Headless contract: preserve the raw dynamic-font-bold expression without evaluating it.
-                runtime_object.properties["dynamicfontbold"] = make_string_value("");
+                // VFP9 documents DynamicFontBold as the true-default exception in this family.
+                // Preserve the raw logical expression without evaluating it.
+                runtime_object.properties["dynamicfontbold"] = make_string_value(".T.");
             }
 
             if (normalized_base_class == "column" &&
