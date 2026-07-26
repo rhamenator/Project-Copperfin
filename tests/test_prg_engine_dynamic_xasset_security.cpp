@@ -188,6 +188,51 @@ void test_dynamic_xasset_uses_admitted_snapshot_during_replacement() {
     fs::remove_all(root, ignored);
 }
 
+void test_dynamic_xasset_uses_admitted_snapshot_when_paths_are_absent() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_absent_paths";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path form_path = root / "dynamic.scx";
+    const fs::path memo_path = root / "dynamic.sct";
+    const fs::path main_path = root / "main.prg";
+    write_form_fixture(form_path, memo_path, "PROCEDURE Init\nTHIS.SETALL('fontname', 'AbsentPathFont')\nRETURN\nENDPROC");
+    const std::string form_bytes = read_text(form_path);
+    const std::string memo_bytes = read_text(memo_path);
+    write_text(main_path, "DO FORM '" + form_path.string() + "'\n");
+    fs::remove(form_path, ignored);
+    fs::remove(memo_path, ignored);
+
+    auto options = make_runtime_session_options(main_path, root);
+    options.verified_file_byte_overrides.emplace(form_path.string(), form_bytes);
+    options.verified_file_byte_overrides.emplace(memo_path.string(), memo_bytes);
+    options.require_verified_file_byte_overrides = true;
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason != copperfin::runtime::DebugPauseReason::error,
+           "strict DO FORM should execute admitted xAsset bytes without physical paths: " + state.message);
+    expect(has_runtime_event(state.events, "form.open", form_path.string()),
+           "strict absent-path DO FORM should retain its logical form event");
+    expect(std::any_of(
+               state.events.begin(),
+               state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent& event) {
+                   return event.category == "prg.object.setall" &&
+                       event.detail == "__cf_xasset_root.fontname:0";
+               }),
+           "strict absent-path DO FORM should execute the admitted form method");
+
+    auto missing_options = make_runtime_session_options(main_path, root);
+    missing_options.require_verified_file_byte_overrides = true;
+    auto missing_session = copperfin::runtime::PrgRuntimeSession::create(missing_options);
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error &&
+               missing_state.message.find("Verified package bytes are unavailable") != std::string::npos,
+           "strict absent-path DO FORM should fail closed without admitted bytes: " + missing_state.message);
+
+    fs::remove_all(root, ignored);
+}
+
 void test_dynamic_xasset_requires_verified_snapshot() {
     const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_xasset_unverified";
     std::error_code ignored;
@@ -465,6 +510,7 @@ void test_strict_do_and_call_use_admitted_source_when_paths_are_absent() {
 int main() {
     test_dynamic_xasset_uses_verified_snapshot();
     test_dynamic_xasset_uses_admitted_snapshot_during_replacement();
+    test_dynamic_xasset_uses_admitted_snapshot_when_paths_are_absent();
     test_dynamic_xasset_requires_verified_snapshot();
     test_dynamic_xasset_bootstrap_paths_are_session_unique();
     test_dynamic_xasset_bootstrap_cleanup();

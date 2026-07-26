@@ -2503,8 +2503,14 @@
                 events.push_back({.category = "form.open",
                                   .detail = copperfin::platform::path_to_utf8_string(form_path.lexically_normal()),
                                   .location = statement.location});
+                const auto admitted_form_bytes = find_verified_file_byte_override(form_path);
+                const bool has_admitted_form_bytes =
+                    options.require_verified_file_byte_overrides &&
+                    admitted_form_bytes != options.verified_file_byte_overrides.end() &&
+                    !admitted_form_bytes->second.empty();
                 std::error_code form_exists_error;
-                if (std::filesystem::exists(form_path, form_exists_error) && !form_exists_error)
+                if ((std::filesystem::exists(form_path, form_exists_error) && !form_exists_error) ||
+                    has_admitted_form_bytes || options.require_verified_file_byte_overrides)
                 {
                     if (const auto bootstrap_path = materialize_xasset_bootstrap(
                             copperfin::platform::path_to_utf8_string(form_path), true))
