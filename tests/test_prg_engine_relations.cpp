@@ -83,11 +83,90 @@ void test_local_set_relation_tracks_parent_navigation()
            "SET RELATION OFF should emit a stable relation event");
     fs::remove_all(temp_root, ignored);
 }
+
+void test_local_set_skip_tracks_child_group_navigation()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_skip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}, {"PARENT30", 30}});
+    write_people_dbf(child_path, {
+        {"CHILD10A", 10}, {"CHILD10B", 10}, {"CHILD20", 20}, {"CHILD30A", 30}, {"CHILD30B", 30}});
+
+    const fs::path main_path = temp_root / "set_skip.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "SET ORDER TO AGE IN Parent\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SELECT Parent\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "SET SKIP TO Child\n"
+        "GO TOP IN Parent\n"
+        "nInitialParent = RECNO('Parent')\n"
+        "nInitialChild = RECNO('Child')\n"
+        "SKIP 1 IN Child\n"
+        "nWithinGroupParent = RECNO('Parent')\n"
+        "nWithinGroupChild = RECNO('Child')\n"
+        "SKIP 1 IN Child\n"
+        "nForwardParent = RECNO('Parent')\n"
+        "nForwardChild = RECNO('Child')\n"
+        "SKIP 1 IN Child\n"
+        "nSecondForwardParent = RECNO('Parent')\n"
+        "nSecondForwardChild = RECNO('Child')\n"
+        "SKIP -1 IN Child\n"
+        "nBackwardParent = RECNO('Parent')\n"
+        "nBackwardChild = RECNO('Child')\n"
+        "SET SKIP TO\n"
+        "SKIP 1 IN Child\n"
+        "nAfterClearParent = RECNO('Parent')\n"
+        "nAfterClearChild = RECNO('Child')\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "SET SKIP script should complete");
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message)
+    {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end())
+        {
+            expect(format_value(found->second) == expected, message);
+        }
+    };
+    check("ninitialparent", "1", "SET SKIP initial parent");
+    check("ninitialchild", "1", "SET SKIP initial child");
+    check("nwithingroupparent", "1", "SET SKIP should stay within a child group");
+    check("nwithingroupchild", "2", "SET SKIP should advance within a child group");
+    check("nforwardparent", "2", "forward child SKIP should advance the parent");
+    check("nforwardchild", "3", "forward child SKIP should select the next child group");
+    check("nsecondforwardparent", "3", "second forward child SKIP should advance the parent");
+    check("nsecondforwardchild", "4", "second forward child SKIP should select the next group");
+    check("nbackwardparent", "2", "reverse child SKIP should move the parent backward");
+    check("nbackwardchild", "3", "reverse child SKIP should select the prior child group");
+    check("nafterclearparent", "2", "SET SKIP TO should preserve the parent pointer when cleared");
+    check("nafterclearchild", "4", "SET SKIP TO should allow ordinary child navigation after clearing");
+    expect(has_runtime_event(state.events, "runtime.set_skip", "Parent -> Child"),
+           "SET SKIP should emit an enabled relation event");
+    expect(has_runtime_event(state.events, "runtime.set_skip", "OFF -> Parent"),
+           "SET SKIP TO with no aliases should emit a clear event");
+    fs::remove_all(temp_root, ignored);
+}
 }
 
 int main()
 {
     test_local_set_relation_tracks_parent_navigation();
+    test_local_set_skip_tracks_child_group_navigation();
     if (copperfin::test_support::test_failures() != 0)
     {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

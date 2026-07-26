@@ -4324,6 +4324,7 @@
                 {
                     cursor->found = false;
                 }
+                (void)synchronize_skip_parent_for_child(*cursor, frame, delta);
                 synchronize_relations_for_parent(*cursor, frame);
                 events.push_back({.category = "runtime.skip",
                                   .detail = statement.expression,
@@ -4838,6 +4839,77 @@
                     return {};
                 }
 
+                if (normalized_name == "skip")
+                {
+                    CursorState *parent = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    if (parent == nullptr)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                            {{"command", "SET SKIP"}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const std::string skip_clause = strip_set_to_value(option_value);
+                    auto &relations = current_session_state().relations;
+                    if (skip_clause.empty())
+                    {
+                        for (auto &relation : relations)
+                        {
+                            if (relation.parent_work_area == parent->work_area)
+                            {
+                                relation.skip_one_to_many = false;
+                            }
+                        }
+                        events.push_back({.category = "runtime.set_skip",
+                                          .detail = "OFF -> " + parent->alias,
+                                          .location = statement.location});
+                        return {};
+                    }
+
+                    std::string enabled_detail;
+                    for (const std::string &raw_alias : split_csv_like(skip_clause))
+                    {
+                        const std::string child_designator = evaluate_cursor_designator_expression(raw_alias, frame);
+                        CursorState *child = resolve_cursor_target(child_designator);
+                        if (child == nullptr)
+                        {
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                                {{"command", "SET SKIP"}, {"target", child_designator}});
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+
+                        bool relation_found = false;
+                        for (auto &relation : relations)
+                        {
+                            if (relation.parent_work_area == parent->work_area &&
+                                relation.child_work_area == child->work_area)
+                            {
+                                relation.skip_one_to_many = true;
+                                relation_found = true;
+                            }
+                        }
+                        if (relation_found)
+                        {
+                            if (!enabled_detail.empty())
+                            {
+                                enabled_detail += ",";
+                            }
+                            enabled_detail += child->alias;
+                        }
+                    }
+
+                    events.push_back({.category = "runtime.set_skip",
+                                      .detail = parent->alias + " -> " + enabled_detail,
+                                      .location = statement.location});
+                    return {};
+                }
+
                 if (normalized_name == "relation")
                 {
                     const std::string relation_clause = strip_set_to_value(option_value);
@@ -4894,7 +4966,8 @@
                         relations.push_back({
                             .parent_work_area = parent->work_area,
                             .child_work_area = child->work_area,
-                            .expression = expression});
+                            .expression = expression,
+                            .skip_one_to_many = false});
                         synchronize_relations_for_parent(*parent, frame);
                     }
 

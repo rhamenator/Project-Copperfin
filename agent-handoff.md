@@ -1,8 +1,12 @@
 # Agent Handoff
 
+- #4686 under #3217 adds first-pass VFP9 `SET SKIP TO` one-to-many navigation on top of existing local `SET RELATION` links. Relation skip state is data-session scoped, multiple child aliases are supported, `SET SKIP TO` clears only the skip flag, and child-side forward/reverse `SKIP` advances the parent across matching groups through the existing iterative frame machine. `test_prg_engine_relations` passes. Interactive BROWSE repetition, persistent DBC relations, relation mutation refresh, and broader multi-level/`ADDITIVE` behavior remain separate.
+
 - #4685 under #4621 changes unsupported `IOleCommandTarget` results in `CopperfinAssetEditorPane` from raw `E_NOTIMPL` to an accessible local copy of the VSSDK `OLECMDERR_E_NOTSUPPORTED` HRESULT, allowing Visual Studio to route standard document-close commands to the shell. Copperfin Undo handling is unchanged. The fix is pushed at `f88631dd`; exact hosted Windows build and close/reopen UI evidence is pending. Linux cannot complete the VSIX build because the VSSDK package invokes Windows-only `vsct.exe`.
 
-- Windows seq325 provides exact focused validation for #4684 at product head `d07c8e7c` (reporting checkout `a812fdbd`): MSVC Release rebuilt and ran `test_prg_engine_dynamic_xasset_security` successfully with exit 0, covering admitted-source and missing-admission strict SPAWN behavior. Evidence is under `artifacts/windows-4684-4685-d07c8e7c/`; #4684 remains open until its closure evidence is recorded.
+- Windows seq329 partially validates #4685 at exact product head `f88631dd`: VS2022 17.14.36 and VS2026 18.8.1 rebuilt/reinstalled the VSIX with matching DLL hashes and clean Copperfin package ActivityLog entries; full VS2026 shutdown now succeeds without the former `Not implemented` error. Ctrl+W and targeted tab-close still leave installed-VFP9 `invoice.frx` open as a silent no-op, so the remaining defect is document/RDT ownership rather than the unsupported-command HRESULT. Evidence is under `artifacts/windows-editor-close-f88631dd/`; #4685/#4621 remain open.
+
+- Windows seq325 provided exact focused validation for #4684 at product head `d07c8e7c` (reporting checkout `a812fdbd`): MSVC Release rebuilt and ran `test_prg_engine_dynamic_xasset_security` successfully with exit 0, covering admitted-source and missing-admission strict SPAWN behavior. Evidence is under `artifacts/windows-4684-4685-d07c8e7c/`; #4684 is closed.
 
 - Windows seq321 provides exact focused validation for #4680/#4681/#4682/#4683 at product head `1ee5b3d6`: MSVC Release rebuilt and ran the procedure-class, dynamic-xAsset, and report-security executables successfully with exit 0. Evidence is under `artifacts/windows-strict-readers-1ee5b3d6/`; those four implementation children are closed.
 

@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Runtime `SET SKIP TO` note: VFP9 uses this command to mark existing local `SET RELATION` links as one-to-many skip relationships. Copperfin now preserves that state per data session, supports multiple child aliases, clears it with `SET SKIP TO` without removing ordinary relation synchronization, and advances the parent when child-side `SKIP` leaves the current matching group under #3217/#4686. Focused forward/reverse headless navigation and stable `runtime.set_skip` events pass. Interactive `BROWSE` row repetition, persistent DBC relations, relation mutation refresh, and broader multi-level/`ADDITIVE` behavior remain separate.
+
 - Strict `DO FORM` xAsset note: security-enabled form startup now reaches the verified SCX/SCT snapshot path when the logical physical files are absent, consuming admitted immutable bytes and preserving the logical `form.open` event; missing admission still fails closed. Non-strict and explicitly authorized debug-manifest behavior remains unchanged under #3866/#4682. Report/label entry-point presence gates remain separate.
 
 - Strict external PRG command-loading note: security-enabled `DO` and `CALL` now honor non-empty admitted source overrides even when the external `.PRG` path is absent, while missing admission fails closed through the existing verified-source diagnostic. Non-strict and explicitly authorized debug-manifest launches remain pathname-based; command tokens, stack-frugal frame behavior, and machine-readable contracts are unchanged under #3866/#4681.

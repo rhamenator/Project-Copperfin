@@ -225,6 +225,98 @@
             }
         }
 
+        std::string relation_key_for_cursor(
+            const DataSessionState::RelationState &relation,
+            const CursorState &cursor,
+            const Frame &frame)
+        {
+            if (cursor.bof || cursor.eof || cursor.recno == 0U)
+            {
+                return {};
+            }
+
+            return uppercase_copy(trim_copy(value_as_string(
+                evaluate_expression(relation.expression, frame, &cursor))));
+        }
+
+        bool relation_matches_current_parent(
+            const DataSessionState::RelationState &relation,
+            const CursorState &parent,
+            const CursorState &child,
+            const Frame &frame)
+        {
+            if (parent.bof || parent.eof || parent.recno == 0U ||
+                child.bof || child.eof || child.recno == 0U)
+            {
+                return false;
+            }
+
+            return relation_key_for_cursor(relation, parent, frame) ==
+                   relation_key_for_cursor(relation, child, frame);
+        }
+
+        bool synchronize_skip_parent_for_child(
+            CursorState &child,
+            const Frame &frame,
+            long long delta)
+        {
+            if (delta == 0)
+            {
+                return false;
+            }
+
+            const int direction = delta > 0 ? 1 : -1;
+            bool adjusted = false;
+            const auto relations = current_session_state().relations;
+            for (const auto &relation : relations)
+            {
+                if (!relation.skip_one_to_many || relation.child_work_area != child.work_area)
+                {
+                    continue;
+                }
+
+                CursorState *parent = find_cursor_by_area(relation.parent_work_area);
+                if (parent == nullptr || relation_matches_current_parent(relation, *parent, child, frame))
+                {
+                    continue;
+                }
+
+                const std::size_t max_parent_steps = parent->record_count + 1U;
+                for (std::size_t step = 0U; step < max_parent_steps; ++step)
+                {
+                    if (!move_by_visible_records(*parent, frame, direction))
+                    {
+                        break;
+                    }
+
+                    synchronize_relations_for_parent(*parent, frame);
+                    if (!relation_matches_current_parent(relation, *parent, child, frame))
+                    {
+                        continue;
+                    }
+
+                    if (direction < 0)
+                    {
+                        // Parent synchronization seeks the first matching child. For reverse
+                        // child navigation, walk to the last visible child in that group.
+                        while (true)
+                        {
+                            const CursorPositionSnapshot before_next = capture_cursor_snapshot(child);
+                            if (!move_by_visible_records(child, frame, 1) ||
+                                !relation_matches_current_parent(relation, *parent, child, frame))
+                            {
+                                restore_cursor_snapshot(child, before_next);
+                                break;
+                            }
+                        }
+                    }
+                    adjusted = true;
+                    break;
+                }
+            }
+            return adjusted;
+        }
+
         vfp::DbfTableParseResult parse_table_path(
             const std::string &table_path,
             std::size_t max_records)

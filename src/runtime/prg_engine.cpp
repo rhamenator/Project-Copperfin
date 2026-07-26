@@ -769,6 +769,7 @@ namespace copperfin::runtime
                 int parent_work_area = 0;
                 int child_work_area = 0;
                 std::string expression;
+                bool skip_one_to_many = false;
             };
 
             struct PopupActionRoutine
