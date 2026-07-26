@@ -67,6 +67,23 @@ non-canary states cannot carry a percentage. Missing configuration creates an em
 registry, whose lookup is safely `off`; invalid configuration returns stable machine
 error codes. This slice defines selection only and does not invoke either bridge.
 
+## Bridge Invocation Semantics v1
+
+Bridge invocation is evaluated as a deterministic policy decision before an adapter
+starts or retries an external process. The policy validates a positive timeout, a
+positive latency budget no greater than the timeout, a positive attempt limit, and the
+invariant `propagate`/`ignore` cancellation and `fail-fast`/`fallback-native`/
+`fallback-artifact` policy values.
+
+The decision order is cancellation, timeout, latency-budget exhaustion, and the
+reported candidate failure class. `propagate` cancellation returns a cancelled result
+without fallback; `ignore` treats cancellation as a failure and applies the configured
+fallback. Other failures map to stable machine error codes and then either fail fast,
+select native, or select the fallback artifact. The implementation records the policy's
+attempt limit but does not claim that a process was started or retried; process
+execution, cancellation tokens, and adapter-specific retry mechanics remain outside
+this contract slice.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.
