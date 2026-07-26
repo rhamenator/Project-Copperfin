@@ -266,6 +266,11 @@ bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_o
     return native_controltiptext_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_header_column_tooltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_header_column_tooltiptext_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_helpcontextid_member_name_matches(runtime_object, normalized_member_name);
@@ -1494,6 +1499,20 @@ void normalize_native_textbox_enablehyperlinks_invariant(RuntimeOleObjectState& 
 void normalize_native_textbox_tooltiptext_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!native_textbox_tooltiptext_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto tooltip_text = runtime_object.properties.find("tooltiptext");
+    if (tooltip_text == runtime_object.properties.end()) {
+        return;
+    }
+
+    tooltip_text->second = make_string_value(value_as_string(tooltip_text->second));
+}
+
+void normalize_native_header_column_tooltiptext_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_header_column_tooltiptext_runtime_object(runtime_object)) {
         return;
     }
 

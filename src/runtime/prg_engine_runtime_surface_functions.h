@@ -90,6 +90,7 @@ bool is_native_visual_righttoleft_member_name(const RuntimeOleObjectState& runti
 bool is_native_visual_wordwrap_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_header_column_tooltiptext_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_helpcontextid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_whatsthishelpid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_tag_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -241,6 +242,7 @@ void normalize_native_textbox_hideselection_invariant(RuntimeOleObjectState& run
 void normalize_native_textbox_autocomplete_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_enablehyperlinks_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_tooltiptext_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_header_column_tooltiptext_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_margin_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_mouseicon_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_textbox_disabledbackcolor_invariant(RuntimeOleObjectState& runtime_object);
