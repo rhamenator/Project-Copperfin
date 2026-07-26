@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Safety traceability was independently rerun against live #4403 at synchronized head `f1624d5b` with primary-hazard coverage enabled. The permissive validator passed; strict validation failed only on `state=open`. This confirms the structural evidence remains valid but does not satisfy closure: a genuinely independent reviewer and formal issue closure are still required.
+
 - Hosted Windows native validation run `30189768682` passed all `307/307` CTest cases at workflow head `191a9b54`, with no Windows skips. The bounded `--parallel 2` run completed in 594.84 seconds; finalized Windows validation metrics report 00:51:53 across three phases. This closes the hosted Windows native matrix leg, but does not replace the separate hosted VFP9/Visual Studio UI evidence required by #4621.
 
 - VFP9 compatibility boundary recorded at `dd3975f1`: mounted `dv_foxhelp.chm` documents `NODEFAULT` in `KeyPress` preventing keyboard-buffer insertion, while Copperfin currently has no modeled `KeyPress` dispatch or keyboard-buffer default action. `KeyPreview` property coverage under #3217/#4637 must not be described as keyboard-event parity. The evidence and per-modeled-action triage are recorded in #4126; do not add a blanket NODEFAULT check.
