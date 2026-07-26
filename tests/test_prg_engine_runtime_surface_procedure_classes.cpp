@@ -342,11 +342,19 @@ void test_newobject_local_vcx_uses_verified_snapshot() {
     fs::create_directories(temp_root);
 
     const fs::path class_library_path = temp_root / "myclasslib.vcx";
-    write_synthetic_vcx_class_library(class_library_path);
+    write_synthetic_vcx_class_library(
+        class_library_path,
+        "Custom",
+        "FUNCTION Answer\r\n"
+        "RETURN INCLUDED_VALUE\r\n"
+        "ENDFUNC\r\n");
+    const fs::path header_path = temp_root / "myclasslib.h";
+    write_text(header_path, "#DEFINE INCLUDED_VALUE 41\n");
     fs::path memo_path = class_library_path;
     memo_path.replace_extension(".vct");
     const std::string verified_library_bytes = read_text(class_library_path);
     const std::string verified_memo_bytes = read_text(memo_path);
+    const std::string verified_header_bytes = read_text(header_path);
     const fs::path main_path = temp_root / "newobject_local_vcx_verified.prg";
     write_text(
         main_path,
@@ -358,10 +366,12 @@ void test_newobject_local_vcx_uses_verified_snapshot() {
     auto options = make_runtime_session_options(main_path, temp_root);
     options.verified_file_byte_overrides.emplace(class_library_path.string(), verified_library_bytes);
     options.verified_file_byte_overrides.emplace(memo_path.string(), verified_memo_bytes);
+    options.verified_file_byte_overrides.emplace(header_path.string(), verified_header_bytes);
     options.require_verified_file_byte_overrides = true;
 
     write_text(class_library_path, "tampered VCX bytes");
     fs::remove(memo_path, ignored);
+    fs::remove(header_path, ignored);
 
     std::atomic<bool> writer_ready{false};
     std::atomic<bool> stop_writer{false};
@@ -374,6 +384,7 @@ void test_newobject_local_vcx_uses_verified_snapshot() {
         {
             write_text(class_library_path, "concurrently replaced VCX bytes");
             write_text(memo_path, "concurrently replaced VCT bytes");
+            write_text(header_path, "#DEFINE INCLUDED_VALUE 999\n");
             std::this_thread::yield();
         }
     });
@@ -391,7 +402,9 @@ void test_newobject_local_vcx_uses_verified_snapshot() {
            std::string("strict local VCX NEWOBJECT should use admitted bytes: ") + state.message);
     const auto answer = state.globals.find("nanswer");
     expect(answer != state.globals.end() && copperfin::runtime::format_value(answer->second) == "41",
-           "strict local VCX NEWOBJECT should preserve the admitted Init and method source");
+           std::string("strict local VCX NEWOBJECT should preserve admitted method and companion-header source; got ") +
+               (answer == state.globals.end() ? "<missing>" : copperfin::runtime::format_value(answer->second)) +
+               ", message=" + state.message);
     const auto caption = state.globals.find("ccaption");
     expect(caption != state.globals.end() && copperfin::runtime::format_value(caption->second) == "vcx-default",
            "strict local VCX NEWOBJECT should preserve admitted memo-backed properties");

@@ -1082,13 +1082,17 @@ void test_try_catch_finally_handles_runtime_errors() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const fs::path header_path = temp_root / "error_constants.h";
+    write_text(header_path, "#DEFINE c_CR chr(13)\n");
+
     const fs::path main_path = temp_root / "try_catch_finally.prg";
     write_text(
         main_path,
+        "#INCLUDE error_constants.h\n"
         "TRY\n"
         "  DO missing_routine\n"
         "CATCH TO err_text\n"
-        "  caught = err_text.Message\n"
+        "  caught = err_text.Message + c_CR + \"Line \" + transform(err_text.LineNo) + \" in \" + err_text.Procedure + \"()\"\n"
         "FINALLY\n"
         "  finally_hit = 1\n"
         "ENDTRY\n"
@@ -1109,8 +1113,9 @@ void test_try_catch_finally_handles_runtime_errors() {
     expect(after_try != state.globals.end(), "execution should continue after ENDTRY");
     if (caught != state.globals.end()) {
         expect(
-            copperfin::runtime::format_value(caught->second).find("Unable to resolve DO target") != std::string::npos,
-            "CATCH TO should receive the runtime error text");
+            copperfin::runtime::format_value(caught->second).find("Unable to resolve DO target") != std::string::npos &&
+                copperfin::runtime::format_value(caught->second).find("Line ") != std::string::npos,
+            "CATCH TO should expose a string-compatible VFP error object for formatted diagnostics");
     }
 
     const bool has_try_handler_event = std::any_of(

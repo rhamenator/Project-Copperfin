@@ -948,6 +948,21 @@ namespace copperfin::runtime
             runtime_instance_id = runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
             concurrency_state = std::make_shared<RuntimeConcurrencyState>();
             runtime_temp_directory = choose_runtime_temp_directory(options);
+            if (options.require_verified_file_byte_overrides)
+            {
+                // The parser consumes source text through this map. Mirror only admitted
+                // PRG/header text so strict include resolution cannot fall back to disk.
+                for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+                {
+                    const std::string extension = lowercase_copy(
+                        copperfin::platform::path_to_utf8_string(
+                            copperfin::platform::path_from_utf8_string(candidate_name).extension()));
+                    if ((extension == ".prg" || extension == ".h") && !bytes.empty())
+                    {
+                        options.source_text_overrides.try_emplace(normalize_path(candidate_name), bytes);
+                    }
+                }
+            }
         }
 
         struct AErrorCompatibilitySnapshot
@@ -9899,20 +9914,62 @@ namespace copperfin::runtime
         }
 
         std::ostringstream source;
-        const std::filesystem::path include_root = open_library_path->parent_path();
+        const std::filesystem::path include_root = options.require_verified_file_byte_overrides
+            ? library_file.parent_path()
+            : open_library_path->parent_path();
         const std::filesystem::path companion_header_candidate =
             include_root / library_file.stem();
         auto companion_header = companion_header_candidate;
         companion_header.replace_extension(".h");
-        const auto companion_header_resolution = copperfin::vfp::resolve_unique_casefold_path(
-            companion_header);
+        std::optional<std::filesystem::path> resolved_companion_header;
+        bool companion_header_ambiguous = false;
+        if (options.require_verified_file_byte_overrides)
+        {
+            const auto requested_header = companion_header.lexically_normal();
+            const std::string requested_parent = lowercase_copy(normalize_path(
+                copperfin::platform::path_to_utf8_string(requested_header.parent_path())));
+            const std::string requested_filename = lowercase_copy(
+                copperfin::platform::path_to_utf8_string(requested_header.filename()));
+            for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+            {
+                if (bytes.empty())
+                {
+                    continue;
+                }
+                const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name).lexically_normal();
+                if (lowercase_copy(normalize_path(
+                        copperfin::platform::path_to_utf8_string(candidate_path.parent_path()))) != requested_parent ||
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.filename())) != requested_filename ||
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.extension())) != ".h")
+                {
+                    continue;
+                }
+                if (resolved_companion_header.has_value())
+                {
+                    companion_header_ambiguous = true;
+                    resolved_companion_header.reset();
+                    break;
+                }
+                resolved_companion_header = candidate_path;
+            }
+        }
+        else
+        {
+            const auto companion_header_resolution = copperfin::vfp::resolve_unique_casefold_path(
+                companion_header);
+            companion_header_ambiguous = companion_header_resolution.ambiguous;
+            if (companion_header_resolution.path.has_value())
+            {
+                resolved_companion_header = companion_header_resolution.path;
+            }
+        }
 
         source << "* Copperfin generated VCX class bridge\n";
-        if (!companion_header_resolution.ambiguous && companion_header_resolution.path.has_value())
+        if (!companion_header_ambiguous && resolved_companion_header.has_value())
         {
             source << "#include \""
                    << copperfin::platform::path_to_utf8_string(
-                          companion_header_resolution.path->lexically_normal())
+                          resolved_companion_header->lexically_normal())
                    << "\"\n";
         }
         source << "DEFINE CLASS " << trimmed_class_name << " AS " << base_class_name << "\n";
