@@ -416,7 +416,8 @@
                 runtime_object.properties["scrollbars"] = make_number_value(0.0);
             }
 
-            if (normalized_base_class == "textbox" &&
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "column") &&
                 !runtime_object.properties.contains("inputmask"))
             {
                 runtime_object.properties["inputmask"] = make_string_value("");

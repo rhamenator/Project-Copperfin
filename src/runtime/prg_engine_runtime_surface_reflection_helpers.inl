@@ -786,7 +786,8 @@ bool native_textbox_inputmask_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     return normalized_member_name == "inputmask" &&
-           native_textbox_inputmask_runtime_object(runtime_object) &&
+           (native_textbox_inputmask_runtime_object(runtime_object) ||
+            native_column_inputmask_runtime_object(runtime_object)) &&
            runtime_object.properties.contains("inputmask");
 }
 
