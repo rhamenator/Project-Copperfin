@@ -1139,6 +1139,40 @@ void test_elseif_control_flow_executes_matching_branch() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_block_terminators_ignore_trailing_annotations() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_terminator_annotations";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "terminator_annotations.prg";
+    write_text(
+        main_path,
+        "LOCAL nValue, nLoop\n"
+        "nValue = 0\n"
+        "IF .T.\n"
+        "    nValue = nValue + 1\n"
+        "ENDIF nValue = 1\n"
+        "FOR nLoop = 1 TO 2\n"
+        "    nValue = nValue + 1\n"
+        "ENDFOR nLoop = 1 TO 2\n"
+        "RETURN nValue\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "annotated block terminators should complete");
+    expect(state.last_return_value.has_value(), "annotated block terminators should preserve RETURN");
+    if (state.last_return_value.has_value()) {
+        expect(copperfin::runtime::format_value(*state.last_return_value) == "3",
+               "annotated block terminators should not execute their suffixes");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_with_endwith_resolves_leading_dot_member_access() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";

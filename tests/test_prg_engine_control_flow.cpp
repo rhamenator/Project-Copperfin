@@ -64,6 +64,7 @@ int main() {
     test_config_fpw_custom_limit_is_enforced_at_boundary();
     test_config_fpw_overrides_temp_directory_default();
     test_elseif_control_flow_executes_matching_branch();
+    test_block_terminators_ignore_trailing_annotations();
     test_do_with_parameters_binds_arguments_in_called_routine();
     test_call_with_parameters_binds_arguments_in_called_routine();
     test_unsupplied_parameters_initialize_to_logical_false();

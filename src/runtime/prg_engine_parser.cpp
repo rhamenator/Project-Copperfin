@@ -1353,6 +1353,24 @@ bool parse_control_flow_statement(
     const std::string& line,
     const std::string& upper,
     Statement& statement) {
+    const auto is_block_terminator = [&](const std::string_view keyword) {
+        const std::string trimmed = trim_copy(line);
+        if (trimmed.size() < keyword.size() ||
+            !std::equal(
+                keyword.begin(),
+                keyword.end(),
+                trimmed.begin(),
+                [](const char left, const char right) {
+                    return std::toupper(static_cast<unsigned char>(left)) ==
+                        std::toupper(static_cast<unsigned char>(right));
+                }))
+        {
+            return false;
+        }
+        return trimmed.size() == keyword.size() ||
+            std::isspace(static_cast<unsigned char>(trimmed[keyword.size()])) != 0;
+    };
+
     if (starts_with_insensitive(line, "IF ")) {
         statement.kind = StatementKind::if_statement;
         statement.expression = trim_copy(line.substr(3U));
@@ -1368,7 +1386,7 @@ bool parse_control_flow_statement(
         statement.kind = StatementKind::otherwise_statement;
     } else if (upper == "ELSE") {
         statement.kind = StatementKind::else_statement;
-    } else if (upper == "ENDIF") {
+    } else if (is_block_terminator("ENDIF")) {
         statement.kind = StatementKind::endif_statement;
     } else if (starts_with_insensitive(line, "FOR EACH ")) {
         // FOR EACH <element> IN <collection>
@@ -1411,11 +1429,11 @@ bool parse_control_flow_statement(
     } else if (starts_with_insensitive(line, "DO WHILE ")) {
         statement.kind = StatementKind::do_while_statement;
         statement.expression = trim_copy(line.substr(9U));
-    } else if (upper == "ENDFOR") {
+    } else if (is_block_terminator("ENDFOR")) {
         statement.kind = StatementKind::endfor_statement;
-    } else if (upper == "ENDDO") {
+    } else if (is_block_terminator("ENDDO")) {
         statement.kind = StatementKind::enddo_statement;
-    } else if (upper == "ENDCASE") {
+    } else if (is_block_terminator("ENDCASE")) {
         statement.kind = StatementKind::endcase_statement;
     } else if (upper == "LOOP") {
         statement.kind = StatementKind::loop_statement;
@@ -1426,7 +1444,7 @@ bool parse_control_flow_statement(
     } else if (starts_with_insensitive(line, "WITH ")) {
         statement.kind = StatementKind::with_statement;
         statement.expression = trim_copy(line.substr(5U));
-    } else if (upper == "ENDWITH") {
+    } else if (is_block_terminator("ENDWITH")) {
         statement.kind = StatementKind::endwith_statement;
     } else if (upper == "TRY") {
         statement.kind = StatementKind::try_statement;
@@ -1449,7 +1467,7 @@ bool parse_control_flow_statement(
         }
     } else if (upper == "FINALLY") {
         statement.kind = StatementKind::finally_statement;
-    } else if (upper == "ENDTRY") {
+    } else if (is_block_terminator("ENDTRY")) {
         statement.kind = StatementKind::endtry_statement;
     } else {
         return false;

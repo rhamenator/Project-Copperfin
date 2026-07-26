@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Runtime control-flow terminator note: VFPSource uses whitespace-delimited trailing annotations after block terminators, including `ENDIF set('TALK') = 'ON'` and `ENDFOR nLoop = 1 TO 2`. Copperfin now recognizes these as terminators and does not execute the annotation suffix, preserving token-boundary behavior for lookalike identifiers under #3217/#4707. The focused control-flow suite passes, and the real VFPSource `MemberDataEditor` package completes in debug mode instead of faulting at `memberdataeditor.prg:38`; Windows exact-head validation remains separate.
+
 - Runtime preprocessor whitespace note: VFP headers commonly separate `#define` names and values with tabs. Copperfin now treats all whitespace as a `#define` token separator, preserving lowercase directives and expanding tab-delimited constants inside class methods and TRY/CATCH error formatting. The real VFPSource ReportBuilder package completes normal and debug Linux launches after this fix; Windows exact-head validation remains separate under #4698.
 
 - Runtime typed-local object note: VFPSource `foxrefstart.prg` declares `oFoxRef AS FoxRef OF foxref.prg` and invokes it through `m.oFoxRef`. Copperfin now strips the declaration type suffix for local binding and resolves `m.name.Method()` against the local object under #3217/#4691. The local `foxref.PJX` package completes `SetProject()`, `SearchCount()`, and `ShowResults()` without a runtime fault. Full FoxRef project/editor integration and hosted UI behavior remain separate.
