@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4311 review correction: the default design-surface palette now retains the prior standalone section-header text color (`44,52,64`), while host-derived palettes use the resolved Visual Studio foreground. No standalone visual drift is intended.
+
 - #4311 transition hardening now captures original standalone control styles before host theming and restores them when the shared editor returns to standalone mode; the focused theme smoke checks the shared design-surface reset. Hosted dark/high-contrast Visual Studio evidence is still required.
 
 - #4311 theme seam implementation is present in the current tree: VSIX/fallback host colors now propagate through the shared editor and the report/label design surface derives page, section, deleted-state, selection, grid, and object colors from that host palette. Standalone mode retains the existing palette. `dotnet build vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj --configuration Release --no-restore` passes; the focused test is listed by the portable runner. Linux could not execute WinForms smoke because `xvfb-run` is unavailable, and the Visual Studio project remains VSSDK/Windows-host dependent. Keep #4311 open until hosted dark/high-contrast rendering is observed in Visual Studio.

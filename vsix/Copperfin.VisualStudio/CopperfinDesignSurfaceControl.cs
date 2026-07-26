@@ -22,6 +22,7 @@ internal sealed class CopperfinDesignSurfaceTheme
         Color sectionFill,
         Color sectionBorder,
         Color sectionHeaderFill,
+        Color sectionHeaderText,
         Color deletedFill,
         Color deletedBorder,
         Color deletedHeaderFill,
@@ -55,6 +56,7 @@ internal sealed class CopperfinDesignSurfaceTheme
         SectionFill = sectionFill;
         SectionBorder = sectionBorder;
         SectionHeaderFill = sectionHeaderFill;
+        SectionHeaderText = sectionHeaderText;
         DeletedFill = deletedFill;
         DeletedBorder = deletedBorder;
         DeletedHeaderFill = deletedHeaderFill;
@@ -89,6 +91,7 @@ internal sealed class CopperfinDesignSurfaceTheme
     public Color SectionFill { get; }
     public Color SectionBorder { get; }
     public Color SectionHeaderFill { get; }
+    public Color SectionHeaderText { get; }
     public Color DeletedFill { get; }
     public Color DeletedBorder { get; }
     public Color DeletedHeaderFill { get; }
@@ -123,6 +126,7 @@ internal sealed class CopperfinDesignSurfaceTheme
         Color.White,
         Color.FromArgb(212, 218, 228),
         Color.FromArgb(233, 238, 247),
+        Color.FromArgb(44, 52, 64),
         Color.FromArgb(255, 244, 244),
         Color.FromArgb(218, 176, 176),
         Color.FromArgb(252, 224, 224),
@@ -168,6 +172,7 @@ internal sealed class CopperfinDesignSurfaceTheme
             Blend(light, dark ? 0.06F : 0.02F),
             Blend(foreground, dark ? 0.30F : 0.20F),
             Blend(accent, dark ? 0.32F : 0.16F),
+            foreground,
             Blend(deleted, dark ? 0.24F : 0.12F),
             Blend(deleted, dark ? 0.60F : 0.48F),
             Blend(deleted, dark ? 0.34F : 0.18F),
@@ -543,7 +548,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         using var sectionFill = new SolidBrush(theme.SectionFill);
         using var sectionBorder = new Pen(theme.SectionBorder);
         using var sectionHeaderFill = new SolidBrush(theme.SectionHeaderFill);
-        using var sectionHeaderText = new SolidBrush(surfaceTextColor);
+        using var sectionHeaderText = new SolidBrush(theme.SectionHeaderText);
         using var deletedSectionFill = new SolidBrush(theme.DeletedFill);
         using var deletedSectionBorder = new Pen(theme.DeletedBorder);
         using var deletedSectionHeaderFill = new SolidBrush(theme.DeletedHeaderFill);
