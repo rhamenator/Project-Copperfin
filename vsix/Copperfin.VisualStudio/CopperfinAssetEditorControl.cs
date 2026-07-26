@@ -167,6 +167,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private bool suppressSelectionSync;
     private bool suppressToolboxContextChange;
     private bool embeddedStudioShell;
+    private readonly Dictionary<Control, (Color BackColor, Color ForeColor)> standaloneControlStyles = new();
+    private bool standaloneControlStylesCaptured;
     private int loadGeneration;
     private readonly object uiActionGate = new();
     private readonly Queue<Action> pendingUiActions = new();
@@ -3646,6 +3648,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ApplyHostMode()
     {
+        CaptureStandaloneControlStyles();
         titleLabel.Visible = embeddedStudioShell;
         subtitleLabel.Visible = embeddedStudioShell;
         guidanceLabel.Visible = embeddedStudioShell;
@@ -3658,9 +3661,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             : new Padding(12, 8, 12, 12);
         if (embeddedStudioShell)
         {
-            BackColor = Color.FromArgb(248, 249, 252);
-            ForeColor = Color.FromArgb(28, 32, 39);
-            designSurface.ResetVisualStudioHostTheme();
+            RestoreStandaloneControlStyles();
         }
         else
         {
@@ -3705,6 +3706,37 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         ForeColor = foreground;
         designSurface.ApplyVisualStudioHostTheme(background, foreground);
         ApplyVisualStudioHostThemeToChildren(this, background, foreground);
+    }
+
+    private void CaptureStandaloneControlStyles()
+    {
+        if (standaloneControlStylesCaptured)
+        {
+            return;
+        }
+
+        CaptureStandaloneControlStyles(this);
+        standaloneControlStylesCaptured = true;
+    }
+
+    private void CaptureStandaloneControlStyles(Control control)
+    {
+        standaloneControlStyles[control] = (control.BackColor, control.ForeColor);
+        foreach (Control child in control.Controls)
+        {
+            CaptureStandaloneControlStyles(child);
+        }
+    }
+
+    private void RestoreStandaloneControlStyles()
+    {
+        foreach (var style in standaloneControlStyles)
+        {
+            style.Key.BackColor = style.Value.BackColor;
+            style.Key.ForeColor = style.Value.ForeColor;
+        }
+
+        designSurface.ResetVisualStudioHostTheme();
     }
 
     private static void ApplyVisualStudioHostThemeToChildren(

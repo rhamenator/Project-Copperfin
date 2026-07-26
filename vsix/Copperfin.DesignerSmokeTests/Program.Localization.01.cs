@@ -350,6 +350,12 @@ internal static partial class Program
         surface.ResetVisualStudioHostTheme();
         Expect(surface.BackColor == Color.White,
             "standalone surface reset should restore the shared designer palette after VSIX host theming");
+
+        using var editor = new CopperfinAssetEditorControl(new CopperfinLocalization("en-US"));
+        var editorSurface = GetPrivateField<CopperfinDesignSurfaceControl>(editor, "designSurface")!;
+        editor.EmbeddedStudioShell = true;
+        Expect(editorSurface.BackColor == Color.White,
+            "switching back to standalone mode should restore the original shared designer palette");
     }
 
     private static void SmokeLocalizedProjectWorkspaceChrome()
