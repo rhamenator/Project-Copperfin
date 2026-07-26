@@ -138,6 +138,8 @@ std::string resolve_project_item_source(
     std::string& error);
 std::vector<std::filesystem::path> discover_prg_include_source_paths(
     const std::filesystem::path& source);
+std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
+    const std::filesystem::path& source);
 bool source_path_exists_on_host(const std::string& value);
 std::string relative_asset_path(
     const studio::StudioDocumentModel& document,

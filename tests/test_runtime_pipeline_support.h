@@ -174,6 +174,7 @@ void test_runtime_manifest_records_generated_compiler_contract_digests();
 void test_manifest_asset_lines_include_copy_state_contract();
 void test_runtime_package_stages_recursive_prg_include_dependencies();
 void test_runtime_package_stages_unicode_prg_include_dependencies();
+void test_runtime_package_stages_literal_newobject_library_dependencies();
 void test_runtime_package_license_fields_stay_debug_only();
 
 // ==== Runtime package materialization and asset-staging tests ====

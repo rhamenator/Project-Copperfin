@@ -639,7 +639,7 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root);
 
-        const fs::path library_path = temp_root / "widgetlib.prg";
+        const fs::path library_path = temp_root / "WidgetLib.PRG";
         write_text(
             library_path,
             "DEFINE CLASS LibraryWidget AS Custom\n"

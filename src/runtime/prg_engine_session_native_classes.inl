@@ -16,8 +16,29 @@
             std::filesystem::path program_path = copperfin::platform::path_from_utf8_string(trimmed_source_path);
             if (program_path.is_absolute())
             {
+                const auto casefolded = copperfin::vfp::resolve_unique_casefold_path(
+                    program_path,
+                    true);
+                if (!casefolded.ambiguous && casefolded.path.has_value())
+                {
+                    return copperfin::platform::path_to_utf8_string(
+                        casefolded.path->lexically_normal());
+                }
                 return copperfin::platform::path_to_utf8_string(program_path.lexically_normal());
             }
+
+            const auto resolve_existing_casefolded = [](const std::filesystem::path &candidate)
+                -> std::optional<std::filesystem::path>
+            {
+                const auto resolution = copperfin::vfp::resolve_unique_casefold_path(
+                    candidate,
+                    true);
+                if (resolution.ambiguous || !resolution.path.has_value())
+                {
+                    return std::nullopt;
+                }
+                return resolution.path->lexically_normal();
+            };
 
             const std::filesystem::path default_directory_candidate =
                 (copperfin::platform::path_from_utf8_string(current_default_directory()) / program_path).lexically_normal();
@@ -35,6 +56,11 @@
             {
                 return copperfin::platform::path_to_utf8_string(default_directory_candidate);
             }
+            if (const auto casefolded = resolve_existing_casefolded(default_directory_candidate);
+                casefolded.has_value())
+            {
+                return copperfin::platform::path_to_utf8_string(*casefolded);
+            }
 
             const std::string normalized_fallback_path = normalize_path(fallback_path);
             if (!normalized_fallback_path.empty())
@@ -46,6 +72,11 @@
                     has_admitted_source(fallback_directory_candidate))
                 {
                     return copperfin::platform::path_to_utf8_string(fallback_directory_candidate);
+                }
+                if (const auto casefolded = resolve_existing_casefolded(fallback_directory_candidate);
+                    casefolded.has_value())
+                {
+                    return copperfin::platform::path_to_utf8_string(*casefolded);
                 }
             }
 

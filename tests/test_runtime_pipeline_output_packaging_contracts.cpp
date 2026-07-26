@@ -449,6 +449,95 @@ void test_runtime_package_stages_unicode_prg_include_dependencies() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_stages_literal_newobject_library_dependencies() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_pipeline_newobject_library_dependencies";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    const fs::path outside_library = temp_root / "outside.vcx";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg",
+               "* NEWOBJECT(\"Ignored\", \"ignored.vcx\")\n"
+               "oEvent = NEWOBJECT(\"Event\", \"Event.VCX\")\n"
+               "oOutside = NEWOBJECT(\"Outside\", \"..\\outside.vcx\")\n"
+               "RETURN\n");
+    write_text(project_dir / "event.vcx", "synthetic class library");
+    write_text(project_dir / "event.vct", "synthetic class library memo");
+    write_text(outside_library, "outside class library");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "newobject_dependencies.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "NewObjectDependencies";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = (output_dir / "NewObjectDependencies.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "literal NEWOBJECT library dependency plan should be created");
+    const auto library_asset = std::find_if(
+        plan.assets.begin(),
+        plan.assets.end(),
+        [](const copperfin::runtime::RuntimePackageAsset& asset) {
+            return asset.type_title == "PRG Runtime Dependency";
+        });
+    expect(library_asset != plan.assets.end(),
+           "literal NEWOBJECT class library should be added to the package plan");
+    if (library_asset != plan.assets.end()) {
+        expect(library_asset->relative_path == "event.vcx" ||
+                   library_asset->relative_path == "Event.VCX",
+               "literal NEWOBJECT library should retain its project-relative path");
+    }
+    expect(std::none_of(
+               plan.assets.begin(),
+               plan.assets.end(),
+               [](const copperfin::runtime::RuntimePackageAsset& asset) {
+                   return asset.source_path.find("outside.vcx") != std::string::npos;
+               }),
+           "NEWOBJECT library outside the project root must not be staged");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect_materialization(result, "literal NEWOBJECT library package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "event.vcx") || fs::exists(content_root / "Event.VCX"),
+               "literal NEWOBJECT class library should be staged under content");
+        expect(fs::exists(content_root / "event.vct") || fs::exists(content_root / "Event.VCT"),
+               "literal NEWOBJECT class library memo sidecar should be staged under content");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 
 
 }  // namespace cf_test_runtime_pipeline

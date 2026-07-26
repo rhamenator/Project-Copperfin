@@ -1377,14 +1377,9 @@
             else if (lowercase_copy(copperfin::platform::path_to_utf8_string(
                          copperfin::platform::path_from_utf8_string(trim_copy(source)).extension())) == ".prg")
             {
-                std::filesystem::path program_path = copperfin::platform::path_from_utf8_string(
-                    trim_copy(source));
-                if (program_path.is_relative())
-                {
-                    program_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
-                        program_path;
-                }
-                program_path = program_path.lexically_normal();
+                const std::filesystem::path program_path =
+                    copperfin::platform::path_from_utf8_string(
+                        resolve_native_prg_program_path(trim_copy(source), frame.file_path));
 
                 std::error_code ignored;
                 const std::string program_path_text =

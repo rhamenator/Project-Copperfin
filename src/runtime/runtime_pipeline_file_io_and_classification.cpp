@@ -847,6 +847,155 @@ std::vector<std::filesystem::path> discover_prg_include_source_paths(
     return discovered;
 }
 
+std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
+    const std::filesystem::path& source) {
+    std::vector<std::filesystem::path> discovered;
+    std::unordered_set<std::string> identities;
+    std::ifstream input(source);
+    if (!input) {
+        return discovered;
+    }
+
+    const auto skip_space = [](const std::string& line, std::size_t offset) {
+        while (offset < line.size() &&
+               std::isspace(static_cast<unsigned char>(line[offset])) != 0) {
+            ++offset;
+        }
+        return offset;
+    };
+    const auto read_literal = [&](const std::string& line, std::size_t& offset)
+        -> std::optional<std::string> {
+        offset = skip_space(line, offset);
+        if (offset >= line.size() || (line[offset] != '"' && line[offset] != '\'')) {
+            return std::nullopt;
+        }
+
+        const char quote = line[offset++];
+        std::string value;
+        while (offset < line.size()) {
+            const char character = line[offset++];
+            if (character == quote) {
+                if (offset < line.size() && line[offset] == quote) {
+                    value.push_back(quote);
+                    ++offset;
+                    continue;
+                }
+                return value;
+            }
+            value.push_back(character);
+        }
+        return std::nullopt;
+    };
+    const auto resolve_library = [](const std::filesystem::path& owner,
+                                    const std::string& value)
+        -> std::optional<std::filesystem::path> {
+        std::string normalized_value = value;
+        std::replace(normalized_value.begin(), normalized_value.end(), '\\', '/');
+        bool ambiguous = false;
+        const auto direct = resolve_existing_path_casefold(
+            (owner.parent_path() / copperfin::platform::path_from_utf8_string(normalized_value)).lexically_normal(),
+            ambiguous);
+        if (ambiguous || direct.has_value()) {
+            return direct;
+        }
+
+        ambiguous = false;
+        return resolve_existing_path_casefold(
+            (owner.parent_path() / copperfin::platform::path_from_utf8_string(normalized_value).filename()).lexically_normal(),
+            ambiguous);
+    };
+    const auto find_newobject = [](const std::string& line, std::size_t offset) {
+        constexpr std::string_view keyword = "NEWOBJECT";
+        for (std::size_t candidate = offset;
+             candidate + keyword.size() <= line.size();
+             ++candidate) {
+            if (std::equal(
+                    keyword.begin(),
+                    keyword.end(),
+                    line.begin() + static_cast<std::ptrdiff_t>(candidate),
+                    [](const char left, const char right) {
+                        return std::tolower(static_cast<unsigned char>(left)) ==
+                            std::tolower(static_cast<unsigned char>(right));
+                    })) {
+                return candidate;
+            }
+        }
+        return std::string::npos;
+    };
+
+    std::string line;
+    while (std::getline(input, line)) {
+        const std::string trimmed = trim_copy(line);
+        if (trimmed.empty() || trimmed.front() == '*') {
+            continue;
+        }
+
+        bool in_string = false;
+        char string_quote = '\0';
+        for (std::size_t comment = 0U; comment + 1U < line.size(); ++comment) {
+            if (in_string) {
+                if (line[comment] == string_quote) {
+                    if (comment + 1U < line.size() && line[comment + 1U] == string_quote) {
+                        ++comment;
+                    } else {
+                        in_string = false;
+                    }
+                }
+                continue;
+            }
+            if (line[comment] == '\'' || line[comment] == '"') {
+                in_string = true;
+                string_quote = line[comment];
+            } else if (line[comment] == '&' && line[comment + 1U] == '&') {
+                line.resize(comment);
+                break;
+            }
+        }
+
+        for (std::size_t offset = 0U; offset < line.size();) {
+            const std::size_t keyword = find_newobject(line, offset);
+            if (keyword == std::string::npos) {
+                break;
+            }
+            offset = keyword + 9U;
+            const bool valid_start = keyword == 0U ||
+                (std::isalnum(static_cast<unsigned char>(line[keyword - 1U])) == 0 &&
+                 line[keyword - 1U] != '_');
+            const bool valid_end = offset >= line.size() ||
+                (std::isalnum(static_cast<unsigned char>(line[offset])) == 0 &&
+                 line[offset] != '_');
+            if (!valid_start || !valid_end) {
+                continue;
+            }
+
+            std::size_t cursor = skip_space(line, offset);
+            if (cursor >= line.size() || line[cursor++] != '(') {
+                continue;
+            }
+            const auto class_name = read_literal(line, cursor);
+            cursor = skip_space(line, cursor);
+            if (!class_name.has_value() || cursor >= line.size() || line[cursor++] != ',') {
+                continue;
+            }
+            const auto library_name = read_literal(line, cursor);
+            if (!library_name.has_value() || trim_copy(*library_name).empty()) {
+                continue;
+            }
+
+            const auto resolved = resolve_library(source, *library_name);
+            if (!resolved.has_value() || !std::filesystem::is_regular_file(*resolved)) {
+                continue;
+            }
+            const std::string identity = lowercase_copy(
+                copperfin::platform::path_to_utf8_string(resolved->lexically_normal()));
+            if (identities.insert(identity).second) {
+                discovered.push_back(resolved->lexically_normal());
+            }
+        }
+    }
+    return discovered;
+}
+
 bool source_path_exists_on_host(const std::string& value) {
     if (trim_copy(value).empty()) {
         return false;

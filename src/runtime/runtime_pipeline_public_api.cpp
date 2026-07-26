@@ -2249,6 +2249,37 @@ RuntimePackagePlan create_runtime_package_plan(
             dependency.exists = true;
             plan.assets.push_back(std::move(dependency));
         }
+
+        for (const auto& library_source : discover_prg_literal_library_source_paths(
+                 copperfin::platform::path_from_utf8_string(prg_source))) {
+            const std::string source = copperfin::platform::path_to_utf8_string(
+                library_source.lexically_normal());
+            if (source.empty() || !known_asset_sources.insert(lowercase_copy(source)).second) {
+                continue;
+            }
+
+            const std::filesystem::path relative = library_source.lexically_relative(project_root);
+            bool escapes_project = relative.empty() || relative.is_absolute();
+            for (const auto& component : relative) {
+                if (component == "..") {
+                    escapes_project = true;
+                    break;
+                }
+            }
+            if (escapes_project) {
+                continue;
+            }
+
+            RuntimePackageAsset dependency;
+            dependency.record_index = plan.assets.size();
+            dependency.source_path = source;
+            dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
+            dependency.staged_path = copperfin::platform::path_to_utf8_string(
+                (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
+            dependency.type_title = "PRG Runtime Dependency";
+            dependency.exists = true;
+            plan.assets.push_back(std::move(dependency));
+        }
     }
 
     std::unordered_map<std::string, std::string> staged_asset_paths;
