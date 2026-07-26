@@ -5046,6 +5046,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_properties_54.cpp
     test_prg_engine_runtime_surface_functions_properties_55.cpp
     test_prg_engine_runtime_surface_functions_properties_56.cpp
+    test_prg_engine_runtime_surface_functions_properties_57.cpp
     test_prg_engine_runtime_surface_functions_form_scalemode.cpp
     test_prg_engine_runtime_surface_functions_drawmode.cpp
     test_prg_engine_runtime_surface_functions_backstyle.cpp

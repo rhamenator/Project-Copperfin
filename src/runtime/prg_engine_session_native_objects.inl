@@ -443,7 +443,8 @@
                 runtime_object.properties["sparse"] = make_boolean_value(true);
             }
 
-            if (normalized_base_class == "textbox" &&
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "column") &&
                 !runtime_object.properties.contains("format"))
             {
                 runtime_object.properties["format"] = make_string_value("");

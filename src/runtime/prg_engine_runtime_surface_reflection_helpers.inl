@@ -819,7 +819,8 @@ bool native_textbox_format_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     return normalized_member_name == "format" &&
-           native_textbox_format_runtime_object(runtime_object) &&
+           (native_textbox_format_runtime_object(runtime_object) ||
+            native_column_format_runtime_object(runtime_object)) &&
            runtime_object.properties.contains("format");
 }
 
