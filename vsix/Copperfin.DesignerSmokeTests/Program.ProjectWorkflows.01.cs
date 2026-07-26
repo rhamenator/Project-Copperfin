@@ -19,6 +19,24 @@ using System.Windows.Forms;
 namespace Copperfin.VisualStudio;
 internal static partial class Program
 {
+    private static string DescribeDebugSession(CopperfinRuntimeDebugSession? session)
+    {
+        if (session is null)
+        {
+            return "session=<null>";
+        }
+
+        var error = (session.Error ?? string.Empty).Replace("\r", " ").Replace("\n", " ");
+        if (error.Length > 240)
+        {
+            error = error.Substring(0, 240) + "...";
+        }
+
+        return $"success={session.Success}; error={error}; commands={string.Join(",", session.Commands)}; " +
+               $"manifest={session.ManifestPath}; debugManifest={session.DebugManifestPath}; " +
+               $"reason={session.State.Reason}; frames={session.State.Frames.Count}; events={session.State.Events.Count}";
+    }
+
     private static void SmokeProjectEditorWithRealAsset(
         string? path,
         string[] expectGroups,
@@ -490,7 +508,10 @@ internal static partial class Program
                            !string.IsNullOrWhiteSpace(restartedSession.DebugManifestPath) &&
                            !string.Equals(restartedSession.DebugManifestPath, initialDebugManifestPath, StringComparison.Ordinal);
                 });
-            Expect(restarted, $"project debugger restart should materialize a fresh debug session for {path}");
+            var observedRestartSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+            Expect(restarted,
+                $"project debugger restart should materialize a fresh debug session for {path} " +
+                $"({DescribeDebugSession(observedRestartSession)})");
 
             var restartedSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
             Expect(restartedSession is not null, $"project debugger restart should retain the refreshed debug session for {path}");
@@ -520,9 +541,11 @@ internal static partial class Program
         if (debuggerSummary is not null)
         {
             Expect(debuggerSummary.Text.IndexOf("Call Stack:", StringComparison.OrdinalIgnoreCase) >= 0,
-                $"project debugger should include a call stack for {path}");
+                $"project debugger should include a call stack for {path} " +
+                $"(summary={DescribeDebugSummary(debuggerSummary.Text)})");
             Expect(debuggerSummary.Text.IndexOf("Runtime Events:", StringComparison.OrdinalIgnoreCase) >= 0,
-                $"project debugger should include runtime events for {path}");
+                $"project debugger should include runtime events for {path} " +
+                $"(summary={DescribeDebugSummary(debuggerSummary.Text)})");
         }
 
         var debuggerCallStackView = GetPrivateListView(control, "debuggerCallStackView");
@@ -546,6 +569,12 @@ internal static partial class Program
         }
 
         TearDownForm(hostForm);
+    }
+
+    private static string DescribeDebugSummary(string summary)
+    {
+        var compact = (summary ?? string.Empty).Replace("\r", " ").Replace("\n", " | ");
+        return compact.Length <= 500 ? compact : compact.Substring(0, 500) + "...";
     }
 
     private static void SmokeProjectBuildWorkflowWithRealAsset(string? path)
