@@ -527,7 +527,7 @@ internal static partial class Program
                 $"project debugger restart should materialize a fresh debug session for {path} " +
                 $"(sameSession={sameSession}; success={successfulRestart}; " +
                 $"lastCommandContinue={restartCommandIsContinue}; distinctDebugManifest={restartManifestIsDistinct}; " +
-                $"{DescribeDebugSession(observedRestartSession)})");
+                $"initial={DescribeDebugSession(debugSession)}; observed={DescribeDebugSession(observedRestartSession)})");
 
             var restartedSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
             Expect(restartedSession is not null, $"project debugger restart should retain the refreshed debug session for {path}");
