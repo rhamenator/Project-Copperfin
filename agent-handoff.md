@@ -1,5 +1,7 @@
 # Agent Handoff
 
+Hosted Linux native validation run `30189768708` passed all `308/308` CTest cases at workflow head `191a9b54`; the only skips were the two expected Linux-only launcher tests (`test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`), with CTest real time 218.88 seconds. Windows native validation remains active as the final platform-matrix job.
+
 Hosted macOS native validation run `30189768686` passed at workflow head `191a9b54`. Linux and Windows native validation from the same matrix remain active; preserve this as a partial hosted result until both required platform checks complete.
 
 Real-VFP9 asset evidence was independently rerun at synchronized head `a01fea5c` with `ctest --test-dir build2 --output-on-failure -R 'real_sample|real_vfp'`: `40/40` passed in 41.52 seconds against the local VFPSource corpus. The suite covers report/label settings, section/grouping/object edits, previews, deletion/restore, and round trips. This is portable native evidence only; it does not satisfy #4621's hosted Windows/VFP9 or live Visual Studio validation requirements.
