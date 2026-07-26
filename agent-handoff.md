@@ -1,5 +1,7 @@
 # Agent Handoff
 
+Hosted macOS native validation run `30189768686` passed at workflow head `191a9b54`. Linux and Windows native validation from the same matrix remain active; preserve this as a partial hosted result until both required platform checks complete.
+
 Real-VFP9 asset evidence was independently rerun at synchronized head `a01fea5c` with `ctest --test-dir build2 --output-on-failure -R 'real_sample|real_vfp'`: `40/40` passed in 41.52 seconds against the local VFPSource corpus. The suite covers report/label settings, section/grouping/object edits, previews, deletion/restore, and round trips. This is portable native evidence only; it does not satisfy #4621's hosted Windows/VFP9 or live Visual Studio validation requirements.
 
 Native CI efficiency slice: `.github/actions/native-validation/action.yml` now runs non-Windows CTest with bounded `--parallel 2`, matching Windows while preserving per-test `RUN_SERIAL` and resource-lock isolation. The local full inventory passed `308/308` in 332.55 seconds with the two expected platform skips; `test_native_platform_workflow_contract` and `test_github_actions_contract` passed. The next hosted Linux/macOS native run should confirm the wall-time improvement without changing the check names or coverage.
