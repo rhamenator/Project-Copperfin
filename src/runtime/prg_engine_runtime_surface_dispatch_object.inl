@@ -332,6 +332,7 @@
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_grid_linkmaster_member_name(*runtime_object, property_name) ||
             is_native_grid_childorder_member_name(*runtime_object, property_name) ||
+            is_native_grid_relation_relationalexpr_member_name(*runtime_object, property_name) ||
             is_native_grid_headerheight_member_name(*runtime_object, property_name) ||
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||
@@ -1480,6 +1481,7 @@
             is_native_grid_rowheight_member_name(*runtime_object, property_name) ||
             is_native_grid_linkmaster_member_name(*runtime_object, property_name) ||
             is_native_grid_childorder_member_name(*runtime_object, property_name) ||
+            is_native_grid_relation_relationalexpr_member_name(*runtime_object, property_name) ||
             is_native_grid_headerheight_member_name(*runtime_object, property_name) ||
             is_native_grid_allowheadersizing_member_name(*runtime_object, property_name) ||
             is_native_grid_allowrowsizing_member_name(*runtime_object, property_name) ||

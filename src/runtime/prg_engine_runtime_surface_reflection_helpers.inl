@@ -1331,6 +1331,19 @@ bool native_grid_childorder_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_grid_relation_relationalexpr_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "relationalexpr" ||
+        !runtime_object.properties.contains("relationalexpr")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "grid" || normalized_base_class == "relation";
+}
+
 bool native_grid_headerheight_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

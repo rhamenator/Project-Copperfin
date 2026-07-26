@@ -827,6 +827,14 @@
                 runtime_object.properties["childorder"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "grid" ||
+                 normalized_base_class == "relation") &&
+                !runtime_object.properties.contains("relationalexpr"))
+            {
+                // Headless relationship objects preserve the raw expression only.
+                runtime_object.properties["relationalexpr"] = make_string_value("");
+            }
+
             if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("allowcellselection"))
             {
