@@ -16,6 +16,8 @@ namespace Copperfin.VisualStudio;
 [ComVisible(true)]
 internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, IOleCommandTarget
 {
+    // Microsoft.VisualStudio.NativeMethods exposes this HRESULT but is internal to the SDK assembly.
+    private const int OleCmdErrNotSupported = unchecked((int)0x80040100);
     private static readonly Dictionary<string, WeakReference<CopperfinAssetEditorPane>> OpenPanes =
         new(CopperfinDocumentPathIdentity.CreateComparer());
     private readonly CopperfinAssetEditorControl control;
@@ -224,7 +226,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
             return VSConstants.S_OK;
         }
 
-        return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
+        return OleCmdErrNotSupported;
     }
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
@@ -235,7 +237,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
             return control.TryHandleUndoCommand() ? VSConstants.S_OK : VSConstants.E_FAIL;
         }
 
-        return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
+        return OleCmdErrNotSupported;
     }
 
     protected override void Dispose(bool disposing)

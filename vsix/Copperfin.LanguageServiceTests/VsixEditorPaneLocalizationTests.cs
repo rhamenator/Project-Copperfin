@@ -26,6 +26,12 @@ internal static partial class Program
             "Copperfin.VisualStudio",
             "CopperfinAssetEditorPane.cs"));
         Expect(paneSource.Contains(
+                "private const int OleCmdErrNotSupported = unchecked((int)0x80040100);",
+                StringComparison.Ordinal) &&
+               paneSource.Contains("return OleCmdErrNotSupported;", StringComparison.Ordinal) &&
+               !paneSource.Contains("NativeMethods.OLECMDERR_E_NOTSUPPORTED", StringComparison.Ordinal),
+            "VSIX editor command routing should use an accessible OLE unsupported-command HRESULT");
+        Expect(paneSource.Contains(
                 "new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture())",
                 StringComparison.Ordinal),
             "VSIX editor pane should pass Visual Studio's current UI culture to the shared editor");
