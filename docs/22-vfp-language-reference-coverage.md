@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Current-head validation note: after the #4725 regression fix, a full rebuild and Linux CTest run at `f65eb7186` passed `316/316` entries in `287.28s`. `DISPLAY MEMORY` and `LIST MEMORY` now pass with the internal application-surface aliases excluded; hosted Windows/macOS evidence remains separate.
+
 - #4725 regression note: the #4691 `application` alias is an internal application-surface binding, like `_screen` and `_vfp`, and must not appear in user-facing `DISPLAY MEMORY` or `LIST MEMORY` output. The shared projection excludes all three aliases before filtering/counting/serialization while preserving direct property access. Focused Linux data-I/O and runtime-surface tests pass; hosted Windows/macOS validation remains separate.
 
 - Strict `COPY FILE` note: security-enabled runtime sessions now copy from the admitted immutable source snapshot, so tampered pathname content is ignored and missing admission fails closed through a localized diagnostic under #3866/#4752. Ordinary copy behavior, destination semantics, and runtime event fields remain unchanged; hosted Windows/macOS evidence is separate.
