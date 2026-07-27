@@ -1,3 +1,5 @@
+- 2026-07-27: Archived raw output for the independent native matrix at `artifacts/native-validation-8c16de857/ctest.log`. The rerun passed `316/316` in `330.93s`, with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; hosted platform and Visual Studio/VFP9 evidence remain separate.
+
 - 2026-07-27: Canceled obsolete Linux/Windows native workflow runs that exceeded their declared 120-minute bound without step progress, then dispatched fresh current-head native validation: Linux `30251602843`, macOS `30251602788`, and Windows `30251602740` at `8c16de857`. No product sources changed; this refreshes CI evidence only.
 
 - 2026-07-27: Independent full native CTest verification against the current product tree (`a45fa19fc`, with product sources unchanged from `d9b04671e`) passed `316/316` in `334.50s`; only the expected conditional launcher skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` did not run. Report/label, runtime/package/debug, PRG, localization, security, and managed compile contracts remained green. The pending Apple parser change remains isolated.

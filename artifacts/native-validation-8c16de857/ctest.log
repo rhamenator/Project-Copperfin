@@ -1,0 +1,673 @@
+Test project /home/rich/dev/Project-Copperfin/build2
+        Start  20: test_runtime_host_audit_stream
+        Start  24: test_build_host_output
+  1/316 Test  #24: test_build_host_output .............................................   Passed   34.71 sec
+        Start 126: test_studio_host_geometry_live_edit_actions
+  2/316 Test #126: test_studio_host_geometry_live_edit_actions ........................   Passed   10.22 sec
+        Start  17: test_runtime_host_binding
+  3/316 Test  #20: test_runtime_host_audit_stream .....................................   Passed   70.57 sec
+        Start  44: test_studio_host_report_layout_classifications
+  4/316 Test  #17: test_runtime_host_binding ..........................................   Passed   26.51 sec
+        Start 183: test_studio_host_selected_sections_stable
+  5/316 Test  #44: test_studio_host_report_layout_classifications .....................   Passed    8.37 sec
+        Start  47: test_studio_host_report_page_setup_fields
+  6/316 Test  #47: test_studio_host_report_page_setup_fields ..........................   Passed    5.47 sec
+        Start  16: test_safety_traceability_workflow_contract
+  7/316 Test #183: test_studio_host_selected_sections_stable ..........................   Passed   15.61 sec
+        Start  43: test_studio_host_detail_header_footer_object_layout_actions
+  8/316 Test  #16: test_safety_traceability_workflow_contract .........................   Passed    5.20 sec
+        Start 178: test_studio_host_report_sort_settings_record
+  9/316 Test  #43: test_studio_host_detail_header_footer_object_layout_actions ........   Passed    4.92 sec
+        Start  51: test_studio_host_report_font_metadata
+ 10/316 Test #178: test_studio_host_report_sort_settings_record .......................   Passed    2.94 sec
+        Start 177: test_studio_host_report_sort_settings_stable
+ 11/316 Test #177: test_studio_host_report_sort_settings_stable .......................   Passed    3.33 sec
+        Start  77: test_studio_host_real_sample_page_setup_settings_round_trip
+ 12/316 Test  #51: test_studio_host_report_font_metadata ..............................   Passed    5.00 sec
+        Start  45: test_studio_host_report_direct_setting_fields
+ 13/316 Test  #77: test_studio_host_real_sample_page_setup_settings_round_trip ........   Passed    3.23 sec
+        Start  63: test_studio_host_real_sample_column_setup_round_trip
+ 14/316 Test  #45: test_studio_host_report_direct_setting_fields ......................   Passed    5.12 sec
+        Start  49: test_studio_host_label_layout_actions
+ 15/316 Test  #63: test_studio_host_real_sample_column_setup_round_trip ...............   Passed    3.04 sec
+        Start  59: test_studio_host_real_sample_round_trip
+ 16/316 Test  #59: test_studio_host_real_sample_round_trip ............................   Passed    2.45 sec
+        Start 165: test_studio_host_side_margin_record_settings
+ 17/316 Test  #49: test_studio_host_label_layout_actions ..............................   Passed    4.04 sec
+        Start  38: test_studio_host_detail_header_footer_section_geometry
+ 18/316 Test #165: test_studio_host_side_margin_record_settings .......................   Passed    1.65 sec
+        Start 119: test_studio_host_report_grouping_nested_mutation
+ 19/316 Test #119: test_studio_host_report_grouping_nested_mutation ...................   Passed    1.52 sec
+        Start 120: test_studio_host_report_grouping_stable_mutation
+ 20/316 Test #120: test_studio_host_report_grouping_stable_mutation ...................   Passed    1.55 sec
+        Start 116: test_studio_host_report_selection_deep
+ 21/316 Test  #38: test_studio_host_detail_header_footer_section_geometry .............   Passed    3.72 sec
+        Start  50: test_studio_host_report_layout_actions
+ 22/316 Test #116: test_studio_host_report_selection_deep .............................   Passed    1.44 sec
+        Start 118: test_studio_host_report_grouping_exposure
+ 23/316 Test #118: test_studio_host_report_grouping_exposure ..........................   Passed    1.42 sec
+        Start 125: test_studio_host_layout_actions
+ 24/316 Test #125: test_studio_host_layout_actions ....................................   Passed    1.34 sec
+        Start  64: test_studio_host_real_sample_paper_dimensions_round_trip
+ 25/316 Test  #50: test_studio_host_report_layout_actions .............................   Passed    3.87 sec
+        Start  53: test_studio_host_report_settings_memo_parsing
+ 26/316 Test  #64: test_studio_host_real_sample_paper_dimensions_round_trip ...........   Passed    1.64 sec
+        Start 114: test_studio_host_report_selection_none
+ 27/316 Test #114: test_studio_host_report_selection_none .............................   Passed    1.25 sec
+        Start 289: test_prg_engine_control_flow
+ 28/316 Test  #53: test_studio_host_report_settings_memo_parsing ......................   Passed    4.41 sec
+        Start  58: test_studio_host_report_schema_fallbacks
+ 29/316 Test  #58: test_studio_host_report_schema_fallbacks ...........................   Passed    3.38 sec
+        Start  42: test_studio_host_detail_header_footer_object_lifecycle
+ 30/316 Test #289: test_prg_engine_control_flow .......................................   Passed    6.96 sec
+        Start  78: test_studio_host_real_sample_direct_margins_round_trip
+ 31/316 Test  #42: test_studio_host_detail_header_footer_object_lifecycle .............   Passed    3.30 sec
+        Start  37: test_studio_host_detail_header_footer_section_expressions
+ 32/316 Test  #78: test_studio_host_real_sample_direct_margins_round_trip .............   Passed    1.67 sec
+        Start  26: test_studio_host_shell_command
+ 33/316 Test  #26: test_studio_host_shell_command .....................................   Passed    1.01 sec
+        Start 115: test_studio_host_report_selection_padded
+ 34/316 Test #115: test_studio_host_report_selection_padded ...........................   Passed    1.04 sec
+        Start  98: test_studio_host_real_sample_grouping_deleted_preview_round_trip
+ 35/316 Test  #37: test_studio_host_detail_header_footer_section_expressions ..........   Passed    3.00 sec
+        Start  39: test_studio_host_detail_header_footer_section_lifecycle
+ 36/316 Test  #98: test_studio_host_real_sample_grouping_deleted_preview_round_trip ...   Passed    1.17 sec
+        Start  81: test_studio_host_real_sample_object_nudge_round_trip
+ 37/316 Test  #81: test_studio_host_real_sample_object_nudge_round_trip ...............   Passed    1.20 sec
+        Start 251: test_visual_asset_editor
+ 38/316 Test  #39: test_studio_host_detail_header_footer_section_lifecycle ............   Passed    3.14 sec
+        Start  54: test_studio_host_report_settings_diagnostics
+ 39/316 Test #251: test_visual_asset_editor ...........................................   Passed    3.55 sec
+        Start 210: test_studio_host_section_deleted_object_counts
+ 40/316 Test  #54: test_studio_host_report_settings_diagnostics .......................   Passed    2.46 sec
+        Start  57: test_studio_host_report_unresolved_memo_placeholders
+ 41/316 Test #210: test_studio_host_section_deleted_object_counts .....................   Passed    0.87 sec
+        Start  84: test_studio_host_real_sample_object_resize_round_trip
+ 42/316 Test  #84: test_studio_host_real_sample_object_resize_round_trip ..............   Passed    1.08 sec
+        Start  82: test_studio_host_real_sample_object_align_round_trip
+ 43/316 Test  #57: test_studio_host_report_unresolved_memo_placeholders ...............   Passed    2.41 sec
+        Start  41: test_studio_host_detail_header_footer_object_expressions
+ 44/316 Test  #82: test_studio_host_real_sample_object_align_round_trip ...............   Passed    1.20 sec
+        Start  95: test_studio_host_real_sample_section_deleted_preview_round_trip
+ 45/316 Test  #95: test_studio_host_real_sample_section_deleted_preview_round_trip ....   Passed    1.13 sec
+        Start  85: test_studio_host_real_sample_object_snap_round_trip
+ 46/316 Test  #41: test_studio_host_detail_header_footer_object_expressions ...........   Passed    1.90 sec
+        Start 112: test_studio_host_report_deleted_states
+ 47/316 Test  #85: test_studio_host_real_sample_object_snap_round_trip ................   Passed    1.07 sec
+        Start  96: test_studio_host_real_sample_section_delete_restore_round_trip
+ 48/316 Test  #96: test_studio_host_real_sample_section_delete_restore_round_trip .....   Passed    1.05 sec
+        Start  93: test_studio_host_real_sample_object_deleted_preview_round_trip
+ 49/316 Test #112: test_studio_host_report_deleted_states .............................   Passed    1.83 sec
+        Start 110: test_studio_host_deleted_report_visual_property_moves
+ 50/316 Test  #93: test_studio_host_real_sample_object_deleted_preview_round_trip .....   Passed    1.05 sec
+        Start  62: test_studio_host_real_sample_settings_delete_restore_round_trip
+ 51/316 Test #110: test_studio_host_deleted_report_visual_property_moves ..............   Passed    1.51 sec
+        Start  56: test_studio_host_report_live_section_geometry
+ 52/316 Test  #62: test_studio_host_real_sample_settings_delete_restore_round_trip ....   Passed    1.02 sec
+        Start  92: test_studio_host_real_sample_object_delete_restore_round_trip
+ 53/316 Test  #92: test_studio_host_real_sample_object_delete_restore_round_trip ......   Passed    1.08 sec
+        Start 123: test_studio_host_report_grouping_deleted_mutation
+ 54/316 Test  #56: test_studio_host_report_live_section_geometry ......................   Passed    1.87 sec
+        Start 100: test_studio_host_deleted_object_width_left_geometry
+ 55/316 Test #123: test_studio_host_report_grouping_deleted_mutation ..................   Passed    0.78 sec
+        Start  79: test_studio_host_real_sample_object_round_trip
+ 56/316 Test  #79: test_studio_host_real_sample_object_round_trip .....................   Passed    1.00 sec
+        Start  19: test_runtime_host_debug_output_formatting
+ 57/316 Test #100: test_studio_host_deleted_object_width_left_geometry ................   Passed    1.64 sec
+        Start 103: test_studio_host_edited_object_delete_geometry
+ 58/316 Test #103: test_studio_host_edited_object_delete_geometry .....................   Passed    1.47 sec
+        Start  99: test_studio_host_deleted_section_geometry
+ 59/316 Test  #99: test_studio_host_deleted_section_geometry ..........................   Passed    1.52 sec
+        Start 109: test_studio_host_deleted_report_visual_property_copies
+ 60/316 Test  #19: test_runtime_host_debug_output_formatting ..........................   Passed    4.03 sec
+        Start 214: test_studio_host_selected_label_objects
+ 61/316 Test #214: test_studio_host_selected_label_objects ............................   Passed    0.68 sec
+        Start 121: test_studio_host_report_grouping_record_mutation
+ 62/316 Test #109: test_studio_host_deleted_report_visual_property_copies .............   Passed    1.50 sec
+        Start 104: test_studio_host_report_width_left_preview_bounds
+ 63/316 Test #121: test_studio_host_report_grouping_record_mutation ...................   Passed    0.70 sec
+        Start 212: test_studio_host_selected_report_objects
+ 64/316 Test #212: test_studio_host_selected_report_objects ...........................   Passed    0.67 sec
+        Start 124: test_studio_host_report_grouping_remaining_exposure
+ 65/316 Test #104: test_studio_host_report_width_left_preview_bounds ..................   Passed    1.47 sec
+        Start 102: test_studio_host_deleted_object_restore_geometry
+ 66/316 Test #124: test_studio_host_report_grouping_remaining_exposure ................   Passed    0.73 sec
+        Start 173: test_studio_host_orientation_record_settings
+ 67/316 Test #102: test_studio_host_deleted_object_restore_geometry ...................   Passed    1.62 sec
+        Start  36: test_studio_host_remaining_object_lifecycle
+ 68/316 Test #173: test_studio_host_orientation_record_settings .......................   Passed    2.02 sec
+        Start 117: test_studio_host_report_selection_deep_section_settings
+ 69/316 Test  #36: test_studio_host_remaining_object_lifecycle ........................   Passed    1.48 sec
+        Start 101: test_studio_host_deleted_object_height_top_geometry
+ 70/316 Test #117: test_studio_host_report_selection_deep_section_settings ............   Passed    0.70 sec
+        Start  74: test_studio_host_real_sample_ascii_round_trip
+ 71/316 Test  #74: test_studio_host_real_sample_ascii_round_trip ......................   Passed    0.91 sec
+        Start  66: test_studio_host_real_sample_right_margin_round_trip
+ 72/316 Test #101: test_studio_host_deleted_object_height_top_geometry ................   Passed    1.49 sec
+        Start 111: test_studio_host_report_geometry_defaults
+ 73/316 Test  #66: test_studio_host_real_sample_right_margin_round_trip ...............   Passed    0.90 sec
+        Start  68: test_studio_host_real_sample_device_round_trip
+ 74/316 Test  #68: test_studio_host_real_sample_device_round_trip .....................   Passed    0.89 sec
+        Start  69: test_studio_host_real_sample_output_round_trip
+ 75/316 Test #111: test_studio_host_report_geometry_defaults ..........................   Passed    1.48 sec
+        Start 105: test_studio_host_report_height_top_preview_bounds
+ 76/316 Test  #69: test_studio_host_real_sample_output_round_trip .....................   Passed    0.93 sec
+        Start  75: test_studio_host_real_sample_collate_round_trip
+ 77/316 Test #105: test_studio_host_report_height_top_preview_bounds ..................   Passed    1.50 sec
+        Start 106: test_studio_host_detail_header_footer_section_preview_bounds
+ 78/316 Test  #75: test_studio_host_real_sample_collate_round_trip ....................   Passed    0.89 sec
+        Start  61: test_studio_host_real_sample_sort_settings_round_trip
+ 79/316 Test  #61: test_studio_host_real_sample_sort_settings_round_trip ..............   Passed    0.93 sec
+        Start  70: test_studio_host_real_sample_defaultsource_round_trip
+ 80/316 Test #106: test_studio_host_detail_header_footer_section_preview_bounds .......   Passed    1.49 sec
+        Start 107: test_studio_host_deleted_report_visual_property_rejections
+ 81/316 Test  #70: test_studio_host_real_sample_defaultsource_round_trip ..............   Passed    0.95 sec
+        Start  71: test_studio_host_real_sample_printquality_round_trip
+ 82/316 Test #107: test_studio_host_deleted_report_visual_property_rejections .........   Passed    1.26 sec
+        Start  35: test_studio_host_object_action_lifecycle
+ 83/316 Test  #71: test_studio_host_real_sample_printquality_round_trip ...............   Passed    1.01 sec
+        Start  73: test_studio_host_real_sample_ttoption_round_trip
+ 84/316 Test  #35: test_studio_host_object_action_lifecycle ...........................   Passed    1.20 sec
+        Start 108: test_studio_host_deleted_report_visual_property_clears
+ 85/316 Test  #73: test_studio_host_real_sample_ttoption_round_trip ...................   Passed    0.94 sec
+        Start  76: test_studio_host_real_sample_copies_round_trip
+ 86/316 Test #108: test_studio_host_deleted_report_visual_property_clears .............   Passed    1.04 sec
+        Start  34: test_studio_host_stable_selector_mutation
+ 87/316 Test  #76: test_studio_host_real_sample_copies_round_trip .....................   Passed    0.87 sec
+        Start  65: test_studio_host_real_sample_left_margin_round_trip
+ 88/316 Test  #65: test_studio_host_real_sample_left_margin_round_trip ................   Passed    0.89 sec
+        Start  72: test_studio_host_real_sample_yresolution_round_trip
+ 89/316 Test  #34: test_studio_host_stable_selector_mutation ..........................   Passed    1.05 sec
+        Start  46: test_studio_host_report_column_setup
+ 90/316 Test  #72: test_studio_host_real_sample_yresolution_round_trip ................   Passed    0.90 sec
+        Start  67: test_studio_host_real_sample_driver_round_trip
+ 91/316 Test  #46: test_studio_host_report_column_setup ...............................   Passed    0.91 sec
+        Start 113: test_studio_host_report_layout_diagnostics
+ 92/316 Test  #67: test_studio_host_real_sample_driver_round_trip .....................   Passed    0.91 sec
+        Start  83: test_studio_host_real_sample_object_distribute_round_trip
+ 93/316 Test #113: test_studio_host_report_layout_diagnostics .........................   Passed    0.86 sec
+        Start  48: test_studio_host_report_column_width_fields
+ 94/316 Test  #83: test_studio_host_real_sample_object_distribute_round_trip ..........   Passed    0.79 sec
+        Start 176: test_studio_host_settings_memo_stable
+ 95/316 Test  #48: test_studio_host_report_column_width_fields ........................   Passed    0.81 sec
+        Start  52: test_studio_host_report_layout_placement
+ 96/316 Test  #52: test_studio_host_report_layout_placement ...........................   Passed    0.83 sec
+        Start  33: test_studio_host_toolbox_create_lifecycle
+ 97/316 Test #176: test_studio_host_settings_memo_stable ..............................   Passed    1.62 sec
+        Start  89: test_studio_host_real_sample_object_memo_round_trip
+ 98/316 Test  #33: test_studio_host_toolbox_create_lifecycle ..........................   Passed    0.79 sec
+        Start  40: test_studio_host_detail_header_footer_object_geometry
+ 99/316 Test  #89: test_studio_host_real_sample_object_memo_round_trip ................   Passed    0.67 sec
+        Start 172: test_studio_host_orientation_stable_settings
+100/316 Test  #40: test_studio_host_detail_header_footer_object_geometry ..............   Passed    0.74 sec
+        Start  90: test_studio_host_real_sample_object_font_round_trip
+101/316 Test  #90: test_studio_host_real_sample_object_font_round_trip ................   Passed    0.67 sec
+        Start  91: test_studio_host_real_sample_object_font_clear_round_trip
+102/316 Test #172: test_studio_host_orientation_stable_settings .......................   Passed    1.54 sec
+        Start  87: test_studio_host_real_sample_object_rename_round_trip
+103/316 Test  #91: test_studio_host_real_sample_object_font_clear_round_trip ..........   Passed    0.70 sec
+        Start  80: test_studio_host_real_sample_object_preview_bounds_round_trip
+104/316 Test  #80: test_studio_host_real_sample_object_preview_bounds_round_trip ......   Passed    0.64 sec
+        Start  88: test_studio_host_real_sample_object_reorder_round_trip
+105/316 Test  #87: test_studio_host_real_sample_object_rename_round_trip ..............   Passed    0.69 sec
+        Start  94: test_studio_host_real_sample_section_round_trip
+106/316 Test  #88: test_studio_host_real_sample_object_reorder_round_trip .............   Passed    0.65 sec
+        Start 223: test_studio_host_settings_memo_record
+107/316 Test  #94: test_studio_host_real_sample_section_round_trip ....................   Passed    0.66 sec
+        Start  86: test_studio_host_real_sample_object_duplicate_round_trip
+108/316 Test  #86: test_studio_host_real_sample_object_duplicate_round_trip ...........   Passed    0.62 sec
+        Start 248: test_studio_host_code_page
+109/316 Test #248: test_studio_host_code_page .........................................   Passed    0.42 sec
+        Start 203: test_studio_host_selected_page_header_sections_record
+110/316 Test #203: test_studio_host_selected_page_header_sections_record ..............   Passed    0.39 sec
+        Start 218: test_studio_host_selected_title_sections_stable
+111/316 Test #223: test_studio_host_settings_memo_record ..............................   Passed    1.47 sec
+        Start 202: test_studio_host_selected_page_footer_sections_record
+112/316 Test #202: test_studio_host_selected_page_footer_sections_record ..............   Passed    0.36 sec
+        Start 200: test_studio_host_selected_column_header_sections_record
+113/316 Test #218: test_studio_host_selected_title_sections_stable ....................   Passed    0.37 sec
+        Start 219: test_studio_host_selected_column_header_sections_stable
+114/316 Test #200: test_studio_host_selected_column_header_sections_record ............   Passed    0.39 sec
+        Start 193: test_studio_host_selected_unplaced_objects_stable
+115/316 Test #219: test_studio_host_selected_column_header_sections_stable ............   Passed    0.38 sec
+        Start 201: test_studio_host_selected_column_footer_sections_record
+116/316 Test #193: test_studio_host_selected_unplaced_objects_stable ..................   Passed    0.38 sec
+        Start 221: test_studio_host_selected_page_footer_sections_stable
+117/316 Test #201: test_studio_host_selected_column_footer_sections_record ............   Passed    0.38 sec
+        Start 196: test_studio_host_selected_detail_objects_orphaned
+118/316 Test #221: test_studio_host_selected_page_footer_sections_stable ..............   Passed    0.38 sec
+        Start 199: test_studio_host_selected_title_sections_record
+119/316 Test #196: test_studio_host_selected_detail_objects_orphaned ..................   Passed    0.39 sec
+        Start 220: test_studio_host_selected_column_footer_sections_stable
+120/316 Test #199: test_studio_host_selected_title_sections_record ....................   Passed    0.38 sec
+        Start 198: test_studio_host_selected_summary_sections_record
+121/316 Test #220: test_studio_host_selected_column_footer_sections_stable ............   Passed    0.39 sec
+        Start 197: test_studio_host_selected_summary_objects_record
+122/316 Test #198: test_studio_host_selected_summary_sections_record ..................   Passed    0.36 sec
+        Start 187: test_studio_host_selected_group_header_objects_stable
+123/316 Test #197: test_studio_host_selected_summary_objects_record ...................   Passed    0.36 sec
+        Start 194: test_studio_host_selected_page_header_objects_stable
+124/316 Test #187: test_studio_host_selected_group_header_objects_stable ..............   Passed    0.38 sec
+        Start 189: test_studio_host_selected_title_objects_stable
+125/316 Test #194: test_studio_host_selected_page_header_objects_stable ...............   Passed    0.38 sec
+        Start 207: test_studio_host_selected_group_footer_sections_stable
+126/316 Test #189: test_studio_host_selected_title_objects_stable .....................   Passed    0.36 sec
+        Start 192: test_studio_host_selected_column_footer_objects_stable
+127/316 Test #207: test_studio_host_selected_group_footer_sections_stable .............   Passed    0.37 sec
+        Start 206: test_studio_host_selected_group_header_sections_stable
+128/316 Test #192: test_studio_host_selected_column_footer_objects_stable .............   Passed    0.35 sec
+        Start 188: test_studio_host_selected_group_footer_objects_stable
+129/316 Test #206: test_studio_host_selected_group_header_sections_stable .............   Passed    0.33 sec
+        Start 208: test_studio_host_selected_nested_group_sections_record
+130/316 Test #208: test_studio_host_selected_nested_group_sections_record .............   Passed    0.35 sec
+        Start 209: test_studio_host_selected_nested_group_sections_stable
+131/316 Test #188: test_studio_host_selected_group_footer_objects_stable ..............   Passed    0.37 sec
+        Start 205: test_studio_host_selected_group_footer_sections_record
+132/316 Test #209: test_studio_host_selected_nested_group_sections_stable .............   Passed    0.34 sec
+        Start 217: test_studio_host_selected_summary_sections_stable
+133/316 Test #205: test_studio_host_selected_group_footer_sections_record .............   Passed    0.35 sec
+        Start 204: test_studio_host_selected_group_header_sections_record
+134/316 Test #204: test_studio_host_selected_group_header_sections_record .............   Passed    0.34 sec
+        Start 128: test_studio_host_deleted_band_object_sections
+135/316 Test #217: test_studio_host_selected_summary_sections_stable ..................   Passed    0.35 sec
+        Start 122: test_studio_host_report_grouping_deleted_exposure
+136/316 Test #122: test_studio_host_report_grouping_deleted_exposure ..................   Passed    0.33 sec
+        Start 190: test_studio_host_selected_page_footer_objects_stable
+137/316 Test #190: test_studio_host_selected_page_footer_objects_stable ...............   Passed    0.36 sec
+        Start 191: test_studio_host_selected_column_header_objects_stable
+138/316 Test #128: test_studio_host_deleted_band_object_sections ......................   Passed    1.02 sec
+        Start  55: test_studio_host_report_section_selection_diagnostics
+139/316 Test #191: test_studio_host_selected_column_header_objects_stable .............   Passed    0.34 sec
+        Start 132: test_studio_host_update_batch
+140/316 Test  #55: test_studio_host_report_section_selection_diagnostics ..............   Passed    0.34 sec
+        Start 160: test_studio_host_mixed_deleted_states
+141/316 Test #132: test_studio_host_update_batch ......................................   Passed    0.41 sec
+        Start 158: test_studio_host_object_deleted_states
+142/316 Test #160: test_studio_host_mixed_deleted_states ..............................   Passed    0.41 sec
+        Start  97: test_studio_host_real_sample_grouping_round_trip
+143/316 Test #158: test_studio_host_object_deleted_states .............................   Passed    0.41 sec
+        Start 166: test_studio_host_bottom_margin_stable_settings
+144/316 Test  #97: test_studio_host_real_sample_grouping_round_trip ...................   Passed    0.35 sec
+        Start 211: test_studio_host_selected_report_sections
+145/316 Test #211: test_studio_host_selected_report_sections ..........................   Passed    0.25 sec
+        Start 168: test_studio_host_vertical_grid_stable_settings
+146/316 Test #166: test_studio_host_bottom_margin_stable_settings .....................   Passed    0.79 sec
+        Start 227: test_studio_host_column_spacing_stable_settings
+147/316 Test #168: test_studio_host_vertical_grid_stable_settings .....................   Passed    0.81 sec
+        Start 174: test_studio_host_paper_size_stable_settings
+148/316 Test #227: test_studio_host_column_spacing_stable_settings ....................   Passed    0.82 sec
+        Start 213: test_studio_host_selected_report_settings
+149/316 Test #213: test_studio_host_selected_report_settings ..........................   Passed    0.27 sec
+        Start 163: test_studio_host_page_margin_stable_settings
+150/316 Test #174: test_studio_host_paper_size_stable_settings ........................   Passed    0.82 sec
+        Start 244: test_studio_host
+151/316 Test #244: test_studio_host ...................................................   Passed    0.34 sec
+        Start 170: test_studio_host_horizontal_grid_stable_settings
+152/316 Test #163: test_studio_host_page_margin_stable_settings .......................   Passed    0.81 sec
+        Start 229: test_studio_host_column_setup_stable_settings
+153/316 Test #170: test_studio_host_horizontal_grid_stable_settings ...................   Passed    0.80 sec
+        Start 224: test_studio_host_column_count_record_settings
+154/316 Test #229: test_studio_host_column_setup_stable_settings ......................   Passed    0.77 sec
+        Start 171: test_studio_host_horizontal_grid_record_settings
+155/316 Test #224: test_studio_host_column_count_record_settings ......................   Passed    0.80 sec
+        Start 167: test_studio_host_bottom_margin_record_settings
+156/316 Test #171: test_studio_host_horizontal_grid_record_settings ...................   Passed    0.82 sec
+        Start 175: test_studio_host_paper_size_record_settings
+157/316 Test #167: test_studio_host_bottom_margin_record_settings .....................   Passed    0.80 sec
+        Start 169: test_studio_host_vertical_grid_record_settings
+158/316 Test #175: test_studio_host_paper_size_record_settings ........................   Passed    0.76 sec
+        Start 164: test_studio_host_page_margin_record_settings
+159/316 Test #169: test_studio_host_vertical_grid_record_settings .....................   Passed    0.76 sec
+        Start  14: test_native_test_isolation_contract
+160/316 Test #164: test_studio_host_page_margin_record_settings .......................   Passed    0.77 sec
+        Start 226: test_studio_host_column_spacing_record_settings
+161/316 Test  #14: test_native_test_isolation_contract ................................   Passed    0.31 sec
+        Start 225: test_studio_host_column_width_record_settings
+162/316 Test #226: test_studio_host_column_spacing_record_settings ....................   Passed    0.78 sec
+        Start 228: test_studio_host_column_setup_record_settings
+163/316 Test #225: test_studio_host_column_width_record_settings ......................   Passed    0.75 sec
+        Start 127: test_studio_host_report_section_ids
+164/316 Test #228: test_studio_host_column_setup_record_settings ......................   Passed    0.74 sec
+        Start 143: test_studio_host_deleted_object_rename_batch
+165/316 Test #127: test_studio_host_report_section_ids ................................   Passed    0.70 sec
+        Start 130: test_studio_host_deleted_update_batch
+166/316 Test #143: test_studio_host_deleted_object_rename_batch .......................   Passed    0.27 sec
+        Start 215: test_studio_host_selected_label_sections
+167/316 Test #130: test_studio_host_deleted_update_batch ..............................   Passed    0.28 sec
+        Start 216: test_studio_host_selected_label_settings
+168/316 Test #215: test_studio_host_selected_label_sections ...........................   Passed    0.18 sec
+        Start 268: test_platform_environment
+169/316 Test #216: test_studio_host_selected_label_settings ...........................   Passed    0.19 sec
+        Start 156: test_studio_host_object_rename_batch
+170/316 Test #268: test_platform_environment ..........................................   Passed    0.17 sec
+        Start 195: test_studio_host_selected_page_header_objects_orphaned
+171/316 Test #156: test_studio_host_object_rename_batch ...............................   Passed    0.25 sec
+        Start 140: test_studio_host_deleted_property_rejection_sections
+172/316 Test #195: test_studio_host_selected_page_header_objects_orphaned .............   Passed    0.17 sec
+        Start 141: test_studio_host_deleted_property_batch_rejection_sections
+173/316 Test #140: test_studio_host_deleted_property_rejection_sections ...............   Passed    0.49 sec
+        Start 135: test_studio_host_deleted_property_clear_batch_sections
+174/316 Test #141: test_studio_host_deleted_property_batch_rejection_sections .........   Passed    0.50 sec
+        Start 162: test_studio_host_settings_section_deleted_states
+175/316 Test #162: test_studio_host_settings_section_deleted_states ...................   Passed    0.42 sec
+        Start 222: test_studio_host_settings_restore_stable
+176/316 Test #135: test_studio_host_deleted_property_clear_batch_sections .............   Passed    0.46 sec
+        Start 180: test_studio_host_settings_delete_record
+177/316 Test #180: test_studio_host_settings_delete_record ............................   Passed    0.39 sec
+        Start 179: test_studio_host_settings_delete_stable
+178/316 Test #222: test_studio_host_settings_restore_stable ...........................   Passed    0.43 sec
+        Start 285: test_prg_engine_database_lifecycle
+179/316 Test #285: test_prg_engine_database_lifecycle .................................   Passed    0.13 sec
+        Start  18: test_localization
+180/316 Test #179: test_studio_host_settings_delete_stable ............................   Passed    0.41 sec
+        Start 235: test_studio_host_subtree_deleted_state
+181/316 Test #235: test_studio_host_subtree_deleted_state .............................   Passed    0.40 sec
+        Start 257: test_designer_context
+182/316 Test #257: test_designer_context ..............................................   Passed    0.37 sec
+        Start 181: test_studio_host_settings_restore_record
+183/316 Test  #18: test_localization ..................................................   Passed    1.29 sec
+        Start 182: test_studio_host_selected_settings_stable
+184/316 Test #181: test_studio_host_settings_restore_record ...........................   Passed    0.39 sec
+        Start 184: test_studio_host_selected_page_header_sections_stable
+185/316 Test #182: test_studio_host_selected_settings_stable ..........................   Passed    0.37 sec
+        Start 185: test_studio_host_selected_objects_stable
+186/316 Test #184: test_studio_host_selected_page_header_sections_stable ..............   Passed    0.37 sec
+        Start  23: test_tool_license_path_launch
+187/316 Test  #23: test_tool_license_path_launch ......................................   Passed    0.11 sec
+        Start 186: test_studio_host_selected_summary_objects_stable
+188/316 Test #185: test_studio_host_selected_objects_stable ...........................   Passed    0.37 sec
+        Start 255: test_toolbox_creation
+189/316 Test #186: test_studio_host_selected_summary_objects_stable ...................   Passed    0.35 sec
+        Start 256: test_context_editor_actions
+190/316 Test #255: test_toolbox_creation ..............................................   Passed    0.35 sec
+        Start 314: test_prg_engine_table_mutation
+191/316 Test #256: test_context_editor_actions ........................................   Passed    0.31 sec
+        Start  22: test_runtime_host_implicit_path_launch
+192/316 Test  #22: test_runtime_host_implicit_path_launch .............................   Passed    0.11 sec
+        Start 249: test_studio_host_deleted_record_localization
+193/316 Test #249: test_studio_host_deleted_record_localization .......................   Passed    0.10 sec
+        Start 142: test_studio_host_deleted_object_rename_batch_sections
+194/316 Test #314: test_prg_engine_table_mutation .....................................   Passed    0.44 sec
+        Start 138: test_studio_host_deleted_property_move_sections
+195/316 Test #142: test_studio_host_deleted_object_rename_batch_sections ..............   Passed    0.27 sec
+        Start 137: test_studio_host_deleted_property_copy_batch_sections
+196/316 Test #138: test_studio_host_deleted_property_move_sections ....................   Passed    0.26 sec
+        Start 134: test_studio_host_deleted_property_clear_sections
+197/316 Test #137: test_studio_host_deleted_property_copy_batch_sections ..............   Passed    0.27 sec
+        Start 139: test_studio_host_deleted_property_move_batch_sections
+198/316 Test #134: test_studio_host_deleted_property_clear_sections ...................   Passed    0.27 sec
+        Start 129: test_studio_host_deleted_update_batch_sections
+199/316 Test #139: test_studio_host_deleted_property_move_batch_sections ..............   Passed    0.28 sec
+        Start 136: test_studio_host_deleted_property_copy_sections
+200/316 Test #129: test_studio_host_deleted_update_batch_sections .....................   Passed    0.28 sec
+        Start 145: test_studio_host_deleted_object_duplicate_batch
+201/316 Test #136: test_studio_host_deleted_property_copy_sections ....................   Passed    0.27 sec
+        Start 144: test_studio_host_deleted_object_duplicate_batch_sections
+202/316 Test #145: test_studio_host_deleted_object_duplicate_batch ....................   Passed    0.27 sec
+        Start 240: test_studio_host_deleted_subtree_duplicate
+203/316 Test #144: test_studio_host_deleted_object_duplicate_batch_sections ...........   Passed    0.24 sec
+        Start 146: test_studio_host_deleted_object_reorder_batch_sections
+204/316 Test #240: test_studio_host_deleted_subtree_duplicate .........................   Passed    0.25 sec
+        Start 147: test_studio_host_deleted_object_reorder_batch
+205/316 Test #146: test_studio_host_deleted_object_reorder_batch_sections .............   Passed    0.24 sec
+        Start 243: test_vfp_sidecar_path
+206/316 Test #147: test_studio_host_deleted_object_reorder_batch ......................   Passed    0.24 sec
+        Start 293: test_prg_engine_arrays
+207/316 Test #243: test_vfp_sidecar_path ..............................................   Passed    0.08 sec
+        Start 281: test_prg_engine_work_areas
+208/316 Test #293: test_prg_engine_arrays .............................................   Passed    0.26 sec
+        Start 238: test_studio_host_subtree_duplicate
+209/316 Test #281: test_prg_engine_work_areas .........................................   Passed    0.29 sec
+        Start 154: test_studio_host_object_duplicate_batch
+210/316 Test #238: test_studio_host_subtree_duplicate .................................   Passed    0.23 sec
+        Start 152: test_studio_host_object_reorder_batch
+211/316 Test #154: test_studio_host_object_duplicate_batch ............................   Passed    0.22 sec
+        Start 233: test_studio_host_section_restore_stable_selection
+212/316 Test #152: test_studio_host_object_reorder_batch ..............................   Passed    0.24 sec
+        Start 262: test_platform_models
+213/316 Test #233: test_studio_host_section_restore_stable_selection ..................   Passed    0.22 sec
+        Start 297: test_prg_engine_runtime_surface_procedure_classes
+214/316 Test #297: test_prg_engine_runtime_surface_procedure_classes ..................   Passed    0.12 sec
+        Start 231: test_studio_host_section_delete_stable_selection
+215/316 Test #262: test_platform_models ...............................................   Passed    0.16 sec
+        Start 232: test_studio_host_section_restore_record_selection
+216/316 Test #231: test_studio_host_section_delete_stable_selection ...................   Passed    0.19 sec
+        Start 230: test_studio_host_section_delete_record_selection
+217/316 Test #232: test_studio_host_section_restore_record_selection ..................   Passed    0.19 sec
+        Start 295: test_prg_engine_runtime_surface_functions
+218/316 Test #230: test_studio_host_section_delete_record_selection ...................   Passed    0.19 sec
+        Start 150: test_studio_host_deleted_object_rename_batch_errors
+219/316 Test #150: test_studio_host_deleted_object_rename_batch_errors ................   Passed    0.07 sec
+        Start 247: test_visual_asset_editor_code_page
+220/316 Test #247: test_visual_asset_editor_code_page .................................   Passed    0.05 sec
+        Start 241: test_studio_host_deleted_subtree_duplicate_collision_errors
+221/316 Test #241: test_studio_host_deleted_subtree_duplicate_collision_errors ........   Passed    0.07 sec
+        Start 239: test_studio_host_deleted_subtree_duplicate_errors
+222/316 Test #239: test_studio_host_deleted_subtree_duplicate_errors ..................   Passed    0.08 sec
+        Start 131: test_studio_host_deleted_update_batch_errors
+223/316 Test #131: test_studio_host_deleted_update_batch_errors .......................   Passed    0.08 sec
+        Start 149: test_studio_host_deleted_object_duplicate_batch_errors
+224/316 Test #149: test_studio_host_deleted_object_duplicate_batch_errors .............   Passed    0.08 sec
+        Start 148: test_studio_host_deleted_object_reorder_batch_errors
+225/316 Test #148: test_studio_host_deleted_object_reorder_batch_errors ...............   Passed    0.07 sec
+        Start 261: test_project_workspace
+226/316 Test #295: test_prg_engine_runtime_surface_functions ..........................   Passed    0.77 sec
+        Start 237: test_studio_host_subtree_duplicate_collision_errors
+227/316 Test #237: test_studio_host_subtree_duplicate_collision_errors ................   Passed    0.07 sec
+        Start  10: test_validate_posix_build_type
+228/316 Test #261: test_project_workspace .............................................   Passed    0.17 sec
+        Start 133: test_studio_host_update_batch_errors
+229/316 Test  #10: test_validate_posix_build_type .....................................   Passed    0.05 sec
+        Start 155: test_studio_host_object_rename_batch_errors
+230/316 Test #133: test_studio_host_update_batch_errors ...............................   Passed    0.07 sec
+        Start   5: test_cpack_artifact_contract
+231/316 Test #155: test_studio_host_object_rename_batch_errors ........................   Passed    0.06 sec
+        Start 300: test_prg_engine_runtime_surface_requery
+232/316 Test   #5: test_cpack_artifact_contract .......................................   Passed    0.05 sec
+        Start 236: test_studio_host_subtree_duplicate_errors
+233/316 Test #236: test_studio_host_subtree_duplicate_errors ..........................   Passed    0.06 sec
+        Start 153: test_studio_host_object_duplicate_batch_errors
+234/316 Test #300: test_prg_engine_runtime_surface_requery ............................   Passed    0.11 sec
+        Start 292: test_prg_engine_data_io
+235/316 Test #153: test_studio_host_object_duplicate_batch_errors .....................   Passed    0.07 sec
+        Start 258: test_report_layout
+236/316 Test #292: test_prg_engine_data_io ............................................   Passed    0.17 sec
+        Start 151: test_studio_host_object_reorder_batch_errors
+237/316 Test #258: test_report_layout .................................................   Passed    0.12 sec
+        Start 234: test_studio_host_subtree_deleted_state_errors
+238/316 Test #151: test_studio_host_object_reorder_batch_errors .......................   Passed    0.06 sec
+        Start   4: test_studio_install_contract
+239/316 Test #234: test_studio_host_subtree_deleted_state_errors ......................   Passed    0.06 sec
+        Start 245: test_dbf_table
+240/316 Test   #4: test_studio_install_contract .......................................   Passed    0.05 sec
+        Start 254: test_toolbox_palette
+241/316 Test #245: test_dbf_table .....................................................   Passed    0.17 sec
+        Start 253: test_builder_registry
+242/316 Test #254: test_toolbox_palette ...............................................   Passed    0.13 sec
+        Start 286: test_prg_engine_seek_index
+243/316 Test #253: test_builder_registry ..............................................   Passed    0.10 sec
+        Start 301: test_prg_engine_runtime_surface_value
+244/316 Test #301: test_prg_engine_runtime_surface_value ..............................   Passed    0.03 sec
+        Start 282: test_prg_engine_relations
+245/316 Test #286: test_prg_engine_seek_index .........................................   Passed    0.12 sec
+        Start 312: test_prg_engine_sql_cursors_mutation
+246/316 Test #282: test_prg_engine_relations ..........................................   Passed    0.03 sec
+        Start  21: test_runtime_host_audit_containment
+247/316 Test #312: test_prg_engine_sql_cursors_mutation ...............................   Passed    0.04 sec
+        Start 250: test_dbf_table_active_locale
+248/316 Test  #21: test_runtime_host_audit_containment ................................   Passed    0.04 sec
+        Start   2: test_package_document_install
+249/316 Test #250: test_dbf_table_active_locale .......................................   Passed    0.03 sec
+        Start 161: test_studio_host_settings_section_deleted_states_errors
+250/316 Test   #2: test_package_document_install ......................................   Passed    0.03 sec
+        Start 159: test_studio_host_mixed_deleted_states_errors
+251/316 Test #161: test_studio_host_settings_section_deleted_states_errors ............   Passed    0.08 sec
+        Start 308: test_prg_engine_string_minus
+252/316 Test #159: test_studio_host_mixed_deleted_states_errors .......................   Passed    0.08 sec
+        Start 287: test_prg_engine_index_seek_optimization
+253/316 Test #308: test_prg_engine_string_minus .......................................   Passed    0.03 sec
+        Start 269: test_query_translator
+254/316 Test #269: test_query_translator ..............................................   Passed    0.06 sec
+        Start 313: test_prg_engine_sql_cursors_seek_and_order
+255/316 Test #287: test_prg_engine_index_seek_optimization ............................   Passed    0.07 sec
+        Start 316: test_xasset_methods
+256/316 Test #313: test_prg_engine_sql_cursors_seek_and_order .........................   Passed    0.03 sec
+        Start   9: test_polyglot_contract
+257/316 Test   #9: test_polyglot_contract .............................................   Passed    0.02 sec
+        Start 157: test_studio_host_object_deleted_states_errors
+258/316 Test #316: test_xasset_methods ................................................   Passed    0.06 sec
+        Start  13: test_windows_msvc_cache_workflow_contract
+259/316 Test  #13: test_windows_msvc_cache_workflow_contract ..........................   Passed    0.02 sec
+        Start 252: test_product_subsystems
+260/316 Test #157: test_studio_host_object_deleted_states_errors ......................   Passed    0.07 sec
+        Start 315: test_prg_engine_table_structure
+261/316 Test #252: test_product_subsystems ............................................   Passed    0.05 sec
+        Start   3: test_locale_catalog_install_contract
+262/316 Test #315: test_prg_engine_table_structure ....................................   Passed    0.06 sec
+        Start 307: test_prg_engine_string_math_functions
+263/316 Test   #3: test_locale_catalog_install_contract ...............................   Passed    0.04 sec
+        Start 270: test_federation_execution
+264/316 Test #307: test_prg_engine_string_math_functions ..............................   Passed    0.02 sec
+        Start 267: test_polyglot_route_contract
+265/316 Test #267: test_polyglot_route_contract .......................................   Passed    0.01 sec
+        Start 259: test_report_layout_sort_settings
+266/316 Test #259: test_report_layout_sort_settings ...................................   Passed    0.02 sec
+        Start  11: test_native_platform_workflow_contract
+267/316 Test #270: test_federation_execution ..........................................   Passed    0.04 sec
+        Start 299: test_prg_engine_runtime_surface_itemid_selectors
+268/316 Test #299: test_prg_engine_runtime_surface_itemid_selectors ...................   Passed    0.02 sec
+        Start   8: test_launcher_trust_provisioning_contract
+269/316 Test  #11: test_native_platform_workflow_contract .............................   Passed    0.03 sec
+        Start  30: test_focused_workflow_path_filters
+270/316 Test   #8: test_launcher_trust_provisioning_contract ..........................   Passed    0.01 sec
+        Start 260: test_report_layout_side_margin_settings
+271/316 Test  #30: test_focused_workflow_path_filters .................................   Passed    0.01 sec
+        Start 311: test_prg_engine_sql_cursors_metadata
+272/316 Test #260: test_report_layout_side_margin_settings ............................   Passed    0.02 sec
+        Start  15: test_security_supply_chain_workflow_contract
+273/316 Test #311: test_prg_engine_sql_cursors_metadata ...............................   Passed    0.02 sec
+        Start 275: test_security_audit_concurrency
+274/316 Test  #15: test_security_supply_chain_workflow_contract .......................   Passed    0.01 sec
+        Start  28: test_licensing_status
+275/316 Test #275: test_security_audit_concurrency ....................................   Passed    0.01 sec
+276/316 Test  #28: test_licensing_status ..............................................   Passed    0.01 sec
+        Start  32: test_studio_host_json
+277/316 Test  #32: test_studio_host_json ..............................................   Passed   67.52 sec
+        Start 271: test_runtime_pipeline
+278/316 Test #271: test_runtime_pipeline ..............................................   Passed   42.36 sec
+        Start   1: test_managed_compile
+279/316 Test   #1: test_managed_compile ...............................................   Passed   18.10 sec
+        Start   6: test_build_parallelism_contract
+280/316 Test   #6: test_build_parallelism_contract ....................................   Passed    2.49 sec
+        Start 273: test_generated_launcher_posix_process
+281/316 Test #273: test_generated_launcher_posix_process ..............................   Passed    1.93 sec
+        Start 276: test_prg_engine
+282/316 Test #276: test_prg_engine ....................................................   Passed    0.86 sec
+        Start 278: test_prg_engine_report_security
+283/316 Test #278: test_prg_engine_report_security ....................................   Passed    0.05 sec
+        Start 242: test_vfp_assets
+284/316 Test #242: test_vfp_assets ....................................................   Passed    0.23 sec
+        Start  27: test_studio_host_utf8_arguments
+285/316 Test  #27: test_studio_host_utf8_arguments ....................................   Passed    0.06 sec
+        Start 283: test_prg_engine_ordered_iteration
+286/316 Test #283: test_prg_engine_ordered_iteration ..................................   Passed    0.05 sec
+        Start 274: test_security_controls
+287/316 Test #274: test_security_controls .............................................   Passed    0.11 sec
+        Start 296: test_prg_engine_runtime_surface_functions_buffering
+288/316 Test #296: test_prg_engine_runtime_surface_functions_buffering ................   Passed    0.03 sec
+        Start 279: test_prg_engine_verified_dbf_security
+289/316 Test #279: test_prg_engine_verified_dbf_security ..............................   Passed    0.04 sec
+        Start 277: test_prg_engine_dynamic_xasset_security
+290/316 Test #277: test_prg_engine_dynamic_xasset_security ............................   Passed    0.10 sec
+        Start 303: test_prg_engine_native_focus_move_events
+291/316 Test #303: test_prg_engine_native_focus_move_events ...........................   Passed    0.02 sec
+        Start 304: test_prg_engine_native_lifecycle_events
+292/316 Test #304: test_prg_engine_native_lifecycle_events ............................   Passed    0.02 sec
+        Start 291: test_prg_engine_macro_expressions
+293/316 Test #291: test_prg_engine_macro_expressions ..................................   Passed    0.01 sec
+        Start 284: test_prg_engine_scope_declarations
+294/316 Test #284: test_prg_engine_scope_declarations .................................   Passed    0.02 sec
+        Start 305: test_prg_engine_transform_numeric_pictures
+295/316 Test #305: test_prg_engine_transform_numeric_pictures .........................   Passed    0.02 sec
+        Start  12: test_github_actions_contract
+296/316 Test  #12: test_github_actions_contract .......................................   Passed    0.02 sec
+        Start   7: test_package_signer_contract
+        Start  31: test_process_capture
+297/316 Test  #31: test_process_capture ...............................................   Passed    0.01 sec
+        Start 266: test_polyglot_migration_telemetry
+298/316 Test   #7: test_package_signer_contract .......................................   Passed    0.01 sec
+        Start 310: test_prg_engine_date_time_functions
+299/316 Test #266: test_polyglot_migration_telemetry ..................................   Passed    0.01 sec
+        Start 306: test_prg_engine_aggregate_array_functions
+300/316 Test #310: test_prg_engine_date_time_functions ................................   Passed    0.02 sec
+        Start 294: test_prg_engine_functions
+301/316 Test #306: test_prg_engine_aggregate_array_functions ..........................   Passed    0.02 sec
+        Start 288: test_prg_engine_rushmore_optimization
+302/316 Test #294: test_prg_engine_functions ..........................................   Passed    0.02 sec
+        Start 264: test_polyglot_bridge_invocation
+303/316 Test #288: test_prg_engine_rushmore_optimization ..............................   Passed    0.02 sec
+        Start 309: test_prg_engine_path_functions
+304/316 Test #264: test_polyglot_bridge_invocation ....................................   Passed    0.01 sec
+        Start 302: test_prg_engine_file_io_functions
+305/316 Test #309: test_prg_engine_path_functions .....................................   Passed    0.01 sec
+        Start 290: test_prg_engine_parser_classes
+306/316 Test #302: test_prg_engine_file_io_functions ..................................   Passed    0.01 sec
+        Start 246: test_dbf_text_encoding
+307/316 Test #290: test_prg_engine_parser_classes .....................................   Passed    0.01 sec
+        Start  29: test_package_launcher_inventory_trust
+308/316 Test #246: test_dbf_text_encoding .............................................   Passed    0.01 sec
+        Start 298: test_prg_engine_locale_code_page
+309/316 Test  #29: test_package_launcher_inventory_trust ..............................   Passed    0.00 sec
+        Start 280: test_prg_engine_debugger
+310/316 Test #298: test_prg_engine_locale_code_page ...................................   Passed    0.00 sec
+        Start  60: test_studio_host_real_sample_discovery
+311/316 Test  #60: test_studio_host_real_sample_discovery .............................   Passed    0.00 sec
+        Start 263: test_polyglot_route_registry
+312/316 Test #263: test_polyglot_route_registry .......................................   Passed    0.00 sec
+        Start 265: test_polyglot_parity_comparator
+313/316 Test #265: test_polyglot_parity_comparator ....................................   Passed    0.00 sec
+314/316 Test #280: test_prg_engine_debugger ...........................................   Passed    0.01 sec
+        Start  25: test_build_host_utf8_launcher_paths
+315/316 Test  #25: test_build_host_utf8_launcher_paths ................................***Skipped   0.00 sec
+        Start 272: test_generated_launcher_process
+316/316 Test #272: test_generated_launcher_process ....................................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 316
+
+Label Time Summary:
+copperfin-isolation:audit=complete                      = 527.57 sec*proc (316 tests)
+copperfin-isolation:child-processes=bounded             = 510.03 sec*proc (238 tests)
+copperfin-isolation:child-processes=bounded-optional    =   0.47 sec*proc (2 tests)
+copperfin-isolation:child-processes=none                =  17.07 sec*proc (76 tests)
+copperfin-isolation:environment=child-scoped            =   7.69 sec*proc (2 tests)
+copperfin-isolation:environment=none                    =  28.84 sec*proc (66 tests)
+copperfin-isolation:environment=scoped-process          = 491.03 sec*proc (248 tests)
+copperfin-isolation:filesystem=fixed-build-tree         =   3.40 sec*proc (3 tests)
+copperfin-isolation:filesystem=fixed-resource-locked    = 106.90 sec*proc (44 tests)
+copperfin-isolation:filesystem=fixed-shared-family      =  67.52 sec*proc (1 test)
+copperfin-isolation:filesystem=none                     =   0.51 sec*proc (11 tests)
+copperfin-isolation:filesystem=process-owned            =  75.82 sec*proc (25 tests)
+copperfin-isolation:filesystem=read-only                =   6.80 sec*proc (20 tests)
+copperfin-isolation:filesystem=shared-build-tree        =  18.10 sec*proc (1 test)
+copperfin-isolation:filesystem=test-owned-unique        = 248.51 sec*proc (211 tests)
+copperfin-isolation:network=disabled-probes             =   5.20 sec*proc (1 test)
+copperfin-isolation:network=none                        = 502.33 sec*proc (311 tests)
+copperfin-isolation:network=possible-package-restore    =  20.03 sec*proc (4 tests)
+copperfin-isolation:platform=configured                 =   0.82 sec*proc (3 tests)
+copperfin-isolation:platform=dotnet-conditional         =  20.03 sec*proc (4 tests)
+copperfin-isolation:platform=portable                   = 455.79 sec*proc (305 tests)
+copperfin-isolation:platform=powershell-conditional     =   8.56 sec*proc (3 tests)
+copperfin-isolation:platform=toolchain-conditional      =  42.36 sec*proc (1 test)
+copperfin-isolation:resources=lock                      = 106.90 sec*proc (44 tests)
+copperfin-isolation:resources=none                      = 420.67 sec*proc (272 tests)
+copperfin-isolation:samples=none                        = 183.14 sec*proc (99 tests)
+copperfin-isolation:samples=owned-copy                  = 344.13 sec*proc (215 tests)
+copperfin-isolation:samples=read-only                   =   0.30 sec*proc (2 tests)
+copperfin-isolation:schedule=parallel-safe              = 393.51 sec*proc (294 tests)
+copperfin-isolation:schedule=serial                     = 134.06 sec*proc (22 tests)
+
+Total Test time (real) = 330.93 sec
+
+The following tests did not run:
+	 25 - test_build_host_utf8_launcher_paths (Skipped)
+	272 - test_generated_launcher_process (Skipped)

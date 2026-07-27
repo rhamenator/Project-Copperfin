@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- The full native matrix was rerun with raw output retained at `artifacts/native-validation-8c16de857/ctest.log` (forced-tracked because `artifacts/` is otherwise ignored). Against the current product sources represented by `8c16de857`, CTest passed `316/316` in `330.93s`; only `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` were expected conditional skips. The log is an independently inspectable Linux run record; it does not replace hosted Windows/macOS or Visual Studio/VFP9 evidence.
+
 - The obsolete push-triggered Linux/Windows native runs `30250175931` and `30250175769` were canceled after remaining in their single composite validation step beyond the declared 120-minute job bound with no step progress. Fresh manual native validation runs were dispatched at current synchronized head `8c16de857`: Linux `30251602843`, macOS `30251602788`, and Windows `30251602740`. This is CI run-state maintenance only; no product sources changed.
 
 - Independent full native CTest verification against the current product tree (`a45fa19fc`, with product sources unchanged from `d9b04671e`) passed `316/316` in `334.50s` with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`. The run included report/label round trips, runtime/package/debug contracts, PRG stack-frugal and runtime-surface coverage, localization, security, and managed compile contracts. The pending Apple parser file remains untouched; hosted platform evidence is still separate.
