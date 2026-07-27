@@ -5222,7 +5222,11 @@ namespace copperfin::runtime
                     return std::nullopt;
                 }
 
-                const std::string function = lowercase_copy(trim_copy(trimmed.substr(0U, open_parenthesis)));
+                std::string function = lowercase_copy(trim_copy(trimmed.substr(0U, open_parenthesis)));
+                if (function == "cnt")
+                {
+                    function = "count";
+                }
                 if (function != "count" && function != "sum" && function != "avg" &&
                     function != "average" && function != "min" && function != "max")
                 {
@@ -5758,7 +5762,8 @@ namespace copperfin::runtime
                                 aggregate_function_value(
                                     aggregate.function,
                                     aggregate.arguments,
-                                    frame));
+                                    frame,
+                                    &cursor));
                             continue;
                         }
                         if (projection_expression == "*")
@@ -5910,7 +5915,7 @@ namespace copperfin::runtime
                         aggregate.arguments.push_back(plan.where_expression);
                     }
                     query_row.values.push_back(
-                        aggregate_function_value(aggregate.function, aggregate.arguments, frame));
+                        aggregate_function_value(aggregate.function, aggregate.arguments, frame, &cursor));
                 }
                 materialized_rows.push_back(std::move(query_row));
             }
@@ -6419,6 +6424,10 @@ namespace copperfin::runtime
             CursorState *cursor = resolve_cursor_target(plan.source_designator);
             if (cursor == nullptr)
             {
+                cursor = resolve_cursor_target_expression(plan.source_designator, frame);
+            }
+            if (cursor == nullptr)
+            {
                 if (require_query_resolution)
                 {
                     return false;
@@ -6430,6 +6439,10 @@ namespace copperfin::runtime
             if (!plan.joined_source_designator.empty())
             {
                 joined_cursor = resolve_cursor_target(plan.joined_source_designator);
+                if (joined_cursor == nullptr)
+                {
+                    joined_cursor = resolve_cursor_target_expression(plan.joined_source_designator, frame);
+                }
                 if (joined_cursor == nullptr)
                 {
                     if (require_query_resolution)

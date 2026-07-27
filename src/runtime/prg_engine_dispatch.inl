@@ -4453,6 +4453,71 @@
             }
             case StatementKind::select_command:
             {
+                const std::string raw_selection = trim_copy(statement.expression);
+                const std::string query_text = "SELECT " + raw_selection;
+                const std::size_t from_position = find_keyword_top_level(query_text, "FROM");
+                if (from_position != std::string::npos)
+                {
+                    const std::size_t into_array_position = find_keyword_top_level(query_text, "INTO ARRAY");
+                    if (into_array_position == std::string::npos || into_array_position < from_position)
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid");
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const std::string query_without_output =
+                        trim_copy(query_text.substr(0U, into_array_position));
+                    const std::string raw_array_name = trim_copy(
+                        query_text.substr(into_array_position + std::string("INTO ARRAY").size()));
+                    const auto array_name = resolve_command_array_name(raw_array_name, "SELECT INTO ARRAY");
+                    if (!array_name.has_value())
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    const int original_work_area = current_selected_work_area();
+                    std::vector<std::vector<PrgValue>> query_rows;
+                    if (!materialize_select_query_rows(query_without_output, frame, query_rows))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+
+                    std::size_t column_count = query_rows.empty() ? 1U : query_rows.front().size();
+                    if (column_count == 0U)
+                    {
+                        column_count = 1U;
+                    }
+                    std::vector<PrgValue> values;
+                    values.reserve(query_rows.size() * column_count);
+                    for (const auto &row : query_rows)
+                    {
+                        if (row.size() != column_count)
+                        {
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid");
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
+                        }
+                        values.insert(values.end(), row.begin(), row.end());
+                    }
+                    assign_array(*array_name, std::move(values), column_count);
+                    globals["_tally"] = make_number_value(static_cast<double>(query_rows.size()));
+                    if (original_work_area > 0)
+                    {
+                        (void)select_work_area(original_work_area);
+                    }
+                    events.push_back({.category = "runtime.select_query",
+                                      .detail = *array_name,
+                                      .location = statement.location});
+                    return {};
+                }
+
                 std::string selection = evaluate_cursor_designator_expression(statement.expression, frame);
                 if (selection.empty())
                 {

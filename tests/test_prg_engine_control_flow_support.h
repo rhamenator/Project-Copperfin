@@ -125,6 +125,7 @@ void test_total_command_tolerates_non_numeric_field_text();
 void test_total_command_errors_use_default_locale_messages();
 void test_total_command_supports_currency_and_integer_fields();
 void test_total_command_for_sql_result_cursors();
+void test_select_query_into_array_commands();
 
 // ==== Concurrency tests (SPAWN/AWAIT/YIELD/critical sections/DOEVENTS) ====
 void test_doevents_pumps_event_queue();

@@ -26,7 +26,8 @@
         PrgValue aggregate_function_value(
             const std::string &function,
             const std::vector<std::string> &raw_arguments,
-            const Frame &frame)
+            const Frame &frame,
+            CursorState *preferred_cursor = nullptr)
         {
             const auto is_numeric_aggregate_field = [](char field_type)
             {
@@ -127,7 +128,9 @@
                 }
             }
 
-            CursorState *cursor = resolve_cursor_target(designator);
+            CursorState *cursor = designator.empty() && preferred_cursor != nullptr
+                                      ? preferred_cursor
+                                      : resolve_cursor_target(designator);
             if (cursor == nullptr)
             {
                 return make_number_value(0.0);
