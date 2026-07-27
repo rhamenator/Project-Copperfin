@@ -37,4 +37,5 @@ the build-inclusion and workflow-diagnostics work that depends on all three.
 debugger fault containment" is complete through #4623 and its focused child
 slices for the runtime host, PRG debugger, forms/classes/menus, and
 reports/labels. Hosted Windows, mounted-VFP9, and Visual Studio validation
-remains release evidence under #4621, not unfinished Phase B implementation.
+was release evidence under #4621 and is now recorded by that closed issue, not
+unfinished Phase B implementation.

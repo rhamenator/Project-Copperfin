@@ -344,8 +344,8 @@ the build-inclusion and workflow-diagnostics work that depends on all three.
 debugger fault containment" is complete through #4623 and its focused child
 slices for the runtime host, PRG debugger, forms/classes/menus, and
 reports/labels. The remaining hosted Windows, mounted-VFP9, and Visual Studio
-checks are release evidence tracked by #4621, not unfinished Phase B
-implementation.
+checks were release evidence tracked and recorded under the now-closed #4621
+issue, not unfinished Phase B implementation.
 
 ### Phase C — Designer, IDE & Delivery Pipeline (slice-lanes D + E + F + G)
 
