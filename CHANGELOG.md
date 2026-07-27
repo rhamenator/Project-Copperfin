@@ -2,6 +2,8 @@
 
 - 2026-07-28: Re-ran safety traceability against the current closed/open issue state after #4621 closure. Permissive validation with primary-hazard coverage passed; strict validation passed every structural check and reported exactly one intentional failure: #4403 remains OPEN. No safety closure or arm's-length reviewer sign-off is claimed.
 
+- 2026-07-28: Archived the current #4403 validator result in `docs/safety/traceability-report-2026-07-27.md`. The report records the permissive pass and the strict validator's sole intentional open-issue gate without claiming independent review, safety closure, or package-signing completion.
+
 - 2026-07-28: Corrected-head Linux Native Validation (`30231088071`), macOS Native Validation (`30231088073`), and Windows Native Validation (`30231088069`) passed at product/test head `d6aabbf7`; the Linux matrix remains `316/316` with two expected conditional skips.
 
 - 2026-07-28: Corrected-head CI release evidence is complete for the native and packaging legs: Windows Environment and Executable Path Validation (`30231088074`), Build Standalone Installers (`30231088061`, including the macOS installer leg), Linux Native (`30231088071`), macOS Native (`30231088073`), and Windows Native (`30231088069`) passed. Hosted Windows/Visual Studio/VFP9 evidence is recorded separately under #4621.
