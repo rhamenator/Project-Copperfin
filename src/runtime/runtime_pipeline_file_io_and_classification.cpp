@@ -183,15 +183,18 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold_impl(
         return std::nullopt;
     }
 
+#if defined(_WIN32)
     // Windows may present the same directory through an 8.3 alias (for
     // example, RUNNER~1 versus runneradmin). Let the host resolve an already
     // existing candidate before walking directory entries for VFP case-fold
     // and ambiguity handling; otherwise a valid external include root can be
-    // rejected before its contents are inspected.
+    // rejected before its contents are inspected. Other platforms retain the
+    // spelling-preserving canonicalization path below.
     std::error_code host_exists_error;
     if (std::filesystem::exists(candidate, host_exists_error) && !host_exists_error) {
         return candidate.lexically_normal();
     }
+#endif
 
     std::filesystem::path resolved = candidate.root_path();
     if (resolved.empty()) {
