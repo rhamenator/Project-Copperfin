@@ -1716,6 +1716,105 @@ void test_agetfileversion_existing_and_missing_files() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_agetfileversion_strict_verified_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_agetfileversion_verified_bytes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto quote_prg_string = [](const fs::path& path) {
+        return std::string{"'"} + path.generic_string() + "'";
+    };
+    const fs::path admitted_file = temp_root / "admitted-versioned-file.bin";
+    std::string expected_version = "9.8.7.6";
+    std::string admitted_bytes;
+
+#if defined(_WIN32)
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length = GetSystemDirectoryW(system_directory, MAX_PATH);
+    const fs::path kernel32 = fs::path(system_directory) / "kernel32.dll";
+    expect(system_directory_length > 0 && system_directory_length < MAX_PATH &&
+               fs::exists(kernel32, ignored),
+           "strict AGETFILEVERSION should find the Windows versioned fixture");
+    if (system_directory_length > 0 && system_directory_length < MAX_PATH &&
+        fs::exists(kernel32, ignored))
+    {
+        admitted_bytes = read_text(kernel32);
+        std::ofstream output(admitted_file, std::ios::binary);
+        output.write(admitted_bytes.data(), static_cast<std::streamsize>(admitted_bytes.size()));
+    }
+#else
+    const auto write_utf16le_string = [](std::string& bytes, const std::string& value) {
+        for (const unsigned char ch : value) {
+            bytes.push_back(static_cast<char>(ch));
+            bytes.push_back('\0');
+        }
+        bytes.push_back('\0');
+        bytes.push_back('\0');
+    };
+    const std::vector<std::string> strings = {
+        "VS_VERSION_INFO", "StringFileInfo", "040904B0", "FileVersion", "9.8.7.6",
+        "FileDescription", "Verified Version Fixture", "CompanyName", "Copperfin Fixtures",
+        "ProductName", "Copperfin Test Product", "ProductVersion", "9.8.7.6",
+        "LegalCopyright", "Copperfin Test Fixture Copyright", "VarFileInfo", "Translation"};
+    for (const std::string& value : strings) {
+        write_utf16le_string(admitted_bytes, value);
+    }
+    write_text(admitted_file, admitted_bytes);
+#endif
+
+    if (admitted_bytes.empty()) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(admitted_file, "tampered bytes must not be read in strict mode");
+    const fs::path missing_file = temp_root / "not-admitted.bin";
+    const fs::path main_path = temp_root / "agetfileversion_verified.prg";
+    write_text(
+        main_path,
+        "cAdmitted = " + quote_prg_string(admitted_file) + "\n"
+        "nVerified = AGETFILEVERSION(aVerified, cAdmitted)\n"
+        "cVersion = aVerified(1)\n"
+        "nMissing = AGETFILEVERSION(aMissing, " + quote_prg_string(missing_file) + ")\n"
+        "RETURN\n");
+
+    auto options = make_runtime_session_options(main_path.string(), temp_root.string());
+    options.verified_file_byte_overrides.emplace(admitted_file.string(), admitted_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(options)
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "strict AGETFILEVERSION script should complete: " + state.message);
+
+    const auto verified = state.globals.find("nverified");
+    const auto version = state.globals.find("cversion");
+    const auto missing = state.globals.find("nmissing");
+    expect(verified != state.globals.end(), "strict AGETFILEVERSION count should be captured");
+    expect(version != state.globals.end(), "strict AGETFILEVERSION version should be captured");
+    expect(missing != state.globals.end(), "strict AGETFILEVERSION missing count should be captured");
+    if (verified != state.globals.end()) {
+        expect(copperfin::runtime::format_value(verified->second) == "7",
+               "strict AGETFILEVERSION should preserve the seven-row contract");
+    }
+    if (version != state.globals.end()) {
+#if defined(_WIN32)
+        expect(!copperfin::runtime::format_value(version->second).empty() &&
+                   copperfin::runtime::format_value(version->second) != "0.0.0.0",
+               "strict AGETFILEVERSION should read the admitted Windows version resource");
+#else
+        expect(copperfin::runtime::format_value(version->second) == expected_version,
+               "strict AGETFILEVERSION should read the admitted POSIX fixture bytes");
+#endif
+    }
+    if (missing != state.globals.end()) {
+        expect(copperfin::runtime::format_value(missing->second) == "0",
+               "strict AGETFILEVERSION should reject an unadmitted file");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 int main() {
     test_ascan_matches_object_references_and_nulls_exactly();
     test_aelement_single_subscript_uses_linear_index();
@@ -1735,6 +1834,7 @@ int main() {
     test_afont_returns_host_aware_font_array_with_deterministic_size_contract();
     test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_fallback();
     test_agetfileversion_existing_and_missing_files();
+    test_agetfileversion_strict_verified_bytes();
 
     if (test_failures() != 0) {
         std::cerr << test_failures() << " test(s) failed.\n";

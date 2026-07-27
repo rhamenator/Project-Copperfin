@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4751 under #3866/#3217 is implementation-complete locally. Strict verified-byte runtime sessions now pass `AGETFILEVERSION()` through the existing admitted immutable snapshot before extracting metadata, so tampered pathname content is ignored and missing admission returns zero through the existing localized verified-byte diagnostic. Non-strict direct filesystem behavior, the seven-row array shape, and machine contracts are unchanged. `test_prg_engine_arrays` passes on Linux. Claude and hosted Windows/macOS review are requested; do not modify the pending `src/runtime/prg_engine_numeric_functions.cpp` Apple change.
+
 - #4743 under #25 is implementation- and evidence-complete and is closed. Windows hosted VS 2026 validation at synchronized checkout e95617cb rebuilt the VSIX, passed clean uninstall/install and hash checks, and positively observed both native WinForms Command and Terminal panes rendered in bottom-tabbed Visual Studio groups through ViewPresenter/HwndHost/GenericPane. No Copperfin ActivityLog errors occurred and both VS instances closed cleanly. The current head changed no VSIX pane sources after that proof.
 
 - #4744 under #109/#3217 is implementation- and evidence-complete and is closed. Current-head test_prg_engine_functions and test_prg_engine_string_math_functions pass 2/2; Windows exact correction-head dacaffb84 also passed both focused targets. No C-suffixed string-function source changed afterward. Keep the zero/negative SUBSTRC/STUFFC regressions and the pending Apple numeric-parser isolation intact.

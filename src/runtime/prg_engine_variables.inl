@@ -1548,13 +1548,35 @@
             }
             namespace fs = std::filesystem;
             std::error_code ignored;
-            const fs::path path = fs::path(filepath);
-            if (!fs::exists(path, ignored))
+            const fs::path path = copperfin::platform::path_from_utf8_string(filepath).lexically_normal();
+            fs::path snapshot_root;
+            const auto metadata_path = materialize_verified_file_snapshot(
+                path,
+                snapshot_root,
+                "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                false,
+                true);
+            if (!metadata_path.has_value())
             {
                 return make_number_value(0.0);
             }
 
-            const FileVersionArrayMetadata metadata = extract_file_version_metadata(path);
+            const auto cleanup_snapshot = [&]()
+            {
+                if (!snapshot_root.empty())
+                {
+                    fs::remove_all(snapshot_root, ignored);
+                    snapshot_root.clear();
+                }
+            };
+            if (!fs::exists(*metadata_path, ignored))
+            {
+                cleanup_snapshot();
+                return make_number_value(0.0);
+            }
+
+            const FileVersionArrayMetadata metadata = extract_file_version_metadata(*metadata_path);
+            cleanup_snapshot();
             static const std::size_t version_row_count = 7U;
             std::vector<PrgValue> values;
             values.reserve(version_row_count);
