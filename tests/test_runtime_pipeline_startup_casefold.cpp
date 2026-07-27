@@ -147,7 +147,7 @@ void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families()
                "#3953: casefold startup plan should retain one asset for " + family.type_title);
         if (plan.assets.size() == 1U) {
             expect(paths_refer_to_same_filesystem_entry(
-                       fs::path(plan.assets.front().source_path), primary_source),
+                       plan.assets.front().source_path, primary_source),
                    "#3953: startup source should preserve actual spelling for " + family.type_title);
             expect(plan.assets.front().relative_path == expected_relative,
                    "#3953: staged relative path should preserve actual spelling for " + family.type_title);
@@ -157,7 +157,7 @@ void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families()
         expect(plan.startup_source_path == expected_staged.lexically_normal().string(),
                "#3953: runtime startup identity should preserve actual spelling for " + family.type_title);
         expect(paths_refer_to_same_filesystem_entry(
-                   fs::path(plan.debug_plan.startup_source_path), primary_source),
+                   plan.debug_plan.startup_source_path, primary_source),
                "#3953: debug startup identity should preserve source spelling for " + family.type_title);
         expect(plan.debug_plan.supports_breakpoints,
                "#3953: resolved startup should retain debug support for " + family.type_title);
@@ -177,8 +177,8 @@ void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families()
                     quote_manifest_value(expected_staged.lexically_normal().string()),
                 "#3953: runtime manifest startup path should preserve actual spelling for " + family.type_title);
             expect(paths_refer_to_same_filesystem_entry(
-                       fs::path(decode_manifest_value(
-                           manifest_value_for_key(debug_manifest, "startup_source"))),
+                       decode_manifest_value(
+                           manifest_value_for_key(debug_manifest, "startup_source")),
                        primary_source),
                 "#3953: debug manifest startup path should preserve actual spelling for " + family.type_title);
             if (!family.companion_extension.empty()) {
@@ -253,7 +253,7 @@ void test_exact_startup_path_wins_over_casefold_siblings() {
 
     expect(plan.assets.size() == 1U &&
                paths_refer_to_same_filesystem_entry(
-                   fs::path(plan.assets.front().source_path), project_dir / "Exact" / "main.prg"),
+                   plan.assets.front().source_path, project_dir / "Exact" / "main.prg"),
            "#3953: exact startup components should win over casefold siblings");
     const auto result = materialize_startup_plan(plan, runtime_host);
         expect_materialization(result, "#3953: exact startup path should materialize despite casefold siblings");
@@ -354,7 +354,7 @@ void test_startup_resolution_preserves_parent_tail_and_name_fallbacks() {
 
     expect(parent_plan.assets.size() == 1U &&
                paths_refer_to_same_filesystem_entry(
-                   fs::path(parent_plan.assets.front().source_path), expected_parent_source),
+                   parent_plan.assets.front().source_path, expected_parent_source),
            "#3953: selected startup should retain the existing parent-relative tail fallback");
     expect(parent_plan.startup_source_path == expected_parent_staged.string(),
            "#3953: parent-relative startup fallback should preserve actual staged spelling");
@@ -381,7 +381,7 @@ void test_startup_resolution_preserves_parent_tail_and_name_fallbacks() {
 
     expect(name_plan.assets.size() == 1U &&
                paths_refer_to_same_filesystem_entry(
-                   fs::path(name_plan.assets.front().source_path), expected_name_source),
+                   name_plan.assets.front().source_path, expected_name_source),
            "#3953: selected startup should retain the existing entry-name fallback");
     expect(name_plan.startup_source_path == expected_name_staged.string(),
            "#3953: entry-name startup fallback should preserve actual staged spelling");
@@ -601,9 +601,9 @@ void test_absolute_project_item_paths_never_rebind_to_project_decoys() {
     const auto plan = create_startup_plan(document, workspace, output_dir);
     expect(plan.assets.size() == 1U && plan.assets[0U].exists &&
                paths_refer_to_same_filesystem_entry(
-                   fs::path(plan.assets[0U].source_path), absolute_source) &&
+                   plan.assets[0U].source_path, absolute_source) &&
                paths_refer_to_same_filesystem_entry(
-                   fs::path(plan.debug_plan.startup_source_path), absolute_source),
+                   plan.debug_plan.startup_source_path, absolute_source),
            "#3991: an existing absolute source should preserve authoritative provenance");
     const auto result = materialize_startup_plan(plan, runtime_host);
     expect_materialization(result, "#3991: an existing absolute source should still materialize");
@@ -752,7 +752,7 @@ void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts()
     expect(plan.assets.size() == 1U, "#3873: Unicode runtime package should retain its source asset");
     if (plan.assets.size() == 1U) {
         expect(paths_refer_to_same_filesystem_entry(
-                   fs::path(plan.assets.front().source_path), source_path),
+                   plan.assets.front().source_path, source_path),
                "#3873: Unicode runtime source path should preserve UTF-8 spelling");
         const auto source_digest = copperfin::security::sha256_hex_for_file(
             copperfin::platform::path_to_utf8_string(source_path));
@@ -782,8 +782,8 @@ void test_unicode_runtime_package_paths_preserve_source_and_manifest_contracts()
                    std::string::npos,
                "#3873: runtime manifest should retain the Unicode source name");
         expect(paths_refer_to_same_filesystem_entry(
-                   fs::path(decode_manifest_value(
-                       manifest_value_for_key(debug_manifest, "startup_source"))),
+                   decode_manifest_value(
+                       manifest_value_for_key(debug_manifest, "startup_source")),
                    source_path),
                "#3873: debug manifest should retain the Unicode source path");
         expect(fs::exists(copperfin::platform::path_from_utf8_string(result.plan.startup_source_path)),

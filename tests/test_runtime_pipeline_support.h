@@ -50,6 +50,9 @@ std::string read_text(const std::filesystem::path& path);
 bool paths_refer_to_same_filesystem_entry(
     const std::filesystem::path& actual,
     const std::filesystem::path& expected);
+bool paths_refer_to_same_filesystem_entry(
+    const std::string& actual_utf8,
+    const std::filesystem::path& expected);
 std::string decode_manifest_value(const std::string& value);
 
 class ScopedRuntimePipelineFixtureNamespace {

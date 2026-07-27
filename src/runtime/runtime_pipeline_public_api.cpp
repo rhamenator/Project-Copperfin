@@ -2264,8 +2264,12 @@ RuntimePackagePlan create_runtime_package_plan(
     }
     const auto external_relative_path = [&](const std::filesystem::path& source_path)
         -> std::optional<std::filesystem::path> {
+        const std::filesystem::path normalized_source =
+            normalize_existing_path_spelling(source_path);
         for (const auto& root : admitted_external_roots) {
-            const auto relative = source_path.lexically_relative(root);
+            const std::filesystem::path normalized_root =
+                normalize_existing_path_spelling(root);
+            const auto relative = normalized_source.lexically_relative(normalized_root);
             bool contained = !relative.empty() && !relative.is_absolute();
             for (const auto& component : relative) {
                 if (component == "..") {
@@ -2283,7 +2287,8 @@ RuntimePackagePlan create_runtime_package_plan(
     };
     const auto enqueue_dependency = [&](const std::filesystem::path& candidate,
                                         const char* type_title) {
-        const std::filesystem::path source_path = candidate.lexically_normal();
+        const std::filesystem::path source_path = normalize_existing_path_spelling(
+            candidate.lexically_normal());
         std::filesystem::path relative = source_path.lexically_relative(project_root);
         bool escapes_project = relative.empty() || relative.is_absolute();
         for (const auto& component : relative) {

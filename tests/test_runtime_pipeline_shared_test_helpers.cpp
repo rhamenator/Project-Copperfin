@@ -73,7 +73,25 @@ bool paths_refer_to_same_filesystem_entry(
         !equivalent_error) {
         return true;
     }
+
+    std::error_code actual_canonical_error;
+    const auto actual_canonical = std::filesystem::weakly_canonical(
+        actual, actual_canonical_error);
+    std::error_code expected_canonical_error;
+    const auto expected_canonical = std::filesystem::weakly_canonical(
+        expected, expected_canonical_error);
+    if (!actual_canonical_error && !expected_canonical_error &&
+        actual_canonical == expected_canonical) {
+        return true;
+    }
     return actual.lexically_normal() == expected.lexically_normal();
+}
+
+bool paths_refer_to_same_filesystem_entry(
+    const std::string& actual_utf8,
+    const std::filesystem::path& expected) {
+    return paths_refer_to_same_filesystem_entry(
+        copperfin::platform::path_from_utf8_string(actual_utf8), expected);
 }
 
 std::string decode_manifest_value(const std::string& value) {
