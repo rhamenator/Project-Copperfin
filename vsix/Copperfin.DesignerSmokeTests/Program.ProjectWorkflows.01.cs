@@ -91,6 +91,34 @@ internal static partial class Program
             .Any(item => expectGroups.Any(expectGroup => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase)));
         Expect(groupFound, $"project editor should surface one of the expected groups for {path}");
 
+        var projectWorkspaceTabs = GetPrivateField<TabControl>(control, "projectWorkspaceTabs");
+        var projectExplorer = GetPrivateField<TreeView>(control, "projectExplorerView");
+        Expect(projectWorkspaceTabs is not null &&
+               projectWorkspaceTabs.TabPages.Cast<TabPage>().Any(page => page.Text == "Project Explorer"),
+            $"project editor should expose a localized Project Explorer tab for {path}");
+        Expect(projectExplorer is not null && projectExplorer.Nodes.Count == 1,
+            $"project editor should expose one Project Explorer root for {path}");
+        var explorerEntryNode = projectExplorer is null
+            ? null
+            : EnumerateTreeNodes(projectExplorer.Nodes)
+                .FirstOrDefault(node => node.Tag is CopperfinStudioProjectEntry entry &&
+                                        !entry.Excluded &&
+                                        CopperfinProjectEntryActivation.TryResolve(path!, entry, out var resolvedPath) &&
+                                        File.Exists(resolvedPath));
+        Expect(explorerEntryNode is not null,
+            $"project explorer should expose an eligible real project entry for {path}");
+        if (projectExplorer is not null && explorerEntryNode?.Tag is CopperfinStudioProjectEntry explorerEntry)
+        {
+            projectExplorer.SelectedNode = explorerEntryNode;
+            Application.DoEvents();
+            CopperfinProjectEntryActivation.TryResolve(path!, explorerEntry, out var expectedExplorerPath);
+            activatedPath = null;
+            var activatedFromExplorer = control.TryActivateSelectedProjectExplorerEntry();
+            Expect(activatedFromExplorer &&
+                   string.Equals(activatedPath, expectedExplorerPath, StringComparison.Ordinal),
+                $"project explorer should activate the selected eligible child through the host callback for {path}");
+        }
+
         var projectEntryList = FindListViews(control)
             .FirstOrDefault(list => list.Columns.Count >= 3 &&
                                     string.Equals(
@@ -288,6 +316,18 @@ internal static partial class Program
         }
 
         TearDownForm(hostForm);
+    }
+
+    private static IEnumerable<TreeNode> EnumerateTreeNodes(TreeNodeCollection nodes)
+    {
+        foreach (TreeNode node in nodes)
+        {
+            yield return node;
+            foreach (var child in EnumerateTreeNodes(node.Nodes))
+            {
+                yield return child;
+            }
+        }
     }
 
     private static void SmokeProgramEditorWithRealAsset(string? path)

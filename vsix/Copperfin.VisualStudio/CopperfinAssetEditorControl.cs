@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Copperfin.VisualStudio;
 
-internal sealed class CopperfinAssetEditorControl : UserControl
+internal sealed partial class CopperfinAssetEditorControl : UserControl
 {
     public event Action<string>? OpenDocumentRequested;
     public event Action<string, int>? OpenDocumentAtLineRequested;
@@ -1307,6 +1307,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         projectWorkspaceTabs.TabPages.Add(buildersPage);
         projectWorkspaceTabs.TabPages.Add(coveragePage);
         projectWorkspaceTabs.TabPages.Add(databasePage);
+        projectWorkspaceTabs.TabPages.Add(CreateProjectExplorerPage());
 
         var surfaceHost = new Panel
         {
@@ -3290,6 +3291,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         workspaceSummaryBox.Text = BuildProjectWorkspaceSummary(currentSnapshot);
+        RefreshProjectExplorer();
         PopulateTaskList(currentProjectInsights);
         taskListSummaryBox.Text = BuildTaskListSummary(currentProjectInsights);
         PopulateCodeReferences(currentProjectInsights);

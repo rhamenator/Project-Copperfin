@@ -73,6 +73,9 @@ security/extensibility summaries.
 The shared E2 interaction and builder implementation is complete; remaining
 IDE work is the separately owned shell, hosted Visual Studio, and standalone
 product-grade surface work described by the live MVP tree.
+The shared project workspace also provides grouped, read-only Project Explorer
+navigation; project mutation, drag/drop authoring, and full VFP9 Project
+Manager parity remain separate implementation work.
 
 ### Runtime And Language Compatibility
 
