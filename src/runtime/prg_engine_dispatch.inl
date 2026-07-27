@@ -1102,7 +1102,7 @@
 
                 for (const auto &[name, value] : globals)
                 {
-                    if (name == "_screen" || name == "_vfp")
+                    if (name == "_screen" || name == "_vfp" || name == "application")
                     {
                         continue;
                     }

@@ -342,6 +342,7 @@ void test_display_memory_hides_internal_application_surfaces() {
         main_path,
         "cCaption = _SCREEN.Caption\n"
         "DISPLAY MEMORY\n"
+        "LIST MEMORY\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -368,8 +369,28 @@ void test_display_memory_hides_internal_application_surfaces() {
         expect(display_events[0].detail.find("global_count=1") != std::string::npos,
                "internal application surfaces should not count as ordinary globals");
         expect(display_events[0].detail.find("_screen") == std::string::npos &&
-                   display_events[0].detail.find("_vfp") == std::string::npos,
+                   display_events[0].detail.find("_vfp") == std::string::npos &&
+                   display_events[0].detail.find("application") == std::string::npos,
                "internal application surface bindings should not be listed");
+    }
+
+    std::vector<copperfin::runtime::RuntimeEvent> list_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.list") {
+            list_events.push_back(event);
+        }
+    }
+    expect(list_events.size() == 1U,
+           "internal-surface LIST MEMORY should emit one runtime.list event");
+    if (list_events.size() == 1U) {
+        expect(list_events[0].detail.find("memvar_count=1") != std::string::npos,
+               "LIST MEMORY should not count internal application surfaces");
+        expect(list_events[0].detail.find("global_count=1") != std::string::npos,
+               "LIST MEMORY should not count internal application globals");
+        expect(list_events[0].detail.find("_screen") == std::string::npos &&
+                   list_events[0].detail.find("_vfp") == std::string::npos &&
+                   list_events[0].detail.find("application") == std::string::npos,
+               "LIST MEMORY should not list internal application surface bindings");
     }
 
     fs::remove_all(temp_root, ignored);
