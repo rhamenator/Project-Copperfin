@@ -1102,6 +1102,10 @@
 
                 for (const auto &[name, value] : globals)
                 {
+                    if (name == "_screen" || name == "_vfp")
+                    {
+                        continue;
+                    }
                     if (!name_passes_filter(name))
                     {
                         continue;

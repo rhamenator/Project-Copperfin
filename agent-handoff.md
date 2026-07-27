@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4725 under #3217 is implementation-complete. The memory-listing projection now excludes the internal `_screen` and `_vfp` global bindings before filtering, counting, and event serialization, while direct `_SCREEN`/`_VFP` property access remains available. The focused `test_prg_engine_data_io` and `test_prg_engine_runtime_surface_functions` CTests pass on Linux; machine-readable event fields and localization contracts are unchanged.
+
 - #4724 under #108 is implementation-complete as a test-fidelity slice. The #3956 ASCAN object/null regression fixture now creates enough same-class objects for the current session allocator to produce a distinct candidate whose serialized reference prefixes the target. The runtime exact-identity and null-versus-zero implementation is unchanged; `test_prg_engine_arrays` passes on Linux.
 
 - #4723 under #110 is implementation-complete. The native isolation inventory now explicitly classifies `test_polyglot_bridge_invocation`, `test_polyglot_contract`, `test_polyglot_migration_telemetry`, `test_polyglot_parity_comparator`, `test_polyglot_route_contract`, `test_polyglot_route_registry`, and `test_prg_engine_relations` after source-backed review. The current `test_native_test_isolation_contract` and all seven affected tests pass on Linux; labels preserve parallel-safe scheduling, read-only fixture access, unique temporary roots, and no child-process/network/resource assumptions.

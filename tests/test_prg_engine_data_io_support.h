@@ -135,6 +135,7 @@ void test_browse_nowait_remains_a_clause_boundary();
 void test_display_structure_emits_runtime_display_event();
 void test_display_status_surfaces_session_metadata();
 void test_display_memory_surfaces_visible_variable_and_array_metadata();
+void test_display_memory_hides_internal_application_surfaces();
 void test_display_records_surfaces_effective_cursor_view_metadata();
 void test_display_and_list_records_surface_resolved_in_target_detail();
 void test_display_and_list_structure_surface_target_detail();

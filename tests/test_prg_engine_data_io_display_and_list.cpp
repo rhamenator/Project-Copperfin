@@ -330,6 +330,51 @@ void test_display_memory_surfaces_visible_variable_and_array_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_display_memory_hides_internal_application_surfaces() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_memory_internal_surfaces";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "display_memory_internal_surfaces.prg";
+    write_text(
+        main_path,
+        "cCaption = _SCREEN.Caption\n"
+        "DISPLAY MEMORY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DISPLAY MEMORY internal-surface script should complete");
+
+    const auto caption = state.globals.find("ccaption");
+    expect(caption != state.globals.end() &&
+               copperfin::runtime::format_value(caption->second) == "Microsoft Visual FoxPro",
+           "internal application surface property access should remain available");
+
+    std::vector<copperfin::runtime::RuntimeEvent> display_events;
+    for (const auto &event : state.events) {
+        if (event.category == "runtime.display") {
+            display_events.push_back(event);
+        }
+    }
+    expect(display_events.size() == 1U,
+           "internal-surface DISPLAY MEMORY should emit one runtime.display event");
+    if (display_events.size() == 1U) {
+        expect(display_events[0].detail.find("memvar_count=1") != std::string::npos,
+               "internal application surfaces should not count as memory variables");
+        expect(display_events[0].detail.find("global_count=1") != std::string::npos,
+               "internal application surfaces should not count as ordinary globals");
+        expect(display_events[0].detail.find("_screen") == std::string::npos &&
+                   display_events[0].detail.find("_vfp") == std::string::npos,
+               "internal application surface bindings should not be listed");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_display_records_surfaces_effective_cursor_view_metadata() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_display_records";

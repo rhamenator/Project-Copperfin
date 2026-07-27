@@ -1,3 +1,5 @@
+- 2026-07-26: Implemented #4725 under #3217. `DISPLAY MEMORY` and `LIST MEMORY` now omit Copperfin's internal `_SCREEN` and `_VFP` bindings from user-facing entries and counts while preserving direct property access and reflection. Focused data-I/O and runtime-surface CTests pass.
+
 - 2026-07-26: Implemented #4724 under #108. Stabilized the #3956 ASCAN object-identity regression fixture for the current per-session object-handle allocation, ensuring a distinct same-class candidate has the target reference as a serialized prefix while exact identity and null-versus-zero assertions remain unchanged. `test_prg_engine_arrays` passes.
 
 - 2026-07-26: Implemented #4723 under #110. Completed the native CTest isolation audit for the polyglot decision/telemetry and contract checks plus `test_prg_engine_relations`. The generated inventory now records their reviewed filesystem, process, network, sample, platform, resource, audit, and scheduling axes; the isolation contract and all eight focused tests pass.

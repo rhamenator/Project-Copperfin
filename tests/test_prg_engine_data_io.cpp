@@ -107,6 +107,7 @@ int main() {
     test_display_structure_emits_runtime_display_event();
     test_display_status_surfaces_session_metadata();
     test_display_memory_surfaces_visible_variable_and_array_metadata();
+    test_display_memory_hides_internal_application_surfaces();
     test_display_records_surfaces_effective_cursor_view_metadata();
     test_display_and_list_records_surface_resolved_in_target_detail();
     test_display_and_list_structure_surface_target_detail();
