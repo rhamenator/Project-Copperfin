@@ -6,26 +6,28 @@ using System;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
+using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
 [Guid(PackageGuids.CommandWindowString)]
 internal sealed class CopperfinCommandWindowPane : ToolWindowPane
 {
+    private readonly CopperfinCommandWindowControl control;
+
     public CopperfinCommandWindowPane()
         : base(null)
     {
         var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         Caption = localization.Text("VSIX.CommandWindow.Title");
-        Content = new CopperfinCommandWindowControl(localization, ExecuteCommandWindowInput);
+        control = new CopperfinCommandWindowControl(localization, ExecuteCommandWindowInput);
     }
+
+    public override IWin32Window Window => control;
 
     public void AppendLine(string message)
     {
-        if (Content is CopperfinCommandWindowControl control)
-        {
-            control.AppendLine(message);
-        }
+        control.AppendLine(message);
     }
 
     private string ExecuteCommandWindowInput(string command)

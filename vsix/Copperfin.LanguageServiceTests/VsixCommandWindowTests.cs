@@ -80,6 +80,7 @@ internal static partial class Program
         var studioRoot = Path.Combine(repositoryRoot, "vsix", "Copperfin.Studio");
         var packageSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinPackage.cs"));
         var paneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowPane.cs"));
+        var terminalPaneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinTerminalWindowPane.cs"));
         var editorPaneSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinAssetEditorPane.cs"));
         var commandSource = File.ReadAllText(Path.Combine(vsixRoot, "ShowCopperfinCommandWindowCommand.cs"));
         var controlSource = File.ReadAllText(Path.Combine(vsixRoot, "CopperfinCommandWindowControl.cs"));
@@ -101,8 +102,16 @@ internal static partial class Program
                paneSource.Contains(": ToolWindowPane", StringComparison.Ordinal) &&
                paneSource.Contains("VSIX.CommandWindow.Title", StringComparison.Ordinal) &&
                paneSource.Contains("new CopperfinCommandWindowControl(localization, ExecuteCommandWindowInput)", StringComparison.Ordinal) &&
+               paneSource.Contains("public override IWin32Window Window => control;", StringComparison.Ordinal) &&
+               !paneSource.Contains("Content =", StringComparison.Ordinal) &&
                paneSource.Contains("CopperfinAssetEditorPane.FindForDocument", StringComparison.Ordinal),
-            "VSIX command window should be a localized ToolWindowPane with a stable identity");
+            "VSIX command window should be a localized ToolWindowPane with a stable identity and native WinForms hosting");
+        Expect(terminalPaneSource.Contains("[Guid(PackageGuids.TerminalWindowString)]", StringComparison.Ordinal) &&
+               terminalPaneSource.Contains(": ToolWindowPane", StringComparison.Ordinal) &&
+               terminalPaneSource.Contains("new StudioTerminalWindowControl(localization)", StringComparison.Ordinal) &&
+               terminalPaneSource.Contains("public override IWin32Window Window => control;", StringComparison.Ordinal) &&
+               !terminalPaneSource.Contains("Content =", StringComparison.Ordinal),
+            "VSIX terminal window should use the native WinForms hosting path");
         Expect(editorPaneSource.Contains("FindForDocument", StringComparison.Ordinal) &&
                editorPaneSource.Contains("ExecuteCommandWindowInput", StringComparison.Ordinal) &&
                editorPaneSource.Contains("OpenPanes", StringComparison.Ordinal),

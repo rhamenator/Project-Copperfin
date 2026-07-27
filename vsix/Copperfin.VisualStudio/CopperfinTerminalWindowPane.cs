@@ -7,21 +7,25 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
+using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
 [Guid(PackageGuids.TerminalWindowString)]
 internal sealed class CopperfinTerminalWindowPane : ToolWindowPane
 {
+    private readonly StudioTerminalWindowControl control;
+
     public CopperfinTerminalWindowPane()
     {
         var localization = CopperfinLocalization.FromVisualStudioUiCulture();
         Caption = localization.Text("VSIX.TerminalWindow.Title");
 
-        var control = new StudioTerminalWindowControl(localization);
+        control = new StudioTerminalWindowControl(localization);
         ApplyVisualStudioTheme(control);
-        Content = control;
     }
+
+    public override IWin32Window Window => control;
 
     private static void ApplyVisualStudioTheme(StudioTerminalWindowControl control)
     {

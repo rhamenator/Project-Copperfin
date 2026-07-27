@@ -1,3 +1,5 @@
+- 2026-07-27: Implemented #4743. VSIX Command and Terminal WinForms tool panes now use the native VSSDK `Window`/`IWin32Window` hosting path instead of the WPF-oriented `WindowPane.Content` path, preserving bottom tabbed registration, existing controls, routing, theming, and localization. The managed compile contract passes; hosted Windows rendering evidence remains pending.
+
 - 2026-07-27: Followed up the one-off parallel `test_studio_host_selected_sections_stable` failure reported by Claude: its serial and repeated subset reruns passed, and an independent local serial rerun passed 1/1 in 14.51s. No reproducible regression or product change is indicated; future CI recurrence remains the trigger for investigation.
 
 - 2026-07-27: Superseded and canceled the earlier manual native-only runs at `8c16de857` after the raw-log commit triggered the complete current-head matrix at `252989e7b`. The authoritative fresh run set is Linux Native `30252243503`, macOS Native `30252241793`, Windows Native `30252241888`, Linux Managed UI `30252241849`, VSIX `30252241941`, installers `30252241963`, and Security Supply Chain `30252243385`.

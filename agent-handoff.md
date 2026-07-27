@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4743 is implementation-complete in the current working tree: the VSIX Command and Terminal WinForms tool panes now expose their controls through the VSSDK native `Window`/`IWin32Window` path rather than `WindowPane.Content`, matching the hosted asset-editor fix that cleared the blank WinForms surface. The managed compile contract passes; exact-head Windows Visual Studio proof that both bottom panes render remains required before closure. No command, localization, or package-registration contracts changed.
+
 - Claude's parallel native run reported one transient `test_studio_host_selected_sections_stable` failure (assertion #4542), but its serial rerun and repeated `test_studio_host*` subset passed. An independent local serial rerun also passed 1/1 in 14.51s, so no reproducible regression or product change is indicated; revisit only if CI or later parallel runs reproduce it.
 
 - The earlier manual native-only runs `30251602843`, `30251602788`, and `30251602740` at `8c16de857` were superseded and canceled after the raw-log evidence commit triggered the complete current-head matrix `252989e7b`. The authoritative fresh run set is now Linux Native `30252243503`, macOS Native `30252241793`, Windows Native `30252241888`, Linux Managed UI `30252241849`, Build Visual Studio VSIX `30252241941`, Build Standalone Installers `30252241963`, and Security Supply Chain Gate `30252243385`. No product source change occurred between the tested product head and the evidence/docs commits.
