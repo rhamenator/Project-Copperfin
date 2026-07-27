@@ -32,6 +32,7 @@
     <Compile Include="StudioShellLayoutState.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.cs" Link="Shared\CopperfinAssetEditorControl.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinAssetEditorControl.ProjectExplorer.cs" Link="Shared\CopperfinAssetEditorControl.ProjectExplorer.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignSurfaceControl.cs" Link="Shared\CopperfinDesignSurfaceControl.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProcessRunner.cs" Link="Shared\CopperfinProcessRunner.cs" />

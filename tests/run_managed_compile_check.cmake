@@ -42,6 +42,12 @@ function(run_managed_test project_relative_path)
     endif()
 endfunction()
 
+file(READ "${SOURCE_DIR}/vsix/Copperfin.Studio/Copperfin.Studio.csproj" standalone_studio_project)
+if(NOT standalone_studio_project MATCHES "CopperfinAssetEditorControl[.]ProjectExplorer[.]cs")
+    message(FATAL_ERROR
+        "Standalone Studio project must compile the shared Project Explorer partial source")
+endif()
+
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
 run_managed_build("tools/Copperfin.LocalizationCatalogGenerator/Copperfin.LocalizationCatalogGenerator.csproj")

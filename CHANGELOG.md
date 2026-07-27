@@ -1,3 +1,5 @@
+- 2026-07-27: Fixed the Windows standalone-installer build failure where the explicitly enumerated `Copperfin.Studio.csproj` omitted the shared Project Explorer partial source. Added a managed project-contract guard; local Release standalone build and the full managed compile contract pass. Fresh Windows installer validation remains pending.
+
 - 2026-07-27: Claude independently reran the #4403 safety traceability validators, recovery/debugger contracts, and all four locale reruns. The evidence remains reproducible and strict validation has exactly one intentional failure because #4403 is still open; no separate-identity reviewer sign-off or safety closure is claimed.
 
 - 2026-07-27: Recorded the Linux baseline for the pending Apple numeric-parser change: `test_prg_engine_string_math_functions` passed 1/1. The Apple-specific fallback-parser work remains isolated pending the Mac commit and focused evidence.
