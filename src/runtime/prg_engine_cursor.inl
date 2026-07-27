@@ -332,7 +332,8 @@
                 logical_table_path,
                 snapshot_root,
                 "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                false);
+                false,
+                true);
             if (!verified_table_path.has_value())
             {
                 return {.ok = false, .error = last_error_message};
@@ -381,12 +382,7 @@
                 }
                 inspection_path = copperfin::platform::path_to_utf8_string(*verified_table_path);
 
-                const std::string table_directory = lowercase_copy(
-                    normalize_path(copperfin::platform::path_to_utf8_string(
-                        copperfin::platform::path_from_utf8_string(table_path).parent_path())));
-                const std::string table_stem = lowercase_copy(
-                    copperfin::platform::path_to_utf8_string(
-                        copperfin::platform::path_from_utf8_string(table_path).stem()));
+                const auto logical_table_path = copperfin::platform::path_from_utf8_string(table_path);
                 for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
                 {
                     const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
@@ -394,9 +390,8 @@
                         copperfin::platform::path_to_utf8_string(candidate_path.extension()));
                     if ((extension != ".cdx" && extension != ".idx" &&
                          extension != ".ndx" && extension != ".mdx") ||
-                        lowercase_copy(normalize_path(copperfin::platform::path_to_utf8_string(
-                            candidate_path.parent_path()))) != table_directory ||
-                        lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.stem())) != table_stem ||
+                        !mutable_impl->verified_database_index_path_matches(
+                            logical_table_path, candidate_path, extension) ||
                         bytes.empty())
                     {
                         continue;

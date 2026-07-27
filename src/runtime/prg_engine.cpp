@@ -2233,7 +2233,8 @@ namespace copperfin::runtime
                             copperfin::platform::path_from_utf8_string(cursor->source_path),
                             snapshot_root,
                             "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                            false);
+                            false,
+                            true);
                         if (!verified_table_path.has_value())
                         {
                             return std::nullopt;
@@ -3101,7 +3102,7 @@ namespace copperfin::runtime
                 if (options.require_verified_file_byte_overrides)
                 {
                     bool ambiguous = false;
-                    return resolve_verified_file_byte_override_path(candidate, ambiguous);
+                    return resolve_verified_file_byte_override_path(candidate, ambiguous, true);
                 }
                 const auto resolution = copperfin::vfp::resolve_unique_casefold_path(candidate);
                 if (resolution.ambiguous || !resolution.path.has_value())
@@ -3169,7 +3170,7 @@ namespace copperfin::runtime
                 if (options.require_verified_file_byte_overrides)
                 {
                     bool ambiguous = false;
-                    resolved_path = resolve_verified_file_byte_override_path(requested_path, ambiguous);
+                    resolved_path = resolve_verified_file_byte_override_path(requested_path, ambiguous, true);
                     if (ambiguous)
                     {
                         resolved_path.reset();

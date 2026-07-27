@@ -311,6 +311,87 @@ void test_initial_use_reads_verified_index_metadata()
     fs::remove_all(root, ignored);
 }
 
+void test_database_index_admission_preserves_platform_case_rules()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_index_case";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "customers.dbf";
+    const fs::path index_path = root / "customers.cdx";
+    const fs::path differently_cased_index_path = root / "CUSTOMERS.CDX";
+    write_simple_dbf(table_path, {"Ada", "Grace"});
+    write_synthetic_cdx(index_path, "NAME", "UPPER(NAME)");
+    const std::string verified_table_bytes = read_text(table_path);
+    const std::string verified_index_bytes = read_text(index_path);
+    fs::remove(index_path, ignored);
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
+    options.verified_file_byte_overrides.emplace(differently_cased_index_path.string(), verified_index_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_index_case.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "cOrder = ORDER('customers')\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict DBF index case-rule fixture should complete: " + state.message);
+#if defined(_WIN32)
+    expect(global_text(state, "corder") == "NAME",
+           "Windows strict DBF admission should retain VFP case-insensitive index lookup");
+#else
+    expect(global_text(state, "corder").empty(),
+           "POSIX strict DBF admission should reject a differently-cased index override");
+#endif
+    fs::remove_all(root, ignored);
+}
+
+void test_database_memo_admission_preserves_platform_case_rules()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_memo_case";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path table_path = root / "notes.dbf";
+    const fs::path memo_path = root / "notes.fpt";
+    const fs::path differently_cased_memo_path = root / "NOTES.FPT";
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NOTE", .type = 'M', .length = 10U}},
+        {{"Verified memo"}});
+    expect(created.ok, "verified DBF memo fixture should be created");
+    const std::string verified_table_bytes = read_text(table_path);
+    const std::string verified_memo_bytes = read_text(memo_path);
+    fs::remove(memo_path, ignored);
+
+    copperfin::runtime::RuntimeSessionOptions options;
+    options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
+    options.verified_file_byte_overrides.emplace(differently_cased_memo_path.string(), verified_memo_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = run_program(
+        root,
+        "verified_memo_case.prg",
+        "USE '" + table_path.string() + "' ALIAS notes\n"
+        "cNote = notes.NOTE\n"
+        "RETURN\n",
+        options);
+
+    expect(state.completed,
+           "strict DBF memo case-rule fixture should complete: " + state.message);
+#if defined(_WIN32)
+    expect(global_text(state, "cnote") == "Verified memo",
+           "Windows strict DBF admission should retain VFP case-insensitive memo lookup");
+#else
+    expect(global_text(state, "cnote") != "Verified memo",
+           "POSIX strict DBF admission should reject a differently-cased memo override");
+#endif
+    fs::remove_all(root, ignored);
+}
+
 void test_runtime_surface_reads_verified_code_page()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_code_page";
@@ -859,6 +940,8 @@ int main()
     test_filetostr_reads_verified_bytes_and_fails_closed_without_admission();
     test_strict_fopen_uses_admitted_bytes_during_replacement();
     test_initial_use_reads_verified_index_metadata();
+    test_database_index_admission_preserves_platform_case_rules();
+    test_database_memo_admission_preserves_platform_case_rules();
     test_runtime_surface_reads_verified_code_page();
     test_append_from_reads_verified_source_rows();
     test_typed_append_from_reads_verified_json_bytes();

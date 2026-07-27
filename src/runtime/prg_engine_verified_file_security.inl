@@ -3,15 +3,33 @@
 
         std::optional<std::filesystem::path> resolve_verified_file_byte_override_path(
             const std::filesystem::path &file_path,
-            bool &ambiguous) const
+            bool &ambiguous,
+            bool exact_paths_on_posix = false) const
         {
             ambiguous = false;
+#if !defined(_WIN32)
+            const bool use_exact_path = exact_paths_on_posix;
+#else
+            const bool use_exact_path = false;
+#endif
             const std::string normalized_path = copperfin::platform::path_to_utf8_string(
                 file_path.lexically_normal());
             const auto exact = options.verified_file_byte_overrides.find(normalized_path);
-            if (exact != options.verified_file_byte_overrides.end() && !exact->second.empty())
+            if (exact != options.verified_file_byte_overrides.end())
             {
-                return copperfin::platform::path_from_utf8_string(exact->first);
+                if (!exact->second.empty())
+                {
+                    return copperfin::platform::path_from_utf8_string(exact->first);
+                }
+                if (use_exact_path)
+                {
+                    return std::nullopt;
+                }
+            }
+
+            if (use_exact_path)
+            {
+                return std::nullopt;
             }
 
             std::optional<std::filesystem::path> resolved_path;
@@ -35,7 +53,8 @@
             const std::filesystem::path &file_path,
             std::filesystem::path &snapshot_root,
             const std::string &diagnostic_key,
-            bool require_memo_sidecar)
+            bool require_memo_sidecar,
+            bool exact_paths_on_posix = false)
         {
             snapshot_root.clear();
             if (!options.require_verified_file_byte_overrides)
@@ -46,7 +65,8 @@
             bool primary_ambiguous = false;
             const auto resolved_primary_path = resolve_verified_file_byte_override_path(
                 file_path,
-                primary_ambiguous);
+                primary_ambiguous,
+                exact_paths_on_posix);
             const auto primary = resolved_primary_path.has_value()
                 ? find_verified_file_byte_override(*resolved_primary_path)
                 : options.verified_file_byte_overrides.end();
@@ -60,7 +80,13 @@
             }
 
             const auto sidecar_resolution = copperfin::vfp::resolve_vfp_memo_sidecar_path(file_path);
-            if (sidecar_resolution.ambiguous)
+            const bool exact_sidecar_path =
+#if !defined(_WIN32)
+                exact_paths_on_posix;
+#else
+                false;
+#endif
+            if (sidecar_resolution.ambiguous && !exact_sidecar_path)
             {
                 last_error_message = runtime_text(
                     diagnostic_key,
@@ -69,15 +95,17 @@
             }
 
             std::optional<std::pair<std::filesystem::path, std::string>> sidecar;
-            const std::filesystem::path sidecar_candidate = sidecar_resolution.path.value_or(
-                sidecar_resolution.requested_path);
+            const std::filesystem::path sidecar_candidate = exact_sidecar_path
+                ? sidecar_resolution.requested_path
+                : sidecar_resolution.path.value_or(sidecar_resolution.requested_path);
             if (sidecar_resolution.path.has_value() ||
                 (options.require_verified_file_byte_overrides && !sidecar_candidate.empty()))
             {
                 bool sidecar_ambiguous = false;
                 const auto resolved_sidecar_path = resolve_verified_file_byte_override_path(
                     sidecar_candidate,
-                    sidecar_ambiguous);
+                    sidecar_ambiguous,
+                    exact_paths_on_posix);
                 const auto verified_sidecar = resolved_sidecar_path.has_value()
                     ? find_verified_file_byte_override(*resolved_sidecar_path)
                     : options.verified_file_byte_overrides.end();
@@ -133,6 +161,22 @@
             return snapshot_path;
         }
 
+        bool verified_database_index_path_matches(
+            const std::filesystem::path &table_path,
+            const std::filesystem::path &candidate_path,
+            const std::string &extension) const
+        {
+            std::filesystem::path expected_path = table_path;
+            expected_path.replace_extension(extension);
+#if defined(_WIN32)
+            return paths_equal_insensitive(
+                copperfin::platform::path_to_utf8_string(candidate_path.lexically_normal()),
+                copperfin::platform::path_to_utf8_string(expected_path.lexically_normal()));
+#else
+            return candidate_path.lexically_normal() == expected_path.lexically_normal();
+#endif
+        }
+
         std::optional<std::filesystem::path> materialize_verified_table_snapshot(
             const std::filesystem::path &table_path,
             std::filesystem::path &snapshot_root)
@@ -141,16 +185,13 @@
                 table_path,
                 snapshot_root,
                 "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                false);
+                false,
+                true);
             if (!snapshot_path.has_value() || !options.require_verified_file_byte_overrides)
             {
                 return snapshot_path;
             }
 
-            const std::string table_directory = lowercase_copy(
-                normalize_path(copperfin::platform::path_to_utf8_string(table_path.parent_path())));
-            const std::string table_stem = lowercase_copy(
-                copperfin::platform::path_to_utf8_string(table_path.stem()));
             for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
             {
                 const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
@@ -161,10 +202,7 @@
                 {
                     continue;
                 }
-                if (lowercase_copy(normalize_path(
-                        copperfin::platform::path_to_utf8_string(candidate_path.parent_path()))) != table_directory ||
-                    lowercase_copy(copperfin::platform::path_to_utf8_string(candidate_path.stem())) != table_stem ||
-                    bytes.empty())
+                if (!verified_database_index_path_matches(table_path, candidate_path, extension) || bytes.empty())
                 {
                     continue;
                 }

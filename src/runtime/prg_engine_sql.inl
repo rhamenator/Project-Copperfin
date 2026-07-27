@@ -567,7 +567,8 @@
                     table_path,
                     verified_snapshot_root,
                     "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                    false);
+                    false,
+                    true);
                 if (!verified_table_path.has_value())
                 {
                     return false;
