@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- #4750 Windows path-identity correction note: hosted Windows workflow `30279144571` at `f65eb7186` passed `313/315` native tests and exposed only the trusted external-include failure caused by an 8.3 temporary-path alias. The resolver now accepts an OS-confirmed existing candidate before VFP case-fold traversal; focused Linux `test_runtime_pipeline` passes `1/1`, and hosted Windows rerun remains required. The Apple numeric-parser source remains separate and untouched.
+
 - Hosted current-head reconciliation note: Linux workflow `30279150037` and macOS workflow `30279145192` both passed `316/316` at `f65eb7186`; Windows workflow `30279144571` remains in progress. Do not claim Windows evidence until that run resolves. The pending `src/runtime/prg_engine_numeric_functions.cpp` Apple change remains separate.
 
 - Hosted Linux validation note: workflow `30279150037` passed the complete native matrix at `f65eb7186` with `316/316` tests passing in `172.81s`; only the two expected conditional launcher tests were skipped. This confirms the portable runtime and #4725 memory-listing fix independently of the local build.
