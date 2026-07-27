@@ -30,6 +30,162 @@ bool wildcard_match_case_sensitive_local(const std::string& pattern, const std::
     return pattern_index == p.size();
 }
 
+std::size_t utf8_scalar_width_local(const std::string& text, std::size_t offset) {
+    const auto byte_at = [&](std::size_t index) {
+        return static_cast<unsigned char>(text[index]);
+    };
+    if (offset >= text.size() || byte_at(offset) < 0x80U) {
+        return 1U;
+    }
+
+    const unsigned char lead = byte_at(offset);
+    std::size_t width = 0U;
+    if (lead >= 0xC2U && lead <= 0xDFU) {
+        width = 2U;
+    } else if (lead >= 0xE0U && lead <= 0xEFU) {
+        width = 3U;
+    } else if (lead >= 0xF0U && lead <= 0xF4U) {
+        width = 4U;
+    } else {
+        return 1U;
+    }
+    if (offset + width > text.size()) {
+        return 1U;
+    }
+    for (std::size_t index = 1U; index < width; ++index) {
+        if ((byte_at(offset + index) & 0xC0U) != 0x80U) {
+            return 1U;
+        }
+    }
+
+    const unsigned char second = byte_at(offset + 1U);
+    if ((lead == 0xE0U && second < 0xA0U) ||
+        (lead == 0xEDU && second > 0x9FU) ||
+        (lead == 0xF0U && second < 0x90U) ||
+        (lead == 0xF4U && second > 0x8FU)) {
+        return 1U;
+    }
+    return width;
+}
+
+std::vector<std::size_t> utf8_scalar_offsets_local(const std::string& text) {
+    std::vector<std::size_t> offsets;
+    offsets.reserve(text.size() + 1U);
+    offsets.push_back(0U);
+    std::size_t offset = 0U;
+    while (offset < text.size()) {
+        offset += utf8_scalar_width_local(text, offset);
+        offsets.push_back(offset);
+    }
+    return offsets;
+}
+
+std::vector<std::string> utf8_scalars_local(const std::string& text) {
+    const std::vector<std::size_t> offsets = utf8_scalar_offsets_local(text);
+    std::vector<std::string> scalars;
+    scalars.reserve(offsets.size() - 1U);
+    for (std::size_t index = 1U; index < offsets.size(); ++index) {
+        scalars.push_back(text.substr(offsets[index - 1U], offsets[index] - offsets[index - 1U]));
+    }
+    return scalars;
+}
+
+std::string fold_ascii_case_preserving_utf8_local(const std::string& text) {
+    std::string folded = text;
+    for (char& ch : folded) {
+        const auto byte = static_cast<unsigned char>(ch);
+        if (byte >= static_cast<unsigned char>('A') && byte <= static_cast<unsigned char>('Z')) {
+            ch = static_cast<char>(byte + (static_cast<unsigned char>('a') - static_cast<unsigned char>('A')));
+        }
+    }
+    return folded;
+}
+
+std::string utf8_scalar_slice_local(
+    const std::string& source,
+    std::size_t start_one_based,
+    std::size_t length) {
+    const std::vector<std::size_t> offsets = utf8_scalar_offsets_local(source);
+    const std::size_t scalar_count = offsets.size() - 1U;
+    if (start_one_based == 0U || start_one_based > scalar_count) {
+        return {};
+    }
+    const std::size_t begin = offsets[start_one_based - 1U];
+    const std::size_t remaining = scalar_count - (start_one_based - 1U);
+    const std::size_t end_scalar = length >= remaining ? scalar_count : start_one_based - 1U + length;
+    return source.substr(begin, offsets[end_scalar] - begin);
+}
+
+std::size_t find_utf8_scalar_occurrence_local(
+    const std::string& needle,
+    const std::string& haystack,
+    std::size_t occurrence,
+    bool reverse) {
+    std::vector<std::string> needle_scalars = utf8_scalars_local(needle);
+    std::vector<std::string> folded_haystack = utf8_scalars_local(haystack);
+    if (needle_scalars.empty() || folded_haystack.size() < needle_scalars.size()) {
+        return 0U;
+    }
+    for (std::string& scalar : needle_scalars) {
+        scalar = fold_ascii_case_preserving_utf8_local(scalar);
+    }
+    for (std::string& scalar : folded_haystack) {
+        scalar = fold_ascii_case_preserving_utf8_local(scalar);
+    }
+
+    const std::size_t last_start = folded_haystack.size() - needle_scalars.size();
+    std::size_t found_count = 0U;
+    if (!reverse) {
+        std::size_t start = 0U;
+        while (start <= last_start) {
+            if (std::equal(needle_scalars.begin(), needle_scalars.end(), folded_haystack.begin() + start)) {
+                if (++found_count == occurrence) {
+                    return start + 1U;
+                }
+                start += needle_scalars.size();
+            } else {
+                ++start;
+            }
+        }
+        return 0U;
+    }
+
+    std::size_t limit = last_start;
+    while (true) {
+        for (std::size_t start = limit + 1U; start-- > 0U;) {
+            if (std::equal(needle_scalars.begin(), needle_scalars.end(), folded_haystack.begin() + start)) {
+                if (++found_count == occurrence) {
+                    return start + 1U;
+                }
+                if (start < needle_scalars.size()) {
+                    return 0U;
+                }
+                limit = start - needle_scalars.size();
+                break;
+            }
+            if (start == 0U) {
+                return 0U;
+            }
+        }
+    }
+}
+
+std::string replace_utf8_scalars_local(
+    const std::string& source,
+    std::size_t start_one_based,
+    std::size_t length,
+    const std::string& replacement) {
+    const std::vector<std::size_t> offsets = utf8_scalar_offsets_local(source);
+    const std::size_t scalar_count = offsets.size() - 1U;
+    if (start_one_based == 0U || start_one_based > scalar_count + 1U) {
+        return source;
+    }
+    const std::size_t begin = offsets[start_one_based - 1U];
+    const std::size_t remaining = scalar_count - (start_one_based - 1U);
+    const std::size_t end_scalar = length >= remaining ? scalar_count : start_one_based - 1U + length;
+    return source.substr(0U, begin) + replacement + source.substr(offsets[end_scalar]);
+}
+
 bool expression_values_equal(const PrgValue& left, const PrgValue& right, bool exact_string_compare) {
     if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string) {
         const std::string left_value = value_as_string(left);

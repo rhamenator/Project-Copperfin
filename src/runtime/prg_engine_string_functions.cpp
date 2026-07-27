@@ -69,6 +69,9 @@ std::optional<PrgValue> evaluate_string_function(
     if (function == "len" && !arguments.empty()) {
         return make_number_value(static_cast<double>(value_as_string(arguments[0]).size()));
     }
+    if (function == "lenc" && !arguments.empty()) {
+        return make_number_value(static_cast<double>(utf8_scalar_offsets_local(value_as_string(arguments[0])).size() - 1U));
+    }
     if (function == "left" && arguments.size() >= 2U) {
         const std::string src = value_as_string(arguments[0]);
         const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
@@ -78,6 +81,17 @@ std::optional<PrgValue> evaluate_string_function(
         const std::string src = value_as_string(arguments[0]);
         const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
         return make_string_value(n >= src.size() ? src : src.substr(src.size() - n));
+    }
+    if (function == "leftc" && arguments.size() >= 2U) {
+        return make_string_value(utf8_scalar_slice_local(
+            value_as_string(arguments[0]), 1U,
+            static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])))));
+    }
+    if (function == "rightc" && arguments.size() >= 2U) {
+        const std::string src = value_as_string(arguments[0]);
+        const std::size_t scalar_count = utf8_scalar_offsets_local(src).size() - 1U;
+        const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[1])));
+        return make_string_value(n >= scalar_count ? src : utf8_scalar_slice_local(src, scalar_count - n + 1U, n));
     }
     if (function == "upper" && !arguments.empty()) {
         return make_string_value(uppercase_copy(value_as_string(arguments[0])));
@@ -397,17 +411,39 @@ std::optional<PrgValue> evaluate_string_function(
         const std::size_t line_index = static_cast<std::size_t>(requested_line);
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
-    if ((function == "at" || function == "atc") && arguments.size() >= 2U) {
-        const bool case_insensitive = function == "atc";
+    if ((function == "atc" || function == "atcc") && arguments.size() >= 2U) {
+        const std::size_t occurrence = arguments.size() >= 3U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           : 1U;
+        if (function == "atcc") {
+            return make_number_value(static_cast<double>(find_utf8_scalar_occurrence_local(
+                value_as_string(arguments[0]), value_as_string(arguments[1]), occurrence, false)));
+        }
+        std::string needle = uppercase_copy(value_as_string(arguments[0]));
+        std::string haystack = uppercase_copy(value_as_string(arguments[1]));
+        if (needle.empty()) {
+            return make_number_value(0.0);
+        }
+        std::size_t found_count = 0U;
+        std::size_t search_pos = 0U;
+        while (search_pos <= haystack.size()) {
+            const auto found = haystack.find(needle, search_pos);
+            if (found == std::string::npos) {
+                break;
+            }
+            if (++found_count == occurrence) {
+                return make_number_value(static_cast<double>(found + 1U));
+            }
+            search_pos = found + needle.size();
+        }
+        return make_number_value(0.0);
+    }
+    if (function == "at" && arguments.size() >= 2U) {
         std::string needle = value_as_string(arguments[0]);
         std::string haystack = value_as_string(arguments[1]);
         const std::size_t occurrence = arguments.size() >= 3U
                                            ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
                                            : 1U;
-        if (case_insensitive) {
-            needle = uppercase_copy(std::move(needle));
-            haystack = uppercase_copy(std::move(haystack));
-        }
         if (needle.empty()) {
             return make_number_value(0.0);
         }
@@ -426,17 +462,19 @@ std::optional<PrgValue> evaluate_string_function(
         }
         return make_number_value(0.0);
     }
-    if ((function == "rat" || function == "ratc") && arguments.size() >= 2U) {
-        const bool case_insensitive = function == "ratc";
+    if (function == "ratc" && arguments.size() >= 2U) {
+        const std::size_t occurrence = arguments.size() >= 3U
+                                           ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
+                                           : 1U;
+        return make_number_value(static_cast<double>(find_utf8_scalar_occurrence_local(
+            value_as_string(arguments[0]), value_as_string(arguments[1]), occurrence, true)));
+    }
+    if (function == "rat" && arguments.size() >= 2U) {
         std::string needle = value_as_string(arguments[0]);
         std::string haystack = value_as_string(arguments[1]);
         const std::size_t occurrence = arguments.size() >= 3U
                                            ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
                                            : 1U;
-        if (case_insensitive) {
-            needle = uppercase_copy(std::move(needle));
-            haystack = uppercase_copy(std::move(haystack));
-        }
         if (needle.empty()) {
             return make_number_value(0.0);
         }
@@ -506,6 +544,27 @@ std::optional<PrgValue> evaluate_string_function(
                                        ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
                                        : std::string::npos;
         return make_string_value(start >= source.size() ? std::string{} : source.substr(start, length));
+    }
+    if (function == "substrc" && arguments.size() >= 2U) {
+        const std::string source = value_as_string(arguments[0]);
+        const double raw_start = value_as_number(arguments[1]);
+        if (raw_start <= 0.0) {
+            return make_string_value(std::string{});
+        }
+        const std::size_t start = static_cast<std::size_t>(raw_start);
+        const std::size_t length = arguments.size() >= 3U
+                                       ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
+                                       : std::numeric_limits<std::size_t>::max();
+        return make_string_value(utf8_scalar_slice_local(source, start, length));
+    }
+    if (function == "stuffc" && arguments.size() >= 4U) {
+        const double raw_start = value_as_number(arguments[1]);
+        const std::size_t start = raw_start <= 0.0 ? 0U : static_cast<std::size_t>(raw_start);
+        const std::size_t length = raw_start <= 0.0
+                                       ? 0U
+                                       : static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
+        return make_string_value(replace_utf8_scalars_local(
+            value_as_string(arguments[0]), start, length, value_as_string(arguments[3])));
     }
     if (function == "alltrim" && !arguments.empty()) {
         return make_string_value(trim_space_copy(value_as_string(arguments[0])));

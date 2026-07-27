@@ -169,6 +169,13 @@ namespace
             "isupper_no = ISUPPER('abc')\n"
             "isleadbyte_ascii = ISLEADBYTE('A')\n"
             "isleadbyte_empty = ISLEADBYTE('')\n"
+            "n_lenc = LENC('café猫')\n"
+            "c_leftc = LEFTC('café猫', 4)\n"
+            "c_rightc = RIGHTC('café猫', 2)\n"
+            "n_atcc = ATCC('FE', 'caféFE猫FE', 2)\n"
+            "n_ratc = RATC('FE', 'caféFE猫FE', 1)\n"
+            "c_substrc = SUBSTRC('café猫', 4, 2)\n"
+            "c_stuffc = STUFFC('café猫', 4, 2, 'X')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -225,6 +232,13 @@ namespace
         check("isupper_no", "false");
         check("isleadbyte_ascii", "false");
         check("isleadbyte_empty", "false");
+        check("n_lenc", "5");
+        check("c_leftc", "café");
+        check("c_rightc", "é猫");
+        check("n_atcc", "8");
+        check("n_ratc", "8");
+        check("c_substrc", "é猫");
+        check("c_stuffc", "cafX");
 
         fs::remove_all(temp_root, ignored);
     }
