@@ -1058,7 +1058,7 @@
             if (normalized_base_class == "listbox" &&
                 !runtime_object.properties.contains("multiselect"))
             {
-                runtime_object.properties["multiselect"] = make_boolean_value(false);
+                runtime_object.properties["multiselect"] = make_number_value(0.0);
             }
 
             if (normalized_base_class == "listbox" &&

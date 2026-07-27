@@ -447,7 +447,7 @@ namespace copperfin::runtime_surface_tests
             "oPlain = CREATEOBJECT('ListBox')\n"
             "lPlainHasMultiSelect = PEMSTATUS(oPlain, 'MultiSelect', 1)\n"
             "lPlainMultiSelectReadOnly = PEMSTATUS(oPlain, 'MultiSelect', 5)\n"
-            "lPlainBefore = oPlain.MultiSelect\n"
+            "nPlainBefore = oPlain.MultiSelect\n"
             "xPlainGetPemBefore = GETPEM(oPlain, 'MultiSelect')\n"
             "oPlain.AddItem('Alpha')\n"
             "oPlain.AddItem('Beta')\n"
@@ -459,8 +459,8 @@ namespace copperfin::runtime_surface_tests
             "nIndexAfterSingle = oPlain.ListIndex\n"
             "cDisplayAfterSingle = oPlain.DisplayValue\n"
             "oPlain.Selected(2) = .F.\n"
-            "lSetPemTrue = SETPEM(oPlain, 'MultiSelect', .T.)\n"
-            "lAfterSetPemTrue = oPlain.MultiSelect\n"
+            "lSetPemOne = SETPEM(oPlain, 'MultiSelect', 1)\n"
+            "nAfterSetPemOne = oPlain.MultiSelect\n"
             "oPlain.Selected(1) = .T.\n"
             "oPlain.Selected(3) = .T.\n"
             "lSelected1Multi = oPlain.Selected(1)\n"
@@ -468,13 +468,21 @@ namespace copperfin::runtime_surface_tests
             "lSelected3Multi = oPlain.Selected(3)\n"
             "nIndexAfterMulti = oPlain.ListIndex\n"
             "cDisplayAfterMulti = oPlain.DisplayValue\n"
-            "oPlain.MultiSelect = .F.\n"
-            "lAfterDirectFalse = oPlain.MultiSelect\n"
+            "oPlain.MultiSelect = 2\n"
+            "nAfterDirectTwo = oPlain.MultiSelect\n"
+            "oPlain.Selected(2) = .T.\n"
+            "nSelectedTwoMode = oPlain.Selected(2)\n"
+            "oPlain.MultiSelect = 0\n"
+            "nAfterDirectZero = oPlain.MultiSelect\n"
             "lSelected1AfterDisable = oPlain.Selected(1)\n"
             "lSelected2AfterDisable = oPlain.Selected(2)\n"
             "lSelected3AfterDisable = oPlain.Selected(3)\n"
             "nIndexAfterDisable = oPlain.ListIndex\n"
             "cDisplayAfterDisable = oPlain.DisplayValue\n"
+            "oPlain.MultiSelect = 1.75\n"
+            "nAfterFractional = oPlain.MultiSelect\n"
+            "oPlain.MultiSelect = 99\n"
+            "nAfterInvalid = oPlain.MultiSelect\n"
             "lPlainAddProperty = ADDPROPERTY(oPlain, 'MultiSelect', .T.)\n"
             "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'MultiSelect')\n"
             "nPropMembers = AMEMBERS(aPropMembers, oPlain, 1)\n"
@@ -485,7 +493,7 @@ namespace copperfin::runtime_surface_tests
             "    ENDIF\n"
             "ENDFOR\n"
             "oSeed = CREATEOBJECT('SeededList')\n"
-            "lSeedMultiSelect = oSeed.MultiSelect\n"
+            "nSeedMultiSelect = oSeed.MultiSelect\n"
             "lSeedRow1 = oSeed.Selected(1)\n"
             "lSeedRow2 = oSeed.Selected(2)\n"
             "nSeedIndex = oSeed.ListIndex\n"
@@ -523,29 +531,33 @@ namespace copperfin::runtime_surface_tests
 
         check("lplainhasmultiselect", "true");
         check("lplainmultiselectreadonly", "false");
-        check("lplainbefore", "false");
-        check("xplaingetpembefore", "false");
+        check("nplainbefore", "0");
+        check("xplaingetpembefore", "0");
         check("lselected1single", "false");
         check("lselected2single", "true");
         check("nindexaftersingle", "2");
         check("cdisplayaftersingle", "Beta");
-        check("lsetpemtrue", "true");
-        check("laftersetpemtrue", "true");
+        check("lsetpemone", "true");
+        check("naftersetpemone", "1");
         check("lselected1multi", "true");
         check("lselected2multi", "false");
         check("lselected3multi", "true");
         check("nindexaftermulti", "3");
         check("cdisplayaftermulti", "Gamma");
-        check("lafterdirectfalse", "false");
+        check("nafterdirecttwo", "2");
+        check("nselectedtwomode", "true");
+        check("nafterdirectzero", "0");
         check("lselected1afterdisable", "false");
-        check("lselected2afterdisable", "false");
-        check("lselected3afterdisable", "true");
-        check("nindexafterdisable", "3");
-        check("cdisplayafterdisable", "Gamma");
+        check("lselected2afterdisable", "true");
+        check("lselected3afterdisable", "false");
+        check("nindexafterdisable", "2");
+        check("cdisplayafterdisable", "Beta");
+        check("nafterfractional", "1");
+        check("nafterinvalid", "0");
         check("lplainaddproperty", "false");
         check("lplainremoveproperty", "false");
         check("lprophasmultiselect", "true");
-        check("lseedmultiselect", "true");
+        check("nseedmultiselect", "1");
         check("lseedrow1", "true");
         check("lseedrow2", "true");
         check("nseedindex", "2");
@@ -563,23 +575,23 @@ namespace copperfin::runtime_surface_tests
             const auto seed_listindex = seed_list.properties.find("listindex");
 
             expect(plain_multiselect != plain_list.properties.end() &&
-                       copperfin::runtime::format_value(plain_multiselect->second) == "false",
-                   "plain ListBox MultiSelect coverage should preserve the built-in property after direct disable");
+                       copperfin::runtime::format_value(plain_multiselect->second) == "0",
+                   "plain ListBox MultiSelect coverage should preserve the canonical single-selection mode");
             expect(plain_list.list_selected.size() == 3U,
                    "plain ListBox MultiSelect coverage should preserve three selection-state slots");
             if (plain_list.list_selected.size() == 3U)
             {
                 expect(!plain_list.list_selected[0] &&
-                           !plain_list.list_selected[1] &&
-                           plain_list.list_selected[2],
+                           plain_list.list_selected[1] &&
+                           !plain_list.list_selected[2],
                        "plain ListBox MultiSelect coverage should collapse selection bits back to the active row when disabled");
             }
             expect(plain_listindex != plain_list.properties.end() &&
-                       copperfin::runtime::format_value(plain_listindex->second) == "3",
+                       copperfin::runtime::format_value(plain_listindex->second) == "2",
                    "plain ListBox MultiSelect coverage should keep ListIndex synchronized after disabling multiselect");
             expect(seed_multiselect != seed_list.properties.end() &&
-                       copperfin::runtime::format_value(seed_multiselect->second) == "true",
-                   "derived ListBox MultiSelect coverage should preserve declarative multiselect enablement");
+                       copperfin::runtime::format_value(seed_multiselect->second) == "1",
+                   "derived ListBox MultiSelect coverage should preserve declarative multiple-selection mode");
             expect(seed_list.list_selected.size() == 2U &&
                        seed_list.list_selected[0] &&
                        seed_list.list_selected[1],

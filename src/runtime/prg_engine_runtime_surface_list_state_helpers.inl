@@ -826,7 +826,7 @@ bool native_list_control_allows_multiple_selection(const RuntimeOleObjectState& 
 
     const auto multiselect = runtime_object.properties.find("multiselect");
     return multiselect != runtime_object.properties.end() &&
-           value_as_bool(multiselect->second);
+           std::llround(value_as_number(multiselect->second)) > 0LL;
 }
 
 bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectState& runtime_object);
