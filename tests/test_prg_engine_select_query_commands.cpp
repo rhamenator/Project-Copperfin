@@ -36,6 +36,7 @@ void test_select_query_into_array_commands() {
         "nSearchCount = aSearchCnt[1]\n"
         "nTally = _TALLY\n"
         "oHost = CREATEOBJECT('QueryHost')\n"
+        "oHost.RefTable = '" + search_path.string() + "'\n"
         "nObjectCount = oHost.CountSearch()\n"
         "RETURN\n"
         "DEFINE CLASS QueryHost AS Session\n"
@@ -78,6 +79,71 @@ void test_select_query_into_array_commands() {
         expect(query_event->detail == "aSearchCnt",
                "direct SELECT INTO ARRAY metadata should identify the target array");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+}  // namespace cf_test_prg_engine_control_flow
+
+namespace cf_test_prg_engine_control_flow {
+
+void test_create_table_free_dynamic_target() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_create_table_free_dynamic_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "dynamic_ref";
+    const fs::path main_path = temp_root / "create_table_free.prg";
+    write_text(
+        main_path,
+        "cTable = '" + table_path.string() + "'\n"
+        "CREATE TABLE (m.cTable) FREE (Marker C(8), Inactive L, Timestamp T NULL)\n"
+        "INSERT INTO (m.cTable) (Marker, Inactive, Timestamp) VALUES ('one', .F., DATETIME())\n"
+        "lCreated = FILE(cTable + '.dbf')\n"
+        "cAliasCreated = ALIAS()\n"
+        "nFieldCount = FCOUNT()\n"
+        "nRecordCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "dynamic CREATE TABLE FREE script should complete: " + state.message);
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("lcreated", "true");
+    check("caliascreated", "dynamic_ref");
+    check("nfieldcount", "3");
+    check("nrecordcount", "1");
+    const auto table_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string() + ".dbf", 5U);
+    expect(table_result.ok, "dynamic CREATE TABLE FREE output should remain readable: " + table_result.error);
+    if (table_result.ok && !table_result.table.records.empty()) {
+        const auto timestamp = std::find_if(
+            table_result.table.records.front().values.begin(),
+            table_result.table.records.front().values.end(),
+            [](const auto &field) { return field.field_name == "Timestamp"; });
+        expect(timestamp != table_result.table.records.front().values.end(),
+               "dynamic INSERT should persist the Timestamp field");
+        if (timestamp != table_result.table.records.front().values.end()) {
+            expect(timestamp->display_value.rfind("julian:", 0U) == 0U &&
+                       timestamp->display_value != "julian:0 millis:0",
+                   "dynamic INSERT should serialize DATETIME() to DBF DateTime storage");
+        }
+    }
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.create_table";
+    }), "dynamic CREATE TABLE FREE should emit table metadata");
 
     fs::remove_all(temp_root, ignored);
 }

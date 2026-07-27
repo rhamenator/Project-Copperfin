@@ -93,6 +93,60 @@
             return find_cursor_by_area(found->first);
         }
 
+        CursorState *find_cursor_by_source_path(const std::string &path)
+        {
+            const std::string normalized_path = normalize_path(path);
+            if (normalized_path.empty())
+            {
+                return nullptr;
+            }
+            std::string default_table_path = normalized_path;
+            if (copperfin::platform::path_from_utf8_string(default_table_path).extension().empty())
+            {
+                default_table_path += ".dbf";
+            }
+
+            auto &session = current_session_state();
+            const auto found = std::find_if(
+                session.cursors.begin(),
+                session.cursors.end(),
+                [&](const auto &entry)
+                {
+                    const CursorState &cursor = entry.second;
+                    return !cursor.source_path.empty() &&
+                           (paths_equal_for_platform(cursor.source_path, normalized_path) ||
+                            paths_equal_for_platform(cursor.source_path, default_table_path));
+                });
+            return found == session.cursors.end() ? nullptr : &found->second;
+        }
+
+        const CursorState *find_cursor_by_source_path(const std::string &path) const
+        {
+            const std::string normalized_path = normalize_path(path);
+            if (normalized_path.empty())
+            {
+                return nullptr;
+            }
+            std::string default_table_path = normalized_path;
+            if (copperfin::platform::path_from_utf8_string(default_table_path).extension().empty())
+            {
+                default_table_path += ".dbf";
+            }
+
+            const auto &session = current_session_state();
+            const auto found = std::find_if(
+                session.cursors.begin(),
+                session.cursors.end(),
+                [&](const auto &entry)
+                {
+                    const CursorState &cursor = entry.second;
+                    return !cursor.source_path.empty() &&
+                           (paths_equal_for_platform(cursor.source_path, normalized_path) ||
+                            paths_equal_for_platform(cursor.source_path, default_table_path));
+                });
+            return found == session.cursors.end() ? nullptr : &found->second;
+        }
+
         CursorState *resolve_cursor_target(const std::string &designator)
         {
             const std::string trimmed = trim_copy(designator);
@@ -112,7 +166,11 @@
             {
                 return find_cursor_by_area(std::stoi(normalized_designator));
             }
-            return find_cursor_by_alias(normalized_designator);
+            if (CursorState *cursor = find_cursor_by_alias(normalized_designator))
+            {
+                return cursor;
+            }
+            return find_cursor_by_source_path(normalized_designator);
         }
 
         const CursorState *resolve_cursor_target(const std::string &designator) const
@@ -134,7 +192,11 @@
             {
                 return find_cursor_by_area(std::stoi(normalized_designator));
             }
-            return find_cursor_by_alias(normalized_designator);
+            if (const CursorState *cursor = find_cursor_by_alias(normalized_designator))
+            {
+                return cursor;
+            }
+            return find_cursor_by_source_path(normalized_designator);
         }
 
         void close_cursor(const std::string &designator)

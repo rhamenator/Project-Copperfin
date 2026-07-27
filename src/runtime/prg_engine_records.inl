@@ -1231,6 +1231,47 @@
                 bool additive = false;
             };
 
+            const auto serialize_value_for_cursor_field = [&](const std::string &field_name, const PrgValue &value)
+            {
+                vfp::DbfRecordValue field{
+                    .field_name = field_name,
+                    .field_type = 'C',
+                    .is_null = false,
+                    .display_value = {}};
+                const std::string normalized_field = collapse_identifier(field_name);
+                if (cursor.remote && cursor.recno > 0U && cursor.recno <= cursor.remote_records.size())
+                {
+                    const auto &record = cursor.remote_records[cursor.recno - 1U];
+                    const auto found = std::find_if(
+                        record.values.begin(),
+                        record.values.end(),
+                        [&](const vfp::DbfRecordValue &candidate)
+                        {
+                            return collapse_identifier(candidate.field_name) == normalized_field;
+                        });
+                    if (found != record.values.end())
+                    {
+                        field.field_type = found->field_type;
+                    }
+                }
+                else
+                {
+                    const auto descriptors = cursor_field_descriptors(cursor);
+                    const auto found = std::find_if(
+                        descriptors.begin(),
+                        descriptors.end(),
+                        [&](const vfp::DbfFieldDescriptor &candidate)
+                        {
+                            return collapse_identifier(candidate.name) == normalized_field;
+                        });
+                    if (found != descriptors.end())
+                    {
+                        field.field_type = found->type;
+                    }
+                }
+                return serialize_prg_value_for_record_field(field, value);
+            };
+
             if (cursor.remote)
             {
                 if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size())
@@ -1257,7 +1298,7 @@
                             {{"fieldName", assignment.field_name}});
                         return false;
                     }
-                    std::string serialized_value = value_as_string(value);
+                    std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
                     if (assignment.additive && field->field_type == 'M')
                     {
                         serialized_value = field->display_value + serialized_value;
@@ -1339,7 +1380,7 @@
                 for (const auto &assignment : assignments)
                 {
                     const PrgValue value = evaluate_expression(assignment.expression, frame);
-                    std::string serialized_value = value_as_string(value);
+                    std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
                     if (truncate_character_overflow_for_local_fields)
                     {
                         const std::string normalized_field = collapse_identifier(assignment.field_name);
@@ -1419,7 +1460,7 @@
             for (const auto &assignment : assignments)
             {
                 const PrgValue value = evaluate_expression(assignment.expression, frame);
-                std::string serialized_value = value_as_string(value);
+                std::string serialized_value = serialize_value_for_cursor_field(assignment.field_name, value);
                 if (truncate_character_overflow_for_local_fields)
                 {
                     const std::string normalized_field = collapse_identifier(assignment.field_name);

@@ -42,6 +42,7 @@ int main() {
     test_total_command_supports_currency_and_integer_fields();
     test_total_command_for_sql_result_cursors();
     test_select_query_into_array_commands();
+    test_create_table_free_dynamic_target();
     test_private_declaration_masks_caller_variable();
     test_private_all_hides_matching_caller_variables_and_arrays();
     test_scoped_array_declarations_follow_vfp_lifetime_rules();

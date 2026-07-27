@@ -91,6 +91,32 @@ std::string strip_inline_comment(const std::string& line) {
     return line;
 }
 
+std::size_t find_matching_parenthesis_in_text(const std::string& text, std::size_t open) {
+    int depth = 0;
+    char quote = '\0';
+    for (std::size_t index = open; index < text.size(); ++index) {
+        const char current = text[index];
+        if (quote != '\0') {
+            if (current == quote) {
+                if (index + 1U < text.size() && text[index + 1U] == quote) {
+                    ++index;
+                } else {
+                    quote = '\0';
+                }
+            }
+            continue;
+        }
+        if (current == '\'' || current == '"') {
+            quote = current;
+        } else if (current == '(') {
+            ++depth;
+        } else if (current == ')' && --depth == 0) {
+            return index;
+        }
+    }
+    return std::string::npos;
+}
+
 bool looks_like_array_declaration_body(const std::string& body) {
     const std::string trimmed = trim_copy(body);
     for (const char ch : trimmed) {
@@ -1250,7 +1276,62 @@ bool parse_table_definition_statement(const std::string& line, Statement& statem
                 return true;
             }
         }
+        const auto find_matching_parenthesis = [&](std::size_t open) -> std::size_t
+        {
+            int depth = 0;
+            char quote = '\0';
+            for (std::size_t index = open; index < body.size(); ++index)
+            {
+                const char current = body[index];
+                if (quote != '\0')
+                {
+                    if (current == quote)
+                    {
+                        if (index + 1U < body.size() && body[index + 1U] == quote)
+                        {
+                            ++index;
+                        }
+                        else
+                        {
+                            quote = '\0';
+                        }
+                    }
+                    continue;
+                }
+                if (current == '\'' || current == '"')
+                {
+                    quote = current;
+                }
+                else if (current == '(')
+                {
+                    ++depth;
+                }
+                else if (current == ')' && --depth == 0)
+                {
+                    return index;
+                }
+            }
+            return std::string::npos;
+        };
+
         const auto paren_open = body.find('(');
+        const std::size_t free_position = find_keyword_top_level(body, "FREE");
+        if (paren_open == 0U && free_position != std::string::npos && free_position > paren_open)
+        {
+            const std::size_t target_close = find_matching_parenthesis(paren_open);
+            const std::size_t fields_open = body.find('(', free_position + 4U);
+            const std::size_t fields_close = fields_open == std::string::npos
+                                                 ? std::string::npos
+                                                 : find_matching_parenthesis(fields_open);
+            if (target_close != std::string::npos && fields_open != std::string::npos &&
+                fields_close == body.size() - 1U && target_close < fields_open)
+            {
+                statement.identifier = trim_copy(body.substr(0U, target_close + 1U));
+                statement.expression = body.substr(fields_open + 1U, fields_close - fields_open - 1U);
+                return true;
+            }
+        }
+
         if (paren_open != std::string::npos && body.back() == ')') {
             statement.identifier = trim_copy(body.substr(0U, paren_open));
             statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
@@ -2378,14 +2459,27 @@ Program parse_program_impl(
             } else {
                 std::string target = trim_copy(body.substr(0U, source_position));
                 const std::size_t open_paren = target.find('(');
-                if (open_paren != std::string::npos) {
+                const std::size_t dynamic_target_close =
+                    open_paren == 0U ? find_matching_parenthesis_in_text(target, open_paren) : std::string::npos;
+                if (dynamic_target_close != std::string::npos) {
+                    const std::size_t field_open = target.find('(', dynamic_target_close + 1U);
+                    if (field_open != std::string::npos &&
+                        find_matching_parenthesis_in_text(target, field_open) == target.size() - 1U) {
+                        statement.expression = trim_copy(
+                            target.substr(field_open + 1U, target.size() - field_open - 2U));
+                    }
+                    statement.identifier = trim_copy(target.substr(0U, dynamic_target_close + 1U));
+                    target.clear();
+                } else if (open_paren != std::string::npos) {
                     const std::size_t close_paren = target.rfind(')');
                     if (close_paren != std::string::npos && close_paren > open_paren) {
                         statement.expression = trim_copy(target.substr(open_paren + 1U, close_paren - open_paren - 1U));
                         target = trim_copy(target.substr(0U, open_paren));
                     }
                 }
-                statement.identifier = target;
+                if (statement.identifier.empty()) {
+                    statement.identifier = target;
+                }
                 if (!inserts_query_rows) {
                     std::string values = trim_copy(body.substr(values_position + 6U));
                     if (values.size() >= 2U && values.front() == '(' && values.back() == ')') {

@@ -6565,8 +6565,13 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if ((target.size() >= 2U && target.front() == '\'' && target.back() == '\'') ||
-                    (target.size() >= 2U && target.front() == '"' && target.back() == '"'))
+                if (target.size() >= 2U && target.front() == '(' && target.back() == ')')
+                {
+                    target = value_as_string(evaluate_expression(
+                        trim_copy(target.substr(1U, target.size() - 2U)), frame));
+                }
+                else if ((target.size() >= 2U && target.front() == '\'' && target.back() == '\'') ||
+                         (target.size() >= 2U && target.front() == '"' && target.back() == '"'))
                 {
                     target = value_as_string(evaluate_expression(target, frame));
                 }
