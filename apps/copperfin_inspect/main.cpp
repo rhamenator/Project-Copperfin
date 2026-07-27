@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/licensing/license_status.h"
+#include "copperfin/licensing/license_status_display.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/executable_path.h"
 #include "copperfin/vfp/asset_inspector.h"
@@ -78,7 +79,9 @@ void print_error_line(
     std::cout << catalog.translate("Inspect.Prefix.Error") << error << "\n";
 }
 
-void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+void print_license_status(
+    const copperfin::licensing::LicenseStatus& status,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     using copperfin::licensing::LicenseState;
 
     std::cout << "status: ok\n";
@@ -118,7 +121,7 @@ void print_license_status(const copperfin::licensing::LicenseStatus& status) {
         std::cout << "source_path: " << status.source_path << "\n";
     }
     if (!status.diagnostic.empty()) {
-        std::cout << "diagnostic: " << status.diagnostic << "\n";
+        std::cout << "diagnostic: " << copperfin::licensing::localized_license_diagnostic(status, catalog) << "\n";
     }
 }
 
@@ -233,7 +236,7 @@ int main(int argc, char** argv) {
         print_warning_line(catalog, hardening.message);
     }
     if (options.license_status) {
-        print_license_status(copperfin::licensing::load_license_status(running_executable_path));
+        print_license_status(copperfin::licensing::load_license_status(running_executable_path), catalog);
         return 0;
     }
     if (!options.valid || options.help || options.asset_path.empty()) {

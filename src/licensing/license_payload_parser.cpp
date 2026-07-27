@@ -7,10 +7,21 @@
 #include <cctype>
 #include <cstddef>
 #include <limits>
+#include <utility>
 
 namespace copperfin::licensing {
 
 namespace {
+
+void set_error(
+    ParsedLicenseFile& result,
+    std::string key,
+    std::string raw,
+    std::string argument = {}) {
+    result.error = std::move(raw);
+    result.error_key = std::move(key);
+    result.error_argument = std::move(argument);
+}
 
 struct Cursor {
     std::string_view text;
@@ -284,13 +295,13 @@ ParsedLicenseFile parse_license_file(std::string_view json_text) {
     Cursor cursor{json_text, 0};
 
     if (!consume(cursor, '{')) {
-        result.error = "expected top-level JSON object";
+        set_error(result, "Licensing.Error.ExpectedTopLevelObject", "expected top-level JSON object");
         return result;
     }
 
     if (peek_is(cursor, '}')) {
         consume(cursor, '}');
-        result.error = "license file has no fields";
+        set_error(result, "Licensing.Error.NoFields", "license file has no fields");
         return result;
     }
 
@@ -301,34 +312,38 @@ ParsedLicenseFile parse_license_file(std::string_view json_text) {
     while (true) {
         std::string key;
         if (!parse_json_string(cursor, key)) {
-            result.error = "expected a JSON key string";
+            set_error(result, "Licensing.Error.ExpectedJsonKey", "expected a JSON key string");
             return result;
         }
         if (!consume(cursor, ':')) {
-            result.error = "expected ':' after key";
+            set_error(result, "Licensing.Error.ExpectedColonAfterKey", "expected ':' after key");
             return result;
         }
 
         if (key == "payload") {
             if (!parse_flat_scalar_object(cursor, result.payload_fields)) {
-                result.error = "malformed payload object";
+                set_error(result, "Licensing.Error.MalformedPayloadObject", "malformed payload object");
                 return result;
             }
             has_payload = true;
         } else if (key == "signature_algorithm") {
             if (!parse_json_string(cursor, result.signature_algorithm)) {
-                result.error = "malformed signature_algorithm field";
+                set_error(result, "Licensing.Error.MalformedSignatureAlgorithmField", "malformed signature_algorithm field");
                 return result;
             }
             has_algorithm = true;
         } else if (key == "signature") {
             if (!parse_json_string(cursor, result.signature_base64)) {
-                result.error = "malformed signature field";
+                set_error(result, "Licensing.Error.MalformedSignatureField", "malformed signature field");
                 return result;
             }
             has_signature = true;
         } else {
-            result.error = "unexpected top-level key: " + key;
+            set_error(
+                result,
+                "Licensing.Error.UnexpectedTopLevelKey",
+                "unexpected top-level key: " + key,
+                key);
             return result;
         }
 
@@ -338,12 +353,15 @@ ParsedLicenseFile parse_license_file(std::string_view json_text) {
         if (consume(cursor, '}')) {
             break;
         }
-        result.error = "expected ',' or '}'";
+        set_error(result, "Licensing.Error.ExpectedCommaOrObjectEnd", "expected ',' or '}'");
         return result;
     }
 
     if (!has_payload || !has_algorithm || !has_signature) {
-        result.error = "missing required top-level field (payload, signature_algorithm, signature)";
+        set_error(
+            result,
+            "Licensing.Error.MissingRequiredField",
+            "missing required top-level field (payload, signature_algorithm, signature)");
         return result;
     }
 

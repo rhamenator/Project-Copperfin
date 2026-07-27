@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/licensing/license_status.h"
+#include "copperfin/licensing/license_status_display.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/executable_path.h"
@@ -101,7 +102,9 @@ std::string normalized_build_configuration(std::string value) {
     return value;
 }
 
-void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+void print_license_status(
+    const copperfin::licensing::LicenseStatus& status,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     using copperfin::licensing::LicenseState;
 
     std::cout << "status: ok\n";
@@ -141,7 +144,7 @@ void print_license_status(const copperfin::licensing::LicenseStatus& status) {
         std::cout << "source_path: " << status.source_path << "\n";
     }
     if (!status.diagnostic.empty()) {
-        std::cout << "diagnostic: " << status.diagnostic << "\n";
+        std::cout << "diagnostic: " << copperfin::licensing::localized_license_diagnostic(status, catalog) << "\n";
     }
 }
 
@@ -573,7 +576,7 @@ int run_build_host_main(int argc, char** argv) {
     const bool license_status_requested =
         std::find(args.begin(), args.end(), "--license-status") != args.end();
     if (legacy_license_status || license_status_requested) {
-        print_license_status(copperfin::licensing::load_license_status(running_executable_path));
+        print_license_status(copperfin::licensing::load_license_status(running_executable_path), catalog);
         return 0;
     }
 

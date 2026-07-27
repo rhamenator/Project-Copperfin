@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "studio_host_main_support.h"
+#include "copperfin/licensing/license_status_display.h"
 
 namespace cf_studio_host_main_detail {
 const copperfin::localization::LocalizedCatalog* g_active_catalog = nullptr;
@@ -3714,7 +3715,9 @@ std::optional<int> try_handle_list_subsystems(
         return 0;
     }
 
-void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+void print_license_status(
+    const copperfin::licensing::LicenseStatus& status,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     using copperfin::licensing::LicenseState;
 
     std::cout << "status: ok\n";
@@ -3754,7 +3757,7 @@ void print_license_status(const copperfin::licensing::LicenseStatus& status) {
         std::cout << "source_path: " << status.source_path << "\n";
     }
     if (!status.diagnostic.empty()) {
-        std::cout << "diagnostic: " << status.diagnostic << "\n";
+        std::cout << "diagnostic: " << copperfin::licensing::localized_license_diagnostic(status, catalog) << "\n";
     }
 }
 
@@ -3800,7 +3803,7 @@ std::optional<int> try_handle_license_status(
     if (output_json) {
         print_json_license_status(status);
     } else {
-        print_license_status(status);
+        print_license_status(status, catalog);
     }
     return 0;
 }

@@ -98,6 +98,7 @@ LicenseStatus classify_verified_payload(
     if (!get_string_required(fields, "license_type", license_type)) {
         status.state = LicenseState::malformed;
         status.diagnostic = "missing or invalid license_type";
+        status.diagnostic_key = "Licensing.Error.MissingOrInvalidLicenseType";
         return status;
     }
 
@@ -114,11 +115,15 @@ LicenseStatus classify_verified_payload(
     if (!get_integer_as_int(fields, "seats", 0, seats)) {
         status.state = LicenseState::malformed;
         status.diagnostic = "integer field out of range: seats";
+        status.diagnostic_key = "Licensing.Error.IntegerFieldOutOfRange";
+        status.diagnostic_argument = "seats";
         return status;
     }
     if (!get_integer_as_int(fields, "perpetual_max_major_version", 0, perpetual_max_major_version)) {
         status.state = LicenseState::malformed;
         status.diagnostic = "integer field out of range: perpetual_max_major_version";
+        status.diagnostic_key = "Licensing.Error.IntegerFieldOutOfRange";
+        status.diagnostic_argument = "perpetual_max_major_version";
         return status;
     }
     status.seats = seats;
@@ -128,6 +133,7 @@ LicenseStatus classify_verified_payload(
         if (status.perpetual_max_major_version <= 0) {
             status.state = LicenseState::malformed;
             status.diagnostic = "perpetual license missing perpetual_max_major_version";
+            status.diagnostic_key = "Licensing.Error.PerpetualVersionMissing";
             return status;
         }
         // Being below the current major version never restricts anything --
@@ -143,16 +149,19 @@ LicenseStatus classify_verified_payload(
         if (status.subscription_expires.empty()) {
             status.state = LicenseState::malformed;
             status.diagnostic = "subscription license missing subscription_expires";
+            status.diagnostic_key = "Licensing.Error.SubscriptionExpiryMissing";
             return status;
         }
         if (!is_canonical_calendar_date(status.subscription_expires)) {
             status.state = LicenseState::malformed;
             status.diagnostic = "subscription license has invalid subscription_expires";
+            status.diagnostic_key = "Licensing.Error.SubscriptionExpiryInvalid";
             return status;
         }
         if (!is_canonical_calendar_date(current_date_iso8601)) {
             status.state = LicenseState::malformed;
             status.diagnostic = "current date is not canonical YYYY-MM-DD";
+            status.diagnostic_key = "Licensing.Error.CurrentDateInvalid";
             return status;
         }
         // ISO-8601 "YYYY-MM-DD" strings compare correctly with plain
@@ -165,6 +174,8 @@ LicenseStatus classify_verified_payload(
 
     status.state = LicenseState::malformed;
     status.diagnostic = "unrecognized license_type: " + license_type;
+    status.diagnostic_key = "Licensing.Error.UnrecognizedLicenseType";
+    status.diagnostic_argument = license_type;
     return status;
 }
 

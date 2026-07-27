@@ -585,7 +585,7 @@ add_test(
 add_executable(test_licensing_status
     test_licensing_status.cpp
 )
-target_link_libraries(test_licensing_status PRIVATE cf_licensing)
+target_link_libraries(test_licensing_status PRIVATE cf_licensing cf_localization)
 target_include_directories(test_licensing_status PRIVATE ${CMAKE_SOURCE_DIR}/src/licensing)
 
 if(MSVC)

@@ -11,6 +11,7 @@
 #include <ctime>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 #include "base64.h"
 #include "canonical_payload_serializer.h"
@@ -42,6 +43,16 @@ const SignerPublicKey* find_signer_key(std::string_view key_id, std::span<const 
         }
     }
     return nullptr;
+}
+
+void set_diagnostic(
+    LicenseStatus& status,
+    std::string key,
+    std::string raw,
+    std::string argument = {}) {
+    status.diagnostic = std::move(raw);
+    status.diagnostic_key = std::move(key);
+    status.diagnostic_argument = std::move(argument);
 }
 
 }  // namespace
@@ -96,7 +107,10 @@ LicenseStatus load_license_status(
     if (!file_exists) {
         if (path_was_explicit) {
             status.state = LicenseState::file_unreadable;
-            status.diagnostic = "license file not found at explicitly configured path";
+            set_diagnostic(
+                status,
+                "Licensing.Error.FileNotFoundAtConfiguredPath",
+                "license file not found at explicitly configured path");
             status.source_path = platform::path_to_utf8_string(resolved_path);
         } else {
             status.state = LicenseState::free;
@@ -107,7 +121,7 @@ LicenseStatus load_license_status(
     std::ifstream input(resolved_path, std::ios::binary);
     if (!input) {
         status.state = LicenseState::file_unreadable;
-        status.diagnostic = "license file exists but could not be opened";
+        set_diagnostic(status, "Licensing.Error.FileOpenFailed", "license file exists but could not be opened");
         status.source_path = platform::path_to_utf8_string(resolved_path);
         return status;
     }
@@ -120,13 +134,17 @@ LicenseStatus load_license_status(
     const ParsedLicenseFile parsed = parse_license_file(contents);
     if (!parsed.ok) {
         status.state = LicenseState::malformed;
-        status.diagnostic = parsed.error;
+        set_diagnostic(status, parsed.error_key, parsed.error, parsed.error_argument);
         return status;
     }
 
     if (parsed.signature_algorithm != "ed25519") {
         status.state = LicenseState::malformed;
-        status.diagnostic = "unsupported signature_algorithm";
+        set_diagnostic(
+            status,
+            "Licensing.Error.UnsupportedSignatureAlgorithm",
+            "unsupported signature_algorithm",
+            parsed.signature_algorithm);
         return status;
     }
 
@@ -134,21 +152,25 @@ LicenseStatus load_license_status(
     if (signer_key_it == parsed.payload_fields.end() ||
         signer_key_it->second.kind != PayloadValue::Kind::string_value) {
         status.state = LicenseState::malformed;
-        status.diagnostic = "missing or invalid signer_key_id";
+        set_diagnostic(status, "Licensing.Error.MissingOrInvalidSignerKeyId", "missing or invalid signer_key_id");
         return status;
     }
 
     const SignerPublicKey* matched_key = find_signer_key(signer_key_it->second.as_string, signer_keys);
     if (matched_key == nullptr) {
         status.state = LicenseState::invalid_signature;
-        status.diagnostic = "unknown signer_key_id";
+        set_diagnostic(
+            status,
+            "Licensing.Error.UnknownSignerKeyId",
+            "unknown signer_key_id",
+            signer_key_it->second.as_string);
         return status;
     }
 
     const auto signature_bytes = base64_decode(parsed.signature_base64);
     if (!signature_bytes.has_value() || signature_bytes->size() != 64U) {
         status.state = LicenseState::invalid_signature;
-        status.diagnostic = "signature is not valid base64 of 64 bytes";
+        set_diagnostic(status, "Licensing.Error.InvalidSignatureEncoding", "signature is not valid base64 of 64 bytes");
         return status;
     }
 
@@ -159,7 +181,7 @@ LicenseStatus load_license_status(
 
     if (!ed25519_verify_detached(canonical, signature_array, matched_key->public_key)) {
         status.state = LicenseState::invalid_signature;
-        status.diagnostic = "signature verification failed";
+        set_diagnostic(status, "Licensing.Error.SignatureVerificationFailed", "signature verification failed");
         return status;
     }
 

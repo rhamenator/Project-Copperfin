@@ -14,6 +14,8 @@ namespace copperfin::licensing {
 struct ParsedLicenseFile {
     bool ok = false;
     std::string error;  // non-localized, diagnostic-only
+    std::string error_key; // optional catalog key for human-facing display
+    std::string error_argument; // optional invariant value for the display placeholder
     PayloadFields payload_fields;
     std::string signature_algorithm;
     std::string signature_base64;

@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/licensing/license_status.h"
+#include "copperfin/licensing/license_status_display.h"
 #include "canonical_payload_serializer.h"
 #include "license_classifier.h"
 #include "license_payload_parser.h"
@@ -33,6 +34,7 @@ using copperfin::licensing::classify_verified_payload;
 using copperfin::licensing::license_state_name;
 using copperfin::licensing::load_license_status;
 using copperfin::licensing::parse_license_file;
+using copperfin::licensing::localized_license_diagnostic;
 
 int failures = 0;
 
@@ -371,6 +373,29 @@ void test_classifier_missing_license_type_is_malformed() {
     expect(status.state == LicenseState::malformed, "a payload without license_type should be malformed");
 }
 
+void test_license_diagnostic_display_preserves_raw_detail_and_localizes_known_key() {
+    auto status = classify_verified_payload(make_subscription_fields("not-a-date"), 1, "2026-01-01");
+    expect(
+        status.diagnostic == "subscription license has invalid subscription_expires" &&
+            status.diagnostic_key == "Licensing.Error.SubscriptionExpiryInvalid",
+        "license classification should retain raw diagnostic text and add a stable display key");
+
+    copperfin::localization::LocalizedCatalog catalog;
+    catalog.requested_locale = "es-419";
+    catalog.fallback_chain = {"es-419"};
+    catalog.catalogs["es-419"][status.diagnostic_key] = "Fecha de vencimiento no válida.";
+    expect(
+        localized_license_diagnostic(status, catalog) == "Fecha de vencimiento no válida.",
+        "known license diagnostic keys should resolve through the active catalog");
+
+    status.diagnostic_key = "Licensing.Error.UnexpectedTopLevelKey";
+    status.diagnostic_argument = "unexpected_field";
+    catalog.catalogs["es-419"][status.diagnostic_key] = "Clave inesperada: {argument}";
+    expect(
+        localized_license_diagnostic(status, catalog) == "Clave inesperada: unexpected_field",
+        "license diagnostic placeholders should preserve invariant field names");
+}
+
 // --- Layer 2: full load_license_status() end-to-end tests (real file I/O,
 // real Ed25519 verification against the golden fixtures above). ---
 
@@ -438,6 +463,9 @@ void test_malformed_json_is_malformed() {
 
     const auto status = load_license_status(test_root() / "app.exe", path);
     expect(status.state == LicenseState::malformed, "truncated/invalid JSON should be malformed");
+    expect(
+        status.diagnostic_key == "Licensing.Error.ExpectedJsonKey",
+        "malformed license JSON should expose a stable catalog display key");
 }
 
 void test_malformed_surrogate_json_is_malformed() {
@@ -569,6 +597,7 @@ int main() {
     test_classifier_subscription_missing_expiry_is_malformed();
     test_classifier_unknown_license_type_is_malformed();
     test_classifier_missing_license_type_is_malformed();
+    test_license_diagnostic_display_preserves_raw_detail_and_localizes_known_key();
     test_parser_checked_integer_boundaries();
     test_parser_unicode_escape_boundaries();
     test_parser_preserves_simple_escapes_and_raw_utf8();

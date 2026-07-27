@@ -46,6 +46,8 @@ struct LicenseStatus {
     int perpetual_max_major_version = 0;
     std::string source_path;       // "" for free
     std::string diagnostic;        // raw, non-localized troubleshooting detail
+    std::string diagnostic_key;    // optional catalog key for human-facing display
+    std::string diagnostic_argument; // optional invariant value for the display placeholder
 };
 
 // Resolves and verifies a license file, entirely offline -- this function
