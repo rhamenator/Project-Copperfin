@@ -2736,7 +2736,7 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
 void print_json_document(const copperfin::studio::StudioDocumentModel& document,
                          const copperfin::localization::LocalizedCatalog& catalog,
                          bool asset_mutation_performed) {
-    const auto objects = copperfin::studio::build_object_snapshot(document);
+    const auto objects = copperfin::studio::build_object_snapshot(document, catalog);
     const auto deleted_object_count = static_cast<std::size_t>(std::count_if(
         objects.begin(),
         objects.end(),
@@ -2771,11 +2771,11 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
                   return left.object_depth < right.object_depth;
               })
               ->object_depth;
-    const auto report_layout = copperfin::studio::build_report_layout(document);
-    const auto project_workspace = copperfin::studio::build_project_workspace(document);
-    const auto security_profile = copperfin::security::default_native_security_profile();
-    const auto database_profile = copperfin::platform::default_database_federation_profile();
-    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    const auto report_layout = copperfin::studio::build_report_layout(document, catalog);
+    const auto project_workspace = copperfin::studio::build_project_workspace(document, catalog);
+    const auto security_profile = copperfin::security::default_native_security_profile(catalog);
+    const auto database_profile = copperfin::platform::default_database_federation_profile(catalog);
+    const auto extensibility_profile = copperfin::platform::default_extensibility_profile(catalog);
     const auto command_undo_status = copperfin::vfp::query_visual_object_undo(document.path);
     const auto* selected_object = document.selection_record_available
         ? find_selected_object(objects, document.selection_record_index)
@@ -3552,10 +3552,10 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
 void print_document(
     const copperfin::studio::StudioDocumentModel& document,
     const copperfin::localization::LocalizedCatalog& catalog) {
-    const auto report_layout = copperfin::studio::build_report_layout(document);
-    const auto project_workspace = copperfin::studio::build_project_workspace(document);
-    const auto security_profile = copperfin::security::default_native_security_profile();
-    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    const auto report_layout = copperfin::studio::build_report_layout(document, catalog);
+    const auto project_workspace = copperfin::studio::build_project_workspace(document, catalog);
+    const auto security_profile = copperfin::security::default_native_security_profile(catalog);
+    const auto extensibility_profile = copperfin::platform::default_extensibility_profile(catalog);
     std::cout << "status: ok\n";
     std::cout << "document.path: " << document.path << "\n";
     std::cout << "document.display_name: " << document.display_name << "\n";

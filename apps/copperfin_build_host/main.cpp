@@ -724,7 +724,7 @@ int run_build_host_main(int argc, char** argv) {
         }
     }
 
-    auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    auto extensibility_profile = copperfin::platform::default_extensibility_profile(catalog);
     if (emit_dotnet_launcher && !supports_dotnet_launcher_publish()) {
         extensibility_profile.dotnet_output.available = false;
     }
