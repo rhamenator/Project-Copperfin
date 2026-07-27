@@ -1,3 +1,5 @@
+- 2026-07-27: Superseded and canceled the earlier manual native-only runs at `8c16de857` after the raw-log commit triggered the complete current-head matrix at `252989e7b`. The authoritative fresh run set is Linux Native `30252243503`, macOS Native `30252241793`, Windows Native `30252241888`, Linux Managed UI `30252241849`, VSIX `30252241941`, installers `30252241963`, and Security Supply Chain `30252243385`.
+
 - 2026-07-27: Archived raw output for the independent native matrix at `artifacts/native-validation-8c16de857/ctest.log`. The rerun passed `316/316` in `330.93s`, with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; hosted platform and Visual Studio/VFP9 evidence remain separate.
 
 - 2026-07-27: Canceled obsolete Linux/Windows native workflow runs that exceeded their declared 120-minute bound without step progress, then dispatched fresh current-head native validation: Linux `30251602843`, macOS `30251602788`, and Windows `30251602740` at `8c16de857`. No product sources changed; this refreshes CI evidence only.
