@@ -425,6 +425,18 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(
     return resolve_existing_path_casefold_impl(candidate, ambiguous);
 }
 
+std::filesystem::path normalize_existing_path_spelling(
+    const std::filesystem::path& candidate) {
+#if defined(_WIN32)
+    bool ambiguous = false;
+    if (const auto resolved = resolve_existing_path_casefold(candidate, ambiguous);
+        resolved.has_value() && !ambiguous) {
+        return resolved->lexically_normal();
+    }
+#endif
+    return candidate.lexically_normal();
+}
+
 BuildOutputKind parse_build_output_kind(const std::string& value) {
     const std::string normalized = lowercase_copy(trim_copy(value));
     if (normalized == "dll") {
@@ -1313,7 +1325,8 @@ std::string relative_asset_path(
     const std::string& resolved_source_path,
     bool preserve_resolved_spelling) {
     if (preserve_resolved_spelling && !resolved_source_path.empty()) {
-        const std::filesystem::path base_dir = copperfin::platform::path_from_utf8_string(document.path).parent_path();
+        const std::filesystem::path base_dir = normalize_existing_path_spelling(
+            copperfin::platform::path_from_utf8_string(document.path).parent_path());
         const std::filesystem::path resolved_relative =
             copperfin::platform::path_from_utf8_string(resolved_source_path).lexically_relative(base_dir);
         if (!resolved_relative.empty() && !resolved_relative.is_absolute()) {

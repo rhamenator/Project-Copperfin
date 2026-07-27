@@ -2244,15 +2244,15 @@ RuntimePackagePlan create_runtime_package_plan(
                 copperfin::platform::path_from_utf8_string(asset.source_path));
         }
     }
-    const std::filesystem::path project_root =
-        copperfin::platform::path_from_utf8_string(document.path).parent_path();
+    const std::filesystem::path project_root = normalize_existing_path_spelling(
+        copperfin::platform::path_from_utf8_string(document.path).parent_path());
     std::vector<std::filesystem::path> admitted_external_roots;
     for (const auto& root_value : external_include_roots) {
         if (root_value.empty()) {
             continue;
         }
-        const std::filesystem::path root =
-            copperfin::platform::path_from_utf8_string(root_value).lexically_normal();
+        const std::filesystem::path root = normalize_existing_path_spelling(
+            copperfin::platform::path_from_utf8_string(root_value).lexically_normal());
         std::error_code root_error;
         if (!std::filesystem::is_directory(root, root_error) || root_error) {
             plan.warnings.push_back(runtime_text(

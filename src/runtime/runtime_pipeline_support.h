@@ -167,6 +167,8 @@ bool should_stage_asset(const RuntimePackageAsset& asset);
 std::optional<std::filesystem::path> resolve_existing_path_casefold(
     const std::filesystem::path& candidate,
     bool& ambiguous);
+std::filesystem::path normalize_existing_path_spelling(
+    const std::filesystem::path& candidate);
 std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source);
 struct RuntimeCompanionCopyResult {
     bool ok = true;
