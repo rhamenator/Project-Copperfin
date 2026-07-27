@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Current evidence reconciliation (2026-07-27): #4750 is closed. Hosted Windows Environment and Executable Path Validation `30295274124` passed all `7/7` focused tests at `13228bbc4`, including `test_build_host_output` and the DLL/FLL debug/API source-provenance assertions. The intermediate #4750 bullets below retain the sequence of path-identity corrections as historical evidence; their earlier "fresh validation required" wording is superseded by that green run. The pending Apple-specific numeric-parser change remains separate and untouched.
+
 - #4750 Windows root-identity correction: the generated-launcher process test exposed that canonicalizing a resolved source without canonicalizing the document/workspace root produced a bogus `runneradmin\\AppData...` relative path. Existing Windows comparison roots and admitted external roots now use the shared host-spelling normalizer; focused Linux `test_runtime_pipeline` passes 1/1 in 43.78s, and fresh hosted validation remains required. The Apple numeric-parser source remains separate and untouched.
 
 - #4750 final-path namespace correction: Windows final path results are normalized after `GetFinalPathNameByHandleW`: ordinary drive `\\?\\` and UNC `\\?\\UNC\\` prefixes are converted to the runtime path form, while other device namespaces fail closed. Focused Linux `test_runtime_pipeline` passes 1/1 in 40.45s; fresh Windows validation remains required. The Apple numeric-parser source remains separate and untouched.
