@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Corrected-head hosted native evidence: Linux workflow `30285953284` passed `316/316` in `174.85s`, and macOS workflow `30285953392` passed `316/316` in `208.09s`, with only documented platform-conditional skips. Windows workflow `30285953343` remains in progress; no Windows evidence is claimed until it resolves. The Apple numeric-parser file remains separate and untouched.
+
 - #4750 cross-platform correction: the Windows 8.3 alias fast path is guarded by `_WIN32` after hosted macOS workflow `30283890467` showed that an unconditional host-exists return preserved `/var` rather than the canonical `/private/var` spelling and violated #3953/#3905. Focused Linux `test_runtime_pipeline` passes 1/1 in 40.25s; fresh Windows workflow `30283890422` remains the required Windows proof. The pending Apple numeric-parser source remains separate and untouched.
 
 - #4750 Windows path-identity correction note: hosted Windows workflow `30279144571` at `f65eb7186` passed `313/315` native tests and exposed only the trusted external-include failure caused by an 8.3 temporary-path alias. The resolver now accepts an OS-confirmed existing candidate before VFP case-fold traversal; focused Linux `test_runtime_pipeline` passes `1/1`, and hosted Windows rerun remains required. The Apple numeric-parser source remains separate and untouched.
