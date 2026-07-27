@@ -145,6 +145,7 @@ int main() {
     test_close_command_closes_all_work_areas();
     test_close_all_releases_runtime_handles();
     test_erase_copy_rename_file_commands();
+    test_erase_copy_file_strict_verified_bytes();
     test_rename_file_command_rejects_existing_destination();
     test_file_operation_runtime_errors_localize();
     test_for_each_iterates_array_elements();

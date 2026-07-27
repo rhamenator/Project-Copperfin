@@ -1699,6 +1699,52 @@ void test_erase_copy_rename_file_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_erase_copy_file_strict_verified_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_file_verified_bytes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source = temp_root / "source.txt";
+    const fs::path destination = temp_root / "destination.txt";
+    const std::string admitted_bytes = "admitted source bytes\n";
+    write_text(source, "tampered source bytes\n");
+    const fs::path copy_path = temp_root / "strict_copy.prg";
+    write_text(
+        copy_path,
+        "COPY FILE '" + source.generic_string() + "' TO '" + destination.generic_string() + "'\n"
+        "RETURN\n");
+
+    auto options = make_runtime_session_options(copy_path.string(), temp_root.string(), false);
+    options.verified_file_byte_overrides.emplace(source.string(), admitted_bytes);
+    options.require_verified_file_byte_overrides = true;
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(options)
+                           .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "strict COPY FILE admitted-byte script should complete: " + state.message);
+    expect(fs::exists(destination), "strict COPY FILE should create its destination");
+    if (fs::exists(destination)) {
+        expect(read_text(destination) == admitted_bytes,
+               "strict COPY FILE should copy admitted bytes instead of tampered disk bytes");
+    }
+
+    const fs::path missing = temp_root / "missing.txt";
+    const fs::path missing_copy_path = temp_root / "strict_missing_copy.prg";
+    write_text(
+        missing_copy_path,
+        "COPY FILE '" + missing.generic_string() + "' TO '" + destination.generic_string() + "'\n"
+        "RETURN\n");
+    auto missing_options = make_runtime_session_options(missing_copy_path.string(), temp_root.string(), false);
+    missing_options.require_verified_file_byte_overrides = true;
+    const auto missing_state = copperfin::runtime::PrgRuntimeSession::create(missing_options)
+                                   .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!missing_state.completed, "strict COPY FILE should reject an unadmitted source");
+    expect(missing_state.message.find("COPY FILE source is not an admitted verified file") != std::string::npos,
+           "strict COPY FILE rejection should use the localized verified-byte diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_rename_file_command_rejects_existing_destination() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rename_existing_target";

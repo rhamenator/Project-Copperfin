@@ -1413,6 +1413,7 @@
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "Area de trabalho de destino nao encontrada para {command}",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requer um comando LOCATE ativo",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE falhou: {errorMessage}",
+  "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable": "A fonte de COPY FILE nao e um arquivo verificado admitido: {path}",
   "Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea": "COPY TO ARRAY: nao ha area de trabalho atual",
   "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea": "COPY TO: nao ha area de trabalho atual",
   "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause": "COPY TO: nenhum campo corresponde a clausula FIELDS",

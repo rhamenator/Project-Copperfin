@@ -6369,8 +6369,35 @@
                 };
                 const std::filesystem::path src = make_abs(src_raw);
                 const std::filesystem::path dst = make_abs(dst_raw);
+                std::filesystem::path verified_snapshot_root;
+                const auto source_to_copy = materialize_verified_file_snapshot(
+                    src,
+                    verified_snapshot_root,
+                    "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable",
+                    false,
+                    true);
+                const auto cleanup_verified_snapshot = [&]()
+                {
+                    if (!verified_snapshot_root.empty())
+                    {
+                        std::error_code cleanup_error;
+                        std::filesystem::remove_all(verified_snapshot_root, cleanup_error);
+                        verified_snapshot_root.clear();
+                    }
+                };
+                if (!source_to_copy.has_value())
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 std::error_code ec;
-                std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
+                std::filesystem::copy_file(
+                    *source_to_copy,
+                    dst,
+                    std::filesystem::copy_options::overwrite_existing,
+                    ec);
+                cleanup_verified_snapshot();
                 if (ec)
                 {
                     last_error_message = runtime_text(

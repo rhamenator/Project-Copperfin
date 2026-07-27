@@ -1087,6 +1087,7 @@
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "{command} target work area not found",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requires an active LOCATE command",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE failed: {errorMessage}",
+  "Runtime.Prg.Dispatch.Error.CopyFileVerifiedBytesUnavailable": "COPY FILE source is not an admitted verified file: {path}",
   "Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea": "COPY TO ARRAY: no current work area",
   "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea": "COPY TO: no current work area",
   "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause": "COPY TO: no fields match the FIELDS clause",
