@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
@@ -29,6 +30,8 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         : base(serviceProvider)
     {
         control = new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture());
+        // WindowPane hosts Content directly; make the shared editor consume the frame.
+        control.Dock = DockStyle.Fill;
         control.OpenDocumentRequested += OpenDocumentInVisualStudio;
         control.OpenDocumentAtLineRequested += OpenDocumentAtLineInVisualStudio;
         this.documentPath = documentPath;

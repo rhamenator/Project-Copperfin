@@ -40,6 +40,8 @@ internal static partial class Program
                 "new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture())",
                 StringComparison.Ordinal),
             "VSIX editor pane should pass Visual Studio's current UI culture to the shared editor");
+        Expect(paneSource.Contains("control.Dock = DockStyle.Fill;", StringComparison.Ordinal),
+            "VSIX editor pane should fill the Visual Studio document frame with the shared editor");
 
         var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
         var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");

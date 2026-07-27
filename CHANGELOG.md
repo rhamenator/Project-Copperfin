@@ -1,3 +1,7 @@
+- 2026-07-27: Implemented a narrow #4740 hosted-rendering fix: `CopperfinAssetEditorPane` now docks the shared editor control with `DockStyle.Fill`, matching standalone Studio's hosting contract. The existing managed language-service suite passes; exact Windows hosted `addlabel.pjx` visual proof is still required.
+
+- 2026-07-27: Closed #4742 after exact-head Windows hosted validation. A real `E:\\VFPSource\\addlabel\\addlabel.pjx` opened with `ActiveDocument.Kind` bound to Copperfin's editor-factory GUID, and strict VSIX lifecycle, generated pkgdef checks, package load, and DLL identity checks passed. The generic binary-editor fallback is cleared; the newly observed blank hosted surface remains tracked under #4740.
+
 - 2026-07-27: Exact-head GitHub VSIX workflow `30246927285` passed at `1d439235b`, including Release packaging, generated pkgdef inspection, the corrected localized-command artifact check, managed VSIX behavior tests, language-service tests, and .NET Framework process-runner tests. Live hosted Visual Studio `addlabel.pjx` editor selection remains the only open #4742 acceptance item.
 
 - 2026-07-27: Corrected the #4742 VSIX artifact check from Windows evidence: VSSDK emits undotted pkgdef extension keys (`pjx`, `scx`, `vcx`, `frx`, `lbx`, `mnx`), while the source extension list uses leading dots. The PowerShell check now normalizes only that generated-key spelling and still requires priority `0x64` plus the trusted Designer logical-view registration; no product or machine contract changes.
