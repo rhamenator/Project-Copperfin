@@ -3094,6 +3094,75 @@ namespace copperfin::runtime
                 return normalize_identifier(trim_copy(class_name)) == "reportlistener";
             }) ||
             normalize_identifier(trim_copy(target_object->base_class_name)) == "reportlistener";
+        if (is_report_listener_object && leaf == "createconfigtable")
+        {
+            std::string result_code = "invalid-path";
+            bool created = false;
+            if (!arguments.empty() && !trim_copy(value_as_string(arguments.front())).empty())
+            {
+                std::filesystem::path requested_path = copperfin::platform::path_from_utf8_string(
+                    value_as_string(arguments.front()));
+                if (requested_path.extension().empty())
+                {
+                    requested_path.replace_extension(".dbf");
+                }
+                if (requested_path.is_relative())
+                {
+                    requested_path = copperfin::platform::path_from_utf8_string(current_default_directory()) /
+                        requested_path;
+                }
+
+                const bool overwrite = arguments.size() >= 2U && value_as_bool(arguments[1]);
+                const auto existing_path = copperfin::vfp::resolve_unique_casefold_path(requested_path);
+                std::filesystem::path memo_path = requested_path;
+                memo_path.replace_extension(".fpt");
+                std::filesystem::path index_path = requested_path;
+                index_path.replace_extension(".cdx");
+                const auto existing_memo_path = copperfin::vfp::resolve_unique_casefold_path(memo_path);
+                const auto existing_index_path = copperfin::vfp::resolve_unique_casefold_path(index_path);
+                if (existing_path.ambiguous || existing_memo_path.ambiguous || existing_index_path.ambiguous)
+                {
+                    result_code = "ambiguous-path";
+                }
+                else if (options.require_verified_file_byte_overrides)
+                {
+                    result_code = "verified-write-rejected";
+                }
+                else if ((existing_path.path.has_value() || existing_memo_path.path.has_value() ||
+                          existing_index_path.path.has_value()) && !overwrite)
+                {
+                    result_code = "exists";
+                }
+                else
+                {
+                    const std::filesystem::path target_path = existing_path.path.value_or(requested_path);
+                    const auto create_result = copperfin::vfp::create_dbf_table_file(
+                        copperfin::platform::path_to_utf8_string(target_path),
+                        {
+                            {.name = "OBJTYPE", .type = 'I', .length = 4U},
+                            {.name = "OBJCODE", .type = 'I', .length = 4U},
+                            {.name = "OBJNAME", .type = 'V', .length = 60U},
+                            {.name = "OBJVALUE", .type = 'V', .length = 60U},
+                            {.name = "OBJINFO", .type = 'M', .length = 4U}
+                        },
+                        {});
+                    created = create_result.ok;
+                    result_code = created ? "created" : "write-failed";
+                    if (created)
+                    {
+                        target_object->properties["configurationtable"] = make_string_value(
+                            copperfin::platform::path_to_utf8_string(target_path.lexically_normal()));
+                    }
+                }
+            }
+            target_object->properties["haderror"] = make_boolean_value(!created);
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.reportlistener.createconfigtable",
+                              .detail = target_object->prog_id + ":" + result_code,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_boolean_value(created);
+        }
         if (is_report_listener_object && leaf == "getconfigtable")
         {
             const std::filesystem::path working_directory =

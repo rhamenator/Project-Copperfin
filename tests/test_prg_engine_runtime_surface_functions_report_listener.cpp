@@ -43,6 +43,11 @@ namespace copperfin::runtime_surface_tests
             "oMissing.ConfigurationTable = 'missing.dbf'\n"
             "lMissing = oMissing.VerifyConfigTable('OutputConfig')\n"
             "lMissingHadError = oMissing.HadError\n"
+            "oCreate = CREATEOBJECT('ReportListenerShim')\n"
+            "lCreate = oCreate.CreateConfigTable('created-config')\n"
+            "cCreated = oCreate.GetConfigTable()\n"
+            "lCreateAgain = oCreate.CreateConfigTable('created-config')\n"
+            "lCreateOverwrite = oCreate.CreateConfigTable('created-config', .T.)\n"
             "oUnsupported = CREATEOBJECT('ReportListenerShim')\n"
             "oUnsupported.ConfigurationTable = 'unsupported.dbf'\n"
             "lUnsupported = oUnsupported.VerifyConfigTable('OutputConfig')\n"
@@ -112,6 +117,10 @@ namespace copperfin::runtime_surface_tests
         const auto valid_had_error = state.globals.find("lvalidhaderror");
         const auto missing = state.globals.find("lmissing");
         const auto missing_had_error = state.globals.find("lmissinghaderror");
+        const auto create = state.globals.find("lcreate");
+        const auto created = state.globals.find("ccreated");
+        const auto create_again = state.globals.find("lcreateagain");
+        const auto create_overwrite = state.globals.find("lcreateoverwrite");
         const auto unsupported = state.globals.find("lunsupported");
         const auto unsupported_had_error = state.globals.find("lunsupportedhaderror");
         const auto plain_config = state.globals.find("cplainconfig");
@@ -164,6 +173,15 @@ namespace copperfin::runtime_surface_tests
                "missing ReportListener configuration table should fail verification");
         expect(is_true(missing_had_error),
                "missing ReportListener configuration table should set HadError");
+        expect(is_true(create),
+               "ReportListener CreateConfigTable should create a missing configuration table");
+        expect(is_true(create_overwrite),
+               "ReportListener CreateConfigTable should allow explicit overwrite");
+        expect(is_false(create_again),
+               "ReportListener CreateConfigTable should preserve an existing table without overwrite");
+        expect(created != state.globals.end() &&
+                   fs::exists(fs::path(copperfin::runtime::format_value(created->second))),
+               "ReportListener CreateConfigTable should publish the created DBF path");
         expect(is_false(unsupported),
                "unsupported ReportListener configuration table should fail verification");
         expect(is_true(unsupported_had_error),

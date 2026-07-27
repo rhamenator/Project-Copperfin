@@ -44,6 +44,7 @@ namespace copperfin::runtime_surface_tests
             "cConfig = oListener.GetConfigTable()\n"
             "lValid = oListener.VerifyConfigTable('OutputConfig')\n"
             "lHadError = oListener.HadError\n"
+            "lCreate = oListener.CreateConfigTable('strict-created')\n"
             "RETURN\n"
             "DEFINE CLASS ReportListenerShim AS ReportListener\n"
             "ENDDEFINE\n");
@@ -111,12 +112,18 @@ namespace copperfin::runtime_surface_tests
                "strict unadmitted ReportListener configuration should complete without consulting disk");
         const auto unadmitted_config = unadmitted_state.globals.find("cconfig");
         const auto unadmitted_valid = unadmitted_state.globals.find("lvalid");
+        const auto unadmitted_create_result = unadmitted_state.globals.find("lcreate");
         expect(unadmitted_config != unadmitted_state.globals.end() &&
                    copperfin::runtime::format_value(unadmitted_config->second).empty(),
                "strict GetConfigTable should reject an unadmitted physical table");
         expect(unadmitted_valid != unadmitted_state.globals.end() &&
                    copperfin::runtime::format_value(unadmitted_valid->second) == "false",
                "strict VerifyConfigTable should reject an unadmitted physical table");
+        expect(unadmitted_create_result != unadmitted_state.globals.end() &&
+                   copperfin::runtime::format_value(unadmitted_create_result->second) == "false",
+               "strict CreateConfigTable should reject an unadmitted write");
+        expect(!fs::exists(temp_root / "strict-created.dbf"),
+               "strict CreateConfigTable should not publish an unadmitted DBF");
 
         fs::remove_all(temp_root, ignored);
     }
