@@ -548,10 +548,7 @@ std::optional<PrgValue> evaluate_string_function(
     if (function == "substrc" && arguments.size() >= 2U) {
         const std::string source = value_as_string(arguments[0]);
         const double raw_start = value_as_number(arguments[1]);
-        if (raw_start <= 0.0) {
-            return make_string_value(std::string{});
-        }
-        const std::size_t start = static_cast<std::size_t>(raw_start);
+        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start));
         const std::size_t length = arguments.size() >= 3U
                                        ? static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])))
                                        : std::numeric_limits<std::size_t>::max();
@@ -559,7 +556,7 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "stuffc" && arguments.size() >= 4U) {
         const double raw_start = value_as_number(arguments[1]);
-        const std::size_t start = raw_start <= 0.0 ? 0U : static_cast<std::size_t>(raw_start);
+        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start));
         const std::size_t length = raw_start <= 0.0
                                        ? 0U
                                        : static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));

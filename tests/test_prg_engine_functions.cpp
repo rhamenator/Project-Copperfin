@@ -175,7 +175,11 @@ namespace
             "n_atcc = ATCC('FE', 'caféFE猫FE', 2)\n"
             "n_ratc = RATC('FE', 'caféFE猫FE', 1)\n"
             "c_substrc = SUBSTRC('café猫', 4, 2)\n"
+            "c_substrc_zero = SUBSTRC('café猫', 0, 2)\n"
+            "c_substrc_negative = SUBSTRC('café猫', -2, 2)\n"
             "c_stuffc = STUFFC('café猫', 4, 2, 'X')\n"
+            "c_stuffc_zero = STUFFC('café猫', 0, 2, 'X')\n"
+            "c_stuffc_negative = STUFFC('café猫', -2, 2, 'X')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -238,7 +242,11 @@ namespace
         check("n_atcc", "8");
         check("n_ratc", "8");
         check("c_substrc", "é猫");
+        check("c_substrc_zero", "ca");
+        check("c_substrc_negative", "ca");
         check("c_stuffc", "cafX");
+        check("c_stuffc_zero", "Xcafé猫");
+        check("c_stuffc_negative", "Xcafé猫");
 
         fs::remove_all(temp_root, ignored);
     }
