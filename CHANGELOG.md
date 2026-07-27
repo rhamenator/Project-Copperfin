@@ -1,3 +1,5 @@
+- 2026-07-27: Independent full native CTest verification against the current product tree (`a45fa19fc`, with product sources unchanged from `d9b04671e`) passed `316/316` in `334.50s`; only the expected conditional launcher skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` did not run. Report/label, runtime/package/debug, PRG, localization, security, and managed compile contracts remained green. The pending Apple parser change remains isolated.
+
 - 2026-07-27: Fixed the Windows standalone-installer build failure where the explicitly enumerated `Copperfin.Studio.csproj` omitted the shared Project Explorer partial source. Added a managed project-contract guard; local Release standalone build and the full managed compile contract pass. Fresh Windows installer validation remains pending.
 
 - 2026-07-27: Claude independently reran the #4403 safety traceability validators, recovery/debugger contracts, and all four locale reruns. The evidence remains reproducible and strict validation has exactly one intentional failure because #4403 is still open; no separate-identity reviewer sign-off or safety closure is claimed.
