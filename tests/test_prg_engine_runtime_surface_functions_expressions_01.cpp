@@ -2,6 +2,49 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_array_element_native_property_expression_access()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_array_element_native_property";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "array_element_native_property.prg";
+        write_text(
+            main_path,
+            "DIMENSION aObjects[1]\n"
+            "aObjects[1] = CREATEOBJECT('ArrayPropertyWidget')\n"
+            "wbcpOrigin = 'QFORM'\n"
+            "lSuppressedMatch = .F. AND NOT LOWER(m.aObjects[1].BaseClass) == 'form'\n"
+            "lQualifiedMatch = TYPE('m.wbcpOrigin') == 'C' AND UPPER(m.wbcpOrigin) == 'QFORM' AND NOT LOWER(m.aObjects[1].BaseClass) == 'form'\n"
+            "lPlainMatch = NOT LOWER(aObjects[1].BaseClass) == 'form'\n"
+            "RETURN\n"
+            "DEFINE CLASS ArrayPropertyWidget AS Custom\n"
+            "ENDDEFINE\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("array-element native-property expression script should complete: ") + state.message);
+
+        const auto qualified = state.globals.find("lqualifiedmatch");
+        const auto suppressed = state.globals.find("lsuppressedmatch");
+        const auto plain = state.globals.find("lplainmatch");
+        expect(suppressed != state.globals.end() &&
+                   copperfin::runtime::format_value(suppressed->second) == "false",
+               "short-circuited array-element property should be parsed without evaluation");
+        expect(qualified != state.globals.end() &&
+                   copperfin::runtime::format_value(qualified->second) == "true",
+               "fully evaluated m.-qualified array-element property should resolve through LOWER()");
+        expect(plain != state.globals.end() &&
+                   copperfin::runtime::format_value(plain->second) == "true",
+               "unparenthesized NOT should apply after the LOWER() comparison");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_expression_runtime_surface_extensions()
     {
         namespace fs = std::filesystem;

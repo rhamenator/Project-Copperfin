@@ -707,10 +707,10 @@
                 {
                     if (suppress_evaluation_)
                     {
-                        (void)parse_unary();
+                        (void)parse_comparison();
                         return make_boolean_value(false);
                     }
-                    return make_boolean_value(!value_as_bool(parse_unary()));
+                    return make_boolean_value(!value_as_bool(parse_comparison()));
                 }
                 if (match("-"))
                 {
@@ -858,11 +858,11 @@
                     {
                         if (suppress_evaluation_)
                         {
-                        (void)parse_expression();
-                        skip_whitespace();
-                        match("]");
-                        return make_empty_value();
-                    }
+                            (void)parse_expression();
+                            skip_whitespace();
+                            match("]");
+                            return skip_postfix_member_and_collection_access();
+                        }
                     return apply_postfix_member_and_collection_access(
                         parse_indexed_identifier_access(identifier, ']'));
                 }
