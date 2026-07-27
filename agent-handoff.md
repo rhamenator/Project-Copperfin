@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4750 namespace follow-up: `GetFinalPathNameByHandleW` may return extended DOS paths even with `VOLUME_NAME_DOS`. Commit pending after local verification now strips the `\\?\\` drive prefix, converts `\\?\\UNC\\` to ordinary UNC spelling, and rejects other device namespaces. Focused Linux `test_runtime_pipeline` passes 1/1 in 40.45s. The 593ad70ec Windows run is superseded; a fresh Windows validation is required, and the Apple numeric-parser file remains untouched.
+
 - #4750 Windows follow-up: workflow `30285953343` at `63f2fb659` failed only `test_runtime_pipeline` (`314/315` native tests passed). The d84 Windows host-exists fast path preserved the `RUNNER~1` alias instead of the actual `runneradmin` spelling, breaking #3953/#3905 and the trusted external-include assertions. The resolver now opens the existing candidate and uses `GetFinalPathNameByHandleW` with normalized DOS volume spelling; focused Linux `test_runtime_pipeline` passes 1/1 in 44.02s. Fresh Windows validation remains required; the Apple numeric-parser file remains untouched.
 
 - Corrected-head native evidence: Linux workflow `30285953284` passed `316/316` in `174.85s`, and macOS workflow `30285953392` passed `316/316` in `208.09s`, including only the documented conditional skips. Windows workflow `30285953343` remains in progress and is the only native platform gate still pending for #4750/#4751/#4752/#4725. The source head is `63f2fb659`; the Apple numeric-parser file remains untouched.

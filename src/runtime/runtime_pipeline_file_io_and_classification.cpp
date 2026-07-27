@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <limits>
+#include <string_view>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -128,6 +129,27 @@ std::optional<std::filesystem::path> resolve_windows_host_spelling(
         if (length < buffer.size()) {
             buffer.resize(length);
             ::CloseHandle(handle);
+
+            // VOLUME_NAME_DOS may still return the extended DOS namespace.
+            // Convert only ordinary drive and UNC paths back to the spelling
+            // used by the rest of the runtime; leave device namespaces
+            // unsupported rather than leaking a different path identity.
+            constexpr std::wstring_view extended_prefix = L"\\\\?\\";
+            constexpr std::wstring_view extended_unc_prefix = L"\\\\?\\UNC\\";
+            if (buffer.starts_with(extended_unc_prefix)) {
+                buffer = L"\\\\" + buffer.substr(extended_unc_prefix.size());
+            } else if (buffer.starts_with(extended_prefix) &&
+                       buffer.size() >= extended_prefix.size() + 3U &&
+                       ((buffer[extended_prefix.size()] >= L'A' &&
+                         buffer[extended_prefix.size()] <= L'Z') ||
+                        (buffer[extended_prefix.size()] >= L'a' &&
+                         buffer[extended_prefix.size()] <= L'z')) &&
+                       buffer[extended_prefix.size() + 1U] == L':') {
+                buffer.erase(0U, extended_prefix.size());
+            } else if (buffer.starts_with(extended_prefix)) {
+                return std::nullopt;
+            }
+
             return std::filesystem::path(buffer).lexically_normal();
         }
         buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
