@@ -1,3 +1,5 @@
+- 2026-07-27: Followed up the one-off parallel `test_studio_host_selected_sections_stable` failure reported by Claude: its serial and repeated subset reruns passed, and an independent local serial rerun passed 1/1 in 14.51s. No reproducible regression or product change is indicated; future CI recurrence remains the trigger for investigation.
+
 - 2026-07-27: Superseded and canceled the earlier manual native-only runs at `8c16de857` after the raw-log commit triggered the complete current-head matrix at `252989e7b`. The authoritative fresh run set is Linux Native `30252243503`, macOS Native `30252241793`, Windows Native `30252241888`, Linux Managed UI `30252241849`, VSIX `30252241941`, installers `30252241963`, and Security Supply Chain `30252243385`.
 
 - 2026-07-27: Archived raw output for the independent native matrix at `artifacts/native-validation-8c16de857/ctest.log`. The rerun passed `316/316` in `330.93s`, with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; hosted platform and Visual Studio/VFP9 evidence remain separate.

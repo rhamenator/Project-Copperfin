@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Claude's parallel native run reported one transient `test_studio_host_selected_sections_stable` failure (assertion #4542), but its serial rerun and repeated `test_studio_host*` subset passed. An independent local serial rerun also passed 1/1 in 14.51s, so no reproducible regression or product change is indicated; revisit only if CI or later parallel runs reproduce it.
+
 - The earlier manual native-only runs `30251602843`, `30251602788`, and `30251602740` at `8c16de857` were superseded and canceled after the raw-log evidence commit triggered the complete current-head matrix `252989e7b`. The authoritative fresh run set is now Linux Native `30252243503`, macOS Native `30252241793`, Windows Native `30252241888`, Linux Managed UI `30252241849`, Build Visual Studio VSIX `30252241941`, Build Standalone Installers `30252241963`, and Security Supply Chain Gate `30252243385`. No product source change occurred between the tested product head and the evidence/docs commits.
 
 - The full native matrix was rerun with raw output retained at `artifacts/native-validation-8c16de857/ctest.log` (forced-tracked because `artifacts/` is otherwise ignored). Against the current product sources represented by `8c16de857`, CTest passed `316/316` in `330.93s`; only `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` were expected conditional skips. The log is an independently inspectable Linux run record; it does not replace hosted Windows/macOS or Visual Studio/VFP9 evidence.
