@@ -198,7 +198,7 @@ namespace copperfin::runtime_surface_tests
         check("csysdefault", "0");
         std::string expected_home = temp_root.string();
         if (!expected_home.empty() && expected_home.back() != '/' && expected_home.back() != '\\') {
-            expected_home += fs::path::preferred_separator;
+            expected_home += static_cast<char>(fs::path::preferred_separator);
         }
         check("chome", expected_home);
         check("ldiskspacepositive", "true");

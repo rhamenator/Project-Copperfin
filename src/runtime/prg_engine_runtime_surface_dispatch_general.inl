@@ -63,7 +63,7 @@
     if (function == "home") {
         std::string home = default_directory;
         if (!home.empty() && home.back() != '/' && home.back() != '\\') {
-            home += std::filesystem::path::preferred_separator;
+            home += static_cast<char>(std::filesystem::path::preferred_separator);
         }
         return make_string_value(std::move(home));
     }

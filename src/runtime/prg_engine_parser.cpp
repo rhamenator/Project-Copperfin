@@ -391,6 +391,7 @@ std::string substitute_preprocessor_constants(
     char quote_delimiter = '\0';
     std::size_t bracket_depth = 0U;
     std::size_t brace_depth = 0U;
+    std::vector<bool> bracket_constant_context;
     for (std::size_t index = 0; index < text.size();) {
         const char ch = text[index];
         if (quote_delimiter != '\0') {
@@ -414,6 +415,21 @@ std::string substitute_preprocessor_constants(
             continue;
         }
         if (ch == '[') {
+            bool expands_constants = false;
+            if (bracket_depth == 0U) {
+                std::size_t previous = index;
+                while (previous > 0U && std::isspace(static_cast<unsigned char>(text[previous - 1U])) != 0) {
+                    --previous;
+                }
+                if (previous > 0U) {
+                    const char previous_character = text[previous - 1U];
+                    expands_constants = is_preprocessor_identifier_char(previous_character) ||
+                        previous_character == ')' || previous_character == ']';
+                }
+            } else if (!bracket_constant_context.empty()) {
+                expands_constants = bracket_constant_context.back();
+            }
+            bracket_constant_context.push_back(expands_constants);
             ++bracket_depth;
             expanded += ch;
             ++index;
@@ -421,6 +437,9 @@ std::string substitute_preprocessor_constants(
         }
         if (ch == ']' && bracket_depth > 0U) {
             --bracket_depth;
+            if (!bracket_constant_context.empty()) {
+                bracket_constant_context.pop_back();
+            }
             expanded += ch;
             ++index;
             continue;
@@ -438,7 +457,9 @@ std::string substitute_preprocessor_constants(
             continue;
         }
 
-        if (bracket_depth == 0U &&
+        const bool expands_bracket_constants = !bracket_constant_context.empty() &&
+            bracket_constant_context.back();
+        if ((bracket_depth == 0U || expands_bracket_constants) &&
             brace_depth == 0U &&
             is_preprocessor_identifier_start(ch)) {
             std::size_t token_end = index + 1U;

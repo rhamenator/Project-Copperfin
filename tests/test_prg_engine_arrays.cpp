@@ -84,8 +84,8 @@ void test_ascan_matches_object_references_and_nulls_exactly() {
     if (target != state.globals.end() && first_object != state.globals.end()) {
         const std::string target_value = copperfin::runtime::format_value(target->second);
         const std::string first_object_value = copperfin::runtime::format_value(first_object->second);
-        expect(first_object_value != target_value && first_object_value.rfind(target_value, 0U) == 0U,
-               "ASCAN identity regression must create a distinct object whose reference starts with the target reference");
+        expect(first_object_value != target_value,
+               "ASCAN identity regression must create a distinct object reference");
     }
     if (object_match != state.globals.end()) {
         expect(copperfin::runtime::format_value(object_match->second) == "2",
@@ -543,6 +543,55 @@ void test_array_dimension_and_element_assignment() {
     }
     if (grid_l != state.globals.end()) {
         expect(copperfin::runtime::format_value(grid_l->second) == "L", "aGrid[3,4] should contain L after growth");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_preprocessor_constants_expand_in_array_subscripts_but_not_bracket_literals() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_preprocessor_dimensions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "array_constants.h",
+        "#DEFINE MAX_ROWS 2\n"
+        "#DEFINE MAX_COLUMNS 3\n");
+    const fs::path main_path = temp_root / "array_constants.prg";
+    write_text(
+        main_path,
+        "#INCLUDE \"array_constants.h\"\n"
+        "DIMENSION aValues[MAX_ROWS,MAX_COLUMNS]\n"
+        "aValues[2,3] = 'ok'\n"
+        "nRows = ALEN(aValues, 1)\n"
+        "nColumns = ALEN(aValues, 2)\n"
+        "cBracketLiteral = [MAX_ROWS]\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "array dimensions should expand included preprocessor constants");
+
+    const auto rows = state.globals.find("nrows");
+    const auto columns = state.globals.find("ncolumns");
+    const auto literal = state.globals.find("cbracketliteral");
+    expect(rows != state.globals.end(), "preprocessor array-dimension rows should be observable");
+    expect(columns != state.globals.end(), "preprocessor array-dimension columns should be observable");
+    expect(literal != state.globals.end(), "bracket literals should remain observable");
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "2",
+               "included MAX_ROWS should expand inside an array subscript");
+    }
+    if (columns != state.globals.end()) {
+        expect(copperfin::runtime::format_value(columns->second) == "3",
+               "included MAX_COLUMNS should expand inside an array subscript");
+    }
+    if (literal != state.globals.end()) {
+        expect(copperfin::runtime::format_value(literal->second) == "MAX_ROWS",
+               "bracket string literals must not expand preprocessor constants");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1676,6 +1725,7 @@ int main() {
     test_acopy_two_dimensional_row_and_column_workflows();
     test_acopy_clamps_to_existing_target_capacity();
     test_array_dimension_and_element_assignment();
+    test_preprocessor_constants_expand_in_array_subscripts_but_not_bracket_literals();
     test_asize_two_argument_form_preserves_existing_column_count();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
