@@ -1,3 +1,5 @@
+- 2026-07-28: Extended #4739 evidence with the real VFPSource `ReportOutput/reportoutput.PJX`: the current Linux build produced zero warnings, normal launch completed with `runtime.completed: true`, and debug-host launch completed with exit 0 and the generated event stream. Exact-head Windows confirmation remains requested.
+
 - 2026-07-28: Closed completed children #4731-#4737 after Claude review and exact-head Windows validation. The builder execution, native licensing display, DBF version display, Studio catalog routing, build-host catalog propagation, and runtime-host catalog slices all have focused Linux evidence plus hosted Windows confirmation; #4738 and #4739 remain open for their separate Windows runtime checks.
 
 - 2026-07-28: Verified #4739 at synchronized head `f8aa58f89` with the complete Linux native CTest matrix: `316/316` tests passed in 336.53 seconds, with only the expected platform-conditional launcher tests skipped. The new ReportListener creation path did not regress Studio, package, security, localization, or PRG runtime coverage.
