@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Hosted Linux validation note: workflow `30279150037` passed the complete native matrix at `f65eb7186` with `316/316` tests passing in `172.81s`; only the two expected conditional launcher tests were skipped. This confirms the portable runtime and #4725 memory-listing fix independently of the local build.
+
 - Hosted macOS validation note: workflow `30279145192` passed the complete native matrix at `f65eb7186` with `316/316` tests passing in `225.07s`; only the two expected conditional launcher tests were skipped. This confirms the portable runtime and memory-listing fix on macOS, while the separate Apple numeric-parser change remains pending.
 
 - Current-head validation note: after the #4725 regression fix, a full rebuild and Linux CTest run at `f65eb7186` passed `316/316` entries in `287.28s`. `DISPLAY MEMORY` and `LIST MEMORY` now pass with the internal application-surface aliases excluded; hosted Windows/macOS evidence remains separate.

@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Hosted Linux GCC workflow `30279150037` passed at product head `f65eb7186`: complete native matrix `316/316` in `172.81s`, with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`. This independently confirms the current runtime, security, package, designer, and #4725 memory-listing fix on Linux; hosted Windows remains in progress.
+
 - Hosted macOS Clang workflow `30279145192` passed at product head `f65eb7186`: the complete native matrix passed `316/316` in `225.07s`, with only the expected conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`. This is hosted macOS evidence for #4725, #4751, and #4752 and for the shared runtime/package/designer contracts; it does not validate the separate pending `src/runtime/prg_engine_numeric_functions.cpp` change.
 
 - Independent current-head Linux validation at `f65eb7186` passed `316/316` CTest entries in `287.28s` after rebuilding all targets. The repaired `DISPLAY MEMORY`/`LIST MEMORY` regression passes, along with managed compile/catalog parity, report/label round trips, package/debug contracts, localization, security, PRG runtime, database/table mutation, and xAsset methods. Only the expected platform-conditional skips `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` did not run; hosted Windows/macOS evidence remains separate.
