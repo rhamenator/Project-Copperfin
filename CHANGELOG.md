@@ -1,3 +1,5 @@
+- 2026-07-28: Corrected-head macOS Native Validation (`30231088073`) passed. Linux Native Validation (`30231088071`) and Windows Native Validation (`30231088069`) remain unfinished; local Linux exact-head evidence is already `316/316` with two expected conditional skips.
+
 - 2026-07-28: Corrected-head CI release evidence is accumulating: Windows Environment and Executable Path Validation (`30231088074`) and Build Standalone Installers (`30231088061`, including the macOS installer leg) passed. Windows, Linux, and macOS native validation runs remain in progress; no native CI pass is claimed from those runs.
 
 - 2026-07-28: Exact-head Linux native validation at `aeab5c92` passed `316/316`; only `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` were skipped by their expected platform conditions. The run included the corrected strict ReportListener admitted-byte fixture; `test_prg_engine_runtime_surface_functions` now passes. A stale GAP-06 safety citation was also refreshed to the current runtime-audit shard family.
