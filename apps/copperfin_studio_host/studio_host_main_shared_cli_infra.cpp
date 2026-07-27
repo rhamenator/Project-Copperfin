@@ -2734,6 +2734,7 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
 }
 
 void print_json_document(const copperfin::studio::StudioDocumentModel& document,
+                         const copperfin::localization::LocalizedCatalog& catalog,
                          bool asset_mutation_performed) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto deleted_object_count = static_cast<std::size_t>(std::count_if(
@@ -2841,7 +2842,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
     std::cout << "    \"indexCount\": " << document.inspection.indexes.size() << ",\n";
     std::cout << "    \"headerVersionDescription\": ";
     if (document.inspection.header_available) {
-        print_json_string(document.inspection.header.version_description());
+        print_json_string(document.inspection.header.version_description(catalog));
     } else {
         std::cout << "null";
     }
@@ -3548,7 +3549,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
     std::cout << "}\n";
 }
 
-void print_document(const copperfin::studio::StudioDocumentModel& document) {
+void print_document(
+    const copperfin::studio::StudioDocumentModel& document,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
     const auto security_profile = copperfin::security::default_native_security_profile();
@@ -3575,7 +3578,7 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     std::cout << "inspection.index_count: " << document.inspection.indexes.size() << "\n";
     if (document.inspection.header_available) {
         std::cout << "inspection.header.version_description: "
-                  << document.inspection.header.version_description() << "\n";
+                  << document.inspection.header.version_description(catalog) << "\n";
     }
 
     if (!document.table_preview_available) {

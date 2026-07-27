@@ -303,8 +303,11 @@ void print_json_record_index_or_null(std::size_t record_index);
 void print_json_record_index_array(const std::vector<std::size_t>& record_indexes);
 void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent);
 void print_json_document(const copperfin::studio::StudioDocumentModel& document,
+                         const copperfin::localization::LocalizedCatalog& catalog,
                          bool asset_mutation_performed = false);
-void print_document(const copperfin::studio::StudioDocumentModel& document);
+void print_document(
+    const copperfin::studio::StudioDocumentModel& document,
+    const copperfin::localization::LocalizedCatalog& catalog);
 void print_json_subsystems(const copperfin::localization::LocalizedCatalog& catalog);
 void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog);
 std::optional<int> try_handle_list_subsystems(

@@ -69,6 +69,80 @@ void test_inspect_accepts_posix_locale_suffixes(const std::string& inspect_path)
     fs::remove_all(temp_root, ignored);
 }
 
+void test_inspect_explicit_locale_routes_dbf_version_display(const std::string& inspect_path) {
+    namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_version_tests";
+    const fs::path dbf_path = temp_root / "version.dbf";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_catalog(
+        temp_root,
+        "en-US",
+        "{\n"
+        "  \"Vfp.DbfHeader.Version.VisualFoxPro\": \"English VFP\"\n"
+        "}\n");
+    write_catalog(
+        temp_root,
+        "es-419",
+        "{\n"
+        "  \"Vfp.DbfHeader.Version.VisualFoxPro\": \"Espanol VFP\"\n"
+        "}\n");
+    write_catalog(
+        temp_root,
+        "pt-BR",
+        "{\n"
+        "  \"Vfp.DbfHeader.Version.VisualFoxPro\": \"Portugues VFP\"\n"
+        "}\n");
+    write_catalog(
+        temp_root,
+        "qps-ploc",
+        "{\n"
+        "  \"Vfp.DbfHeader.Version.VisualFoxPro\": \"Pseudo VFP\"\n"
+        "}\n");
+
+    std::string dbf_bytes(33U, '\0');
+    dbf_bytes[0] = static_cast<char>(0x30U);
+    dbf_bytes[1] = static_cast<char>(126U);
+    dbf_bytes[2] = static_cast<char>(7U);
+    dbf_bytes[3] = static_cast<char>(26U);
+    dbf_bytes[8] = static_cast<char>(33U);
+    dbf_bytes[10] = static_cast<char>(1U);
+    dbf_bytes[32] = static_cast<char>(0x0DU);
+    {
+        std::ofstream stream(dbf_path, std::ios::binary);
+        stream.write(dbf_bytes.data(), static_cast<std::streamsize>(dbf_bytes.size()));
+    }
+
+    set_env_value("COPPERFIN_LOCALE_DIR", temp_root.string(), true);
+    set_env_value("COPPERFIN_LOCALE", "", false);
+    for (const auto& locale_case : {
+             std::pair<std::string, std::string>{"es-419", "Espanol VFP"},
+             std::pair<std::string, std::string>{"pt-BR", "Portugues VFP"}}) {
+        const std::string output = run_command_capture(
+            shell_quote(inspect_path) + " " + shell_quote(dbf_path.string()) +
+            " --locale " + locale_case.first + " 2>&1");
+        expect(
+            output.find("header.version_description: " + locale_case.second) != std::string::npos,
+            "#4733: explicit " + locale_case.first + " should localize DBF version display");
+        expect(
+            output.find("header.version_description: English VFP") == std::string::npos,
+            "#4733: explicit " + locale_case.first + " should not use the environment/default DBF catalog");
+    }
+
+    const std::string pseudo_output = run_command_capture(
+        shell_quote(inspect_path) + " " + shell_quote(dbf_path.string()) +
+        " --locale qps-ploc 2>&1");
+    expect(
+        pseudo_output.find("header.version_description: [!! ") != std::string::npos,
+        "#4733: explicit qps-ploc should pseudo-localize DBF version display");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_inspect_license_status_preserves_machine_contracts(const std::string& inspect_path) {
     ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");

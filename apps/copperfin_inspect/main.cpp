@@ -152,7 +152,7 @@ void print_inspection(
     } else {
         const auto& header = result.header;
         std::cout << "header.version: 0x" << std::hex << static_cast<unsigned int>(header.version) << std::dec << "\n";
-        std::cout << "header.version_description: " << header.version_description() << "\n";
+        std::cout << "header.version_description: " << header.version_description(catalog) << "\n";
         std::cout << "header.last_update: " << header.last_update_iso8601() << "\n";
         std::cout << "header.record_count: " << header.record_count << "\n";
         std::cout << "header.header_length: " << header.header_length << "\n";

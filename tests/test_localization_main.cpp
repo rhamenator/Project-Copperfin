@@ -61,6 +61,7 @@ void test_runtime_object_helper_dispatch_errors_route_through_catalog();
 void test_runtime_ole_invocation_and_property_read_errors_route_through_catalog();
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path);
 void test_inspect_accepts_posix_locale_suffixes(const std::string& inspect_path);
+void test_inspect_explicit_locale_routes_dbf_version_display(const std::string& inspect_path);
 void test_inspect_license_status_preserves_machine_contracts(const std::string& inspect_path);
 void test_runtime_package_warnings_pseudo_localize();
 void test_inspect_error_prefix_routes_through_localization(const std::string& inspect_path);
@@ -127,6 +128,7 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
         test_inspect_accepts_posix_locale_suffixes(argv[1]);
+        test_inspect_explicit_locale_routes_dbf_version_display(argv[1]);
         test_inspect_license_status_preserves_machine_contracts(argv[1]);
         test_inspect_error_prefix_routes_through_localization(argv[1]);
     } else {

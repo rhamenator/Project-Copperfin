@@ -4540,10 +4540,10 @@ int run_studio_host_main(int argc, char** argv) {
         return 3;
     }
     if (parse_result.output_json) {
-        print_json_document(open_result.document, asset_mutation_performed);
+        print_json_document(open_result.document, catalog, asset_mutation_performed);
         return 0;
     }
-    print_document(open_result.document);
+    print_document(open_result.document, catalog);
     return 0;
 }
 
