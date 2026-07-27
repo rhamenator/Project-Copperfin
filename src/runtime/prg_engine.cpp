@@ -2054,6 +2054,65 @@ namespace copperfin::runtime
                     const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
                     return std::to_string(left_delimiter.size()) + ":" + left_delimiter + right_delimiter;
                 }
+                constexpr std::string_view relation_introspection_prefix = "__relation_introspection__\x1f";
+                if (trimmed_option_name.starts_with(relation_introspection_prefix))
+                {
+                    const std::string payload = trimmed_option_name.substr(relation_introspection_prefix.size());
+                    const std::size_t kind_end = payload.find('\x1f');
+                    const std::size_t number_end = kind_end == std::string::npos
+                        ? std::string::npos
+                        : payload.find('\x1f', kind_end + 1U);
+                    if (kind_end == std::string::npos || number_end == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+
+                    long long relation_number = 0;
+                    try
+                    {
+                        relation_number = std::stoll(payload.substr(kind_end + 1U, number_end - kind_end - 1U));
+                    }
+                    catch (...)
+                    {
+                        return std::string{};
+                    }
+                    if (relation_number < 1)
+                    {
+                        return std::string{};
+                    }
+
+                    const std::string kind = payload.substr(0U, kind_end);
+                    const std::string designator = payload.substr(number_end + 1U);
+                    CursorState *parent = designator.empty()
+                        ? resolve_cursor_target(std::to_string(current_selected_work_area()))
+                        : resolve_cursor_target(designator);
+                    if (parent == nullptr)
+                    {
+                        return std::string{};
+                    }
+
+                    long long current_relation_number = 0;
+                    for (const auto &relation : current_session_state().relations)
+                    {
+                        if (relation.parent_work_area != parent->work_area)
+                        {
+                            continue;
+                        }
+                        ++current_relation_number;
+                        if (current_relation_number != relation_number)
+                        {
+                            continue;
+                        }
+
+                        CursorState *child = find_cursor_by_area(relation.child_work_area);
+                        if (child == nullptr)
+                        {
+                            return std::string{};
+                        }
+                        return kind == "target" ? child->alias : relation.expression;
+                    }
+                    return std::string{};
+                }
 
                 std::string base_option_name = trimmed_option_name;
                 std::string option_variant;
@@ -2118,6 +2177,38 @@ namespace copperfin::runtime
                     return found_fields == current_set_state().end() || trim_copy(found_fields->second).empty()
                                ? std::string("ON")
                                : found_fields->second;
+                }
+
+                if (normalized_name == "relation" || normalized_name == "skip")
+                {
+                    CursorState *parent = resolve_cursor_target(std::to_string(current_selected_work_area()));
+                    if (parent == nullptr)
+                    {
+                        return std::string{};
+                    }
+
+                    std::string result;
+                    for (const auto &relation : current_session_state().relations)
+                    {
+                        if (relation.parent_work_area != parent->work_area ||
+                            (normalized_name == "skip" && !relation.skip_one_to_many))
+                        {
+                            continue;
+                        }
+                        CursorState *child = find_cursor_by_area(relation.child_work_area);
+                        if (child == nullptr)
+                        {
+                            continue;
+                        }
+                        if (!result.empty())
+                        {
+                            result += normalized_name == "relation" ? ", " : ",";
+                        }
+                        result += normalized_name == "relation"
+                            ? relation.expression + " INTO " + child->alias
+                            : child->alias;
+                    }
+                    return result;
                 }
 
                 const auto found = current_set_state().find(normalized_name);

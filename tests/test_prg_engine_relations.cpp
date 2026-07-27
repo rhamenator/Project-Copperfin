@@ -280,6 +280,75 @@ void test_local_set_relation_additive_and_explicit_parent()
            "SET RELATION TO should emit a stable clear event");
     fs::remove_all(temp_root, ignored);
 }
+
+void test_local_relation_introspection_preserves_order_and_session_state()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_relation_introspection";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path parent_path = temp_root / "parent.dbf";
+    const fs::path child_path = temp_root / "child.dbf";
+    const fs::path second_child_path = temp_root / "second_child.dbf";
+    write_people_dbf(parent_path, {{"PARENT10", 10}, {"PARENT20", 20}});
+    write_people_dbf(child_path, {{"CHILD10", 10}, {"CHILD20", 20}});
+    write_people_dbf(second_child_path, {{"SECOND10", 10}, {"SECOND20", 20}});
+
+    const fs::path main_path = temp_root / "relation_introspection.prg";
+    write_text(
+        main_path,
+        "USE '" + parent_path.string() + "' ALIAS Parent IN 0\n"
+        "USE '" + child_path.string() + "' ALIAS Child IN 0\n"
+        "USE '" + second_child_path.string() + "' ALIAS SecondChild IN 0\n"
+        "SET ORDER TO AGE IN Parent\n"
+        "SET ORDER TO AGE IN Child\n"
+        "SET ORDER TO AGE IN SecondChild\n"
+        "SELECT Parent\n"
+        "SET RELATION TO AGE INTO Child\n"
+        "SET RELATION TO AGE INTO SecondChild ADDITIVE\n"
+        "cRelationOne = RELATION(1)\n"
+        "cRelationTwo = RELATION(2, 'Parent')\n"
+        "cRelationMissing = RELATION(3, 'Parent')\n"
+        "cTargetOne = TARGET(1)\n"
+        "cTargetTwo = TARGET(2, 'Parent')\n"
+        "cTargetMissing = TARGET(3, 'Parent')\n"
+        "cRelationClause = SET('RELATION')\n"
+        "SET SKIP TO Child\n"
+        "cSkipClause = SET('SKIP')\n"
+        "SET DATASESSION TO 2\n"
+        "cFreshRelation = SET('RELATION')\n"
+        "cFreshTarget = TARGET(1)\n"
+        "SET DATASESSION 1\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "relation introspection script should complete");
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message)
+    {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end())
+        {
+            expect(format_value(found->second) == expected, message);
+        }
+    };
+    check("crelationone", "AGE", "RELATION should preserve the first expression");
+    check("crelationtwo", "AGE", "RELATION should resolve an alias-selected parent");
+    check("crelationmissing", "", "RELATION should return empty for an out-of-range relation");
+    check("ctargetone", "Child", "TARGET should return the first child alias");
+    check("ctargettwo", "SecondChild", "TARGET should resolve an alias-selected parent");
+    check("ctargetmissing", "", "TARGET should return empty for an out-of-range relation");
+    check("crelationclause", "AGE INTO Child, AGE INTO SecondChild", "SET RELATION should emit a restorable clause");
+    check("cskipclause", "Child", "SET SKIP should emit only enabled child aliases");
+    check("cfreshrelation", "", "relation introspection should be data-session scoped");
+    check("cfreshtarget", "", "TARGET should be empty in a fresh data session");
+    fs::remove_all(temp_root, ignored);
+}
 }
 
 int main()
@@ -288,6 +357,7 @@ int main()
     test_local_set_skip_tracks_child_group_navigation();
     test_local_set_relation_refreshes_after_parent_mutation();
     test_local_set_relation_additive_and_explicit_parent();
+    test_local_relation_introspection_preserves_order_and_session_state();
     if (copperfin::test_support::test_failures() != 0)
     {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

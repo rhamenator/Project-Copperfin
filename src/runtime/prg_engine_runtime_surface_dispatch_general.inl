@@ -355,6 +355,21 @@
         }
         return make_string_value(set_callback(option_name));
     }
+    if ((function == "relation" || function == "target") && !arguments.empty()) {
+        const long long relation_number = static_cast<long long>(std::llround(value_as_number(arguments[0])));
+        if (relation_number < 1) {
+            return make_string_value(std::string{});
+        }
+
+        // Relation introspection is resolved by the owning runtime session so the
+        // expression evaluator does not need to own cursor or data-session state.
+        const std::string designator = arguments.size() >= 2U
+            ? value_as_string(arguments[1])
+            : std::string{};
+        return make_string_value(
+            set_callback("__relation_introspection__\x1f" + function + "\x1f" +
+                         std::to_string(relation_number) + "\x1f" + designator));
+    }
     if (function == "error") {
         return make_number_value(static_cast<double>(last_error_code));
     }
