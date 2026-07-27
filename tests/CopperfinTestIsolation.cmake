@@ -112,6 +112,43 @@ function(copperfin_configure_native_test_isolation)
     endforeach()
 
     foreach(test_name IN ITEMS
+            test_polyglot_bridge_invocation
+            test_polyglot_migration_telemetry
+            test_polyglot_parity_comparator
+            test_polyglot_route_registry)
+        copperfin_set_test_isolation(${test_name}
+            PARALLEL_SAFE
+            FILESYSTEM none
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endforeach()
+    copperfin_set_test_isolation(test_polyglot_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+    copperfin_set_test_isolation(test_polyglot_route_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    foreach(test_name IN ITEMS
             test_product_subsystems
             test_builder_registry
             test_toolbox_palette
@@ -830,6 +867,7 @@ function(copperfin_configure_native_test_isolation)
             test_prg_engine_runtime_surface_requery
             test_prg_engine_runtime_surface_value
             test_prg_engine_rushmore_optimization
+            test_prg_engine_relations
             test_prg_engine_seek_index
             test_prg_engine_sql_cursors_metadata
             test_prg_engine_sql_cursors_mutation

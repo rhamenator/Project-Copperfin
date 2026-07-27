@@ -20,6 +20,8 @@ Every test has exactly one value for each axis:
 
 CTest labels use the stable `copperfin-isolation:<axis>=<value>` form. These are test-policy identities, not product strings or runtime contracts.
 
+The current audit explicitly covers the pure polyglot decision/telemetry tests, the read-only polyglot contract checks, and the unique-temporary-root `test_prg_engine_relations` suite. Those targets are classified as complete and parallel-safe; the inventory contract remains fail-closed for any future registration that has not received the same source-backed review.
+
 ## Fail-Closed Default
 
 A newly registered or unaudited test receives `unverified` risk values, `audit=pending`, `schedule=serial`, and `RUN_SERIAL=TRUE`. A pending test therefore runs alone even when the caller later uses bounded `ctest --parallel` execution.
