@@ -570,10 +570,12 @@ void test_runtime_package_stages_unicode_prg_include_dependencies() {
         copperfin::platform::path_from_utf8_string(header_name);
     const fs::path nested_header_path = include_dir /
         copperfin::platform::path_from_utf8_string(nested_header_name);
-    const std::string header_relative = copperfin::platform::path_to_utf8_string(
+    std::string header_relative = copperfin::platform::path_to_utf8_string(
         header_path.lexically_relative(project_dir));
-    const std::string nested_header_relative = copperfin::platform::path_to_utf8_string(
+    std::string nested_header_relative = copperfin::platform::path_to_utf8_string(
         nested_header_path.lexically_relative(project_dir));
+    std::replace(header_relative.begin(), header_relative.end(), '\\', '/');
+    std::replace(nested_header_relative.begin(), nested_header_relative.end(), '\\', '/');
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(include_dir);

@@ -8,6 +8,7 @@
 #include "runtime_pipeline_test_hooks.h"
 #endif
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cerrno>
