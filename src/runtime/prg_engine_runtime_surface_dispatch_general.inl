@@ -61,7 +61,11 @@
         return make_string_value("0");
     }
     if (function == "home") {
-        return make_string_value(default_directory);
+        std::string home = default_directory;
+        if (!home.empty() && home.back() != '/' && home.back() != '\\') {
+            home += std::filesystem::path::preferred_separator;
+        }
+        return make_string_value(std::move(home));
     }
     if (function == "os") {
         return make_string_value(host_os_name());

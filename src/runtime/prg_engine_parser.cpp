@@ -1315,11 +1315,24 @@ bool parse_table_definition_statement(const std::string& line, Statement& statem
         };
 
         const auto paren_open = body.find('(');
-        const std::size_t free_position = find_keyword_top_level(body, "FREE");
-        if (paren_open == 0U && free_position != std::string::npos && free_position > paren_open)
+        if (paren_open == 0U)
         {
             const std::size_t target_close = find_matching_parenthesis(paren_open);
-            const std::size_t fields_open = body.find('(', free_position + 4U);
+            std::size_t fields_open = target_close == std::string::npos ? std::string::npos : target_close + 1U;
+            while (fields_open < body.size() && std::isspace(static_cast<unsigned char>(body[fields_open])) != 0)
+            {
+                ++fields_open;
+            }
+            if (fields_open != std::string::npos && starts_with_insensitive(body.substr(fields_open), "FREE") &&
+                (body.size() == fields_open + 4U ||
+                 std::isspace(static_cast<unsigned char>(body[fields_open + 4U])) != 0))
+            {
+                fields_open += 4U;
+                while (fields_open < body.size() && std::isspace(static_cast<unsigned char>(body[fields_open])) != 0)
+                {
+                    ++fields_open;
+                }
+            }
             const std::size_t fields_close = fields_open == std::string::npos
                                                  ? std::string::npos
                                                  : find_matching_parenthesis(fields_open);

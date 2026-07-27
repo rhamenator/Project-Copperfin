@@ -105,6 +105,11 @@ void test_create_table_free_dynamic_target() {
         "cAliasCreated = ALIAS()\n"
         "nFieldCount = FCOUNT()\n"
         "nRecordCount = RECCOUNT()\n"
+        "cTableNoFree = '" + (temp_root / "dynamic_ref_nofree").string() + "'\n"
+        "CREATE TABLE (m.cTableNoFree) (Marker C(8), Timestamp T NULL)\n"
+        "lCreatedNoFree = FILE(cTableNoFree + '.dbf')\n"
+        "cAliasNoFree = ALIAS()\n"
+        "nFieldCountNoFree = FCOUNT()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -126,6 +131,9 @@ void test_create_table_free_dynamic_target() {
     check("caliascreated", "dynamic_ref");
     check("nfieldcount", "3");
     check("nrecordcount", "1");
+    check("lcreatednofree", "true");
+    check("caliasnofree", "dynamic_ref_nofree");
+    check("nfieldcountnofree", "2");
     const auto table_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string() + ".dbf", 5U);
     expect(table_result.ok, "dynamic CREATE TABLE FREE output should remain readable: " + table_result.error);
     if (table_result.ok && !table_result.table.records.empty()) {

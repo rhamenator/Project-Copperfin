@@ -196,7 +196,11 @@ namespace copperfin::runtime_surface_tests
         check("lfilemiss", "false");
         check("csysscript", main_path.string());
         check("csysdefault", "0");
-        check("chome", temp_root.string());
+        std::string expected_home = temp_root.string();
+        if (!expected_home.empty() && expected_home.back() != '/' && expected_home.back() != '\\') {
+            expected_home += fs::path::preferred_separator;
+        }
+        check("chome", expected_home);
         check("ldiskspacepositive", "true");
         check("ndrivetype", "3");
         check("nmissingdrivetype", "0");
