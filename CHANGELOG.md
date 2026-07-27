@@ -1,3 +1,5 @@
+- 2026-07-28: Verified #4739 at synchronized head `f8aa58f89` with the complete Linux native CTest matrix: `316/316` tests passed in 336.53 seconds, with only the expected platform-conditional launcher tests skipped. The new ReportListener creation path did not regress Studio, package, security, localization, or PRG runtime coverage.
+
 - 2026-07-28: Implemented #4739 under #3217. ReportListener-derived objects now expose a portable `CreateConfigTable()` contract for the supported five-field configuration DBF schema. Creation preserves existing tables unless `tlOverwrite` is true, updates `ConfigurationTable`, and fails closed in strict verified-byte sessions rather than writing an unadmitted destination. Focused runtime-surface and strict configuration-security tests pass; exact-head Windows validation remains requested.
 
 - 2026-07-28: Verified the #4738 localization/runtime-session head with the complete Linux native CTest matrix at `92283ec6c`: `316/316` tests passed, with only the two expected platform-conditional launcher tests skipped. Runtime-host, package, security, report/label, Studio, localization, and PRG engine coverage remained green.
