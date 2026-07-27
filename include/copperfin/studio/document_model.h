@@ -885,5 +885,8 @@ struct StudioOpenResult {
     const StudioDocumentModel& document,
     const localization::LocalizedCatalog& catalog);
 StudioOpenResult open_document(const StudioOpenRequest& request);
+StudioOpenResult open_document(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::studio

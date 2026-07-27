@@ -938,8 +938,14 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
 }
 
 StudioOpenResult open_document(const StudioOpenRequest& request) {
+    return open_document(request, document_catalog());
+}
+
+StudioOpenResult open_document(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.path.empty()) {
-        return {.ok = false, .error = document_text("Studio.DocumentOpen.Error.PathRequired")};
+        return {.ok = false, .error = document_text(catalog, "Studio.DocumentOpen.Error.PathRequired")};
     }
 
     std::string document_path = request.path;
@@ -954,6 +960,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             return {
                 .ok = false,
                 .error = document_text(
+                    catalog,
                     "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
                     {{"path", request.path}})
             };
@@ -970,6 +977,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                 return {
                     .ok = false,
                     .error = document_text(
+                        catalog,
                         "Studio.DocumentOpen.Error.SidecarPrimaryAmbiguous",
                         {{"path", request.path}})
                 };
@@ -978,6 +986,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                 return {
                     .ok = false,
                     .error = document_text(
+                        catalog,
                         "Studio.DocumentOpen.Error.SidecarPrimaryMissing",
                         {{"path", request.path}})
                 };
@@ -998,6 +1007,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             return {
                 .ok = false,
                 .error = document_text(
+                    catalog,
                     "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
                     {{"path", copperfin::platform::path_to_utf8_string(
                         inferred_sidecar_resolution.requested_path)}})
@@ -1041,6 +1051,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                 return {
                     .ok = false,
                     .error = document_text(
+                        catalog,
                         "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
                         {{"path", copperfin::platform::path_to_utf8_string(
                             inferred_sidecar_resolution.requested_path)}})

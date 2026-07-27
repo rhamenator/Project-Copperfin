@@ -12,6 +12,7 @@ using namespace cf_test_studio_host;
 
 int main() {
     test_open_document_path_error_resolves_through_localization_catalog();
+    test_open_document_uses_supplied_localization_catalog();
     test_document_default_catalog_refreshes_when_locale_changes();
     test_launch_parse_errors_resolve_through_localization_catalog();
     test_parse_launch_arguments();

@@ -4533,7 +4533,7 @@ int run_studio_host_main(int argc, char** argv) {
             return 4;
         }
     }
-    const auto open_result = copperfin::studio::open_document(open_request);
+    const auto open_result = copperfin::studio::open_document(open_request, catalog);
     if (!open_result.ok) {
         std::cout << "status: error\n";
         std::cout << studio_error_prefix() << open_result.error << "\n";

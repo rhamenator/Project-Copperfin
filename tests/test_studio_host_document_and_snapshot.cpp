@@ -87,6 +87,27 @@ void test_open_document_path_error_resolves_through_localization_catalog() {
         "#2393: open_document should preserve default localized missing path diagnostic");
 }
 
+void test_open_document_uses_supplied_localization_catalog() {
+    copperfin::test_support::ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE");
+    locale_override.set("qps-ploc");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto catalogs = std::vector<std::pair<std::string_view, copperfin::localization::LocalizedCatalog>>{
+        {"en-US", copperfin::localization::load_catalogs(catalog_root, "en-US")},
+        {"es-419", copperfin::localization::load_catalogs(catalog_root, "es-419")},
+        {"pt-BR", copperfin::localization::load_catalogs(catalog_root, "pt-BR")},
+        {"qps-ploc", copperfin::localization::load_catalogs(catalog_root, "qps-ploc")}
+    };
+    constexpr std::string_view key = "Studio.DocumentOpen.Error.PathRequired";
+    for (const auto& [locale, catalog] : catalogs) {
+        const auto result = copperfin::studio::open_document({}, catalog);
+        expect(!result.ok, "#4734: supplied catalog should preserve missing-path failure");
+        expect(result.error == catalog.translate(key),
+               std::string("#4734: supplied catalog should control document-open text for ") +
+                   std::string(locale));
+    }
+}
+
 void test_open_document_infers_form_sidecar() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_tests";
