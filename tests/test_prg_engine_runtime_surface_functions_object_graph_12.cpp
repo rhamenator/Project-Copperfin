@@ -31,6 +31,9 @@ namespace copperfin::runtime_surface_tests
             "m.oFoxRef = NEWOBJECT('FoxRef', 'setproject_library.prg')\n"
             "cResult = m.oFoxRef.SetProject()\n"
             "nProjectCount = Application.Projects.Count\n"
+            "cBracketLiteral = [\"]\n"
+            "cBracketExpression = 'prefix' + [\"] + 'suffix'\n"
+            "nBracketLength = LENC('ab' + [\"])\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -47,6 +50,18 @@ namespace copperfin::runtime_surface_tests
         const auto project_count = state.globals.find("nprojectcount");
         expect(project_count != state.globals.end() && copperfin::runtime::format_value(project_count->second) == "0",
                "headless runtime should expose an empty Application.Projects collection");
+
+        const auto bracket_literal = state.globals.find("cbracketliteral");
+        expect(bracket_literal != state.globals.end() && copperfin::runtime::format_value(bracket_literal->second) == "\"",
+               "VFP square-bracket literals should preserve their enclosed character");
+
+        const auto bracket_expression = state.globals.find("cbracketexpression");
+        expect(bracket_expression != state.globals.end() && copperfin::runtime::format_value(bracket_expression->second) == "prefix\"suffix",
+               "VFP square-bracket literals should participate in ordinary expression concatenation");
+
+        const auto bracket_length = state.globals.find("nbracketlength");
+        expect(bracket_length != state.globals.end() && copperfin::runtime::format_value(bracket_length->second) == "3",
+               "VFP square-bracket literals should feed character-aware string functions");
 
         fs::remove_all(temp_root, ignored);
     }

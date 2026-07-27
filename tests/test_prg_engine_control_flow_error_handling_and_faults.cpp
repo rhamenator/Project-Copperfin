@@ -1299,6 +1299,12 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
         "  cCatchClass = oErr.Class\n"
         "  cCatchBaseClass = oErr.BaseClass\n"
         "  cCatchMessage = oErr.Message\n"
+        "  cQualifiedMessage = m.oErr.Message\n"
+        "  cQualifiedCombined = 'prefix' + m.oErr.Message + 'suffix'\n"
+        "  cChrResult = CHR(10)\n"
+        "  cForceExtResult = FORCEEXT('reference', 'DBF')\n"
+        "  cRefTable = '/tmp/reference'\n"
+        "  nDiagnosticMessageBox = MESSAGEBOX('The Reference Table could not be created' + ' (' + m.oErr.Message + '):' + CHR(10) + CHR(10) + FORCEEXT(m.cRefTable, 'DBF'), 16, 'Code References')\n"
         "  cCatchMessageText = oErr.MessageText\n"
         "  nCatchErrorNo = oErr.ErrorNo\n"
         "  nCatchHelpContext = oErr.HelpContext\n"
@@ -1332,7 +1338,10 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "CATCH TO Exception-object script should complete: " + state.message);
+    const std::string last_event = state.events.empty() ? std::string{} : state.events.back().detail;
+    expect(state.completed,
+           "CATCH TO Exception-object script should complete: " + state.message +
+               " @line=" + std::to_string(state.location.line) + " last=" + last_event);
 
     const auto check = [&](const std::string& name, const std::string& expected) {
         const auto it = state.globals.find(name);
@@ -1355,6 +1364,11 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     check("nerrrows", "1");
 
     const auto catch_message = state.globals.find("ccatchmessage");
+    const auto qualified_message = state.globals.find("cqualifiedmessage");
+    const auto qualified_combined = state.globals.find("cqualifiedcombined");
+    const auto chr_result = state.globals.find("cchrresult");
+    const auto forceext_result = state.globals.find("cforceextresult");
+    const auto diagnostic_message_box = state.globals.find("ndiagnosticmessagebox");
     const auto catch_message_text = state.globals.find("ccatchmessagetext");
     const auto catch_error_no = state.globals.find("ncatcherrorno");
     const auto catch_help_context = state.globals.find("ncatchhelpcontext");
@@ -1373,6 +1387,11 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     const auto fn_prog = state.globals.find("cfnprog");
 
     expect(catch_message != state.globals.end(), "caught Exception object should expose Message");
+    expect(qualified_message != state.globals.end(), "m-qualified caught Exception object should expose Message");
+    expect(qualified_combined != state.globals.end(), "m-qualified caught Exception Message should concatenate as a string");
+    expect(chr_result != state.globals.end(), "CHR() should return a string while formatting caught diagnostics");
+    expect(forceext_result != state.globals.end(), "FORCEEXT() should return a string while formatting caught diagnostics");
+    expect(diagnostic_message_box != state.globals.end(), "MESSAGEBOX() should accept the formatted caught diagnostic expression");
     expect(catch_message_text != state.globals.end(), "caught Exception object should expose MessageText");
     expect(catch_error_no != state.globals.end(), "caught Exception object should expose ErrorNo");
     expect(catch_help_context != state.globals.end(), "caught Exception object should expose HelpContext");
@@ -1396,6 +1415,30 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
                "caught Exception Message should match AERROR()[1,2]");
         expect(catch_msg == copperfin::runtime::format_value(fn_msg->second),
                "caught Exception Message should match MESSAGE()");
+    }
+    if (catch_message != state.globals.end() && qualified_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(qualified_message->second) ==
+                   copperfin::runtime::format_value(catch_message->second),
+               "m-qualified Exception Message should match the direct property read");
+    }
+    if (qualified_combined != state.globals.end()) {
+        expect(copperfin::runtime::format_value(qualified_combined->second).find("prefix") == 0U &&
+                   copperfin::runtime::format_value(qualified_combined->second).rfind("suffix") ==
+                       copperfin::runtime::format_value(qualified_combined->second).size() - 6U,
+               "m-qualified Exception Message should participate in string concatenation");
+    }
+    if (chr_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(chr_result->second).size() == 1U &&
+                   copperfin::runtime::format_value(chr_result->second)[0] == '\n',
+               "CHR() should preserve its string result for diagnostic formatting");
+    }
+    if (forceext_result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(forceext_result->second) == "reference.DBF",
+               "FORCEEXT() should preserve its string result for diagnostic formatting");
+    }
+    if (diagnostic_message_box != state.globals.end()) {
+        expect(copperfin::runtime::format_value(diagnostic_message_box->second) == "1",
+               "MESSAGEBOX() should return its normal button result for formatted caught diagnostics");
     }
     if (catch_message != state.globals.end() && catch_message_text != state.globals.end()) {
         expect(copperfin::runtime::format_value(catch_message_text->second) ==

@@ -816,6 +816,10 @@
                 {
                     return make_string_value(parse_braced_literal());
                 }
+                if (peek() == '[')
+                {
+                    return make_string_value(parse_bracket_literal());
+                }
                 if (peek() == '.')
                 {
                     if (match(".T.") || match(".t."))
@@ -2608,6 +2612,10 @@
                 }
                 if (starts_with_insensitive(normalize_identifier(identifier), "m."))
                 {
+                    if (normalized.find('.') != std::string::npos)
+                    {
+                        return ole_property_callback_(normalized);
+                    }
                     return {};
                 }
                 if (const auto field = field_lookup_callback_(identifier))
@@ -3151,6 +3159,33 @@
                         if (position_ < text_.size() && text_[position_] == delimiter)
                         {
                             result.push_back(delimiter);
+                            ++position_;
+                            continue;
+                        }
+                        break;
+                    }
+                    result.push_back(ch);
+                }
+                return result;
+            }
+
+            std::string parse_bracket_literal()
+            {
+                std::string result;
+                skip_whitespace();
+                if (position_ >= text_.size() || text_[position_] != '[')
+                {
+                    return result;
+                }
+                ++position_;
+                while (position_ < text_.size())
+                {
+                    const char ch = text_[position_++];
+                    if (ch == ']')
+                    {
+                        if (position_ < text_.size() && text_[position_] == ']')
+                        {
+                            result.push_back(']');
                             ++position_;
                             continue;
                         }
