@@ -400,12 +400,14 @@
             if (!stack.empty())
             {
                 const bool requested_nodefault = stack.back().requested_nodefault;
+                const bool returned_explicitly = stack.back().return_pending;
                 const std::optional<PrgValue> saved_return_value = last_return_value;
                 sync_byref_arguments(stack.back());
                 release_frame_object_bindings(stack.back());
                 restore_private_declarations(stack.back());
                 stack.pop_back();
                 last_popped_frame_requested_nodefault = requested_nodefault;
+                last_popped_frame_returned = returned_explicitly;
                 last_return_value = saved_return_value;
             }
         }

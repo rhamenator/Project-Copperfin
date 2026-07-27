@@ -2,6 +2,7 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_external_prg_setproject_method_invocation();
     void test_typed_local_newobject_method_invocation_uses_local_storage();
     void test_native_list_controls_file_rowsource_materializes_masks();
     void test_native_list_controls_field_structure_rowsource_materializes_fields();

@@ -1057,6 +1057,7 @@ The official command inventory is much larger than the current runtime. The deep
 
 ### Automation And Compatibility Utilities
 
+- Native PRG constructor and application-surface note: a no-return native `Init()` no longer inherits a nested routine's stale return value when deciding whether construction failed. The headless runtime also exposes `Application.Projects` as an empty read-only collection through the standard `Application` alias, allowing no-project startup paths such as VFPSource FoxRef to reach their own project-selection logic under #3217/#4691. The real FOXREF run currently stops later in `CreateFileTable` at an isolated operator/type boundary; full FoxRef parity is not claimed.
 - host stability and debugger fault containment are implemented for the current MVP runtime boundary: the process-boundary contract and PRG/form/class/menu/report/label debugger recovery regressions are covered by closed #4623/#4625/#4626/#4627; hosted Windows, mounted-VFP9, and Visual Studio validation remains release evidence under #4621
 
 ## How To Use The References

@@ -1041,6 +1041,7 @@ namespace copperfin::runtime
         std::map<std::string, PrgValue> globals;
         std::optional<PrgValue> last_return_value;
         bool last_popped_frame_requested_nodefault = false;
+        bool last_popped_frame_returned = false;
         std::map<std::string, RuntimeArray> arrays;
         std::map<int, std::map<std::string, RuntimeArray>> native_object_arrays;
         std::set<std::string> public_names;
@@ -1173,6 +1174,7 @@ namespace copperfin::runtime
         RuntimeOleObjectState *representative_application_surface_object();
         RuntimeOleObjectState *ensure_representative_application_forms_collection_object();
         bool consume_last_popped_frame_requested_nodefault();
+        bool consume_last_popped_frame_returned();
         std::optional<std::intptr_t> dispatch_windows_message(
             std::intptr_t hwnd,
             std::uint32_t message,
@@ -4205,6 +4207,13 @@ namespace copperfin::runtime
         const bool requested = last_popped_frame_requested_nodefault;
         last_popped_frame_requested_nodefault = false;
         return requested;
+    }
+
+    bool PrgRuntimeSession::Impl::consume_last_popped_frame_returned()
+    {
+        const bool returned = last_popped_frame_returned;
+        last_popped_frame_returned = false;
+        return returned;
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_user_routine(
@@ -11332,8 +11341,27 @@ namespace copperfin::runtime
             const PrgValue application_surface_reference = make_string_value(
                 "object:" + application_surface->second.prog_id + "#" +
                 std::to_string(application_surface->second.handle));
+            const int projects_handle = impl->next_ole_handle++;
+            RuntimeOleObjectState projects_state{
+                .handle = projects_handle,
+                .prog_id = "Collection",
+                .source = {},
+                .last_action = "Projects",
+                .action_count = 1,
+                .hidden_runtime_surface = true,
+                .read_only_collection_surface = true};
+            projects_state.base_class_name = "Collection";
+            projects_state.class_hierarchy = {"COLLECTION", "OBJECT"};
+            const auto [projects_it, _] = impl->ole_objects.emplace(
+                projects_handle,
+                std::move(projects_state));
+            application_surface->second.properties["projects"] = make_string_value(
+                "object:" + projects_it->second.prog_id + "#" +
+                std::to_string(projects_it->second.handle));
+            application_surface->second.properties["activeproject"] = make_empty_value();
             impl->globals["_screen"] = application_surface_reference;
             impl->globals["_vfp"] = application_surface_reference;
+            impl->globals["application"] = application_surface_reference;
         }
         impl->events.push_back({.category = "runtime.config",
                                 .detail = "temp=" + copperfin::platform::path_to_utf8_string(impl->runtime_temp_directory) +

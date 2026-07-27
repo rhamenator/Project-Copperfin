@@ -2,6 +2,55 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_external_prg_setproject_method_invocation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_setproject_method";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "setproject_library.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS FoxRef AS Session\n"
+            "    FUNCTION Init\n"
+            "        lIgnored = THIS.InitializerResult()\n"
+            "    ENDFUNC\n"
+            "    FUNCTION InitializerResult\n"
+            "        RETURN .F.\n"
+            "    ENDFUNC\n"
+            "    FUNCTION SetProject\n"
+            "        RETURN 'set-project-ok'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+        const fs::path main_path = temp_root / "setproject_main.prg";
+        write_text(
+            main_path,
+            "LOCAL oFoxRef AS FoxRef OF setproject_library.prg\n"
+            "m.oFoxRef = NEWOBJECT('FoxRef', 'setproject_library.prg')\n"
+            "cResult = m.oFoxRef.SetProject()\n"
+            "nProjectCount = Application.Projects.Count\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external PRG SetProject method script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto result = state.globals.find("cresult");
+        expect(result != state.globals.end() && copperfin::runtime::format_value(result->second) == "set-project-ok",
+               "external PRG SetProject method should dispatch by its ordinary normalized member name");
+
+        const auto project_count = state.globals.find("nprojectcount");
+        expect(project_count != state.globals.end() && copperfin::runtime::format_value(project_count->second) == "0",
+               "headless runtime should expose an empty Application.Projects collection");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_typed_local_newobject_method_invocation_uses_local_storage()
     {
         namespace fs = std::filesystem;

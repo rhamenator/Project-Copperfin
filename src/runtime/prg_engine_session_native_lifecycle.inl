@@ -480,7 +480,9 @@
                                   effective_constructor_arguments,
                                   constructor_argument_references);
                 const PrgValue init_result = run_expression_invoked_routine_until_return(return_depth);
-                if (init_result.kind == PrgValueKind::boolean && !init_result.boolean_value)
+                const bool init_returned_explicitly = consume_last_popped_frame_returned();
+                if (init_returned_explicitly &&
+                    init_result.kind == PrgValueKind::boolean && !init_result.boolean_value)
                 {
                     events.erase(
                         std::remove_if(

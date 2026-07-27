@@ -17,6 +17,7 @@ int main()
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_cursor_xml_cardinality_mismatch_preserves_destinations();
     test_newobject_getpem_setpem_compobj_functions();
+    test_external_prg_setproject_method_invocation();
     test_typed_local_newobject_method_invocation_uses_local_storage();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_native_prg_class_dimension_properties_are_per_instance_arrays();
