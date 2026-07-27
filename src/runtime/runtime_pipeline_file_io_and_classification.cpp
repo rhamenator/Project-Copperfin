@@ -99,6 +99,40 @@ std::optional<std::filesystem::path> expand_windows_drive_relative_path(
         buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
     }
 }
+
+std::optional<std::filesystem::path> resolve_windows_host_spelling(
+    const std::filesystem::path& candidate) {
+    const HANDLE handle = ::CreateFileW(
+        candidate.c_str(),
+        0,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS,
+        nullptr);
+    if (handle == INVALID_HANDLE_VALUE) {
+        return std::nullopt;
+    }
+
+    std::wstring buffer(256U, L'\0');
+    for (;;) {
+        const DWORD length = ::GetFinalPathNameByHandleW(
+            handle,
+            buffer.data(),
+            static_cast<DWORD>(buffer.size()),
+            FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+        if (length == 0U) {
+            ::CloseHandle(handle);
+            return std::nullopt;
+        }
+        if (length < buffer.size()) {
+            buffer.resize(length);
+            ::CloseHandle(handle);
+            return std::filesystem::path(buffer).lexically_normal();
+        }
+        buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
+    }
+}
 #endif
 
 std::filesystem::path resolve_vfp_path_from_base(
@@ -185,14 +219,16 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold_impl(
 
 #if defined(_WIN32)
     // Windows may present the same directory through an 8.3 alias (for
-    // example, RUNNER~1 versus runneradmin). Let the host resolve an already
-    // existing candidate before walking directory entries for VFP case-fold
-    // and ambiguity handling; otherwise a valid external include root can be
-    // rejected before its contents are inspected. Other platforms retain the
+    // example, RUNNER~1 versus runneradmin). Resolve an existing candidate
+    // through a host handle so the returned path uses the actual long spelling
+    // rather than preserving the alias. Other platforms retain the
     // spelling-preserving canonicalization path below.
     std::error_code host_exists_error;
     if (std::filesystem::exists(candidate, host_exists_error) && !host_exists_error) {
-        return candidate.lexically_normal();
+        if (const auto host_spelling = resolve_windows_host_spelling(candidate);
+            host_spelling.has_value()) {
+            return host_spelling;
+        }
     }
 #endif
 

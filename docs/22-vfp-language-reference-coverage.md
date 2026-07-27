@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- #4750 Windows path-spelling follow-up: workflow `30285953343` at `63f2fb659` passed `314/315` native tests and failed only `test_runtime_pipeline`. The initial Windows alias fast path preserved `RUNNER~1` instead of the normalized long spelling, so #3953/#3905 and trusted external-include assertions failed. The resolver now uses `GetFinalPathNameByHandleW` for an existing Windows candidate; focused Linux `test_runtime_pipeline` passes 1/1 in 44.02s, and a fresh Windows rerun remains required. The Apple numeric-parser file remains separate and untouched.
+
 - Corrected-head hosted native evidence: Linux workflow `30285953284` passed `316/316` in `174.85s`, and macOS workflow `30285953392` passed `316/316` in `208.09s`, with only documented platform-conditional skips. Windows workflow `30285953343` remains in progress; no Windows evidence is claimed until it resolves. The Apple numeric-parser file remains separate and untouched.
 
 - #4750 cross-platform correction: the Windows 8.3 alias fast path is guarded by `_WIN32` after hosted macOS workflow `30283890467` showed that an unconditional host-exists return preserved `/var` rather than the canonical `/private/var` spelling and violated #3953/#3905. Focused Linux `test_runtime_pipeline` passes 1/1 in 40.25s; fresh Windows workflow `30283890422` remains the required Windows proof. The pending Apple numeric-parser source remains separate and untouched.
