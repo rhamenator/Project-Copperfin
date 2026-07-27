@@ -1,3 +1,5 @@
+- 2026-07-27: Corrected the #4729 case-rule regression to inspect `TAG()` metadata rather than active `ORDER()` state; the fixture does not issue `SET ORDER`, so an empty `ORDER()` result was not evidence of lost index metadata. The four focused asset/DBF/report/xAsset CTests pass on Linux; exact-head Windows rerun is required.
+
 - 2026-07-26: The full synchronized native CTest matrix passed `316/316` after the #4729 virtual-companion fix. The only skips were the expected platform-conditional launcher tests `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; exact-head Windows validation remains required.
 
 - 2026-07-26: Hardened #4729 verified companion-index discovery after agent review. Asset inspection now consults admitted index bytes even when no physical companion exists, using exact paths on POSIX and case-insensitive matching on Windows. Added direct virtual-companion coverage alongside the runtime DBF security tests; the focused asset, DBF, report, and xAsset CTests pass on Linux. Exact-head Windows validation remains required.

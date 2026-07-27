@@ -334,17 +334,17 @@ void test_database_index_admission_preserves_platform_case_rules()
         root,
         "verified_index_case.prg",
         "USE '" + table_path.string() + "' ALIAS customers\n"
-        "cOrder = ORDER('customers')\n"
+        "cTag = TAG('customers.cdx', 1, 'customers')\n"
         "RETURN\n",
         options);
 
     expect(state.completed,
            "strict DBF index case-rule fixture should complete: " + state.message);
 #if defined(_WIN32)
-    expect(global_text(state, "corder") == "NAME",
+    expect(global_text(state, "ctag") == "NAME",
            "Windows strict DBF admission should retain VFP case-insensitive index lookup");
 #else
-    expect(global_text(state, "corder").empty(),
+    expect(global_text(state, "ctag").empty(),
            "POSIX strict DBF admission should reject a differently-cased index override");
 #endif
     fs::remove_all(root, ignored);
