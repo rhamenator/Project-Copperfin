@@ -139,6 +139,42 @@ internal sealed class CopperfinStudioBuilderLaunchPlanResult
     public CopperfinStudioBuilderLaunchPlanPayload Plan { get; set; } = new();
 }
 
+internal sealed class CopperfinStudioBuilderExecutionEnvelope
+{
+    public string Status { get; set; } = string.Empty;
+    public string Error { get; set; } = string.Empty;
+    public CopperfinStudioBuilderExecutionPayload? BuilderExecution { get; set; }
+    public int ObservedExitCode { get; set; }
+    public bool Executed { get; set; }
+    public bool DryRun { get; set; }
+    public bool ExecutionAdmitted { get; set; }
+    public string LaunchCommand { get; set; } = string.Empty;
+    public string ExecutedCommand { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioBuilderExecutionPayload
+{
+    public bool Ok { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string BuilderId { get; set; } = string.Empty;
+    public string Context { get; set; } = string.Empty;
+    public string EntryPoint { get; set; } = string.Empty;
+    public bool Executed { get; set; }
+    public bool DryRun { get; set; }
+    public bool ExecutionAdmitted { get; set; }
+    public int ObservedExitCode { get; set; }
+    public string LaunchCommand { get; set; } = string.Empty;
+    public string ExecutedCommand { get; set; } = string.Empty;
+}
+
+internal sealed class CopperfinStudioBuilderExecutionResult
+{
+    public bool Success { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public int ObservedExitCode { get; set; }
+    public bool Executed { get; set; }
+}
+
 internal sealed class CopperfinStudioSnapshotDocument
 {
     public string Path { get; set; } = string.Empty;

@@ -110,6 +110,40 @@ internal static class CopperfinStudioHostBridge
         return arguments;
     }
 
+    public static string BuildBuilderExecuteArguments(
+        string builderId,
+        string builderContext,
+        string launchCommand,
+        string? assetPath = null,
+        int? recordIndex = null,
+        string? objectName = null,
+        string? uniqueId = null)
+    {
+        var arguments = $"--json --builder-execute {Quote(builderId)} --builder-context {Quote(builderContext)}" +
+                       $" --builder-launch-command {Quote(launchCommand)} --admit-ui-launch true --admit-builder-execution true";
+        if (!string.IsNullOrWhiteSpace(assetPath))
+        {
+            arguments += $" --path {Quote(assetPath!)}";
+        }
+
+        if (recordIndex.HasValue && recordIndex.Value >= 0)
+        {
+            arguments += $" --record {recordIndex.Value.ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(objectName))
+        {
+            arguments += $" --object-name {Quote(objectName!)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(uniqueId))
+        {
+            arguments += $" --unique-id {Quote(uniqueId!)}";
+        }
+
+        return arguments;
+    }
+
     public static string BuildPropertyBatchUpdateArguments(
         string documentPath,
         int recordIndex,

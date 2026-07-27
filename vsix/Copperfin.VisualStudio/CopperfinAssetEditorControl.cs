@@ -145,6 +145,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Label toolboxStatusLabel;
     private readonly RichTextBox buildersSummaryBox;
     private readonly ListView buildersView;
+    private readonly Button buildersExecuteButton;
     private readonly Label buildersStatusLabel;
     private readonly RichTextBox coverageSummaryBox;
     private readonly ListView coverageView;
@@ -978,6 +979,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Text = this.localization.Text("AssetEditor.Builders.Status.Ready")
         };
 
+        buildersExecuteButton = new Button
+        {
+            AutoSize = true,
+            Enabled = false,
+            Text = this.localization.Text("AssetEditor.Builders.ExecuteButton")
+        };
+        buildersExecuteButton.Click += (_, _) => QueueUiAction(ExecuteSelectedBuilderAsync);
+        buildersView.SelectedIndexChanged += (_, _) =>
+        {
+            buildersExecuteButton.Enabled = buildersView.SelectedItems.Count == 1;
+        };
+
         coverageSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -1241,10 +1254,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Dock = DockStyle.Bottom,
             Height = 150
         };
+        var buildersActionPanel = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            Dock = DockStyle.Top,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            Padding = new Padding(6)
+        };
+        buildersActionPanel.Controls.Add(buildersExecuteButton);
+        buildersActionPanel.Controls.Add(buildersStatusLabel);
         buildersSummaryPanel.Controls.Add(buildersSummaryBox);
         buildersPageHost.Controls.Add(buildersView);
         buildersPageHost.Controls.Add(buildersSummaryPanel);
-        buildersPageHost.Controls.Add(buildersStatusLabel);
+        buildersPageHost.Controls.Add(buildersActionPanel);
         buildersPage.Controls.Add(buildersPageHost);
         var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
         var coveragePageHost = new Panel
@@ -2006,6 +2029,52 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             : localization.Format(
                 "AssetEditor.Builders.Status.PlanFailed",
                 planResult.Error);
+    }
+
+    private async Task ExecuteSelectedBuilderAsync()
+    {
+        if (buildersView.SelectedItems.Count != 1 ||
+            buildersView.SelectedItems[0].Tag is not CopperfinStudioBuilderCatalogEntry entry)
+        {
+            buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.NoSelection");
+            return;
+        }
+
+        var path = currentPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.NoPath");
+            return;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        var recordIndex = selectedObject?.RecordIndex;
+        var objectName = selectedObject?.Title;
+        var uniqueId = selectedObject is null ? null : TryReadObjectUniqueId(selectedObject);
+        buildersExecuteButton.Enabled = false;
+        buildersStatusLabel.Text = this.localization.Text("AssetEditor.Builders.Status.Executing");
+        var executionResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryExecuteBuilder(
+            entry.BuilderId,
+            entry.Context,
+            path,
+            recordIndex,
+            objectName,
+            uniqueId,
+            localization));
+        if (IsDisposed || Disposing || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        buildersExecuteButton.Enabled = buildersView.SelectedItems.Count == 1;
+        buildersStatusLabel.Text = executionResult.Success
+            ? localization.Format(
+                "AssetEditor.Builders.Status.ExecutionReady",
+                entry.Title,
+                executionResult.ObservedExitCode)
+            : localization.Format(
+                "AssetEditor.Builders.Status.ExecutionFailed",
+                executionResult.Error);
     }
 
     private void HandleCreatedForPendingUiActions(object? sender, EventArgs e)

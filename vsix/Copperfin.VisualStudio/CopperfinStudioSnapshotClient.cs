@@ -49,7 +49,8 @@ internal static class CopperfinStudioSnapshotClient
     private static StudioHostCommandResult RunCommand(
         string studioHostPath,
         string arguments,
-        CopperfinLocalization localization)
+        CopperfinLocalization localization,
+        bool allowNonZeroExit = false)
     {
         var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
             studioHostPath,
@@ -77,7 +78,7 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        if (processResult.ExitCode != 0)
+        if (processResult.ExitCode != 0 && !allowNonZeroExit)
         {
             return new StudioHostCommandResult
             {
@@ -91,7 +92,8 @@ internal static class CopperfinStudioSnapshotClient
         return new StudioHostCommandResult
         {
             Success = true,
-            Stdout = processResult.StandardOutput
+            Stdout = processResult.StandardOutput,
+            Error = processResult.StandardError.Trim()
         };
     }
 
@@ -271,6 +273,106 @@ internal static class CopperfinStudioSnapshotClient
         catch (InvalidOperationException ex)
         {
             return new CopperfinStudioBuilderLaunchPlanResult
+            {
+                Success = false,
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+            };
+        }
+    }
+
+    public static CopperfinStudioBuilderExecutionResult TryExecuteBuilder(
+        string builderId,
+        string builderContext,
+        string? assetPath = null,
+        int? recordIndex = null,
+        string? objectName = null,
+        string? uniqueId = null,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var launchCommand = Environment.GetEnvironmentVariable("COPPERFIN_BUILDER_LAUNCH_COMMAND");
+        if (string.IsNullOrWhiteSpace(launchCommand))
+        {
+            return new CopperfinStudioBuilderExecutionResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Builders.Status.ExecutionNotConfigured")
+            };
+        }
+
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioBuilderExecutionResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        var commandResult = RunCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildBuilderExecuteArguments(
+                builderId,
+                builderContext,
+                launchCommand,
+                assetPath,
+                recordIndex,
+                objectName,
+                uniqueId),
+            localization,
+            allowNonZeroExit: true);
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioBuilderExecutionResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
+        try
+        {
+            var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+            var envelope = serializer.Deserialize<CopperfinStudioBuilderExecutionEnvelope>(commandResult.Stdout);
+            var payload = envelope?.BuilderExecution;
+            if (string.Equals(envelope?.Status, "ok", StringComparison.OrdinalIgnoreCase) && payload?.Ok == true)
+            {
+                return new CopperfinStudioBuilderExecutionResult
+                {
+                    Success = true,
+                    ObservedExitCode = payload.ObservedExitCode,
+                    Executed = payload.Executed
+                };
+            }
+
+            var error = payload?.Error ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(error))
+            {
+                error = envelope?.Error ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(error))
+            {
+                error = commandResult.Error ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(error))
+            {
+                error = localization.Text("AssetEditor.Builders.Status.ExecutionFailed");
+            }
+
+            return new CopperfinStudioBuilderExecutionResult
+            {
+                Success = false,
+                Error = error,
+                ObservedExitCode = payload?.ObservedExitCode ?? envelope?.ObservedExitCode ?? 0,
+                Executed = payload?.Executed ?? envelope?.Executed ?? false
+            };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CopperfinStudioBuilderExecutionResult
             {
                 Success = false,
                 Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
