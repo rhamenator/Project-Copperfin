@@ -469,7 +469,7 @@ namespace copperfin::runtime_surface_tests
             "nIndexAfterMulti = oPlain.ListIndex\n"
             "cDisplayAfterMulti = oPlain.DisplayValue\n"
             "oPlain.MultiSelect = 2\n"
-            "nAfterDirectTwo = oPlain.MultiSelect\n"
+            "nAfterInvalidTwo = oPlain.MultiSelect\n"
             "oPlain.Selected(2) = .T.\n"
             "nSelectedTwoMode = oPlain.Selected(2)\n"
             "oPlain.MultiSelect = 0\n"
@@ -479,7 +479,7 @@ namespace copperfin::runtime_surface_tests
             "lSelected3AfterDisable = oPlain.Selected(3)\n"
             "nIndexAfterDisable = oPlain.ListIndex\n"
             "cDisplayAfterDisable = oPlain.DisplayValue\n"
-            "oPlain.MultiSelect = 1.75\n"
+            "oPlain.MultiSelect = 0.75\n"
             "nAfterFractional = oPlain.MultiSelect\n"
             "oPlain.MultiSelect = 99\n"
             "nAfterInvalid = oPlain.MultiSelect\n"
@@ -544,7 +544,7 @@ namespace copperfin::runtime_surface_tests
         check("lselected3multi", "true");
         check("nindexaftermulti", "3");
         check("cdisplayaftermulti", "Gamma");
-        check("nafterdirecttwo", "2");
+        check("nafterinvalidtwo", "0");
         check("nselectedtwomode", "true");
         check("nafterdirectzero", "0");
         check("lselected1afterdisable", "false");
@@ -552,7 +552,7 @@ namespace copperfin::runtime_surface_tests
         check("lselected3afterdisable", "false");
         check("nindexafterdisable", "2");
         check("cdisplayafterdisable", "Beta");
-        check("nafterfractional", "1");
+        check("nafterfractional", "0");
         check("nafterinvalid", "0");
         check("lplainaddproperty", "false");
         check("lplainremoveproperty", "false");

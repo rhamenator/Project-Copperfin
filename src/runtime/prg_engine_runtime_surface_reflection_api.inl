@@ -692,7 +692,7 @@ void normalize_native_listbox_multiselect_invariant(RuntimeOleObjectState& runti
     const double raw_value = value_as_number(multiselect->second);
     const long long normalized_value = std::isfinite(raw_value) &&
                                                raw_value >= 0.0 &&
-                                               raw_value <= 2.0
+                                               raw_value <= 1.0
                                            ? static_cast<long long>(std::trunc(raw_value))
                                            : 0LL;
     multiselect->second = make_number_value(static_cast<double>(normalized_value));
