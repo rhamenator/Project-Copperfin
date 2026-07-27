@@ -646,15 +646,15 @@ int run_build_host_main(int argc, char** argv) {
         return 2;
     }
 
-    const auto open_result = copperfin::studio::open_document({.path = project_path});
+    const auto open_result = copperfin::studio::open_document({.path = project_path}, catalog);
     if (!open_result.ok) {
         std::cout << "status: error\n";
         print_error_line(catalog, open_result.error);
         return 3;
     }
 
-    const auto workspace = copperfin::studio::build_project_workspace(open_result.document);
-    const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto workspace = copperfin::studio::build_project_workspace(open_result.document, catalog);
+    const auto security_profile = copperfin::security::default_native_security_profile(catalog);
 
     if (enable_security) {
         const std::string role_env =

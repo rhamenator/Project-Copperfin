@@ -1,3 +1,5 @@
+- 2026-07-28: Implemented #4736 under #2348. The build host now passes its selected catalog into document opening, project workspace construction, and the native security profile, so explicit `--locale` selection reaches package metadata instead of falling back to `COPPERFIN_LOCALE`. Invariant manifest keys, project identity, output kind, and package behavior remain unchanged; the explicit-locale build-host manifest regression passes.
+
 - 2026-07-28: Implemented #4735 under #2348. Standalone Studio summary text and build-host extensibility planning now use the catalogs selected by their callers across object, report/label, project, security, database, and extensibility models. Invariant IDs, enum values, JSON keys, manifest fields, and package behavior remain unchanged; existing environment-based library overloads are preserved.
 
 - 2026-07-28: Implemented #4734 under #2348. Standalone Studio now passes its active localization catalog into document-open diagnostics while preserving the environment-based library overload, document data, paths, status values, and machine contracts. Focused tests cover all shipped MVP locales, including pseudo-localization.

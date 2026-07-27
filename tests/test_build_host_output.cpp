@@ -1140,6 +1140,55 @@ void run_build_host_localized_usage_path_search_smoke(const std::string& build_h
     fs::remove_all(temp_root, ignored);
 }
 
+void run_build_host_explicit_locale_manifest_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running explicit-locale manifest smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_explicit_locale_manifest";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path project_path = project_dir / "explicitlocale.pjx";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_synthetic_executable_project(project_path, project_dir, output_dir / "ExplicitLocale.dll", "ExplicitLocale");
+
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    ScopedTestLocaleCatalogDirectory locale_dir;
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    const auto process = run_process_capture(
+        build_host_path,
+        {
+            "build",
+            "--locale", "qps-ploc",
+            "--project", project_path.string(),
+            "--output-dir", output_dir.string()
+        },
+        temp_root);
+
+    expect_process_success(process, "build host explicit-locale manifest smoke should succeed");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "build host explicit-locale manifest smoke should preserve machine-readable status");
+    expect(process.stdout_text.find("output.kind: dll") != std::string::npos,
+           "build host explicit-locale manifest smoke should preserve invariant output kind");
+
+    const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+    const std::string manifest_text = manifest_path.empty() ? std::string{} : read_text(manifest_path);
+    const std::string pseudo_security_mode = build_host_catalog("qps-ploc").translate("Security.Profile.Mode");
+    expect(manifest_text.find("project_title=ExplicitLocale") != std::string::npos,
+           "build host explicit-locale manifest should preserve the invariant project title");
+    expect(manifest_text.find("security_mode=" + quote_manifest_value(pseudo_security_mode)) != std::string::npos,
+           "build host explicit-locale manifest should use the selected catalog for security metadata");
+    expect(manifest_text.find("security_mode=" + quote_manifest_value(
+               build_host_catalog("en-US").translate("Security.Profile.Mode"))) == std::string::npos,
+           "build host explicit-locale manifest should not fall back to the environment catalog");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1157,6 +1206,7 @@ int main(int argc, char** argv) {
     run_emit_dotnet_launcher_fallback_smoke(argv[1]);
     run_build_host_localized_usage_smoke(argv[1]);
     run_build_host_localized_usage_path_search_smoke(argv[1]);
+    run_build_host_explicit_locale_manifest_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
