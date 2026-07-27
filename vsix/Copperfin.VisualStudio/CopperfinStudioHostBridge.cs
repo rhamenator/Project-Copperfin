@@ -477,13 +477,14 @@ internal static class CopperfinStudioHostBridge
         {
             startInfo.EnvironmentVariables[WindowsScriptWrapperCommandVariable] = wrapperCommand;
         }
-        ApplyLocalizationEnvironment(startInfo, localization);
+        ApplyLocalizationEnvironment(startInfo, localization, studioHostPath);
         return startInfo;
     }
 
     internal static void ApplyLocalizationEnvironment(
         DiagnosticsStartInfo startInfo,
-        CopperfinLocalization? localization)
+        CopperfinLocalization? localization,
+        string? hostPath = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
         if (string.IsNullOrWhiteSpace(localization.Locale))
@@ -493,6 +494,67 @@ internal static class CopperfinStudioHostBridge
 
         startInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"] = localization.Locale;
         startInfo.EnvironmentVariables["COPPERFIN_LOCALE"] = localization.Locale;
+
+        var catalogRoot = ResolveCatalogRootForHost(hostPath);
+        if (!string.IsNullOrWhiteSpace(catalogRoot))
+        {
+            startInfo.EnvironmentVariables["COPPERFIN_LOCALE_DIR"] = catalogRoot;
+        }
+    }
+
+    private static string? ResolveCatalogRootForHost(string? hostPath)
+    {
+        var configuredRoot = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
+        {
+            return configuredRoot.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(hostPath))
+        {
+            return null;
+        }
+
+        string hostDirectory;
+        try
+        {
+            hostDirectory = Path.GetDirectoryName(Path.GetFullPath(hostPath)) ?? string.Empty;
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(hostDirectory))
+        {
+            return null;
+        }
+
+        var candidates = new[]
+        {
+            Path.Combine(hostDirectory, "..", "share", "copperfin", "locales"),
+            Path.Combine(hostDirectory, "..", "..", "share", "copperfin", "locales"),
+            Path.Combine(hostDirectory, "share", "copperfin", "locales"),
+            Path.Combine(hostDirectory, "..", "resources", "locales"),
+            Path.Combine(hostDirectory, "..", "..", "resources", "locales")
+        };
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                var normalizedCandidate = Path.GetFullPath(candidate);
+                if (File.Exists(Path.Combine(normalizedCandidate, "en-US", "strings.json")))
+                {
+                    return normalizedCandidate;
+                }
+            }
+            catch (ArgumentException)
+            {
+                // Ignore an invalid optional discovery candidate and continue.
+            }
+        }
+
+        return null;
     }
 
     public static string DescribeAssetKind(string path, CopperfinLocalization? localization = null)

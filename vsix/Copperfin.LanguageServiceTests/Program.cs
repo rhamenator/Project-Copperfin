@@ -1045,6 +1045,37 @@ internal static partial class Program
             "Studio host launch info should stamp the selected UI locale into the child environment");
         Expect(string.Equals(locale, localization.Locale, StringComparison.Ordinal),
             "Studio host launch info should stamp the selected runtime locale into the child environment");
+
+        var previousDirectory = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE_DIR");
+        var temporaryRoot = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-host-locale-root-" + Guid.NewGuid().ToString("N"));
+        var hostDirectory = Path.Combine(temporaryRoot, "bin", "studio");
+        var catalogDirectory = Path.Combine(temporaryRoot, "share", "copperfin", "locales");
+        Directory.CreateDirectory(Path.Combine(catalogDirectory, "en-US"));
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(catalogDirectory, "en-US", "strings.json"),
+                "{\"Studio.AppTitle\":\"Copperfin Studio\"}");
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE_DIR", null);
+            var hostStartInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+                Path.Combine(hostDirectory, "copperfin_studio_host.exe"),
+                "--json",
+                localization: localization,
+                isWindowsOverride: true);
+            var hostLocaleDirectory = hostStartInfo.EnvironmentVariables.ContainsKey("COPPERFIN_LOCALE_DIR")
+                ? hostStartInfo.EnvironmentVariables["COPPERFIN_LOCALE_DIR"]
+                : null;
+            Expect(
+                string.Equals(hostLocaleDirectory, catalogDirectory, StringComparison.OrdinalIgnoreCase),
+                "Studio host launch info should propagate the installed catalog root beside the host executable");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE_DIR", previousDirectory);
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
     }
 
     private static void TestStudioHostBatchArgumentsKeepVisualStudioProvenance()

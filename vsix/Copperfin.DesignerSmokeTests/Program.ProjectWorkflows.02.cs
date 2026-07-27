@@ -358,12 +358,17 @@ internal static partial class Program
                     "project workspace Builders should expose the native builder catalog across supported contexts");
                 if (builders is not null)
                 {
-                    Expect(builders.Items.Cast<ListViewItem>().Any(item => item.SubItems[1].Text == "Form Builder"),
-                        "project workspace Builders should preserve localized native builder titles");
+                    Expect(builders.Items.Cast<ListViewItem>().Any(item =>
+                            item.Tag is CopperfinStudioBuilderCatalogEntry entry &&
+                            entry.BuilderId == "form-builder" &&
+                            !string.IsNullOrWhiteSpace(item.SubItems[1].Text) &&
+                            string.Equals(item.SubItems[1].Text, entry.Title, StringComparison.Ordinal)),
+                        "project workspace Builders should preserve invariant builder identity and returned localized title");
                     projectWorkspaceTabs?.SelectTab(7);
                     Application.DoEvents();
                     var formBuilder = builders.Items.Cast<ListViewItem>()
-                        .FirstOrDefault(item => item.SubItems[1].Text == "Form Builder");
+                        .FirstOrDefault(item => item.Tag is CopperfinStudioBuilderCatalogEntry entry &&
+                                                entry.BuilderId == "form-builder");
                     if (formBuilder is not null)
                     {
                         formBuilder.Selected = true;
