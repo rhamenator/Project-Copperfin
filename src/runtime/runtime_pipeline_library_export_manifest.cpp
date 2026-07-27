@@ -249,7 +249,13 @@ std::map<std::string, SourceLocation> collect_library_export_routine_locations(c
                 continue;
             }
 
-            routine_locations.emplace(export_name, routine.declaration_location);
+            SourceLocation location = routine.declaration_location;
+            if (!location.file_path.empty()) {
+                location.file_path = copperfin::platform::path_to_utf8_string(
+                    normalize_existing_path_spelling(
+                        copperfin::platform::path_from_utf8_string(location.file_path)));
+            }
+            routine_locations.emplace(export_name, std::move(location));
         }
     }
 
