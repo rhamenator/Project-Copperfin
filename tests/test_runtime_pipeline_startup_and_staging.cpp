@@ -90,8 +90,8 @@ void run_xasset_startup_companion_stage_smoke(
         false);
 
     expect(plan.ok, startup_type_title + " startup contract plan should be created");
-    expect(plan.debug_plan.startup_source_path == copperfin::platform::path_to_utf8_string(
-               project_dir / startup_path),
+    expect(paths_refer_to_same_filesystem_entry(
+               fs::path(plan.debug_plan.startup_source_path), project_dir / startup_path),
            startup_type_title + " startup contract should preserve source-side startup path");
     expect(plan.debug_plan.supports_breakpoints,
            startup_type_title + " startup contract should advertise breakpoint support through xasset bootstrap");
@@ -407,7 +407,8 @@ void test_materialize_runtime_package() {
             result.plan.startup_source_path == (fs::path(result.plan.content_root) / "main.prg").string(),
             "runtime plan should point startup to staged package content");
         expect(
-            result.plan.debug_plan.startup_source_path == (project_dir / "main.prg").string(),
+            paths_refer_to_same_filesystem_entry(
+                fs::path(result.plan.debug_plan.startup_source_path), project_dir / "main.prg"),
             "debug plan should point startup to source content");
         expect(result.plan.debug_plan.supports_breakpoints, "debug plan should enable breakpoints for PRG startup");
         expect(result.plan.debug_plan.supports_step_debugging, "debug plan should enable step debugging for PRG startup");
@@ -943,7 +944,8 @@ void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root(
     });
     expect(shared_asset != plan.assets.end(), "VFP-style parent-relative asset should be present in the plan");
     if (shared_asset != plan.assets.end()) {
-        expect(shared_asset->source_path == (shared_dir / "registry.vcx").lexically_normal().string(),
+        expect(paths_refer_to_same_filesystem_entry(
+                   fs::path(shared_asset->source_path), shared_dir / "registry.vcx"),
                "VFP-style parent-relative asset should resolve to its sibling source file");
         expect(shared_asset->relative_path == "wzcommon/registry.vcx",
                "VFP-style parent-relative asset should stage under a safe package-relative path");
@@ -1035,7 +1037,8 @@ void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match() {
     });
     expect(shared_asset != plan.assets.end(), "VFPSource-style tail-match asset should be present in the plan");
     if (shared_asset != plan.assets.end()) {
-        expect(shared_asset->source_path == (shared_dir / "REGISTRY.VCX").lexically_normal().string(),
+        expect(paths_refer_to_same_filesystem_entry(
+                   fs::path(shared_asset->source_path), shared_dir / "REGISTRY.VCX"),
                "VFPSource-style tail-match asset should resolve to the case-insensitive shared source file");
         expect(shared_asset->relative_path == "wzcommon/registry.vcx",
                "VFPSource-style tail-match asset should preserve the sanitized package-relative path");

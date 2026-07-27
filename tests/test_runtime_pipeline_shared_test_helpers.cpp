@@ -61,6 +61,46 @@ std::string read_text(const std::filesystem::path& path) {
     return stream.str();
 }
 
+bool paths_refer_to_same_filesystem_entry(
+    const std::filesystem::path& actual,
+    const std::filesystem::path& expected) {
+    if (actual.empty() || expected.empty()) {
+        return actual.empty() && expected.empty();
+    }
+
+    std::error_code equivalent_error;
+    if (std::filesystem::equivalent(actual, expected, equivalent_error) &&
+        !equivalent_error) {
+        return true;
+    }
+    return actual.lexically_normal() == expected.lexically_normal();
+}
+
+std::string decode_manifest_value(const std::string& value) {
+    std::string decoded;
+    decoded.reserve(value.size());
+    for (std::size_t index = 0U; index < value.size(); ++index) {
+        if (value[index] != '\\' || index + 1U >= value.size()) {
+            decoded.push_back(value[index]);
+            continue;
+        }
+        const char escaped = value[++index];
+        if (escaped == '\\') {
+            decoded.push_back('\\');
+        } else if (escaped == 'n') {
+            decoded.push_back('\n');
+        } else if (escaped == 'r') {
+            decoded.push_back('\r');
+        } else if (escaped == '|') {
+            decoded.push_back('|');
+        } else {
+            decoded.push_back('\\');
+            decoded.push_back(escaped);
+        }
+    }
+    return decoded;
+}
+
 #if defined(_WIN32)
 bool create_windows_junction(
     const std::filesystem::path& link,

@@ -150,6 +150,27 @@ std::optional<std::filesystem::path> resolve_windows_host_spelling(
                 return std::nullopt;
             }
 
+            // GetFinalPathNameByHandleW normally returns normalized spelling,
+            // but Windows may still retain an 8.3 component for a path that
+            // was opened through an alias. Expand that remaining alias before
+            // publishing source/debug provenance to the rest of the runtime.
+            std::wstring long_path(256U, L'\0');
+            for (;;) {
+                const DWORD long_length = ::GetLongPathNameW(
+                    buffer.c_str(),
+                    long_path.data(),
+                    static_cast<DWORD>(long_path.size()));
+                if (long_length == 0U) {
+                    break;
+                }
+                if (long_length < long_path.size()) {
+                    long_path.resize(long_length);
+                    buffer = std::move(long_path);
+                    break;
+                }
+                long_path.assign(static_cast<std::size_t>(long_length) + 1U, L'\0');
+            }
+
             return std::filesystem::path(buffer).lexically_normal();
         }
         buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');

@@ -51,6 +51,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         copperfin::runtime::BuildConfiguration::debug,
         false,
         true);
+    const std::string librarymain_source = plan.assets.at(0U).source_path;
+    const std::string helper_source = plan.assets.at(1U).source_path;
 
     expect(plan.ok, "fll-output plan should be created");
     expect(plan.output_kind == copperfin::runtime::BuildOutputKind::fll,
@@ -1193,9 +1195,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record parameter-name fields in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord _FoxTable") != std::string::npos,
                "fll-output wrapper source should export the FoxTable registration symbol");
-        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
+        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + quote_manifest_value(librarymain_source) + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
                "fll-output wrapper source should record InitLibrary metadata in the FoxInfo table");
-        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + quote_manifest_value((project_dir / "helper.prg").string()) + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
+        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + quote_manifest_value(helper_source) + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                "fll-output wrapper source should record AddNumbers metadata in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord* FoxInfo()") != std::string::npos,
                "fll-output wrapper source should scaffold the FoxInfo entrypoint");
@@ -1356,9 +1358,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should record InitLibrary routine kind");
         expect(api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                "fll-output API manifest should record AddNumbers routine kind");
-        expect(api_manifest.find("function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
+        expect(api_manifest.find("function_source=InitLibrary|" + quote_manifest_value(librarymain_source) + "|1") != std::string::npos,
                "fll-output API manifest should record InitLibrary source provenance");
-        expect(api_manifest.find("function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
+        expect(api_manifest.find("function_source=AddNumbers|" + quote_manifest_value(helper_source) + "|1") != std::string::npos,
                "fll-output API manifest should record AddNumbers source provenance");
         expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                "fll-output API manifest should record InitLibrary parameter names");
@@ -1571,9 +1573,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should mirror InitLibrary routine kind");
         expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
                "fll-output debug manifest should mirror AddNumbers routine kind");
-        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value(librarymain_source) + "|1") != std::string::npos,
                "fll-output debug manifest should mirror InitLibrary source provenance");
-        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value(helper_source) + "|1") != std::string::npos,
                "fll-output debug manifest should mirror AddNumbers source provenance");
         expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                "fll-output debug manifest should mirror InitLibrary parameter names");

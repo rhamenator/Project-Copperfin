@@ -76,6 +76,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         copperfin::runtime::BuildConfiguration::debug,
         false,
         true);
+    const std::string librarymain_source = plan.assets.at(0U).source_path;
+    const std::string helper_source = plan.assets.at(1U).source_path;
 
     expect(plan.ok, "library-output plan should be created");
     expect(plan.output_kind == copperfin::runtime::BuildOutputKind::dll,
@@ -1352,9 +1354,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL API manifest should record InitLibrary routine kind");
         expect(library_api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                "library-output DLL API manifest should record AddNumbers routine kind");
-        expect(library_api_manifest.find("function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
+        expect(library_api_manifest.find("function_source=InitLibrary|" + quote_manifest_value(librarymain_source) + "|1") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary source provenance");
-        expect(library_api_manifest.find("function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
+        expect(library_api_manifest.find("function_source=AddNumbers|" + quote_manifest_value(helper_source) + "|1") != std::string::npos,
                "library-output DLL API manifest should record AddNumbers source provenance");
         expect(library_api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary parameter names");
@@ -1557,9 +1559,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record InitLibrary routine kind");
         expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
                "library-output debug manifest should record AddNumbers routine kind");
-        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value(librarymain_source) + "|1") != std::string::npos,
                "library-output debug manifest should record InitLibrary source provenance");
-        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value(helper_source) + "|1") != std::string::npos,
                "library-output debug manifest should record AddNumbers source provenance");
         expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                "library-output debug manifest should record InitLibrary parameter names");

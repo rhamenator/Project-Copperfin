@@ -9,31 +9,6 @@
 
 namespace cf_test_runtime_pipeline {
 
-inline std::string decode_manifest_value(const std::string& value) {
-    std::string decoded;
-    decoded.reserve(value.size());
-    for (std::size_t index = 0U; index < value.size(); ++index) {
-        if (value[index] != '\\' || index + 1U >= value.size()) {
-            decoded.push_back(value[index]);
-            continue;
-        }
-        const char escaped = value[++index];
-        if (escaped == '\\') {
-            decoded.push_back('\\');
-        } else if (escaped == 'n') {
-            decoded.push_back('\n');
-        } else if (escaped == 'r') {
-            decoded.push_back('\r');
-        } else if (escaped == '|') {
-            decoded.push_back('|');
-        } else {
-            decoded.push_back('\\');
-            decoded.push_back(escaped);
-        }
-    }
-    return decoded;
-}
-
 inline void expect_manifest_omits_keys(
     const std::string& manifest_text,
     const std::vector<std::string>& keys,

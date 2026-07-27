@@ -47,6 +47,10 @@ void expect_materialization(
 void write_text(const std::filesystem::path& path, const std::string& contents);
 std::filesystem::path runtime_host_fixture_path(const std::filesystem::path& root);
 std::string read_text(const std::filesystem::path& path);
+bool paths_refer_to_same_filesystem_entry(
+    const std::filesystem::path& actual,
+    const std::filesystem::path& expected);
+std::string decode_manifest_value(const std::string& value);
 
 class ScopedRuntimePipelineFixtureNamespace {
 public:
