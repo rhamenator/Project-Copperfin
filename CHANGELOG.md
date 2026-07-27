@@ -4,9 +4,9 @@
 
 - 2026-07-27: Recorded the Linux baseline for the pending Apple numeric-parser change: `test_prg_engine_string_math_functions` passed 1/1. The Apple-specific fallback-parser work remains isolated pending the Mac commit and focused evidence.
 
-- 2026-07-27: Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, including Release packaging, generated artifact checks, managed VSIX behavior, language-service, and .NET Framework process-runner tests. Hosted Visual Studio validation of the new WinForms `Window` hosting path remains pending under #4740.
+- 2026-07-27: Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, and Windows hosted validation at `f3825f7b` proved real `E:\VFPSource\addlabel\addlabel.pjx` renders through the WinForms `Window/IWin32Window` path with a localized grouped Project Explorer hierarchy. #4740 is closed; standalone installer validation of the later project-file inclusion fix remains in progress.
 
-- 2026-07-27: Corrected the #4740 hosted VSIX rendering path after Windows evidence showed that `WindowPane.Content` sends the WinForms editor through Visual Studio's WPF host. `CopperfinAssetEditorPane` now exposes the shared `CopperfinAssetEditorControl` through `Window` as an `IWin32Window` and retains `DockStyle.Fill`; the managed language-service suite passes. Exact Windows hosted `addlabel.pjx` visual proof is still required, so #4740 remains open.
+- 2026-07-27: Corrected the #4740 hosted VSIX rendering path after Windows evidence showed that `WindowPane.Content` sends the WinForms editor through Visual Studio's WPF host. `CopperfinAssetEditorPane` now exposes the shared `CopperfinAssetEditorControl` through `Window` as an `IWin32Window` and retains `DockStyle.Fill`; the managed language-service suite and exact Windows hosted `addlabel.pjx` visual proof pass. #4740 is closed.
 
 - 2026-07-27: Implemented a narrow #4740 hosted-rendering fix: `CopperfinAssetEditorPane` now docks the shared editor control with `DockStyle.Fill`, matching standalone Studio's hosting contract. The existing managed language-service suite passes; exact Windows hosted `addlabel.pjx` visual proof is still required.
 
@@ -20,7 +20,7 @@
 
 - 2026-07-27: Closed #4741 under #3217 after Claude review and exact-head Windows validation. Native PRG runtime now exposes `RELATION()`/`TARGET()` and `SET("RELATION")`/`SET("SKIP")` over the existing per-data-session temporary relation state, preserving declaration order, work-area/alias lookup, empty missing results, and restorable relation clauses. Focused Linux and Windows relation/runtime-surface tests pass.
 
-- 2026-07-27: Implemented #4740 under #25. Shared project workspaces now expose a localized, read-only Project Explorer tree in standalone Studio and VSIX, preserving project group and entry order while using invariant entry tags and the existing host activation callback. Excluded or missing entries fail closed. The four catalogs have matching keys, and the real-asset `SmokeResolvedRealAssetCoverageClusterPart07` passed for VFPSource `tasklist.PJX` and `addlabel.PJX`; exact-head Windows host validation remains an RC follow-up.
+- 2026-07-27: Implemented and validated #4740 under #25. Shared project workspaces expose a localized, read-only Project Explorer tree in standalone Studio and VSIX, preserving project group and entry order while using invariant entry tags and the existing host activation callback. Excluded or missing entries fail closed. Linux real-asset smoke coverage and Windows hosted `addlabel.pjx` visual/control evidence pass; full project-manager mutation, drag/drop authoring, and VFP9 parity remain separate work.
 
 - 2026-07-28: Closed #4738 after Windows validation of the selected-catalog PRG runtime-session path. Focused CTest passed 4/4, and the real runtime host proved explicit `--locale qps-ploc` overrides `COPPERFIN_LOCALE=en-US` while preserving invariant status, mode, and reason fields. Future regressions or additional locale surfaces should be tracked separately.
 
