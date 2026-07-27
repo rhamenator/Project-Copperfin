@@ -419,6 +419,44 @@ std::string unquote_manifest_value(const std::string& value) {
     return unescaped;
 }
 
+bool manifest_source_location_matches(
+    const std::string& text,
+    const std::string& key,
+    const std::string& symbol,
+    const std::filesystem::path& expected_path,
+    std::size_t expected_line) {
+    std::istringstream input(text);
+    std::string line;
+    const std::string prefix = key + "=" + symbol + "|";
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.rfind(prefix, 0U) != 0U) {
+            continue;
+        }
+
+        const std::string encoded_location = line.substr(prefix.size());
+        const std::size_t separator = encoded_location.rfind('|');
+        if (separator == std::string::npos ||
+            encoded_location.substr(separator + 1U) != std::to_string(expected_line)) {
+            continue;
+        }
+
+        const std::filesystem::path actual_path = unquote_manifest_value(
+            encoded_location.substr(0U, separator));
+        std::error_code equivalent_error;
+        if (std::filesystem::equivalent(actual_path, expected_path, equivalent_error) &&
+            !equivalent_error) {
+            return true;
+        }
+        if (actual_path.lexically_normal() == expected_path.lexically_normal()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::filesystem::path manifest_path_for_key(const std::string& text, const std::string& key) {
     return unquote_manifest_value(manifest_value_for_key(text, key));
 }
