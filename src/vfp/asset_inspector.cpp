@@ -1141,17 +1141,20 @@ AssetInspectionResult inspect_asset(
     }
 
     for (const auto& companion_index : companion_index_paths_for(asset_path, result.family)) {
+        const auto expected_companion_index = copperfin::platform::path_from_utf8_string(companion_index);
         const auto resolved_companion_index = resolve_existing_path_casefold(
-            copperfin::platform::path_from_utf8_string(companion_index));
-        if (!resolved_companion_index.has_value()) {
+            expected_companion_index);
+        const std::filesystem::path inspection_index_path = resolved_companion_index.value_or(expected_companion_index);
+
+        const auto* override_bytes = find_byte_override(
+            byte_overrides,
+            inspection_index_path);
+        if (!resolved_companion_index.has_value() && override_bytes == nullptr) {
             continue;
         }
 
         const std::string resolved_companion_index_text =
-            copperfin::platform::path_to_utf8_string(*resolved_companion_index);
-        const auto* override_bytes = find_byte_override(
-            byte_overrides,
-            *resolved_companion_index);
+            copperfin::platform::path_to_utf8_string(inspection_index_path);
         const IndexParseResult index_result = override_bytes == nullptr
             ? parse_index_probe_from_file(resolved_companion_index_text)
             : parse_index_probe(

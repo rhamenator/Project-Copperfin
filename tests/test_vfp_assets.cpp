@@ -1080,6 +1080,38 @@ void test_inspect_asset_uses_admitted_index_bytes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_inspect_asset_discovers_virtual_casefolded_index_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_virtual_index_inspection_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "sample.dbf";
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        {{.name = "NAME", .type = 'C', .length = 16U}},
+        {{"Ada"}});
+    expect(created.ok, "virtual index inspection should create its DBF fixture");
+
+    const fs::path differently_cased_index_path = temp_dir / "SAMPLE.CDX";
+    const auto admitted_bytes = make_synthetic_cdx_family_bytes(false, true);
+    copperfin::vfp::AssetByteOverrides overrides{
+        {differently_cased_index_path.lexically_normal().string(),
+         std::string(admitted_bytes.begin(), admitted_bytes.end())}};
+    const auto result = copperfin::vfp::inspect_asset(table_path.string(), {}, &overrides);
+    expect(result.ok, "virtual index inspection should accept a valid DBF without a physical companion");
+#if defined(_WIN32)
+    expect(result.indexes.size() == 1U,
+           "Windows virtual index inspection should retain VFP case-insensitive companion admission");
+#else
+    expect(result.indexes.empty(),
+           "POSIX virtual index inspection should reject a differently-cased companion override");
+#endif
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_inspect_database_container_collects_dcx_companion() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_dbc_assets_tests";
@@ -2300,6 +2332,7 @@ int main() {
     test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_asset_uses_admitted_index_bytes();
+    test_inspect_asset_discovers_virtual_casefolded_index_bytes();
     test_inspect_database_container_collects_dcx_companion();
     test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
