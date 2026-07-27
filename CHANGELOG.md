@@ -1,3 +1,5 @@
+- 2026-07-27: Closed #4729 after exact-head Windows validation at `ab573dc1`: `test_vfp_assets`, verified-DBF security, report security, and dynamic-xAsset security passed 4/4, including Windows index/memo case-rule branches. Linux focused coverage and the full native matrix (`316/316`, with only two expected launcher skips) also pass. The two real product gaps were fixed in `d189bc16` and `ffcbbe46`; the final inactive-`ORDER()` test-contract error was corrected in `eeba0c28.
+
 - 2026-07-27: Corrected the #4729 case-rule regression to inspect `TAG()` metadata rather than active `ORDER()` state; the fixture does not issue `SET ORDER`, so an empty `ORDER()` result was not evidence of lost index metadata. The four focused asset/DBF/report/xAsset CTests pass on Linux; exact-head Windows rerun is required.
 
 - 2026-07-26: The full synchronized native CTest matrix passed `316/316` after the #4729 virtual-companion fix. The only skips were the expected platform-conditional launcher tests `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`; exact-head Windows validation remains required.
