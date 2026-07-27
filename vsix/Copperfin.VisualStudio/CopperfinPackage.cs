@@ -29,13 +29,17 @@ namespace Copperfin.VisualStudio;
     Orientation = ToolWindowOrientation.Bottom,
     Window = ToolWindowGuids80.Outputwindow,
     DockedHeight = 240)]
+[ProvideEditorLogicalView(
+    typeof(CopperfinAssetEditorFactory),
+    PackageGuids.DesignerLogicalViewString,
+    IsTrusted = true)]
 [ProvideEditorFactory(typeof(CopperfinAssetEditorFactory), 200)]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".pjx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".scx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".vcx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".frx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".lbx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
-[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".mnx", 50, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".pjx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".scx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".vcx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".frx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".lbx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
+[ProvideEditorExtension(typeof(CopperfinAssetEditorFactory), ".mnx", PackageGuids.EditorDefaultPriority, NameResourceID = 200, DefaultName = "Copperfin Visual Designer")]
 [Guid(PackageGuids.PackageString)]
 public sealed class CopperfinPackage : AsyncPackage
 {

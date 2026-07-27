@@ -65,6 +65,15 @@ try {
     Assert-Condition ($pkgdefText -match $expectedCodeBasePattern) `
         "VSIX pkgdef is missing the exact Copperfin.VisualStudio.dll CodeBase registration: $pkgdefPath"
 
+    foreach ($extension in @(".pjx", ".scx", ".vcx", ".frx", ".lbx", ".mnx")) {
+        $expectedEditorExtensionPattern = '(?im)"{0}"\s*=\s*dword:00000064' -f [regex]::Escape($extension)
+        Assert-Condition ($pkgdefText -match $expectedEditorExtensionPattern) `
+            "VSIX pkgdef is missing Copperfin default editor registration for $($extension): $pkgdefPath"
+    }
+    $designerLogicalViewGuid = "7651A702-06E5-11D1-8EBD-00A0C90F26EA"
+    Assert-Condition ($pkgdefText -match [regex]::Escape($designerLogicalViewGuid)) `
+        "VSIX pkgdef is missing the trusted Copperfin Designer logical view: $pkgdefPath"
+
     foreach ($expected in $expectedSatellites) {
         $relativePath = $expected.RelativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
         $satellitePath = Join-Path $extractRoot $relativePath

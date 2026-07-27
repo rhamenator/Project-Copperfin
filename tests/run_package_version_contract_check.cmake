@@ -57,10 +57,53 @@ if(NOT use_codebase_match)
 endif()
 
 file(READ "${package_source}" package_text)
+set(package_guids_source "${COPPERFIN_SOURCE_DIR}/vsix/Copperfin.VisualStudio/PackageGuids.cs")
+if(NOT EXISTS "${package_guids_source}")
+    message(FATAL_ERROR "Visual Studio package GUID source is missing: ${package_guids_source}")
+endif()
+file(READ "${package_guids_source}" package_guids_text)
 string(FIND "${package_text}" "\"${package_version}\")]" registration_version_offset)
 if(registration_version_offset EQUAL -1)
     message(FATAL_ERROR
         "InstalledProductRegistration version in ${package_source} does not match '${package_version}'")
+endif()
+
+string(REGEX MATCH "EditorDefaultPriority[ \t]*=[ \t]*([0-9]+)" editor_priority_match "${package_text}")
+if(NOT editor_priority_match)
+    string(REGEX MATCH "EditorDefaultPriority[ \t]*=[ \t]*([0-9]+)" editor_priority_match "${package_guids_text}")
+endif()
+if(NOT editor_priority_match OR NOT CMAKE_MATCH_1 STREQUAL "100")
+    message(FATAL_ERROR
+        "Copperfin editor default priority must remain 100 (> 0x60) so Visual Studio selects it for MVP asset extensions")
+endif()
+
+string(REGEX MATCH
+    "DesignerLogicalViewString[ \t]*=[ \t]*\"\\{7651A702-06E5-11D1-8EBD-00A0C90F26EA\\}\""
+    designer_view_constant_match "${package_guids_text}")
+if(NOT designer_view_constant_match)
+    message(FATAL_ERROR
+        "Copperfin editor must retain the Visual Studio Designer logical-view GUID")
+endif()
+
+string(FIND "${package_text}" "PackageGuids.EditorDefaultPriority" editor_priority_reference)
+if(editor_priority_reference EQUAL -1)
+    message(FATAL_ERROR
+        "Copperfin editor extensions must use the shared default-priority constant")
+endif()
+
+string(FIND "${package_text}" "ProvideEditorLogicalView" trusted_view_attribute)
+string(FIND "${package_text}" "PackageGuids.DesignerLogicalViewString" trusted_view_reference)
+string(FIND "${package_text}" "IsTrusted = true" trusted_view_flag)
+if(trusted_view_attribute EQUAL -1 OR trusted_view_reference EQUAL -1 OR trusted_view_flag EQUAL -1)
+    message(FATAL_ERROR
+        "Copperfin package must register the trusted Designer logical view for hosted/automation opens")
+endif()
+
+string(REGEX MATCHALL "ProvideEditorExtension" editor_extension_matches "${package_text}")
+list(LENGTH editor_extension_matches editor_extension_count)
+if(NOT editor_extension_count EQUAL 6)
+    message(FATAL_ERROR
+        "Copperfin package must register exactly six MVP asset editor extensions; found ${editor_extension_count}")
 endif()
 
 message(STATUS "Copperfin package version contract passed: ${package_version}")
