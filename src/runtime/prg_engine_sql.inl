@@ -546,7 +546,14 @@
                 }
                 table_path = table_path.lexically_normal();
                 const bool has_verified_primary =
-                    find_verified_file_byte_override(table_path) != options.verified_file_byte_overrides.end();
+                    find_verified_database_file_byte_override(table_path) != options.verified_file_byte_overrides.end();
+                if (options.require_verified_file_byte_overrides && !has_verified_primary)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                        {{"path", copperfin::platform::path_to_utf8_string(table_path)}});
+                    return false;
+                }
                 std::error_code table_exists_error;
                 if ((!std::filesystem::exists(table_path, table_exists_error) || table_exists_error) &&
                     !(options.require_verified_file_byte_overrides && has_verified_primary))

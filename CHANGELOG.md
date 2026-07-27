@@ -1,3 +1,5 @@
+- 2026-07-26: Implemented #4726 under #3217. Strict database and local DBF admission now requires an exact normalized override path on POSIX, preventing a differently cased verified entry from supplying bytes for a distinct case-sensitive file. Windows retains case-insensitive verified matching; ordinary VFP filesystem lookup is unchanged. Database lifecycle, verified-DBF, data-I/O, arrays, and runtime-surface CTests pass.
+
 - 2026-07-26: Implemented #4725 under #3217. `DISPLAY MEMORY` and `LIST MEMORY` now omit Copperfin's internal `_SCREEN` and `_VFP` bindings from user-facing entries and counts while preserving direct property access and reflection. Focused data-I/O and runtime-surface CTests pass.
 
 - 2026-07-26: Implemented #4724 under #108. Stabilized the #3956 ASCAN object-identity regression fixture for the current per-session object-handle allocation, ensuring a distinct same-class candidate has the target reference as a serialized prefix while exact identity and null-versus-zero assertions remain unchanged. `test_prg_engine_arrays` passes.

@@ -6,6 +6,8 @@
 
 - Runtime strict ReportListener admission note: when verified-byte mode is enabled, `GetConfigTable()` resolves only admitted logical DBF bytes and `VerifyConfigTable()` parses an admitted temporary snapshot, including an admitted `.fpt` sidecar when present. A valid admitted table wins over tampered disk content, an admitted table can run with its physical files absent, and an unadmitted physical table is ignored under #3217/#4720. Ambiguous admission fails closed; non-strict lookup remains case-insensitive filesystem lookup.
 
+- Runtime strict database admission note: `OPEN DATABASE` and local DBF reads now require exact normalized verified-byte override keys on POSIX under #3217/#4726, preventing a differently cased entry from being borrowed for a distinct case-sensitive path. Windows keeps case-insensitive verified matching; non-strict VFP path resolution remains case-insensitive.
+
 - Runtime bare `NULL` note: VFPSource uses both `NULL` and `.NULL.` as null sentinels in assignments and `STORE` commands. Copperfin now maps the exact case-insensitive bare identifier `NULL` to the same null value as `.NULL.`, preserving `ISNULL()` and `VARTYPE() = 'X'` while leaving unknown identifiers uninitialized. Focused control-flow coverage and the real ReportOutput package validate the contract under #3217/#4721.
 
 - Runtime literal `DO` dependency note: VFPSource projects may invoke a beside-project PRG that is not listed in the PJX, such as `DO wzastart` from `Wizards/wzapp/wzapp.PRG`. Copperfin now discovers and stages contained literal targets with VFP case-insensitive resolution under #110/#4714. The real `wzapp.PJX` package completes normal and debug Linux launches; dynamic DO expressions and xAsset forms remain separate.

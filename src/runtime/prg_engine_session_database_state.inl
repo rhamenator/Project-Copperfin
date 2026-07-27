@@ -181,6 +181,28 @@
                 });
         }
 
+        std::map<std::string, std::string>::const_iterator find_verified_database_file_byte_override(
+            const std::filesystem::path &path) const
+        {
+            const std::string normalized = copperfin::platform::path_to_utf8_string(path.lexically_normal());
+            if (const auto exact = options.verified_file_byte_overrides.find(normalized);
+                exact != options.verified_file_byte_overrides.end())
+            {
+                return exact;
+            }
+#if defined(_WIN32)
+            return std::find_if(
+                options.verified_file_byte_overrides.begin(),
+                options.verified_file_byte_overrides.end(),
+                [&](const auto &candidate)
+                {
+                    return paths_equal_insensitive(candidate.first, normalized);
+                });
+#else
+            return options.verified_file_byte_overrides.end();
+#endif
+        }
+
         bool database_paths_equal(const std::string &left, const std::string &right) const
         {
 #if defined(_WIN32)
@@ -223,7 +245,7 @@
             const std::filesystem::path &path,
             std::string &bytes)
         {
-            const auto verified = find_verified_file_byte_override(path);
+            const auto verified = find_verified_database_file_byte_override(path);
             if (verified != options.verified_file_byte_overrides.end())
             {
                 bytes = verified->second;

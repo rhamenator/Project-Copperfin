@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4726 under #3217 is implementation-complete. Strict database and local DBF byte admission now uses exact normalized override keys on POSIX, so a differently cased verified entry cannot satisfy a distinct case-sensitive database path. Windows retains case-insensitive verified matching, and non-strict VFP filesystem lookup is unchanged. `test_prg_engine_database_lifecycle`, `test_prg_engine_verified_dbf_security`, `test_prg_engine_data_io`, `test_prg_engine_arrays`, and `test_prg_engine_runtime_surface_functions` pass on Linux. The implementation is ready for Claude/Windows review.
+
 - #4725 under #3217 is implementation-complete. The memory-listing projection now excludes the internal `_screen` and `_vfp` global bindings before filtering, counting, and event serialization, while direct `_SCREEN`/`_VFP` property access remains available. The focused `test_prg_engine_data_io` and `test_prg_engine_runtime_surface_functions` CTests pass on Linux; machine-readable event fields and localization contracts are unchanged.
 
 - #4724 under #108 is implementation-complete as a test-fidelity slice. The #3956 ASCAN object/null regression fixture now creates enough same-class objects for the current session allocator to produce a distinct candidate whose serialized reference prefixes the target. The runtime exact-identity and null-versus-zero implementation is unchanged; `test_prg_engine_arrays` passes on Linux.
