@@ -30,6 +30,7 @@ void test_runtime_host_rejects_bridge_descriptor_identity_mismatch(const std::st
 void test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(const std::string& runtime_host_path);
 void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const std::string& runtime_host_path);
 void test_runtime_host_debug_errors_localize_without_changing_command_tokens(const std::string& runtime_host_path);
+void test_runtime_host_xasset_open_errors_follow_explicit_locale(const std::string& runtime_host_path);
 void test_runtime_host_rejects_invalid_debug_command_without_execution(const std::string& runtime_host_path);
 void test_runtime_host_rejects_invalid_startup_breakpoint_without_execution(const std::string& runtime_host_path);
 void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(const std::string& runtime_host_path);
@@ -82,6 +83,7 @@ int main(int argc, char** argv) {
     run_runtime_host_test("bridge descriptor metadata", runtime_host_path, test_runtime_host_rejects_bridge_descriptor_metadata_mismatch);
     run_runtime_host_test("usage localization", runtime_host_path, test_runtime_host_usage_text_localizes_without_changing_cli_tokens);
     run_runtime_host_test("debug error localization", runtime_host_path, test_runtime_host_debug_errors_localize_without_changing_command_tokens);
+    run_runtime_host_test("xAsset open localization", runtime_host_path, test_runtime_host_xasset_open_errors_follow_explicit_locale);
     run_runtime_host_test("invalid debug command rejection", runtime_host_path, test_runtime_host_rejects_invalid_debug_command_without_execution);
     run_runtime_host_test("invalid startup breakpoint rejection", runtime_host_path, test_runtime_host_rejects_invalid_startup_breakpoint_without_execution);
     run_runtime_host_test("pause localization", runtime_host_path, test_runtime_host_pause_messages_localize_without_changing_pause_reasons);

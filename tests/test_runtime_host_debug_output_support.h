@@ -159,6 +159,7 @@ using copperfin::test_support::ScopedEnvironmentPath;
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"xAsset action breakpoints require xasset-bootstrap mode.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"warning: \",\n"
+        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"The primary document for sidecar '{path}' was not found.\",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
@@ -237,6 +238,7 @@ using copperfin::test_support::ScopedEnvironmentPath;
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"Los breakpoints de accion xAsset requieren el modo xasset-bootstrap.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
+        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"No se encontro el documento principal para el archivo asociado '{path}'.\",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG y no pudo materializarse para xAsset bootstrap. Este inicio esta recurriendo al modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
         "  \"RuntimeHost.Error.AssetEntryMalformed\": \"La entrada asset del manifiesto esta mal formada.\",\n"
@@ -361,9 +363,14 @@ using copperfin::test_support::ScopedEnvironmentPath;
         "  \"RuntimeHost.Debug.Error.WatchRequiresPausedState\": \"A avaliacao de watch requer um estado pausado ativo.\",\n"
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"Breakpoints de acao xAsset exigem o modo xasset-bootstrap.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"erro: \",\n"
-        "  \"RuntimeHost.Prefix.Warning\": \"aviso: \"\n"
+        "  \"RuntimeHost.Prefix.Warning\": \"aviso: \",\n"
+        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"O documento principal do arquivo complementar '{path}' nao foi encontrado.\"\n"
         "}\n");
-    write_text(pseudo_root / "strings.json", "{}\n");
+    write_text(
+        pseudo_root / "strings.json",
+        "{\n"
+        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"[!! Ţhë prïmåry døçümëñţ før sïdëçår '{path}' wås ñøţ føüñd. !!]\"\n"
+        "}\n");
 }
 
 [[maybe_unused]] std::string read_text(const std::filesystem::path& path) {

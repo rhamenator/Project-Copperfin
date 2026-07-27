@@ -2568,7 +2568,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     request.path = startup_read_path;
     request.read_only = true;
     request.load_full_table = true;
-    auto open_result = copperfin::studio::open_document(request);
+    auto open_result = copperfin::studio::open_document(request, catalog);
     if (!open_result.ok) {
         result.error = open_result.error;
         return result;
@@ -3233,7 +3233,7 @@ int run_runtime_host_main_impl(int argc, char** argv) {
 
         const bool ai_planning_requested = federation_planning_enable || federation_planning_require;
         if (ai_planning_requested) {
-            const auto security_profile = copperfin::security::default_native_security_profile();
+            const auto security_profile = copperfin::security::default_native_security_profile(catalog);
             const std::string security_role = resolve_federation_security_role();
             if (!copperfin::security::role_has_permission(security_profile, security_role, "ai.mcp")) {
                 std::cout << "status: error\n";
@@ -3372,7 +3372,7 @@ int run_runtime_host_main_impl(int argc, char** argv) {
             event_name,
             detail);
     };
-    const auto security_profile = copperfin::security::default_native_security_profile();
+    const auto security_profile = copperfin::security::default_native_security_profile(catalog);
     VerifiedPackagePaths verified_package_paths;
 
     if (security_enabled) {

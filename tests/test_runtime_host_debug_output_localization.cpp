@@ -455,6 +455,58 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_xasset_open_errors_follow_explicit_locale(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_host_xasset_open_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const fs::path sidecar_path = temp_root / "startup.sct";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(sidecar_path, "not-a-valid-primary-document\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=XAssetOpenLocalization\n"
+        "startup_item=startup.sct\n"
+        "startup_source=" + sidecar_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=developer\n"
+        "security_mode=off\n"
+        "dotnet_story=none\n");
+
+    ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
+    ScopedEnvironmentValue environment_locale("COPPERFIN_LOCALE", "en-US");
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {"--locale", "qps-ploc", "--manifest", manifest_path.string()},
+        temp_root);
+
+    expect(process.exit_code == 0,
+           "#4737: xAsset fallback should preserve the compatibility-launcher exit code");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "#4737: xAsset fallback should preserve the machine-readable success status");
+    expect(process.stdout_text.find("runtime.mode: compatibility-launcher") != std::string::npos,
+           "#4737: xAsset open failure should preserve the compatibility-launcher mode");
+    expect(process.stdout_text.find(
+               "[!! Ţhë prïmåry døçümëñţ før sïdëçår '") != std::string::npos &&
+               process.stdout_text.find("startup.sct' wås ñøţ føüñd. !!]") != std::string::npos,
+           "#4737: xAsset open diagnostics should follow the explicit pseudo-locale");
+    expect(process.stdout_text.find(
+               "The primary document for sidecar '" + sidecar_path.string() +
+               "' was not found.") == std::string::npos,
+           "#4737: xAsset open diagnostics should not fall back to COPPERFIN_LOCALE");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_host_rejects_invalid_debug_command_without_execution(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
