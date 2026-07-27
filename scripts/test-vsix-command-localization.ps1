@@ -66,7 +66,9 @@ try {
         "VSIX pkgdef is missing the exact Copperfin.VisualStudio.dll CodeBase registration: $pkgdefPath"
 
     foreach ($extension in @(".pjx", ".scx", ".vcx", ".frx", ".lbx", ".mnx")) {
-        $expectedEditorExtensionPattern = '(?im)"{0}"\s*=\s*dword:00000064' -f [regex]::Escape($extension)
+        # VSSDK writes pkgdef value names without the source extension's leading dot.
+        $pkgdefExtension = $extension.TrimStart('.')
+        $expectedEditorExtensionPattern = '(?im)"{0}"\s*=\s*dword:00000064' -f [regex]::Escape($pkgdefExtension)
         Assert-Condition ($pkgdefText -match $expectedEditorExtensionPattern) `
             "VSIX pkgdef is missing Copperfin default editor registration for $($extension): $pkgdefPath"
     }
