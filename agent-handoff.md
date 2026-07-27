@@ -1,5 +1,9 @@
 # Agent Handoff
 
+- Independent read-only review of #4403 is complete. Claude freshly reran the permissive and strict safety validators, the four recovery/debugger CTest targets, and all four locale reruns; the evidence is reproducible and all structural, DQ/DV/HZ, and primary-hazard checks pass. Strict validation has exactly one remaining failure because #4403 is still open. The review does not claim the required separate-identity sign-off; keep the issue open until the project's independent-review policy is satisfied.
+
+- Linux baseline for the pending Apple numeric-parser work: CTest `test_prg_engine_string_math_functions` passed 1/1 at the synchronized coordination head. `src/runtime/prg_engine_numeric_functions.cpp` remains untouched here pending the Mac commit and focused Apple evidence.
+
 - Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, including Release packaging, generated artifact checks, managed VSIX behavior, language-service, and .NET Framework process-runner tests. This validates the `WindowPane.Window` source path at the package/build level; hosted Windows `addlabel.pjx` visual proof is still required for #4740.
 
 - #4740 hosted-rendering root cause is now addressed in the current tree. Windows evidence showed that returning the WinForms `CopperfinAssetEditorControl` through `WindowPane.Content` selected Visual Studio's WPF hosting path, leaving the document surface blank even though the editor factory loaded. `CopperfinAssetEditorPane` now returns the control through `Window` as `IWin32Window` and retains `DockStyle.Fill`, matching the documented VSSDK WinForms path. The managed language-service suite passes and source-contract coverage rejects the old `Content` override. Exact-head Windows VSIX rebuild/reinstall and hosted `addlabel.pjx` screenshot/tree proof remain required before closing #4740.

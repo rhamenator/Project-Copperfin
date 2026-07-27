@@ -1,3 +1,7 @@
+- 2026-07-27: Claude independently reran the #4403 safety traceability validators, recovery/debugger contracts, and all four locale reruns. The evidence remains reproducible and strict validation has exactly one intentional failure because #4403 is still open; no separate-identity reviewer sign-off or safety closure is claimed.
+
+- 2026-07-27: Recorded the Linux baseline for the pending Apple numeric-parser change: `test_prg_engine_string_math_functions` passed 1/1. The Apple-specific fallback-parser work remains isolated pending the Mac commit and focused evidence.
+
 - 2026-07-27: Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, including Release packaging, generated artifact checks, managed VSIX behavior, language-service, and .NET Framework process-runner tests. Hosted Visual Studio validation of the new WinForms `Window` hosting path remains pending under #4740.
 
 - 2026-07-27: Corrected the #4740 hosted VSIX rendering path after Windows evidence showed that `WindowPane.Content` sends the WinForms editor through Visual Studio's WPF host. `CopperfinAssetEditorPane` now exposes the shared `CopperfinAssetEditorControl` through `Window` as an `IWin32Window` and retains `DockStyle.Fill`; the managed language-service suite passes. Exact Windows hosted `addlabel.pjx` visual proof is still required, so #4740 remains open.
