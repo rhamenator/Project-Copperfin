@@ -1,3 +1,5 @@
+- 2026-07-26: Implemented #4727 under #25. The product subsystem registry now reports the shipped Builders/Wizards, Data Explorer, and Toolbox/Task Pane workflows as implemented in both shared hosts. Host JSON status values remain invariant, while full VFP9 parity and future utility-pane depth remain separate work.
+
 - 2026-07-26: Implemented #4726 under #3217. Strict database and local DBF admission now requires an exact normalized override path on POSIX, preventing a differently cased verified entry from supplying bytes for a distinct case-sensitive file. Windows retains case-insensitive verified matching; ordinary VFP filesystem lookup is unchanged. Database lifecycle, verified-DBF, data-I/O, arrays, and runtime-surface CTests pass.
 
 - 2026-07-26: Implemented #4725 under #3217. `DISPLAY MEMORY` and `LIST MEMORY` now omit Copperfin's internal `_SCREEN` and `_VFP` bindings from user-facing entries and counts while preserving direct property access and reflection. Focused data-I/O and runtime-surface CTests pass.

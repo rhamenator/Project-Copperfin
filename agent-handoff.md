@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- #4727 under #25 is implementation-complete. The shared product subsystem registry now reports Builders/Wizards, Data Explorer, and Toolbox/Task Pane as `implemented`, matching the existing shared editor behavior and focused navigation/selection/smoke coverage in standalone Studio and VSIX. This is a status-contract correction, not a claim of full VFP9 utility-pane parity; deeper builders, data tooling, and toolbox fidelity remain separate work.
+
 - #4726 under #3217 is implementation-complete. Strict database and local DBF byte admission now uses exact normalized override keys on POSIX, so a differently cased verified entry cannot satisfy a distinct case-sensitive database path. Windows retains case-insensitive verified matching, and non-strict VFP filesystem lookup is unchanged. `test_prg_engine_database_lifecycle`, `test_prg_engine_verified_dbf_security`, `test_prg_engine_data_io`, `test_prg_engine_arrays`, and `test_prg_engine_runtime_surface_functions` pass on Linux. The implementation is ready for Claude/Windows review.
 
 - #4725 under #3217 is implementation-complete. The memory-listing projection now excludes the internal `_screen` and `_vfp` global bindings before filtering, counting, and event serialization, while direct `_SCREEN`/`_VFP` property access remains available. The focused `test_prg_engine_data_io` and `test_prg_engine_runtime_surface_functions` CTests pass on Linux; machine-readable event fields and localization contracts are unchanged.

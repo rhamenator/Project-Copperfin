@@ -123,7 +123,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
             .vfp9_equivalent_key = "Studio.ProductSubsystem.BuildersWizards.Vfp9Equivalent",
             .copperfin_component = "cf_builders + cf_wizards",
             .host_kind = ProductHostKind::native_ide,
-            .current_status = "planned",
+            .current_status = "implemented",
             .parity_scope_key = "Studio.ProductSubsystem.BuildersWizards.ParityScope",
             .modern_editor_direction_key = "Studio.ProductSubsystem.BuildersWizards.ModernEditorDirection"
         },
@@ -145,7 +145,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
             .vfp9_equivalent_key = "Studio.ProductSubsystem.DataExplorer.Vfp9Equivalent",
             .copperfin_component = "cf_data_explorer",
             .host_kind = ProductHostKind::visual_studio_shell,
-            .current_status = "planned",
+            .current_status = "implemented",
             .parity_scope_key = "Studio.ProductSubsystem.DataExplorer.ParityScope",
             .modern_editor_direction_key = "Studio.ProductSubsystem.DataExplorer.ModernEditorDirection"
         },
@@ -167,7 +167,7 @@ const std::vector<ProductSubsystemSource>& product_subsystem_sources() {
             .vfp9_equivalent_key = "Studio.ProductSubsystem.ToolboxTaskPane.Vfp9Equivalent",
             .copperfin_component = "cf_toolbox + cf_task_panes",
             .host_kind = ProductHostKind::visual_studio_shell,
-            .current_status = "planned",
+            .current_status = "implemented",
             .parity_scope_key = "Studio.ProductSubsystem.ToolboxTaskPane.ParityScope",
             .modern_editor_direction_key = "Studio.ProductSubsystem.ToolboxTaskPane.ModernEditorDirection"
         },

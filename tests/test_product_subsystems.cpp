@@ -109,7 +109,13 @@ int main() {
         }
         if (subsystem.id == "toolbox-task-pane") {
             found_toolbox_task_pane = true;
-            expect(std::string(subsystem.current_status) == "planned", "toolbox/task pane should remain planned");
+            expect(std::string(subsystem.current_status) == "implemented", "toolbox/task pane should now be marked implemented");
+        }
+        if (subsystem.id == "builders-wizards") {
+            expect(std::string(subsystem.current_status) == "implemented", "builders/wizards should now be marked implemented");
+        }
+        if (subsystem.id == "data-explorer") {
+            expect(std::string(subsystem.current_status) == "implemented", "data explorer should now be marked implemented");
         }
     }
 
@@ -120,7 +126,7 @@ int main() {
     expect(found_build_deploy, "registry should include the build/deploy subsystem");
     expect(found_object_browser, "registry should include the object browser subsystem");
     expect(found_toolbox_task_pane, "registry should include the toolbox/task pane subsystem");
-    expect(implemented_count >= 11U, "registry should now mark the Phase C-equivalent surfaces as implemented");
+    expect(implemented_count >= 14U, "registry should now mark all shipped MVP utility-pane surfaces as implemented");
 
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
