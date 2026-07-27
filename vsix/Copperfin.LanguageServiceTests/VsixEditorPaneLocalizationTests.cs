@@ -42,6 +42,9 @@ internal static partial class Program
             "VSIX editor pane should pass Visual Studio's current UI culture to the shared editor");
         Expect(paneSource.Contains("control.Dock = DockStyle.Fill;", StringComparison.Ordinal),
             "VSIX editor pane should fill the Visual Studio document frame with the shared editor");
+        Expect(paneSource.Contains("public override IWin32Window Window => control;", StringComparison.Ordinal) &&
+               !paneSource.Contains("public override object Content => control;", StringComparison.Ordinal),
+            "VSIX editor pane should route the WinForms control through Window instead of the WPF Content host");
 
         var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
         var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");

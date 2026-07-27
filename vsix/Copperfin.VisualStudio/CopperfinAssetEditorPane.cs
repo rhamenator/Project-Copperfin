@@ -30,7 +30,8 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         : base(serviceProvider)
     {
         control = new CopperfinAssetEditorControl(CopperfinLocalization.FromCurrentUiCulture());
-        // WindowPane hosts Content directly; make the shared editor consume the frame.
+        // WindowPane.Content is the WPF hosting path. Return the WinForms control
+        // through Window so Visual Studio uses its native WinForms host.
         control.Dock = DockStyle.Fill;
         control.OpenDocumentRequested += OpenDocumentInVisualStudio;
         control.OpenDocumentAtLineRequested += OpenDocumentAtLineInVisualStudio;
@@ -39,7 +40,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
         control.LoadDocument(documentPath);
     }
 
-    public override object Content => control;
+    public override IWin32Window Window => control;
 
     public int Close()
     {
