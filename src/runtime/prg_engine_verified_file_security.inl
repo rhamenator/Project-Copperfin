@@ -177,6 +177,23 @@
 #endif
         }
 
+        std::filesystem::path verified_database_index_snapshot_path(
+            const std::filesystem::path &table_path,
+            const std::filesystem::path &candidate_path,
+            const std::string &extension) const
+        {
+#if defined(_WIN32)
+            (void)candidate_path;
+            std::filesystem::path expected_path = table_path;
+            expected_path.replace_extension(extension);
+            return expected_path;
+#else
+            (void)table_path;
+            (void)extension;
+            return candidate_path;
+#endif
+        }
+
         std::optional<std::filesystem::path> materialize_verified_table_snapshot(
             const std::filesystem::path &table_path,
             std::filesystem::path &snapshot_root)
@@ -207,7 +224,11 @@
                     continue;
                 }
 
-                std::ofstream output(snapshot_root / candidate_path.filename(), std::ios::binary | std::ios::trunc);
+                const auto snapshot_index_path = verified_database_index_snapshot_path(
+                    table_path,
+                    candidate_path,
+                    extension);
+                std::ofstream output(snapshot_root / snapshot_index_path.filename(), std::ios::binary | std::ios::trunc);
                 output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
                 output.close();
                 if (!output.good())

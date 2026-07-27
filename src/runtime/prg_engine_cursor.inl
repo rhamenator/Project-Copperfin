@@ -397,8 +397,12 @@
                         continue;
                     }
 
+                    const auto snapshot_index_path = mutable_impl->verified_database_index_snapshot_path(
+                        logical_table_path,
+                        candidate_path,
+                        extension);
                     inspection_byte_overrides.emplace(
-                        copperfin::platform::path_to_utf8_string(snapshot_root / candidate_path.filename()),
+                        copperfin::platform::path_to_utf8_string(snapshot_root / snapshot_index_path.filename()),
                         bytes);
                 }
             }
