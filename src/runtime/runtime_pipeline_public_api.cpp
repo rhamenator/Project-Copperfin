@@ -2332,6 +2332,10 @@ RuntimePackagePlan create_runtime_package_plan(
         dependency.record_index = plan.assets.size();
         dependency.source_path = source;
         dependency.relative_path = copperfin::platform::path_to_utf8_string(relative);
+        std::replace(dependency.relative_path.begin(), dependency.relative_path.end(), '\\', '/');
+        if (dependency.relative_path.empty()) {
+            return;
+        }
         dependency.staged_path = copperfin::platform::path_to_utf8_string(
             (content_root / copperfin::platform::path_from_utf8_string(dependency.relative_path)).lexically_normal());
         dependency.type_title = type_title;
