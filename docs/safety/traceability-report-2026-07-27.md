@@ -40,3 +40,14 @@ This report archives validation evidence only. It does not claim:
 The remaining #4403 closure requirements are a genuinely arm's-length review,
 formal issue closure, and a fresh strict validator pass. Protected Windows
 launcher signing remains separately tracked under #4409.
+
+## Current Rerun
+
+The validator was rerun against fresh GitHub JSON for #4403 after closing
+#4750, #4751, #4752, and #4725. The repository/documentation head was
+`d9aa187ef`. The permissive run passed with primary-hazard coverage enabled.
+The strict run passed every structural, DQ/DV/HZ, and primary-hazard check and
+reported exactly one error: `Issue is not closed (state=OPEN)` for #4403. The
+runtime follow-up closures therefore do not introduce a new safety-validation
+failure. Independent reviewer sign-off, #4403 closure, and protected launcher
+signing remain open release prerequisites.
