@@ -1,3 +1,5 @@
+- 2026-07-27: Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, including Release packaging, generated artifact checks, managed VSIX behavior, language-service, and .NET Framework process-runner tests. Hosted Visual Studio validation of the new WinForms `Window` hosting path remains pending under #4740.
+
 - 2026-07-27: Corrected the #4740 hosted VSIX rendering path after Windows evidence showed that `WindowPane.Content` sends the WinForms editor through Visual Studio's WPF host. `CopperfinAssetEditorPane` now exposes the shared `CopperfinAssetEditorControl` through `Window` as an `IWin32Window` and retains `DockStyle.Fill`; the managed language-service suite passes. Exact Windows hosted `addlabel.pjx` visual proof is still required, so #4740 remains open.
 
 - 2026-07-27: Implemented a narrow #4740 hosted-rendering fix: `CopperfinAssetEditorPane` now docks the shared editor control with `DockStyle.Fill`, matching standalone Studio's hosting contract. The existing managed language-service suite passes; exact Windows hosted `addlabel.pjx` visual proof is still required.

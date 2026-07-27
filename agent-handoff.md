@@ -1,5 +1,7 @@
 # Agent Handoff
 
+- Exact-head GitHub VSIX workflow `30248868863` passed at `617751b88`, including Release packaging, generated artifact checks, managed VSIX behavior, language-service, and .NET Framework process-runner tests. This validates the `WindowPane.Window` source path at the package/build level; hosted Windows `addlabel.pjx` visual proof is still required for #4740.
+
 - #4740 hosted-rendering root cause is now addressed in the current tree. Windows evidence showed that returning the WinForms `CopperfinAssetEditorControl` through `WindowPane.Content` selected Visual Studio's WPF hosting path, leaving the document surface blank even though the editor factory loaded. `CopperfinAssetEditorPane` now returns the control through `Window` as `IWin32Window` and retains `DockStyle.Fill`, matching the documented VSSDK WinForms path. The managed language-service suite passes and source-contract coverage rejects the old `Content` override. Exact-head Windows VSIX rebuild/reinstall and hosted `addlabel.pjx` screenshot/tree proof remain required before closing #4740.
 
 - Superseded #4740 candidate: the earlier `DockStyle.Fill`-only change was necessary sizing work but did not fix the hosted blank surface because the control was still routed through `WindowPane.Content`. The current `Window` implementation and remaining Windows proof are recorded above.
