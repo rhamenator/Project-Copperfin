@@ -8,9 +8,35 @@
 
 namespace copperfin::runtime {
 
+namespace {
+
+thread_local const localization::LocalizedCatalog* active_catalog = nullptr;
+
+}  // namespace
+
+RuntimeCatalogScope::RuntimeCatalogScope(
+    const localization::LocalizedCatalog* catalog) noexcept
+    : catalog_(catalog), previous_(active_catalog) {
+    // A null scope preserves an outer host-selected catalog for nested sessions.
+    if (catalog != nullptr) {
+        active_catalog = catalog;
+    }
+}
+
+RuntimeCatalogScope::RuntimeCatalogScope(const RuntimeCatalogScope& other) noexcept
+    : RuntimeCatalogScope(other.catalog_) {}
+
+RuntimeCatalogScope::~RuntimeCatalogScope() {
+    active_catalog = previous_;
+}
+
 std::string runtime_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders) {
+    if (active_catalog != nullptr) {
+        return active_catalog->translate(key, placeholders);
+    }
+
     struct CatalogCache {
         std::filesystem::path locale_root;
         std::string locale;

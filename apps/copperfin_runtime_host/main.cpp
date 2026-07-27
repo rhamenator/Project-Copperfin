@@ -894,6 +894,8 @@ int run_runtime_bridge_invocation(
 
     copperfin::runtime::RuntimeSessionOptions session_options{};
     session_options.startup_path = execution_source;
+    session_options.localization_catalog =
+        std::make_shared<copperfin::localization::LocalizedCatalog>(catalog);
     if (execution_source_text.has_value()) {
         session_options.startup_source_text = std::move(execution_source_text);
     } else if (!routine_bootstrap_materialized && execution_source == startup_source) {
@@ -3768,6 +3770,8 @@ int run_runtime_host_main_impl(int argc, char** argv) {
 
     copperfin::runtime::RuntimeSessionOptions session_options{};
     session_options.startup_path = effective_startup_source;
+    session_options.localization_catalog =
+        std::make_shared<copperfin::localization::LocalizedCatalog>(catalog);
     if (prg_startup) {
         session_options.startup_source_text = verified_startup_bytes;
         session_options.source_text_overrides = verified_source_texts;

@@ -369,7 +369,8 @@ using copperfin::test_support::ScopedEnvironmentPath;
     write_text(
         pseudo_root / "strings.json",
         "{\n"
-        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"[!! Ţhë prïmåry døçümëñţ før sïdëçår '{path}' wås ñøţ føüñd. !!]\"\n"
+        "  \"Studio.DocumentOpen.Error.SidecarPrimaryMissing\": \"[!! Ţhë prïmåry døçümëñţ før sïdëçår '{path}' wås ñøţ føüñd. !!]\",\n"
+        "  \"Runtime.Prg.Session.Message.StoppedOnEntry\": \"[!! Sţøppëd øñ ëñţry. !!]\"\n"
         "}\n");
 }
 

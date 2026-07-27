@@ -11,6 +11,19 @@
 
 namespace copperfin::runtime {
 
+class RuntimeCatalogScope {
+public:
+    explicit RuntimeCatalogScope(const localization::LocalizedCatalog* catalog) noexcept;
+    ~RuntimeCatalogScope();
+
+    RuntimeCatalogScope(const RuntimeCatalogScope& other) noexcept;
+    RuntimeCatalogScope& operator=(const RuntimeCatalogScope&) = delete;
+
+private:
+    const localization::LocalizedCatalog* catalog_ = nullptr;
+    const localization::LocalizedCatalog* previous_ = nullptr;
+};
+
 std::string runtime_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders = {});

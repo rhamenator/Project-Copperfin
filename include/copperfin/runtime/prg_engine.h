@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/rushmore_planning.h"
 
 #include <functional>
@@ -204,6 +205,8 @@ struct RuntimeWatchResult {
 
 struct RuntimeSessionOptions {
     std::string startup_path;
+    // Optional host-selected catalog. Null keeps the legacy environment lookup.
+    std::shared_ptr<const localization::LocalizedCatalog> localization_catalog;
     // Parses trusted startup bytes under startup_path's logical source identity.
     std::optional<std::string> startup_source_text;
     std::map<std::string, std::string> source_text_overrides;

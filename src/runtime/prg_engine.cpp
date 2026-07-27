@@ -936,7 +936,8 @@ namespace copperfin::runtime
     struct PrgRuntimeSession::Impl
     {
         explicit Impl(RuntimeSessionOptions session_options)
-            : options(std::move(session_options))
+            : options(std::move(session_options)),
+              localization_scope(options.localization_catalog.get())
         {
             static std::atomic<std::uint64_t> runtime_instance_counter{1ULL};
             max_call_depth = std::max<std::size_t>(1U, options.max_call_depth);
@@ -1034,6 +1035,7 @@ namespace copperfin::runtime
         };
 
         RuntimeSessionOptions options;
+        RuntimeCatalogScope localization_scope;
         std::map<std::string, Program> programs;
         std::deque<Frame> stack;
         std::map<std::string, PrgValue> globals;
