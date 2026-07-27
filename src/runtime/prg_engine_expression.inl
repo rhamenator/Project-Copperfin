@@ -1810,7 +1810,7 @@
                     return array_function_callback_(function, raw_arguments, arguments);
                 }
                 // --- Misc ---
-                if (function == "pcount")
+                if (function == "pcount" || function == "parameters")
                 {
                     return make_number_value(static_cast<double>(frame_.call_arguments.size()));
                 }

@@ -468,8 +468,9 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "env_and_sys_introspection.prg";
         write_text(
             main_path,
-            "PUBLIC nPCountRoutine\n"
+            "PUBLIC nPCountRoutine, nParametersRoutine\n"
             "nPCountMain = PCOUNT()\n"
+            "nParametersMain = PARAMETERS()\n"
             "DO pcount_helper WITH 10, 'x', .T.\n"
             "lPutEnvSet = PUTENV('" + env_name + "', 'runtime-surface-value')\n"
             "cGetEnvSet = GETENV('" + env_name + "')\n"
@@ -486,6 +487,7 @@ namespace copperfin::runtime_surface_tests
             "PROCEDURE pcount_helper\n"
             "LPARAMETERS p1, p2, p3, p4\n"
             "nPCountRoutine = PCOUNT()\n"
+            "nParametersRoutine = PARAMETERS()\n"
             "RETURN\n"
             "ENDPROC\n");
 
@@ -508,6 +510,8 @@ namespace copperfin::runtime_surface_tests
 
         check("npcountmain", "0");
         check("npcountroutine", "3");
+        check("nparametersmain", "0");
+        check("nparametersroutine", "3");
         check("lputenvset", "true");
         check("cgetenvset", "runtime-surface-value");
         check("lputenvunicode", "true");

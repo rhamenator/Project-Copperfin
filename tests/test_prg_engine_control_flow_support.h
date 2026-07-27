@@ -272,6 +272,7 @@ void test_elseif_predicate_resumption_review_gaps();
 void test_expression_level_function_call_can_chain_nested_user_routines();
 void test_set_procedure_registers_external_function_for_expression_calls();
 void test_set_procedure_registers_external_procedure_for_do_calls();
+void test_set_procedure_macro_off_clears_saved_procedure_state();
 void test_set_procedure_additive_uses_first_opened_precedence_and_replace_resets_lookup();
 void test_set_procedure_registers_external_event_handler();
 void test_set_procedure_registers_external_error_handler();

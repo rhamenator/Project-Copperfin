@@ -5482,6 +5482,14 @@
                                       .location = statement.location});
                     return {};
                 }
+                if (uppercase_copy(target) == "OFF")
+                {
+                    procedure_program_paths.clear();
+                    events.push_back({.category = "runtime.procedure",
+                                      .detail = "clear",
+                                      .location = statement.location});
+                    return {};
+                }
 
                 const std::string resolved_program_path =
                     normalize_path(resolve_procedure_program_path(target, frame.file_path));

@@ -113,6 +113,41 @@ void test_set_procedure_registers_external_procedure_for_do_calls() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_procedure_macro_off_clears_saved_procedure_state() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_macro_off";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "helpers.prg",
+        "FUNCTION helper\n"
+        "RETURN 7\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO helpers\n"
+        "nBefore = helper()\n"
+        "cSavedProcedure = SET(\"PROCEDURE\")\n"
+        "cSavedProcedure = \"OFF\"\n"
+        "SET PROCEDURE TO &cSavedProcedure\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "macro-expanded SET PROCEDURE OFF should clear the procedure list");
+
+    const auto before = state.globals.find("nbefore");
+    expect(before != state.globals.end(), "SET PROCEDURE macro OFF fixture should call the helper before clearing");
+    if (before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(before->second) == "7",
+               "SET PROCEDURE macro OFF fixture should preserve the pre-clear helper call");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_procedure_registers_external_event_handler() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_event";
