@@ -54,8 +54,13 @@ namespace copperfin::runtime_surface_tests
             options.require_verified_file_byte_overrides = true;
             if (admit_config)
             {
+#if defined(_WIN32)
                 const fs::path admitted_config = temp_root / "_REPORTOUTPUTCONFIG.DBF";
                 const fs::path admitted_memo = temp_root / "_REPORTOUTPUTCONFIG.FPT";
+#else
+                const fs::path admitted_config = config_path;
+                const fs::path admitted_memo = memo_path;
+#endif
                 options.verified_file_byte_overrides.emplace(
                     admitted_config.string(),
                     config_bytes);
