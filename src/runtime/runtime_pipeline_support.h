@@ -137,7 +137,9 @@ std::string resolve_project_item_source(
     bool require_unique_casefold,
     std::string& error);
 std::vector<std::filesystem::path> discover_prg_include_source_paths(
-    const std::filesystem::path& source);
+    const std::filesystem::path& source,
+    const std::vector<std::filesystem::path>& external_include_roots,
+    std::vector<std::string>& warnings);
 std::vector<std::filesystem::path> discover_prg_literal_library_source_paths(
     const std::filesystem::path& source);
 std::vector<std::filesystem::path> discover_prg_literal_do_source_paths(
@@ -276,6 +278,16 @@ RuntimePackagePlan create_runtime_package_plan(
     BuildConfiguration configuration,
     bool enable_security,
     bool emit_dotnet_launcher);
+RuntimePackagePlan create_runtime_package_plan(
+    const studio::StudioDocumentModel& document,
+    const studio::StudioProjectWorkspace& workspace,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile,
+    const std::string& output_root,
+    BuildConfiguration configuration,
+    bool enable_security,
+    bool emit_dotnet_launcher,
+    const std::vector<std::string>& external_include_roots);
 std::string build_runtime_manifest_text(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,

@@ -154,6 +154,7 @@ int run_runtime_pipeline_tests(const std::filesystem::path& executable_path) {
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
     test_manifest_asset_lines_include_copy_state_contract();
     test_runtime_package_stages_recursive_prg_include_dependencies();
+    test_runtime_package_admits_trusted_external_include_roots();
     test_runtime_package_stages_literal_do_dependencies();
     test_runtime_package_stages_unicode_prg_include_dependencies();
     test_runtime_package_stages_literal_newobject_library_dependencies();

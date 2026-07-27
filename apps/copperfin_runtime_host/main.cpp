@@ -3605,6 +3605,89 @@ int run_runtime_host_main_impl(int argc, char** argv) {
         }
     }
 
+    // External FFC headers are staged under a namespaced physical path to
+    // avoid trust-root collisions, while VFP source keeps its logical
+    // include path (for example, ffc\_ws3.h). Add only aliases derived from
+    // manifest-admitted PRG Include assets; never search arbitrary host paths.
+    if (!debug_manifest_privileges) {
+        for (const auto& asset : assets) {
+            const auto parts = split_pipe(asset);
+            if (parts.size() != 8U || parts[3] != "PRG Include") {
+                continue;
+            }
+            const std::filesystem::path relative_asset = path_from_utf8(parts[1]);
+            auto component = relative_asset.begin();
+            if (component == relative_asset.end() || *component != "external") {
+                continue;
+            }
+            ++component;
+            if (component == relative_asset.end()) {
+                continue;
+            }
+            ++component;
+            std::filesystem::path logical_relative;
+            for (; component != relative_asset.end(); ++component) {
+                logical_relative /= *component;
+            }
+            if (logical_relative.empty() || logical_relative.is_absolute() ||
+                relative_path_escapes_root(logical_relative)) {
+                continue;
+            }
+
+            copperfin::security::PhysicalPathContainmentFailure alias_failure =
+                copperfin::security::PhysicalPathContainmentFailure::none;
+            const auto bound_asset = bind_packaged_path(
+                parts[2],
+                first_value(manifest, "package_root"),
+                manifest_directory,
+                PackagePathBindingMode::strict_relative_fidelity,
+                &alias_failure);
+            if (!bound_asset.has_value()) {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    localized_message(
+                        catalog,
+                        physical_indirection_was_rejected(alias_failure)
+                            ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
+                            : "RuntimeHost.Error.PackagedAssetMissing",
+                        {{"fileName", copperfin::platform::path_to_utf8_string(relative_asset.filename())}}));
+                return 4;
+            }
+
+            const std::string physical_key =
+                copperfin::platform::path_to_utf8_string(bound_asset->lexically_normal());
+            auto source_text = verified_source_texts.find(physical_key);
+            if (source_text == verified_source_texts.end()) {
+                const auto containment =
+                    copperfin::security::inspect_physical_path_containment(
+                        *bound_asset,
+                        manifest_directory);
+                const auto snapshot =
+                    copperfin::security::read_physically_contained_file_snapshot(
+                        containment,
+                        manifest_directory);
+                if (!snapshot.ok) {
+                    std::cout << "status: error\n";
+                    print_error_line(
+                        catalog,
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                            {{"fileName", copperfin::platform::path_to_utf8_string(relative_asset.filename())}}));
+                    return 4;
+                }
+                source_text = verified_source_texts.emplace(physical_key, snapshot.bytes).first;
+            }
+
+            const std::filesystem::path logical_path =
+                (manifest_directory / "content" / logical_relative).lexically_normal();
+            verified_source_texts.emplace(
+                copperfin::platform::path_to_utf8_string(logical_path),
+                source_text->second);
+        }
+    }
+
     if (runtime_bridge_mode_requested(bridge_options)) {
         std::optional<std::string> verified_bridge_source_text;
         std::optional<std::string> verified_bridge_source_path;

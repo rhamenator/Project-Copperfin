@@ -338,6 +338,134 @@ void test_runtime_package_stages_recursive_prg_include_dependencies() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_admits_trusted_external_include_roots() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_pipeline_external_include_roots";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path external_root = temp_root / "FFC-master";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(external_root / "ffc");
+
+    write_text(
+        project_dir / "main.prg",
+        "#include \"ffc\\_ws3.h\"\n"
+        "RETURN\n");
+    write_text(
+        external_root / "ffc" / "_ws3.h",
+        "#include \"nested.h\"\n"
+        "#DEFINE FOXWSDBF \"FOXWS3.DBF\"\n");
+    write_text(external_root / "ffc" / "nested.h", "#DEFINE NESTED_VALUE 7\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "external_include.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "ExternalInclude";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = workspace.project_title;
+    workspace.build_plan.output_path = (output_dir / "ExternalInclude.exe").string();
+    workspace.build_plan.output_kind = "executable";
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false,
+        {external_root.string()});
+
+    expect(plan.ok, "trusted external include plan should be created");
+    const auto has_external_asset = [&](const std::string& relative_path) {
+        return std::any_of(
+            plan.assets.begin(),
+            plan.assets.end(),
+            [&](const copperfin::runtime::RuntimePackageAsset& asset) {
+                return asset.relative_path == relative_path &&
+                    asset.type_title == "PRG Include";
+            });
+    };
+    expect(has_external_asset("external/FFC-master/ffc/_ws3.h"),
+           "trusted external include should be admitted under a namespaced content path");
+    expect(has_external_asset("external/FFC-master/ffc/nested.h"),
+           "trusted external include discovery should recurse within the admitted root");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect_materialization(result, "trusted external include package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "external" / "FFC-master" / "ffc" / "_ws3.h"),
+               "trusted external include should be staged under content/external");
+        expect(fs::exists(content_root / "external" / "FFC-master" / "ffc" / "nested.h"),
+               "recursive trusted external include should be staged under content/external");
+    }
+
+    const auto missing_root_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        (temp_root / "missing-output").string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false,
+        {(temp_root / "missing-root").string()});
+    expect(std::any_of(
+               missing_root_plan.warnings.begin(),
+               missing_root_plan.warnings.end(),
+               [](const std::string& warning) {
+                   return warning.find("unavailable") != std::string::npos ||
+                       warning.find("disponible") != std::string::npos ||
+                       warning.find("ExternalIncludeRootUnavailable") != std::string::npos;
+               }),
+           "unavailable trusted include roots should be reported as warnings");
+
+    fs::create_directories(temp_root / "other-FFC" / "ffc");
+    write_text(temp_root / "other-FFC" / "ffc" / "_ws3.h", "#DEFINE OTHER 1\n");
+    const auto ambiguous_plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        (temp_root / "ambiguous-output").string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false,
+        {external_root.string(), (temp_root / "other-FFC").string()});
+    expect(std::any_of(
+               ambiguous_plan.warnings.begin(),
+               ambiguous_plan.warnings.end(),
+               [](const std::string& warning) {
+                   return warning.find("more than one") != std::string::npos ||
+                       warning.find("más de una") != std::string::npos ||
+                       warning.find("mais de uma") != std::string::npos ||
+                       warning.find("ExternalIncludeAmbiguous") != std::string::npos;
+               }),
+           "ambiguous trusted include roots should be reported as warnings");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_runtime_package_stages_literal_do_dependencies() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_literal_do_dependencies";

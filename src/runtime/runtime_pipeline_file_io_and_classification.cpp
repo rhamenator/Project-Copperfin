@@ -769,7 +769,9 @@ std::string resolve_project_item_source(
 }
 
 std::vector<std::filesystem::path> discover_prg_include_source_paths(
-    const std::filesystem::path& source) {
+    const std::filesystem::path& source,
+    const std::vector<std::filesystem::path>& external_include_roots,
+    std::vector<std::string>& warnings) {
     std::vector<std::filesystem::path> discovered;
     std::unordered_set<std::string> visited;
 
@@ -782,20 +784,81 @@ std::vector<std::filesystem::path> discover_prg_include_source_paths(
         return extension == ".prg" || extension == ".mpr" || extension == ".h" ||
             extension == ".inc" || extension == ".ch" || extension == ".txt";
     };
-    const auto resolve_include = [](const std::filesystem::path& owner, std::string value) {
+    const auto resolve_include = [&](const std::filesystem::path& owner, std::string value)
+        -> std::optional<std::filesystem::path> {
         std::replace(value.begin(), value.end(), '\\', '/');
+        const auto include_path = copperfin::platform::path_from_utf8_string(value);
         bool ambiguous = false;
         const auto direct = resolve_existing_path_casefold(
-            (owner.parent_path() / copperfin::platform::path_from_utf8_string(value)).lexically_normal(),
+            (owner.parent_path() / include_path).lexically_normal(),
             ambiguous);
         if (direct.has_value()) {
             return direct;
         }
 
         ambiguous = false;
-        return resolve_existing_path_casefold(
-            (owner.parent_path() / copperfin::platform::path_from_utf8_string(value).filename()).lexically_normal(),
+        const auto local_fallback = resolve_existing_path_casefold(
+            (owner.parent_path() / include_path.filename()).lexically_normal(),
             ambiguous);
+        if (local_fallback.has_value()) {
+            return local_fallback;
+        }
+
+        std::vector<std::filesystem::path> external_matches;
+        for (const auto& root : external_include_roots) {
+            bool root_candidate_ambiguous = false;
+            const auto root_direct = resolve_existing_path_casefold(
+                (root / include_path).lexically_normal(),
+                root_candidate_ambiguous);
+            if (root_candidate_ambiguous) {
+                warnings.push_back(runtime_text(
+                    "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+                    {{"path", value}}));
+                return std::nullopt;
+            }
+            if (root_direct.has_value()) {
+                external_matches.push_back(root_direct->lexically_normal());
+                continue;
+            }
+
+            root_candidate_ambiguous = false;
+            const auto root_fallback = resolve_existing_path_casefold(
+                (root / include_path.filename()).lexically_normal(),
+                root_candidate_ambiguous);
+            if (root_candidate_ambiguous) {
+                warnings.push_back(runtime_text(
+                    "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+                    {{"path", value}}));
+                return std::nullopt;
+            }
+            if (root_fallback.has_value()) {
+                external_matches.push_back(root_fallback->lexically_normal());
+            }
+        }
+
+        std::sort(external_matches.begin(), external_matches.end(), [](const auto& left, const auto& right) {
+            return lowercase_copy(copperfin::platform::path_to_utf8_string(left)) <
+                lowercase_copy(copperfin::platform::path_to_utf8_string(right));
+        });
+        external_matches.erase(
+            std::unique(external_matches.begin(), external_matches.end(), [](const auto& left, const auto& right) {
+                return lowercase_copy(copperfin::platform::path_to_utf8_string(left)) ==
+                    lowercase_copy(copperfin::platform::path_to_utf8_string(right));
+            }),
+            external_matches.end());
+        if (external_matches.size() > 1U) {
+            warnings.push_back(runtime_text(
+                "Runtime.Package.Warning.ExternalIncludeAmbiguous",
+                {{"path", value}}));
+            return std::nullopt;
+        }
+        if (!external_matches.empty()) {
+            return external_matches.front();
+        }
+        warnings.push_back(runtime_text(
+            "Runtime.Package.Warning.ExternalIncludeUnresolved",
+            {{"path", value}}));
+        return std::nullopt;
     };
     std::function<void(const std::filesystem::path&)> visit;
     visit = [&](const std::filesystem::path& current) {

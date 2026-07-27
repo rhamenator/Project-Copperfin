@@ -2051,6 +2051,28 @@ RuntimePackagePlan create_runtime_package_plan(
     BuildConfiguration configuration,
     bool enable_security,
     bool emit_dotnet_launcher) {
+    return create_runtime_package_plan(
+        document,
+        workspace,
+        security_profile,
+        extensibility_profile,
+        output_root,
+        configuration,
+        enable_security,
+        emit_dotnet_launcher,
+        {});
+}
+
+RuntimePackagePlan create_runtime_package_plan(
+    const studio::StudioDocumentModel& document,
+    const studio::StudioProjectWorkspace& workspace,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile,
+    const std::string& output_root,
+    BuildConfiguration configuration,
+    bool enable_security,
+    bool emit_dotnet_launcher,
+    const std::vector<std::string>& external_include_roots) {
     RuntimePackagePlan plan;
     plan.project_path = document.path;
     plan.project_title = workspace.project_title.empty()
@@ -2224,10 +2246,45 @@ RuntimePackagePlan create_runtime_package_plan(
     }
     const std::filesystem::path project_root =
         copperfin::platform::path_from_utf8_string(document.path).parent_path();
+    std::vector<std::filesystem::path> admitted_external_roots;
+    for (const auto& root_value : external_include_roots) {
+        if (root_value.empty()) {
+            continue;
+        }
+        const std::filesystem::path root =
+            copperfin::platform::path_from_utf8_string(root_value).lexically_normal();
+        std::error_code root_error;
+        if (!std::filesystem::is_directory(root, root_error) || root_error) {
+            plan.warnings.push_back(runtime_text(
+                "Runtime.Package.Warning.ExternalIncludeRootUnavailable",
+                {{"path", root_value}}));
+            continue;
+        }
+        admitted_external_roots.push_back(root);
+    }
+    const auto external_relative_path = [&](const std::filesystem::path& source_path)
+        -> std::optional<std::filesystem::path> {
+        for (const auto& root : admitted_external_roots) {
+            const auto relative = source_path.lexically_relative(root);
+            bool contained = !relative.empty() && !relative.is_absolute();
+            for (const auto& component : relative) {
+                if (component == "..") {
+                    contained = false;
+                    break;
+                }
+            }
+            if (contained) {
+                const std::string root_name = sanitize_file_name(
+                    copperfin::platform::path_to_utf8_string(root.filename()));
+                return std::filesystem::path("external") / root_name / relative;
+            }
+        }
+        return std::nullopt;
+    };
     const auto enqueue_dependency = [&](const std::filesystem::path& candidate,
                                         const char* type_title) {
         const std::filesystem::path source_path = candidate.lexically_normal();
-        const std::filesystem::path relative = source_path.lexically_relative(project_root);
+        std::filesystem::path relative = source_path.lexically_relative(project_root);
         bool escapes_project = relative.empty() || relative.is_absolute();
         for (const auto& component : relative) {
             if (component == "..") {
@@ -2236,7 +2293,11 @@ RuntimePackagePlan create_runtime_package_plan(
             }
         }
         if (escapes_project) {
-            return;
+            const auto external_relative = external_relative_path(source_path);
+            if (!external_relative.has_value()) {
+                return;
+            }
+            relative = *external_relative;
         }
 
         const std::string source = copperfin::platform::path_to_utf8_string(source_path);
@@ -2281,7 +2342,10 @@ RuntimePackagePlan create_runtime_package_plan(
          ++source_index) {
         const std::filesystem::path source = dependency_scan_sources[source_index];
         if (is_prg_path(copperfin::platform::path_to_utf8_string(source))) {
-            for (const auto& include_source : discover_prg_include_source_paths(source)) {
+            for (const auto& include_source : discover_prg_include_source_paths(
+                     source,
+                     admitted_external_roots,
+                     plan.warnings)) {
                 enqueue_dependency(include_source, "PRG Include");
             }
             for (const auto& library_source : discover_prg_literal_library_source_paths(source)) {

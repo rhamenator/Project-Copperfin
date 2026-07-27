@@ -156,6 +156,17 @@ struct RuntimeBuildResult {
     bool enable_security,
     bool emit_dotnet_launcher);
 
+[[nodiscard]] RuntimePackagePlan create_runtime_package_plan(
+    const studio::StudioDocumentModel& document,
+    const studio::StudioProjectWorkspace& workspace,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile,
+    const std::string& output_root,
+    BuildConfiguration configuration,
+    bool enable_security,
+    bool emit_dotnet_launcher,
+    const std::vector<std::string>& external_include_roots);
+
 [[nodiscard]] std::string build_runtime_manifest_text(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,

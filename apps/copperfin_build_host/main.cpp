@@ -65,6 +65,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
             {"configurationOption", "--configuration"},
             {"configurationValue", "debug|release"},
             {"emitDotnetLauncherOption", "--emit-dotnet-launcher"},
+            {"externalIncludeRootOption", "--external-include-root"},
             {"enableSecurityOption", "--enable-security"},
             {"outputDirOption", "--output-dir"},
             {"outputDirValue", "<directory>"},
@@ -592,6 +593,7 @@ int run_build_host_main(int argc, char** argv) {
     bool enable_security = false;
     bool emit_dotnet_launcher = false;
     std::string security_role = "developer";
+    std::vector<std::string> external_include_roots;
 
     for (std::size_t index = 1; index < args.size(); ++index) {
         const auto& arg = args[index];
@@ -616,6 +618,8 @@ int run_build_host_main(int argc, char** argv) {
             enable_security = true;
         } else if (arg == "--emit-dotnet-launcher") {
             emit_dotnet_launcher = true;
+        } else if (arg == "--external-include-root" && (index + 1U) < args.size()) {
+            external_include_roots.push_back(args[++index]);
         } else if (arg == "--runtime-host" && (index + 1U) < args.size()) {
             runtime_host_override = args[++index];
         } else {
@@ -736,7 +740,8 @@ int run_build_host_main(int argc, char** argv) {
         output_dir,
         configuration,
         enable_security,
-        emit_dotnet_launcher);
+        emit_dotnet_launcher,
+        external_include_roots);
 
     if (!plan.ok) {
         std::cout << "status: error\n";
