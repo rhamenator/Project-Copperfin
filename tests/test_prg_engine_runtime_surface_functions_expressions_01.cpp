@@ -1079,4 +1079,94 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_program_reports_active_name_and_stack_depth()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_program_stack_introspection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "program_stack.prg";
+        write_text(
+            main_path,
+            "cMainProgram = PROGRAM()\n"
+            "nMainDepth = PROGRAM(-1)\n"
+            "PUBLIC cNestedProgram, nNestedDepth\n"
+            "DO CaptureProgramStack\n"
+            "RETURN\n"
+            "PROCEDURE CaptureProgramStack\n"
+            "cNestedProgram = PROGRAM()\n"
+            "nNestedDepth = PROGRAM(-1)\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "PROGRAM() stack-introspection script should complete: " + state.message);
+
+        const auto value = [&](const std::string& name)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be captured");
+            return it == state.globals.end()
+                       ? std::string{}
+                       : copperfin::runtime::format_value(it->second);
+        };
+        expect(value("cmainprogram") == "main",
+               "PROGRAM() should report the active main routine");
+        expect(value("cnestedprogram") == "CaptureProgramStack",
+               "PROGRAM() should report the active nested routine");
+        const long long main_depth = std::stoll(value("nmaindepth"));
+        const long long nested_depth = std::stoll(value("nnesteddepth"));
+        expect(main_depth >= 1, "PROGRAM(-1) should report at least the active frame");
+        expect(nested_depth == main_depth + 1,
+               "PROGRAM(-1) should increase by one for a nested DO frame");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_singular_lparameter_binds_object_method_text_for_concatenation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_singular_lparameter_object_method";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "singular_lparameter.prg";
+        write_text(
+            main_path,
+            "oAppender = CREATEOBJECT('Appender')\n"
+            "oAppender.Append('first')\n"
+            "oAppender.Append('second')\n"
+            "cLog = oAppender.Log\n"
+            "RETURN\n"
+            "DEFINE CLASS Appender AS Custom\n"
+            "    Log = ''\n"
+            "    PROCEDURE Append\n"
+            "        LPARAMETER tcText\n"
+            "        THIS.Log = THIS.Log + CHR(13) + m.tcText\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "singular LPARAMETER object-method script should complete: " + state.message);
+        const auto log = state.globals.find("clog");
+        expect(log != state.globals.end(), "singular LPARAMETER object method should expose its log");
+        if (log != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(log->second) == "\rfirst\rsecond",
+                   "singular LPARAMETER should bind text for repeated character concatenation (got " +
+                       copperfin::runtime::format_value(log->second) + ")");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 }

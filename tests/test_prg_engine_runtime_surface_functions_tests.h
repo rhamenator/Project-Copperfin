@@ -15,6 +15,8 @@ namespace copperfin::runtime_surface_tests
     void test_native_listbox_moveitem_preserves_row_identity_and_state();
     void test_native_listbox_moveitem_dispatches_onmoveitem_and_honors_veto();
     void test_expression_runtime_surface_extensions();
+    void test_program_reports_active_name_and_stack_depth();
+    void test_singular_lparameter_binds_object_method_text_for_concatenation();
     void test_array_element_native_property_expression_access();
     void test_local_optimistic_table_buffering();
     void test_local_optimistic_table_buffering_append_lifecycle();

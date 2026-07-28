@@ -378,6 +378,12 @@
         return make_number_value(static_cast<double>(last_error_code));
     }
     if (function == "program") {
+        if (!arguments.empty() && value_as_number(arguments[0]) == -1.0) {
+            return make_number_value(static_cast<double>(program_stack_depth));
+        }
+        if (arguments.empty() && !current_program_name.empty()) {
+            return make_string_value(current_program_name);
+        }
         return make_string_value(last_error_procedure);
     }
     if (function == "lineno") {

@@ -128,6 +128,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     int last_error_code,
     const std::string& last_error_procedure,
     std::size_t last_error_line,
+    const std::string& current_program_name,
+    std::size_t program_stack_depth,
     const std::string& error_handler,
     const std::string& shutdown_handler,
     const std::function<int(const std::string&)>& aerror_callback,

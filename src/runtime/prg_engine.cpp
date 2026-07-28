@@ -1396,6 +1396,8 @@ namespace copperfin::runtime
             current_error_code(),
             current_error_procedure(),
             current_fault_location().line,
+            frame.routine_name,
+            stack.size(),
             error_handler,
             shutdown_handler,
             is_set_enabled("exact"),

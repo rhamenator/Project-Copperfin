@@ -2313,6 +2313,11 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "LPARAMETERS ")) {
             statement.kind = StatementKind::lparameters_declaration;
             statement.names = split_csv_like(line.substr(12U));
+        } else if (starts_with_insensitive(line, "LPARAMETER ")) {
+            // VFP accepts the singular command as an abbreviation; legacy
+            // sources such as ReportBuilder use it in object methods.
+            statement.kind = StatementKind::lparameters_declaration;
+            statement.names = split_csv_like(line.substr(11U));
         } else if (starts_with_insensitive(line, "PARAMETERS ")) {
             statement.kind = StatementKind::parameters_declaration;
             statement.names = split_csv_like(line.substr(11U));
