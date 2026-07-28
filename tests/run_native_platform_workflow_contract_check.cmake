@@ -496,8 +496,8 @@ require_text(".github/workflows/windows-deep-validation.yml" [=[      test_jobs:
           - '2']=]
     "bounded Windows CTest input")
 require_text(".github/workflows/windows-deep-validation.yml"
-    [=[-CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--parallel', '${{ inputs.test_jobs }}')]=]
-    "bounded Windows CTest command")
+    [=[-CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--timeout', '180', '--parallel', '${{ inputs.test_jobs }}')]=]
+    "bounded Windows CTest command and timeout")
 require_text(".github/workflows/windows-deep-validation.yml"
     [=[name: copperfin-windows-deep-validation-${{ inputs.build_configuration }}-build-${{ inputs.build_jobs }}-test-${{ inputs.test_jobs }}]=]
     "Windows deep-validation build/test job artifact identity")

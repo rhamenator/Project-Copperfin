@@ -1,3 +1,5 @@
+- 2026-07-28: Hardened Windows Deep Validation under #4755 by adding the existing 180-second per-test CTest timeout to the manual workflow and its contract test. This bounds a hung native test without reducing the complete inventory or bounded parallelism, allowing later VSIX, Studio, debugger, and xAsset stages to produce evidence on subsequent runs.
+
 - 2026-07-28: Current-head Windows Native Validation `30324522773` passed
   `315/315` CTest cases in `530.97s` at implementation head `b07d30d9c`,
   with no failures or skips. This completes the broad native Windows

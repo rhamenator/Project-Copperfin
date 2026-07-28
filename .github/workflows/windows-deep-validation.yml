@@ -107,7 +107,7 @@ jobs:
           -Name 'Run native CTest suite'
           -Category native-test
           -FilePath ctest
-          -CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--parallel', '${{ inputs.test_jobs }}')
+          -CommandArguments @('--test-dir', 'build', '-C', '${{ inputs.build_configuration }}', '--output-on-failure', '--timeout', '180', '--parallel', '${{ inputs.test_jobs }}')
           -SampleResources
 
       - name: Build Visual Studio extension
