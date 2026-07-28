@@ -100,6 +100,15 @@ remain unhandled; handled dispatch restores `READ EVENTS` and emits invariant
 Double-click timing policy, hit testing, capture, rendering, and hosted Windows
 UI validation remain separate. Future user-facing text remains catalog-first.
 
+Runtime child #4764 under #3217 adds the modeled `WM_RBUTTONUP` boundary. A
+native visual object with a declared `RightClick` handler receives the VFP
+no-argument event invocation through the same heap-backed frame path. Unknown
+targets and objects without `RightClick` remain unhandled; handled dispatch
+restores `READ EVENTS` and emits invariant `prg.event.rightclick` telemetry.
+The focused runtime-surface CTest passes `1/1`. Context-menu rendering, hit
+testing, capture, and hosted Windows UI validation remain separate. Future
+user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or

@@ -543,6 +543,7 @@ int main()
         test_native_mouse_down_up_dispatch_around_click();
         test_native_mouse_move_dispatches_with_button_state();
         test_native_double_click_dispatches_with_mouse_arguments();
+        test_native_right_click_dispatches_without_mouse_arguments();
         test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
         test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
