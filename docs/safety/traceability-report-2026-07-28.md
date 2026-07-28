@@ -12,6 +12,19 @@
 - Related hosted evidence: Windows Native `30329037587`; Windows Deep
   Validation `30329053296`
 
+## DQ/DV/HZ Mapping
+
+| Documentation requirement | Verification evidence | Controlled hazards |
+| --- | --- | --- |
+| `DQ-MVP-release-4403-runtime-recovery` | `DV-MVP-release-4403-recovery-walkthrough`; `DV-MVP-release-4403-cross-platform-validation` | `HZ-runtime-crash-01`; `HZ-runtime-debug-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
+| `DQ-MVP-release-4403-localized-operator-guidance` | `DV-MVP-release-4403-cross-platform-validation`; `DV-MVP-release-4403-recovery-walkthrough` | `HZ-runtime-crash-01`; `HZ-runtime-debug-01`; `HZ-system-failure-01`; `HZ-data-corruption-01` |
+
+The recovery walkthrough supplies the bounded package/debug/recovery
+procedure and locale reruns. Cross-platform validation supplies the native
+and hosted evidence that the procedure and localized guidance remain valid
+across supported MVP platforms. The mapping is explicit even where both
+requirements mitigate the same hazard family.
+
 ## Commands
 
 ```text
