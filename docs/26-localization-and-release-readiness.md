@@ -30,7 +30,11 @@ slice. Hosted Linux Native `30322581213` passed all `316/316` CTest cases in
 installer `30322581220`, generated launcher `30322581198`, managed UI
 `30322581184`, VSIX `30322581157`, security `30322581183`, Windows environment
 `30322581177`, Windows DECLARE ABI `30322581171`, and executable-path
-`30322581163` also passed. Windows Native `30322581189` remains in progress.
+`30322581163` also passed. Windows Native `30322581189` was cancelled during
+the native build after a later product-code push superseded it; it reached no
+CTest result and is not treated as a pass or failure. Replacement Windows
+Native run `30324522773` is in progress at test-slice head `b07d30d9c`.
+The current-head evidence remains partial until that replacement run finishes.
 The prior corrected-head evidence remains valid: hosted Linux Native
 `30320046770` passed all `316/316` CTest cases in `175.76s`, with only the two
 expected platform-conditional skips; hosted macOS Native `30320046738` passed
