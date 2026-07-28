@@ -2396,3 +2396,10 @@ head `bf2e33fd0`. Linux Managed UI, VSIX, and Security Supply Chain are green;
 the remaining native, installer, and Windows validation runs are still in
 progress. RC readiness remains unclaimed, with #4403 independent safety
 sign-off and #4409 protected launcher trust still open.
+
+# 2026-07-28 Independent local POSIX validation: synchronized head
+`792f1840c` passed `316/316` CTest cases in `224.56s` with only the expected
+platform-conditional skips `test_build_host_utf8_launcher_paths` and
+`test_generated_launcher_process`. The run was headless and no Copperfin UI
+process remained afterward. Hosted native and installer jobs remain separate
+release evidence.

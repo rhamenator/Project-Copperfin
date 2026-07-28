@@ -1,3 +1,9 @@
+- 2026-07-28: Independent local POSIX validation at synchronized head
+  `792f1840c` passed `316/316` CTest cases in `224.56s` with only the two
+  documented platform-conditional skips for UTF-8 launcher paths and generated
+  launcher process execution. The run was headless and left no Copperfin UI
+  process running.
+
 - 2026-07-28: Refreshed the roadmap RC evidence section against the current
   product head `364e62058` and coordination head `bf2e33fd0`. It now lists the
   exact-head green and in-progress hosted runs without claiming RC readiness;
