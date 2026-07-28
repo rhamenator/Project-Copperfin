@@ -209,27 +209,25 @@
                 return snapshot_path;
             }
 
-            for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+            for (const std::string &extension : {std::string{".cdx"},
+                                                 std::string{".idx"},
+                                                 std::string{".ndx"},
+                                                 std::string{".mdx"}})
             {
-                const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
-                const std::string extension = lowercase_copy(
-                    copperfin::platform::path_to_utf8_string(candidate_path.extension()));
-                if (extension != ".cdx" && extension != ".idx" &&
-                    extension != ".ndx" && extension != ".mdx")
-                {
-                    continue;
-                }
-                if (!verified_database_index_path_matches(table_path, candidate_path, extension) || bytes.empty())
+                std::filesystem::path expected_path = table_path;
+                expected_path.replace_extension(extension);
+                const auto verified = find_verified_database_file_byte_override(expected_path);
+                if (verified == options.verified_file_byte_overrides.end() || verified->second.empty())
                 {
                     continue;
                 }
 
                 const auto snapshot_index_path = verified_database_index_snapshot_path(
                     table_path,
-                    candidate_path,
+                    expected_path,
                     extension);
                 std::ofstream output(snapshot_root / snapshot_index_path.filename(), std::ios::binary | std::ios::trunc);
-                output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+                output.write(verified->second.data(), static_cast<std::streamsize>(verified->second.size()));
                 output.close();
                 if (!output.good())
                 {
@@ -238,7 +236,7 @@
                     snapshot_root.clear();
                     last_error_message = runtime_text(
                         "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
-                        {{"path", copperfin::platform::path_to_utf8_string(candidate_path)}});
+                        {{"path", copperfin::platform::path_to_utf8_string(expected_path)}});
                     return std::nullopt;
                 }
             }

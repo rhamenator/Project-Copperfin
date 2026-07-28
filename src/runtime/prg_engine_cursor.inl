@@ -445,27 +445,26 @@
                 inspection_path = copperfin::platform::path_to_utf8_string(*verified_table_path);
 
                 const auto logical_table_path = copperfin::platform::path_from_utf8_string(table_path);
-                for (const auto &[candidate_name, bytes] : options.verified_file_byte_overrides)
+                for (const std::string &extension : {std::string{".cdx"},
+                                                     std::string{".idx"},
+                                                     std::string{".ndx"},
+                                                     std::string{".mdx"}})
                 {
-                    const auto candidate_path = copperfin::platform::path_from_utf8_string(candidate_name);
-                    const std::string extension = lowercase_copy(
-                        copperfin::platform::path_to_utf8_string(candidate_path.extension()));
-                    if ((extension != ".cdx" && extension != ".idx" &&
-                         extension != ".ndx" && extension != ".mdx") ||
-                        !mutable_impl->verified_database_index_path_matches(
-                            logical_table_path, candidate_path, extension) ||
-                        bytes.empty())
+                    std::filesystem::path expected_path = logical_table_path;
+                    expected_path.replace_extension(extension);
+                    const auto verified = mutable_impl->find_verified_database_file_byte_override(expected_path);
+                    if (verified == options.verified_file_byte_overrides.end() || verified->second.empty())
                     {
                         continue;
                     }
 
                     const auto snapshot_index_path = mutable_impl->verified_database_index_snapshot_path(
                         logical_table_path,
-                        candidate_path,
+                        expected_path,
                         extension);
                     inspection_byte_overrides.emplace(
                         copperfin::platform::path_to_utf8_string(snapshot_root / snapshot_index_path.filename()),
-                        bytes);
+                        verified->second);
                 }
             }
 
