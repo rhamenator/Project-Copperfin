@@ -132,9 +132,15 @@ three package-trust/provisioning contracts (`3/3`), `test_runtime_pipeline`
 against the original `invoice.frx/.frt` and `cust.lbx/.lbt` fixtures. These
 results strengthen package and asset-fidelity evidence but do not substitute
 for Windows VFP9 execution, Visual Studio UI smoke, protected signing, or
-safety sign-off. The complete RC evidence gate remains unclaimed while the
-Windows sample-dependent stages, #4403 independent review/closure, and #4409
-protected launcher-trust provisioning remain open.
+safety sign-off. Windows Codex subsequently passed the four sample-dependent
+runtime equivalents twice at the same product head: RuntimePackage, XAsset,
+Report, and Menu, with the installed VFP9 prerequisite present. The artifacts
+are recorded under the Windows host's
+`E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\` path.
+The complete RC evidence gate remains unclaimed while #4403 independent
+review/closure and #4409 protected launcher-trust provisioning remain open;
+the accepted #4621 hosted baseline remains separate from an exact-head live
+Visual Studio UI rerun.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.

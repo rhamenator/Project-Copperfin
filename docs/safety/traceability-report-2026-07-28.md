@@ -31,3 +31,12 @@ validator or product failure. This rerun was performed after #4755 and #4756
 closed and after the exact-head Windows validation completed. The report does
 not claim independent reviewer sign-off, formal #4403 closure, or protected
 package signing under #4409. Those remain release prerequisites.
+
+Supplemental Windows-host evidence was added after this report's original
+rerun: at product head `93d44395f`, the installed VFP9 prerequisite passed and
+Windows Codex ran the RuntimePackage, XAsset, Report, and Menu equivalents
+twice. The artifacts are recorded in #4403 and under the Windows host path
+`E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\`. This
+closes the sample-runtime evidence omission from the hosted deep run, but does
+not satisfy the separate independent-review, strict-closure, or protected
+signing requirements.

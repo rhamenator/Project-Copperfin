@@ -4,6 +4,8 @@
 
 - 2026-07-28: Mounted VFP9 ISO asset validation at coordination head `f687ba0ac` passed the native report/label real-sample subset `40/40` in `13.85s` against the original `invoice.frx/.frt` and `cust.lbx/.lbt` fixtures. The result covers report/label fidelity and round trips only; it is not Windows VFP9 execution or Visual Studio/runtime smoke evidence.
 
+- 2026-07-28: Windows Codex passed the four sample-dependent deep-smoke equivalents twice at product head `93d44395f` with installed VFP9 assets: RuntimePackage, XAsset, Report, and Menu. Evidence is under `E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\`; this closes the skipped sample-runtime stages but does not claim VFP9 IDE/Visual Studio UI, protected signing, or safety closure.
+
 - 2026-07-28: Implemented #4756's bounded net472 Windows process-tree cleanup retry. The .NET Framework runner now gives `taskkill /T /F` a two-attempt, bounded completion path before falling back to root termination, preserving timeout, output, exit-code, and POSIX behavior. Linux managed tests and the managed compile contract pass; exact-head Windows Deep Validation `30329053296` later passed the net472 process-runner stage.
 
 - 2026-07-28: Hardened Windows Deep Validation under #4755 by adding the existing 180-second per-test CTest timeout to the manual workflow and its contract test. This bounds a hung native test without reducing the complete inventory or bounded parallelism, allowing later VSIX, Studio, debugger, and xAsset stages to produce evidence on subsequent runs.

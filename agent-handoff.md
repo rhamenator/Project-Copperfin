@@ -19,7 +19,9 @@ managed VSIX and language-service tests, the net472 process-runner fixture,
 standalone Studio and designer builds, all required designer smoke
 assertions, and the PRG debugger smoke. Its runtime-package, xAsset,
 report, and menu sample stages were intentionally skipped because the run
-used `require_vfp9_samples=false`; no VFP9-sample coverage is claimed.
+used `require_vfp9_samples=false`; no VFP9-sample coverage is claimed from
+that hosted workflow. Windows Codex later passed equivalent local stages twice
+at the same product head; that supplemental evidence is recorded below.
 
 #4621 and #4750 are closed. The hosted Windows/VFP9/Visual Studio evidence
 recorded for #4621 remains the accepted release-evidence baseline; the current
@@ -38,8 +40,8 @@ tracked in #4756; the current code change retries the bounded Windows
 
 The replacement exact-head deep run `30329053296` passed the process-runner
 stage and the later non-sample stages. This closes the implementation/testing
-acceptance for #4756; the sample-dependent stages remain a separate hosted
-VFP9 evidence requirement.
+acceptance for #4756; its sample-dependent stages were skipped by input, and
+the equivalent Windows-host VFP9 stages are recorded below.
 
 Windows Codex independently validated the #4756 fix at implementation head
 `93d44395f`: the real net472 `cmd.exe`/PowerShell/`taskkill.exe`
@@ -70,8 +72,9 @@ Validation `30326601002` passed its managed plus three adjacent targets on
 both Win32 and x64. The exact-head replacement matrix is now authoritative:
 Windows Native `30329037587` passed `315/315` in `557.26s`, and Windows Deep
 Validation `30329053296` passed. The four sample-dependent deep stages were
-skipped by the explicit `require_vfp9_samples=false` input and remain
-unclaimed.
+skipped by the explicit `require_vfp9_samples=false` input; Windows Codex
+subsequently passed equivalent RuntimePackage, XAsset, Report, and Menu stages
+twice at the same product head as recorded below.
 
 Fresh safety validation is archived in
 `docs/safety/traceability-report-2026-07-28.md` at synchronized documentation
@@ -104,6 +107,17 @@ includes section/grouping and placed-object edits, settings, preview and
 delete/restore behavior, and no-op/property round trips. This is native
 asset-fidelity evidence only; it does not claim Windows VFP9 execution,
 Visual Studio UI behavior, or the runtime/xAsset/menu smoke stages.
+
+Windows Codex then passed the four sample-dependent deep-smoke equivalents
+twice at product implementation head `93d44395f`, with the installed VFP9
+root `C:\Program Files (x86)\Microsoft Visual FoxPro 9` and all prerequisite
+assets present. RuntimePackage, XAsset, Report, and Menu each passed; the
+second-run timings were `6.76s`, `0.41s`, `0.43s`, and `0.33s`. Artifacts and
+logs are under `E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\`
+on the Windows host, including the generated package manifests, security
+audit, and staged SCX/FRX/MNX sidecars. This closes the sample-runtime evidence
+gap left by Windows Deep Validation `30329053296`; it does not claim a VFP9
+IDE or Visual Studio UI run, protected signing, or safety closure.
 
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,
