@@ -5336,3 +5336,10 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   protection. The redundant Form-only implementation/test was removed; the
   focused `test_prg_engine_runtime_surface_functions` suite passes `1/1`.
   No new machine contract or platform rendering claim is made.
+- 2026-07-28: Implemented F1 child #4789 under #25. The shared standalone/VSIX
+  Coverage pane now has an independent localized filter over stable location,
+  category, and detail text, with explicit localized no-match feedback while
+  preserving source paths, line numbers, deduplication, and hit counts.
+  Managed catalog parity passed, the DesignerSmokeTests project built with
+  zero warnings/errors, and the exact `SmokeProjectWorkspaceEntryActivation`
+  WinForms smoke passed all assertions under Mono offscreen mode.

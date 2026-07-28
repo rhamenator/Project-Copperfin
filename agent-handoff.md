@@ -37,6 +37,12 @@ cleanup head also removes the redundant Form-only ForeColor slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
 generic visual ForeColor contract already covers Form and visual child
 controls. The focused runtime-surface suite passes `1/1` after the cleanup.
+#4789 is implemented in the next product slice: the shared Coverage pane now
+has an independent localized filter with invariant-backed source activation
+and explicit localized no-match feedback. Catalog parity passed, the managed
+DesignerSmokeTests build is clean, and `SmokeProjectWorkspaceEntryActivation`
+passed all assertions in Mono offscreen mode. The next documentation commit
+will update this product-head pointer after the slice is committed.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
