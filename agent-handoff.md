@@ -4,8 +4,8 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `b2e44535d`, with coordination-only documentation and
-review commits through synchronized head `da52ce8ec`. The broad validation
+implementation head is `c34417f5f`, with coordination-only documentation and
+review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
@@ -141,6 +141,17 @@ handler fallthrough, invariant mouse telemetry, and `READ EVENTS` restoration
 are covered by the focused runtime-surface test; right-button hit testing,
 capture, context-menu rendering, drag-and-drop, and hosted Windows UI remain
 separate. Future user-facing text remains catalog-first.
+
+Runtime child #4771 under #3217 completes the modeled keyboard default-action
+boundary. After Form or child `KeyPress` permits default processing, ENTER
+selects the owning Form's deterministic `CommandButton.Default` candidate and
+ESC selects `CommandButton.Cancel`; candidates without an ordinary `Click`
+handler are skipped. `Click` receives no synthetic arguments and runs through
+the heap-backed frame path; `NODEFAULT`, invariant click telemetry, and
+`READ EVENTS` restoration are covered by the focused runtime-surface CTest,
+which passes `1/1` locally. Focus traversal, keyboard buffering, toolbar
+arbitration, pixel UI, and hosted Windows/macOS validation remain separate.
+Exact-head cross-platform review is required before closing #4771.
 
 Runtime package child #4769 corrects the IR-manifest opcode map. The parsed
 `DEFINE MENU` statement kind now emits invariant `define_menu_command` metadata

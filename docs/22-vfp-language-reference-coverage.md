@@ -25,6 +25,17 @@
   Focused verified-file, database-lifecycle, and runtime-surface tests pass on
   POSIX. Exact-head hosted Windows validation remains separate.
 
+- Native `CommandButton` keyboard-action note (2026-07-28, #4771 under #3217):
+  the modeled `WM_KEYDOWN` path now selects the owning Form's deterministic
+  `Default = .T.` button for ENTER or `Cancel = .T.` button for ESC after
+  `KeyPress` permits default processing. The selected ordinary no-argument
+  `Click` handler runs through the heap-backed frame path, missing handlers are
+  skipped, and `NODEFAULT`, event-loop restoration, and invariant click
+  telemetry remain intact. This is a headless default-action boundary; focus
+  traversal, keyboard buffering, toolbar arbitration, pixel UI, and hosted
+  Windows validation remain separate. Focused runtime-surface CTest passes
+  locally; hosted Windows/macOS review remains pending.
+
 - Runtime follow-up closure evidence (2026-07-28): #4751, #4752, and #4725 are closed at exact synchronized head `8718f9076`. Windows MSVC 18.8.2 Release built and passed `test_prg_engine_verified_dbf_security` plus `test_prg_engine_data_io` `2/2` in `5.76s`; Linux corroborated both targets `2/2`. The result confirms strict admitted-byte reads/copy behavior and exclusion of internal `_SCREEN`/`_VFP`/`application` bindings from user-facing memory listings while preserving direct property access. The Apple-specific numeric-parser source remains separate and untouched. The separate full Windows matrix remains release evidence.
 
 - #4750 closure evidence (2026-07-28): hosted Windows validation at `632f0e089` rebuilt the VS 2026/MSBuild 18.8.2 Release `test_runtime_pipeline` target and passed `1/1` in `138.60s`. The result confirms the Windows long-path/UTF-8 identity sequence, trusted external-root normalization, portable forward-slash package-relative paths, and Unicode direct/recursive `#INCLUDE` fixture expectations. #4750 is closed; the Apple-specific numeric-parser source remains separate and untouched. This focused result does not claim completion of the broader synchronized CI matrix.
@@ -152,7 +163,7 @@
 
 - Runtime visual `SpecialEffect` note: the extracted VFP9 `SpecialEffect Property` topic documents runtime values `0..2` and applies them to CheckBox, ComboBox, CommandButton, CommandGroup, Container, EditBox, ListBox, OptionButton, OptionGroup, PageFrame, Shape, and TextBox. Copperfin now exposes native PRG coverage for the non-TextBox classes with documented defaults (`Container = 1`, others `0`), direct and `GETPEM()` / `SETPEM()` / `PUTPEM()` access, `0..2` normalization, derived-class preservation, and built-in reflection protection under #3217/#4577. Three-dimensional rendering, flat/hover tracking, platform theme behavior, and pointer/event semantics remain separate work.
 
-- Runtime `CommandButton` `Default`/`Cancel` note: the extracted VFP9 topics `html/832cc48f-03fd-457f-bd9d-bbbe4fd3e581.htm` and `html/c13ed199-94ba-4bf5-b33b-ef073fd6820a.htm` document both properties as read/write logical values with `.F.` defaults. Copperfin now exposes their native PRG property contracts under #3217/#4610 through direct access, `GETPEM()` / `SETPEM()` / `PUTPEM()`, `PEMSTATUS()` / `AMEMBERS()`, logical normalization, derived-class initialization, and built-in reflection protection. ENTER-key default routing, ESC-key cancel dispatch, toolbar restrictions, and form-level default-button arbitration remain separate event/UI work.
+- Runtime `CommandButton` `Default`/`Cancel` note: the extracted VFP9 topics `html/832cc48f-03fd-457f-bd9d-bbbe4fd3e581.htm` and `html/c13ed199-94ba-4bf5-b33b-ef073fd6820a.htm` document both properties as read/write logical values with `.F.` defaults. Copperfin exposes their native PRG property contracts under #3217/#4610 through direct access, `GETPEM()` / `SETPEM()` / `PUTPEM()`, `PEMSTATUS()` / `AMEMBERS()`, logical normalization, derived-class initialization, and built-in reflection protection. The modeled ENTER/ESC default-action boundary is implemented under #4771; focus traversal, toolbar restrictions, pixel UI, and hosted Windows validation remain separate.
 
 - Runtime `CommandButton.Style` note: the extracted VFP9 `Style Property` topic `html/21a57d42-ae88-432c-8240-72f185a5d56c.htm` documents `0` (Standard) and `1` (Invisible) as read/write values with `0` as the default. Copperfin now exposes the native PRG property contract under #3217/#4611 through direct access, `GETPEM()` / `SETPEM()` / `PUTPEM()`, `PEMSTATUS()` / `AMEMBERS()`, `0..1` normalization, derived-class initialization, and built-in reflection protection. Actual visibility, rendering, layout, focus, and designer serialization remain separate host/UI work.
 

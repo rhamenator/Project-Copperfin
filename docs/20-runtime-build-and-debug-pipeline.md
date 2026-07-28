@@ -13,6 +13,15 @@ Windows/VFP compatibility behavior, and ordinary non-strict filesystem reads
 are unchanged. The focused verified-file, database-lifecycle, and runtime-
 surface tests pass on POSIX; hosted Windows review remains required.
 
+The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
+boundary under #3217/#4771: ENTER selects the owning Form's deterministic
+`CommandButton.Default` candidate, while ESC selects `CommandButton.Cancel`,
+after `KeyPress` permits default processing. A selected ordinary no-argument
+`Click` handler runs through the heap-backed frame machine; missing handlers,
+`NODEFAULT`, event-loop restoration, and invariant click telemetry retain their
+existing contracts. Focus traversal, keyboard buffering, toolbar arbitration,
+pixel UI, and hosted Windows behavior remain separate.
+
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Parenthesized dynamic targets such as `DO (cTarget)` and `DO (&cTargetHolder)` now evaluate through the same heap-backed iterative frame machine, preserving `WITH` arguments and deterministic missing-target behavior under #3217/#4722. Package dependency discovery remains literal-only; arbitrary external paths, dynamic xAssets, and control-flow forms remain separate runtime boundaries.
 
 Current native components:
