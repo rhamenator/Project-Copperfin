@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented the modeled VFP9 `WVISIBLE(WindowName)` runtime
+  surface under #4808. The main application window, named visual windows, and
+  live `Show()`/`Hide()`/`Visible` state are covered case-insensitively; unknown
+  and non-visual names return false. The focused runtime-surface CTest passes;
+  native OS-window enumeration and hosted window-manager behavior remain
+  explicit boundaries.
+
 - 2026-07-28: Refreshed the handoff and roadmap release matrix at product
   head `7587be12f`: Security Supply Chain, VSIX, Linux Managed UI, and
   Executable Path are green; Windows Native and the remaining hosted native,

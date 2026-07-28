@@ -2838,6 +2838,40 @@ namespace copperfin::runtime
                 }
                 return std::nullopt;
             },
+            [this](const std::string &window_name) -> bool
+            {
+                // WVISIBLE("") denotes the modeled main VFP application window.
+                if (trim_copy(window_name).empty())
+                {
+                    return true;
+                }
+
+                const std::string normalized_name = normalize_identifier(trim_copy(window_name));
+                if (normalized_name.empty())
+                {
+                    return false;
+                }
+
+                for (const auto &[handle, runtime_object] : ole_objects)
+                {
+                    (void)handle;
+                    if (runtime_object.hidden_runtime_surface ||
+                        !runtime_object.native_hwnd.has_value())
+                    {
+                        continue;
+                    }
+
+                    const auto name = runtime_object.properties.find("name");
+                    const auto visible = runtime_object.properties.find("visible");
+                    if (name != runtime_object.properties.end() &&
+                        visible != runtime_object.properties.end() &&
+                        normalize_identifier(trim_copy(value_as_string(name->second))) == normalized_name)
+                    {
+                        return value_as_bool(visible->second);
+                    }
+                }
+                return false;
+            },
             [this](const std::string &name, std::vector<PrgValue> values)
             {
                 assign_array(name, std::move(values));
