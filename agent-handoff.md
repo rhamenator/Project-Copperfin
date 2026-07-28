@@ -1,5 +1,29 @@
 # Agent Handoff
 
+## Current State
+
+This section is authoritative over the historical log below. The synchronized
+branch is `main` at `34ee24de1`; the product/test implementation head for the
+active Windows native run is `b07d30d9c`. Windows Native Validation
+`30324522773` is still in progress during native compilation, so no CTest
+result is claimed yet. The preceding Windows run `30322581189` was cancelled
+before CTest after a later product push superseded it and is neither a pass nor
+a product failure.
+
+#4621 and #4750 are closed. The hosted Windows/VFP9/Visual Studio evidence
+recorded for #4621 remains the accepted release-evidence baseline; the current
+native rerun is a later exact-head corroboration. The remaining explicit
+release prerequisites are the open safety traceability review under #4403 and
+the externally provisioned package-signing/trust registry under #4409. Do not
+claim the complete RC evidence gate until those prerequisites and the active
+native run are resolved.
+
+The entries below are a chronological historical handoff log. Older wording
+such as “pending” or “open” applies to the historical head named in that entry,
+not to the current state above.
+
+## Historical Handoff Log
+
 - Windows Native Validation `30317113993` at implementation head `7c13a926d`
   completed `314/315` tests before failing only `test_runtime_pipeline`. The
   nine failures were exact staged/source-provenance assertions caused by the
