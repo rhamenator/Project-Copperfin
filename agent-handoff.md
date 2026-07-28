@@ -3,7 +3,7 @@
 ## Current State
 
 This section is authoritative over the historical log below. The synchronized
-branch is `main` at `9e48f1989`; the product/test implementation head for the
+branch is `main` and is synchronized with `origin/main`; the product/test implementation head for the
 active Windows native run is `b07d30d9c`. Windows Native Validation
 `30324522773` is still in progress during native compilation, so no CTest
 result is claimed yet. The preceding Windows run `30322581189` was cancelled
