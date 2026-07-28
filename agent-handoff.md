@@ -88,10 +88,14 @@ and returns dotted project-method signature help with parameter names and
 default expressions preserved. The focused
 `Copperfin.LanguageServiceTests` Release run passes all tests. Windows
 validation seq862 passed the exact Release run at tested descendant
-`e092f12bc`; #4795 is closed as implementation-complete. This is a managed
-indexing/signature surface only; native parser behavior remains the separate
-#4792 contract. Broader language-service scope and the RC matrix remain
-separate.
+`e092f12bc`. Independent review then found that the first matcher also
+accepted bare `PARAMETER`; the correction narrows it to `LPARAMETER`,
+`LPARAMETERS`, and `PARAMETERS`, with a negative regression test for the
+unsupported bare form. The focused Release suite passes all tests, and #4795
+is reopened pending exact-head hosted review of this correction. This is a
+managed indexing/signature surface only; native parser behavior remains the
+separate #4792 contract. Broader language-service scope and the RC matrix
+remain separate.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and

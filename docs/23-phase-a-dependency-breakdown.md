@@ -62,9 +62,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `LPARAMETERS`. Dotted project-method signature help preserves parameter
   names and default expressions, and the focused Release language-service
   suite passes all tests. Windows validation seq862 passed the exact Release
-  run at tested descendant `e092f12bc`; #4795 is closed as
-  implementation-complete. Native parser behavior remains the separate #4792
-  contract.
+  run at tested descendant `e092f12bc`. Independent review then found that the
+  first matcher also accepted bare `PARAMETER`; the correction narrows it to
+  `LPARAMETER`, `LPARAMETERS`, and `PARAMETERS`, with a negative regression test.
+  The focused Release suite passes all tests, and #4795 is reopened pending
+  exact-head hosted review of this correction. Native parser behavior remains
+  the separate #4792 contract.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

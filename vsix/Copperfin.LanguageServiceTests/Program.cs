@@ -81,6 +81,7 @@ internal static partial class Program
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
+        TestProjectProcedureSignatureHelpRejectsBareParameter();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestSignatureInvocationParserIgnoresCommentsAndStrings();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
@@ -2216,6 +2217,33 @@ internal static partial class Program
                 Expect(signatures[0].Parameters[0].Name == "tcCustomerId" &&
                        signatures[0].Parameters[1].Name == "tlPreview",
                     "singular LPARAMETER signature help should normalize parameter names");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectProcedureSignatureHelpRejectsBareParameter()
+    {
+        var root = CreateProjectRoot("bare_parameter_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "orders.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "PARAMETER tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "SaveOrder");
+            Expect(signatures.Count == 1,
+                "bare PARAMETER should still leave the procedure symbol available");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "SaveOrder()" && signatures[0].Parameters.Count == 0,
+                    "bare PARAMETER should not be treated as a VFP parameter declaration");
             }
         }
         finally

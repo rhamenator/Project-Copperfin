@@ -6,6 +6,11 @@
   `Copperfin.LanguageServiceTests` suite passes all tests. Windows validation
   seq862 independently passed the exact Release run at tested descendant
   `e092f12bc`; runtime/parser behavior remains covered separately by #4792.
+  Independent review then found that the first matcher also accepted bare
+  `PARAMETER`; the correction narrows it to `LPARAMETER`, `LPARAMETERS`, and
+  `PARAMETERS`, with a negative regression test for the unsupported bare form.
+  The focused Release suite passes all tests; hosted review of this correction
+  remains pending.
 
 - 2026-07-28: Implemented runtime child #4793 under #3217 at product head
   `a796a31dc`. Native PRG indexed `PROGRAM(nLevel)` and `SYS(16,nLevel)` now
