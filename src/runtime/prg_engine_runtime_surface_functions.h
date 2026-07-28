@@ -85,6 +85,7 @@ bool is_native_form_drawwidth_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_form_desktop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_show_in_taskbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_whats_this_button_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_form_whats_this_help_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_sizebox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_zoombox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_showtips_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -275,6 +276,7 @@ void normalize_native_list_control_selecteditemforecolor_invariant(RuntimeOleObj
 void normalize_native_textbox_statusbartext_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_helpcontextid_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_whatsthishelpid_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_form_whatsthishelp_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_commandbutton_style_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_commandbutton_picture_layout_invariant(RuntimeOleObjectState& runtime_object);

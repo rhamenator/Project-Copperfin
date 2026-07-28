@@ -230,6 +230,7 @@
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
             is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_whats_this_button_member_name(*runtime_object, property_name) ||
+            is_native_form_whats_this_help_member_name(*runtime_object, property_name) ||
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
             is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_form_showtips_member_name(*runtime_object, property_name) ||
@@ -933,6 +934,9 @@
             if (member_name == "whatsthishelpid") {
                 normalize_native_visual_whatsthishelpid_invariant(*runtime_object);
             }
+            if (member_name == "whatsthishelp") {
+                normalize_native_form_whatsthishelp_invariant(*runtime_object);
+            }
             if (member_name == "default" || member_name == "cancel") {
                 normalize_native_commandbutton_default_cancel_invariant(*runtime_object);
             }
@@ -1250,6 +1254,9 @@
             if (member_name == "whatsthishelpid") {
                 normalize_native_visual_whatsthishelpid_invariant(*runtime_object);
             }
+            if (member_name == "whatsthishelp") {
+                normalize_native_form_whatsthishelp_invariant(*runtime_object);
+            }
             if (member_name == "default" || member_name == "cancel") {
                 normalize_native_commandbutton_default_cancel_invariant(*runtime_object);
             }
@@ -1398,6 +1405,7 @@
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
             is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_whats_this_button_member_name(*runtime_object, property_name) ||
+            is_native_form_whats_this_help_member_name(*runtime_object, property_name) ||
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
             is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_form_showtips_member_name(*runtime_object, property_name) ||

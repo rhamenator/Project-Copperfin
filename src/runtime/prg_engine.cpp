@@ -9702,6 +9702,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_visual_whatsthishelpid_invariant(runtime_object);
                 }
+                if (normalized_property_name == "whatsthishelp")
+                {
+                    normalize_native_form_whatsthishelp_invariant(runtime_object);
+                }
                 if (normalized_property_name == "default" ||
                     normalized_property_name == "cancel")
                 {

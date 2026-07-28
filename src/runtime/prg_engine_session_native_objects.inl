@@ -1274,6 +1274,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("whatsthishelp"))
+            {
+                // Headless contract: preserve the documented Form default.
+                runtime_object.properties["whatsthishelp"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("sizebox"))
             {
                 // Headless contract: preserve the documented Form default.

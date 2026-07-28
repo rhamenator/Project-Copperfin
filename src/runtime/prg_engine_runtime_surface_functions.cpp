@@ -319,6 +319,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_relativerow_member_name_matches(runtime_object, member_name) ||
                native_form_show_in_taskbar_member_name_matches(runtime_object, member_name) ||
                native_form_whats_this_button_member_name_matches(runtime_object, member_name) ||
+               native_form_whats_this_help_member_name_matches(runtime_object, member_name) ||
                native_editbox_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
                native_textbox_dynamicinputmask_member_name_matches(runtime_object, member_name) ||

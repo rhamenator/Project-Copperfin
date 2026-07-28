@@ -273,6 +273,7 @@
             normalize_native_commandbutton_default_cancel_invariant(*runtime_object);
             normalize_native_commandbutton_style_invariant(*runtime_object);
             normalize_native_commandbutton_picture_layout_invariant(*runtime_object);
+            normalize_native_form_whatsthishelp_invariant(*runtime_object);
             normalize_native_grid_rowheight_invariant(*runtime_object);
             normalize_native_grid_headerheight_invariant(*runtime_object);
             normalize_native_grid_allowheadersizing_invariant(*runtime_object);
@@ -396,6 +397,7 @@
                     normalize_native_commandbutton_default_cancel_invariant(*child_object);
                     normalize_native_commandbutton_style_invariant(*child_object);
                     normalize_native_commandbutton_picture_layout_invariant(*child_object);
+                    normalize_native_form_whatsthishelp_invariant(*child_object);
                     normalize_native_grid_rowheight_invariant(*child_object);
                     normalize_native_grid_headerheight_invariant(*child_object);
                     normalize_native_grid_allowheadersizing_invariant(*child_object);

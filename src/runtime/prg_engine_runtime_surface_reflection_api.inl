@@ -156,6 +156,11 @@ bool is_native_form_whats_this_button_member_name(const RuntimeOleObjectState& r
     return native_form_whats_this_button_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_form_whats_this_help_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_whats_this_help_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_sizebox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_sizebox_member_name_matches(runtime_object, normalized_member_name);
@@ -1868,6 +1873,20 @@ void normalize_native_visual_whatsthishelpid_invariant(RuntimeOleObjectState& ru
         ? std::llround(value)
         : 0LL;
     whats_this_help_id->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_form_whatsthishelp_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "form") {
+        return;
+    }
+
+    const auto whats_this_help = runtime_object.properties.find("whatsthishelp");
+    if (whats_this_help == runtime_object.properties.end()) {
+        return;
+    }
+
+    whats_this_help->second = make_boolean_value(value_as_bool(whats_this_help->second));
 }
 
 void normalize_native_commandbutton_default_cancel_invariant(RuntimeOleObjectState& runtime_object)
