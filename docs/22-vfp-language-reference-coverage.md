@@ -5,8 +5,9 @@
   related error metadata bound to the original fault procedure while an
   `ON ERROR` handler or `TRY/CATCH` block is active. Outside an active error
   context, current-frame behavior is unchanged. The focused control-flow and
-  runtime-surface CTest targets pass locally; exact-head Windows validation
-  remains a required compatibility check.
+  runtime-surface CTest targets pass locally, and Windows validation seq888
+  passes `2/2` at tested descendant `a404b4038`; #4800 is
+  implementation-complete. Broader VFP9 parity remains separate.
 
 - Current native PRG form-sizing status (2026-07-28, #4797 under #3217): the
   shared headless runtime surface exposes VFP9 `MinWidth`, `MinHeight`,

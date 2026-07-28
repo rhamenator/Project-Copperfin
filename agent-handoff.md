@@ -15,9 +15,11 @@ evaluates expressions, `PROGRAM()`, `SYS(16)`, `AERROR()`, and related error
 metadata remain bound to the original faulting procedure; ordinary evaluation
 still reports the executing frame. The focused `test_prg_engine_control_flow`
 and `test_prg_engine_runtime_surface_functions` CTest targets pass locally.
-Windows exact-head validation has been requested through the agent channel and
-is still pending. This slice is intentionally stack-frugal and does not alter
-the broader VFP9 runtime or hosted UI boundaries.
+Windows exact-head validation seq888 passes `2/2` at tested descendant
+`a404b4038`, including the new `PROGRAM()`/`SYS(16)` assertions, and no
+Copperfin process remained. #4800 is implementation-complete. This slice is
+intentionally stack-frugal and does not alter the broader VFP9 runtime or
+hosted UI boundaries.
 
 The current test-infrastructure slice for #4798 under #25 hardens the managed
 DesignerSmoke executable's cleanup boundary. The runner recursively closes and
