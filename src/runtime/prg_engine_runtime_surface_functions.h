@@ -32,6 +32,11 @@ struct RuntimeSurfaceCursorSnapshot {
     std::vector<RuntimeSurfaceCursorRow> rows;
 };
 
+struct RuntimeProgramStackFrame {
+    std::string routine_name;
+    std::string file_path;
+};
+
 struct NativeListControlCellReference {
     std::size_t row_slot = 0U;
     std::size_t column_slot = 0U;
@@ -395,6 +400,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     std::size_t last_error_line,
     const std::string& current_program_name,
     std::size_t program_stack_depth,
+    const std::function<std::optional<RuntimeProgramStackFrame>(long long)>& program_stack_frame_callback,
     const std::string& error_handler,
     const std::string& shutdown_handler,
     const std::function<int(const std::string&)>& aerror_callback,

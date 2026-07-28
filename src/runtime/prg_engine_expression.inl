@@ -44,6 +44,9 @@
         int last_error_code,
         const std::string& last_error_procedure,
         std::size_t last_error_line,
+        const std::string& current_program_name,
+        std::size_t program_stack_depth,
+        const std::function<std::optional<RuntimeProgramStackFrame>(long long)>& program_stack_frame_callback,
         const std::string& error_handler,
         const std::string& shutdown_handler,
         const std::function<int(const std::string&)>& aerror_callback,
@@ -83,6 +86,7 @@
                 std::size_t last_error_line,
                 const std::string &current_program_name,
                 std::size_t program_stack_depth,
+                std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback,
                 const std::string &error_handler,
                 const std::string &shutdown_handler,
                 bool exact_string_compare,
@@ -254,6 +258,7 @@
                   last_error_line_(last_error_line),
                   current_program_name_(current_program_name),
                   program_stack_depth_(program_stack_depth),
+                  program_stack_frame_callback_(std::move(program_stack_frame_callback)),
                   error_handler_(error_handler),
                 shutdown_handler_(shutdown_handler),
                   exact_string_compare_(exact_string_compare)
@@ -1874,6 +1879,7 @@
                                                           last_error_line_,
                                                           current_program_name_,
                                                           program_stack_depth_,
+                                                          program_stack_frame_callback_,
                                                           error_handler_,
                                                           shutdown_handler_,
                                                           aerror_callback_,
@@ -3572,6 +3578,7 @@
             std::size_t last_error_line_ = 0;
             const std::string &current_program_name_;
             std::size_t program_stack_depth_ = 0;
+            std::function<std::optional<RuntimeProgramStackFrame>(long long)> program_stack_frame_callback_;
             const std::string &error_handler_;
             const std::string &shutdown_handler_;
             bool exact_string_compare_ = false;

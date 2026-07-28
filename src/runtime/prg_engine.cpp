@@ -1398,6 +1398,24 @@ namespace copperfin::runtime
             current_fault_location().line,
             frame.routine_name,
             stack.size(),
+            [this](const long long level) -> std::optional<RuntimeProgramStackFrame>
+            {
+                if (level < 0 || stack.empty())
+                {
+                    return std::nullopt;
+                }
+
+                const std::size_t frame_index = level <= 1
+                    ? 0U
+                    : static_cast<std::size_t>(level - 1);
+                if (frame_index >= stack.size())
+                {
+                    return std::nullopt;
+                }
+
+                const Frame &stack_frame = stack[frame_index];
+                return RuntimeProgramStackFrame{stack_frame.routine_name, stack_frame.file_path};
+            },
             error_handler,
             shutdown_handler,
             is_set_enabled("exact"),

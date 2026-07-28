@@ -30,6 +30,13 @@
                 return make_string_value("0");
             }
             if (sys_code == 16) {
+                if (arguments.size() >= 2U && program_stack_frame_callback) {
+                    const long long level = safe_int_argument(1U, 0);
+                    if (const auto stack_frame = program_stack_frame_callback(level); stack_frame.has_value()) {
+                        return make_string_value(stack_frame->file_path);
+                    }
+                    return make_string_value({});
+                }
                 return make_string_value(frame_file_path);
             }
             if (sys_code == 2018) {
@@ -383,6 +390,13 @@
         }
         if (arguments.empty() && !current_program_name.empty()) {
             return make_string_value(current_program_name);
+        }
+        if (!arguments.empty() && program_stack_frame_callback) {
+            const long long level = safe_int_argument(0U, -1);
+            if (const auto stack_frame = program_stack_frame_callback(level); stack_frame.has_value()) {
+                return make_string_value(stack_frame->routine_name);
+            }
+            return make_string_value({});
         }
         return make_string_value(last_error_procedure);
     }
