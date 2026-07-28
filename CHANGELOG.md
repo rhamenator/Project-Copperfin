@@ -1,3 +1,5 @@
+- 2026-07-28: Windows Codex passed the real net472 process-tree fixture `6/6` times at implementation head `93d44395f`, including five serial repetitions after the initial run. The full Windows Deep Validation workflow remains pending.
+
 - 2026-07-28: Implemented #4756's bounded net472 Windows process-tree cleanup retry. The .NET Framework runner now gives `taskkill /T /F` a two-attempt, bounded completion path before falling back to root termination, preserving timeout, output, exit-code, and POSIX behavior. Linux managed tests and the managed compile contract pass; Windows rerun evidence remains required after deep run `30326601931` exposed the surviving-child assertion.
 
 - 2026-07-28: Hardened Windows Deep Validation under #4755 by adding the existing 180-second per-test CTest timeout to the manual workflow and its contract test. This bounds a hung native test without reducing the complete inventory or bounded parallelism, allowing later VSIX, Studio, debugger, and xAsset stages to produce evidence on subsequent runs.

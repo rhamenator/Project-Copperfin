@@ -27,6 +27,16 @@ designer, package, debugger, and xAsset stages were skipped. The failure is
 tracked in #4756; the current code change retries the bounded Windows
 `taskkill /T /F` fallback, while Windows rerun evidence remains required.
 
+Windows Codex independently validated the #4756 fix at implementation head
+`93d44395f`: the real net472 `cmd.exe`/PowerShell/`taskkill.exe`
+process-tree fixture passed once through `dotnet run` and five additional
+serial `--no-build` repetitions, for `6/6` passes. The repetitions completed
+in `10.69`-`10.90s` after the initial `16.34s` run, with no child-termination
+or cleanup-budget assertion failure. This settles the observed timing concern
+for the fixture but does not replace the still-running full Windows Deep
+Validation workflow or its later Studio, designer, package, debugger, and
+xAsset stages.
+
 The workflow timeout hardening for #4755 is in `bd7e1d4c9`: manual Windows
 Deep Validation now passes CTest `--timeout 180`, matching the local Windows
 validator. This bounds a hung test without reducing the test inventory or
