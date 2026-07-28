@@ -114,43 +114,32 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current implementation head is `b07d30d9c`, including runtime child #4753's
-defined-menu lifecycle slice and the #4754 cross-file project-procedure
-completion regression slice. Hosted Linux Native `30324522759` passed
-`316/316` in `171.47s`, and hosted macOS Native `30324522748` passed `316/316`
-in `207.83s`, with only the two expected platform-conditional skips. At the
-same head, managed UI `30324522752`, VSIX `30324522769`, installers
-`30324522738`, and security `30324522761` passed. The push-triggered
-managed-only test slice did not rerun the separately scoped generated-launcher,
-Windows environment, DECLARE ABI, or executable-path workflows; their exact-
-head manual results are recorded below. Windows Native `30322581189` was
-cancelled during the
-native build after a later product-code push superseded it; it reached no
-CTest result and is not treated as a pass or failure. Replacement Windows
-Native run `30324522773` passed `315/315` in `530.97s` at test-slice head
-`b07d30d9c`, with no failures or skips. Generated Launcher Validation
-`30326599223` passed its POSIX and Windows process tests (`1/1` each), Windows
-Environment and Executable Path Validation `30326600206` passed `7/7`, and
-Windows DECLARE ABI Validation `30326601002` passed its managed plus three
-adjacent targets on both Win32 and x64. Windows Deep Validation `30326601931`
-remains pending; the complete RC evidence gate remains unclaimed until it and
-the safety/trust prerequisites finish.
-The prior corrected-head evidence remains useful: local POSIX validation at
-`2417603ea` passed `316/316` in `301.53s`, hosted Linux Native
-`30320046770` passed `316/316` in `175.76s`, and hosted macOS
-`30320046738` passed `316/316` in `218.31s`, with only expected conditional
-skips. The prior Windows run `30317113993` failed only `test_runtime_pipeline`
-(`314/315` passed) because its fixture compared short `RUNNER~1` temp paths
-with the product's long directory-entry spelling; test-only correction
-`73cdd5f57` normalizes the fixture namespace with `GetLongPathNameW`, and its
-corrected rerun `30320046748` was superseded by the current-head matrix. The
-project does not claim a complete RC evidence gate until the auxiliary Windows
-workflows and the safety/trust prerequisites finish.
+Current product implementation head is `93d44395f`. Hosted Linux Native
+`30329037575`, macOS Native `30329037567`, Linux managed UI `30329037628`, VSIX
+`30329037609`, installers `30329037566`, and the security supply-chain gate
+`30329037556` all completed successfully at that head. Windows Native
+`30329037587` passed `315/315` CTest cases in `557.26s`. Windows Deep
+Validation `30329053296` passed native CTest `315/315` in `503.96s`, VSIX and
+managed tests, the net472 process-runner fixture, standalone Studio and
+designer builds, required designer smoke assertions, and PRG debugger smoke.
+The deep run used `require_vfp9_samples=false`, so its RuntimePackage, xAsset,
+Report, and Menu stages were skipped; no Windows VFP9 sample-runtime coverage
+is claimed from that run.
+
+Independent local evidence at coordination head `4a3a66865` includes the
+three package-trust/provisioning contracts (`3/3`), `test_runtime_pipeline`
+(`1/1`), and the complete mounted-VFP9 ISO report/label asset subset (`40/40`)
+against the original `invoice.frx/.frt` and `cust.lbx/.lbt` fixtures. These
+results strengthen package and asset-fidelity evidence but do not substitute
+for Windows VFP9 execution, Visual Studio UI smoke, protected signing, or
+safety sign-off. The complete RC evidence gate remains unclaimed while the
+Windows sample-dependent stages, #4403 independent review/closure, and #4409
+protected launcher-trust provisioning remain open.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
-Corrected-head installer workflow `30320046761` passed all Linux, Windows, and
-macOS jobs and uploaded the seven expected platform artifacts. Local
+Current-head installer workflow `30329037566` passed the macOS, Linux, and
+Windows installer jobs and uploaded the expected platform artifacts. Local
 inspection of the downloaded artifacts confirmed the expected host, standalone
 Studio/launcher-guard, and locale-catalog layouts. Artifact packaging still
 does not substitute for protected signing evidence.
@@ -161,23 +150,17 @@ suites pass, and the shared DesignerSmoke executable builds and lists its full
 inventory without warnings. The net472 process-tree fixture is explicitly
 Windows-only; VSIX compilation remains a Windows/MSBuild gate.
 
-Current-head hosted Linux UI evidence strengthens this: run `30317114002` at
-`7c13a926d` listed 144 smoke tests, passed 10/10 standalone-shell selectors
-under Xvfb, and passed 6/6 shared designer property-grid selectors. The
-current-head Security Supply Chain Gate `30317113962` is also green.
+Current-head hosted Linux UI evidence is represented by managed UI run
+`30329037628`; it completed successfully. The current-head Security Supply
+Chain Gate `30329037556` is also green.
 
-Current-head VSIX evidence is green after rerun: run `30317113986` passed
-MSBuild compilation, localized command-resource verification, managed VSIX and
-language-service tests, the Windows net472 process-runner test, and artifact
-upload. Its first attempt failed once at the child-cleanup assertion and passed
-on same-head rerun without source changes; #4014 coverage remains intact.
-
-Focused Windows corroboration at the same implementation head also passed the
-real net472 process-runner fixture and all four debugger-detail smoke assertions
-(`SmokeDebuggerDetailTablesMirrorPauseState`). This is hosted managed evidence,
-not a substitute for the full Windows native matrix or live Visual Studio UI.
-The hosted macOS native run and all three installer jobs are now green; Linux
-and Windows native results remain pending above.
+Current-head VSIX evidence is green: run `30329037609` passed the VSIX build
+and managed validation lane, while Windows Deep Validation independently passed
+localized resource verification, managed VSIX/language-service tests, and the
+net472 process-runner fixture. The Deep run did not execute the mounted-VFP9
+runtime sample stages or a live Visual Studio UI walkthrough; the accepted
+#4621 hosted baseline is recorded separately and is not claimed as exact-head
+`93d44395f` evidence.
 
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
