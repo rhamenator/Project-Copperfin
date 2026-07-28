@@ -1,3 +1,5 @@
+- 2026-07-28: Corrected #4772 at product head `71ac05cac` after independent review found that an unadmitted `#INCLUDE` could be silently dropped when a same-named disk file existed. Strict include admission again fails closed unconditionally, with a regression test; focused PRG/security/runtime tests remain `3/3` locally and hosted review is pending.
+
 - 2026-07-28: Closed #4771 after Claude/Windows review and macOS Native Validation `30353802078` corroborated the focused CommandButton Default/Cancel implementation at product head `f9f44a786`. Enabled filtering, ENTER focus precedence, NODEFAULT suppression, Click telemetry, and stack-frugal dispatch remain covered; full UI/RC boundaries stay separate.
 
 - 2026-07-28: Implemented #4772 under #3866 at product head `4957a62c3`. Strict PRG/header source-text overrides now preserve exact and unique-folded matches but fail closed on multiple folded-only candidates across direct loading, `#INCLUDE`, and strict DO admission. Local PRG, dynamic-xAsset security, and runtime-surface targets pass `3/3`; hosted review remains pending.
