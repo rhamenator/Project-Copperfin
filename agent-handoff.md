@@ -130,6 +130,16 @@ the focused runtime-surface CTest. Middle-button hit testing, capture,
 drag-and-drop, rendering, and hosted Windows UI validation remain separate.
 Future user-facing text remains catalog-first.
 
+Runtime child #4768 under #3217 extends the right-button boundary. Native
+`MouseDown` dispatches on `WM_RBUTTONDOWN` and `MouseUp` dispatches before
+`RightClick` on `WM_RBUTTONUP`, with VFP right-button value `2`, modifier bits,
+and signed client coordinates through the same heap-backed frame path. The
+existing no-argument `RightClick` contract remains unchanged. Independent
+handler fallthrough, invariant mouse telemetry, and `READ EVENTS` restoration
+are covered by the focused runtime-surface test; right-button hit testing,
+capture, context-menu rendering, drag-and-drop, and hosted Windows UI remain
+separate. Future user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or

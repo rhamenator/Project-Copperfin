@@ -90,6 +90,7 @@ namespace copperfin::runtime
         constexpr std::uint32_t kWindowsKeyDownMessage = 0x0100U;
         constexpr std::uint32_t kWindowsLeftButtonUpMessage = 0x0202U;
         constexpr std::uint32_t kWindowsLeftButtonDoubleClickMessage = 0x0203U;
+        constexpr std::uint32_t kWindowsRightButtonDownMessage = 0x0204U;
         constexpr std::uint32_t kWindowsRightButtonUpMessage = 0x0205U;
         constexpr std::uint32_t kWindowsMiddleButtonDownMessage = 0x0207U;
         constexpr std::uint32_t kWindowsMiddleButtonUpMessage = 0x0208U;
@@ -10692,6 +10693,7 @@ namespace copperfin::runtime
 
         std::optional<int> mouse_down_target;
         if (message == kWindowsLeftButtonDownMessage ||
+            message == kWindowsRightButtonDownMessage ||
             message == kWindowsMiddleButtonDownMessage)
         {
             for (const auto &[handle, runtime_object] : ole_objects)
@@ -10761,6 +10763,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> right_up_target;
+        if (message == kWindowsRightButtonUpMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    right_up_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::optional<int> middle_up_target;
         if (message == kWindowsMiddleButtonUpMessage)
         {
@@ -10800,6 +10816,7 @@ namespace copperfin::runtime
             !keypress_target.has_value() && !click_target.has_value() &&
             !mouse_down_target.has_value() && !mouse_move_target.has_value() &&
             !double_click_target.has_value() && !right_click_target.has_value() &&
+            !right_up_target.has_value() &&
             !middle_click_target.has_value() && !middle_up_target.has_value())
         {
             return std::nullopt;
@@ -10884,6 +10901,11 @@ namespace copperfin::runtime
                      message == kWindowsMiddleButtonUpMessage)
             {
                 button = 4;
+            }
+            else if (message == kWindowsRightButtonDownMessage ||
+                     message == kWindowsRightButtonUpMessage)
+            {
+                button = 2;
             }
             const std::int64_t x_coordinate = static_cast<std::int16_t>(
                 static_cast<std::uint16_t>(raw_coordinates & 0xffffU));
@@ -10990,6 +11012,30 @@ namespace copperfin::runtime
                         .has_value())
                 {
                     events.push_back({.category = "prg.event.dblclick",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
+            }
+        }
+
+        if (right_up_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*right_up_target);
+            if (target_found != ole_objects.end())
+            {
+                bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "MouseUp",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.mouseup",
                                       .detail = target_found->second.prog_id,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     last_result = 0;
