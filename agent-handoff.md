@@ -29,6 +29,12 @@ managed UI `30324522752`, VSIX `30324522769`, installers `30324522738`, and
 security `30324522761` passed. Windows Native `30324522773` remains the active
 broad native gate; no Windows CTest result is claimed until it completes.
 
+Fresh safety validation is archived in
+`docs/safety/traceability-report-2026-07-28.md` at synchronized documentation
+head `5efa5a92f`: permissive mode passed, while strict mode reported only the
+expected open-issue gate for #4403. Independent sign-off, formal closure, and
+protected launcher signing under #4409 remain unclaimed.
+
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,
 not to the current state above.
