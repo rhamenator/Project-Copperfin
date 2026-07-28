@@ -156,6 +156,11 @@ bool is_native_form_whats_this_button_member_name(const RuntimeOleObjectState& r
     return native_form_whats_this_button_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_form_sizebox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_sizebox_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_scrollbars_member_name_matches(runtime_object, normalized_member_name);
