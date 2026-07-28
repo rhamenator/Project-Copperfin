@@ -75,9 +75,16 @@ unclaimed.
 
 Fresh safety validation is archived in
 `docs/safety/traceability-report-2026-07-28.md` at synchronized documentation
-head `5efa5a92f`: permissive mode passed, while strict mode reported only the
-expected open-issue gate for #4403. Independent sign-off, formal closure, and
-protected launcher signing under #4409 remain unclaimed.
+head represented by `305082f44`: permissive mode passed, while strict mode
+reported only the expected open-issue gate for #4403. Independent sign-off,
+formal closure, and protected launcher signing under #4409 remain unclaimed.
+
+Safety traceability was rerun against the current live #4403 issue after
+#4755/#4756 closure. `RequireClosedIssues=false` passed all structural,
+DQ/DV/HZ, and primary-hazard checks; strict mode again reported only
+`Issue is not closed (state=OPEN)` for #4403. This confirms the remaining
+safety gate is procedural/independent-review state, not a validator or product
+regression.
 
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,

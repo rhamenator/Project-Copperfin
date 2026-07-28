@@ -3,12 +3,14 @@
 ## Scope
 
 - Repository: `rhamenator/Project-Copperfin`
-- Synchronized documentation head: `5efa5a92f`
-- Product/test implementation head: `b07d30d9c`
+- Synchronized documentation head before this report update: `305082f44`
+- Product/test implementation head: `93d44395f`
 - Issue set: `#4403`
 - Hazard coverage: primary hazards required
 - Validator: `scripts/validate-safety-traceability.ps1`
 - Issue source: fresh GitHub issue JSON export
+- Related hosted evidence: Windows Native `30329037587`; Windows Deep
+  Validation `30329053296`
 
 ## Commands
 
@@ -25,6 +27,7 @@ pwsh -NoProfile -Command '$json = gh issue view 4403 --json number,title,state,b
 | `RequireClosedIssues=true` | EXPECTED GATE FAILURE | All checks passed except `Issue is not closed (state=OPEN)` for #4403. |
 
 The strict result is the deliberate closure gate defined by #4403, not a
-validator or product failure. The report does not claim independent reviewer
-sign-off, formal #4403 closure, or protected package signing under #4409.
-Those remain release prerequisites.
+validator or product failure. This rerun was performed after #4755 and #4756
+closed and after the exact-head Windows validation completed. The report does
+not claim independent reviewer sign-off, formal #4403 closure, or protected
+package signing under #4409. Those remain release prerequisites.
