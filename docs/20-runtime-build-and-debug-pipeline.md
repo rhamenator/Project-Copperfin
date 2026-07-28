@@ -13,8 +13,9 @@ the existing Windows/VFP compatibility behavior, and ordinary non-strict
 filesystem reads are unchanged. At product head `f9f44a786`, strict table
 snapshot materialization and cursor-order inspection also use that helper;
 the focused verified-file, database-lifecycle, and runtime-surface tests pass
-`3/3` on POSIX, while exact-head hosted Windows and macOS review remains in
-progress.
+`3/3` on POSIX. Exact-head Windows validation seq778 also passes those three
+targets `3/3`, including the previously failing folded-only CDX collision;
+macOS/full-matrix validation remains separate release evidence.
 
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic

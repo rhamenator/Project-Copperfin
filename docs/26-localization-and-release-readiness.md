@@ -54,9 +54,10 @@ head is `f9f44a786`: #4770 now routes both strict table snapshot materialization
 and cursor-order inspection through the ambiguity-safe database-byte helper,
 and #4771 includes disabled-button filtering plus focused CommandButton ENTER
 precedence when a host supplies a target handle. The three focused Linux
-targets pass `3/3`; Claude has reviewed the exact correction, while hosted
-Windows and macOS runs `30353802047` and `30353802078` remain in progress.
-Neither child is closed until those exact-head results resolve.
+targets pass `3/3`; exact-head Windows validation seq778 closed #4770 after
+passing those targets `3/3`, including the prior folded-only CDX failure.
+Claude and Windows have reviewed #4771; its remaining hosted macOS/full-matrix
+evidence is pending, so #4771 remains open.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

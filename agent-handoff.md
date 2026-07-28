@@ -34,12 +34,12 @@ claim the complete RC evidence gate until those prerequisites are resolved.
 
 Current focused validation is at product head `f9f44a786`. #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
-not an unfinished runtime-safety slice. #4770 and #4771 remain open pending
-exact-head hosted results: Linux focused verified-file, database-lifecycle,
-and runtime-surface targets pass `3/3`, Claude has reviewed the correction, and
-Windows Native `30353802047` plus macOS Native `30353802078` are still in
-progress. Do not close either child or claim their hosted corroboration until
-those runs resolve.
+not an unfinished runtime-safety slice. #4770 is also closed: Linux and
+exact-head Windows seq778 both pass the three focused verified-file,
+database-lifecycle, and runtime-surface targets `3/3`, including the prior
+folded-only CDX failure. #4771 remains open; Claude and Windows have accepted
+its unchanged behavior, while hosted macOS/full-matrix corroboration remains
+pending. Do not claim the complete RC evidence gate from either child alone.
 
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or

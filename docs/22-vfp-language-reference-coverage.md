@@ -5,8 +5,9 @@
   recovery coverage for PRG, SCX/VCX, MNX, FRX, and LBX fault paths. Product
   head `f9f44a786` contains the final #4770 strict index-snapshot correction
   and the #4771 keyboard-action correction; the three focused POSIX targets
-  pass `3/3`. Hosted Windows and macOS exact-head validation remains in
-  progress, so those two children remain open and no closure is claimed here.
+  pass `3/3`. Exact-head Windows validation seq778 also passes the three
+  targets `3/3`, closing #4770; #4771 remains open for its remaining hosted
+  macOS/full-matrix evidence, and no broader RC gate is claimed here.
 
 - Current test-slice status (2026-07-28): implementation head `b07d30d9c` adds the managed language-service regression coverage for sibling-project procedure completions; it does not change native runtime sources. Windows Native Validation `30324522773` passed `315/315` at that head with no failures or skips. Generated Launcher Validation `30326599223`, Windows Environment and Executable Path Validation `30326600206`, and Windows DECLARE ABI Validation `30326601002` also passed; Windows Deep Validation `30326601931` remains pending. The synchronized documentation commits are excluded from the native workflow's product/test path.
 
