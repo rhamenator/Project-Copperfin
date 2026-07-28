@@ -95,6 +95,7 @@ bool is_native_form_whats_this_help_member_name(const RuntimeOleObjectState& run
 bool is_native_form_sizebox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_zoombox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_showtips_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_form_size_limit_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_visual_enabled_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -228,6 +229,7 @@ void normalize_native_list_control_itemtips_invariant(RuntimeOleObjectState& run
 void normalize_native_list_control_incrementalsearch_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_alignment_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_object);
+void normalize_native_form_size_limit_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_fontcharset_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_righttoleft_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_visual_wordwrap_invariant(RuntimeOleObjectState& runtime_object);

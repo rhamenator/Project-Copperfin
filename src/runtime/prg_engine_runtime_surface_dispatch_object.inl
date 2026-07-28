@@ -234,6 +234,7 @@
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
             is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_showtips_member_name(*runtime_object, property_name) ||
+            is_native_form_size_limit_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
@@ -785,6 +786,9 @@
             if (member_name == "scalemode") {
                 normalize_native_form_scalemode_invariant(*runtime_object);
             }
+            if (is_native_form_size_limit_member_name(*runtime_object, member_name)) {
+                normalize_native_form_size_limit_invariant(*runtime_object);
+            }
             if (member_name == "drawstyle") {
                 normalize_native_form_drawstyle_invariant(*runtime_object);
             }
@@ -1105,6 +1109,9 @@
             if (member_name == "scalemode") {
                 normalize_native_form_scalemode_invariant(*runtime_object);
             }
+            if (is_native_form_size_limit_member_name(*runtime_object, member_name)) {
+                normalize_native_form_size_limit_invariant(*runtime_object);
+            }
             if (member_name == "drawstyle") {
                 normalize_native_form_drawstyle_invariant(*runtime_object);
             }
@@ -1409,6 +1416,7 @@
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
             is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_showtips_member_name(*runtime_object, property_name) ||
+            is_native_form_size_limit_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||

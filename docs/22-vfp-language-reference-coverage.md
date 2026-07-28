@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- Current native PRG form-sizing status (2026-07-28, #4797 under #3217): the
+  shared headless runtime surface exposes VFP9 `MinWidth`, `MinHeight`,
+  `MaxWidth`, and `MaxHeight` for `Form` and `_SCREEN`/`_VFP`, with `-1`
+  meaning no limit. Direct and PEM access, alias synchronization, derived
+  initialization, numeric normalization, `AMEMBERS`, and built-in
+  shadow/removal protection are covered by the focused runtime-surface CTest,
+  which passes `1/1`. Actual window resizing, layout enforcement, and hosted
+  platform UI remain separate boundaries.
+
 - Current native PRG ShowTips status (2026-07-28, #4796 under #3217): the
   shared headless runtime surface now exposes the documented logical
   `ShowTips` property for `Form`, `ToolBar`, and the `_SCREEN`/`_VFP`

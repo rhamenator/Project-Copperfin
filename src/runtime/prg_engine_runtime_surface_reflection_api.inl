@@ -176,6 +176,11 @@ bool is_native_showtips_member_name(const RuntimeOleObjectState& runtime_object,
     return native_showtips_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_form_size_limit_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_size_limit_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_scrollbars_member_name_matches(runtime_object, normalized_member_name);
@@ -1003,6 +1008,28 @@ void normalize_native_form_scalemode_invariant(RuntimeOleObjectState& runtime_ob
     const long long normalized =
         !std::isfinite(value) ? 0LL : std::clamp(std::llround(value), 0LL, 3LL);
     scale_mode->second = make_number_value(static_cast<double>(normalized));
+}
+
+void normalize_native_form_size_limit_invariant(RuntimeOleObjectState& runtime_object)
+{
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    const std::string normalized_prog_id = normalize_identifier(trim_copy(runtime_object.prog_id));
+    if (normalized_base_class != "form" && normalized_prog_id != "_screen") {
+        return;
+    }
+
+    for (const char *property_name : {"minwidth", "minheight", "maxwidth", "maxheight"}) {
+        const auto property = runtime_object.properties.find(property_name);
+        if (property == runtime_object.properties.end()) {
+            continue;
+        }
+
+        const double value = value_as_number(property->second);
+        const long long normalized = !std::isfinite(value)
+            ? -1LL
+            : std::clamp(std::llround(value), -1LL, 32767LL);
+        property->second = make_number_value(static_cast<double>(normalized));
+    }
 }
 
 void normalize_native_visual_fontcharset_invariant(RuntimeOleObjectState& runtime_object)

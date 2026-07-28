@@ -2,6 +2,14 @@
 
 ## Current State
 
+The current implementation slice for #4797 under #3217 adds VFP9 native PRG
+`MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` to `Form` and the shared
+`_SCREEN`/`_VFP` application surface. The properties use `-1` for no limit,
+share deterministic numeric normalization, and are covered through direct
+assignment, PEM reflection, aliases, derived declarations, `AMEMBERS`, and
+built-in protection by the focused runtime-surface CTest (`1/1`). Actual
+window resizing, layout enforcement, and hosted UI remain separate boundaries.
+
 The current implementation slice for #4796 under #3217 extends native PRG
 `ShowTips` from `Form` to `ToolBar` and the shared `_SCREEN`/`_VFP`
 application surface. Direct assignment and PEM writes share synchronized

@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented native PRG Form sizing-limit parity slice #4797
+  under #3217. `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` now work
+  on `Form` and shared `_SCREEN`/`_VFP` state with VFP9 `-1` no-limit defaults,
+  direct/PEM access, alias synchronization, derived initialization, and
+  built-in protection. The focused runtime-surface CTest passes `1/1`;
+  actual window resizing and hosted UI remain separate boundaries.
+
 - 2026-07-28: Implemented native PRG `ShowTips` parity slice #4796 under
   #3217. The shared headless runtime surface now supports the `.F.` default,
   direct assignment, PEM reflection, derived initialization, and built-in

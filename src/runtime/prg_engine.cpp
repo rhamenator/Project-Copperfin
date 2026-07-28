@@ -9558,6 +9558,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_form_scalemode_invariant(runtime_object);
                 }
+                if (is_native_form_size_limit_member_name(runtime_object, normalized_property_name))
+                {
+                    normalize_native_form_size_limit_invariant(runtime_object);
+                }
                 if (normalized_property_name == "drawstyle")
                 {
                     normalize_native_form_drawstyle_invariant(runtime_object);
@@ -12420,6 +12424,10 @@ namespace copperfin::runtime
             application_surface->second.class_hierarchy = {"SCREEN", "OBJECT"};
             application_surface->second.properties["mousepointer"] = make_number_value(0.0);
             application_surface->second.properties["showtips"] = make_boolean_value(false);
+            application_surface->second.properties["minwidth"] = make_number_value(-1.0);
+            application_surface->second.properties["minheight"] = make_number_value(-1.0);
+            application_surface->second.properties["maxwidth"] = make_number_value(-1.0);
+            application_surface->second.properties["maxheight"] = make_number_value(-1.0);
             impl->representative_application_surface_handle = application_surface_handle;
             const PrgValue application_surface_reference = make_string_value(
                 "object:" + application_surface->second.prog_id + "#" +

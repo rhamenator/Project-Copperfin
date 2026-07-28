@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent native PRG parity slice: `#4797` under `#3217` adds the VFP9
+  `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` numeric properties to
+  `Form` and the shared `_SCREEN`/`_VFP` surface. The focused runtime-surface
+  CTest covers `-1` defaults, direct/PEM writes, deterministic normalization,
+  derived declarations, aliases, `AMEMBERS`, and built-in protection. This is
+  a headless state contract; actual resize/layout enforcement and hosted UI
+  evidence remain separate.
 - Recent native PRG parity slice: `#4796` under `#3217` extends the existing
   `ShowTips` contract from `Form` to `ToolBar` and the shared `_SCREEN`/`_VFP`
   application surface. Direct assignment, `GETPEM`/`SETPEM`/`PUTPEM`,

@@ -1297,8 +1297,19 @@
             if ((normalized_base_class == "form" || normalized_base_class == "toolbar") &&
                 !runtime_object.properties.contains("showtips"))
             {
-                // Headless contract: preserve the documented Form default.
+                // Headless contract: preserve the documented Form/ToolBar default.
                 runtime_object.properties["showtips"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form")
+            {
+                for (const char *property_name : {"minwidth", "minheight", "maxwidth", "maxheight"})
+                {
+                    if (!runtime_object.properties.contains(property_name))
+                    {
+                        runtime_object.properties[property_name] = make_number_value(-1.0);
+                    }
+                }
             }
 
             if (normalized_base_class == "form" &&

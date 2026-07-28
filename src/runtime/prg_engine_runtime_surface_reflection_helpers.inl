@@ -451,6 +451,22 @@ bool native_showtips_member_name_matches(
            runtime_object.properties.contains("showtips");
 }
 
+bool native_form_size_limit_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "minwidth" &&
+        normalized_member_name != "minheight" &&
+        normalized_member_name != "maxwidth" &&
+        normalized_member_name != "maxheight") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    const std::string normalized_prog_id = normalize_identifier(trim_copy(runtime_object.prog_id));
+    return (normalized_base_class == "form" || normalized_prog_id == "_screen") &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
 bool native_form_scrollbars_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
