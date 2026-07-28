@@ -118,9 +118,10 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The current release-validation product head is `7587be12f`; the synchronized
-documentation head records this evidence state. The exact-head matrix is still
-running, so RC readiness is not claimed. Security Supply Chain `30408081069`,
+The latest implementation head is `2af765524`; the hosted release-validation
+matrix below was launched from its predecessor `7587be12f`, so it is now
+historical evidence rather than exact-head proof for the new runtime slice. RC
+readiness is not claimed. Security Supply Chain `30408081069`,
 VSIX `30408081057`, Linux Managed UI `30408081037`, and Executable Path
 `30408081029` are green; Windows Native `30408081049`, Generated Launcher
 `30408081016`, Linux Native

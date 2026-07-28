@@ -11,7 +11,9 @@ The focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-Current release-matrix evidence at product source head `7587be12f` has green
+The latest implementation head is `2af765524`. The release-matrix evidence
+below was launched at predecessor product head `7587be12f`, so it remains
+historical until a new exact-head matrix runs. It has green
 Security Supply Chain `30408081069`, VSIX `30408081057`, Linux Managed UI
 `30408081037`, and Executable Path `30408081029`. Windows Native
 `30408081049`, Generated Launcher `30408081016`, Linux Native `30408081006`,

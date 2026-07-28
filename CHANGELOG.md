@@ -5,6 +5,11 @@
   native OS-window enumeration and hosted window-manager behavior remain
   explicit boundaries.
 
+- 2026-07-28: The #4808 implementation head `2af765524` supersedes the
+  currently running hosted release matrix, which was launched at
+  `7587be12f`; those results remain historical until exact-head validation is
+  rerun. RC readiness remains unclaimed.
+
 - 2026-07-28: Refreshed the handoff and roadmap release matrix at product
   head `7587be12f`: Security Supply Chain, VSIX, Linux Managed UI, and
   Executable Path are green; Windows Native and the remaining hosted native,
