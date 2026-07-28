@@ -96,6 +96,39 @@ void test_platform_environment_rejects_empty_names() {
            "#4005: filesystem environment helper should reject empty clear keys");
 }
 
+void test_platform_environment_rejects_unsafe_names_and_embedded_nuls() {
+    const std::string invalid_name = "COPPERFIN_TEST_PLATFORM_ENVIRONMENT=INVALID";
+    const std::string embedded_nul_name =
+        std::string("COPPERFIN_TEST_PLATFORM_ENVIRONMENT") + '\0' + "TRUNCATED";
+    const std::string embedded_nul_value = std::string("value") + '\0' + "TRUNCATED";
+    const std::filesystem::path embedded_nul_path(
+        std::string("path") + '\0' + "TRUNCATED");
+
+    expect(!copperfin::platform::read_environment_variable(invalid_name).has_value(),
+           "#3214: environment reads should reject names containing '='");
+    expect(!copperfin::platform::write_environment_variable(invalid_name, "value"),
+           "#3214: environment writes should reject names containing '='");
+    expect(!copperfin::platform::clear_environment_variable(invalid_name),
+           "#3214: environment clears should reject names containing '='");
+    expect(!copperfin::platform::read_environment_variable(embedded_nul_name).has_value(),
+           "#3214: environment reads should reject embedded-NUL names");
+    expect(!copperfin::platform::write_environment_variable(embedded_nul_name, "value"),
+           "#3214: environment writes should reject embedded-NUL names");
+    expect(!copperfin::platform::write_environment_variable(
+               "COPPERFIN_TEST_PLATFORM_ENVIRONMENT_NUL_VALUE", embedded_nul_value),
+           "#3214: environment writes should reject embedded-NUL values");
+    expect(!copperfin::platform::read_environment_path(invalid_name).has_value(),
+           "#4005: filesystem environment reads should reject invalid names");
+    expect(!copperfin::platform::write_environment_path(
+               invalid_name, std::filesystem::path("value")),
+           "#4005: filesystem environment writes should reject invalid names");
+    expect(!copperfin::platform::write_environment_path(
+               "COPPERFIN_TEST_PLATFORM_ENVIRONMENT_NUL_PATH", embedded_nul_path),
+           "#4005: filesystem environment writes should reject embedded-NUL paths");
+    expect(!copperfin::platform::clear_environment_path(invalid_name),
+           "#4005: filesystem environment clears should reject invalid names");
+}
+
 void test_running_executable_path_resolves_current_process(const char* invocation_path) {
     namespace fs = std::filesystem;
 
@@ -498,6 +531,7 @@ int main(int argc, char** argv) {
     test_platform_environment_round_trips_values();
     test_platform_environment_round_trips_unicode_values();
     test_platform_environment_rejects_empty_names();
+    test_platform_environment_rejects_unsafe_names_and_embedded_nuls();
     test_running_executable_path_resolves_current_process(argc > 0 ? argv[0] : nullptr);
 #if !defined(_WIN32)
     test_posix_path_unset_and_empty_components();

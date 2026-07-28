@@ -17,9 +17,18 @@ namespace copperfin::platform {
 
 namespace detail {
 
+inline bool is_valid_environment_name(std::string_view name) {
+    return !name.empty() && name.find('\0') == std::string_view::npos &&
+        name.find('=') == std::string_view::npos;
+}
+
+inline bool contains_nul(std::string_view value) {
+    return value.find('\0') != std::string_view::npos;
+}
+
 #if defined(_WIN32)
 inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view name) {
-    if (name.empty()) {
+    if (!is_valid_environment_name(name)) {
         return std::nullopt;
     }
 
@@ -35,6 +44,9 @@ inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view
 }
 
 inline std::optional<std::wstring> widen_utf8_environment_value(std::string_view value) {
+    if (contains_nul(value)) {
+        return std::nullopt;
+    }
     if (value.empty()) {
         return std::wstring{};
     }
@@ -67,7 +79,7 @@ inline std::mutex& environment_mutex() {
 }  // namespace detail
 
 inline std::optional<std::string> read_environment_variable(std::string_view name) {
-    if (name.empty()) {
+    if (!detail::is_valid_environment_name(name)) {
         return std::nullopt;
     }
 
@@ -101,6 +113,10 @@ inline std::string read_environment_variable_or_empty(std::string_view name) {
 }
 
 inline std::optional<std::filesystem::path> read_environment_path(std::string_view name) {
+    if (!detail::is_valid_environment_name(name)) {
+        return std::nullopt;
+    }
+
 #if defined(_WIN32)
     const auto wide_name = detail::widen_ascii_environment_name(name);
     if (!wide_name.has_value()) {
@@ -124,7 +140,7 @@ inline std::optional<std::filesystem::path> read_environment_path(std::string_vi
 }
 
 inline bool write_environment_variable(std::string_view name, std::string_view value) {
-    if (name.empty()) {
+    if (!detail::is_valid_environment_name(name) || detail::contains_nul(value)) {
         return false;
     }
 
@@ -142,16 +158,22 @@ inline bool write_environment_variable(std::string_view name, std::string_view v
 }
 
 inline bool write_environment_path(std::string_view name, const std::filesystem::path& value) {
+    if (!detail::is_valid_environment_name(name)) {
+        return false;
+    }
+
 #if defined(_WIN32)
     const auto wide_name = detail::widen_ascii_environment_name(name);
-    return wide_name.has_value() && _wputenv_s(wide_name->c_str(), value.c_str()) == 0;
+    const auto native_value = value.native();
+    return wide_name.has_value() && native_value.find(L'\0') == std::wstring::npos &&
+        _wputenv_s(wide_name->c_str(), native_value.c_str()) == 0;
 #else
     return write_environment_variable(name, value.native());
 #endif
 }
 
 inline bool clear_environment_variable(std::string_view name) {
-    if (name.empty()) {
+    if (!detail::is_valid_environment_name(name)) {
         return false;
     }
 
@@ -166,6 +188,10 @@ inline bool clear_environment_variable(std::string_view name) {
 }
 
 inline bool clear_environment_path(std::string_view name) {
+    if (!detail::is_valid_environment_name(name)) {
+        return false;
+    }
+
 #if defined(_WIN32)
     const auto wide_name = detail::widen_ascii_environment_name(name);
     return wide_name.has_value() && _wputenv_s(wide_name->c_str(), L"") == 0;

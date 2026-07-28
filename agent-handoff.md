@@ -30,6 +30,15 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
+The shared cross-platform environment boundary now rejects variable names that
+contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
+Windows path values before calling C environment APIs. This prevents silent
+truncation and keeps invalid-name behavior consistent across POSIX and Windows.
+The focused `test_platform_environment`, aggregate `test_localization`, and
+`test_runtime_host_implicit_path_launch` tests pass locally. Direct callers
+outside the helper remain subject to the process-wide environment synchronization
+boundary documented in `include/copperfin/platform/environment.h`.
+
 Windows Deep Validation `30326601931` completed with native CTest `315/315` in
 `516.66s`, VSIX build/resource verification, and both managed language-service
 stages passing. Its net472 process-runner stage failed at
