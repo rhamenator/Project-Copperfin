@@ -15,6 +15,9 @@ namespace copperfin::runtime_surface_tests
         write_text(
             main_path,
             "PUBLIC nFormHwnd, nChildHwnd, nFormCalls, nChildCalls, cSequence\n"
+            "nFormCalls = 0\n"
+            "nChildCalls = 0\n"
+            "cSequence = ''\n"
             "oForm = CREATEOBJECT('PreviewForm')\n"
             "oForm.KeyPreview = .T.\n"
             "oForm.lst.SetFocus()\n"

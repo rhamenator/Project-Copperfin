@@ -62,6 +62,15 @@ traversal, keyboard buffering, expanded modifier state, Page/_SCREEN/ToolBar
 applicability, rendering, and hosted Windows UI validation remain separate. Future
 user-facing text remains catalog-first.
 
+Runtime child #4760 under #3217 adds the adjacent modeled left-button-release
+boundary. A native visual object identified by its existing `hWnd` receives its
+`Click` method on `WM_LBUTTONUP` through the same iterative frame path, with
+stable `prg.event.click` telemetry and event-loop restoration. A missing `Click`
+handler remains an unhandled message. Native hit testing/focus traversal,
+`MouseDown`/`MouseUp` sequencing, double-click detection, button/modifier state,
+rendering, and hosted Windows UI validation remain separate. Future user-facing
+text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or
