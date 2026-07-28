@@ -502,6 +502,29 @@ void test_strict_source_overrides_reject_casefold_collisions() {
     expect(include_error.find("Verified package include source is unavailable") != std::string::npos,
            "strict #INCLUDE should fail closed on ambiguous folded source overrides: " + include_error);
 
+    write_text(header_path, "#DEFINE SOURCE_VALUE 'disk-only'\n");
+    auto unadmitted_include_options = make_runtime_session_options(root / "main.prg", root);
+    unadmitted_include_options.startup_source_text =
+        "#INCLUDE 'header.h'\n"
+        "RETURN\n";
+    unadmitted_include_options.require_source_text_overrides = true;
+    std::string unadmitted_include_error;
+    try
+    {
+        auto unadmitted_include_session =
+            copperfin::runtime::PrgRuntimeSession::create(unadmitted_include_options);
+        unadmitted_include_error = unadmitted_include_session
+            .run(copperfin::runtime::DebugResumeAction::continue_run)
+            .message;
+    }
+    catch (const std::exception &error)
+    {
+        unadmitted_include_error = error.what();
+    }
+    expect(unadmitted_include_error.find("Verified package include source is unavailable") != std::string::npos,
+           "strict #INCLUDE should fail closed even when an unadmitted file exists on disk: " +
+               unadmitted_include_error);
+
     fs::remove_all(root, ignored);
 }
 

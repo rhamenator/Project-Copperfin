@@ -1056,12 +1056,11 @@ void append_preprocessed_logical_lines(
             const fs::path include_path = resolve_include_path(path, include_path_text);
             const std::string include_key = normalize_path(
                 copperfin::platform::path_to_utf8_string(include_path));
-            bool include_source_ambiguous = false;
             const std::string* include_source = find_source_text_override(
                 source_text_overrides,
                 include_key,
                 require_source_text_overrides,
-                &include_source_ambiguous);
+                nullptr);
             std::error_code exists_error;
             const bool include_exists = fs::exists(include_path, exists_error);
             if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
@@ -1076,8 +1075,7 @@ void append_preprocessed_logical_lines(
                         require_source_text_overrides);
                     state.include_stack.erase(include_key);
                 }
-            } else if (require_source_text_overrides &&
-                       (include_source_ambiguous || !include_exists)) {
+            } else if (require_source_text_overrides) {
                 throw std::runtime_error(runtime_text(
                     "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
                     {{"path", include_key}}));
