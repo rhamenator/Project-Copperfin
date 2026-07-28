@@ -24,17 +24,18 @@ Localized text must be separated from stable protocol values:
 
 The current implementation head is `b07d30d9c`, which includes runtime child
 #4753's defined-menu lifecycle slice and the #4754 cross-file project-procedure
-completion regression slice. Hosted Linux Native `30322581213` passed all
-`316/316` CTest cases in
-`172.41s`, and hosted macOS Native `30322581188` passed `316/316` in
-`223.95s`, with only the two expected platform-conditional skips. Current-head
-installer `30322581220`, generated launcher `30322581198`, managed UI
-`30322581184`, VSIX `30322581157`, security `30322581183`, Windows environment
-`30322581177`, Windows DECLARE ABI `30322581171`, and executable-path
-`30322581163` also passed. Windows Native `30322581189` was cancelled during
-the native build after a later product-code push superseded it; it reached no
-CTest result and is not treated as a pass or failure. Replacement Windows
-Native run `30324522773` is in progress at test-slice head `b07d30d9c`.
+completion regression slice. Hosted Linux Native `30324522759` passed all
+`316/316` CTest cases in `171.47s`, and hosted macOS Native `30324522748`
+passed `316/316` in `207.83s`, with only the two expected platform-conditional
+skips. At the same head, managed UI `30324522752`, VSIX `30324522769`,
+installers `30324522738`, and security `30324522761` passed. The current
+managed-only test-slice change did not rerun the separately scoped
+generated-launcher, Windows environment, DECLARE ABI, or executable-path
+workflows; their prior green evidence remains historical. Windows Native
+`30322581189` was cancelled during the native build after a later product-code
+push superseded it; it reached no CTest result and is not treated as a pass or
+failure. Replacement Windows Native run `30324522773` is in progress at
+test-slice head `b07d30d9c`.
 The current-head evidence remains partial until that replacement run finishes.
 The prior corrected-head evidence remains valid: hosted Linux Native
 `30320046770` passed all `316/316` CTest cases in `175.76s`, with only the two

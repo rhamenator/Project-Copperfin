@@ -23,6 +23,12 @@ cases; its aggregate, navigation, scan, and zero-record copy/append coverage
 was already present in the test tree. The full VFP command surface remains a
 separate parity boundary.
 
+At the same implementation head, Linux Native `30324522759` passed `316/316`
+in `171.47s`, macOS Native `30324522748` passed `316/316` in `207.83s`, and
+managed UI `30324522752`, VSIX `30324522769`, installers `30324522738`, and
+security `30324522761` passed. Windows Native `30324522773` remains the active
+broad native gate; no Windows CTest result is claimed until it completes.
+
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,
 not to the current state above.
