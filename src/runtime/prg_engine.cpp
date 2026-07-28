@@ -85,6 +85,7 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
         constexpr std::uint32_t kCopperfinWindowCloseMessage = 0x0010U;
+        constexpr std::uint32_t kWindowsLeftButtonDownMessage = 0x0201U;
         constexpr std::uint32_t kWindowsKeyDownMessage = 0x0100U;
         constexpr std::uint32_t kWindowsLeftButtonUpMessage = 0x0202U;
         constexpr std::intptr_t kWindowsAltContextBit = static_cast<std::intptr_t>(1) << 29;
@@ -10684,6 +10685,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> mouse_down_target;
+        if (message == kWindowsLeftButtonDownMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    mouse_down_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -10706,7 +10721,8 @@ namespace copperfin::runtime
             }
         }
         if (bindings.empty() && !window_close_target.has_value() &&
-            !keypress_target.has_value() && !click_target.has_value())
+            !keypress_target.has_value() && !click_target.has_value() &&
+            !mouse_down_target.has_value())
         {
             return std::nullopt;
         }
@@ -10776,6 +10792,26 @@ namespace copperfin::runtime
             return 0;
         };
 
+        const auto mouse_event_arguments = [&]()
+        {
+            const auto raw_coordinates = static_cast<std::uint64_t>(lparam);
+            const std::int64_t x_coordinate = static_cast<std::int16_t>(
+                static_cast<std::uint16_t>(raw_coordinates & 0xffffU));
+            const std::int64_t y_coordinate = static_cast<std::int16_t>(
+                static_cast<std::uint16_t>((raw_coordinates >> 16U) & 0xffffU));
+            const std::int64_t shift_alt_ctrl =
+                ((wparam & 0x0004) != 0 ? 1 : 0) |
+                ((wparam & 0x0008) != 0 ? 2 : 0);
+            return std::vector<PrgValue>{
+                make_int64_value(1),
+                make_int64_value(shift_alt_ctrl),
+                make_int64_value(x_coordinate),
+                make_int64_value(y_coordinate)};
+        };
+        const std::vector<std::optional<std::string>> mouse_argument_references(
+            4,
+            std::nullopt);
+
         std::optional<std::intptr_t> last_result;
         for (const WindowMessageBinding &binding : bindings)
         {
@@ -10796,6 +10832,30 @@ namespace copperfin::runtime
                 result.has_value())
             {
                 last_result = result_to_intptr(*result);
+            }
+        }
+
+        if (mouse_down_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*mouse_down_target);
+            if (target_found != ole_objects.end())
+            {
+                bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "MouseDown",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.mousedown",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
             }
         }
 
@@ -10909,6 +10969,22 @@ namespace copperfin::runtime
             if (target_found != ole_objects.end())
             {
                 bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "MouseUp",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.mouseup",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
+
                 if (invoke_native_object_method_if_present(
                         target_found->second,
                         "Click",

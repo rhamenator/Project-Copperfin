@@ -71,6 +71,16 @@ handler remains an unhandled message. Native hit testing/focus traversal,
 rendering, and hosted Windows UI validation remain separate. Future user-facing
 text remains catalog-first.
 
+Runtime child #4761 under #3217 completes the adjacent modeled left-button event
+order: native `MouseDown` runs on `WM_LBUTTONDOWN`, and `MouseUp` runs before
+`Click` on `WM_LBUTTONUP`, using the iterative frame path and VFP's button,
+modifier, and signed client-coordinate arguments. Targets with only one of the
+handlers remain independently dispatchable; unknown targets remain unhandled.
+Stable `prg.event.mousedown` and `prg.event.mouseup` telemetry and event-loop
+restoration are covered by the focused runtime test. Hit testing, capture/focus,
+double-clicks, non-left buttons, rendering, and hosted Windows UI validation
+remain separate. Future user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or

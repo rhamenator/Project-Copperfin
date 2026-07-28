@@ -540,6 +540,7 @@ int main()
         test_native_list_control_interactivechange_dispatches_for_changed_input();
         test_native_form_keypreview_dispatches_before_child_keypress();
         test_native_click_dispatches_on_left_button_release();
+        test_native_mouse_down_up_dispatch_around_click();
         test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
         test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
