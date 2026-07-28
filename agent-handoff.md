@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `89c669593`, with coordination-only documentation and
+implementation head is `a796a31dc`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `89c669593`; the latest runtime
+Current focused validation is at product head `a796a31dc`; the latest runtime
 cleanup head also removes the redundant Form-only ForeColor slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
 generic visual ForeColor contract already covers Form and visual child
@@ -59,7 +59,18 @@ required before closure.
 `LPARAMETER` abbreviation, allowing the ReportBuilder `AppendToLog` method to
 preserve string coercion and complete at `frxsetup.prg:250`. It shares the same
 focused test and hosted-review gate as #4791. The two expected missing sample
-assets are warnings, not claims of complete VFP9 asset coverage.
+assets are warnings, not claims of complete VFP9 asset coverage. Claude review
+seq851 and exact tested-descendant Windows validation seq852 both pass; #4791
+and #4792 are closed as implementation-complete. The authoritative Windows
+ReportBuilder package completed normal and debug launches with 387 statements,
+no fault or stack-overflow markers, and only the two expected missing-asset
+warnings. Indexed `PROGRAM(nLevel)` remains a separate #4793 boundary.
+#4793 is implemented at product head `a796a31dc`: indexed `PROGRAM(nLevel)` and
+`SYS(16,nLevel)` resolve master, nested, and out-of-range heap-backed frames with
+VFP's `0/1` master aliases and empty out-of-range results. The focused
+runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
+package completes in normal and debug launches with 210 statements. Hosted
+Windows/macOS exact-head review remains required before closure.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and

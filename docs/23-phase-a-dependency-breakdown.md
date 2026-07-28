@@ -38,9 +38,17 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   introspection plus the singular `LPARAMETER` parser abbreviation used by
   VFPSource ReportBuilder. The focused runtime-surface CTest passes `1/1`, and
   a clean ReportBuilder setup probe completes in normal and debug launches with
-  210 statements. Keep the two expected missing sample assets, local Linux
-  `WIN32API`, hosted Windows/macOS review, and broader VFP9 parity as explicit
-  boundaries rather than treating this probe as full runtime coverage.
+  210 statements. Claude seq851 and Windows seq852 corroborate the preceding
+  implementation; #4791 and #4792 are closed. Keep the two expected missing
+  sample assets, local Linux `WIN32API`, macOS review, and broader VFP9 parity
+  as explicit boundaries rather than treating this probe as full coverage.
+- Recent native PRG compatibility slice: `#4793` under `#3217` adds indexed
+  `PROGRAM(nLevel)` and `SYS(16,nProgramLevel)` stack walking over the existing
+  heap-backed frame machine, including VFP `0/1` master aliases and empty
+  out-of-range results. The focused runtime-surface CTest passes `1/1`, and a
+  fresh clean ReportBuilder package completes in normal and debug launches with
+  210 statements. Hosted Windows/macOS review and broader VFP9 parity remain
+  explicit boundaries.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

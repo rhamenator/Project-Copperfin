@@ -1,3 +1,20 @@
+- 2026-07-28: Implemented runtime child #4793 under #3217 at product head
+  `a796a31dc`. Native PRG indexed `PROGRAM(nLevel)` and `SYS(16,nLevel)` now
+  resolve master, nested, and out-of-range heap-backed frames with VFP's `0/1`
+  master-level aliases and empty out-of-range results. Existing no-argument
+  `PROGRAM()`, `PROGRAM(-1)`, and `SYS(16)` contracts remain unchanged. The
+  focused runtime-surface CTest passes `1/1`; a fresh clean VFPSource
+  ReportBuilder package completes in normal and debug launches with 210
+  statements and two expected missing sample-asset warnings. Hosted Windows
+  and macOS exact-head validation remain required.
+
+- 2026-07-28: Closed runtime children #4791 and #4792 after independent Claude
+  review seq851 and Windows validation seq852. The exact tested descendant
+  `75307499a` passed the focused runtime-surface CTest and the authoritative
+  VFPSource ReportBuilder package completed normal and debug launches with 387
+  statements, no fault or stack-overflow markers, and only the two expected
+  missing-asset warnings. Indexed `PROGRAM(nLevel)` remains tracked by #4793.
+
 - 2026-07-28: Implemented runtime children #4791 and #4792 under #3217 at
   product head `89c669593`. Native PRG `PROGRAM()` now reports the active
   routine name and `PROGRAM(-1)` reports the active heap-backed program-stack
