@@ -1,6 +1,83 @@
 // prg_engine_verified_file_security.inl
 // Verified immutable file materialization helpers. Included inside Impl.
 
+        bool write_verified_snapshot_file(
+            const std::filesystem::path &path,
+            const std::string &bytes)
+        {
+#if defined(_WIN32)
+            const HANDLE handle = ::CreateFileW(
+                path.c_str(),
+                GENERIC_WRITE,
+                0U,
+                nullptr,
+                CREATE_NEW,
+                FILE_ATTRIBUTE_TEMPORARY,
+                nullptr);
+            if (handle == INVALID_HANDLE_VALUE)
+            {
+                return false;
+            }
+
+            bool written = true;
+            std::size_t offset = 0U;
+            while (offset < bytes.size())
+            {
+                const DWORD requested = static_cast<DWORD>(std::min<std::size_t>(
+                    bytes.size() - offset,
+                    static_cast<std::size_t>(std::numeric_limits<DWORD>::max())));
+                DWORD transferred = 0U;
+                if (::WriteFile(
+                        handle,
+                        bytes.data() + offset,
+                        requested,
+                        &transferred,
+                        nullptr) == 0 ||
+                    transferred == 0U)
+                {
+                    written = false;
+                    break;
+                }
+                offset += transferred;
+            }
+            written = written && ::FlushFileBuffers(handle) != 0;
+            return ::CloseHandle(handle) != 0 && written;
+#else
+            const std::string native_path =
+                copperfin::platform::path_to_utf8_string(path);
+            const int descriptor = ::open(
+                native_path.c_str(),
+                O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+                0600);
+            if (descriptor < 0)
+            {
+                return false;
+            }
+
+            bool written = true;
+            std::size_t offset = 0U;
+            while (offset < bytes.size())
+            {
+                const ssize_t transferred = ::write(
+                    descriptor,
+                    bytes.data() + offset,
+                    bytes.size() - offset);
+                if (transferred < 0 && errno == EINTR)
+                {
+                    continue;
+                }
+                if (transferred <= 0)
+                {
+                    written = false;
+                    break;
+                }
+                offset += static_cast<std::size_t>(transferred);
+            }
+            written = written && ::fsync(descriptor) == 0;
+            return ::close(descriptor) == 0 && written;
+#endif
+        }
+
         std::optional<std::filesystem::path> resolve_verified_file_byte_override_path(
             const std::filesystem::path &file_path,
             bool &ambiguous,
@@ -139,17 +216,12 @@
                 return std::nullopt;
             }
 
-            const auto write_snapshot = [](const std::filesystem::path &path, const std::string &bytes)
-            {
-                std::ofstream output(path, std::ios::binary | std::ios::trunc);
-                output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-                output.close();
-                return output.good();
-            };
             const std::filesystem::path snapshot_path = snapshot_root / file_path.filename();
-            if (!write_snapshot(snapshot_path, primary->second) ||
+            if (!write_verified_snapshot_file(snapshot_path, primary->second) ||
                 (sidecar.has_value() &&
-                 !write_snapshot(snapshot_root / sidecar->first.filename(), sidecar->second)))
+                 !write_verified_snapshot_file(
+                     snapshot_root / sidecar->first.filename(),
+                     sidecar->second)))
             {
                 std::filesystem::remove_all(snapshot_root, filesystem_error);
                 snapshot_root.clear();
@@ -226,10 +298,9 @@
                     table_path,
                     expected_path,
                     extension);
-                std::ofstream output(snapshot_root / snapshot_index_path.filename(), std::ios::binary | std::ios::trunc);
-                output.write(verified->second.data(), static_cast<std::streamsize>(verified->second.size()));
-                output.close();
-                if (!output.good())
+                if (!write_verified_snapshot_file(
+                        snapshot_root / snapshot_index_path.filename(),
+                        verified->second))
                 {
                     std::error_code filesystem_error;
                     std::filesystem::remove_all(snapshot_root, filesystem_error);

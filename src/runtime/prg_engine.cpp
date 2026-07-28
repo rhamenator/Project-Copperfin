@@ -71,6 +71,9 @@
 #include "managed_pe_image.h"
 
 #else
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
