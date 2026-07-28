@@ -1,3 +1,10 @@
+- 2026-07-28: Completed localization child #4783 at product head
+  `7d86e28fe`. The managed Project Explorer and Database catalog additions are
+  now synchronized into all four shared JSON catalogs, preserving existing
+  English/Spanish/Portuguese wording, placeholder parity, and pseudo-locale
+  expansion. The catalog generator update and `--check` parity validation pass;
+  native `test_localization` passes 1/1.
+
 - 2026-07-28: Implemented F1 child #4782 at product head `aa88defa6`.
   The shared Project Explorer now has an independent localized filter that
   matches project paths, names, type titles, and group metadata while

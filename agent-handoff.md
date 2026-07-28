@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `aa88defa6`, with coordination-only documentation and
+implementation head is `7d86e28fe`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `aa88defa6`. #4623 is closed as
+Current focused validation is at product head `7d86e28fe`. #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,
@@ -2155,3 +2155,8 @@ pass. `git diff --check` is clean. A direct Linux Visual Studio project build
 still hits the existing VSSDK `FindVsSDKInstallation` dependency failure for
 `Microsoft.VisualStudio.Validation`; the shared smoke project builds cleanly.
 Windows VSIX and hosted UI validation remain RC evidence gates.
+# 2026-07-28 Localization child #4783 is complete at product head `7d86e28fe`:
+the managed Project Explorer and Database keys are synchronized into the
+`en-US`, `es-419`, `pt-BR`, and `qps-ploc` shared JSON catalogs. The generator
+and generator `--check` pass, native `test_localization` passes 1/1, and the
+existing placeholder/non-production language-pack boundary is unchanged.
