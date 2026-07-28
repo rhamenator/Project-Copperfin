@@ -16,11 +16,11 @@
   `PROGRAM(nLevel)` and `SYS(16,nProgramLevel)` resolve master (`0/1`), nested,
   and out-of-range levels through the heap-backed frame machine. The focused
   runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
-  package completes in normal and debug launches with 210 statements. Hosted
-  Windows/macOS exact-head validation remains separate evidence; Windows review
-  for the preceding #4791/#4792 package is recorded in seq852. Follow-up child
-  #4794 tracks the remaining VFP-compatible `SYS(16)` procedure-context return
-  shape, which can include `PROCEDURE <routine> <file>`.
+  package completes in normal and debug launches with 210 statements. Windows
+  validation seq861 passed the corrected exact focused target at tested
+  descendant `d18d9d1fc`; #4793 is closed as implementation-complete. Follow-up
+  child #4794 tracks the remaining VFP-compatible `SYS(16)` procedure-context
+  return shape, which can include `PROCEDURE <routine> <file>`.
 
 - Current SYS(16) context status (2026-07-28): runtime child #4794 is
   implemented at product head `e842e4e1e`. Entry frames retain plain file paths;
@@ -29,8 +29,9 @@
   CTest passes `1/1`. The #4793 nested-stack regression fixture was also
   corrected to declare its cross-frame captures `PUBLIC` after Windows seq856
   and Claude seq857 identified a test-scoping defect; this was not a runtime
-  implementation failure. Hosted Windows/macOS exact-head validation remains
-  separate evidence.
+  implementation failure. Windows validation seq861 passed the exact focused
+  target for both children, and #4794 is closed as implementation-complete.
+  Broader VFP9 parity and macOS evidence remain separate boundaries.
 
 - Current runtime-safety and strict-reader status (2026-07-28): #4623 is
   implementation-complete and closed after focused containment and debugger
