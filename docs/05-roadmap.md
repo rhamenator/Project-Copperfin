@@ -114,19 +114,21 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current release evidence is split between implementation head
-`73cdd5f57` and later documentation-only commits. The local POSIX validation
-at `2417603ea` rebuilt the native tree and passed all `316/316` CTest cases in
-`301.53s`, with only the two expected platform-conditional skips. Hosted
-Linux Native Validation `30320046770` passed `316/316` in `175.76s`, and hosted
-macOS `30320046738` passed `316/316` in `218.31s`. Windows run `30317113993`
-failed only `test_runtime_pipeline` (`314/315` passed) because the full-suite
-fixture compared short `RUNNER~1` temp paths with the product's long
-directory-entry spelling; test-only correction `73cdd5f57` normalizes the
-fixture namespace with `GetLongPathNameW`, and corrected rerun `30320046748`
-remains in progress.
-The project does not claim a complete cross-platform RC gate until that rerun
-finishes.
+Current implementation head is `ff9417a4a` (synchronized coordination head
+`e8b857f95`), including runtime child #4753's defined-menu lifecycle slice.
+Fresh hosted Linux Native `30322581213`, Windows Native `30322581189`, and
+macOS Native `30322581188` runs are in progress against that head, alongside
+the managed UI, VSIX, installer, launcher, and Windows environment workflows.
+The prior corrected-head evidence remains useful: local POSIX validation at
+`2417603ea` passed `316/316` in `301.53s`, hosted Linux Native
+`30320046770` passed `316/316` in `175.76s`, and hosted macOS
+`30320046738` passed `316/316` in `218.31s`, with only expected conditional
+skips. The prior Windows run `30317113993` failed only `test_runtime_pipeline`
+(`314/315` passed) because its fixture compared short `RUNNER~1` temp paths
+with the product's long directory-entry spelling; test-only correction
+`73cdd5f57` normalizes the fixture namespace with `GetLongPathNameW`, and its
+corrected rerun `30320046748` remains in progress. The project does not claim
+a complete cross-platform RC gate until the current-head matrix finishes.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
