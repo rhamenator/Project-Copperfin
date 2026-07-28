@@ -2815,5 +2815,6 @@
   "Studio.FloatCommandWindowMenu": "[Float Command Window]",
   "Studio.DockCommandWindowMenu": "[Dock Command Window]",
   "Studio.FloatTerminalWindowMenu": "[Float Terminal]",
-  "Studio.DockTerminalWindowMenu": "[Dock Terminal]"
+  "Studio.DockTerminalWindowMenu": "[Dock Terminal]",
+  "AssetEditor.Dialog.UnexpectedFailure": "[The editor operation failed: {0}]"
 }

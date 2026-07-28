@@ -2815,5 +2815,6 @@
   "Studio.FloatCommandWindowMenu": "Flotar ventana de comandos",
   "Studio.DockCommandWindowMenu": "Acoplar ventana de comandos",
   "Studio.FloatTerminalWindowMenu": "Flotar terminal",
-  "Studio.DockTerminalWindowMenu": "Acoplar terminal"
+  "Studio.DockTerminalWindowMenu": "Acoplar terminal",
+  "AssetEditor.Dialog.UnexpectedFailure": "La operaci\u00F3n del editor fall\u00F3: {0}"
 }

@@ -41,6 +41,16 @@ boundary documented in `include/copperfin/platform/environment.h`. Exact-head
 Windows Environment and Executable Path Validation `30333627791` passed all
 seven configured targets in `15m42s`, including the `_WIN32` helper path.
 
+Localization child #4757 is implementation-complete for the managed asset editor:
+unexpected queued-operation exceptions now appear through the catalog-backed
+`AssetEditor.Dialog.UnexpectedFailure` wrapper in both the status label and warning
+dialog, while the original exception text remains the diagnostic placeholder.
+The managed catalog generator/check, `test_managed_compile`, and `test_localization`
+pass locally (`2/2`) across `en-US`, `es-419`, `pt-BR`, and `qps-ploc`. This does
+not translate arbitrary operating-system exception text or change any machine
+contract; future user-facing managed surfaces should follow the same catalog-first
+pattern.
+
 Windows Deep Validation `30326601931` completed with native CTest `315/315` in
 `516.66s`, VSIX build/resource verification, and both managed language-service
 stages passing. Its net472 process-runner stage failed at

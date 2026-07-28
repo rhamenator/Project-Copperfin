@@ -2815,5 +2815,6 @@
   "Studio.FloatCommandWindowMenu": "Flutuar janela de comandos",
   "Studio.DockCommandWindowMenu": "Ancorar janela de comandos",
   "Studio.FloatTerminalWindowMenu": "Flutuar terminal",
-  "Studio.DockTerminalWindowMenu": "Ancorar terminal"
+  "Studio.DockTerminalWindowMenu": "Ancorar terminal",
+  "AssetEditor.Dialog.UnexpectedFailure": "A opera\u00E7\u00E3o do editor falhou: {0}"
 }

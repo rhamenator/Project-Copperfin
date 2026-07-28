@@ -37,6 +37,7 @@ internal static partial class Program
         TestCompletionSetDisplayNameLocalizesWithoutChangingIdentity();
         TestIntelliSenseUsesCurrentUiCultureWhenEnvironmentIsUnset();
         TestLocalizationCatalogFormatsWithInvariantCulture();
+        TestLocalizationCatalogFormatsUnexpectedEditorFailure();
         TestStudioOpenDialogFilterPreservesInvariantPatterns();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogUsesInstalledSharedCatalogs();
@@ -138,6 +139,31 @@ internal static partial class Program
         var spanish = new CopperfinLocalization("es-419");
         Expect(spanish.Text("Missing.Key") == "Missing.Key",
             "missing localization keys should fall back to the stable key instead of returning blank text");
+    }
+
+    private static void TestLocalizationCatalogFormatsUnexpectedEditorFailure()
+    {
+        const string diagnostic = "fixture failure";
+        var english = new CopperfinLocalization("en-US").Format(
+            "AssetEditor.Dialog.UnexpectedFailure", diagnostic);
+        var spanish = new CopperfinLocalization("es-419").Format(
+            "AssetEditor.Dialog.UnexpectedFailure", diagnostic);
+        var portuguese = new CopperfinLocalization("pt-BR").Format(
+            "AssetEditor.Dialog.UnexpectedFailure", diagnostic);
+        var pseudo = new CopperfinLocalization("qps-ploc").Format(
+            "AssetEditor.Dialog.UnexpectedFailure", diagnostic);
+
+        Expect(english == "The editor operation failed: fixture failure",
+            "English unexpected-editor failure wrapper should preserve the diagnostic placeholder");
+        Expect(spanish.StartsWith("La operación del editor falló:", StringComparison.Ordinal) &&
+               spanish.EndsWith(diagnostic, StringComparison.Ordinal),
+            "Spanish unexpected-editor failure wrapper should localize its surrounding text");
+        Expect(portuguese.StartsWith("A operação do editor falhou:", StringComparison.Ordinal) &&
+               portuguese.EndsWith(diagnostic, StringComparison.Ordinal),
+            "Portuguese unexpected-editor failure wrapper should localize its surrounding text");
+        Expect(pseudo.Contains(diagnostic, StringComparison.Ordinal) &&
+               pseudo.StartsWith("[!! ", StringComparison.Ordinal),
+            "pseudo-localized unexpected-editor failure wrapper should preserve and decorate the diagnostic");
     }
 
     private static void TestLocalizationCatalogSupportsPseudoLocale()

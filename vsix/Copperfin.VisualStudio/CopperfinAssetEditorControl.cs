@@ -3666,6 +3666,11 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         return this.localization.Text("AssetEditor.Dialog.StudioLaunchFailed");
     }
 
+    private string BuildUnexpectedFailureMessage(string? error)
+    {
+        return this.localization.Format("AssetEditor.Dialog.UnexpectedFailure", error ?? string.Empty);
+    }
+
     private string BuildOpenProjectFirstMessage()
     {
         return this.localization.Text("AssetEditor.Dialog.OpenProjectFirst");
@@ -3870,8 +3875,9 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
                 return;
             }
 
-            snapshotStatusLabel.Text = ex.Message;
-            MessageBox.Show(this, ex.Message, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            var localizedMessage = BuildUnexpectedFailureMessage(ex.Message);
+            snapshotStatusLabel.Text = localizedMessage;
+            MessageBox.Show(this, localizedMessage, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
