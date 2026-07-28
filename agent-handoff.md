@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `c34417f5f`, with coordination-only documentation and
+implementation head is `540d27402`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -144,14 +144,16 @@ separate. Future user-facing text remains catalog-first.
 
 Runtime child #4771 under #3217 completes the modeled keyboard default-action
 boundary. After Form or child `KeyPress` permits default processing, ENTER
-selects the owning Form's deterministic `CommandButton.Default` candidate and
-ESC selects `CommandButton.Cancel`; candidates without an ordinary `Click`
-handler are skipped. `Click` receives no synthetic arguments and runs through
-the heap-backed frame path; `NODEFAULT`, invariant click telemetry, and
-`READ EVENTS` restoration are covered by the focused runtime-surface CTest,
-which passes `1/1` locally. Focus traversal, keyboard buffering, toolbar
-arbitration, pixel UI, and hosted Windows/macOS validation remain separate.
-Exact-head cross-platform review is required before closing #4771.
+selects an enabled focused `CommandButton` when its host target is available,
+otherwise the owning Form's deterministic `CommandButton.Default` candidate;
+ESC selects `CommandButton.Cancel`. Candidates without an ordinary `Click`
+handler and disabled candidates are skipped. `Click` receives no synthetic
+arguments and runs through the heap-backed frame path; `NODEFAULT`, invariant
+click telemetry, and `READ EVENTS` restoration are covered by the focused
+runtime-surface CTest, which passes `1/1` locally. Ordinary CommandButton
+synthetic handles, focus traversal, keyboard buffering, toolbar arbitration,
+pixel UI, and hosted Windows/macOS validation remain separate. Exact-head
+cross-platform review is required before closing #4771.
 
 Runtime package child #4769 corrects the IR-manifest opcode map. The parsed
 `DEFINE MENU` statement kind now emits invariant `define_menu_command` metadata
@@ -164,10 +166,10 @@ Windows Codex seq763 both passed the focused test at the reviewed exact head;
 Security child #4770 under #3866 hardens the shared strict verified-byte lookup:
 exact keys remain authoritative, unique case-folded matches retain compatibility,
 and ambiguous case-folded entries fail closed instead of selecting arbitrary
-bytes. The focused `test_prg_engine_verified_dbf_security` target passes `1/1`,
-and adjacent database-lifecycle/runtime-surface targets pass `2/2` on Linux.
-Exact-head review and Windows validation remain required before closing the
-child.
+bytes for generic files and DBF/CDX/FPT components. The focused verified-file,
+database-lifecycle, and runtime-surface targets pass `3/3` on Linux. The
+correction is pushed at `540d27402`; fresh exact-head review and Windows
+validation remain required before closing the child.
 
 Safety documentation follow-up for #4403: an independent read-only review
 (coordination seq760) found the DQ/DV/HZ structure and current evidence sound,

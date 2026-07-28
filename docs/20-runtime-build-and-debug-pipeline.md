@@ -6,12 +6,13 @@ The ReportListener bridge now supplies the VFP9 default `HadError` state, a buil
 
 Strict database lifecycle and local DBF reads now use exact normalized verified-byte keys on POSIX under #3217/#4726. A differently cased admitted entry cannot satisfy a distinct case-sensitive path, while Windows retains case-insensitive verified matching and ordinary VFP filesystem lookup remains case-insensitive. Missing or mismatched strict components continue to use the invariant verified-bytes-unavailable diagnostic.
 
-Strict generic file readers now reject ambiguous case-folded admitted-byte
-matches under #3866/#4770 instead of selecting an arbitrary override. Exact
-keys remain authoritative, unique case-folded matches preserve the existing
-Windows/VFP compatibility behavior, and ordinary non-strict filesystem reads
-are unchanged. The focused verified-file, database-lifecycle, and runtime-
-surface tests pass on POSIX; hosted Windows review remains required.
+Strict generic and database-component readers now reject ambiguous case-folded
+admitted-byte matches under #3866/#4770 instead of selecting an arbitrary
+override. Exact keys remain authoritative, unique case-folded matches preserve
+the existing Windows/VFP compatibility behavior, and ordinary non-strict
+filesystem reads are unchanged. The focused verified-file, database-lifecycle,
+and runtime-surface tests pass on POSIX; exact-head hosted Windows review
+remains required.
 
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic

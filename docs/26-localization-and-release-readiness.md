@@ -55,8 +55,10 @@ Claude and Windows Codex. #4769's IR-manifest `DEFINE MENU` correction has a
 focused `test_runtime_pipeline` pass (`1/1`) at `b2e44535d`, with exact-head
 Windows corroboration in seq763 at `da52ce8ec`; the issue is closed. #4770 is
 the next focused strict-reader hardening slice and remains pending exact-head
-review. #4771 is implemented at product head `c34417f5f` with focused Linux
-runtime-surface coverage and remains pending exact-head Windows/macOS review.
+review. #4771 is implemented at product head `540d27402` with focused Linux
+runtime-surface coverage, including disabled-button filtering and focused
+target precedence when a host supplies a CommandButton handle; exact-head
+Windows/macOS review remains pending.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
