@@ -172,13 +172,22 @@
             {
                 return exact;
             }
-            return std::find_if(
-                options.verified_file_byte_overrides.begin(),
-                options.verified_file_byte_overrides.end(),
-                [&](const auto &candidate)
+            auto matching = options.verified_file_byte_overrides.end();
+            for (auto candidate = options.verified_file_byte_overrides.begin();
+                 candidate != options.verified_file_byte_overrides.end();
+                 ++candidate)
+            {
+                if (!paths_equal_insensitive(candidate->first, normalized))
                 {
-                    return paths_equal_insensitive(candidate.first, normalized);
-                });
+                    continue;
+                }
+                if (matching != options.verified_file_byte_overrides.end())
+                {
+                    return options.verified_file_byte_overrides.end();
+                }
+                matching = candidate;
+            }
+            return matching;
         }
 
         std::map<std::string, std::string>::const_iterator find_verified_database_file_byte_override(

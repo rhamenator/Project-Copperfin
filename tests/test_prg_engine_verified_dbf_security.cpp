@@ -274,6 +274,60 @@ void test_strict_fopen_uses_admitted_bytes_during_replacement()
     fs::remove_all(root, ignored);
 }
 
+void test_strict_generic_file_admission_rejects_ambiguous_casefold_matches()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_file_case_ambiguity";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+    const fs::path lower_path = root / "payload.txt";
+    const fs::path mixed_path = root / "Payload.txt";
+    const fs::path request_path = root / "PAYLOAD.TXT";
+
+    copperfin::runtime::RuntimeSessionOptions unique_options;
+    unique_options.verified_file_byte_overrides.emplace(lower_path.string(), "UNIQUE");
+    unique_options.require_verified_file_byte_overrides = true;
+    const auto unique_state = run_program(
+        root,
+        "unique_casefold_file.prg",
+        "cValue = FILETOSTR('PAYLOAD.TXT')\nRETURN\n",
+        unique_options);
+    expect(unique_state.completed,
+           "strict generic file admission should complete for a unique case-fold match: " + unique_state.message);
+    expect(global_text(unique_state, "cvalue") == "UNIQUE",
+           "strict generic file admission should preserve a unique case-fold match");
+
+    copperfin::runtime::RuntimeSessionOptions ambiguous_options;
+    ambiguous_options.verified_file_byte_overrides.emplace(lower_path.string(), "LOWER");
+    ambiguous_options.verified_file_byte_overrides.emplace(mixed_path.string(), "MIXED");
+    ambiguous_options.require_verified_file_byte_overrides = true;
+    const auto ambiguous_state = run_program(
+        root,
+        "ambiguous_casefold_file.prg",
+        "cValue = FILETOSTR('PAYLOAD.TXT')\nRETURN\n",
+        ambiguous_options);
+    expect(ambiguous_state.completed,
+           "ambiguous strict generic file admission should fail safely: " + ambiguous_state.message);
+    expect(global_text(ambiguous_state, "cvalue").empty(),
+           "ambiguous strict generic file admission should not select arbitrary bytes");
+
+    copperfin::runtime::RuntimeSessionOptions exact_options;
+    exact_options.verified_file_byte_overrides.emplace(lower_path.string(), "LOWER");
+    exact_options.verified_file_byte_overrides.emplace(mixed_path.string(), "MIXED");
+    exact_options.verified_file_byte_overrides.emplace(request_path.string(), "EXACT");
+    exact_options.require_verified_file_byte_overrides = true;
+    const auto exact_state = run_program(
+        root,
+        "exact_casefold_file.prg",
+        "cValue = FILETOSTR('PAYLOAD.TXT')\nRETURN\n",
+        exact_options);
+    expect(exact_state.completed,
+           "exact strict generic file admission should complete: " + exact_state.message);
+    expect(global_text(exact_state, "cvalue") == "EXACT",
+           "an exact strict generic file admission should remain authoritative");
+    fs::remove_all(root, ignored);
+}
+
 void test_initial_use_reads_verified_index_metadata()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_index";
@@ -939,6 +993,7 @@ int main()
     test_initial_use_fails_closed_without_verified_dbf_bytes();
     test_filetostr_reads_verified_bytes_and_fails_closed_without_admission();
     test_strict_fopen_uses_admitted_bytes_during_replacement();
+    test_strict_generic_file_admission_rejects_ambiguous_casefold_matches();
     test_initial_use_reads_verified_index_metadata();
     test_database_index_admission_preserves_platform_case_rules();
     test_database_memo_admission_preserves_platform_case_rules();

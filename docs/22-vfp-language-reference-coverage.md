@@ -16,6 +16,15 @@
   contract. Menu pads, rendering, selection callbacks, system menus, and
   keyboard interaction remain separate compatibility work.
 
+- Strict generic file-admission note (2026-07-28, #4770 under #3866):
+  `FILETOSTR()`, read-only `FOPEN()`, `XMLTOCURSOR()`, `RESTORE FROM`,
+  `APPEND FROM`, and xAsset readers now reject ambiguous case-folded admitted
+  byte entries instead of selecting an arbitrary path. Exact keys remain
+  authoritative and a unique folded match preserves existing VFP/Windows
+  compatibility behavior; ordinary non-strict filesystem lookup is unchanged.
+  Focused verified-file, database-lifecycle, and runtime-surface tests pass on
+  POSIX. Exact-head hosted Windows validation remains separate.
+
 - Runtime follow-up closure evidence (2026-07-28): #4751, #4752, and #4725 are closed at exact synchronized head `8718f9076`. Windows MSVC 18.8.2 Release built and passed `test_prg_engine_verified_dbf_security` plus `test_prg_engine_data_io` `2/2` in `5.76s`; Linux corroborated both targets `2/2`. The result confirms strict admitted-byte reads/copy behavior and exclusion of internal `_SCREEN`/`_VFP`/`application` bindings from user-facing memory listings while preserving direct property access. The Apple-specific numeric-parser source remains separate and untouched. The separate full Windows matrix remains release evidence.
 
 - #4750 closure evidence (2026-07-28): hosted Windows validation at `632f0e089` rebuilt the VS 2026/MSBuild 18.8.2 Release `test_runtime_pipeline` target and passed `1/1` in `138.60s`. The result confirms the Windows long-path/UTF-8 identity sequence, trusted external-root normalization, portable forward-slash package-relative paths, and Unicode direct/recursive `#INCLUDE` fixture expectations. #4750 is closed; the Apple-specific numeric-parser source remains separate and untouched. This focused result does not claim completion of the broader synchronized CI matrix.

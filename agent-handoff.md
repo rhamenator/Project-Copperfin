@@ -149,6 +149,14 @@ coverage protects the mapping and removes the `-Wswitch` warning. The existing
 manifest schema and all other opcode names remain unchanged. Future
 user-facing text remains catalog-first.
 
+Security child #4770 under #3866 hardens the shared strict verified-byte lookup:
+exact keys remain authoritative, unique case-folded matches retain compatibility,
+and ambiguous case-folded entries fail closed instead of selecting arbitrary
+bytes. The focused `test_prg_engine_verified_dbf_security` target passes `1/1`,
+and adjacent database-lifecycle/runtime-surface targets pass `2/2` on Linux.
+Exact-head review and Windows validation remain required before closing the
+child.
+
 Safety documentation follow-up for #4403: an independent read-only review
 (coordination seq760) found the DQ/DV/HZ structure and current evidence sound,
 but identified a stale `docs/26-localization-and-release-readiness.md`
