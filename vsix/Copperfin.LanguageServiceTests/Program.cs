@@ -95,6 +95,7 @@ internal static partial class Program
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
         TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
         TestCrossFileProjectBoundaryResolvesProcedureDefinition();
+        TestCrossFileProjectBoundaryCompletions();
         TestLanguageServiceMetadataLocalizesThroughCatalogs();
 
         if (failures != 0)
@@ -2767,6 +2768,38 @@ internal static partial class Program
 
             var signatures = FoxProIntelliSenseCatalog.GetSignatures(entryPath, "SaveOrder");
             Expect(signatures.Count == 1, "cross-file project-boundary lookup should also surface the defining procedure signature");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestCrossFileProjectBoundaryCompletions()
+    {
+        var root = CreateProjectRoot("cross_file_project_completions");
+        try
+        {
+            var entryPath = Path.Combine(root, "main.prg");
+            var libraryPath = Path.Combine(root, "orders.prg");
+            File.WriteAllText(entryPath, "DO SaveOrder" + Environment.NewLine);
+            File.WriteAllText(
+                libraryPath,
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(entryPath, "DO ", "Sav");
+            var saveOrder = completions.FirstOrDefault(entry => entry.DisplayText == "SaveOrder");
+            Expect(saveOrder is not null,
+                "completion results should include procedures defined in sibling project files");
+            if (saveOrder is not null)
+            {
+                Expect(saveOrder.Kind == "symbol",
+                    "cross-file procedure completions should preserve the invariant symbol kind");
+                Expect(saveOrder.Description == "Procedure/function/program symbol in the active project.",
+                    "cross-file procedure completions should use the existing project-symbol description");
+            }
         }
         finally
         {
