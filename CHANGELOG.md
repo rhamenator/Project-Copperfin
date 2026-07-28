@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4785 under #3217 at product head
+  `a8f613add`. Native PRG `Form.SizeBox` now follows the mounted VFP9
+  contract: `.F.` default, writable direct and PEM reflection paths,
+  preserved design-time/class declarations, and rejected dynamic shadowing or
+  removal. The focused `test_prg_engine_runtime_surface_functions` CTest
+  passes `1/1` locally. This is a headless property contract; size-box
+  rendering, resize interaction, and hosted UI remain separate.
+
 - 2026-07-28: Implemented runtime child #4784 under #3217 at product head
   `013ca797f`. Native PRG `Form.WhatsThisButton` now follows the mounted
   VFP9 contract: `.F.` default, read-only runtime/reflection metadata,
