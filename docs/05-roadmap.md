@@ -118,16 +118,16 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The current release-validation product head is `364e62058`, with coordination
-head `d17c0bd68`. The exact-head matrix is still running, so RC readiness is
-not claimed: Linux Managed UI `30404819438`, macOS Native `30404819331`, VSIX
-`30404819312`, Security Supply Chain `30404819335`, Windows Environment and
-Executable Path `30404819386`, Executable Path `30404819239`, Windows DECLARE
-ABI `30404819228`, and Standalone Installers `30404819272` are green. Linux
-Native `30404819262` is also green. Windows Native `30404819387` is the sole
-remaining active matrix job.
-The earlier accepted hosted baselines remain historical evidence only and are
-not substituted for this exact-head matrix. Independent safety sign-off under
+The current release-validation product head is `7587be12f`, with coordination
+head `7da9a1b4d`. The exact-head matrix is still running, so RC readiness is
+not claimed. Security Supply Chain `30408081069` and Linux Managed UI
+`30408081037` are green; Windows Native `30408081049`, VSIX `30408081057`,
+Executable Path `30408081029`, Generated Launcher `30408081016`, Linux Native
+`30408081006`, Windows DECLARE ABI `30408081004`, macOS Native `30408081003`,
+Windows Environment and Executable Path `30408080996`, and Standalone
+Installers `30408080995` remain in progress as of this update. The earlier
+accepted hosted baselines remain historical evidence only and are not
+substituted for this exact-head matrix. Independent safety sign-off under
 #4403 and protected launcher-trust provisioning under #4409 remain separate
 release gates.
 

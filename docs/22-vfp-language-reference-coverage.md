@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- Current codepage status (2026-07-28, #4807 under #3217): supported VFP
+  `SET CODEPAGE TO n` values are stored independently per data session.
+  `SET("CODEPAGE")` and omitted/zero `CPCURRENT()` return the configured
+  session value, while `CPCURRENT(1)` and `CPCURRENT(2)` remain host and OEM
+  queries; unsupported values preserve the previous setting. The focused
+  runtime-surface and locale-codepage tests pass locally. Windows/macOS
+  corroboration remains pending, and DBF encoding, `CPCONVERT()`, and other
+  machine contracts are unchanged.
+
 - Current fault-context status (2026-07-28, #4800 under #3217): native PRG
   diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and
   related error metadata bound to the original fault procedure while an
