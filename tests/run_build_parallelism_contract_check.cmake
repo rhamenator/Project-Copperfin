@@ -59,6 +59,7 @@ require_text(".github/workflows/windows-deep-validation.yml"
 
 require_text("scripts/validate-posix.sh" "build_jobs=\${COPPERFIN_BUILD_JOBS:-2}")
 require_text("scripts/validate-posix.sh" "cmake --build \"\$build_dir\" --parallel \"\$build_jobs\" \"\$@\"")
+require_text("scripts/validate-posix.sh" "ctest --test-dir \"\$build_dir\" --output-on-failure --timeout 180 --parallel \"\$build_jobs\"")
 require_text("scripts/validate-windows.ps1" "[int]\$BuildJobs = 2")
 require_text("scripts/validate-windows.ps1" "\"--parallel\", \"\$BuildJobs\"")
 require_text("README.md" "Native CMake validation defaults to two concurrent compile jobs")

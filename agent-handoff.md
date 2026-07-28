@@ -2,6 +2,13 @@
 
 ## Current State
 
+The validation-infrastructure slice for #4801 adds the same 180-second
+per-test CTest timeout and configured test parallelism to
+`scripts/validate-posix.sh` that the hosted native action and Windows script
+already enforce. The build-parallelism, POSIX build-type, and native-workflow
+contract tests pass `3/3`. This changes validation behavior only; it does not
+change product runtime or machine-readable contracts.
+
 The current implementation slice for #4800 under #3217 corrects native PRG
 diagnostic context selection. While an `ON ERROR` handler or `TRY/CATCH` block
 evaluates expressions, `PROGRAM()`, `SYS(16)`, `AERROR()`, and related error

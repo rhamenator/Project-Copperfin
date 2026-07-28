@@ -69,4 +69,4 @@ elif [ "$cached_build_type" != "$build_type" ]; then
 fi
 
 cmake --build "$build_dir" --parallel "$build_jobs" "$@"
-ctest --test-dir "$build_dir" --output-on-failure
+ctest --test-dir "$build_dir" --output-on-failure --timeout 180 --parallel "$build_jobs"
