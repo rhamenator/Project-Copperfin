@@ -66,6 +66,16 @@ transition. The strengthened focused test passes `1/1` on Linux at product
 The scope is deliberately Container-only; PageFrame, OptionGroup,
 CommandGroup, reverse Shift+Tab, and full macOS/RC evidence remain separate.
 
+Runtime child #4775 extends that default forward Tab path through only the
+active page of a native `PageFrame`. The iterative worklist reads the existing
+1-based `ActivePage` value, queues that page's descendants, excludes inactive
+pages and `Page` objects as candidates, and preserves ancestor `Visible`/
+`Enabled`, `TabStop`, ordering, deduplication, and focus-transition behavior.
+The focused runtime-surface CTest passes `1/1` locally; Claude seq797 and exact-
+head Windows validation seq799 also pass. The macOS/full-RC matrix remains
+separate evidence, and #4776 tracks the remaining OptionGroup/CommandGroup
+container-like traversal gap.
+
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Parenthesized dynamic targets such as `DO (cTarget)` and `DO (&cTargetHolder)` now evaluate through the same heap-backed iterative frame machine, preserving `WITH` arguments and deterministic missing-target behavior under #3217/#4722. Package dependency discovery remains literal-only; arbitrary external paths, dynamic xAssets, and control-flow forms remain separate runtime boundaries.
 
 Current native components:

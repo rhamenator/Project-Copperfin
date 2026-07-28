@@ -85,6 +85,14 @@ The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
 protected external package-signing registry remains a separate release gate.
+Runtime child #4775 is implementation-complete at product head `bdd033690`:
+default forward Tab traversal now descends through only the active native
+`PageFrame` page, excludes inactive pages and `Page` candidates, and preserves
+ancestor visibility/enabled filtering, TabStop filtering, deterministic order,
+and focus transitions. Local focused CTest, Claude seq797, and exact-head
+Windows validation seq799 pass. The macOS job for the broader exact-head
+matrix remains in progress and is not claimed as slice evidence; #4776 tracks
+the remaining OptionGroup/CommandGroup traversal slice.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head

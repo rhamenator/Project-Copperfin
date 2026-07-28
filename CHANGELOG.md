@@ -1,3 +1,12 @@
+- 2026-07-28: Closed runtime child #4775 under #3217 at product head
+  `bdd033690` after Claude seq797 and exact-head Windows validation seq799
+  passed. Default forward Tab traversal now descends through only the active
+  native `PageFrame` page, excludes inactive pages and `Page` candidates, and
+  preserves ancestor visibility/enabled filtering, TabStop filtering,
+  deterministic ordering, and focus transitions. Local, Claude, and Windows
+  focused tests pass; macOS/full-RC validation remains separate, and #4776
+  tracks OptionGroup/CommandGroup traversal.
+
 - 2026-07-28: Closed runtime child #4774 under #3217 at product head
   `29391e3d2` after Claude seq795 and exact-head Windows validation seq794
   passed. Default forward Tab traversal now discovers nested `Container`

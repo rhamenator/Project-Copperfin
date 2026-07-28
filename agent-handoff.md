@@ -79,6 +79,17 @@ Container-only: PageFrame/OptionGroup/CommandGroup, reverse Shift+Tab,
 keyboard buffering, hosted UI, and full macOS/RC evidence remain separate.
 Do not claim the complete RC evidence gate from this child alone.
 
+Runtime child #4775 under #3217 is closed as implementation-complete at
+product head `bdd033690`. It extends default forward Tab traversal through
+only the active native `PageFrame` page using the existing 1-based `ActivePage`
+and `Pages` model. Inactive pages and `Page` objects are excluded from
+candidacy; ancestor `Visible`/`Enabled`, `TabStop`, deterministic ordering,
+deduplication, and the existing focus transition remain intact. The focused
+runtime-surface CTest passes `1/1` on Linux; Claude seq797 and exact-head
+Windows validation seq799 also pass. The macOS/full-RC matrix remains separate
+evidence. #4776 is the next queued OptionGroup/CommandGroup traversal slice.
+Do not claim the complete RC evidence gate from this child alone.
+
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
 Windows path values before calling C environment APIs. This prevents silent
