@@ -146,8 +146,9 @@ Runtime package child #4769 corrects the IR-manifest opcode map. The parsed
 `DEFINE MENU` statement kind now emits invariant `define_menu_command` metadata
 instead of falling through to `no_op`; focused runtime package/compiler
 coverage protects the mapping and removes the `-Wswitch` warning. The existing
-manifest schema and all other opcode names remain unchanged. Future
-user-facing text remains catalog-first.
+manifest schema and all other opcode names remain unchanged. Claude seq762 and
+Windows Codex seq763 both passed the focused test at the reviewed exact head;
+#4769 is closed. Future user-facing text remains catalog-first.
 
 Security child #4770 under #3866 hardens the shared strict verified-byte lookup:
 exact keys remain authoritative, unique case-folded matches retain compatibility,

@@ -52,9 +52,10 @@ Windows path/package contract validation. #4757-#4768 have focused Linux
 coverage, with exact-head Windows corroboration recorded for the reviewed
 runtime slices; the latest right-button slice #4768 was validated by both
 Claude and Windows Codex. #4769's IR-manifest `DEFINE MENU` correction has a
-focused `test_runtime_pipeline` pass (`1/1`) at `b2e44535d`; the hosted CI
-matrix for that newer package change is still in progress, so no additional
-platform pass is claimed here.
+focused `test_runtime_pipeline` pass (`1/1`) at `b2e44535d`, with exact-head
+Windows corroboration in seq763 at `da52ce8ec`; the issue is closed. #4770 is
+the next focused strict-reader hardening slice and remains pending exact-head
+review.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
