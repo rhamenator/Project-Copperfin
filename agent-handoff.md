@@ -28,7 +28,8 @@ Windows review of #4804 then found that mapping-row hazards were not checked
 against the issue's declared `Hazard Linkage IDs` or the hazard register. The
 #4805 correction adds both checks, rejects `HZ-NONE` outside its sole explicit
 no-hazard row, and adds an undeclared/unknown row-hazard regression fixture.
-The focused safety workflow contract is the acceptance gate for this slice.
+The focused safety workflow contract passes `1/1`; read-only Claude and Windows
+review is requested for the synchronized source head.
 
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
@@ -80,10 +81,12 @@ the issue only after the normal implementation review/validation handoff.
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest safety
-validation implementation head is `d68a2fc5e`, with the synchronized
-coordination head at `b2ebc10d6`. The current hosted matrix has green VSIX,
-Linux managed UI, and security gates; native, installer, executable-path, and
-Windows validation jobs remain in progress. The broad validation
+validation implementation head is `37366143c`, with the synchronized
+coordination head at `5cb66d04f`. The current hosted matrix for that head has
+not completed; the preceding head's green VSIX, Linux managed UI, and security
+gates are not being carried forward as exact-head evidence. Native, installer,
+executable-path, and Windows validation remain pending for the new head. The
+broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
@@ -111,7 +114,7 @@ the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
 Current focused product validation for the latest safety slice is at source head
-`d68a2fc5e`; the synchronized branch tip is `b2ebc10d6`. The latest standalone
+`37366143c`; the synchronized branch tip is `5cb66d04f`. The latest standalone
 validation contract remains the complete `f0734f262` run, and the focused safety
 workflow contract passes `1/1` at the current head. The current source head
 includes the #4800 fault-procedure preservation slice and its focused regression

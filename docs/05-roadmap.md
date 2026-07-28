@@ -118,11 +118,12 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest safety-validation implementation head is `d68a2fc5e`; the synchronized
-coordination branch tip is `b2ebc10d6`. The current hosted matrix has green VSIX,
-Linux managed UI, and security gates, with native, installer, executable-path,
-and Windows jobs still in progress. The product behavior head for #4800 remains
-`f669fd51c`. The broad hosted baseline remains the successful
+The latest safety-validation implementation head is `37366143c`; the synchronized
+coordination branch tip is `5cb66d04f`. The hosted matrix for this head has not
+completed, so prior green lanes are not being claimed as exact-head evidence;
+native, installer, executable-path, and Windows jobs remain pending or in
+progress. The product behavior head for #4800 remains `f669fd51c`. The broad
+hosted baseline remains the successful
 `93d44395f` evidence set: Linux Native `30329037575`, macOS Native
 `30329037567`, Linux managed UI `30329037628`, VSIX `30329037609`, installers
 `30329037566`, and security supply-chain gate `30329037556`. Windows Native
