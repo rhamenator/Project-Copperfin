@@ -132,6 +132,11 @@ suites pass, and the shared DesignerSmoke executable builds and lists its full
 inventory without warnings. The net472 process-tree fixture is explicitly
 Windows-only; VSIX compilation remains a Windows/MSBuild gate.
 
+Current-head hosted Linux UI evidence strengthens this: run `30317114002` at
+`7c13a926d` listed 144 smoke tests, passed 10/10 standalone-shell selectors
+under Xvfb, and passed 6/6 shared designer property-grid selectors. The
+current-head Security Supply Chain Gate `30317113962` is also green.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).
