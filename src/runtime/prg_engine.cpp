@@ -354,6 +354,7 @@ namespace copperfin::runtime
                    normalized_base_class == "listbox" ||
                    normalized_base_class == "olecontrol" ||
                    normalized_base_class == "optionbutton" ||
+                   normalized_base_class == "optiongroup" ||
                    normalized_base_class == "page" ||
                    normalized_base_class == "spinner" ||
                    normalized_base_class == "textbox";
@@ -1257,6 +1258,10 @@ namespace copperfin::runtime
         bool move_native_focus_to_next_tab_stop(
             RuntimeOleObjectState &runtime_object,
             const Frame &source_frame);
+        bool move_native_optiongroup_selection(
+            RuntimeOleObjectState &runtime_object,
+            const Frame &source_frame,
+            int direction);
         bool write_native_property_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
@@ -3336,6 +3341,180 @@ namespace copperfin::runtime
         }
 
         return set_native_focus(next_object->second, "SetFocus", frame);
+    }
+
+    bool PrgRuntimeSession::Impl::move_native_optiongroup_selection(
+        RuntimeOleObjectState &runtime_object,
+        const Frame &frame,
+        const int direction)
+    {
+        if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "optiongroup" ||
+            (direction != -1 && direction != 1))
+        {
+            return false;
+        }
+
+        struct OptionCandidate
+        {
+            int handle = 0;
+            long long option_number = 0;
+            long long tab_index = 0;
+            bool eligible = false;
+        };
+        std::vector<OptionCandidate> candidates;
+        for (const int child_handle : collect_native_owned_child_handles(runtime_object))
+        {
+            const auto child_found = ole_objects.find(child_handle);
+            if (child_found == ole_objects.end() ||
+                normalize_identifier(trim_copy(child_found->second.base_class_name)) != "optionbutton")
+            {
+                continue;
+            }
+
+            const auto visible = read_native_property_if_present(child_found->second, "visible", frame);
+            const auto enabled = read_native_property_if_present(child_found->second, "enabled", frame);
+            const bool eligible = (!visible.has_value() || value_as_bool(*visible)) &&
+                (!enabled.has_value() || value_as_bool(*enabled));
+
+            long long tab_index = child_handle;
+            if (const auto tab_index_value =
+                    read_native_property_if_present(child_found->second, "tabindex", frame);
+                tab_index_value.has_value())
+            {
+                try
+                {
+                    tab_index = std::llround(value_as_number(*tab_index_value));
+                }
+                catch (...)
+                {
+                    tab_index = child_handle;
+                }
+            }
+            candidates.push_back({child_handle, 0, tab_index, eligible});
+        }
+
+        if (candidates.empty())
+        {
+            return false;
+        }
+
+        std::sort(
+            candidates.begin(),
+            candidates.end(),
+            [](const OptionCandidate &left, const OptionCandidate &right)
+            {
+                return left.handle < right.handle;
+            });
+        for (std::size_t index = 0U; index < candidates.size(); ++index)
+        {
+            candidates[index].option_number = static_cast<long long>(index + 1U);
+        }
+        candidates.erase(
+            std::remove_if(
+                candidates.begin(),
+                candidates.end(),
+                [](const OptionCandidate &candidate)
+                {
+                    return !candidate.eligible;
+                }),
+            candidates.end());
+        if (candidates.empty())
+        {
+            return false;
+        }
+
+        std::sort(
+            candidates.begin(),
+            candidates.end(),
+            [](const OptionCandidate &left, const OptionCandidate &right)
+            {
+                if (left.tab_index != right.tab_index)
+                {
+                    return left.tab_index < right.tab_index;
+                }
+                return left.handle < right.handle;
+            });
+
+        std::optional<std::size_t> current_index;
+        if (const auto group_value = read_native_property_if_present(runtime_object, "value", frame);
+            group_value.has_value())
+        {
+            const long long selected_option = std::llround(value_as_number(*group_value));
+            for (std::size_t index = 0U; index < candidates.size(); ++index)
+            {
+                if (candidates[index].option_number == selected_option)
+                {
+                    current_index = index;
+                    break;
+                }
+            }
+        }
+        if (!current_index.has_value())
+        {
+            for (std::size_t index = 0U; index < candidates.size(); ++index)
+            {
+                const auto child_found = ole_objects.find(candidates[index].handle);
+                if (child_found == ole_objects.end())
+                {
+                    continue;
+                }
+                const auto selected = read_native_property_if_present(child_found->second, "value", frame);
+                if (selected.has_value() && value_as_bool(*selected))
+                {
+                    current_index = index;
+                    break;
+                }
+            }
+        }
+
+        const std::size_t start_index = current_index.has_value()
+            ? *current_index
+            : (direction > 0 ? candidates.size() - 1U : 0U);
+        const std::size_t next_index = direction > 0
+            ? (start_index + 1U) % candidates.size()
+            : (start_index + candidates.size() - 1U) % candidates.size();
+        const long long selected_option = candidates[next_index].option_number;
+
+        for (const OptionCandidate &candidate : candidates)
+        {
+            const auto child_found = ole_objects.find(candidate.handle);
+            if (child_found == ole_objects.end())
+            {
+                continue;
+            }
+            (void)write_native_property_if_present(
+                child_found->second,
+                "value",
+                make_boolean_value(candidate.handle == candidates[next_index].handle),
+                frame);
+        }
+        if (!write_native_property_if_present(
+                runtime_object,
+                "value",
+                make_number_value(static_cast<double>(selected_option)),
+                frame))
+        {
+            return false;
+        }
+
+        bool ignored_nodefault = false;
+        if (invoke_native_object_method_if_present(
+                runtime_object,
+                "interactivechange",
+                frame,
+                {},
+                {},
+                &ignored_nodefault,
+                nullptr)
+                .has_value())
+        {
+            events.push_back({.category = "prg.event.interactivechange",
+                              .detail = runtime_object.prog_id,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        }
+        runtime_object.last_action = "OptionGroup.Value";
+        ++runtime_object.action_count;
+        return true;
     }
 
     PrgValue PrgRuntimeSession::Impl::invoke_runtime_object_member(
@@ -10897,6 +11076,10 @@ namespace copperfin::runtime
             }
         }
 
+        const auto is_optiongroup_arrow_key = [](const std::intptr_t key_code)
+        {
+            return key_code == 37 || key_code == 38 || key_code == 39 || key_code == 40;
+        };
         std::optional<int> keypress_target;
         if (message == kWindowsKeyDownMessage)
         {
@@ -10925,9 +11108,25 @@ namespace copperfin::runtime
                         {
                             const std::string active_base_class = normalize_identifier(
                                 trim_copy((*resolved_active_control)->base_class_name));
-                            if (wparam == 9 || active_base_class == "commandbutton")
+                            if (wparam == 9 || active_base_class == "commandbutton" ||
+                                (is_optiongroup_arrow_key(wparam) &&
+                                 (active_base_class == "optiongroup" || active_base_class == "optionbutton")))
                             {
                                 keypress_target = (*resolved_active_control)->handle;
+                                if (is_optiongroup_arrow_key(wparam) && active_base_class == "optionbutton")
+                                {
+                                    if (const auto parent_reference =
+                                            native_object_parent_reference(**resolved_active_control);
+                                        parent_reference.has_value())
+                                    {
+                                        if (auto parent = resolve_ole_object(*parent_reference);
+                                            parent.has_value() &&
+                                            normalize_identifier(trim_copy((*parent)->base_class_name)) == "optiongroup")
+                                        {
+                                            keypress_target = (*parent)->handle;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -11478,6 +11677,15 @@ namespace copperfin::runtime
                 if (!requested_nodefault && wparam == 9)
                 {
                     if (move_native_focus_to_next_tab_stop(target_found->second, stack.back()))
+                    {
+                        last_result = 0;
+                    }
+                }
+
+                if (!requested_nodefault && is_optiongroup_arrow_key(wparam))
+                {
+                    const int direction = wparam == 37 || wparam == 38 ? -1 : 1;
+                    if (move_native_optiongroup_selection(target_found->second, stack.back(), direction))
                     {
                         last_result = 0;
                     }

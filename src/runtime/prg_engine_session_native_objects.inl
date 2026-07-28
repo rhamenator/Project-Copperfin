@@ -647,6 +647,18 @@
                 runtime_object.properties["value"] = make_string_value("");
             }
 
+            if (normalized_base_class == "optiongroup" &&
+                !runtime_object.properties.contains("value"))
+            {
+                runtime_object.properties["value"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "optionbutton" &&
+                !runtime_object.properties.contains("value"))
+            {
+                runtime_object.properties["value"] = make_boolean_value(false);
+            }
+
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "editbox") &&
                 !runtime_object.properties.contains("selstart"))

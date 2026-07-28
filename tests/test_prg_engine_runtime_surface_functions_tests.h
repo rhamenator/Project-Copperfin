@@ -547,6 +547,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_keypress_tab_traverses_active_pageframe_page_only();
     void test_native_keypress_tab_traverses_commandgroup_children();
     void test_native_keypress_tab_preserves_nested_parent_order();
+    void test_native_keypress_optiongroup_windows_navigation();
     void test_native_list_control_interactivechange_dispatches_for_changed_input();
     void test_native_form_keypreview_dispatches_before_child_keypress();
     void test_native_click_dispatches_on_left_button_release();

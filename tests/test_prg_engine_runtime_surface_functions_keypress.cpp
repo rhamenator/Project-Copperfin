@@ -946,4 +946,169 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_optiongroup_windows_navigation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_optiongroup_windows";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_optiongroup_windows.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFormHwnd, nGotFocus, nKeyPress, nInteractive, nOptionValue, lFirst, lSecond\n"
+            "nGotFocus = 0\n"
+            "nKeyPress = 0\n"
+            "nInteractive = 0\n"
+            "nOptionValue = 0\n"
+            "lFirst = .F.\n"
+            "lSecond = .F.\n"
+            "oForm = CREATEOBJECT('OptionNavigationForm')\n"
+            "oForm.before.TabIndex = 1\n"
+            "oForm.options.TabIndex = 2\n"
+            "oForm.options.first.TabIndex = 2\n"
+            "oForm.options.second.TabIndex = 1\n"
+            "oForm.options.blocked.Enabled = .F.\n"
+            "oForm.options.hidden.Visible = .F.\n"
+            "oForm.options.Value = 1\n"
+            "oForm.options.first.Value = .T.\n"
+            "oForm.before.SetFocus()\n"
+            "nFormHwnd = oForm.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS OptionNavigationForm AS Form\n"
+            "    ADD OBJECT before AS OptionNavigationBox WITH cId = 'before'\n"
+            "    ADD OBJECT options AS TestOptionGroup\n"
+            "    ADD OBJECT after AS OptionNavigationFinishButton WITH cId = 'after'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TestOptionGroup AS OptionGroup\n"
+            "    cId = 'options'\n"
+            "    ADD OBJECT first AS OptionButton WITH Caption = 'First'\n"
+            "    ADD OBJECT second AS OptionButton WITH Caption = 'Second'\n"
+            "    ADD OBJECT blocked AS OptionButton WITH Caption = 'Blocked'\n"
+            "    ADD OBJECT hidden AS OptionButton WITH Caption = 'Hidden'\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode >= 37 AND tnKeyCode <= 40\n"
+            "            nKeyPress = nKeyPress + 1\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "    ENDPROC\n"
+            "    PROCEDURE InteractiveChange\n"
+            "        nInteractive = nInteractive + 1\n"
+            "        nOptionValue = THIS.Value\n"
+            "        lFirst = THIS.first.Value\n"
+            "        lSecond = THIS.second.Value\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS OptionNavigationBox AS ListBox\n"
+            "    cId = ''\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS OptionNavigationFinishButton AS CommandButton\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'after'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "OptionGroup navigation fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_global_number = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            return found == state.globals.end()
+                ? 0LL
+                : std::stoll(copperfin::runtime::format_value(found->second));
+        };
+        const auto read_global_text = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            return found == state.globals.end()
+                ? std::string{}
+                : copperfin::runtime::format_value(found->second);
+        };
+        const std::intptr_t form_hwnd = read_global_number("nformhwnd");
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "OptionGroup dispatch should restore the event loop: " + state.message);
+        };
+
+        const auto enter_group = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+        expect(enter_group.has_value() && *enter_group == 0,
+               "Tab should enter the OptionGroup as one parent-level stop");
+        resume_event_loop();
+        expect(read_global_number("ngotfocus") == 1,
+               "Tab should focus the form control and then the OptionGroup only; got " +
+                   std::to_string(read_global_number("ngotfocus")));
+
+        const auto move_right = session.dispatch_windows_message(form_hwnd, 0x0100, 39, 0);
+        expect(move_right.has_value() && *move_right == 0,
+               "Right arrow should select the next eligible OptionButton");
+        resume_event_loop();
+        expect(read_global_number("nkeypress") == 1 &&
+                   read_global_number("ninteractive") == 1 &&
+                   read_global_number("noptionvalue") == 2 &&
+                   read_global_text("lfirst") == "false" &&
+                   read_global_text("lsecond") == "true",
+               "Right arrow should update group and child selection state; keypress=" +
+                   std::to_string(read_global_number("nkeypress")) +
+                   " interactive=" + std::to_string(read_global_number("ninteractive")) +
+                   " value=" + std::to_string(read_global_number("noptionvalue")) +
+                   " first=" + read_global_text("lfirst") +
+                   " second=" + read_global_text("lsecond"));
+
+        const auto move_left = session.dispatch_windows_message(form_hwnd, 0x0100, 37, 0);
+        expect(move_left.has_value() && *move_left == 0,
+               "Left arrow should wrap to the prior eligible OptionButton");
+        resume_event_loop();
+        expect(read_global_number("nkeypress") == 2 &&
+                   read_global_number("ninteractive") == 2 &&
+                   read_global_number("noptionvalue") == 1 &&
+                   read_global_text("lfirst") == "true" &&
+                   read_global_text("lsecond") == "false",
+               "Left arrow should preserve deterministic reverse selection state; keypress=" +
+                   std::to_string(read_global_number("nkeypress")) +
+                   " interactive=" + std::to_string(read_global_number("ninteractive")) +
+                   " value=" + std::to_string(read_global_number("noptionvalue")) +
+                   " first=" + read_global_text("lfirst") +
+                   " second=" + read_global_text("lsecond"));
+
+        const auto leave_group = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+        expect(leave_group.has_value() && *leave_group == 0,
+               "Tab should leave the OptionGroup rather than entering its buttons");
+        resume_event_loop();
+        const auto finish = session.dispatch_windows_message(form_hwnd, 0x0100, 67, 0);
+        expect(finish.has_value() && *finish == 0,
+               "OptionGroup navigation fixture should finish through the next control");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "OptionGroup navigation fixture should complete after CLEAR EVENTS: " + state.message);
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

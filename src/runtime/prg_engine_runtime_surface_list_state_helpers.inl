@@ -696,6 +696,7 @@ bool native_tabstop_runtime_object_matches(const RuntimeOleObjectState& runtime_
            normalized_base_class == "listbox" ||
            normalized_base_class == "olecontrol" ||
            normalized_base_class == "optionbutton" ||
+           normalized_base_class == "optiongroup" ||
            normalized_base_class == "page" ||
            normalized_base_class == "pageframe" ||
            normalized_base_class == "spinner" ||
@@ -718,6 +719,7 @@ bool is_native_focusable_runtime_object(const RuntimeOleObjectState& runtime_obj
            normalized_base_class == "listbox" ||
            normalized_base_class == "olecontrol" ||
            normalized_base_class == "optionbutton" ||
+           normalized_base_class == "optiongroup" ||
            normalized_base_class == "page" ||
            normalized_base_class == "spinner" ||
            normalized_base_class == "textbox";
