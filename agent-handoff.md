@@ -52,7 +52,9 @@ fail closed when a same-named disk file exists. Local `test_prg_engine`,
 `test_prg_engine_runtime_surface_functions` pass `3/3`. Claude's independent
 repro and review passed at documentation descendant `cb67b7930`, and exact-head
 native Windows validation seq785 rebuilt and passed the same three targets
-`3/3`. The full macOS matrix remains separate release evidence.
+`3/3`; macOS Native Validation `30356725909` also passed the full native
+matrix at the exact corrected product commit. The remaining release matrix is
+separate from this implementation slice.
 
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or

@@ -24,8 +24,10 @@ non-strict source parsing retains its existing filesystem behavior. Product
 head `71ac05cac` includes the follow-up correction and passes the focused PRG,
 dynamic-xAsset security, and runtime-surface targets locally. Claude independently
 reproduced the fail-closed disk-file case, and exact-head native Windows validation
-seq785 rebuilt and passed the same three targets `3/3`. The implementation slice is
-closed; the full macOS matrix remains separate release evidence.
+seq785 rebuilt and passed the same three targets `3/3`; macOS Native Validation
+`30356725909` also passed the full native matrix at the exact corrected product
+commit. The implementation slice is closed; the remaining release matrix is
+separate evidence.
 
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic
