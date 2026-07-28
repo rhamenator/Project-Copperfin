@@ -1,3 +1,12 @@
+- 2026-07-28: Implemented F1 child #4781 at product head `7d436cf13`.
+  The shared project Database pane now has its own localized connector/query-path
+  filter, preserves connector and query-path objects behind invariant list-item
+  identities, and renders selection-aware details for both entry types. The
+  focused `SmokeProjectWorkspaceEntryActivation` UI test and localized project
+  workspace smoke selectors pass on Linux/Mono. Visual Studio package builds
+  remain subject to the existing Linux VSSDK dependency limitation; hosted
+  Windows VSIX validation remains a separate RC gate.
+
 - 2026-07-28: Implemented runtime child #4780 under #3217 at product head
   `faca165e5`. Native PRG `Form.ShowInTaskbar` now follows the mounted VFP9
   contract: `.T.` default, read-only runtime/reflection metadata, preserved
