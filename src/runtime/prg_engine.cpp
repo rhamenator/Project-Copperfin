@@ -3349,6 +3349,7 @@ namespace copperfin::runtime
         const int direction)
     {
         if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "optiongroup" ||
+            options.keyboard_compatibility != RuntimeKeyboardCompatibility::windows ||
             (direction != -1 && direction != 1))
         {
             return false;

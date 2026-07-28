@@ -203,6 +203,11 @@ struct RuntimeWatchResult {
     std::string message;
 };
 
+enum class RuntimeKeyboardCompatibility {
+    windows,
+    dos,
+};
+
 struct RuntimeSessionOptions {
     std::string startup_path;
     // Optional host-selected catalog. Null keeps the legacy environment lookup.
@@ -223,6 +228,9 @@ struct RuntimeSessionOptions {
     std::string temp_directory;
     std::size_t scheduler_yield_statement_interval = 4096;
     std::size_t scheduler_yield_sleep_ms = 1;
+    // Windows is the only modeled OptionGroup keyboard contract. DOS remains
+    // explicit and unsupported until its distinct navigation semantics land.
+    RuntimeKeyboardCompatibility keyboard_compatibility = RuntimeKeyboardCompatibility::windows;
     RushmorePlanningOptions rushmore_planning{};
     // Called when QUIT executes. Return true to allow quit; false to cancel it
     // (e.g. show a dialog asking the user to confirm). Null means always quit.

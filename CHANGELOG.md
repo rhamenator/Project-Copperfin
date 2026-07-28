@@ -3,10 +3,11 @@
   OptionButtons remain out of Tab traversal, while Windows-compatible arrow
   keys select enabled/visible buttons in local TabIndex order, preserve
   declaration-stable Value ordinals, synchronize group/child selection state,
-  and raise InteractiveChange. The focused runtime-surface CTest passes 1/1
-  locally; Windows/macOS exact-head review remains pending. DOS-compatible
-  KEYCOMP behavior, reverse Shift+Tab, keyboard buffering, and hosted rendering
-  remain separate boundaries.
+  and raise InteractiveChange. The mode is selected explicitly through
+  `RuntimeSessionOptions.keyboard_compatibility`, with Windows as the default;
+  DOS remains an unsupported boundary. The focused runtime-surface CTest passes
+  1/1 locally; Windows/macOS exact-head review remains pending. Reverse
+  Shift+Tab, keyboard buffering, and hosted rendering remain separate.
 
 - 2026-07-28: Closed runtime child #4778 under #3217 after correcting the
   hierarchical TabIndex ordering exposed by #4776. Product `b642f81c5` carries

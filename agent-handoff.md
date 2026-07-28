@@ -99,10 +99,11 @@ Runtime child #4777 under #3217 is implemented at product head `5b43e7a26`.
 OptionGroup is one parent-level Tab stop, its OptionButton children are not
 Tab candidates, and the Windows-compatible arrow path selects eligible
 children by local TabIndex while synchronizing declaration-stable group Value
-ordinals, child values, and InteractiveChange. The focused runtime-surface
-CTest passes 1/1 locally; seq807 requests exact-head platform review. DOS
-KEYCOMP behavior, reverse Shift+Tab, keyboard buffering, and hosted rendering
-remain separate and are not claimed.
+ordinals, child values, and InteractiveChange. The mode is selected explicitly
+through `RuntimeSessionOptions.keyboard_compatibility`, with Windows as the
+default; DOS remains unsupported. The focused runtime-surface CTest passes 1/1
+locally; seq807 requests exact-head platform review. Reverse Shift+Tab,
+keyboard buffering, and hosted rendering remain separate and are not claimed.
 
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
