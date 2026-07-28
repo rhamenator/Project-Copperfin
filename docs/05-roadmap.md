@@ -137,6 +137,12 @@ Current-head hosted Linux UI evidence strengthens this: run `30317114002` at
 under Xvfb, and passed 6/6 shared designer property-grid selectors. The
 current-head Security Supply Chain Gate `30317113962` is also green.
 
+Current-head VSIX evidence is green after rerun: run `30317113986` passed
+MSBuild compilation, localized command-resource verification, managed VSIX and
+language-service tests, the Windows net472 process-runner test, and artifact
+upload. Its first attempt failed once at the child-cleanup assertion and passed
+on same-head rerun without source changes; #4014 coverage remains intact.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).
