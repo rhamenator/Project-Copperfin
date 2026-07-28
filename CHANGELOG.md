@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4786 under #3217 at product head
+  `b983a7c05`. Native PRG `Form.ZoomBox` now follows the mounted VFP9
+  contract: `.F.` default, writable direct and PEM reflection paths,
+  preserved design-time/class declarations, and rejected dynamic shadowing or
+  removal. The focused `test_prg_engine_runtime_surface_functions` CTest
+  passes `1/1` locally. This is a headless property contract; zoom-box
+  rendering, maximize interaction, and hosted UI remain separate.
+
 - 2026-07-28: Implemented runtime child #4785 under #3217 at product head
   `a8f613add`. Native PRG `Form.SizeBox` now follows the mounted VFP9
   contract: `.F.` default, writable direct and PEM reflection paths,

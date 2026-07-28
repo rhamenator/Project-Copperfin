@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `a8f613add`. #4623 is closed as
+Current focused validation is at product head `b983a7c05`. #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,
@@ -2176,5 +2176,14 @@ preservation, and rejected dynamic shadowing/removal. The focused
 `test_prg_engine_runtime_surface_functions` target builds and CTest passes
 `1/1` on Linux; `git diff --check` is clean. This is a headless property
 contract. Size-box rendering, resize hit testing, form geometry, and hosted
+Windows UI remain separate. Exact-head Windows/macOS validation is still
+required before any cross-platform closure claim.
+# 2026-07-28 Runtime child #4786 under #3217 is implemented at product head
+`b983a7c05`: native PRG `Form.ZoomBox` now has the documented `.F.` default,
+writable direct and PEM reflection paths, design-time/class declaration
+preservation, and rejected dynamic shadowing/removal. The focused
+`test_prg_engine_runtime_surface_functions` target builds and CTest passes
+`1/1` on Linux; `git diff --check` is clean. This is a headless property
+contract. Zoom-box rendering, maximize interaction, form geometry, and hosted
 Windows UI remain separate. Exact-head Windows/macOS validation is still
 required before any cross-platform closure claim.
