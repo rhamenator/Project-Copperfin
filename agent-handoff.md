@@ -2,6 +2,16 @@
 
 ## Current State
 
+The #4403/#4802 safety-validation slice now parses the explicit Markdown
+`DQ/DV/HZ Mapping` table instead of checking identifier presence only. Every
+declared DQ and DV must appear in a mapping row, mapped DQ/DV identifiers must
+come from their declaration sections, mapped hazards must be known, malformed
+rows fail with actionable diagnostics, and `HZ-NONE` remains a supported
+explicit no-hazard path. The focused safety workflow contract passes `1/1`.
+At live #4403 state, permissive validation passes and strict validation reports
+only `Issue is not closed (state=OPEN)`; independent reviewer sign-off remains
+unclaimed.
+
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
 `scripts/validate-posix.sh` that the hosted native action and Windows script

@@ -76,6 +76,50 @@ function(assert_invalid_issue_numbers probe)
     endif()
 endfunction()
 
+function(assert_invalid_mapping_fixture)
+    set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-mapping-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_invalid_mapping_issues.json"
+            -ReportPath "${invalid_report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted an invalid DQ/DV/HZ mapping fixture")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "undeclared DV identifier" undeclared_dv_index)
+    if(undeclared_dv_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the invalid DQ/DV/HZ mapping row: ${all_output}")
+    endif()
+    string(FIND "${all_output}" "not mapped" incomplete_mapping_index)
+    if(incomplete_mapping_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the unmapped DQ identifier: ${all_output}")
+    endif()
+    file(REMOVE "${invalid_report}")
+endfunction()
+
+function(assert_no_hazard_fixture)
+    set(no_hazard_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-no-hazard-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_no_hazard_issues.json"
+            -ReportPath "${no_hazard_report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR
+            "Safety validator rejected the explicit HZ-NONE path:\n${standard_output}\n${standard_error}")
+    endif()
+    file(REMOVE "${no_hazard_report}")
+endfunction()
+
 require_text("uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
     "pinned checkout action")
 require_text("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
@@ -117,6 +161,9 @@ if(POWERSHELL_EXECUTABLE)
         message(FATAL_ERROR "Safety validator classified a safety-only implementation issue as documentation work")
     endif()
     file(REMOVE "${classifier_report}")
+
+    assert_invalid_mapping_fixture()
+    assert_no_hazard_fixture()
 
     assert_invalid_issue_numbers([=[2201"; Write-Output injected]=])
     assert_invalid_issue_numbers([=[2201; Write-Output injected]=])

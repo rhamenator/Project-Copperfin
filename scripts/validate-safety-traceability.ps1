@@ -162,6 +162,75 @@ function Test-SafetyDocIssue {
     return $false
 }
 
+function Get-MarkdownSection {
+    param(
+        [string]$Body,
+        [string]$Heading
+    )
+
+    $escapedHeading = [regex]::Escape($Heading)
+    $match = [regex]::Match(
+        $Body,
+        "(?ims)^\s*##\s*$escapedHeading\s*\r?\n(?<content>.*?)(?=^\s*##\s|\z)")
+    if (-not $match.Success) {
+        return ""
+    }
+
+    return $match.Groups["content"].Value
+}
+
+function Get-TraceabilityIds {
+    param(
+        [AllowEmptyString()]
+        [string]$Text,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("DQ", "DV", "HZ")]
+        [string]$Prefix
+    )
+
+    $ids = @{}
+    foreach ($match in [regex]::Matches($Text, "\b$Prefix-[A-Za-z0-9-]+\b")) {
+        $ids[$match.Value.ToUpperInvariant()] = $true
+    }
+
+    return @($ids.Keys | Sort-Object)
+}
+
+function Get-TraceabilityMappingRows {
+    param([string]$Body)
+
+    $section = Get-MarkdownSection -Body $Body -Heading "DQ/DV/HZ Mapping"
+    if ([string]::IsNullOrWhiteSpace($section)) {
+        return @()
+    }
+
+    $rows = @()
+    foreach ($line in ($section -split "\r?\n")) {
+        $trimmed = $line.Trim()
+        if ($trimmed -notmatch '^\|') {
+            continue
+        }
+
+        $cells = @($trimmed.Trim('|') -split '\|') | ForEach-Object { $_.Trim() }
+        if ($cells.Count -eq 3 -and $cells[0] -eq "Documentation requirement") {
+            continue
+        }
+        if ($cells.Count -eq 3 -and ($cells -join "") -match '^[-:]+$') {
+            continue
+        }
+
+        $rows += [pscustomobject]@{
+            Raw = $trimmed
+            Malformed = $cells.Count -ne 3
+            DqIds = if ($cells.Count -ge 1) { @(Get-TraceabilityIds -Text $cells[0] -Prefix DQ) } else { @() }
+            DvIds = if ($cells.Count -ge 2) { @(Get-TraceabilityIds -Text $cells[1] -Prefix DV) } else { @() }
+            HzIds = if ($cells.Count -ge 3) { @(Get-TraceabilityIds -Text $cells[2] -Prefix HZ) } else { @() }
+        }
+    }
+
+    return $rows
+}
+
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($HazardRegisterPath)) {
     $HazardRegisterPath = Join-Path $repoRoot "docs/safety/hazard-register.md"
@@ -229,6 +298,11 @@ foreach ($issue in $issues) {
     $dvMatches = [regex]::Matches($body, '\bDV-[A-Za-z0-9-]+\b')
     $hzMatches = [regex]::Matches($body, '\bHZ-[A-Za-z0-9-]+\b')
 
+    $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Requirement IDs") -Prefix DQ)
+    $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Verification IDs") -Prefix DV)
+    $mappingSection = Get-MarkdownSection -Body $body -Heading "DQ/DV/HZ Mapping"
+    $mappingRows = @(Get-TraceabilityMappingRows -Body $body)
+
     if ($dqMatches.Count -eq 0) {
         $issueErrors += "Missing DQ-* identifier(s)."
     }
@@ -239,12 +313,74 @@ foreach ($issue in $issues) {
         $issueErrors += "Missing HZ-* identifier(s) or explicit HZ-none rationale."
     }
 
+    if ($declaredDqIds.Count -eq 0) {
+        $issueErrors += "Missing Documentation Requirement IDs section."
+    }
+    if ($declaredDvIds.Count -eq 0) {
+        $issueErrors += "Missing Documentation Verification IDs section."
+    }
+    if ([string]::IsNullOrWhiteSpace($mappingSection)) {
+        $issueErrors += "Missing DQ/DV/HZ Mapping section."
+    } elseif ($mappingRows.Count -eq 0) {
+        $issueErrors += "DQ/DV/HZ Mapping section contains no data rows."
+    }
+
     $issueHazards = @{}
     foreach ($match in $hzMatches) {
         $id = $match.Value.ToUpperInvariant()
         $issueHazards[$id] = $true
-        if (-not $knownHazards.ContainsKey($id)) {
+        if ($id -ne "HZ-NONE" -and -not $knownHazards.ContainsKey($id)) {
             $issueErrors += "Unknown hazard identifier: $id (not found in hazard register)."
+        }
+    }
+
+    $mappedDqIds = @{}
+    $mappedDvIds = @{}
+    $mappedHzIds = @{}
+    foreach ($row in $mappingRows) {
+        if ($row.Malformed) {
+            $issueErrors += "Malformed DQ/DV/HZ mapping row: $($row.Raw)"
+            continue
+        }
+        if ($row.DqIds.Count -eq 0 -or $row.DvIds.Count -eq 0 -or $row.HzIds.Count -eq 0) {
+            if ($upperBody -notmatch '\bHZ-NONE\b' -or $row.HzIds.Count -eq 0) {
+                $issueErrors += "Mapping row must contain at least one DQ, DV, and HZ identifier: $($row.Raw)"
+                continue
+            }
+        }
+
+        foreach ($id in $row.DqIds) {
+            $mappedDqIds[$id] = $true
+            if ($declaredDqIds -notcontains $id) {
+                $issueErrors += "Mapping row references undeclared DQ identifier: $id"
+            }
+        }
+        foreach ($id in $row.DvIds) {
+            $mappedDvIds[$id] = $true
+            if ($declaredDvIds -notcontains $id) {
+                $issueErrors += "Mapping row references undeclared DV identifier: $id"
+            }
+        }
+        foreach ($id in $row.HzIds) {
+            $mappedHzIds[$id] = $true
+        }
+    }
+
+    foreach ($id in $declaredDqIds) {
+        if (-not $mappedDqIds.ContainsKey($id)) {
+            $issueErrors += "Declared DQ identifier is not mapped: $id"
+        }
+    }
+    foreach ($id in $declaredDvIds) {
+        if (-not $mappedDvIds.ContainsKey($id)) {
+            $issueErrors += "Declared DV identifier is not mapped: $id"
+        }
+    }
+    if ($upperBody -notmatch '\bHZ-NONE\b') {
+        foreach ($id in $issueHazards.Keys) {
+            if (-not $mappedHzIds.ContainsKey($id)) {
+                $issueErrors += "Declared HZ identifier is not mapped: $id"
+            }
         }
     }
 
@@ -257,7 +393,7 @@ foreach ($issue in $issues) {
             }
         }
 
-        if (-not $hasPrimary) {
+        if (-not $hasPrimary -and $upperBody -notmatch '\bHZ-NONE\b') {
             $issueErrors += "No primary hazard linked. Expected at least one of: $($primaryHazardIds -join ', ')."
         }
     }

@@ -1,0 +1,11 @@
+[
+  {
+    "number": 4810,
+    "title": "[docs-safety] Invalid mapping fixture",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" }
+    ],
+    "body": "## Documentation Requirement IDs\n\n- DQ-invalid-one\n- DQ-invalid-two\n\n## Documentation Verification IDs\n\n- DV-invalid-one\n\n## Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-invalid-one | DV-undeclared | HZ-system-failure-01 |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  }
+]

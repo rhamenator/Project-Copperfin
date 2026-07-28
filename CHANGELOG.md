@@ -1,3 +1,10 @@
+- 2026-07-28: Hardened safety traceability validation under #4403/#4802. The
+  validator now parses the explicit DQ/DV/HZ Markdown mapping, requires every
+  declared requirement and verification to be mapped, rejects undeclared
+  identifiers and malformed rows, and preserves the explicit `HZ-NONE` path.
+  The focused workflow contract passes `1/1`; live #4403 permissive validation
+  passes, while strict mode reports only the expected open-issue gate.
+
 - 2026-07-28: Hardened `scripts/validate-posix.sh` under #4801 so local
   Linux/macOS validation bounds each CTest case to 180 seconds and preserves
   the configured test parallelism, matching the hosted native action and

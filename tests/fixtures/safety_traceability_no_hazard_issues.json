@@ -1,0 +1,11 @@
+[
+  {
+    "number": 4811,
+    "title": "[docs-safety] Explicit no-hazard fixture",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" }
+    ],
+    "body": "## Documentation Requirement IDs\n\n- DQ-no-hazard\n\n## Documentation Verification IDs\n\n- DV-no-hazard\n\n## Hazard Linkage IDs\n\n- HZ-NONE\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-no-hazard | DV-no-hazard | HZ-NONE |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  }
+]
