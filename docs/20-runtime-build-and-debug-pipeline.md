@@ -52,7 +52,10 @@ the end, and routes the destination through the existing `Valid`,
 `NODEFAULT` still cancels traversal. The focused runtime-surface CTest passes
 `1/1` locally at product head `d2c6d525e`; reverse Shift+Tab remains outside
 the current message contract, and nested-container, buffering, hosted UI,
-and pixel-level behavior remain separate.
+and pixel-level behavior remain separate. #4773 is implementation-complete:
+Claude review seq790 passed, and exact-head Windows validation seq789 rebuilt
+the product and passed the focused runtime-surface CTest `1/1`; the remaining
+macOS/full-RC matrix is separate evidence.
 
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Parenthesized dynamic targets such as `DO (cTarget)` and `DO (&cTargetHolder)` now evaluate through the same heap-backed iterative frame machine, preserving `WITH` arguments and deterministic missing-target behavior under #3217/#4722. Package dependency discovery remains literal-only; arbitrary external paths, dynamic xAssets, and control-flow forms remain separate runtime boundaries.
 

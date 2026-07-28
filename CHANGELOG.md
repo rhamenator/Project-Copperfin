@@ -1,3 +1,9 @@
+- 2026-07-28: Closed runtime child #4773 under #3217 after Claude review seq790
+  and exact-head Windows validation seq789 passed at product `d2c6d525e`.
+  Local focused runtime-surface and explicit-focus lifecycle tests pass `2/2`;
+  reverse Shift+Tab, nested-container traversal, and full macOS/RC validation
+  remain separate.
+
 - 2026-07-28: Implemented runtime child #4773 under #3217 at product head
   `d2c6d525e`. Native PRG `WM_KEYDOWN` now performs default forward Tab
   traversal through deduplicated direct focusable controls ordered by

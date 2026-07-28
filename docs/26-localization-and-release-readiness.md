@@ -71,8 +71,10 @@ Runtime child #4773 under #3217 is implemented at product head `d2c6d525e`:
 default forward Tab traversal now uses deduplicated `TabIndex` order, skips
 non-tab-stop/invisible/disabled direct controls, wraps, preserves the existing
 focus transition semantics, and honors `KeyPress NODEFAULT`. The focused
-runtime-surface CTest passes `1/1` on Linux; hosted review and the remaining
-keyboard/input/UI boundaries are separate release evidence.
+runtime-surface CTest passes `1/1` on Linux; Claude review seq790 and exact-head
+Windows validation seq789 also pass, so #4773 is implementation-complete.
+The remaining macOS/full-RC and keyboard/input/UI boundaries are separate
+release evidence.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

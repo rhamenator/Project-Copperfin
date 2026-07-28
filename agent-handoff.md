@@ -61,10 +61,12 @@ Runtime child #4773 under #3217 is implemented and pushed at product head
 deduplicated direct focusable children by `TabIndex`, skips non-tab-stop,
 invisible, and disabled controls, wraps, and reuses the existing focus
 transition path. `KeyPress NODEFAULT` cancels the default action. The focused
-`test_prg_engine_runtime_surface_functions` CTest passes `1/1` on Linux;
-Claude, Windows, and macOS review remains requested, and reverse Shift+Tab,
-nested-container traversal, keyboard buffering, and hosted UI remain separate
-contracts. Do not claim the complete RC evidence gate from this child alone.
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1` on Linux.
+Claude review seq790 and exact-head Windows validation seq789 also pass; #4773
+is closed as implementation-complete. Reverse Shift+Tab, nested-container
+traversal, keyboard buffering, hosted UI, and the full macOS/RC matrix remain
+separate contracts. Do not claim the complete RC evidence gate from this child
+alone.
 
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
