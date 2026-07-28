@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest synchronized
-implementation head is `bd7e1d4c9`. The product/test implementation head for the
+implementation head is `93d44395f`. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
 or skips. The preceding Windows run `30322581189` was cancelled before CTest
