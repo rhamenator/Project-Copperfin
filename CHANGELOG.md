@@ -1,3 +1,10 @@
+- 2026-07-28: Hardened the safety traceability validator under #4403/#4805.
+  Mapping-row hazard identifiers must now be both declared in the issue's
+  `Hazard Linkage IDs` section and present in the controlled hazard register;
+  `HZ-NONE` remains valid only as the sole hazard in the sole explicit
+  no-hazard row. The focused workflow contract covers undeclared and unknown
+  row hazards.
+
 - 2026-07-28: Hardened safety traceability validation under #4403/#4802. The
   validator now parses the explicit DQ/DV/HZ Markdown mapping, requires every
   declared requirement and verification to be mapped, rejects undeclared

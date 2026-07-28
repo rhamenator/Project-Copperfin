@@ -24,6 +24,12 @@ correction rejects a `Hazard Linkage IDs` section that combines `HZ-NONE` with a
 real hazard, and adds a mixed-declaration regression fixture. Valid explicit
 no-hazard and ordinary hazard paths remain covered.
 
+Windows review of #4804 then found that mapping-row hazards were not checked
+against the issue's declared `Hazard Linkage IDs` or the hazard register. The
+#4805 correction adds both checks, rejects `HZ-NONE` outside its sole explicit
+no-hazard row, and adds an undeclared/unknown row-hazard regression fixture.
+The focused safety workflow contract is the acceptance gate for this slice.
+
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
 `scripts/validate-posix.sh` that the hosted native action and Windows script

@@ -364,6 +364,18 @@ foreach ($issue in $issues) {
         }
         foreach ($id in $row.HzIds) {
             $mappedHzIds[$id] = $true
+            if ($id -eq "HZ-NONE") {
+                if (-not $hasExplicitNoHazard -or $row.HzIds.Count -ne 1) {
+                    $issueErrors += "Mapping row references HZ-NONE outside the sole explicit no-hazard path: $($row.Raw)"
+                }
+                continue
+            }
+            if (-not $issueHazards.ContainsKey($id)) {
+                $issueErrors += "Mapping row references undeclared HZ identifier: $id"
+            }
+            if (-not $knownHazards.ContainsKey($id)) {
+                $issueErrors += "Mapping row references unknown hazard identifier: $id (not found in hazard register)."
+            }
         }
     }
 
