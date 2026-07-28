@@ -114,22 +114,23 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current release evidence is split between the implementation head
-`7c13a926d` and later documentation-only commits. The local POSIX validation
+Current release evidence is split between implementation head
+`73cdd5f57` and later documentation-only commits. The local POSIX validation
 at `2417603ea` rebuilt the native tree and passed all `316/316` CTest cases in
 `301.53s`, with only the two expected platform-conditional skips. Hosted
-Linux Native Validation `30317113995` passed `316/316` in `175.62s`, and hosted
-macOS `30317113983` passed `316/316` in `218.31s`. Windows run `30317113993`
+Linux Native Validation `30320046770` passed `316/316` in `175.76s`, and hosted
+macOS `30320046738` passed `316/316` in `218.31s`. Windows run `30317113993`
 failed only `test_runtime_pipeline` (`314/315` passed) because the full-suite
 fixture compared short `RUNNER~1` temp paths with the product's long
 directory-entry spelling; test-only correction `73cdd5f57` normalizes the
-fixture namespace with `GetLongPathNameW`, and rerun `30320046748` is pending.
+fixture namespace with `GetLongPathNameW`, and corrected rerun `30320046748`
+remains in progress.
 The project does not claim a complete cross-platform RC gate until that rerun
 finishes.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
-Current-head installer workflow `30317113970` passed all Linux, Windows, and
+Corrected-head installer workflow `30320046761` passed all Linux, Windows, and
 macOS jobs and uploaded the seven expected platform artifacts. Local
 inspection of the downloaded artifacts confirmed the expected host, standalone
 Studio/launcher-guard, and locale-catalog layouts. Artifact packaging still
