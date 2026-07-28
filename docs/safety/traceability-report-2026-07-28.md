@@ -33,6 +33,17 @@ closed, after the exact-head Windows validation completed, and after
 independent stale-documentation finding. The report does not claim formal
 #4403 closure or protected package signing under #4409.
 
+## Current-State Follow-Up
+
+On 2026-07-28, the validator was rerun against fresh live issue JSON at
+synchronized head `30ff4ec38`. Permissive validation again passed all
+structural, DQ/DV/HZ, and primary-hazard checks. Strict validation again
+reported exactly one failure: `Issue is not closed (state=OPEN)` for #4403.
+The reports were written to `/tmp/copperfin-safety-permissive-current.json`
+and `/tmp/copperfin-safety-strict-current.json`; this follow-up confirms the
+gate remains procedural and independent-review state, not a validator or
+product regression.
+
 ## Independent Review Status
 
 Claude's read-only review recorded in coordination seq760 independently

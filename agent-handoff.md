@@ -390,6 +390,13 @@ DQ/DV/HZ, and primary-hazard checks; strict mode again reported only
 safety gate is procedural/independent-review state, not a validator or product
 regression.
 
+The validator was rerun again on 2026-07-28 against fresh issue JSON at
+synchronized head `30ff4ec38`; permissive mode passed and strict mode again
+reported exactly that single open-issue error. Current reports are
+`/tmp/copperfin-safety-permissive-current.json` and
+`/tmp/copperfin-safety-strict-current.json`. This is evidence refresh only and
+does not replace the required arm's-length reviewer sign-off.
+
 Independent local contract verification at synchronized coordination head
 `b25bf6c9f` (product implementation head `93d44395f`) passed
 `test_package_signer_contract`, `test_launcher_trust_provisioning_contract`,
