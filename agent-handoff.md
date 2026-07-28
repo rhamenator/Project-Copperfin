@@ -3,8 +3,9 @@
 ## Current State
 
 This section is authoritative over the historical log below. The synchronized
-branch is `main` and is synchronized with `origin/main`; the product/test implementation head for the
-completed Windows native run is `b07d30d9c`. Windows Native Validation
+branch is `main` and is synchronized with `origin/main`; the latest synchronized
+implementation head is `bd7e1d4c9`. The product/test implementation head for the
+completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
 or skips. The preceding Windows run `30322581189` was cancelled before CTest
 after a later product push superseded it and is neither a pass nor a product
@@ -17,6 +18,19 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409, and the
 separately dispatched exact-head deep-validation workflow. Do not claim the
 complete RC evidence gate until those prerequisites are resolved.
+
+Windows Deep Validation `30326601931` completed with native CTest `315/315` in
+`516.66s`, VSIX build/resource verification, and both managed language-service
+stages passing. Its net472 process-runner stage failed at
+`net472 taskkill fallback should terminate the child process`, so the Studio,
+designer, package, debugger, and xAsset stages were skipped. The failure is
+tracked in #4756; the current code change retries the bounded Windows
+`taskkill /T /F` fallback, while Windows rerun evidence remains required.
+
+The workflow timeout hardening for #4755 is in `bd7e1d4c9`: manual Windows
+Deep Validation now passes CTest `--timeout 180`, matching the local Windows
+validator. This bounds a hung test without reducing the test inventory or
+bounded concurrency; the failed run above started before that workflow change.
 
 The safety gap analysis now marks GAP-04 as closed for its focused empty-table
 cases; its aggregate, navigation, scan, and zero-record copy/append coverage

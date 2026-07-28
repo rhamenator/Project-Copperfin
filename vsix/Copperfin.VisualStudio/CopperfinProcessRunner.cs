@@ -24,6 +24,7 @@ internal static class CopperfinProcessRunner
 {
     private const int CleanupGraceMilliseconds = 1000;
     private const int ProcessTreeDiscoveryGraceMilliseconds = 2000;
+    private const int WindowsTaskKillAttempts = 2;
 
     public static CopperfinCapturedProcessResult Run(ProcessStartInfo startInfo, int? timeoutMilliseconds = null)
     {
@@ -193,45 +194,54 @@ internal static class CopperfinProcessRunner
 
     private static bool TryTaskKill(int processId)
     {
-        try
+        for (var attempt = 0; attempt < WindowsTaskKillAttempts; ++attempt)
         {
-            var systemDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);
-            if (string.IsNullOrWhiteSpace(systemDirectory))
+            try
             {
-                return false;
-            }
-            var taskKillPath = Path.Combine(systemDirectory, "taskkill.exe");
-            if (!File.Exists(taskKillPath))
-            {
-                return false;
-            }
-
-            using var taskKill = new Process
-            {
-                StartInfo = new ProcessStartInfo
+                var systemDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                if (string.IsNullOrWhiteSpace(systemDirectory))
                 {
-                    FileName = taskKillPath,
-                    Arguments = $"/PID {processId} /T /F",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
+                    return false;
                 }
-            };
-            if (!taskKill.Start())
+                var taskKillPath = Path.Combine(systemDirectory, "taskkill.exe");
+                if (!File.Exists(taskKillPath))
+                {
+                    return false;
+                }
+
+                using var taskKill = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = taskKillPath,
+                        Arguments = $"/PID {processId} /T /F",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                if (!taskKill.Start())
+                {
+                    return false;
+                }
+                if (TryWaitForExit(taskKill, ProcessTreeDiscoveryGraceMilliseconds) &&
+                    taskKill.ExitCode == 0)
+                {
+                    return true;
+                }
+
+                if (!taskKill.HasExited)
+                {
+                    TryKill(taskKill);
+                    _ = TryWaitForExit(taskKill, CleanupGraceMilliseconds);
+                }
+            }
+            catch (Exception)
             {
                 return false;
             }
-            if (!taskKill.WaitForExit(CleanupGraceMilliseconds))
-            {
-                TryKill(taskKill);
-                _ = TryWaitForExit(taskKill, CleanupGraceMilliseconds);
-                return false;
-            }
-            return taskKill.ExitCode == 0;
         }
-        catch (Exception)
-        {
-            return false;
-        }
+
+        return false;
     }
 
     private static void TryKillPosixDescendants(int processId)
