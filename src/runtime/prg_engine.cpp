@@ -85,6 +85,7 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
         constexpr std::uint32_t kCopperfinWindowCloseMessage = 0x0010U;
+        constexpr std::uint32_t kWindowsMouseMoveMessage = 0x0200U;
         constexpr std::uint32_t kWindowsLeftButtonDownMessage = 0x0201U;
         constexpr std::uint32_t kWindowsKeyDownMessage = 0x0100U;
         constexpr std::uint32_t kWindowsLeftButtonUpMessage = 0x0202U;
@@ -10699,6 +10700,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> mouse_move_target;
+        if (message == kWindowsMouseMoveMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    mouse_move_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -10722,7 +10737,7 @@ namespace copperfin::runtime
         }
         if (bindings.empty() && !window_close_target.has_value() &&
             !keypress_target.has_value() && !click_target.has_value() &&
-            !mouse_down_target.has_value())
+            !mouse_down_target.has_value() && !mouse_move_target.has_value())
         {
             return std::nullopt;
         }
@@ -10795,6 +10810,13 @@ namespace copperfin::runtime
         const auto mouse_event_arguments = [&]()
         {
             const auto raw_coordinates = static_cast<std::uint64_t>(lparam);
+            std::int64_t button = 1;
+            if (message == kWindowsMouseMoveMessage)
+            {
+                button = ((wparam & 0x0001) != 0 ? 1 : 0) |
+                         ((wparam & 0x0002) != 0 ? 2 : 0) |
+                         ((wparam & 0x0010) != 0 ? 4 : 0);
+            }
             const std::int64_t x_coordinate = static_cast<std::int16_t>(
                 static_cast<std::uint16_t>(raw_coordinates & 0xffffU));
             const std::int64_t y_coordinate = static_cast<std::int16_t>(
@@ -10803,7 +10825,7 @@ namespace copperfin::runtime
                 ((wparam & 0x0004) != 0 ? 1 : 0) |
                 ((wparam & 0x0008) != 0 ? 2 : 0);
             return std::vector<PrgValue>{
-                make_int64_value(1),
+                make_int64_value(button),
                 make_int64_value(shift_alt_ctrl),
                 make_int64_value(x_coordinate),
                 make_int64_value(y_coordinate)};
@@ -10852,6 +10874,30 @@ namespace copperfin::runtime
                         .has_value())
                 {
                     events.push_back({.category = "prg.event.mousedown",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
+            }
+        }
+
+        if (mouse_move_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*mouse_move_target);
+            if (target_found != ole_objects.end())
+            {
+                bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "MouseMove",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.mousemove",
                                       .detail = target_found->second.prog_id,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     last_result = 0;

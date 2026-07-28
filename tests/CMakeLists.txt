@@ -4992,6 +4992,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_keypreview.cpp
     test_prg_engine_runtime_surface_functions_click.cpp
     test_prg_engine_runtime_surface_functions_mouse.cpp
+    test_prg_engine_runtime_surface_functions_mousemove.cpp
     test_prg_engine_runtime_surface_functions_interop_03.cpp
     test_prg_engine_runtime_surface_functions_interop_04.cpp
     test_prg_engine_runtime_surface_functions_interop_05.cpp

@@ -81,6 +81,16 @@ restoration are covered by the focused runtime test. Hit testing, capture/focus,
 double-clicks, non-left buttons, rendering, and hosted Windows UI validation
 remain separate. Future user-facing text remains catalog-first.
 
+Runtime child #4762 under #3217 adds the modeled `WM_MOUSEMOVE` boundary. A
+native visual object with a declared `MouseMove` handler receives VFP button
+bits (`MK_LBUTTON`, `MK_RBUTTON`, and `MK_MBUTTON` map to `1`, `2`, and `4`),
+Shift/Ctrl state, and signed client coordinates through the same heap-backed
+frame path. Unknown targets and native objects without `MouseMove` remain
+unhandled; repeated handled motion restores `READ EVENTS` and emits invariant
+`prg.event.mousemove` telemetry. Fresh out-of-tree runtime-surface CTest passes
+`1/1`. Hit testing, capture/hover, drag-and-drop, rendering, and hosted Windows
+UI validation remain separate. Future user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or
