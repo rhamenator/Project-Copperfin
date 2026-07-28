@@ -1,3 +1,8 @@
+- 2026-07-28: Reconciled the durable roadmap and VFP language-coverage notes
+  with product head `7587be12f`. The exact-head hosted matrix has green
+  Security Supply Chain and Linux Managed UI jobs while the remaining platform
+  and package jobs are still in progress; RC readiness remains unclaimed.
+
 - 2026-07-28: Implemented the narrow VFP `SET CODEPAGE TO n` contract under
   #4807. Supported code pages are stored independently per data session;
   `SET("CODEPAGE")` and omitted/zero `CPCURRENT()` return the configured value,
