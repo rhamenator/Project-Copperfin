@@ -6,8 +6,10 @@ The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
 `scripts/validate-posix.sh` that the hosted native action and Windows script
 already enforce. The build-parallelism, POSIX build-type, and native-workflow
-contract tests pass `3/3`. This changes validation behavior only; it does not
-change product runtime or machine-readable contracts.
+contract tests pass `3/3`. The complete standalone POSIX validation at
+synchronized head `f0734f262` then passed `316/316` CTest cases with the two
+expected conditional skips in `214.78s`. This changes validation behavior only;
+it does not change product runtime or machine-readable contracts.
 
 The current implementation slice for #4800 under #3217 corrects native PRG
 diagnostic context selection. While an `ON ERROR` handler or `TRY/CATCH` block
@@ -50,8 +52,8 @@ the issue only after the normal implementation review/validation handoff.
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `f669fd51c`, with coordination-only documentation and
-review commits following the product slice. The broad validation
+implementation head is `f0734f262`, with coordination-only documentation and
+review commits following the product/validation slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
@@ -78,7 +80,8 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `f669fd51c`; this head includes
+Current focused product validation remains at product head `f669fd51c`; the
+latest standalone validation contract is at `f0734f262`. This product head includes
 the #4800 fault-procedure preservation slice and its focused regression tests.
 The latest runtime cleanup head also removes the redundant Form-only ForeColor
 slice from #4788.

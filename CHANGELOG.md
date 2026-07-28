@@ -1,7 +1,9 @@
 - 2026-07-28: Hardened `scripts/validate-posix.sh` under #4801 so local
   Linux/macOS validation bounds each CTest case to 180 seconds and preserves
   the configured test parallelism, matching the hosted native action and
-  Windows validation script. The focused validation-contract tests pass `3/3`.
+  Windows validation script. The focused validation-contract tests pass `3/3`,
+  and the complete standalone POSIX run passes `316/316` with the two expected
+  conditional skips in `214.78s` at synchronized head `f0734f262`.
 
 - 2026-07-28: Corrected #4800 under #3217 so native PRG diagnostic surfaces
   preserve the original fault procedure while evaluating expressions in
