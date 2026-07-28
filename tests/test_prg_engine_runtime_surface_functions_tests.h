@@ -543,6 +543,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_keypress_dispatch_and_nodefault_preserve_event_loop_state();
     void test_native_keypress_dispatches_default_and_cancel_buttons();
     void test_native_keypress_tab_traverses_tabstops_and_wraps();
+    void test_native_keypress_tab_traverses_nested_containers();
     void test_native_list_control_interactivechange_dispatches_for_changed_input();
     void test_native_form_keypreview_dispatches_before_child_keypress();
     void test_native_click_dispatches_on_left_button_release();

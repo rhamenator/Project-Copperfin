@@ -3154,17 +3154,31 @@ namespace copperfin::runtime
             int handle = 0;
             long long tab_index = 0;
         };
+        struct PendingTabObject
+        {
+            int handle = 0;
+            bool ancestor_visible = true;
+            bool ancestor_enabled = true;
+        };
         std::vector<TabStopCandidate> candidates;
+        std::vector<PendingTabObject> pending_objects;
         std::set<int> seen_handles;
         for (const int child_handle : collect_native_owned_child_handles(*owner_form))
         {
-            if (!seen_handles.insert(child_handle).second)
+            pending_objects.push_back({child_handle, true, true});
+        }
+
+        while (!pending_objects.empty())
+        {
+            const PendingTabObject pending = pending_objects.back();
+            pending_objects.pop_back();
+            if (!seen_handles.insert(pending.handle).second)
             {
                 continue;
             }
-            const auto child_found = ole_objects.find(child_handle);
-            if (child_found == ole_objects.end() ||
-                !is_native_focusable_runtime_object(child_found->second))
+
+            const auto child_found = ole_objects.find(pending.handle);
+            if (child_found == ole_objects.end())
             {
                 continue;
             }
@@ -3175,27 +3189,35 @@ namespace copperfin::runtime
                 return property == child_found->second.properties.end() ||
                     value_as_bool(property->second);
             };
-            if (!property_is_true("tabstop") ||
-                !property_is_true("visible") ||
-                !property_is_true("enabled"))
+            const bool visible = pending.ancestor_visible && property_is_true("visible");
+            const bool enabled = pending.ancestor_enabled && property_is_true("enabled");
+            if (is_native_focusable_runtime_object(child_found->second) &&
+                property_is_true("tabstop") && visible && enabled)
             {
-                continue;
+                long long tab_index = 0LL;
+                if (const auto property = child_found->second.properties.find("tabindex");
+                    property != child_found->second.properties.end())
+                {
+                    try
+                    {
+                        tab_index = std::llround(value_as_number(property->second));
+                    }
+                    catch (...)
+                    {
+                        tab_index = 0LL;
+                    }
+                }
+                candidates.push_back({pending.handle, tab_index});
             }
 
-            long long tab_index = 0LL;
-            if (const auto property = child_found->second.properties.find("tabindex");
-                property != child_found->second.properties.end())
+            if (visible && enabled &&
+                normalize_identifier(trim_copy(child_found->second.base_class_name)) == "container")
             {
-                try
+                for (const int nested_handle : collect_native_owned_child_handles(child_found->second))
                 {
-                    tab_index = std::llround(value_as_number(property->second));
-                }
-                catch (...)
-                {
-                    tab_index = 0LL;
+                    pending_objects.push_back({nested_handle, visible, enabled});
                 }
             }
-            candidates.push_back({child_handle, tab_index});
         }
 
         if (candidates.empty())

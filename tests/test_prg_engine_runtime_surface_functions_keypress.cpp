@@ -405,4 +405,124 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_tab_traverses_nested_containers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_nested_tab_traversal";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_nested_tab_traversal.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFirstHwnd, nNestedHwnd, nThirdHwnd, nGotFocus, cLastFocus\n"
+            "nGotFocus = 0\n"
+            "cLastFocus = ''\n"
+            "oForm = CREATEOBJECT('NestedTabForm')\n"
+            "oForm.first.TabIndex = 1\n"
+            "oForm.host.nested.TabIndex = 2\n"
+            "oForm.host.hidden.TabIndex = 3\n"
+            "oForm.host.hidden.Enabled = .F.\n"
+            "oForm.third.TabIndex = 4\n"
+            "oForm.first.SetFocus()\n"
+            "nFirstHwnd = oForm.first.hWnd\n"
+            "nNestedHwnd = oForm.host.nested.hWnd\n"
+            "nThirdHwnd = oForm.third.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS NestedTabForm AS Form\n"
+            "    ADD OBJECT first AS NestedTabBox WITH cId = 'first'\n"
+            "    ADD OBJECT host AS TabContainer\n"
+            "    ADD OBJECT third AS NestedTabBox WITH cId = 'third'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabContainer AS Container\n"
+            "    ADD OBJECT nested AS NestedTabBox WITH cId = 'nested'\n"
+            "    ADD OBJECT hidden AS NestedTabBox WITH cId = 'hidden'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NestedTabBox AS ListBox\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'third'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Nested Tab fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_hwnd = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found == state.globals.end())
+            {
+                return static_cast<std::intptr_t>(0);
+            }
+            return static_cast<std::intptr_t>(std::stoll(copperfin::runtime::format_value(found->second)));
+        };
+        const std::intptr_t first_hwnd = read_hwnd("nfirsthwnd");
+        const std::intptr_t nested_hwnd = read_hwnd("nnestedhwnd");
+        const std::intptr_t third_hwnd = read_hwnd("nthirdhwnd");
+
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "Nested Tab dispatch should restore the event loop: " + state.message);
+        };
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        const auto first_tab = session.dispatch_windows_message(first_hwnd, 0x0100, 9, 0);
+        expect(first_tab.has_value() && *first_tab == 0,
+               "Tab should enter the eligible nested control");
+        resume_event_loop();
+        check("clastfocus", "nested");
+
+        const auto nested_tab = session.dispatch_windows_message(nested_hwnd, 0x0100, 9, 0);
+        expect(nested_tab.has_value() && *nested_tab == 0,
+               "Tab should leave the nested control for the next eligible control");
+        resume_event_loop();
+        check("clastfocus", "third");
+
+        const auto finish = session.dispatch_windows_message(third_hwnd, 0x0100, 67, 0);
+        expect(finish.has_value() && *finish == 0,
+               "The nested Tab fixture should finish through its third control");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "Nested Tab fixture should complete after CLEAR EVENTS: " + state.message);
+        check("clastfocus", "third");
+        check("ngotfocus", "3");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

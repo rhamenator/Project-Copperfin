@@ -539,6 +539,7 @@ int main()
         test_native_keypress_dispatch_and_nodefault_preserve_event_loop_state();
         test_native_keypress_dispatches_default_and_cancel_buttons();
         test_native_keypress_tab_traverses_tabstops_and_wraps();
+        test_native_keypress_tab_traverses_nested_containers();
         test_native_list_control_interactivechange_dispatches_for_changed_input();
         test_native_form_keypreview_dispatches_before_child_keypress();
         test_native_click_dispatches_on_left_button_release();
