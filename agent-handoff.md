@@ -37,7 +37,9 @@ truncation and keeps invalid-name behavior consistent across POSIX and Windows.
 The focused `test_platform_environment`, aggregate `test_localization`, and
 `test_runtime_host_implicit_path_launch` tests pass locally. Direct callers
 outside the helper remain subject to the process-wide environment synchronization
-boundary documented in `include/copperfin/platform/environment.h`.
+boundary documented in `include/copperfin/platform/environment.h`. Exact-head
+Windows Environment and Executable Path Validation `30333627791` passed all
+seven configured targets in `15m42s`, including the `_WIN32` helper path.
 
 Windows Deep Validation `30326601931` completed with native CTest `315/315` in
 `516.66s`, VSIX build/resource verification, and both managed language-service
