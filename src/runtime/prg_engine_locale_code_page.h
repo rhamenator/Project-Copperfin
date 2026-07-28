@@ -16,4 +16,8 @@ int resolve_posix_host_code_page(
     const std::optional<std::string>& nl_codeset,
     const std::array<std::optional<std::string>, 3U>& locale_candidates);
 
+int default_host_code_page();
+int default_host_oem_code_page();
+bool is_supported_vfp_code_page(int code_page);
+
 }  // namespace copperfin::runtime::detail

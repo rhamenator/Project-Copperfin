@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented the narrow VFP `SET CODEPAGE TO n` contract under
+  #4807. Supported code pages are stored independently per data session;
+  `SET("CODEPAGE")` and omitted/zero `CPCURRENT()` return the configured value,
+  while `CPCURRENT(1)` and `CPCURRENT(2)` continue to report host and OEM
+  values. Unsupported values preserve the prior setting. The focused runtime
+  surface test passes locally; machine-readable contracts and conversion
+  policy are unchanged.
+
 - 2026-07-28: Reconciled the release-readiness evidence pointer at coordination
   head `d17c0bd68`. The exact-head Windows Native job `30404819387` remains in
   progress; #4403 still requires arm's-length safety sign-off and #4409 still

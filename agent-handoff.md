@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4807 runtime slice now honors the supported VFP `SET CODEPAGE TO n`
+contract per data session. `SET("CODEPAGE")` and omitted/zero `CPCURRENT()`
+return the configured session value; `CPCURRENT(1)` and `CPCURRENT(2)` remain
+host and OEM queries. Unsupported values are ignored so the previous setting
+survives, and the default remains the detected host code page. The focused
+`test_prg_engine_runtime_surface_functions` target passes locally, including
+session isolation and invalid-value regression coverage. This slice does not
+change DBF header encoding, `CPCONVERT()` policy, JSON keys, or other machine
+contracts. Windows/macOS native corroboration remains part of the hosted
+validation matrix.
+
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper
 itself fails after launch. The managed smoke runner already closes and

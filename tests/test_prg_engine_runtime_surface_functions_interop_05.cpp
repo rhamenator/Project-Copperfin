@@ -450,6 +450,20 @@ namespace copperfin::runtime_surface_tests
             "nCpCurrentOs    = CPCURRENT(1)\n"
             "nCpCurrentUni   = CPCURRENT(2)\n"
             "nCpCurrentBad   = CPCURRENT(99)\n"
+            "nCpConfiguredBefore = CPCURRENT()\n"
+            "SET CODEPAGE TO 1251\n"
+            "nCpConfigured    = CPCURRENT()\n"
+            "nCpConfiguredZero = CPCURRENT(0)\n"
+            "nCpConfiguredHost = CPCURRENT(1)\n"
+            "cCpConfiguredSet = SET('CODEPAGE')\n"
+            "SET DATASESSION TO 2\n"
+            "nCpSessionTwoDefault = CPCURRENT()\n"
+            "SET CODEPAGE TO 932\n"
+            "nCpSessionTwoConfigured = CPCURRENT()\n"
+            "SET DATASESSION TO 1\n"
+            "nCpSessionOneRestored = CPCURRENT()\n"
+            "SET CODEPAGE TO 99999\n"
+            "nCpInvalidRetains = CPCURRENT()\n"
             // CPCONVERT identity pass-through
             "cCpConverted    = CPCONVERT(1252, 1252, 'hello')\n"
             // CPDBF with no open work area should fall back to 0
@@ -494,6 +508,15 @@ namespace copperfin::runtime_surface_tests
         check("ncpcurrentos",   expected_host_code_page_text);
         check("ncpcurrentuni",  expected_host_oem_code_page_text);
         check("ncpcurrentbad",  expected_host_code_page_text);
+        check("ncpconfiguredbefore", expected_host_code_page_text);
+        check("ncpconfigured", "1251");
+        check("ncpconfiguredzero", "1251");
+        check("ncpconfiguredhost", expected_host_code_page_text);
+        check("ccpconfiguredset", "1251");
+        check("ncpsessiontwodefault", expected_host_code_page_text);
+        check("ncpsessiontwoconfigured", "932");
+        check("ncpsessiononerestored", "1251");
+        check("ncpinvalidretains", "1251");
         check("ccpconverted",   "hello");
         check("ncpdbf",         "0");
         check("cpict",          "current.bmp");

@@ -87,65 +87,15 @@ std::string strip_surrounding_quotes(std::string text) {
 }
 
 int current_host_code_page() {
-#if defined(_WIN32)
-    const UINT active_code_page = GetACP();
-    return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
-#else
-    std::optional<std::string> system_codeset;
-    if (const char* codeset = nl_langinfo(CODESET); codeset != nullptr) {
-        system_codeset = codeset;
-    }
-
-    const std::array<std::optional<std::string>, 3U> locale_candidates = {
-        platform::read_environment_variable("LC_ALL"),
-        platform::read_environment_variable("LC_CTYPE"),
-        platform::read_environment_variable("LANG"),
-    };
-    return detail::resolve_posix_host_code_page(system_codeset, locale_candidates);
-#endif
+    return detail::default_host_code_page();
 }
 
 int current_host_oem_code_page() {
-#if defined(_WIN32)
-    const UINT oem_code_page = GetOEMCP();
-    return oem_code_page == 0U ? current_host_code_page() : static_cast<int>(oem_code_page);
-#else
-    return current_host_code_page();
-#endif
+    return detail::default_host_oem_code_page();
 }
 
 bool is_supported_vfp_code_page(int code_page) {
-    switch (code_page) {
-        case 437:
-        case 620:
-        case 737:
-        case 850:
-        case 852:
-        case 857:
-        case 861:
-        case 865:
-        case 866:
-        case 874:
-        case 895:
-        case 932:
-        case 936:
-        case 949:
-        case 950:
-        case 1250:
-        case 1251:
-        case 1252:
-        case 1253:
-        case 1254:
-        case 1255:
-        case 1256:
-        case 10000:
-        case 10006:
-        case 10007:
-        case 10029:
-            return true;
-        default:
-            return false;
-    }
+    return detail::is_supported_vfp_code_page(code_page);
 }
 
 #if defined(_WIN32)

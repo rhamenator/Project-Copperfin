@@ -4,10 +4,19 @@
 
 #include "prg_engine_locale_code_page.h"
 
+#include "copperfin/platform/environment.h"
 #include "prg_engine_helpers.h"
 
 #include <charconv>
 #include <string_view>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#else
+#include <langinfo.h>
+#endif
 
 namespace copperfin::runtime::detail {
 
@@ -100,6 +109,68 @@ int resolve_posix_host_code_page(
         }
     }
     return 1252;
+}
+
+int default_host_code_page() {
+#if defined(_WIN32)
+    const UINT active_code_page = GetACP();
+    return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
+#else
+    std::optional<std::string> system_codeset;
+    if (const char* codeset = nl_langinfo(CODESET); codeset != nullptr) {
+        system_codeset = codeset;
+    }
+
+    const std::array<std::optional<std::string>, 3U> locale_candidates = {
+        copperfin::platform::read_environment_variable("LC_ALL"),
+        copperfin::platform::read_environment_variable("LC_CTYPE"),
+        copperfin::platform::read_environment_variable("LANG"),
+    };
+    return resolve_posix_host_code_page(system_codeset, locale_candidates);
+#endif
+}
+
+int default_host_oem_code_page() {
+#if defined(_WIN32)
+    const UINT oem_code_page = GetOEMCP();
+    return oem_code_page == 0U ? default_host_code_page() : static_cast<int>(oem_code_page);
+#else
+    return default_host_code_page();
+#endif
+}
+
+bool is_supported_vfp_code_page(int code_page) {
+    switch (code_page) {
+        case 437:
+        case 620:
+        case 737:
+        case 850:
+        case 852:
+        case 857:
+        case 861:
+        case 865:
+        case 866:
+        case 874:
+        case 895:
+        case 932:
+        case 936:
+        case 949:
+        case 950:
+        case 1250:
+        case 1251:
+        case 1252:
+        case 1253:
+        case 1254:
+        case 1255:
+        case 1256:
+        case 10000:
+        case 10006:
+        case 10007:
+        case 10029:
+            return true;
+        default:
+            return false;
+    }
 }
 
 }  // namespace copperfin::runtime::detail

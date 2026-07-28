@@ -12,6 +12,7 @@
 #include "prg_engine_internal.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_runtime_config.h"
+#include "prg_engine_locale_code_page.h"
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
 #include "prg_engine_date_time_functions.h"
@@ -2325,6 +2326,10 @@ namespace copperfin::runtime
                     {
                         return std::string("1950");
                     }
+                    if (normalized_name == "codepage")
+                    {
+                        return std::to_string(detail::default_host_code_page());
+                    }
                     if (normalized_name == "collate")
                     {
                         return std::string("MACHINE");
@@ -2352,6 +2357,7 @@ namespace copperfin::runtime
                     normalized_name == "fweek" ||
                     normalized_name == "reprocess" ||
                     normalized_name == "decimals" ||
+                    normalized_name == "codepage" ||
                     normalized_name == "collate" ||
                     normalized_name == "point" ||
                     normalized_name == "separator" ||

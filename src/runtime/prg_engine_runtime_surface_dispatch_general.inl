@@ -585,12 +585,21 @@
     // - 1 => current OS code page regardless of CODEPAGE config
     // - 2 => underlying OS code page (MS-DOS/OEM on Windows)
     //
-    // Copperfin's runtime does not yet project a CODEPAGE config item, so omitted
-    // and 0 explicitly read back the current host code page.
+    // The configured CODEPAGE value is scoped to the current data session;
+    // omitted and 0 read it back while 1 and 2 remain host/OEM queries.
     if (function == "cpcurrent") {
         const int type_flag = arguments.empty() ? 0 : static_cast<int>(std::llround(value_as_number(arguments[0])));
         if (type_flag == 2) {
             return make_number_value(static_cast<double>(current_host_oem_code_page()));
+        }
+        if (type_flag == 0) {
+            const std::string configured = set_callback("CODEPAGE");
+            try {
+                return make_number_value(std::stod(configured));
+            } catch (const std::exception&) {
+                // Preserve the host fallback if a malformed state value is
+                // encountered rather than leaking a runtime exception.
+            }
         }
         return make_number_value(static_cast<double>(current_host_code_page()));
     }
