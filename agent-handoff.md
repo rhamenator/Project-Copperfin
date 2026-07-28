@@ -107,6 +107,9 @@ includes section/grouping and placed-object edits, settings, preview and
 delete/restore behavior, and no-op/property round trips. This is native
 asset-fidelity evidence only; it does not claim Windows VFP9 execution,
 Visual Studio UI behavior, or the runtime/xAsset/menu smoke stages.
+Claude independently reran the same 40 tests against the same mounted fixtures
+and passed `40/40` in `26.09s`; automatic discovery also found the fixtures
+through `/run/media` without the explicit environment override.
 
 Windows Codex then passed the four sample-dependent deep-smoke equivalents
 twice at product implementation head `93d44395f`, with the installed VFP9
