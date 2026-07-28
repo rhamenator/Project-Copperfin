@@ -388,6 +388,18 @@ bool native_form_show_in_taskbar_member_name_matches(
            runtime_object.properties.contains("showintaskbar");
 }
 
+bool native_form_whats_this_button_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "whatsthisbutton") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("whatsthisbutton");
+}
+
 bool native_form_scrollbars_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {

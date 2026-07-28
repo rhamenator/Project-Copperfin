@@ -181,6 +181,96 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_whats_this_button_defaults_are_runtime_readonly_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_whats_this_button";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_whats_this_button.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasWhatsThisButton = PEMSTATUS(oBaseForm, 'WhatsThisButton', 1)\n"
+            "lBaseWhatsThisButtonReadOnly = PEMSTATUS(oBaseForm, 'WhatsThisButton', 5)\n"
+            "lBaseBefore = oBaseForm.WhatsThisButton\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'WhatsThisButton')\n"
+            "oBaseForm.WhatsThisButton = .T.\n"
+            "lBaseAfterDirectAssign = oBaseForm.WhatsThisButton\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'WhatsThisButton', .T.)\n"
+            "lBaseAfterSetPem = oBaseForm.WhatsThisButton\n"
+            "lBasePutPem = PUTPEM(oBaseForm, 'WhatsThisButton', .T.)\n"
+            "lBaseAfterPutPem = oBaseForm.WhatsThisButton\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'WhatsThisButton', .T.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'WhatsThisButton')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.WhatsThisButton\n"
+            "lChildBefore = oDerived.cmdSave.ReadWhatsThisButton()\n"
+            "oDerived.cmdSave.DisableWhatsThisButton()\n"
+            "lDerivedAfterChild = oDerived.WhatsThisButton\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'WhatsThisButton')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasWhatsThisButton = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'WHATSTHISBUTTON'\n"
+            "        lPropHasWhatsThisButton = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadWhatsThisButton\n"
+            "        RETURN THISFORM.WhatsThisButton\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisableWhatsThisButton\n"
+            "        THISFORM.WhatsThisButton = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    WhatsThisButton = .T.\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form WhatsThisButton property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehaswhatsthisbutton", "true");
+        check("lbasewhatsthisbuttonreadonly", "true");
+        check("lbasebefore", "false");
+        check("xbasegetpembefore", "false");
+        check("lbaseafterdirectassign", "false");
+        check("lbasesetpem", "false");
+        check("lbaseaftersetpem", "false");
+        check("lbaseputpem", "false");
+        check("lbaseafterputpem", "false");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "true");
+        check("lchildbefore", "true");
+        check("lderivedafterchild", "true");
+        check("xderivedgetpem", "true");
+        check("lprophaswhatsthisbutton", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_controlbox_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;

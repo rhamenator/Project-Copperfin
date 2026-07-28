@@ -318,6 +318,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                native_grid_relativecolumn_member_name_matches(runtime_object, member_name) ||
                native_grid_relativerow_member_name_matches(runtime_object, member_name) ||
                native_form_show_in_taskbar_member_name_matches(runtime_object, member_name) ||
+               native_form_whats_this_button_member_name_matches(runtime_object, member_name) ||
                native_editbox_scrollbars_member_name_matches(runtime_object, member_name) ||
                native_textbox_inputmask_member_name_matches(runtime_object, member_name) ||
                native_textbox_dynamicinputmask_member_name_matches(runtime_object, member_name) ||
@@ -397,6 +398,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_grid_relativerow_member_name(runtime_object, member_name) ||
                is_native_form_desktop_member_name(runtime_object, member_name) ||
                is_native_form_show_in_taskbar_member_name(runtime_object, member_name) ||
+               is_native_form_whats_this_button_member_name(runtime_object, member_name) ||
                is_native_form_scrollbars_member_name(runtime_object, member_name) ||
                is_native_grid_scrollbars_member_name(runtime_object, member_name) ||
                is_native_movable_member_name(runtime_object, member_name) ||
