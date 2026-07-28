@@ -231,6 +231,7 @@
             is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_whats_this_button_member_name(*runtime_object, property_name) ||
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
+            is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
@@ -1397,6 +1398,7 @@
             is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_whats_this_button_member_name(*runtime_object, property_name) ||
             is_native_form_sizebox_member_name(*runtime_object, property_name) ||
+            is_native_form_zoombox_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||

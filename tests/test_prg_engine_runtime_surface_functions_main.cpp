@@ -97,6 +97,7 @@ int main()
     test_native_form_show_in_taskbar_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_form_whats_this_button_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_form_sizebox_defaults_mutate_and_stay_builtin();
+    test_native_form_zoombox_defaults_mutate_and_stay_builtin();
     test_native_form_scrollbars_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();

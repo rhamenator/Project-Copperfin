@@ -1281,6 +1281,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("zoombox"))
+            {
+                // Headless contract: preserve the documented Form default.
+                runtime_object.properties["zoombox"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("scrollbars"))
             {
                 runtime_object.properties["scrollbars"] = make_number_value(0.0);
