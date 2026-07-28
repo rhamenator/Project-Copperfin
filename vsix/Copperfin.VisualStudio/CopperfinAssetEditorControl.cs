@@ -149,6 +149,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
     private readonly Label buildersStatusLabel;
     private readonly RichTextBox coverageSummaryBox;
     private readonly ListView coverageView;
+    private readonly TextBox coverageFilterBox;
     private readonly RichTextBox databaseSummaryBox;
     private readonly ListView databaseView;
     private readonly TextBox databaseFilterBox;
@@ -1027,6 +1028,13 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             TryActivateSelectedCoverage();
         };
 
+        coverageFilterBox = new TextBox
+        {
+            Dock = DockStyle.Top,
+            AccessibleName = this.localization.Text("AssetEditor.Coverage.FilterAccessibleName")
+        };
+        coverageFilterBox.TextChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
+
         databaseSummaryBox = new RichTextBox
         {
             Dock = DockStyle.Fill,
@@ -1291,6 +1299,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         coverageSummaryPanel.Controls.Add(coverageSummaryBox);
         coveragePageHost.Controls.Add(coverageView);
         coveragePageHost.Controls.Add(coverageSummaryPanel);
+        coveragePageHost.Controls.Add(coverageFilterBox);
         coveragePage.Controls.Add(coveragePageHost);
         var databasePage = new TabPage(this.localization.Text("AssetEditor.Tab.Database"));
         var databasePageHost = new Panel
@@ -1746,6 +1755,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         buildersView.Items.Clear();
         coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
         coverageView.Items.Clear();
+        coverageFilterBox.Text = string.Empty;
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
         databaseView.Items.Clear();
         databaseFilterBox.Text = string.Empty;
@@ -3315,8 +3325,8 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         toolboxSummaryBox.Text = BuildToolboxSummary(currentSnapshot, currentProjectInsights);
         buildersSummaryBox.Text = BuildBuilderSummary(currentSnapshot, currentProjectInsights);
         _ = LoadBuilderCatalogAsync(loadGeneration);
-        PopulateCoverage(currentDebugSession);
-        coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
+        PopulateCoverage(currentDebugSession, coverageFilterBox.Text);
+        coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession, coverageFilterBox.Text);
         PopulateDatabaseFederation(currentSnapshot, databaseFilterBox.Text);
         databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, databaseFilterBox.Text, null);
     }
@@ -3391,7 +3401,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         }
     }
 
-    private void PopulateCoverage(CopperfinRuntimeDebugSession? session)
+    private void PopulateCoverage(CopperfinRuntimeDebugSession? session, string? filter)
     {
         coverageView.Items.Clear();
         if (session is null || !session.Success)
@@ -3444,7 +3454,15 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             }
         }
 
-        foreach (var coverage in locations.Values.OrderBy(item => item.FilePath, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.Line))
+        var normalizedFilter = (filter ?? string.Empty).Trim();
+        foreach (var coverage in locations.Values
+                     .Where(item => string.IsNullOrWhiteSpace(normalizedFilter) ||
+                                    Path.GetFileName(item.FilePath).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    item.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    item.Category.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    item.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+                     .OrderBy(item => item.FilePath, StringComparer.OrdinalIgnoreCase)
+                     .ThenBy(item => item.Line))
         {
             var item = new ListViewItem($"{Path.GetFileName(coverage.FilePath)}:{coverage.Line.ToString(CultureInfo.InvariantCulture)}");
             item.SubItems.Add(coverage.HitCount.ToString(CultureInfo.InvariantCulture));
@@ -4024,8 +4042,8 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             debuggerSummaryBox.Text = BuildDebugSessionSummary(session);
             if (currentSnapshot?.ProjectWorkspace is not null && currentSnapshot.AssetFamily == "project")
             {
-                PopulateCoverage(session);
-                coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, session);
+                PopulateCoverage(session, coverageFilterBox.Text);
+                coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, session, coverageFilterBox.Text);
             }
             if (projectWorkspaceTabs.Visible)
             {
@@ -5548,7 +5566,10 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         };
     }
 
-    private string BuildCoverageSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinRuntimeDebugSession? session)
+    private string BuildCoverageSummary(
+        CopperfinStudioSnapshotDocument snapshot,
+        CopperfinRuntimeDebugSession? session,
+        string? filter)
     {
         var summary = new StringBuilder();
         summary.AppendLine(L("AssetEditor.Summary.Coverage"));
@@ -5561,6 +5582,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         }
 
         var state = session.State;
+        var normalizedFilter = (filter ?? string.Empty).Trim();
         var executedLocations = state.Events
             .Where(runtimeEvent => !string.IsNullOrWhiteSpace(runtimeEvent.Location))
             .Select(runtimeEvent => runtimeEvent.Location)
@@ -5570,6 +5592,14 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         summary.AppendLine($"{L("AssetEditor.Summary.LabelPauseReason")}: {state.Reason}");
         summary.AppendLine($"{L("AssetEditor.Summary.LabelExecutedStatements")}: {state.ExecutedStatements}");
         summary.AppendLine($"{L("AssetEditor.Summary.LabelDistinctRuntimeLocations")}: {executedLocations.Count}");
+        if (!string.IsNullOrWhiteSpace(normalizedFilter))
+        {
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelFilter")}: {normalizedFilter}");
+        }
+        if (!string.IsNullOrWhiteSpace(normalizedFilter) && coverageView.Items.Count == 0)
+        {
+            summary.AppendLine(L("AssetEditor.Summary.NoCoverageLocationsFiltered"));
+        }
         summary.AppendLine();
         summary.AppendLine(L("AssetEditor.Summary.CoverageActivation"));
         summary.AppendLine();

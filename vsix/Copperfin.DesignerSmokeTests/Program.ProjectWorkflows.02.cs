@@ -639,6 +639,27 @@ internal static partial class Program
             {
                 Expect(coverage.Items[0].SubItems[1].Text == "2",
                     "project workspace Coverage should count repeated runtime events at one source location");
+                var coverageFilter = GetPrivateField<TextBox>(control, "coverageFilterBox");
+                var coverageSummary = GetPrivateField<RichTextBox>(control, "coverageSummaryBox");
+                Expect(coverageFilter is not null,
+                    "project workspace Coverage should expose an independent filter control");
+                if (coverageFilter is not null)
+                {
+                    coverageFilter.Text = "runtime.call";
+                    Application.DoEvents();
+                    Expect(coverage.Items.Count == 1 && coverage.Items[0].SubItems[0].Text.EndsWith(":3", StringComparison.Ordinal),
+                        "project workspace Coverage should filter by invariant runtime category without changing hit counts");
+
+                    coverageFilter.Text = "does-not-match";
+                    Application.DoEvents();
+                    Expect(coverage.Items.Count == 0 &&
+                           coverageSummary is not null &&
+                           coverageSummary.Text.IndexOf("No coverage locations matched the current filter.", StringComparison.Ordinal) >= 0,
+                        "project workspace Coverage should expose a localized no-match summary");
+
+                    coverageFilter.Text = string.Empty;
+                    Application.DoEvents();
+                }
                 coverage.Items[0].Selected = true;
                 coverage.Items[0].Focused = true;
                 requestedTaskPath = null;
