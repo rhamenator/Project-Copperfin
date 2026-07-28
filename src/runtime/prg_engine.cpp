@@ -91,6 +91,7 @@ namespace copperfin::runtime
         constexpr std::uint32_t kWindowsLeftButtonUpMessage = 0x0202U;
         constexpr std::uint32_t kWindowsLeftButtonDoubleClickMessage = 0x0203U;
         constexpr std::uint32_t kWindowsRightButtonUpMessage = 0x0205U;
+        constexpr std::uint32_t kWindowsMiddleButtonDownMessage = 0x0207U;
         constexpr std::uint32_t kWindowsMiddleButtonUpMessage = 0x0208U;
         constexpr std::intptr_t kWindowsAltContextBit = static_cast<std::intptr_t>(1) << 29;
 
@@ -10690,7 +10691,8 @@ namespace copperfin::runtime
         }
 
         std::optional<int> mouse_down_target;
-        if (message == kWindowsLeftButtonDownMessage)
+        if (message == kWindowsLeftButtonDownMessage ||
+            message == kWindowsMiddleButtonDownMessage)
         {
             for (const auto &[handle, runtime_object] : ole_objects)
             {
@@ -10759,6 +10761,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> middle_up_target;
+        if (message == kWindowsMiddleButtonUpMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    middle_up_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -10784,7 +10800,7 @@ namespace copperfin::runtime
             !keypress_target.has_value() && !click_target.has_value() &&
             !mouse_down_target.has_value() && !mouse_move_target.has_value() &&
             !double_click_target.has_value() && !right_click_target.has_value() &&
-            !middle_click_target.has_value())
+            !middle_click_target.has_value() && !middle_up_target.has_value())
         {
             return std::nullopt;
         }
@@ -10863,6 +10879,11 @@ namespace copperfin::runtime
                 button = ((wparam & 0x0001) != 0 ? 1 : 0) |
                          ((wparam & 0x0002) != 0 ? 2 : 0) |
                          ((wparam & 0x0010) != 0 ? 4 : 0);
+            }
+            else if (message == kWindowsMiddleButtonDownMessage ||
+                     message == kWindowsMiddleButtonUpMessage)
+            {
+                button = 4;
             }
             const std::int64_t x_coordinate = static_cast<std::int16_t>(
                 static_cast<std::uint16_t>(raw_coordinates & 0xffffU));
@@ -10962,8 +10983,8 @@ namespace copperfin::runtime
                         target_found->second,
                         "DblClick",
                         stack.back(),
-                        mouse_event_arguments(),
-                        mouse_argument_references,
+                        {},
+                        {},
                         &ignored_nodefault,
                         nullptr)
                         .has_value())
@@ -10993,6 +11014,30 @@ namespace copperfin::runtime
                         .has_value())
                 {
                     events.push_back({.category = "prg.event.rightclick",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
+            }
+        }
+
+        if (middle_up_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*middle_up_target);
+            if (target_found != ole_objects.end())
+            {
+                bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "MouseUp",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.mouseup",
                                       .detail = target_found->second.prog_id,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     last_result = 0;

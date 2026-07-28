@@ -546,9 +546,10 @@ namespace copperfin::runtime_surface_tests
     void test_native_click_dispatches_on_left_button_release();
     void test_native_mouse_down_up_dispatch_around_click();
     void test_native_mouse_move_dispatches_with_button_state();
-    void test_native_double_click_dispatches_with_mouse_arguments();
+    void test_native_double_click_dispatches_without_mouse_arguments();
     void test_native_right_click_dispatches_without_mouse_arguments();
     void test_native_middle_click_dispatches_without_mouse_arguments();
+    void test_native_middle_button_events_dispatch_around_middle_click();
     void test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
     void test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
     void test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();

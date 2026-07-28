@@ -2,7 +2,7 @@
 
 namespace copperfin::runtime_surface_tests
 {
-    void test_native_double_click_dispatches_with_mouse_arguments()
+    void test_native_double_click_dispatches_without_mouse_arguments()
     {
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() /
@@ -14,12 +14,8 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "dblclick_dispatch.prg";
         write_text(
             main_path,
-            "PUBLIC nFormHwnd, nPlainHwnd, nCalls, nButton, nShift, nX, nY, cSequence\n"
+            "PUBLIC nFormHwnd, nPlainHwnd, nCalls, cSequence\n"
             "nCalls = 0\n"
-            "nButton = 0\n"
-            "nShift = 0\n"
-            "nX = 0\n"
-            "nY = 0\n"
             "cSequence = ''\n"
             "oForm = CREATEOBJECT('DblClickForm')\n"
             "oPlain = CREATEOBJECT('Form')\n"
@@ -29,12 +25,7 @@ namespace copperfin::runtime_surface_tests
             "RETURN\n"
             "DEFINE CLASS DblClickForm AS Form\n"
             "    FUNCTION DblClick\n"
-            "        LPARAMETERS tnButton, tnShiftAltCtrl, tnXCoord, tnYCoord\n"
             "        nCalls = nCalls + 1\n"
-            "        nButton = tnButton\n"
-            "        nShift = tnShiftAltCtrl\n"
-            "        nX = tnXCoord\n"
-            "        nY = tnYCoord\n"
             "        cSequence = cSequence + 'B'\n"
             "        RETURN\n"
             "    ENDFUNC\n"
@@ -117,10 +108,6 @@ namespace copperfin::runtime_surface_tests
             }
         };
         check("ncalls", "1");
-        check("nbutton", "1");
-        check("nshift", "3");
-        check("nx", "-3");
-        check("ny", "-4");
         check("csequence", "B");
 
         const auto event_count = std::count_if(

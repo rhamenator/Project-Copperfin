@@ -92,11 +92,13 @@ unhandled; repeated handled motion restores `READ EVENTS` and emits invariant
 UI validation remain separate. Future user-facing text remains catalog-first.
 
 Runtime child #4763 under #3217 adds the modeled `WM_LBUTTONDBLCLK` boundary. A
-native visual object with a declared `DblClick` handler receives VFP's
-left-button value, Shift/Ctrl state, and signed client coordinates through the
-same heap-backed frame path. Unknown targets and objects without `DblClick`
-remain unhandled; handled dispatch restores `READ EVENTS` and emits invariant
-`prg.event.dblclick` telemetry. The focused runtime-surface CTest passes `1/1`.
+native visual object with a declared `DblClick` handler receives the ordinary
+VFP no-argument event invocation through the same heap-backed frame path. The
+#4767 correction removed synthetic mouse parameters from this path; mouse
+arguments remain reserved for `MouseDown`/`MouseUp`/`MouseMove`. Unknown targets
+and objects without `DblClick` remain unhandled; handled dispatch restores
+`READ EVENTS` and emits invariant `prg.event.dblclick` telemetry. The focused
+runtime-surface CTest passes `1/1`.
 Double-click timing policy, hit testing, capture, rendering, and hosted Windows
 UI validation remain separate. Future user-facing text remains catalog-first.
 
@@ -117,6 +119,16 @@ restores `READ EVENTS` and emits invariant `prg.event.middleclick` telemetry.
 The focused runtime-surface CTest passes `1/1`. Middle-button `MouseDown`/
 `MouseUp`, hit testing, capture, rendering, and hosted Windows UI validation
 remain separate. Future user-facing text remains catalog-first.
+
+Runtime child #4766 under #3217 extends the middle-button boundary. Native
+`MouseDown` dispatches on `WM_MBUTTONDOWN` and `MouseUp` dispatches before
+`MiddleClick` on `WM_MBUTTONUP`, with VFP middle-button value `4`, modifier
+bits, and signed client coordinates through the same heap-backed frame path.
+Independent handler fallthrough, invariant `prg.event.mousedown`/
+`prg.event.mouseup` telemetry, and `READ EVENTS` restoration are covered by
+the focused runtime-surface CTest. Middle-button hit testing, capture,
+drag-and-drop, rendering, and hosted Windows UI validation remain separate.
+Future user-facing text remains catalog-first.
 
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
