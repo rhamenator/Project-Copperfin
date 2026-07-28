@@ -5329,3 +5329,10 @@ It is intentionally append-only and mirrors shipped history rather than planned 
 - 2026-07-28: Implemented security child #4770 under #3866. Strict generic verified-byte readers now reject ambiguous case-folded override matches instead of selecting arbitrary bytes, while exact keys, unique compatibility matches, non-strict filesystem behavior, and machine contracts remain unchanged. Focused verified-file, database-lifecycle, and runtime-surface tests pass locally; exact-head Windows review remains pending.
 - 2026-07-28: Refreshed current-state roadmap, localization-readiness, and agent-handoff evidence to distinguish product implementation head `b2e44535d` and synchronized coordination head `da52ce8ec` from the older broad validation baseline. No in-progress CI result is claimed as passed; #4769 remains open pending exact-head review and hosted validation.
 - 2026-07-28: Closed runtime package child #4769 after Claude seq762 review and Windows Codex seq763 exact-head validation. `DEFINE MENU` now emits invariant `define_menu_command` IR metadata without a `-Wswitch` warning or fallback to `no_op`; Linux and Windows `test_runtime_pipeline` both passed 1/1.
+- 2026-07-28: Corrected runtime issue #4788 under #3217. A focused audit
+  showed that the existing generic visual `ForeColor` surface already covers
+  Form and visual child controls, including deterministic defaults, direct and
+  reflective mutation, derived declarations, and built-in reflection
+  protection. The redundant Form-only implementation/test was removed; the
+  focused `test_prg_engine_runtime_surface_functions` suite passes `1/1`.
+  No new machine contract or platform rendering claim is made.

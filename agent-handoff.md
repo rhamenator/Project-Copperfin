@@ -32,7 +32,12 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `c9fad5724`. #4623 is closed as
+Current focused validation is at product head `c9fad5724`; the latest runtime
+cleanup head also removes the redundant Form-only ForeColor slice from #4788.
+#4788 is an evidence correction, not a new product capability: the existing
+generic visual ForeColor contract already covers Form and visual child
+controls. The focused runtime-surface suite passes `1/1` after the cleanup.
+#4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,

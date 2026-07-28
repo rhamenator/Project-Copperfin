@@ -1295,13 +1295,6 @@
             }
 
             if (normalized_base_class == "form" &&
-                !runtime_object.properties.contains("forecolor"))
-            {
-                // Headless fallback: preserve a deterministic color value without OS theme lookup.
-                runtime_object.properties["forecolor"] = make_int64_value(0);
-            }
-
-            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("scrollbars"))
             {
                 runtime_object.properties["scrollbars"] = make_number_value(0.0);
