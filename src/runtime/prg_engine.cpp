@@ -11229,53 +11229,90 @@ namespace copperfin::runtime
                             owner_form_prog_id))
                     {
                         const std::string property_name = wparam == 13 ? "default" : "cancel";
-                        for (auto &entry : ole_objects)
+                        const bool focused_command_button =
+                            wparam == 13 &&
+                            normalize_identifier(trim_copy(target_found->second.base_class_name)) == "commandbutton";
+                        if (focused_command_button)
                         {
-                            auto &candidate = entry.second;
-                            if (normalize_identifier(trim_copy(candidate.base_class_name)) != "commandbutton")
-                            {
-                                continue;
-                            }
-
-                            const auto candidate_owner_reference =
-                                native_object_owner_form_reference(candidate);
-                            int candidate_owner_handle = 0;
-                            std::string candidate_owner_prog_id;
-                            if (!candidate_owner_reference.has_value() ||
-                                !parse_object_handle_reference(
-                                    *candidate_owner_reference,
-                                    candidate_owner_handle,
-                                    candidate_owner_prog_id) ||
-                                candidate_owner_handle != owner_form_handle)
-                            {
-                                continue;
-                            }
-
-                            const auto enabled = read_native_property_if_present(
-                                candidate,
-                                property_name,
+                            const auto focused_enabled = read_native_property_if_present(
+                                target_found->second,
+                                "enabled",
                                 stack.back());
-                            if (!enabled.has_value() || !value_as_bool(*enabled))
+                            if (focused_enabled.has_value() && value_as_bool(*focused_enabled))
                             {
-                                continue;
+                                bool ignored_nodefault = false;
+                                if (invoke_native_object_method_if_present(
+                                        target_found->second,
+                                        "Click",
+                                        stack.back(),
+                                        {},
+                                        {},
+                                        &ignored_nodefault,
+                                        nullptr)
+                                        .has_value())
+                                {
+                                    events.push_back({.category = "prg.event.click",
+                                                      .detail = target_found->second.prog_id,
+                                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                                    last_result = 0;
+                                }
                             }
-
-                            bool ignored_nodefault = false;
-                            if (invoke_native_object_method_if_present(
-                                    candidate,
-                                    "Click",
-                                    stack.back(),
-                                    {},
-                                    {},
-                                    &ignored_nodefault,
-                                    nullptr)
-                                    .has_value())
+                        }
+                        else
+                        {
+                            for (auto &entry : ole_objects)
                             {
-                                events.push_back({.category = "prg.event.click",
-                                                  .detail = candidate.prog_id,
-                                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                                last_result = 0;
-                                break;
+                                auto &candidate = entry.second;
+                                if (normalize_identifier(trim_copy(candidate.base_class_name)) != "commandbutton")
+                                {
+                                    continue;
+                                }
+
+                                const auto candidate_owner_reference =
+                                    native_object_owner_form_reference(candidate);
+                                int candidate_owner_handle = 0;
+                                std::string candidate_owner_prog_id;
+                                if (!candidate_owner_reference.has_value() ||
+                                    !parse_object_handle_reference(
+                                        *candidate_owner_reference,
+                                        candidate_owner_handle,
+                                        candidate_owner_prog_id) ||
+                                    candidate_owner_handle != owner_form_handle)
+                                {
+                                    continue;
+                                }
+
+                                const auto enabled = read_native_property_if_present(
+                                    candidate,
+                                    "enabled",
+                                    stack.back());
+                                const auto action_property = read_native_property_if_present(
+                                    candidate,
+                                    property_name,
+                                    stack.back());
+                                if (!enabled.has_value() || !value_as_bool(*enabled) ||
+                                    !action_property.has_value() || !value_as_bool(*action_property))
+                                {
+                                    continue;
+                                }
+
+                                bool ignored_nodefault = false;
+                                if (invoke_native_object_method_if_present(
+                                        candidate,
+                                        "Click",
+                                        stack.back(),
+                                        {},
+                                        {},
+                                        &ignored_nodefault,
+                                        nullptr)
+                                        .has_value())
+                                {
+                                    events.push_back({.category = "prg.event.click",
+                                                      .detail = candidate.prog_id,
+                                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                                    last_result = 0;
+                                    break;
+                                }
                             }
                         }
                     }

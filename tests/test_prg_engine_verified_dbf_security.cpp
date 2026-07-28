@@ -365,6 +365,75 @@ void test_initial_use_reads_verified_index_metadata()
     fs::remove_all(root, ignored);
 }
 
+void test_database_component_admission_rejects_ambiguous_casefold_matches()
+{
+    const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_component_case_ambiguity";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path table_path = root / "Customers.dbf";
+    const fs::path index_path = root / "customers.cdx";
+    const fs::path mixed_index_path = root / "CUSTOMERS.CDX";
+    write_simple_dbf(table_path, {"Ada", "Grace"});
+    write_synthetic_cdx(index_path, "NAME", "UPPER(NAME)");
+    const std::string verified_table_bytes = read_text(table_path);
+    const std::string lower_index_bytes = read_text(index_path);
+    write_synthetic_cdx(mixed_index_path, "OTHER", "NAME");
+    const std::string mixed_index_bytes = read_text(mixed_index_path);
+    fs::remove(index_path, ignored);
+    fs::remove(mixed_index_path, ignored);
+
+    copperfin::runtime::RuntimeSessionOptions index_options;
+    index_options.verified_file_byte_overrides.emplace(table_path.string(), verified_table_bytes);
+    index_options.verified_file_byte_overrides.emplace(index_path.string(), lower_index_bytes);
+    index_options.verified_file_byte_overrides.emplace(mixed_index_path.string(), mixed_index_bytes);
+    index_options.require_verified_file_byte_overrides = true;
+    const auto index_state = run_program(
+        root,
+        "ambiguous_verified_index.prg",
+        "USE '" + table_path.string() + "' ALIAS customers\n"
+        "cTag = TAG('Customers.cdx', 1, 'customers')\n"
+        "RETURN\n",
+        index_options);
+    expect(index_state.completed,
+           "ambiguous strict DBF index admission should fail safely: " + index_state.message);
+    expect(global_text(index_state, "ctag") != "NAME" &&
+               global_text(index_state, "ctag") != "OTHER",
+           "ambiguous strict DBF index admission should not select arbitrary bytes");
+
+    const fs::path memo_table_path = root / "Notes.dbf";
+    const fs::path memo_path = root / "Notes.fpt";
+    const fs::path lower_memo_path = root / "notes.fpt";
+    const fs::path mixed_memo_path = root / "NOTES.FPT";
+    const auto created = copperfin::vfp::create_dbf_table_file(
+        memo_table_path.string(),
+        {{.name = "NOTE", .type = 'M', .length = 10U}},
+        {{"Verified memo"}});
+    expect(created.ok, "ambiguous strict DBF memo fixture should be created");
+    const std::string verified_memo_bytes = read_text(memo_path);
+    fs::remove(memo_path, ignored);
+
+    copperfin::runtime::RuntimeSessionOptions memo_options;
+    memo_options.verified_file_byte_overrides.emplace(memo_table_path.string(), read_text(memo_table_path));
+    memo_options.verified_file_byte_overrides.emplace(lower_memo_path.string(), verified_memo_bytes);
+    memo_options.verified_file_byte_overrides.emplace(mixed_memo_path.string(), verified_memo_bytes + "ambiguous");
+    memo_options.require_verified_file_byte_overrides = true;
+    const auto memo_state = run_program(
+        root,
+        "ambiguous_verified_memo.prg",
+        "USE '" + memo_table_path.string() + "' ALIAS notes\n"
+        "cNote = notes.NOTE\n"
+        "RETURN\n",
+        memo_options);
+    expect(memo_state.completed,
+           "ambiguous strict DBF memo admission should fail safely: " + memo_state.message);
+    expect(global_text(memo_state, "cnote") != "Verified memo",
+           "ambiguous strict DBF memo admission should not select arbitrary bytes");
+
+    fs::remove_all(root, ignored);
+}
+
 void test_database_index_admission_preserves_platform_case_rules()
 {
     const fs::path root = fs::temp_directory_path() / "copperfin_verified_dbf_index_case";
@@ -995,6 +1064,7 @@ int main()
     test_strict_fopen_uses_admitted_bytes_during_replacement();
     test_strict_generic_file_admission_rejects_ambiguous_casefold_matches();
     test_initial_use_reads_verified_index_metadata();
+    test_database_component_admission_rejects_ambiguous_casefold_matches();
     test_database_index_admission_preserves_platform_case_rules();
     test_database_memo_admission_preserves_platform_case_rules();
     test_runtime_surface_reads_verified_code_page();

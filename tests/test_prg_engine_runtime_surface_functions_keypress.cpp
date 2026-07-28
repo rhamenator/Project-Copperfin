@@ -145,9 +145,10 @@ namespace copperfin::runtime_surface_tests
         const fs::path main_path = temp_root / "default_cancel_dispatch.prg";
         write_text(
             main_path,
-            "PUBLIC nDefaultClicks, nCancelClicks, lSuppressDefault, nFormHwnd\n"
+            "PUBLIC nDefaultClicks, nCancelClicks, nDisabledClicks, lSuppressDefault, nFormHwnd\n"
             "nDefaultClicks = 0\n"
             "nCancelClicks = 0\n"
+            "nDisabledClicks = 0\n"
             "lSuppressDefault = .F.\n"
             "oForm = CREATEOBJECT('DefaultCancelForm')\n"
             "nFormHwnd = oForm.hWnd\n"
@@ -155,6 +156,7 @@ namespace copperfin::runtime_surface_tests
             "RETURN\n"
             "DEFINE CLASS DefaultCancelForm AS Form\n"
             "    ADD OBJECT cmdNoClick AS NoClickDefaultButton\n"
+            "    ADD OBJECT cmdDisabled AS DisabledDefaultButton\n"
             "    ADD OBJECT cmdDefault AS DefaultButton\n"
             "    ADD OBJECT cmdCancel AS CancelButton\n"
             "    FUNCTION KeyPress\n"
@@ -170,6 +172,14 @@ namespace copperfin::runtime_surface_tests
             "ENDDEFINE\n"
             "DEFINE CLASS NoClickDefaultButton AS CommandButton\n"
             "    Default = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DisabledDefaultButton AS CommandButton\n"
+            "    Default = .T.\n"
+            "    Enabled = .F.\n"
+            "    FUNCTION Click\n"
+            "        nDisabledClicks = nDisabledClicks + 1\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
             "ENDDEFINE\n"
             "DEFINE CLASS DefaultButton AS CommandButton\n"
             "    Default = .T.\n"
@@ -238,12 +248,16 @@ namespace copperfin::runtime_surface_tests
 
         const auto default_clicks = state.globals.find("ndefaultclicks");
         const auto cancel_clicks = state.globals.find("ncancelclicks");
+        const auto disabled_clicks = state.globals.find("ndisabledclicks");
         expect(default_clicks != state.globals.end() &&
                    copperfin::runtime::format_value(default_clicks->second) == "1",
                "Default button should be clicked once while the no-handler candidate is skipped");
         expect(cancel_clicks != state.globals.end() &&
                    copperfin::runtime::format_value(cancel_clicks->second) == "1",
                "Cancel button should be clicked once");
+        expect(disabled_clicks != state.globals.end() &&
+                   copperfin::runtime::format_value(disabled_clicks->second) == "0",
+               "Disabled default button should not be activated");
 
         std::size_t click_events = 0U;
         for (const auto &event : state.events)
