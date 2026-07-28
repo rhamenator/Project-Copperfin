@@ -48,7 +48,9 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   out-of-range results. The focused runtime-surface CTest passes `1/1`, and a
   fresh clean ReportBuilder package completes in normal and debug launches with
   210 statements. Hosted Windows/macOS review and broader VFP9 parity remain
-  explicit boundaries.
+  explicit boundaries. Follow-up child `#4794` records the remaining
+  procedure-context formatting that VFP9 and VFPSource may expose through
+  `SYS(16)`.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

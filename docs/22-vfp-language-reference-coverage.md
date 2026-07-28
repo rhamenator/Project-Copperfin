@@ -18,7 +18,10 @@
   runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
   package completes in normal and debug launches with 210 statements. Hosted
   Windows/macOS exact-head validation remains separate evidence; Windows review
-  for the preceding #4791/#4792 package is recorded in seq852.
+  for the preceding #4791/#4792 package is recorded in seq852. Follow-up child
+  #4794 tracks the remaining VFP-compatible `SYS(16)` procedure-context return
+  shape, which can include `PROCEDURE <routine> <file>` and is currently
+  normalized to the indexed frame file path only.
 
 - Current runtime-safety and strict-reader status (2026-07-28): #4623 is
   implementation-complete and closed after focused containment and debugger

@@ -6,7 +6,9 @@
   focused runtime-surface CTest passes `1/1`; a fresh clean VFPSource
   ReportBuilder package completes in normal and debug launches with 210
   statements and two expected missing sample-asset warnings. Hosted Windows
-  and macOS exact-head validation remain required.
+  and macOS exact-head validation remain required. Follow-up child #4794 tracks
+  VFP9's optional `PROCEDURE <routine> <file>` context formatting for `SYS(16)`;
+  the current indexed implementation returns the frame file path only.
 
 - 2026-07-28: Closed runtime children #4791 and #4792 after independent Claude
   review seq851 and Windows validation seq852. The exact tested descendant

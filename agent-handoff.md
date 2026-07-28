@@ -70,7 +70,10 @@ warnings. Indexed `PROGRAM(nLevel)` remains a separate #4793 boundary.
 VFP's `0/1` master aliases and empty out-of-range results. The focused
 runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
 package completes in normal and debug launches with 210 statements. Hosted
-Windows/macOS exact-head review remains required before closure.
+Windows/macOS exact-head review remains required before closure. Follow-up child
+#4794 tracks VFP9's optional `PROCEDURE <routine> <file>` context formatting for
+`SYS(16)`; the current #4793 implementation returns the indexed frame file path
+and does not claim that formatting yet.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
