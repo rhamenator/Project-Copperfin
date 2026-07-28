@@ -114,8 +114,9 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current implementation head is `ff9417a4a` (synchronized documentation head
-`9a22142bd`), including runtime child #4753's defined-menu lifecycle slice.
+Current implementation head is `b07d30d9c`, including runtime child #4753's
+defined-menu lifecycle slice and the #4754 cross-file project-procedure
+completion regression slice.
 Hosted Linux Native `30322581213` passed `316/316` in `172.41s`, and hosted
 macOS Native `30322581188` passed `316/316` in `223.95s`, with only the two
 expected platform-conditional skips. Current-head installers
@@ -138,7 +139,7 @@ with the product's long directory-entry spelling; test-only correction
 `73cdd5f57` normalizes the fixture namespace with `GetLongPathNameW`, and its
 corrected rerun `30320046748` was superseded by the current-head matrix. The
 project does not claim a complete cross-platform RC gate until Windows Native
-`30322581189` finishes.
+`30324522773` finishes.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
