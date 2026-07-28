@@ -65,7 +65,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex SqlExecInvocationRegex = new(@"\bSQLEXEC\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex ParametersRegex = new(@"^\s*(?:L?PARAMETERS)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ParametersRegex = new(@"^\s*(?:L?PARAMETERS?)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex AliasIdentifierRegex = new(@"^[A-Za-z_][A-Za-z0-9_\.]*$", RegexOptions.Compiled);
 

@@ -80,6 +80,7 @@ internal static partial class Program
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
+        TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
         TestSignatureInvocationParserIgnoresCommentsAndStrings();
         TestProjectInsightsCollectDirectAndDottedProcedureCallReferences();
@@ -2181,6 +2182,40 @@ internal static partial class Program
                 Expect(signatures[0].Parameters.Count == 2, "project procedure signature help should surface each LPARAMETERS argument");
                 Expect(signatures[0].Parameters[0].Name == "tcCustomerId", "project procedure signature help should normalize the first parameter name");
                 Expect(signatures[0].Parameters[1].Name == "tlPreview", "project procedure signature help should normalize defaulted parameter names");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod()
+    {
+        var root = CreateProjectRoot("singular_lparameter_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "LPARAMETER tcCustomerId, tlPreview = .F." + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "oEditor.SaveOrder");
+            Expect(signatures.Count == 1,
+                "singular LPARAMETER declarations should surface dotted project method signature help");
+            if (signatures.Count == 1)
+            {
+                Expect(signatures[0].Content == "app.customer.editor.SaveOrder(tcCustomerId, tlPreview = .F.)",
+                    "singular LPARAMETER signature help should preserve the qualified method and defaulted parameter text");
+                Expect(signatures[0].Parameters.Count == 2,
+                    "singular LPARAMETER signature help should expose each parameter");
+                Expect(signatures[0].Parameters[0].Name == "tcCustomerId" &&
+                       signatures[0].Parameters[1].Name == "tlPreview",
+                    "singular LPARAMETER signature help should normalize parameter names");
             }
         }
         finally
