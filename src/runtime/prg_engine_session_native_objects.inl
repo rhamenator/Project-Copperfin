@@ -1269,7 +1269,7 @@
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("whatsthisbutton"))
             {
-                // Headless contract: preserve the documented Form default.
+                // Headless contract: preserve the documented Form/ToolBar default.
                 runtime_object.properties["whatsthisbutton"] = make_boolean_value(false);
             }
 
@@ -1294,7 +1294,7 @@
                 runtime_object.properties["zoombox"] = make_boolean_value(false);
             }
 
-            if (normalized_base_class == "form" &&
+            if ((normalized_base_class == "form" || normalized_base_class == "toolbar") &&
                 !runtime_object.properties.contains("showtips"))
             {
                 // Headless contract: preserve the documented Form default.

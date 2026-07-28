@@ -2,6 +2,14 @@
 
 ## Current State
 
+The current implementation slice for #4796 under #3217 extends native PRG
+`ShowTips` from `Form` to `ToolBar` and the shared `_SCREEN`/`_VFP`
+application surface. Direct assignment and PEM writes share synchronized
+state; derived initialization, `PEMSTATUS`, `AMEMBERS`, and built-in
+shadow/removal protection are covered by the focused runtime-surface CTest
+(`1/1`). Tooltip rendering and hosted UI remain separate boundaries. Close
+the issue only after the normal implementation review/validation handoff.
+
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
 implementation head is `30ff4ec38`, with coordination-only documentation and

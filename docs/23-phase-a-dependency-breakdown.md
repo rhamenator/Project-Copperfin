@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent native PRG parity slice: `#4796` under `#3217` extends the existing
+  `ShowTips` contract from `Form` to `ToolBar` and the shared `_SCREEN`/`_VFP`
+  application surface. Direct assignment, `GETPEM`/`SETPEM`/`PUTPEM`,
+  `PEMSTATUS`, `AMEMBERS`, derived initialization, and built-in
+  shadow/removal protection pass in the focused runtime-surface CTest. This
+  is a headless state/reflection contract; tooltip rendering and hosted UI
+  evidence remain separate boundaries.
 - Recent native PRG compatibility slices: `#4791` and `#4792` under `#3217`
   implement VFP `PROGRAM()` routine-name and `PROGRAM(-1)` stack-depth
   introspection plus the singular `LPARAMETER` parser abbreviation used by

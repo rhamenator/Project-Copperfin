@@ -135,7 +135,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_form_whats_this_button_defaults_are_runtime_readonly_and_stay_builtin();
     void test_native_form_sizebox_defaults_mutate_and_stay_builtin();
     void test_native_form_zoombox_defaults_mutate_and_stay_builtin();
-    void test_native_form_showtips_defaults_mutate_and_stay_builtin();
+    void test_native_showtips_defaults_mutate_and_stay_builtin();
     void test_native_form_whatsthishelp_defaults_mutate_and_stay_builtin();
     void test_native_form_controlbox_defaults_mutates_and_stays_builtin();
     void test_native_form_closable_defaults_mutates_and_stays_builtin();

@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- Current native PRG ShowTips status (2026-07-28, #4796 under #3217): the
+  shared headless runtime surface now exposes the documented logical
+  `ShowTips` property for `Form`, `ToolBar`, and the `_SCREEN`/`_VFP`
+  application surface, with a `.F.` default and synchronized direct/PEM
+  writes. Built-in reflection protection, derived-class initialization, and
+  unsupported-control rejection are covered by the focused runtime-surface
+  CTest, which passes `1/1`. Tooltip rendering, hover timing, and hosted UI
+  remain separate implementation and evidence boundaries.
+
 - Current ReportBuilder compatibility status (2026-07-28): runtime children
   #4791 and #4792 under #3217 are implemented at product head `89c669593`.
   `PROGRAM()` reports the active routine name, `PROGRAM(-1)` reports the active

@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented native PRG `ShowTips` parity slice #4796 under
+  #3217. The shared headless runtime surface now supports the `.F.` default,
+  direct assignment, PEM reflection, derived initialization, and built-in
+  protection for `Form`, `ToolBar`, and `_SCREEN`/`_VFP`. The focused
+  runtime-surface CTest passes `1/1`; tooltip rendering and hosted UI remain
+  separate boundaries.
+
 - 2026-07-28: Refreshed #4403 safety traceability at documentation head
   `06b67a94e`. Added an explicit per-DQ DQ-to-DV-to-HZ mapping to the archived
   report and live issue after the Windows audit identified that gap. The

@@ -1104,6 +1104,7 @@ namespace copperfin::runtime
         std::string representative_application_caption = "Microsoft Visual FoxPro";
         int representative_application_window_state = 0;
         bool representative_application_right_to_left = true;
+        bool representative_application_show_tips = false;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::set<std::string> active_native_property_assignments;
@@ -1890,6 +1891,11 @@ namespace copperfin::runtime
                     normalized_property_path == "_vfp.righttoleft")
                 {
                     return make_boolean_value(representative_application_right_to_left);
+                }
+                if (normalized_property_path == "_screen.showtips" ||
+                    normalized_property_path == "_vfp.showtips")
+                {
+                    return make_boolean_value(representative_application_show_tips);
                 }
                 if (normalized_property_path == "_screen.mousepointer" ||
                     normalized_property_path == "_vfp.mousepointer")
@@ -8756,6 +8762,12 @@ namespace copperfin::runtime
             return false;
         }
 
+        if (normalized_property_name == "showtips" &&
+            normalize_identifier(trim_copy(runtime_object.prog_id)) == "_screen")
+        {
+            representative_application_show_tips = value_as_bool(assigned_value);
+        }
+
         const std::string property_assignment_key =
             std::to_string(runtime_object.handle) + ":" + normalized_property_name;
 
@@ -12407,6 +12419,7 @@ namespace copperfin::runtime
             application_surface->second.base_class_name = "Screen";
             application_surface->second.class_hierarchy = {"SCREEN", "OBJECT"};
             application_surface->second.properties["mousepointer"] = make_number_value(0.0);
+            application_surface->second.properties["showtips"] = make_boolean_value(false);
             impl->representative_application_surface_handle = application_surface_handle;
             const PrgValue application_surface_reference = make_string_value(
                 "object:" + application_surface->second.prog_id + "#" +

@@ -436,7 +436,7 @@ bool native_form_zoombox_member_name_matches(
            runtime_object.properties.contains("zoombox");
 }
 
-bool native_form_showtips_member_name_matches(
+bool native_showtips_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     if (normalized_member_name != "showtips") {
@@ -444,7 +444,10 @@ bool native_form_showtips_member_name_matches(
     }
 
     const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
-    return normalized_base_class == "form" &&
+    const std::string normalized_prog_id = normalize_identifier(trim_copy(runtime_object.prog_id));
+    return (normalized_base_class == "form" ||
+            normalized_base_class == "toolbar" ||
+            normalized_prog_id == "_screen") &&
            runtime_object.properties.contains("showtips");
 }
 

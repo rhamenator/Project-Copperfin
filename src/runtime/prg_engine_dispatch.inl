@@ -1337,6 +1337,24 @@
                                               .location = statement.location});
                             return {};
                         }
+                        if (normalized_member_path == "showtips")
+                        {
+                            representative_application_show_tips = value_as_bool(assignment_value);
+                            if (RuntimeOleObjectState *application_surface = representative_application_surface_object();
+                                application_surface != nullptr)
+                            {
+                                application_surface->properties["showtips"] =
+                                    make_boolean_value(representative_application_show_tips);
+                                application_surface->last_action = "ShowTips = " +
+                                    value_as_string(application_surface->properties["showtips"]);
+                                ++application_surface->action_count;
+                            }
+                            events.push_back({.category = "ole.set",
+                                              .detail = object_part + ".ShowTips = " +
+                                                            (representative_application_show_tips ? "true" : "false"),
+                                              .location = statement.location});
+                            return {};
+                        }
                         if (normalized_member_path == "mousepointer")
                         {
                             RuntimeOleObjectState *application_surface =
