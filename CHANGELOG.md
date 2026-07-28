@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4780 under #3217 at product head
+  `faca165e5`. Native PRG `Form.ShowInTaskbar` now follows the mounted VFP9
+  contract: `.T.` default, read-only runtime/reflection metadata, preserved
+  design-time/class declarations, and rejected direct/PEM/dynamic mutation.
+  The focused `test_prg_engine_runtime_surface_functions` CTest passes 1/1
+  locally. This is a headless property contract; taskbar registration,
+  rendering, and hosted Windows UI remain separate.
+
 - 2026-07-28: Implemented security child #4779 under #3866 at product head
   `7d4eb8739`. Strict verified runtime primary, memo, and index snapshots now
   use native exclusive creation with restrictive permissions/attributes before
