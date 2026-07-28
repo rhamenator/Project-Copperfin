@@ -118,9 +118,14 @@ Current release evidence is split between the implementation head
 `7c13a926d` and later documentation-only commits. The local POSIX validation
 at `2417603ea` rebuilt the native tree and passed all `316/316` CTest cases in
 `301.53s`, with only the two expected platform-conditional skips. Hosted
-macOS Native Validation `30317113983` passed `316/316` in `218.31s`; hosted
-Linux `30317113995` and Windows `30317113993` remain in progress. The project
-does not claim a complete cross-platform RC gate until those two runs finish.
+Linux Native Validation `30317113995` passed `316/316` in `175.62s`, and hosted
+macOS `30317113983` passed `316/316` in `218.31s`. Windows run `30317113993`
+failed only `test_runtime_pipeline` (`314/315` passed) because the full-suite
+fixture compared short `RUNNER~1` temp paths with the product's long
+directory-entry spelling; test-only correction `73cdd5f57` normalizes the
+fixture namespace with `GetLongPathNameW`, and rerun `30320046748` is pending.
+The project does not claim a complete cross-platform RC gate until that rerun
+finishes.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.

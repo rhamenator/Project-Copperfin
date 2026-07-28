@@ -1,5 +1,15 @@
 # Agent Handoff
 
+- Windows Native Validation `30317113993` at implementation head `7c13a926d`
+  completed `314/315` tests before failing only `test_runtime_pipeline`. The
+  nine failures were exact staged/source-provenance assertions caused by the
+  full-suite fixture inheriting `C:\Users\RUNNER~1` while production resolved
+  existing source paths to the actual long spelling. Test-only commit
+  `73cdd5f57` expands the fixture namespace through `GetLongPathNameW` under
+  `_WIN32`, preserving strict #3953 path assertions without changing runtime
+  code. Linux `test_runtime_pipeline` passes `1/1` in `44.72s`; fresh Windows
+  Native rerun `30320046748` is pending.
+
 - RC evidence update at implementation head `7c13a926d`: hosted macOS Native
   Validation `30317113983` passed `316/316` CTest cases in `218.31s`, and the
   installer workflow `30317113970` passed Linux, Windows, and macOS packaging

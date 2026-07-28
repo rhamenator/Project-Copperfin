@@ -23,12 +23,17 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 At implementation head `7c13a926d`, hosted macOS Native Validation
-`30317113983` passed all `316/316` CTest cases in `218.31s`; hosted Linux
-`30317113995` and Windows `30317113993` remain in progress. The earlier local
+`30317113983` passed all `316/316` CTest cases in `218.31s`, and hosted Linux
+`30317113995` passed `316/316` in `175.62s`. Windows run `30317113993`
+failed only `test_runtime_pipeline` (`314/315` passed) because the full-suite
+fixture compared short `RUNNER~1` temp paths with the product's long
+directory-entry spelling; test-only correction `73cdd5f57` normalizes the
+fixture namespace with `GetLongPathNameW`, and rerun `30320046748` is pending.
+The earlier local
 POSIX validation at `2417603ea` passed `316/316` in `301.53s`, skipping only
 `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`.
-These results are still partial release evidence until the Linux and Windows
-hosted runs finish.
+These results are still partial release evidence until the corrected Windows
+hosted run finishes.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
