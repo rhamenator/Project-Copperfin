@@ -133,4 +133,128 @@ namespace copperfin::runtime_surface_tests
         check("nlastshift", "0");
         check("naltshift", "4");
     }
+
+    void test_native_keypress_dispatches_default_and_cancel_buttons()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_default_cancel_dispatch";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "default_cancel_dispatch.prg";
+        write_text(
+            main_path,
+            "PUBLIC nDefaultClicks, nCancelClicks, lSuppressDefault, nFormHwnd\n"
+            "nDefaultClicks = 0\n"
+            "nCancelClicks = 0\n"
+            "lSuppressDefault = .F.\n"
+            "oForm = CREATEOBJECT('DefaultCancelForm')\n"
+            "nFormHwnd = oForm.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS DefaultCancelForm AS Form\n"
+            "    ADD OBJECT cmdNoClick AS NoClickDefaultButton\n"
+            "    ADD OBJECT cmdDefault AS DefaultButton\n"
+            "    ADD OBJECT cmdCancel AS CancelButton\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 13 AND lSuppressDefault\n"
+            "            NODEFAULT\n"
+            "        ENDIF\n"
+            "        IF tnKeyCode = 67\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NoClickDefaultButton AS CommandButton\n"
+            "    Default = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DefaultButton AS CommandButton\n"
+            "    Default = .T.\n"
+            "    FUNCTION Click\n"
+            "        nDefaultClicks = nDefaultClicks + 1\n"
+            "        lSuppressDefault = .T.\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CancelButton AS CommandButton\n"
+            "    Cancel = .T.\n"
+            "    FUNCTION Click\n"
+            "        nCancelClicks = nCancelClicks + 1\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Default/Cancel fixture should pause in READ EVENTS: " + state.message);
+
+        const auto hwnd_it = state.globals.find("nformhwnd");
+        expect(hwnd_it != state.globals.end(),
+               "Default/Cancel fixture should publish the Form hWnd");
+        std::intptr_t form_hwnd = 0;
+        if (hwnd_it != state.globals.end())
+        {
+            form_hwnd = static_cast<std::intptr_t>(
+                std::stoll(copperfin::runtime::format_value(hwnd_it->second)));
+        }
+
+        const auto enter_result = session.dispatch_windows_message(form_hwnd, 0x0100, 13, 0);
+        expect(enter_result.has_value() && *enter_result == 0,
+               "ENTER should dispatch the eligible default button Click");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Default button Click should restore the event loop");
+
+        const auto escape_result = session.dispatch_windows_message(form_hwnd, 0x0100, 27, 0);
+        expect(escape_result.has_value() && *escape_result == 0,
+               "ESC should dispatch the eligible cancel button Click");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Cancel button Click should restore the event loop");
+
+        const auto suppressed_result = session.dispatch_windows_message(form_hwnd, 0x0100, 13, 0);
+        expect(suppressed_result.has_value() && *suppressed_result == 1,
+               "Form KeyPress NODEFAULT should suppress default button activation");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Suppressed default activation should restore the event loop");
+
+        const auto clear_result = session.dispatch_windows_message(form_hwnd, 0x0100, 67, 0);
+        expect(clear_result.has_value() && *clear_result == 0,
+               "A non-action key should retain the ordinary KeyPress result");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "Default/Cancel fixture should complete after CLEAR EVENTS: " + state.message);
+
+        const auto default_clicks = state.globals.find("ndefaultclicks");
+        const auto cancel_clicks = state.globals.find("ncancelclicks");
+        expect(default_clicks != state.globals.end() &&
+                   copperfin::runtime::format_value(default_clicks->second) == "1",
+               "Default button should be clicked once while the no-handler candidate is skipped");
+        expect(cancel_clicks != state.globals.end() &&
+                   copperfin::runtime::format_value(cancel_clicks->second) == "1",
+               "Cancel button should be clicked once");
+
+        std::size_t click_events = 0U;
+        for (const auto &event : state.events)
+        {
+            if (event.category == "prg.event.click")
+            {
+                ++click_events;
+            }
+        }
+        expect(click_events == 2U,
+               "Default/Cancel activation should emit one invariant click event per action");
+        fs::remove_all(temp_root, ignored);
+    }
 }

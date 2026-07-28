@@ -541,6 +541,7 @@ namespace copperfin::runtime_surface_tests
     void test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
     void test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
     void test_native_keypress_dispatch_and_nodefault_preserve_event_loop_state();
+    void test_native_keypress_dispatches_default_and_cancel_buttons();
     void test_native_list_control_interactivechange_dispatches_for_changed_input();
     void test_native_form_keypreview_dispatches_before_child_keypress();
     void test_native_click_dispatches_on_left_button_release();
