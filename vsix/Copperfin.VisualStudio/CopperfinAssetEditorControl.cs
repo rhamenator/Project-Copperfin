@@ -151,6 +151,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
     private readonly ListView coverageView;
     private readonly RichTextBox databaseSummaryBox;
     private readonly ListView databaseView;
+    private readonly TextBox databaseFilterBox;
     private readonly TextBox dataExplorerFilterBox;
     private readonly TextBox objectBrowserFilterBox;
     private readonly CheckBox objectBrowserHideProjectCheckBox;
@@ -1048,6 +1049,14 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Title"), 240);
         databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Shape"), 300);
         databaseView.Columns.Add(this.localization.Text("AssetEditor.Database.Column.Details"), 620);
+        databaseView.SelectedIndexChanged += (_, _) => RefreshDatabaseSelectionSummary();
+
+        databaseFilterBox = new TextBox
+        {
+            Dock = DockStyle.Top,
+            AccessibleName = this.localization.Text("AssetEditor.Database.FilterAccessibleName")
+        };
+        databaseFilterBox.TextChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
 
         dataExplorerFilterBox = new TextBox
         {
@@ -1296,6 +1305,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         databaseSummaryPanel.Controls.Add(databaseSummaryBox);
         databasePageHost.Controls.Add(databaseView);
         databasePageHost.Controls.Add(databaseSummaryPanel);
+        databasePageHost.Controls.Add(databaseFilterBox);
         databasePage.Controls.Add(databasePageHost);
         projectWorkspaceTabs.TabPages.Add(summaryPage);
         projectWorkspaceTabs.TabPages.Add(debuggerPage);
@@ -1738,6 +1748,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         coverageView.Items.Clear();
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
         databaseView.Items.Clear();
+        databaseFilterBox.Text = string.Empty;
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
         objectBrowserHideProjectCheckBox.Checked = false;
@@ -3305,8 +3316,21 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         _ = LoadBuilderCatalogAsync(loadGeneration);
         PopulateCoverage(currentDebugSession);
         coverageSummaryBox.Text = BuildCoverageSummary(currentSnapshot, currentDebugSession);
-        PopulateDatabaseFederation(currentSnapshot, dataExplorerFilterBox.Text);
-        databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, dataExplorerFilterBox.Text);
+        PopulateDatabaseFederation(currentSnapshot, databaseFilterBox.Text);
+        databaseSummaryBox.Text = BuildDatabaseFederationSummary(currentSnapshot, databaseFilterBox.Text, null);
+    }
+
+    private void RefreshDatabaseSelectionSummary()
+    {
+        if (currentSnapshot?.ProjectWorkspace is null || currentSnapshot.AssetFamily != "project")
+        {
+            return;
+        }
+
+        databaseSummaryBox.Text = BuildDatabaseFederationSummary(
+            currentSnapshot,
+            databaseFilterBox.Text,
+            databaseView.SelectedItems.Count == 1 ? databaseView.SelectedItems[0].Tag : null);
     }
 
     private void PopulateDatabaseFederation(CopperfinStudioSnapshotDocument snapshot, string? filter)
@@ -3328,7 +3352,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             item.SubItems.Add(connector.Title);
             item.SubItems.Add(connector.Family + " / " + connector.SchemaShape);
             item.SubItems.Add(connector.TranslationStory);
-            item.Tag = connector.Id;
+            item.Tag = connector;
             databaseView.Items.Add(item);
         }
 
@@ -3342,7 +3366,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             item.SubItems.Add(path.Title);
             item.SubItems.Add(path.SourceShape + " -> " + path.TargetShape);
             item.SubItems.Add(path.Complexity + ": " + path.Strategy);
-            item.Tag = path.Id;
+            item.Tag = path;
             databaseView.Items.Add(item);
         }
     }
@@ -5562,7 +5586,10 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private string BuildDatabaseFederationSummary(CopperfinStudioSnapshotDocument snapshot, string? filter)
+    private string BuildDatabaseFederationSummary(
+        CopperfinStudioSnapshotDocument snapshot,
+        string? filter,
+        object? selectedEntry)
     {
         var summary = new StringBuilder();
         summary.AppendLine(L("AssetEditor.Summary.DatabaseFederation"));
@@ -5627,6 +5654,38 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(F("AssetEditor.Summary.BulletLine", guardrail));
         }
 
+        summary.AppendLine();
+        summary.AppendLine(L("AssetEditor.Summary.SelectedDatabaseEntry"));
+        switch (selectedEntry)
+        {
+            case CopperfinStudioDatabaseConnector connector:
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelId"), connector.Id));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelTitle"), connector.Title));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelFamily"), connector.Family));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelAccessMode"), connector.AccessMode));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelSchemaShape"), connector.SchemaShape));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelTranslationStory"), connector.TranslationStory));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelXbaseCommandsFirstClass"), LBoolean(connector.XbaseCommandsFirstClass)));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelDirectFoxSql"), LBoolean(connector.FoxSqlTranslationDirect)));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelOptionalAiPlanning"), LBoolean(connector.AiQueryPlanningOptional)));
+                break;
+            case CopperfinStudioQueryTranslationPath path:
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelId"), path.Id));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelTitle"), path.Title));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelSourceShape"), path.SourceShape));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelTargetShape"), path.TargetShape));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelComplexity"), path.Complexity));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelStrategy"), path.Strategy));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelDeterministicFirst"), LBoolean(path.DeterministicFirst)));
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelOptionalAiPlanning"), LBoolean(path.AiOptional)));
+                break;
+            default:
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.NoDatabaseSelection")));
+                break;
+        }
+
         return summary.ToString();
     }
+
+    private string LBoolean(bool value) => L(value ? "AssetEditor.Summary.Boolean.True" : "AssetEditor.Summary.Boolean.False");
 }

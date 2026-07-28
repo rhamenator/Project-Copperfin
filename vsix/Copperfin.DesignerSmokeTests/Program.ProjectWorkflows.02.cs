@@ -170,6 +170,39 @@ internal static partial class Program
                 {
                     Entries = new List<CopperfinStudioProjectEntry> { projectEntry }
                 },
+                DatabaseProfile = new CopperfinStudioDatabaseFederationProfile
+                {
+                    Available = true,
+                    Connectors = new List<CopperfinStudioDatabaseConnector>
+                    {
+                        new CopperfinStudioDatabaseConnector
+                        {
+                            Id = "connector.sql",
+                            Title = "Orders SQL",
+                            Family = "sqlserver",
+                            AccessMode = "readwrite",
+                            SchemaShape = "relational",
+                            TranslationStory = "Direct Fox SQL translation",
+                            XbaseCommandsFirstClass = true,
+                            FoxSqlTranslationDirect = true
+                        }
+                    },
+                    QueryPaths = new List<CopperfinStudioQueryTranslationPath>
+                    {
+                        new CopperfinStudioQueryTranslationPath
+                        {
+                            Id = "query.orders",
+                            Title = "Orders query",
+                            SourceShape = "Fox SQL",
+                            TargetShape = "relational SQL",
+                            Complexity = "simple",
+                            Strategy = "deterministic translation",
+                            DeterministicFirst = true,
+                            AiOptional = true
+                        }
+                    },
+                    Guardrails = new List<string> { "Deterministic translation remains the first path." }
+                },
                 Objects = new List<CopperfinStudioSnapshotObject> { snapshotObject }
             });
             GetPrivateField<ListView>(control, "sectionListView")?.Items.Clear();
@@ -466,6 +499,46 @@ internal static partial class Program
                     dataActivated &&
                     string.Equals(requestedPath, dataAssetPath, StringComparison.Ordinal),
                     "project workspace Data Explorer activation should open the selected asset path");
+            }
+
+            var databaseFilter = GetPrivateField<TextBox>(control, "databaseFilterBox");
+            var database = FindListViews(control)
+                .FirstOrDefault(list => list.Columns.Count == 4 &&
+                                        string.Equals(list.Columns[0].Text, "Kind", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[1].Text, "Title", StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(list.Columns[2].Text, "Shape", StringComparison.OrdinalIgnoreCase));
+            Expect(databaseFilter is not null && database is not null && database.Items.Count == 2,
+                "project workspace Database should expose an independent filter and all supported entries");
+            if (databaseFilter is not null && database is not null)
+            {
+                projectWorkspaceTabs?.SelectTab(9);
+                Application.DoEvents();
+                databaseFilter.Text = "sqlserver";
+                Application.DoEvents();
+                Expect(database.Items.Count == 1 && dataExplorer is not null && dataExplorer.Items.Count == 1,
+                    "project workspace Database filtering should not change the Data Explorer result");
+                database.Items[0].Selected = true;
+                database.Items[0].Focused = true;
+                Application.DoEvents();
+                var databaseSummary = GetPrivateField<RichTextBox>(control, "databaseSummaryBox");
+                Expect(databaseSummary is not null &&
+                       databaseSummary.Text.IndexOf("Orders SQL", StringComparison.Ordinal) >= 0 &&
+                       databaseSummary.Text.IndexOf("readwrite", StringComparison.Ordinal) >= 0 &&
+                       databaseSummary.Text.IndexOf("Direct Fox SQL", StringComparison.Ordinal) >= 0,
+                    $"project workspace Database connector selection should expose supported connector details (summary: {databaseSummary?.Text ?? "<missing>"})");
+
+                databaseFilter.Text = "orders query";
+                Application.DoEvents();
+                Expect(database.Items.Count == 1,
+                    "project workspace Database should filter query paths by title");
+                database.Items[0].Selected = true;
+                database.Items[0].Focused = true;
+                Application.DoEvents();
+                Expect(databaseSummary is not null &&
+                       databaseSummary.Text.IndexOf("Orders query", StringComparison.Ordinal) >= 0 &&
+                       databaseSummary.Text.IndexOf("deterministic translation", StringComparison.Ordinal) >= 0 &&
+                       databaseSummary.Text.IndexOf("Deterministic First", StringComparison.Ordinal) >= 0,
+                    $"project workspace Database query-path selection should expose supported translation details (summary: {databaseSummary?.Text ?? "<missing>"})");
             }
 
             if (projectWorkspaceTabs is not null)
