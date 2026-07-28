@@ -143,6 +143,11 @@ language-service tests, the Windows net472 process-runner test, and artifact
 upload. Its first attempt failed once at the child-cleanup assertion and passed
 on same-head rerun without source changes; #4014 coverage remains intact.
 
+Focused Windows corroboration at the same implementation head also passed the
+real net472 process-runner fixture and all four debugger-detail smoke assertions
+(`SmokeDebuggerDetailTablesMirrorPauseState`). This is hosted managed evidence,
+not a substitute for the full Windows native matrix or live Visual Studio UI.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).
