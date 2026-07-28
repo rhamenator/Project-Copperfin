@@ -228,6 +228,7 @@
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
+            is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
@@ -626,6 +627,7 @@
             is_native_grid_relativecolumn_member_name(*runtime_object, member_name) ||
             is_native_grid_relativerow_member_name(*runtime_object, member_name) ||
             is_native_form_desktop_member_name(*runtime_object, member_name) ||
+            is_native_form_show_in_taskbar_member_name(*runtime_object, member_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, member_name) ||
             is_native_grid_scrollbars_member_name(*runtime_object, member_name) ||
             is_native_movable_member_name(*runtime_object, member_name) ||
@@ -1389,6 +1391,7 @@
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
             is_native_form_desktop_member_name(*runtime_object, property_name) ||
+            is_native_form_show_in_taskbar_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_grid_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||

@@ -600,6 +600,7 @@
                 is_native_olecontrol_conflict_member_name(runtime_object, normalized_property_name) ||
                 is_native_child_parent_member_name(runtime_object, normalized_property_name) ||
                 is_native_form_desktop_member_name(runtime_object, normalized_property_name) ||
+                is_native_form_show_in_taskbar_member_name(runtime_object, normalized_property_name) ||
                 is_native_form_scrollbars_member_name(runtime_object, normalized_property_name) ||
                 is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {

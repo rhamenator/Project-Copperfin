@@ -1260,6 +1260,13 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("showintaskbar"))
+            {
+                // Headless contract: preserve the documented top-level-form default.
+                runtime_object.properties["showintaskbar"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("scrollbars"))
             {
                 runtime_object.properties["scrollbars"] = make_number_value(0.0);

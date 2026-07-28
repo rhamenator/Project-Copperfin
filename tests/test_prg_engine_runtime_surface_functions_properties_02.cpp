@@ -91,6 +91,96 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_show_in_taskbar_defaults_are_runtime_readonly_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_show_in_taskbar";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_show_in_taskbar.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasShowInTaskbar = PEMSTATUS(oBaseForm, 'ShowInTaskbar', 1)\n"
+            "lBaseShowInTaskbarReadOnly = PEMSTATUS(oBaseForm, 'ShowInTaskbar', 5)\n"
+            "lBaseBefore = oBaseForm.ShowInTaskbar\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'ShowInTaskbar')\n"
+            "oBaseForm.ShowInTaskbar = .F.\n"
+            "lBaseAfterDirectAssign = oBaseForm.ShowInTaskbar\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'ShowInTaskbar', .F.)\n"
+            "lBaseAfterSetPem = oBaseForm.ShowInTaskbar\n"
+            "lBasePutPem = PUTPEM(oBaseForm, 'ShowInTaskbar', .F.)\n"
+            "lBaseAfterPutPem = oBaseForm.ShowInTaskbar\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'ShowInTaskbar', .F.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'ShowInTaskbar')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.ShowInTaskbar\n"
+            "lChildBefore = oDerived.cmdSave.ReadShowInTaskbar()\n"
+            "oDerived.cmdSave.DisableTaskbar()\n"
+            "lDerivedAfterChild = oDerived.ShowInTaskbar\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'ShowInTaskbar')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasShowInTaskbar = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'SHOWINTASKBAR'\n"
+            "        lPropHasShowInTaskbar = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadShowInTaskbar\n"
+            "        RETURN THISFORM.ShowInTaskbar\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisableTaskbar\n"
+            "        THISFORM.ShowInTaskbar = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ShowInTaskbar = .F.\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form ShowInTaskbar property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasshowintaskbar", "true");
+        check("lbaseshowintaskbarreadonly", "true");
+        check("lbasebefore", "true");
+        check("xbasegetpembefore", "true");
+        check("lbaseafterdirectassign", "true");
+        check("lbasesetpem", "false");
+        check("lbaseaftersetpem", "true");
+        check("lbaseputpem", "false");
+        check("lbaseafterputpem", "true");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "false");
+        check("lchildbefore", "false");
+        check("lderivedafterchild", "false");
+        check("xderivedgetpem", "false");
+        check("lprophasshowintaskbar", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_controlbox_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
