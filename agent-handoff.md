@@ -41,6 +41,14 @@ folded-only CDX failure. #4771 remains open; Claude and Windows have accepted
 its unchanged behavior, while hosted macOS/full-matrix corroboration remains
 pending. Do not claim the complete RC evidence gate from either child alone.
 
+The next strict-reader slice, #4772 under #3866, is implemented at product
+head `4957a62c3`. It closes the separate source-text override ambiguity path:
+direct PRG loading, strict `#INCLUDE`, and DO admission probes now fail closed
+on multiple folded-only admitted source keys. Local `test_prg_engine`,
+`test_prg_engine_dynamic_xasset_security`, and
+`test_prg_engine_runtime_surface_functions` pass `3/3`; hosted exact-head
+review is pending. Do not close #4772 until its platform evidence resolves.
+
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
 Windows path values before calling C environment APIs. This prevents silent

@@ -17,6 +17,13 @@ the focused verified-file, database-lifecycle, and runtime-surface tests pass
 targets `3/3`, including the previously failing folded-only CDX collision;
 macOS/full-matrix validation remains separate release evidence.
 
+Strict PRG and header source-text overrides now use the same exact-key,
+unique-folded, fail-closed-on-ambiguity rule under #3866/#4772. The rule covers
+direct program loading, `#INCLUDE` expansion, and strict DO admission probes;
+non-strict source parsing retains its existing filesystem behavior. Product
+head `4957a62c3` passes the focused PRG, dynamic-xAsset security, and runtime
+surface targets locally; exact-head hosted review remains pending.
+
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic
 `CommandButton.Default` candidate, while ESC selects `CommandButton.Cancel`,

@@ -58,6 +58,9 @@ targets pass `3/3`; exact-head Windows validation seq778 closed #4770 after
 passing those targets `3/3`, including the prior folded-only CDX failure.
 Claude and Windows have reviewed #4771; its remaining hosted macOS/full-matrix
 evidence is pending, so #4771 remains open.
+The new #4772 strict PRG source-admission correction is at product head
+`4957a62c3`; its focused local PRG, dynamic-xAsset security, and runtime-surface
+targets pass `3/3`, with exact-head hosted review pending.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
