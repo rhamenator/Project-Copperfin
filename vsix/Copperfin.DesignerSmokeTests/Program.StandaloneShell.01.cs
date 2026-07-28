@@ -5,6 +5,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -91,6 +92,42 @@ internal static partial class Program
             "standalone Command window should preserve its initial transcript");
 
         TearDownForm(form);
+    }
+
+    private static void SmokeDesignerHarnessCleanupClosesOwnedForms()
+    {
+        using var owner = new Form
+        {
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000),
+            Width = 640,
+            Height = 360,
+            Text = "Copperfin smoke owner"
+        };
+        using var child = new Form
+        {
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000),
+            Width = 320,
+            Height = 180,
+            Text = "Copperfin smoke child",
+            Owner = owner
+        };
+
+        owner.Show();
+        child.Show(owner);
+        Application.DoEvents();
+        Expect(Application.OpenForms.Cast<Form>().Contains(owner) &&
+               Application.OpenForms.Cast<Form>().Contains(child),
+            "smoke cleanup regression should create an owned form tree");
+
+        CloseHarnessForms();
+        Expect(owner.IsDisposed && child.IsDisposed &&
+               !Application.OpenForms.Cast<Form>().Contains(owner) &&
+               !Application.OpenForms.Cast<Form>().Contains(child),
+            "smoke harness cleanup should close and dispose owned Copperfin forms");
     }
 
     private static void SmokeStandaloneStudioToolWindowFloating()

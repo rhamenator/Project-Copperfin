@@ -2,6 +2,15 @@
 
 ## Current State
 
+The current test-infrastructure slice for #4798 under #25 hardens the managed
+DesignerSmoke executable's cleanup boundary. The runner recursively closes and
+disposes only forms owned by its own process before writing the final status
+marker, including owned floating tool windows and normal assertion-failure
+paths. The focused `SmokeDesignerHarnessCleanupClosesOwnedForms` regression
+passes in Mono offscreen mode; no Copperfin smoke or Studio process remains
+after the run. Xvfb is unavailable on this Linux host, so virtual-display
+coverage remains a separate environment check.
+
 The current implementation slice for #4797 under #3217 adds VFP9 native PRG
 `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` to `Form` and the shared
 `_SCREEN`/`_VFP` application surface. The properties use `-1` for no limit,

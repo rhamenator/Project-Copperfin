@@ -1,3 +1,9 @@
+- 2026-07-28: Hardened the managed DesignerSmoke harness for #4798 under
+  #25. The runner now closes and disposes its own WinForms owner trees before
+  writing the final status marker, including failure and floating-tool-window
+  paths, without touching unrelated desktop processes. The focused cleanup
+  regression passes in Mono offscreen mode; Xvfb was unavailable on this host.
+
 - 2026-07-28: Implemented native PRG Form sizing-limit parity slice #4797
   under #3217. `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` now work
   on `Form` and shared `_SCREEN`/`_VFP` state with VFP9 `-1` no-limit defaults,

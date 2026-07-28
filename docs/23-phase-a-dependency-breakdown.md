@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent F1 test-infrastructure slice: `#4798` adds a final owner-first,
+  recursive WinForms cleanup pass to the managed DesignerSmoke executable.
+  Preserve the process boundary: only forms opened by the smoke process may be
+  closed, and unrelated Visual Studio, Studio, or user processes must remain
+  untouched. The focused owned-form regression passes in Mono offscreen mode;
+  Windows and virtual-display validation remain separate evidence.
 - Recent native PRG parity slice: `#4797` under `#3217` adds the VFP9
   `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` numeric properties to
   `Form` and the shared `_SCREEN`/`_VFP` surface. The focused runtime-surface

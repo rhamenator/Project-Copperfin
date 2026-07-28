@@ -76,6 +76,10 @@ product-grade surface work described by the live MVP tree.
 The shared project workspace also provides grouped, read-only Project Explorer
 navigation; project mutation, drag/drop authoring, and full VFP9 Project
 Manager parity remain separate implementation work.
+The managed WinForms smoke harness now closes its own owner trees before
+completion, so a failed or interrupted utility-pane test does not leave a
+Copperfin command or terminal window open; hosted Visual Studio and native
+window-manager behavior remain separate evidence.
 
 ### Runtime And Language Compatibility
 

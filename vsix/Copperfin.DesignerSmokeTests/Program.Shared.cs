@@ -21,6 +21,71 @@ internal static partial class Program
 {
     private static int failures;
 
+    private static void CloseHarnessForms()
+    {
+        var openForms = Application.OpenForms.Cast<Form>().ToArray();
+        if (openForms.Length == 0)
+        {
+            return;
+        }
+
+        var closedForms = new HashSet<Form>();
+        foreach (var form in openForms.Where(form => form.Owner is null))
+        {
+            CloseHarnessFormTree(form, closedForms);
+        }
+
+        // A malformed owner relationship should not leave a window behind.
+        foreach (var form in openForms)
+        {
+            CloseHarnessFormTree(form, closedForms);
+        }
+
+        Application.DoEvents();
+    }
+
+    private static void CloseHarnessFormTree(Form form, ISet<Form> closedForms)
+    {
+        if (!closedForms.Add(form))
+        {
+            return;
+        }
+
+        foreach (var ownedForm in form.OwnedForms.ToArray())
+        {
+            CloseHarnessFormTree(ownedForm, closedForms);
+        }
+
+        try
+        {
+            if (!form.IsDisposed)
+            {
+                form.Hide();
+                form.Close();
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine(
+                $"WARN: smoke harness could not close form '{form.Text}': {exception.Message}");
+        }
+        finally
+        {
+            try
+            {
+                if (!form.IsDisposed)
+                {
+                    form.Dispose();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine(
+                    $"WARN: smoke harness could not dispose form '{form.Text}': {exception.Message}");
+            }
+        }
+    }
+
     private sealed class ExpectedSectionGroupingMetadata
     {
         public string GroupRole { get; set; } = string.Empty;
@@ -411,6 +476,7 @@ internal static partial class Program
 
         public int Finish()
         {
+            CloseHarnessForms();
             if (!ready_)
             {
                 WriteStatus("invalid");
