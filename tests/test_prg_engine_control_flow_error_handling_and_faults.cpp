@@ -563,9 +563,10 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
         "after_error = 'continued'\n"
         "RETURN\n"
         "PROCEDURE handleerr\n"
-        "PUBLIC cInitialMessage, cInitialProgram, nInitialLine, cCaughtMessage, nErrorRows, cFinalMessage, cFinalProgram, nFinalLine, cFinalParam\n"
+        "PUBLIC cInitialMessage, cInitialProgram, cInitialSys16, nInitialLine, cCaughtMessage, nErrorRows, cFinalMessage, cFinalProgram, cFinalSys16, nFinalLine, cFinalParam\n"
         "cInitialMessage = MESSAGE()\n"
         "cInitialProgram = PROGRAM()\n"
+        "cInitialSys16 = SYS(16)\n"
         "nInitialLine = LINENO()\n"
         "TRY\n"
         "    DO missing_inner\n"
@@ -575,6 +576,7 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
         "nErrorRows = AERROR(aErr)\n"
         "cFinalMessage = MESSAGE()\n"
         "cFinalProgram = PROGRAM()\n"
+        "cFinalSys16 = SYS(16)\n"
         "nFinalLine = LINENO()\n"
         "cFinalParam = aErr[1,3]\n"
         "RETURN\n"
@@ -588,9 +590,11 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
 
     const auto initial_message = state.globals.find("cinitialmessage");
     const auto initial_program = state.globals.find("cinitialprogram");
+    const auto initial_sys16 = state.globals.find("cinitialsys16");
     const auto initial_line = state.globals.find("ninitialline");
     const auto final_message = state.globals.find("cfinalmessage");
     const auto final_program = state.globals.find("cfinalprogram");
+    const auto final_sys16 = state.globals.find("cfinalsys16");
     const auto final_line = state.globals.find("nfinalline");
     const auto final_param = state.globals.find("cfinalparam");
     const auto rows = state.globals.find("nerrorrows");
@@ -598,9 +602,11 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
 
     expect(initial_message != state.globals.end(), "handler should capture initial MESSAGE()");
     expect(initial_program != state.globals.end(), "handler should capture initial PROGRAM()");
+    expect(initial_sys16 != state.globals.end(), "handler should capture initial SYS(16)");
     expect(initial_line != state.globals.end(), "handler should capture initial LINENO()");
     expect(final_message != state.globals.end(), "handler should preserve final MESSAGE() after caught inner fault");
     expect(final_program != state.globals.end(), "handler should preserve final PROGRAM() after caught inner fault");
+    expect(final_sys16 != state.globals.end(), "handler should preserve final SYS(16) after caught inner fault");
     expect(final_line != state.globals.end(), "handler should preserve final LINENO() after caught inner fault");
     expect(final_param != state.globals.end(), "AERROR() should preserve the original error parameter after a caught inner fault");
     expect(rows != state.globals.end(), "AERROR() should still return a row count after a caught inner fault");
@@ -621,6 +627,11 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
             copperfin::runtime::format_value(initial_line->second) == "2",
             "initial LINENO() should report the original faulting line");
     }
+    if (initial_sys16 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(initial_sys16->second) == main_path.string(),
+            "initial SYS(16) should report the original faulting file");
+    }
     if (final_message != state.globals.end()) {
         expect(
             copperfin::runtime::format_value(final_message->second).find("missing_outer") != std::string::npos,
@@ -635,6 +646,11 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
         expect(
             copperfin::runtime::format_value(final_line->second) == "2",
             "LINENO() should remain bound to the original ON ERROR fault");
+    }
+    if (final_sys16 != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(final_sys16->second) == main_path.string(),
+            "SYS(16) should remain bound to the original ON ERROR fault");
     }
     if (final_param != state.globals.end()) {
         expect(
@@ -1545,6 +1561,7 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
         "  cFnMsg = MESSAGE()\n"
         "  nFnLine = LINENO()\n"
         "  cFnProg = PROGRAM()\n"
+        "  cFnSys16 = SYS(16)\n"
         "ENDTRY\n"
         "RETURN\n"
         "PROCEDURE raiselegacy\n"
@@ -1591,6 +1608,7 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
     check("cerrstmt", "THROW make_throw_value()");
     check("cfnmsg", "User Thrown Error.");
     check("cfnprog", "raiselegacy");
+    check("cfnsys16", "PROCEDURE raiselegacy " + main_path.string());
 
     const auto catch_line_no = state.globals.find("ncatchlineno");
     const auto err_code = state.globals.find("nerrcode");
@@ -1605,16 +1623,19 @@ void test_throw_is_catchable_and_preserves_exception_uservalue() {
     expect(fn_line != state.globals.end(), "LINENO() should expose thrown line");
 
     if (catch_line_no != state.globals.end()) {
-        expect(copperfin::runtime::format_value(catch_line_no->second) == "31",
-               "caught THROW Exception LineNo should report the THROW statement line");
+        expect(copperfin::runtime::format_value(catch_line_no->second) == "32",
+               "caught THROW Exception LineNo should report the THROW statement line (got " +
+                   copperfin::runtime::format_value(catch_line_no->second) + ")");
     }
     if (err_line != state.globals.end()) {
-        expect(copperfin::runtime::format_value(err_line->second) == "31",
-               "AERROR()[1,5] should report the THROW statement line");
+        expect(copperfin::runtime::format_value(err_line->second) == "32",
+               "AERROR()[1,5] should report the THROW statement line (got " +
+                   copperfin::runtime::format_value(err_line->second) + ")");
     }
     if (fn_line != state.globals.end()) {
-        expect(copperfin::runtime::format_value(fn_line->second) == "31",
-               "LINENO() should report the THROW statement line");
+        expect(copperfin::runtime::format_value(fn_line->second) == "32",
+               "LINENO() should report the THROW statement line (got " +
+                   copperfin::runtime::format_value(fn_line->second) + ")");
     }
     if (err_code != state.globals.end() && fn_code != state.globals.end()) {
         expect(copperfin::runtime::format_value(err_code->second) == "2071",

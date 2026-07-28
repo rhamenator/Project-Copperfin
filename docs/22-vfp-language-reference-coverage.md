@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current fault-context status (2026-07-28, #4800 under #3217): native PRG
+  diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and
+  related error metadata bound to the original fault procedure while an
+  `ON ERROR` handler or `TRY/CATCH` block is active. Outside an active error
+  context, current-frame behavior is unchanged. The focused control-flow and
+  runtime-surface CTest targets pass locally; exact-head Windows validation
+  remains a required compatibility check.
+
 - Current native PRG form-sizing status (2026-07-28, #4797 under #3217): the
   shared headless runtime surface exposes VFP9 `MinWidth`, `MinHeight`,
   `MaxWidth`, and `MaxHeight` for `Form` and `_SCREEN`/`_VFP`, with `-1`

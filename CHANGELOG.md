@@ -1,3 +1,11 @@
+- 2026-07-28: Corrected #4800 under #3217 so native PRG diagnostic surfaces
+  preserve the original fault procedure while evaluating expressions in
+  `ON ERROR` handlers and `TRY/CATCH` blocks. `PROGRAM()`, `SYS(16)`,
+  `AERROR()`, and related error metadata now remain aligned with the faulting
+  routine without changing ordinary current-frame behavior. The focused
+  control-flow and runtime-surface CTest targets pass locally; Windows
+  exact-head validation remains pending.
+
 - 2026-07-28: Hardened the managed DesignerSmoke harness for #4798 under
   #25. The runner now closes and disposes its own WinForms owner trees before
   writing the final status marker, including failure and floating-tool-window

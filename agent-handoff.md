@@ -2,6 +2,16 @@
 
 ## Current State
 
+The current implementation slice for #4800 under #3217 corrects native PRG
+diagnostic context selection. While an `ON ERROR` handler or `TRY/CATCH` block
+evaluates expressions, `PROGRAM()`, `SYS(16)`, `AERROR()`, and related error
+metadata remain bound to the original faulting procedure; ordinary evaluation
+still reports the executing frame. The focused `test_prg_engine_control_flow`
+and `test_prg_engine_runtime_surface_functions` CTest targets pass locally.
+Windows exact-head validation has been requested through the agent channel and
+is still pending. This slice is intentionally stack-frugal and does not alter
+the broader VFP9 runtime or hosted UI boundaries.
+
 The current test-infrastructure slice for #4798 under #25 hardens the managed
 DesignerSmoke executable's cleanup boundary. The runner recursively closes and
 disposes only forms owned by its own process before writing the final status

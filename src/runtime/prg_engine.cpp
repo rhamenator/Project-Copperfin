@@ -1389,6 +1389,17 @@ namespace copperfin::runtime
                        ? preferred_cursor->alias
                        : designator;
         };
+        const bool handling_try_error = std::any_of(
+            frame.tries.begin(),
+            frame.tries.end(),
+            [](const TryState &try_state)
+            {
+                return try_state.handling_error;
+            });
+        const std::string diagnostic_program_name =
+            (handling_error || handling_try_error || !error_metadata_stack.empty())
+                ? current_error_procedure()
+                : frame.routine_name;
         ExpressionParser parser(
             effective_expression,
             frame,
@@ -1398,7 +1409,7 @@ namespace copperfin::runtime
             current_error_code(),
             current_error_procedure(),
             current_fault_location().line,
-            frame.routine_name,
+            diagnostic_program_name,
             stack.size(),
             [this](const long long level) -> std::optional<RuntimeProgramStackFrame>
             {
