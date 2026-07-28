@@ -2,7 +2,9 @@
   #25. The runner now closes and disposes its own WinForms owner trees before
   writing the final status marker, including failure and floating-tool-window
   paths, without touching unrelated desktop processes. The focused cleanup
-  regression passes in Mono offscreen mode; Xvfb was unavailable on this host.
+  regression passes in Mono offscreen mode, and the exact Windows
+  `run-required-designer-smoke.ps1` suite passed with completed status and no
+  remaining Copperfin process; Xvfb remains unavailable on this host.
 
 - 2026-07-28: Implemented native PRG Form sizing-limit parity slice #4797
   under #3217. `MinWidth`, `MinHeight`, `MaxWidth`, and `MaxHeight` now work
