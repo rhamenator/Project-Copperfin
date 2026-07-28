@@ -1,5 +1,15 @@
 # VFP Language Reference Coverage
 
+- Runtime menu lifecycle note (2026-07-28, #4753 under #3217): native PRG now
+  recognizes session-local `DEFINE MENU` declarations and requires a matching
+  case-insensitive definition before `ACTIVATE MENU`. `DEACTIVATE MENU` leaves
+  the definition available, while `RELEASE MENU` removes it; missing activation
+  uses the localized `Runtime.Prg.Dispatch.Error.MenuNotDefined` diagnostic.
+  Generated non-shortcut MNX bootstrap sources declare their synthetic menu
+  before the existing activation line, preserving the current xAsset startup
+  contract. Menu pads, rendering, selection callbacks, system menus, and
+  keyboard interaction remain separate compatibility work.
+
 - Runtime follow-up closure evidence (2026-07-28): #4751, #4752, and #4725 are closed at exact synchronized head `8718f9076`. Windows MSVC 18.8.2 Release built and passed `test_prg_engine_verified_dbf_security` plus `test_prg_engine_data_io` `2/2` in `5.76s`; Linux corroborated both targets `2/2`. The result confirms strict admitted-byte reads/copy behavior and exclusion of internal `_SCREEN`/`_VFP`/`application` bindings from user-facing memory listings while preserving direct property access. The Apple-specific numeric-parser source remains separate and untouched. The separate full Windows matrix remains release evidence.
 
 - #4750 closure evidence (2026-07-28): hosted Windows validation at `632f0e089` rebuilt the VS 2026/MSBuild 18.8.2 Release `test_runtime_pipeline` target and passed `1/1` in `138.60s`. The result confirms the Windows long-path/UTF-8 identity sequence, trusted external-root normalization, portable forward-slash package-relative paths, and Unicode direct/recursive `#INCLUDE` fixture expectations. #4750 is closed; the Apple-specific numeric-parser source remains separate and untouched. This focused result does not claim completion of the broader synchronized CI matrix.

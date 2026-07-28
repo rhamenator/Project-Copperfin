@@ -8,6 +8,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_list_controls_field_structure_rowsource_materializes_fields();
     void test_native_list_controls_collection_rowsource_materializes_members();
     void test_native_list_controls_popup_rowsource_materializes_static_bars();
+    void test_native_defined_menu_lifecycle();
     void test_native_popup_bar_selection_dispatches_registered_callback();
     void test_native_on_bar_activates_static_popup_submenu();
     void test_native_on_selection_bar_executes_static_action_command();

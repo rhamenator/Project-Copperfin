@@ -1410,6 +1410,7 @@
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} exige um handle de tarefa",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} nao aceita argumentos",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Nao foi possivel resolver o destino de {command}: {target}",
+  "Runtime.Prg.Dispatch.Error.MenuNotDefined": "O menu nao esta definido: {menuName}",
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "Area de trabalho de destino nao encontrada para {command}",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requer um comando LOCATE ativo",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE falhou: {errorMessage}",

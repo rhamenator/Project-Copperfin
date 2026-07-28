@@ -29,6 +29,7 @@ enum class StatementKind {
     do_form,
     report_form,
     label_form,
+    define_menu_command,
     define_popup_command,
     define_bar_command,
     on_bar_activate_popup_command,

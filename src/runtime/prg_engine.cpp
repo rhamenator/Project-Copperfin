@@ -791,6 +791,7 @@ namespace copperfin::runtime
             std::vector<std::string> key_stack;
             std::vector<std::string> menu_stack;
             std::vector<std::string> popup_stack;
+            std::set<std::string> defined_menus;
             std::map<std::string, std::map<long long, std::string>> popup_bar_prompts;
             std::map<std::string, std::map<long long, bool>> popup_bar_skip_states;
             std::map<std::string, std::map<long long, bool>> popup_bar_mark_states;

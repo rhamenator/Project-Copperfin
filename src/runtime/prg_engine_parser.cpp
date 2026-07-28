@@ -1754,6 +1754,12 @@ bool parse_popup_statement(const std::string& line, Statement& statement) {
         statement.expression = action_text;
         return true;
     }
+    if (starts_with_insensitive(line, "DEFINE MENU ")) {
+        statement.kind = StatementKind::define_menu_command;
+        const std::string body = trim_copy(line.substr(12U));
+        statement.identifier = unquote_identifier(take_first_token(body));
+        return true;
+    }
     if (starts_with_insensitive(line, "DEFINE POPUP ")) {
         statement.kind = StatementKind::define_popup_command;
         const std::string body = trim_copy(line.substr(13U));

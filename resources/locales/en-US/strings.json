@@ -1084,6 +1084,7 @@
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requires a task handle",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} does not take arguments",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Unable to resolve {command} target: {target}",
+  "Runtime.Prg.Dispatch.Error.MenuNotDefined": "Menu is not defined: {menuName}",
   "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "{command} target work area not found",
   "Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate": "CONTINUE requires an active LOCATE command",
   "Runtime.Prg.Dispatch.Error.CopyFileFailed": "COPY FILE failed: {errorMessage}",

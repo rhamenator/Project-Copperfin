@@ -793,6 +793,14 @@ std::string build_xasset_bootstrap_source(
         stream << "__cf_xasset_instance = CREATEOBJECT('__cf_xasset_root')\n";
     }
 
+    // A real MNX asset supplies the menu definition through the generated
+    // bootstrap. Keep the activation line and model metadata unchanged while
+    // making the runtime's defined-menu contract explicit.
+    if (model.activation_kind == "menu" && !model.activation_target.empty())
+    {
+        stream << "DEFINE MENU " << model.activation_target << "\n";
+    }
+
     for (const auto& line : model.startup_lines) {
         if (has_form_lifecycle && starts_with_insensitive(line, "DO ")) {
             stream << "__cf_xasset_instance." << trim_copy(line.substr(3U)) << "()\n";

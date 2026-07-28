@@ -3,6 +3,71 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_defined_menu_lifecycle()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+            "copperfin_native_defined_menu_lifecycle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path defined_path = temp_root / "defined_menu.prg";
+        write_text(
+            defined_path,
+            "DEFINE MENU MainMenu\n"
+            "DEFINE MENU MAINMENU\n"
+            "DEACTIVATE MENU MainMenu\n"
+            "ACTIVATE MENU mainmenu\n"
+            "RETURN\n");
+        auto defined_session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(defined_path, temp_root));
+        const auto defined_state = defined_session.run(
+            copperfin::runtime::DebugResumeAction::continue_run);
+        expect(defined_state.waiting_for_events,
+               "a defined menu should enter the event loop case-insensitively");
+        expect(std::any_of(
+                   defined_state.events.begin(),
+                   defined_state.events.end(),
+                   [](const copperfin::runtime::RuntimeEvent& event)
+                   {
+                       return event.category == "menu.activate" &&
+                           event.detail == "mainmenu";
+                   }),
+               "defined menu activation should emit stable lifecycle telemetry");
+
+        const fs::path released_path = temp_root / "released_menu.prg";
+        write_text(
+            released_path,
+            "DEFINE MENU MainMenu\n"
+            "DEACTIVATE MENU MainMenu\n"
+            "RELEASE MENU MainMenu\n"
+            "ACTIVATE MENU MainMenu\n"
+            "RETURN\n");
+        const auto released_state = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(released_path, temp_root))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(released_state.reason == copperfin::runtime::DebugPauseReason::error,
+               "activating a released menu should fail deterministically");
+        expect(released_state.message.find("Menu is not defined: mainmenu") != std::string::npos,
+               "released-menu failure should identify the normalized menu name");
+
+        const fs::path missing_path = temp_root / "missing_menu.prg";
+        write_text(
+            missing_path,
+            "ACTIVATE MENU MissingMenu\n"
+            "RETURN\n");
+        const auto missing_state = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(missing_path, temp_root))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(missing_state.reason == copperfin::runtime::DebugPauseReason::error,
+               "an undefined menu should fail without entering the event loop");
+        expect(!missing_state.waiting_for_events,
+               "an undefined menu should not leave the runtime waiting");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_popup_rowsource_materializes_static_bars()
     {
         namespace fs = std::filesystem;

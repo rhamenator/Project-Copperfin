@@ -897,6 +897,9 @@ void test_build_menu_xasset_activation_uses_vfp_path_stem() {
         expect(model.startup_lines[0] == "ACTIVATE MENU mainmenu",
                "#698: generated activation line should not include Windows directory text");
     }
+    const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
+    expect(bootstrap.find("DEFINE MENU mainmenu") != std::string::npos,
+           "#4753: generated non-shortcut menu bootstrap should define its menu before activation");
 }
 
 void test_build_report_xasset_executable_model() {

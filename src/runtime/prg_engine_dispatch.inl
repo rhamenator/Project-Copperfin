@@ -2855,6 +2855,18 @@
                 return open_report_surface(statement, frame, ".frx", "report");
             case StatementKind::label_form:
                 return open_report_surface(statement, frame, ".lbx", "label");
+            case StatementKind::define_menu_command:
+            {
+                const std::string menu_name = normalize_identifier(
+                    unquote_identifier(trim_copy(statement.identifier)));
+                if (!menu_name.empty())
+                {
+                    // VFP replaces the prior definition when a menu is defined
+                    // again. Pad and selection state are separate slices.
+                    current_session_state().defined_menus.insert(menu_name);
+                }
+                return {};
+            }
             case StatementKind::define_popup_command:
             {
                 const std::string popup_name = normalize_identifier(
@@ -2962,6 +2974,19 @@
                 return {};
             }
             case StatementKind::activate_surface:
+                if (statement.identifier == "menu")
+                {
+                    const std::string menu_name = normalize_identifier(
+                        unquote_identifier(trim_copy(statement.expression)));
+                    if (current_session_state().defined_menus.find(menu_name) ==
+                        current_session_state().defined_menus.end())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.MenuNotDefined",
+                            {{"menuName", menu_name}});
+                        return {.ok = false, .message = last_error_message};
+                    }
+                }
                 waiting_for_events = true;
                 events.push_back({.category = statement.identifier + ".activate",
                                   .detail = statement.expression,
@@ -2974,6 +2999,12 @@
                                   .location = statement.location});
                 return {};
             case StatementKind::release_surface:
+                if (statement.identifier == "menu")
+                {
+                    const std::string menu_name = normalize_identifier(
+                        unquote_identifier(trim_copy(statement.expression)));
+                    current_session_state().defined_menus.erase(menu_name);
+                }
                 if (statement.identifier == "popup")
                 {
                     const std::string popup_name = normalize_identifier(
