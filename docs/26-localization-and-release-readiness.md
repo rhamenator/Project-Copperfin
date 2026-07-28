@@ -106,6 +106,16 @@ implementation-complete. Full current-head Windows/macOS workflows remain
 separate RC evidence. None of these focused slices closes the broader RC
 matrix, safety gate, signing registry, or hosted pixel-UI evidence.
 
+The latest focused compatibility slices are recorded at implementation head
+`30ff4ec38`. Runtime children #4793 and #4794 add indexed `PROGRAM(nLevel)` /
+`SYS(16,nLevel)` stack lookup and VFP procedure-context formatting; Windows
+seq861 and the focused Linux target pass, and both issues are closed as
+implementation-complete. Managed language-service child #4795 recognizes
+`LPARAMETER` alongside `LPARAMETERS` and `PARAMETERS` while rejecting bare
+`PARAMETER`; its focused Release suite and independent Claude validation seq866
+pass, and the issue is closed. These slices preserve invariant machine
+contracts and do not replace the broader RC matrix.
+
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
 installer workflow `30317113970` passed its Linux, Windows, and macOS jobs and
