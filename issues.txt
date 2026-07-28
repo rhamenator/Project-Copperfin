@@ -1,25 +1,14 @@
 # Local open-issue snapshot exported from GitHub. Use live GitHub state for planning. Wishlist and future-facing rows are preserved roadmap work, not active noise. Columns: issue number, state, title, labels, updated_at.
-4636	OPEN	#4621 slice: make real VFP9 setting-count tests sample-tolerant		2026-07-25T03:22:20Z
-4635	OPEN	#4621 slice: give Studio host JSON test its Windows runtime budget		2026-07-25T03:07:49Z
-4634	OPEN	#4621 slice: make Windows process-timeout fixtures startup-tolerant		2026-07-25T03:05:54Z
-4633	OPEN	#3217 slice: execute static ON SELECTION BAR commands		2026-07-25T03:00:14Z
-4632	OPEN	#110 slice: split PRG parser control-flow dispatch for MSVC		2026-07-25T03:00:19Z
-4621	OPEN	Track hosted Windows + mounted-VFP9 + Visual Studio release-evidence validation execution (Phase C / lane E RC gate)	testing,E3	2026-07-25T03:25:29Z
+4700	OPEN	Polyglot Migration Contract v1: staged replacement of VFP units via artifact-first bridge		2026-07-26T23:23:07Z
 4409	OPEN	Provision external launcher-trust registry for enforced Windows release validation	security,portability	2026-07-22T19:14:00Z
-4403	OPEN	[docs-safety] MVP release - archive runtime recovery traceability evidence	documentation,safety	2026-07-23T08:00:10Z
+4403	OPEN	[docs-safety] MVP release - archive runtime recovery traceability evidence	documentation,safety	2026-07-27T23:35:22Z
 4387	OPEN	#4041 slice: authenticate the Windows generated-launcher inventory		2026-07-22T19:13:44Z
-4311	OPEN	#2996 slice: apply Visual Studio theme to the shared editor host surface		2026-07-24T07:01:20Z
-4126	OPEN	CRITICAL: NODEFAULT is a silent no-op everywhere except .Release()/Destroy() -- base behavior always fires in Init/Click/Valid/KeyPress/custom events		2026-07-18T13:44:53Z
 4041	OPEN	Define and enforce trust for generated .NET launcher sidecars		2026-07-22T02:02:50Z
-3873	OPEN	Windows runtime package paths lose non-ASCII names at narrow-string handoff boundaries		2026-07-18T19:18:22Z
 3866	OPEN	Bind security verification to the exact file handles consumed by runtime readers		2026-07-23T00:15:21Z
 3227	OPEN	Rushmore 2.0: cost-based xBase optimizer roadmap	enhancement	2026-07-03T05:16:27Z
 3217	OPEN	Native PRG class/runtime parity residuals after shipped DEFINE CLASS baseline		2026-07-23T11:45:01Z
-3051	OPEN	Backlog: dockable Command and Terminal windows for standalone Studio and VSIX		2026-07-03T05:57:06Z
 3050	OPEN	Backlog: align Copperfin UI with platform standards across Windows/macOS/Linux		2026-07-03T05:57:04Z
 2998	OPEN	Backlog: evaluate curated standalone extension support without loading the Copperfin VSIX		2026-07-03T05:57:02Z
-2997	OPEN	F2/#26 slice: build a modern dockable standalone IDE shell		2026-07-22T02:31:51Z
-2996	OPEN	F1/#25 slice: align the VSIX shell with Visual Studio 2022 UI standards		2026-07-23T04:24:07Z
 2564	OPEN	Backlog: refactor oversized source and test files toward ~1k-line modules		2026-07-18T01:55:40Z
 2348	OPEN	Backlog Umbrella: Localization, globalization, and language-pack readiness		2026-07-23T04:17:46Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-07-03T05:56:49Z
