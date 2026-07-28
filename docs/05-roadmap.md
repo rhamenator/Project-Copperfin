@@ -118,7 +118,7 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product/validation implementation head is `f0734f262`; the product
+The latest product/validation implementation head is `9599204ed`; the product
 behavior head for #4800 remains `f669fd51c`. The synchronized documentation
 branch contains the current coordination-only review and evidence updates for
 the active slice. The broad hosted baseline remains the successful
