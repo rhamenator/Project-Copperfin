@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `3b66dd73d`; the latest runtime
+Current focused validation is at product head `a2fe47647`; the latest runtime
 cleanup head also removes the redundant Form-only ForeColor slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
 generic visual ForeColor contract already covers Form and visual child
@@ -41,8 +41,8 @@ controls. The focused runtime-surface suite passes `1/1` after the cleanup.
 has an independent localized filter with invariant-backed source activation
 and explicit localized no-match feedback. Catalog parity passed, the managed
 DesignerSmokeTests build is clean, and `SmokeProjectWorkspaceEntryActivation`
-passed all assertions in Mono offscreen mode. The next documentation commit
-will update this product-head pointer after the slice is committed.
+passed all assertions in Mono offscreen mode. The synchronized documentation
+head is updated in the same slice record.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
