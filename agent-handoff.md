@@ -1,5 +1,20 @@
 # Agent Handoff
 
+- RC evidence update at implementation head `7c13a926d`: hosted macOS Native
+  Validation `30317113983` passed `316/316` CTest cases in `218.31s`, and the
+  installer workflow `30317113970` passed Linux, Windows, and macOS packaging
+  jobs with seven expected artifacts uploaded. Local inspection confirmed the
+  Linux DEB/TGZ and Windows ZIP contents include the native hosts, standalone
+  Studio/launcher guard where applicable, and all four locale catalogs. Hosted
+  Linux Native `30317113995` and Windows Native `30317113993` remain in
+  progress; do not claim the complete native RC gate until both finish.
+
+- Fresh #4403 safety validation against live issue JSON passed in permissive
+  mode. Strict mode has exactly one expected error, `Issue is not closed
+  (state=OPEN)`. Independent review, formal #4403 closure, and protected
+  launcher signing under #4409 remain external release gates; no product or
+  safety claim should imply otherwise.
+
 - #4750 root-identity follow-up: Generated Launcher Validation `30290365266` failed because the canonical resolved source was compared lexically against a `RUNNER~1` document/workspace root, yielding a bogus `runneradmin\\AppData...` package-relative path. The new `normalize_existing_path_spelling` helper applies the same Windows host spelling normalization to comparison roots and admitted external roots; non-Windows behavior remains unchanged. Focused Linux `test_runtime_pipeline` passes 1/1 in 43.78s. Fresh hosted validation is required; the Apple numeric-parser file remains untouched.
 
 - #4750 namespace follow-up: `GetFinalPathNameByHandleW` may return extended DOS paths even with `VOLUME_NAME_DOS`. Commit pending after local verification now strips the `\\?\\` drive prefix, converts `\\?\\UNC\\` to ordinary UNC spelling, and rejects other device namespaces. Focused Linux `test_runtime_pipeline` passes 1/1 in 40.45s. The 593ad70ec Windows run is superseded; a fresh Windows validation is required, and the Apple numeric-parser file remains untouched.

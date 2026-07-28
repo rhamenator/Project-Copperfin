@@ -114,17 +114,21 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current release evidence: at synchronized head `2417603ea`,
-`COPPERFIN_BUILD_JOBS=2 ./scripts/validate-posix.sh` rebuilt the native tree and
-passed all `316/316` CTest cases in `301.53s`, with only the two expected
-platform-conditional skips. Hosted Windows Native Validation `30314709007` is
-still running; the project therefore does not yet claim a complete
-cross-platform RC gate.
+Current release evidence is split between the implementation head
+`7c13a926d` and later documentation-only commits. The local POSIX validation
+at `2417603ea` rebuilt the native tree and passed all `316/316` CTest cases in
+`301.53s`, with only the two expected platform-conditional skips. Hosted
+macOS Native Validation `30317113983` passed `316/316` in `218.31s`; hosted
+Linux `30317113995` and Windows `30317113993` remain in progress. The project
+does not claim a complete cross-platform RC gate until those two runs finish.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
-`c95cf269d`; the package/document/install contract subset passed `4/4`. This is
-local Linux evidence only and does not substitute for Windows/macOS installers,
-hosted UI validation, or the protected signing gate.
+`c95cf269d`; the package/document/install contract subset passed `4/4`.
+Current-head installer workflow `30317113970` passed all Linux, Windows, and
+macOS jobs and uploaded the seven expected platform artifacts. Local
+inspection of the downloaded artifacts confirmed the expected host, standalone
+Studio/launcher-guard, and locale-catalog layouts. Artifact packaging still
+does not substitute for protected signing evidence.
 
 Managed Linux evidence is also current: `Copperfin.Studio` Release builds with
 zero warnings/errors, the portable language-service and Studio target-selection
@@ -147,6 +151,8 @@ Focused Windows corroboration at the same implementation head also passed the
 real net472 process-runner fixture and all four debugger-detail smoke assertions
 (`SmokeDebuggerDetailTablesMirrorPauseState`). This is hosted managed evidence,
 not a substitute for the full Windows native matrix or live Visual Studio UI.
+The hosted macOS native run and all three installer jobs are now green; Linux
+and Windows native results remain pending above.
 
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see

@@ -6,7 +6,7 @@ evidence issue was closed. It contains no secrets or private signing material.
 ## Execution
 
 - Repository: `rhamenator/Project-Copperfin`
-- Documentation/product head: `9a0e8c2c`
+- Documentation/product head used for the latest rerun: `41f655036`
 - Issue set: `#4403`
 - Hazard coverage: primary hazards required
 - Validator: `scripts/validate-safety-traceability.ps1`
@@ -45,7 +45,7 @@ launcher signing remains separately tracked under #4409.
 
 The validator was rerun against fresh GitHub JSON for #4403 after closing
 #4750, #4751, #4752, and #4725. The repository/documentation head was
-`d9aa187ef`. The permissive run passed with primary-hazard coverage enabled.
+`41f655036`. The permissive run passed with primary-hazard coverage enabled.
 The strict run passed every structural, DQ/DV/HZ, and primary-hazard check and
 reported exactly one error: `Issue is not closed (state=OPEN)` for #4403. The
 runtime follow-up closures therefore do not introduce a new safety-validation

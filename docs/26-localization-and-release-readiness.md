@@ -22,18 +22,20 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
-At synchronized head `2417603ea`,
-`COPPERFIN_BUILD_JOBS=2 ./scripts/validate-posix.sh` rebuilt the native tree and
-passed all `316/316` CTest cases in `301.53s`. The two expected
-platform-conditional tests, `test_build_host_utf8_launcher_paths` and
-`test_generated_launcher_process`, were skipped. Hosted Windows Native
-Validation `30314709007` remains in progress, so the POSIX result is recorded
-as partial release evidence rather than a complete RC claim.
+At implementation head `7c13a926d`, hosted macOS Native Validation
+`30317113983` passed all `316/316` CTest cases in `218.31s`; hosted Linux
+`30317113995` and Windows `30317113993` remain in progress. The earlier local
+POSIX validation at `2417603ea` passed `316/316` in `301.53s`, skipping only
+`test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`.
+These results are still partial release evidence until the Linux and Windows
+hosted runs finish.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
-the package/document/install contract subset passed `4/4`. Installer resources
-and package names remain machine-stable across locales; this local result does
-not substitute for Windows/macOS installer jobs or protected signing evidence.
+the package/document/install contract subset passed `4/4`. Current-head
+installer workflow `30317113970` passed its Linux, Windows, and macOS jobs and
+uploaded the expected artifacts, including all four locale catalogs in the
+install trees. Installer resources and package names remain machine-stable
+across locales; protected signing evidence remains separate.
 
 ## Resource Layout
 
