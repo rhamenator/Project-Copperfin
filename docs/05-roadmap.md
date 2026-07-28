@@ -136,6 +136,8 @@ Independent local POSIX validation at synchronized head `792f1840c` passed
 `316/316` tests passing in `224.56s`. Only the documented platform-conditional
 `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`
 tests were skipped; no local UI process was started by this headless run.
+A separate Claude-run headless CTest corroboration at coordination head
+`f2776b336` also passed `316/316` in `217.52s` with the same two skips.
 
 Independent local evidence at coordination head `4a3a66865` includes the
 three package-trust/provisioning contracts (`3/3`), `test_runtime_pipeline`

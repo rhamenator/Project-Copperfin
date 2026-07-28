@@ -1,3 +1,7 @@
+- 2026-07-28: Claude independently corroborated the local POSIX matrix at
+  coordination head `f2776b336`: CTest passed `316/316` in `217.52s`, with only
+  the documented UTF-8 launcher-path and generated-launcher-process skips.
+
 - 2026-07-28: Recorded the fresh #4403 safety-ledger re-review: permissive
   validation passes and strict mode reports only the expected open-issue gate,
   but the reviewer cannot provide the required arm's-length sign-off because

@@ -2416,3 +2416,8 @@ recorded green lanes. Linux Native `30404819262` and Windows Native
 successfully. Windows Native `30404819387` is now the sole active exact-head
 matrix job. RC readiness remains unclaimed pending that result and the
 separate #4403/#4409 release gates.
+
+# 2026-07-28 Independent Claude CTest corroboration: at coordination head
+`f2776b336`, a separate headless full CTest run passed `316/316` in `217.52s`
+with only `test_build_host_utf8_launcher_paths` and
+`test_generated_launcher_process` skipped. No UI process was left running.
