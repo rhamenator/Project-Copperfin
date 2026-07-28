@@ -41,7 +41,7 @@ the issue only after the normal implementation review/validation handoff.
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `30ff4ec38`, with coordination-only documentation and
+implementation head is `f669fd51c`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -69,8 +69,10 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `30ff4ec38`; the latest runtime
-cleanup head also removes the redundant Form-only ForeColor slice from #4788.
+Current focused validation is at product head `f669fd51c`; this head includes
+the #4800 fault-procedure preservation slice and its focused regression tests.
+The latest runtime cleanup head also removes the redundant Form-only ForeColor
+slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
 generic visual ForeColor contract already covers Form and visual child
 controls. The focused runtime-surface suite passes `1/1` after the cleanup.

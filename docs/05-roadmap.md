@@ -118,7 +118,7 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `30ff4ec38`. The synchronized
+The latest product implementation head is `f669fd51c`. The synchronized
 documentation branch contains the current coordination-only review and evidence
 updates for the active slice. The broad hosted baseline remains the successful
 `93d44395f` evidence set: Linux Native `30329037575`, macOS Native
