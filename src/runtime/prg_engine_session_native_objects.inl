@@ -1269,7 +1269,7 @@
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("whatsthisbutton"))
             {
-                // Headless contract: preserve the documented Form/ToolBar default.
+                // Headless contract: preserve the documented Form default.
                 runtime_object.properties["whatsthisbutton"] = make_boolean_value(false);
             }
 
