@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4784 under #3217 at product head
+  `013ca797f`. Native PRG `Form.WhatsThisButton` now follows the mounted
+  VFP9 contract: `.F.` default, read-only runtime/reflection metadata,
+  preserved design-time/class declarations, and rejected direct/PEM/dynamic
+  mutation. The focused `test_prg_engine_runtime_surface_functions` CTest
+  passes `1/1` locally. This is a headless property contract; the What's This
+  button, help routing, rendering, and hosted UI remain separate.
+
 - 2026-07-28: Completed localization child #4783 at product head
   `7d86e28fe`. The managed Project Explorer and Database catalog additions are
   now synchronized into all four shared JSON catalogs, preserving existing

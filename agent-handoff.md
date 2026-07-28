@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `7d86e28fe`. #4623 is closed as
+Current focused validation is at product head `013ca797f`. #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,
@@ -2160,3 +2160,12 @@ the managed Project Explorer and Database keys are synchronized into the
 `en-US`, `es-419`, `pt-BR`, and `qps-ploc` shared JSON catalogs. The generator
 and generator `--check` pass, native `test_localization` passes 1/1, and the
 existing placeholder/non-production language-pack boundary is unchanged.
+# 2026-07-28 Runtime child #4784 under #3217 is implemented at product head
+`013ca797f`: native PRG `Form.WhatsThisButton` now has the documented `.F.`
+default, read-only runtime/reflection behavior, design-time/class declaration
+preservation, and rejected direct/PEM/dynamic mutation. The focused
+`test_prg_engine_runtime_surface_functions` target builds and CTest passes
+`1/1` on Linux; `git diff --check` is clean. This is a headless property
+contract. The What's This button, `WhatsThisHelp` dependency, help routing,
+rendering, and hosted Windows UI remain separate. Exact-head Windows/macOS
+validation is still required before any cross-platform closure claim.
