@@ -29,8 +29,8 @@ against the issue's declared `Hazard Linkage IDs` or the hazard register. The
 #4805 correction adds both checks, rejects `HZ-NONE` outside its sole explicit
 no-hazard row, and adds an undeclared/unknown row-hazard regression fixture.
 The focused safety workflow contract passes `1/1`; Windows read-only review of
-the source fix passed with no further issue, and the follow-up fixture-only
-regression also passes locally. #4805 is closed.
+the source fix and the follow-up fixture-only regression both passed with no
+further issue, and no Copperfin process survived. #4805 is closed.
 
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
