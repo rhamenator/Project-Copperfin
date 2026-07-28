@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `540d27402`, with coordination-only documentation and
+implementation head is `f9f44a786`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -168,7 +168,7 @@ exact keys remain authoritative, unique case-folded matches retain compatibility
 and ambiguous case-folded entries fail closed instead of selecting arbitrary
 bytes for generic files and DBF/CDX/FPT components. The focused verified-file,
 database-lifecycle, and runtime-surface targets pass `3/3` on Linux. The
-correction is pushed at `540d27402`; fresh exact-head review and Windows
+final index-snapshot correction is pushed at `f9f44a786`; fresh exact-head review and Windows
 validation remain required before closing the child.
 
 Safety documentation follow-up for #4403: an independent read-only review

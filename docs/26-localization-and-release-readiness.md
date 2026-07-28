@@ -59,6 +59,9 @@ review. #4771 is implemented at product head `540d27402` with focused Linux
 runtime-surface coverage, including disabled-button filtering and focused
 target precedence when a host supplies a CommandButton handle; exact-head
 Windows/macOS review remains pending.
+#4770's final index-snapshot correction is now at product head `f9f44a786`;
+the folded-only CDX/FPT collision suite passes locally and exact-head Windows
+validation remains pending.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
