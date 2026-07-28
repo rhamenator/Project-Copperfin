@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4787 under #3217 at product head
+  `c9fad5724`. Native PRG `Form.ShowTips` now follows the mounted VFP9
+  contract: `.F.` Form default, writable direct and PEM reflection paths,
+  preserved design-time/class declarations, and rejected dynamic shadowing or
+  removal. The focused `test_prg_engine_runtime_surface_functions` CTest
+  passes `1/1` locally. This child intentionally does not claim `_SCREEN`,
+  ToolBar, tooltip rendering, or hosted UI behavior.
+
 - 2026-07-28: Implemented runtime child #4786 under #3217 at product head
   `b983a7c05`. Native PRG `Form.ZoomBox` now follows the mounted VFP9
   contract: `.F.` default, writable direct and PEM reflection paths,
