@@ -1749,6 +1749,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
         databaseView.Items.Clear();
         databaseFilterBox.Text = string.Empty;
+        projectExplorerFilterBox.Text = string.Empty;
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
         objectBrowserHideProjectCheckBox.Checked = false;

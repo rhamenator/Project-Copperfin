@@ -13,6 +13,7 @@ namespace Copperfin.VisualStudio;
 internal sealed partial class CopperfinAssetEditorControl
 {
     private TreeView projectExplorerView = null!;
+    private TextBox projectExplorerFilterBox = null!;
 
     private TabPage CreateProjectExplorerPage()
     {
@@ -39,8 +40,16 @@ internal sealed partial class CopperfinAssetEditorControl
             TryActivateSelectedProjectExplorerEntry();
         };
 
+        projectExplorerFilterBox = new TextBox
+        {
+            Dock = DockStyle.Top,
+            AccessibleName = this.localization.Text("AssetEditor.ProjectExplorer.FilterAccessibleName")
+        };
+        projectExplorerFilterBox.TextChanged += (_, _) => RefreshProjectExplorer();
+
         var page = new TabPage(this.localization.Text("AssetEditor.Tab.ProjectExplorer"));
         page.Controls.Add(projectExplorerView);
+        page.Controls.Add(projectExplorerFilterBox);
         return page;
     }
 
@@ -60,6 +69,16 @@ internal sealed partial class CopperfinAssetEditorControl
             {
                 return;
             }
+
+            var normalizedFilter = projectExplorerFilterBox.Text.Trim();
+            bool Matches(string? value) => string.IsNullOrWhiteSpace(normalizedFilter) ||
+                                           (value is not null &&
+                                            value.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0);
+            bool MatchesEntry(CopperfinStudioProjectEntry entry) =>
+                Matches(entry.RelativePath) ||
+                Matches(entry.Name) ||
+                Matches(entry.TypeTitle) ||
+                Matches(entry.GroupTitle);
 
             var rootTitle = string.IsNullOrWhiteSpace(workspace.ProjectTitle)
                 ? workspace.ProjectKey
@@ -88,21 +107,33 @@ internal sealed partial class CopperfinAssetEditorControl
                         continue;
                     }
 
+                    if (!Matches(group.Title) && !Matches(group.Id) && !MatchesEntry(entry))
+                    {
+                        continue;
+                    }
+
                     groupedRecordIndexes.Add(recordIndex);
                     groupNode.Nodes.Add(CreateProjectExplorerEntryNode(entry));
                 }
 
-                root.Nodes.Add(groupNode);
+                if (groupNode.Nodes.Count > 0)
+                {
+                    root.Nodes.Add(groupNode);
+                }
             }
 
-            foreach (var entry in workspace.Entries.Where(entry => !groupedRecordIndexes.Contains(entry.RecordIndex)))
+            foreach (var entry in workspace.Entries.Where(entry =>
+                         !groupedRecordIndexes.Contains(entry.RecordIndex) && MatchesEntry(entry)))
             {
                 root.Nodes.Add(CreateProjectExplorerEntryNode(entry));
             }
 
             if (root.Nodes.Count == 0)
             {
-                root.Nodes.Add(new TreeNode(this.localization.Text("AssetEditor.ProjectExplorer.Empty")));
+                root.Nodes.Add(new TreeNode(
+                    string.IsNullOrWhiteSpace(normalizedFilter)
+                        ? this.localization.Text("AssetEditor.ProjectExplorer.Empty")
+                        : this.localization.Text("AssetEditor.ProjectExplorer.NoMatches")));
             }
 
             root.Expand();

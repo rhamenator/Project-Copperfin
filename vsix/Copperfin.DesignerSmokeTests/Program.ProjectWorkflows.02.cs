@@ -168,6 +168,15 @@ internal static partial class Program
                 AssetFamily = "project",
                 ProjectWorkspace = new CopperfinStudioProjectWorkspace
                 {
+                    Groups = new List<CopperfinStudioProjectGroup>
+                    {
+                        new CopperfinStudioProjectGroup
+                        {
+                            Id = "forms",
+                            Title = "Forms",
+                            RecordIndexes = new List<int> { 7 }
+                        }
+                    },
                     Entries = new List<CopperfinStudioProjectEntry> { projectEntry }
                 },
                 DatabaseProfile = new CopperfinStudioDatabaseFederationProfile
@@ -539,6 +548,46 @@ internal static partial class Program
                        databaseSummary.Text.IndexOf("deterministic translation", StringComparison.Ordinal) >= 0 &&
                        databaseSummary.Text.IndexOf("Deterministic First", StringComparison.Ordinal) >= 0,
                     $"project workspace Database query-path selection should expose supported translation details (summary: {databaseSummary?.Text ?? "<missing>"})");
+            }
+
+            if (projectWorkspaceTabs is not null)
+            {
+                projectWorkspaceTabs.SelectTab(10);
+                Application.DoEvents();
+            }
+            projectEntry.RelativePath = "forms\\orders.scx";
+            projectEntry.Excluded = false;
+            var projectExplorerFilter = GetPrivateField<TextBox>(control, "projectExplorerFilterBox");
+            var projectExplorer = GetPrivateField<TreeView>(control, "projectExplorerView");
+            Expect(projectExplorerFilter is not null && projectExplorer is not null,
+                "project workspace Project Explorer should expose an independent filter");
+            if (projectExplorerFilter is not null && projectExplorer is not null)
+            {
+                projectExplorerFilter.Text = "forms";
+                Application.DoEvents();
+                var filteredExplorerEntry = EnumerateTreeNodes(projectExplorer.Nodes)
+                    .FirstOrDefault(node => node.Tag is CopperfinStudioProjectEntry entry &&
+                                            string.Equals(entry.RelativePath, "forms\\orders.scx", StringComparison.OrdinalIgnoreCase));
+                Expect(filteredExplorerEntry is not null &&
+                       filteredExplorerEntry.Parent is not null &&
+                       filteredExplorerEntry.Parent.Tag is CopperfinStudioProjectGroup,
+                    "project workspace Project Explorer should preserve matching group hierarchy");
+                if (filteredExplorerEntry is not null)
+                {
+                    projectExplorer.SelectedNode = filteredExplorerEntry;
+                    requestedPath = null;
+                    Expect(control.TryActivateSelectedProjectExplorerEntry() &&
+                           string.Equals(requestedPath, CopperfinDocumentPathIdentity.Normalize(childPath), StringComparison.Ordinal),
+                        "project workspace Project Explorer should activate a filtered eligible entry");
+                }
+
+                projectExplorerFilter.Text = "no-such-project-entry";
+                Application.DoEvents();
+                Expect(EnumerateTreeNodes(projectExplorer.Nodes).Any(node =>
+                           node.Text.IndexOf("no project entries match", StringComparison.OrdinalIgnoreCase) >= 0),
+                    "project workspace Project Explorer should show an explicit no-match state");
+                projectExplorerFilter.Text = string.Empty;
+                Application.DoEvents();
             }
 
             if (projectWorkspaceTabs is not null)
