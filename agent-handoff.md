@@ -4,19 +4,19 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the product/test implementation head for the
-active Windows native run is `b07d30d9c`. Windows Native Validation
-`30324522773` is still in progress during native compilation, so no CTest
-result is claimed yet. The preceding Windows run `30322581189` was cancelled
-before CTest after a later product push superseded it and is neither a pass nor
-a product failure.
+completed Windows native run is `b07d30d9c`. Windows Native Validation
+`30324522773` passed `315/315` CTest cases in `530.97s` with no failures
+or skips. The preceding Windows run `30322581189` was cancelled before CTest
+after a later product push superseded it and is neither a pass nor a product
+failure.
 
 #4621 and #4750 are closed. The hosted Windows/VFP9/Visual Studio evidence
 recorded for #4621 remains the accepted release-evidence baseline; the current
 native rerun is a later exact-head corroboration. The remaining explicit
 release prerequisites are the open safety traceability review under #4403 and
-the externally provisioned package-signing/trust registry under #4409. Do not
-claim the complete RC evidence gate until those prerequisites and the active
-native run are resolved.
+the externally provisioned package-signing/trust registry under #4409, and the
+separately dispatched exact-head deep-validation workflow. Do not claim the
+complete RC evidence gate until those prerequisites are resolved.
 
 The safety gap analysis now marks GAP-04 as closed for its focused empty-table
 cases; its aggregate, navigation, scan, and zero-record copy/append coverage
@@ -24,10 +24,14 @@ was already present in the test tree. The full VFP command surface remains a
 separate parity boundary.
 
 At the same implementation head, Linux Native `30324522759` passed `316/316`
-in `171.47s`, macOS Native `30324522748` passed `316/316` in `207.83s`, and
-managed UI `30324522752`, VSIX `30324522769`, installers `30324522738`, and
-security `30324522761` passed. Windows Native `30324522773` remains the active
-broad native gate; no Windows CTest result is claimed until it completes.
+in `171.47s`, macOS Native `30324522748` passed `316/316` in `207.83s`,
+Windows Native `30324522773` passed `315/315` in `530.97s`, and managed
+UI `30324522752`, VSIX `30324522769`, installers `30324522738`, and
+security `30324522761` passed. Generated Launcher Validation `30326599223`
+passed its POSIX and Windows process tests (`1/1` each), Environment and
+Executable Path Validation `30326600206` passed `7/7`, and DECLARE ABI
+Validation `30326601002` passed its managed plus three adjacent targets on
+both Win32 and x64. Windows Deep Validation `30326601931` remains pending.
 
 Fresh safety validation is archived in
 `docs/safety/traceability-report-2026-07-28.md` at synchronized documentation

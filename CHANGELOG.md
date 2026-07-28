@@ -1,3 +1,19 @@
+- 2026-07-28: Current-head Windows Native Validation `30324522773` passed
+  `315/315` CTest cases in `530.97s` at implementation head `b07d30d9c`,
+  with no failures or skips. This completes the broad native Windows
+  corroboration for the current implementation slice; separately dispatched
+  generated-launcher, environment/path, DECLARE ABI, and deep-validation
+  workflows plus safety traceability and protected signing remain distinct
+  release gates.
+
+- 2026-07-28: Exact-head auxiliary Windows validation completed for the current
+  implementation slice: Generated Launcher Validation `30326599223` passed
+  its POSIX and Windows process tests (`1/1` each), Environment and Executable
+  Path Validation `30326600206` passed `7/7`, and DECLARE ABI Validation
+  `30326601002` passed its managed plus three adjacent targets on both Win32
+  and x64. Windows Deep Validation `30326601931` remains the only dispatched
+  auxiliary workflow in progress.
+
 - 2026-07-28: Archived fresh safety traceability validation in `docs/safety/traceability-report-2026-07-28.md` at documentation head `5efa5a92f`. Permissive validation passed all structural and primary-hazard checks; strict validation reported only the expected `#4403` open-issue gate. No independent sign-off, formal safety closure, or protected launcher signing is claimed.
 - 2026-07-28: Current-head release validation at implementation `b07d30d9c`: Linux Native `30324522759` passed `316/316` in `171.47s`, macOS Native `30324522748` passed `316/316` in `207.83s` with only expected platform skips, and managed UI `30324522752`, VSIX `30324522769`, installers `30324522738`, and security `30324522761` passed. Windows Native `30324522773` remains in progress; separately scoped generated-launcher, Windows environment, DECLARE ABI, and executable-path workflows were not rerun by this managed-only test slice.
 - 2026-07-28: Clarified the opening evidence ledger in `docs/22-vfp-language-reference-coverage.md`: the `316/316` POSIX run remains attributed to native head `ff9417a4a`, while current head `b07d30d9c` is identified as a managed-only language-service regression slice with Windows Native Validation `30324522773` still in progress.

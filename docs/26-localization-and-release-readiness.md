@@ -31,12 +31,18 @@ skips. At the same head, managed UI `30324522752`, VSIX `30324522769`,
 installers `30324522738`, and security `30324522761` passed. The current
 managed-only test-slice change did not rerun the separately scoped
 generated-launcher, Windows environment, DECLARE ABI, or executable-path
-workflows; their prior green evidence remains historical. Windows Native
-`30322581189` was cancelled during the native build after a later product-code
-push superseded it; it reached no CTest result and is not treated as a pass or
-failure. Replacement Windows Native run `30324522773` is in progress at
-test-slice head `b07d30d9c`.
-The current-head evidence remains partial until that replacement run finishes.
+workflows; their prior green evidence remains historical until the exact-head
+manual runs complete. Windows Native `30322581189` was cancelled during the
+native build after a later product-code push superseded it; it reached no CTest
+result and is not treated as a pass or failure.
+Hosted Windows Native `30324522773` passed `315/315` in `530.97s` at test-slice
+head `b07d30d9c`, with no failures or skips. Generated Launcher Validation
+`30326599223` passed its POSIX and Windows process tests (`1/1` each), Windows
+Environment and Executable Path Validation `30326600206` passed `7/7`, and
+Windows DECLARE ABI Validation `30326601002` passed its managed plus three
+adjacent targets on both Win32 and x64. Windows Deep Validation `30326601931`
+remains pending. The safety traceability review and protected signing registry
+remain separate release gates.
 The prior corrected-head evidence remains valid: hosted Linux Native
 `30320046770` passed all `316/316` CTest cases in `175.76s`, with only the two
 expected platform-conditional skips; hosted macOS Native `30320046738` passed

@@ -127,9 +127,14 @@ green evidence remains historical and does not substitute for exact-head
 reruns where required. Windows Native `30322581189` was cancelled during the
 native build after a later product-code push superseded it; it reached no
 CTest result and is not treated as a pass or failure. Replacement Windows
-Native run `30324522773` is in progress at test-slice head `b07d30d9c`.
-The complete cross-platform RC gate remains unclaimed until that replacement
-run finishes.
+Native run `30324522773` passed `315/315` in `530.97s` at test-slice head
+`b07d30d9c`, with no failures or skips. Generated Launcher Validation
+`30326599223` passed its POSIX and Windows process tests (`1/1` each), Windows
+Environment and Executable Path Validation `30326600206` passed `7/7`, and
+Windows DECLARE ABI Validation `30326601002` passed its managed plus three
+adjacent targets on both Win32 and x64. Windows Deep Validation `30326601931`
+remains pending; the complete RC evidence gate remains unclaimed until it and
+the safety/trust prerequisites finish.
 The prior corrected-head evidence remains useful: local POSIX validation at
 `2417603ea` passed `316/316` in `301.53s`, hosted Linux Native
 `30320046770` passed `316/316` in `175.76s`, and hosted macOS
@@ -139,8 +144,8 @@ skips. The prior Windows run `30317113993` failed only `test_runtime_pipeline`
 with the product's long directory-entry spelling; test-only correction
 `73cdd5f57` normalizes the fixture namespace with `GetLongPathNameW`, and its
 corrected rerun `30320046748` was superseded by the current-head matrix. The
-project does not claim a complete cross-platform RC gate until Windows Native
-`30324522773` finishes.
+project does not claim a complete RC evidence gate until the auxiliary Windows
+workflows and the safety/trust prerequisites finish.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
