@@ -50,7 +50,9 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   210 statements. Hosted Windows/macOS review and broader VFP9 parity remain
   explicit boundaries. Follow-up child `#4794` records the remaining
   procedure-context formatting that VFP9 and VFPSource may expose through
-  `SYS(16)`.
+  `SYS(16)`. Child `#4794` is implemented at product head `e842e4e1e`, and
+  focused runtime-surface coverage passes `1/1`; entry frames retain plain
+  paths while procedure and method frames preserve the VFP context form.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

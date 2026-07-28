@@ -72,8 +72,13 @@ runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
 package completes in normal and debug launches with 210 statements. Hosted
 Windows/macOS exact-head review remains required before closure. Follow-up child
 #4794 tracks VFP9's optional `PROCEDURE <routine> <file>` context formatting for
-`SYS(16)`; the current #4793 implementation returns the indexed frame file path
-and does not claim that formatting yet.
+`SYS(16)`. It is implemented at product head `e842e4e1e`: entry frames retain
+plain paths while procedure and method frames preserve the context form for
+current and indexed calls. The focused runtime-surface CTest passes `1/1`.
+The #4793 fixture's missing `PUBLIC` declarations were corrected after the
+cross-platform failures in seq856 and seq857; those failures were test-scoping
+defects, not runtime failures. Hosted Windows/macOS exact-head review remains
+required for both children.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and

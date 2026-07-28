@@ -20,8 +20,17 @@
   Windows/macOS exact-head validation remains separate evidence; Windows review
   for the preceding #4791/#4792 package is recorded in seq852. Follow-up child
   #4794 tracks the remaining VFP-compatible `SYS(16)` procedure-context return
-  shape, which can include `PROCEDURE <routine> <file>` and is currently
-  normalized to the indexed frame file path only.
+  shape, which can include `PROCEDURE <routine> <file>`.
+
+- Current SYS(16) context status (2026-07-28): runtime child #4794 is
+  implemented at product head `e842e4e1e`. Entry frames retain plain file paths;
+  procedure and method frames preserve VFP's `PROCEDURE <routine> <file>` form
+  for both current and indexed `SYS(16)` calls. The focused runtime-surface
+  CTest passes `1/1`. The #4793 nested-stack regression fixture was also
+  corrected to declare its cross-frame captures `PUBLIC` after Windows seq856
+  and Claude seq857 identified a test-scoping defect; this was not a runtime
+  implementation failure. Hosted Windows/macOS exact-head validation remains
+  separate evidence.
 
 - Current runtime-safety and strict-reader status (2026-07-28): #4623 is
   implementation-complete and closed after focused containment and debugger

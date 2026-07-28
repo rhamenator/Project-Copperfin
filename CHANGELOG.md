@@ -7,8 +7,14 @@
   ReportBuilder package completes in normal and debug launches with 210
   statements and two expected missing sample-asset warnings. Hosted Windows
   and macOS exact-head validation remain required. Follow-up child #4794 tracks
-  VFP9's optional `PROCEDURE <routine> <file>` context formatting for `SYS(16)`;
-  the current indexed implementation returns the frame file path only.
+  VFP9's optional `PROCEDURE <routine> <file>` context formatting for `SYS(16)`.
+
+- 2026-07-28: Implemented runtime child #4794 under #3217 at product head
+  `e842e4e1e`. Current and indexed `SYS(16)` preserve plain entry-frame paths
+  and VFP procedure/method context formatting. The focused runtime-surface CTest
+  passes `1/1`. The #4793 nested-stack fixture also now declares its cross-frame
+  captures `PUBLIC` after cross-platform review found a test-scoping defect;
+  this correction does not change runtime behavior.
 
 - 2026-07-28: Closed runtime children #4791 and #4792 after independent Claude
   review seq851 and Windows validation seq852. The exact tested descendant
