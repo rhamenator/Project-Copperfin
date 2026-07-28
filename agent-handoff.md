@@ -28,8 +28,9 @@ Windows review of #4804 then found that mapping-row hazards were not checked
 against the issue's declared `Hazard Linkage IDs` or the hazard register. The
 #4805 correction adds both checks, rejects `HZ-NONE` outside its sole explicit
 no-hazard row, and adds an undeclared/unknown row-hazard regression fixture.
-The focused safety workflow contract passes `1/1`; read-only Claude and Windows
-review is requested for the synchronized source head.
+The focused safety workflow contract passes `1/1`; Windows read-only review of
+the source fix passed with no further issue, and the follow-up fixture-only
+regression also passes locally. #4805 is closed.
 
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
