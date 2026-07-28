@@ -1,3 +1,10 @@
+- 2026-07-28: Refreshed the archived #4403 safety traceability report against
+  fresh live issue JSON at documentation head `7da457edf` and product/test
+  head `2cbe5ab49`. Permissive structural, DQ/DV/HZ, and primary-hazard
+  validation passed; strict mode reported only the intentional open-issue
+  gate. Independent sign-off, formal #4403 closure, and protected #4409
+  launcher-trust provisioning remain unclaimed.
+
 - 2026-07-28: Hardened the required Windows DesignerSmoke wrapper so its
   `finally` cleanup terminates and disposes the Copperfin-owned smoke process
   on every wrapper exit path, including wrapper-side failures. The existing

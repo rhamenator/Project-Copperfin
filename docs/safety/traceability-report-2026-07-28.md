@@ -3,8 +3,8 @@
 ## Scope
 
 - Repository: `rhamenator/Project-Copperfin`
-- Synchronized documentation head before this report update: `06b67a94e`
-- Product/test implementation head: `30ff4ec38`
+- Synchronized documentation head before this report update: `7da457edf`
+- Product/test implementation head: `2cbe5ab49`
 - Issue set: `#4403`
 - Hazard coverage: primary hazards required
 - Validator: `scripts/validate-safety-traceability.ps1`
@@ -28,8 +28,8 @@ requirements mitigate the same hazard family.
 ## Commands
 
 ```text
-pwsh -NoProfile -Command '$json = gh issue view 4403 --json number,title,state,body,labels; $json | Set-Content -Path /tmp/copperfin-4403-permissive-current.json; & ./scripts/validate-safety-traceability.ps1 -Repository rhamenator/Project-Copperfin -IssueJsonPath /tmp/copperfin-4403-permissive-current.json -RequireClosedIssues false -RequirePrimaryHazardCoverage true -ReportPath /tmp/copperfin-safety-permissive-current.json'
-pwsh -NoProfile -Command '$json = gh issue view 4403 --json number,title,state,body,labels; $json | Set-Content -Path /tmp/copperfin-4403-strict-current.json; & ./scripts/validate-safety-traceability.ps1 -Repository rhamenator/Project-Copperfin -IssueJsonPath /tmp/copperfin-4403-strict-current.json -RequireClosedIssues true -RequirePrimaryHazardCoverage true -ReportPath /tmp/copperfin-safety-strict-current.json'
+pwsh -NoProfile -Command '$json = gh issue view 4403 --json number,title,state,body,labels; $json | Set-Content -Path /tmp/copperfin-4403-current.json; & ./scripts/validate-safety-traceability.ps1 -Repository rhamenator/Project-Copperfin -IssueJsonPath /tmp/copperfin-4403-current.json -RequireClosedIssues false -RequirePrimaryHazardCoverage true -ReportPath /tmp/copperfin-safety-permissive-7da.json'
+pwsh -NoProfile -Command '$json = gh issue view 4403 --json number,title,state,body,labels; $json | Set-Content -Path /tmp/copperfin-4403-current.json; & ./scripts/validate-safety-traceability.ps1 -Repository rhamenator/Project-Copperfin -IssueJsonPath /tmp/copperfin-4403-current.json -RequireClosedIssues true -RequirePrimaryHazardCoverage true -ReportPath /tmp/copperfin-safety-strict-7da.json'
 ```
 
 ## Results
@@ -49,13 +49,14 @@ independent stale-documentation finding. The report does not claim formal
 ## Current-State Follow-Up
 
 On 2026-07-28, the validator was rerun against fresh live issue JSON at
-synchronized product head `30ff4ec38`. Permissive validation again passed all
-structural, DQ/DV/HZ, and primary-hazard checks. Strict validation again
-reported exactly one failure: `Issue is not closed (state=OPEN)` for #4403.
-The reports were written to `/tmp/copperfin-safety-permissive-current.json`
-and `/tmp/copperfin-safety-strict-current.json`; this follow-up confirms the
-gate remains procedural and independent-review state, not a validator or
-product regression.
+synchronized product/test head `2cbe5ab49` and documentation head
+`7da457edf`. Permissive validation passed all structural, DQ/DV/HZ, and
+primary-hazard checks. Strict validation reported exactly one failure:
+`Issue is not closed (state=OPEN)` for #4403. The reports were written to
+`/tmp/copperfin-safety-permissive-7da.json` and
+`/tmp/copperfin-safety-strict-7da.json`; this follow-up confirms the gate
+remains procedural and independent-review state, not a validator or product
+regression.
 
 The Windows read-only audit in coordination seq868 identified the missing
 explicit per-DQ mapping and the absent arm's-length sign-off. The mapping was

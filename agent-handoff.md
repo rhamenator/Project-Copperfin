@@ -19,6 +19,11 @@ explicit no-hazard path. The focused safety workflow contract passes `1/1`.
 At live #4403 state, permissive validation passes and strict validation reports
 only `Issue is not closed (state=OPEN)`; independent reviewer sign-off remains
 unclaimed.
+The fresh 2026-07-28 rerun at product/test head `2cbe5ab49` and documentation
+head `7da457edf` reproduces that exact boundary: permissive structural,
+DQ/DV/HZ, and primary-hazard checks pass, while strict mode reports only the
+open-issue gate. The archived evidence is
+`docs/safety/traceability-report-2026-07-28.md`.
 
 Windows review of #4802 found and reproduced a follow-up defect: an arbitrary
 `HZ-NONE` token could waive missing DQ/DV cells on an extra mapping row. The
