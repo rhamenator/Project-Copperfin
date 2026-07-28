@@ -43,14 +43,16 @@ matrix, focus traversal, keyboard buffering, and hosted pixel UI remain
 separate evidence boundaries. Do not claim the complete RC evidence gate from
 either child alone.
 
-The next strict-reader slice, #4772 under #3866, is implemented at product
-head `71ac05cac`. It closes the separate source-text override ambiguity path:
+The strict-reader slice #4772 under #3866 is closed at product head
+`71ac05cac`. It closes the separate source-text override ambiguity path:
 direct PRG loading, strict `#INCLUDE`, and DO admission probes now fail closed
 on multiple folded-only admitted source keys; unadmitted includes also remain
 fail closed when a same-named disk file exists. Local `test_prg_engine`,
 `test_prg_engine_dynamic_xasset_security`, and
-`test_prg_engine_runtime_surface_functions` pass `3/3`; hosted exact-head
-review is pending. Do not close #4772 until its platform evidence resolves.
+`test_prg_engine_runtime_surface_functions` pass `3/3`. Claude's independent
+repro and review passed at documentation descendant `cb67b7930`, and exact-head
+native Windows validation seq785 rebuilt and passed the same three targets
+`3/3`. The full macOS matrix remains separate release evidence.
 
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or

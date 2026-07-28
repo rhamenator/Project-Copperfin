@@ -59,11 +59,12 @@ passing those targets `3/3`, including the prior folded-only CDX failure.
 Claude and Windows reviewed #4771, and exact-head macOS Native Validation
 `30353802078` passed at `f9f44a786`; the child is closed as implementation-
 complete. Its full RC matrix and UI rendering boundaries remain separate.
-The #4772 strict PRG source-admission correction is at product head
+The #4772 strict PRG source-admission correction is closed at product head
 `71ac05cac`; it also restores fail-closed behavior for unadmitted includes
 when same-named disk files exist. Its focused local PRG, dynamic-xAsset
-security, and runtime-surface targets pass `3/3`, with exact-head hosted
-review pending.
+security, and runtime-surface targets pass `3/3`; Claude's independent repro
+and exact-head native Windows validation seq785 corroborate the correction.
+Full macOS and release-matrix evidence remain separate.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

@@ -22,8 +22,10 @@ unique-folded, fail-closed-on-ambiguity rule under #3866/#4772. The rule covers
 direct program loading, `#INCLUDE` expansion, and strict DO admission probes;
 non-strict source parsing retains its existing filesystem behavior. Product
 head `71ac05cac` includes the follow-up correction and passes the focused PRG,
-dynamic-xAsset security, and runtime-surface targets locally; exact-head hosted
-review remains pending.
+dynamic-xAsset security, and runtime-surface targets locally. Claude independently
+reproduced the fail-closed disk-file case, and exact-head native Windows validation
+seq785 rebuilt and passed the same three targets `3/3`. The implementation slice is
+closed; the full macOS matrix remains separate release evidence.
 
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic

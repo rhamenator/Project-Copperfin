@@ -10,12 +10,14 @@
   Native Validation `30353802078` and Claude review. No broader RC gate is
   claimed here.
 
-- Strict PRG source-admission correction #4772 is implemented at product head
+- Strict PRG source-admission correction #4772 is closed at product head
   `71ac05cac`. Direct source loading, strict `#INCLUDE`, and DO admission now
   reject multiple folded-only source overrides rather than selecting an
   arbitrary body, and unadmitted includes still fail closed when a same-named
   disk file exists. Local PRG, dynamic-xAsset security, and runtime-surface
-  targets pass `3/3`; exact-head hosted review remains pending.
+  targets pass `3/3`; Claude's independent repro and exact-head native Windows
+  validation seq785 corroborate the correction. Full macOS and release-matrix
+  evidence remain separate.
 
 - Current test-slice status (2026-07-28): implementation head `b07d30d9c` adds the managed language-service regression coverage for sibling-project procedure completions; it does not change native runtime sources. Windows Native Validation `30324522773` passed `315/315` at that head with no failures or skips. Generated Launcher Validation `30326599223`, Windows Environment and Executable Path Validation `30326600206`, and Windows DECLARE ABI Validation `30326601002` also passed; Windows Deep Validation `30326601931` remains pending. The synchronized documentation commits are excluded from the native workflow's product/test path.
 
