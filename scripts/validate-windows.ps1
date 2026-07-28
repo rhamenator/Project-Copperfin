@@ -109,7 +109,9 @@ Invoke-Step -Name "Build Visual Studio extension" -Action {
 }
 
 Invoke-Step -Name "Verify localized command resources" -Action {
-    & $vsixLocalizationTest -VsixPath $vsixArtifact
+    Invoke-Checked -FilePath $vsixLocalizationTest -ArgumentList @(
+        "-VsixPath", $vsixArtifact
+    )
 }
 
 Invoke-Step -Name "Run managed VSIX behavior tests" -Action {

@@ -2381,3 +2381,11 @@ declaration preservation, and rejected dynamic shadowing/removal. The focused
 property contract. `_SCREEN`/ToolBar applicability, tooltip rendering/timing,
 memo tips, and hosted Windows UI remain separate. Exact-head Windows/macOS
 validation is still required before any cross-platform closure claim.
+
+# 2026-07-28 Windows validation contract: #4806 hardens
+`scripts/validate-windows.ps1` so the localized VSIX-command checker is
+invoked through `Invoke-Checked`; a nonzero child exit now fails the aggregate
+validation instead of being silently accepted. The focused
+`test_native_platform_workflow_contract` CTest passes `1/1`, PowerShell parsing
+passes with the repository's `pwsh`, and `git diff --check` is clean. No VSIX,
+catalog, or machine-readable contract changed.

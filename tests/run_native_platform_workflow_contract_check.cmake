@@ -611,6 +611,12 @@ require_text("scripts/validate-windows.ps1"
 require_text("scripts/validate-windows.ps1"
     "Validation completed with $($validationFailures.Count) failure(s):"
     "Windows validation aggregate failure result")
+require_text("scripts/validate-windows.ps1"
+    "Invoke-Checked -FilePath $vsixLocalizationTest"
+    "Windows validation checks VSIX localization exit status")
+require_text("scripts/validate-windows.ps1"
+    [=["-VsixPath", $vsixArtifact]=]
+    "Windows validation passes the built VSIX to the checked localization test")
 require_text(".github/workflows/windows-deep-validation.yml"
     "'-TimeoutSeconds', '1800'"
     "explicit hosted designer smoke timeout")

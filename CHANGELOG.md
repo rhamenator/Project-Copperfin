@@ -1,3 +1,9 @@
+- 2026-07-28: Closed #4806 under #110. The aggregate Windows validator now
+  invokes the VSIX localized-command checker through `Invoke-Checked`, so a
+  nonzero child exit cannot be reported as a successful validation stage.
+  The native workflow contract test and PowerShell parse pass; VSIX contents,
+  localization catalogs, and machine-readable contracts are unchanged.
+
 - 2026-07-28: Refreshed the archived #4403 safety traceability report against
   fresh live issue JSON at documentation head `7da457edf` and product/test
   head `2cbe5ab49`. Permissive structural, DQ/DV/HZ, and primary-hazard
