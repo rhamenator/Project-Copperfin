@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented runtime child #4790 under #3217 at product head
+  `20a5210c1`. Native PRG `Form.WhatsThisHelp` now follows the mounted VFP9
+  sample contract with a `.F.` default, logical normalization for direct and
+  PEM reflection writes, preserved derived-class declarations, and protected
+  built-in membership. Focused `test_prg_engine_runtime_surface_functions`
+  passes `1/1` locally. This headless slice does not claim What's This help
+  lookup, F1 routing, cursor/window chrome, rendering, or hosted UI behavior.
+
 - 2026-07-28: Implemented runtime child #4787 under #3217 at product head
   `c9fad5724`. Native PRG `Form.ShowTips` now follows the mounted VFP9
   contract: `.F.` Form default, writable direct and PEM reflection paths,

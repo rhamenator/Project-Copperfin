@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
+  `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
+  reflection writes, numeric/logical normalization, derived-class preservation,
+  and built-in shadow/removal protection. Preserve the Form-only applicability
+  and stack-frugal runtime path; help lookup, F1 routing, What's This cursor or
+  window chrome, rendering, and hosted UI remain separate evidence boundaries.
 - Recent native PRG parity slice: `#4722` under `#3217` evaluates parenthesized dynamic `DO` targets, including nested macro expressions and `WITH` arguments, through the heap-backed iterative frame machine. Same-file and admitted project-local targets are covered by the focused control-flow regression; package dependency discovery remains literal-only and unadmitted dynamic files fail closed.
 - Recent native PRG parity slice: `#4663` under #3217 adds the documented `Grid.View` property contract with a Browse (`0`) default, direct/PEM access, reflection, derived initialization, built-in protection, and normalization to `0..1` for unsplit state or `0..3` when a positive partition state is present. The focused runtime-surface target passes locally; split-pane layout, painting, navigation/editing behavior, and designer serialization remain separate UI work.
 - Recent installer resilience slice: `#4594` under `#110` adds a checksum-pinned portable NSIS 3.12 fallback after the existing Chocolatey retry loop exhausted HTTP 504/504/503 responses in run `30116440594`. The runner-temp fallback verifies the archive hash and `makensis.exe` before CPack; the workflow contract test and PowerShell parse check pass locally, and exact-head hosted run `30118462547` passed all Linux/macOS/Windows installer jobs and artifact checks.
