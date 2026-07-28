@@ -91,6 +91,15 @@ unhandled; repeated handled motion restores `READ EVENTS` and emits invariant
 `1/1`. Hit testing, capture/hover, drag-and-drop, rendering, and hosted Windows
 UI validation remain separate. Future user-facing text remains catalog-first.
 
+Runtime child #4763 under #3217 adds the modeled `WM_LBUTTONDBLCLK` boundary. A
+native visual object with a declared `DblClick` handler receives VFP's
+left-button value, Shift/Ctrl state, and signed client coordinates through the
+same heap-backed frame path. Unknown targets and objects without `DblClick`
+remain unhandled; handled dispatch restores `READ EVENTS` and emits invariant
+`prg.event.dblclick` telemetry. The focused runtime-surface CTest passes `1/1`.
+Double-click timing policy, hit testing, capture, rendering, and hosted Windows
+UI validation remain separate. Future user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or

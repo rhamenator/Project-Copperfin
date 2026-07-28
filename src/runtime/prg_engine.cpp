@@ -89,6 +89,7 @@ namespace copperfin::runtime
         constexpr std::uint32_t kWindowsLeftButtonDownMessage = 0x0201U;
         constexpr std::uint32_t kWindowsKeyDownMessage = 0x0100U;
         constexpr std::uint32_t kWindowsLeftButtonUpMessage = 0x0202U;
+        constexpr std::uint32_t kWindowsLeftButtonDoubleClickMessage = 0x0203U;
         constexpr std::intptr_t kWindowsAltContextBit = static_cast<std::intptr_t>(1) << 29;
 
         class PrgCompatibilityError final : public std::runtime_error
@@ -10714,6 +10715,20 @@ namespace copperfin::runtime
             }
         }
 
+        std::optional<int> double_click_target;
+        if (message == kWindowsLeftButtonDoubleClickMessage)
+        {
+            for (const auto &[handle, runtime_object] : ole_objects)
+            {
+                if (runtime_object.native_hwnd.has_value() &&
+                    *runtime_object.native_hwnd == hwnd)
+                {
+                    double_click_target = handle;
+                    break;
+                }
+            }
+        }
+
         std::vector<WindowMessageBinding> bindings;
         bindings.reserve(window_message_bindings.size());
         for (const WindowMessageBinding &binding : window_message_bindings)
@@ -10737,7 +10752,8 @@ namespace copperfin::runtime
         }
         if (bindings.empty() && !window_close_target.has_value() &&
             !keypress_target.has_value() && !click_target.has_value() &&
-            !mouse_down_target.has_value() && !mouse_move_target.has_value())
+            !mouse_down_target.has_value() && !mouse_move_target.has_value() &&
+            !double_click_target.has_value())
         {
             return std::nullopt;
         }
@@ -10898,6 +10914,30 @@ namespace copperfin::runtime
                         .has_value())
                 {
                     events.push_back({.category = "prg.event.mousemove",
+                                      .detail = target_found->second.prog_id,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    last_result = 0;
+                }
+            }
+        }
+
+        if (double_click_target.has_value())
+        {
+            const auto target_found = ole_objects.find(*double_click_target);
+            if (target_found != ole_objects.end())
+            {
+                bool ignored_nodefault = false;
+                if (invoke_native_object_method_if_present(
+                        target_found->second,
+                        "DblClick",
+                        stack.back(),
+                        mouse_event_arguments(),
+                        mouse_argument_references,
+                        &ignored_nodefault,
+                        nullptr)
+                        .has_value())
+                {
+                    events.push_back({.category = "prg.event.dblclick",
                                       .detail = target_found->second.prog_id,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     last_result = 0;
