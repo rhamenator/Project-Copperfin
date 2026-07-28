@@ -22,23 +22,27 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
-The current implementation head is `ff9417a4a` (synchronized coordination
-head `e8b857f95`), which includes runtime child #4753's defined-menu lifecycle
-slice. Fresh hosted Linux Native `30322581213`, Windows Native
-`30322581189`, and macOS Native `30322581188` runs are in progress against
-that head, along with the managed UI, VSIX, installer, launcher, and Windows
-environment validation workflows. The prior corrected-head evidence remains
-valid: hosted Linux Native `30320046770` passed all `316/316` CTest cases in
-`175.76s`, with only the two expected platform-conditional skips; hosted macOS
-Native `30320046738` passed `316/316` in `218.31s`, and Windows Environment
-and Executable Path Validation `30320046758` passed. The earlier Windows
+The current implementation head is `ff9417a4a` (synchronized documentation
+head `061a7abbf`), which includes runtime child #4753's defined-menu lifecycle
+slice. Hosted Linux Native `30322581213` passed all `316/316` CTest cases in
+`172.41s`, and hosted macOS Native `30322581188` passed `316/316` in
+`223.95s`, with only the two expected platform-conditional skips. Current-head
+installer `30322581220`, generated launcher `30322581198`, managed UI
+`30322581184`, VSIX `30322581157`, security `30322581183`, Windows environment
+`30322581177`, Windows DECLARE ABI `30322581171`, and executable-path
+`30322581163` also passed. Windows Native `30322581189` remains in progress.
+The prior corrected-head evidence remains valid: hosted Linux Native
+`30320046770` passed all `316/316` CTest cases in `175.76s`, with only the two
+expected platform-conditional skips; hosted macOS Native `30320046738` passed
+`316/316` in `218.31s`, and Windows Environment and Executable Path Validation
+`30320046758` passed. The earlier Windows
 Native `30317113993` failed only `test_runtime_pipeline` (`314/315` passed)
 because its full-suite fixture compared short `RUNNER~1` temp paths with the
 product's long directory-entry spelling; test-only correction `73cdd5f57`
 normalizes the fixture namespace with `GetLongPathNameW`. The earlier local
 POSIX validation at `2417603ea` passed `316/316` in `301.53s`, skipping only
 `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`.
-The new current-head runs are still partial release evidence until they finish.
+The current-head evidence remains partial until Windows Native finishes.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
