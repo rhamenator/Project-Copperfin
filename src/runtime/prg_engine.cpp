@@ -10788,6 +10788,54 @@ namespace copperfin::runtime
             const auto target_found = ole_objects.find(*keypress_target);
             if (target_found != ole_objects.end())
             {
+                bool keypress_suppressed_by_preview = false;
+                if (normalize_identifier(trim_copy(target_found->second.base_class_name)) != "form")
+                {
+                    if (const auto owner_form_reference =
+                            native_object_owner_form_reference(target_found->second);
+                        owner_form_reference.has_value())
+                    {
+                        if (auto owner_form = resolve_ole_object(*owner_form_reference);
+                            owner_form.has_value())
+                        {
+                            const auto key_preview = read_native_property_if_present(
+                                **owner_form,
+                                "keypreview",
+                                stack.back());
+                            if (key_preview.has_value() && value_as_bool(*key_preview))
+                            {
+                                bool preview_requested_nodefault = false;
+                                if (invoke_native_object_method_if_present(
+                                        **owner_form,
+                                        "KeyPress",
+                                        stack.back(),
+                                        {make_int64_value(static_cast<std::int64_t>(wparam)),
+                                         make_int64_value((lparam & kWindowsAltContextBit) != 0 ? 4 : 0)},
+                                        {std::nullopt, std::nullopt},
+                                        &preview_requested_nodefault,
+                                        nullptr)
+                                        .has_value())
+                                {
+                                    events.push_back({.category = "prg.event.keypress",
+                                                      .detail = (*owner_form)->prog_id +
+                                                                " key=" + std::to_string(wparam),
+                                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                                    keypress_suppressed_by_preview = preview_requested_nodefault;
+                                    if (keypress_suppressed_by_preview)
+                                    {
+                                        last_result = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (keypress_suppressed_by_preview)
+                {
+                    return last_result;
+                }
+
                 const auto before_interactive_change_signature =
                     native_list_control_selection_signature(target_found->second);
                 // WM_KEYDOWN carries Alt in bit 29. Shift and Ctrl state are

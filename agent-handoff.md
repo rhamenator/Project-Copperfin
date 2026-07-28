@@ -51,6 +51,17 @@ not translate arbitrary operating-system exception text or change any machine
 contract; future user-facing managed surfaces should follow the same catalog-first
 pattern.
 
+Runtime child #4759 under #3217 extends the modeled `WM_KEYDOWN` boundary for
+native child controls. When the owning Form has `KeyPreview = .T.`, the Form's
+`KeyPress` runs first with the existing key-code and Alt-context arguments; a Form
+`NODEFAULT` suppresses child processing, while an unhandled Form preview leaves
+the child `KeyPress` and its `NODEFAULT` result intact. The regression also covers
+disabling preview from the Form handler, stable keypress telemetry, and event-loop
+restoration. `test_prg_engine_runtime_surface_functions` passes `1/1`. Native focus
+traversal, keyboard buffering, expanded modifier state, Page/_SCREEN/ToolBar
+applicability, rendering, and hosted Windows UI validation remain separate. Future
+user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or
