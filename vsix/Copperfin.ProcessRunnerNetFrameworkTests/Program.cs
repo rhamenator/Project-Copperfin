@@ -16,6 +16,12 @@ internal static class Program
     [STAThread]
     private static int Main()
     {
+        if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+        {
+            Console.WriteLine("Copperfin .NET Framework process-runner tests skipped: the fixture requires Windows cmd.exe, PowerShell, and taskkill.exe.");
+            return 0;
+        }
+
         var root = Path.Combine(Path.GetTempPath(), "copperfin_process_runner_net472", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var scriptPath = Path.Combine(root, "timeout.cmd");

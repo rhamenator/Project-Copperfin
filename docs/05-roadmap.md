@@ -126,6 +126,12 @@ The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 local Linux evidence only and does not substitute for Windows/macOS installers,
 hosted UI validation, or the protected signing gate.
 
+Managed Linux evidence is also current: `Copperfin.Studio` Release builds with
+zero warnings/errors, the portable language-service and Studio target-selection
+suites pass, and the shared DesignerSmoke executable builds and lists its full
+inventory without warnings. The net472 process-tree fixture is explicitly
+Windows-only; VSIX compilation remains a Windows/MSBuild gate.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).
