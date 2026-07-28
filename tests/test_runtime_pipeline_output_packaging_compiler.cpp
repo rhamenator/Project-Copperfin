@@ -116,6 +116,7 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "LOCAL nValue\n"
                "nValue = 1\n"
                "DO worker\n"
+               "DEFINE MENU MainMenu\n"
                "RETURN\n"
                "PROCEDURE worker\n"
                "WAIT WINDOW 'ir'\n"
@@ -184,6 +185,8 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should map assignments to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"do_command\"") != std::string::npos,
                "ir manifest should map DO statements to a stable opcode");
+        expect(ir_manifest.find("\"opcode\": \"define_menu_command\"") != std::string::npos,
+               "ir manifest should map DEFINE MENU statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"wait_command\"") != std::string::npos,
                "ir manifest should map WAIT WINDOW statements to a stable opcode");
         expect(ir_manifest.find("\"name\": \"worker\"") != std::string::npos,

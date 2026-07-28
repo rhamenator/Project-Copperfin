@@ -140,6 +140,13 @@ are covered by the focused runtime-surface test; right-button hit testing,
 capture, context-menu rendering, drag-and-drop, and hosted Windows UI remain
 separate. Future user-facing text remains catalog-first.
 
+Runtime package child #4769 corrects the IR-manifest opcode map. The parsed
+`DEFINE MENU` statement kind now emits invariant `define_menu_command` metadata
+instead of falling through to `no_op`; focused runtime package/compiler
+coverage protects the mapping and removes the `-Wswitch` warning. The existing
+manifest schema and all other opcode names remain unchanged. Future
+user-facing text remains catalog-first.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or
