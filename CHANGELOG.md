@@ -1,3 +1,9 @@
+- 2026-07-28: Refreshed the roadmap RC evidence section against the current
+  product head `364e62058` and coordination head `bf2e33fd0`. It now lists the
+  exact-head green and in-progress hosted runs without claiming RC readiness;
+  #4403 independent safety sign-off and #4409 protected launcher trust remain
+  explicit release gates.
+
 - 2026-07-28: Closed #4806 under #110. The aggregate Windows validator now
   invokes the VSIX localized-command checker through `Invoke-Checked`, so a
   nonzero child exit cannot be reported as a successful validation stage.

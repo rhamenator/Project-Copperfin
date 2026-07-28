@@ -2389,3 +2389,10 @@ validation instead of being silently accepted. The focused
 `test_native_platform_workflow_contract` CTest passes `1/1`, PowerShell parsing
 passes with the repository's `pwsh`, and `git diff --check` is clean. No VSIX,
 catalog, or machine-readable contract changed.
+
+# 2026-07-28 Roadmap evidence refresh: `docs/05-roadmap.md` now reflects the
+current exact-head release matrix for product head `364e62058` and coordination
+head `bf2e33fd0`. Linux Managed UI, VSIX, and Security Supply Chain are green;
+the remaining native, installer, and Windows validation runs are still in
+progress. RC readiness remains unclaimed, with #4403 independent safety
+sign-off and #4409 protected launcher trust still open.

@@ -118,23 +118,17 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest safety-validation implementation head is `37366143c`; synchronized
-coordination commits follow that source head. The hosted matrix for the
-synchronized branch tip has not
-completed, so prior green lanes are not being claimed as exact-head evidence;
-native, installer, executable-path, and Windows jobs remain pending or in
-progress. The product behavior head for #4800 remains `f669fd51c`. The broad
-hosted baseline remains the successful
-`93d44395f` evidence set: Linux Native `30329037575`, macOS Native
-`30329037567`, Linux managed UI `30329037628`, VSIX `30329037609`, installers
-`30329037566`, and security supply-chain gate `30329037556`. Windows Native
-`30329037587` passed `315/315` CTest cases in `557.26s`. Windows Deep
-Validation `30329053296` passed native CTest `315/315` in `503.96s`, VSIX and
-managed tests, the net472 process-runner fixture, standalone Studio and
-designer builds, required designer smoke assertions, and PRG debugger smoke.
-The deep run used `require_vfp9_samples=false`, so its RuntimePackage, xAsset,
-Report, and Menu stages were skipped; no Windows VFP9 sample-runtime coverage
-is claimed from that run.
+The current release-validation product head is `364e62058`, with coordination
+head `bf2e33fd0`. The exact-head matrix is still running, so RC readiness is
+not claimed: Linux Managed UI `30404819438`, VSIX `30404819312`, and Security
+Supply Chain `30404819335` are green, while Linux Native `30404819262`, macOS
+Native `30404819331`, Windows Native `30404819387`, Windows Environment and
+Executable Path `30404819386`, Executable Path `30404819239`, Windows DECLARE
+ABI `30404819228`, and Standalone Installers `30404819272` remain in progress.
+The earlier accepted hosted baselines remain historical evidence only and are
+not substituted for this exact-head matrix. Independent safety sign-off under
+#4403 and protected launcher-trust provisioning under #4409 remain separate
+release gates.
 
 Independent local evidence at coordination head `4a3a66865` includes the
 three package-trust/provisioning contracts (`3/3`), `test_runtime_pipeline`
