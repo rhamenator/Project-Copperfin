@@ -1,3 +1,9 @@
+- 2026-07-28: Recorded the fresh #4403 safety-ledger re-review: permissive
+  validation passes and strict mode reports only the expected open-issue gate,
+  but the reviewer cannot provide the required arm's-length sign-off because
+  it participated in the validator-hardening work. The separate #4409
+  protected launcher-trust gate remains open.
+
 - 2026-07-28: Linux Native `30404819262` completed successfully in the exact-
   head matrix. Windows Native `30404819387` is now the sole active hosted
   validation job; RC readiness remains unclaimed pending that result and the

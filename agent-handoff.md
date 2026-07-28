@@ -2392,7 +2392,7 @@ catalog, or machine-readable contract changed.
 
 # 2026-07-28 Roadmap evidence refresh: `docs/05-roadmap.md` now reflects the
 current exact-head release matrix for product head `364e62058` and coordination
-head `bf2e33fd0`. Linux Managed UI, Linux Native, macOS Native, VSIX, Security
+head `65bd80c80`. Linux Managed UI, Linux Native, macOS Native, VSIX, Security
 Supply Chain, Windows environment/path, DECLARE ABI, executable-path, and
 installer runs are green; Windows Native remains active. RC readiness remains
 unclaimed, with #4403 independent safety sign-off and #4409 protected launcher
