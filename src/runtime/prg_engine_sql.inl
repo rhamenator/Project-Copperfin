@@ -1392,10 +1392,14 @@
                 std::error_code ignored;
                 const std::string program_path_text =
                     copperfin::platform::path_to_utf8_string(program_path);
+                bool admitted_source_ambiguous = false;
                 const auto admitted_source = find_source_text_override(
-                    program_path_text);
+                    program_path_text,
+                    options.require_source_text_overrides,
+                    &admitted_source_ambiguous);
                 const bool has_admitted_source =
                     options.require_source_text_overrides &&
+                    !admitted_source_ambiguous &&
                     admitted_source != options.source_text_overrides.end() &&
                     !admitted_source->second.empty();
                 if (std::filesystem::exists(program_path, ignored) ||

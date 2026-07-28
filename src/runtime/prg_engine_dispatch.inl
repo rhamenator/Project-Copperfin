@@ -2023,7 +2023,8 @@
                     }
                     target_path = target_path.lexically_normal();
                     const auto admitted_target = find_source_text_override(
-                        copperfin::platform::path_to_utf8_string(target_path));
+                        copperfin::platform::path_to_utf8_string(target_path),
+                        true);
                     if (admitted_target != options.source_text_overrides.end())
                     {
                         target_path = copperfin::platform::path_from_utf8_string(admitted_target->first);

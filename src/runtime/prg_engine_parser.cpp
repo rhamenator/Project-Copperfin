@@ -966,7 +966,12 @@ fs::path resolve_include_path(const fs::path& owning_path, const std::string& in
 
 const std::string* find_source_text_override(
     const std::map<std::string, std::string>* source_text_overrides,
-    const std::string& path) {
+    const std::string& path,
+    const bool fail_on_ambiguity,
+    bool* ambiguous) {
+    if (ambiguous != nullptr) {
+        *ambiguous = false;
+    }
     if (source_text_overrides == nullptr) {
         return nullptr;
     }
@@ -974,15 +979,23 @@ const std::string* find_source_text_override(
         exact != source_text_overrides->end()) {
         return &exact->second;
     }
-    const auto insensitive = std::find_if(
-        source_text_overrides->begin(),
-        source_text_overrides->end(),
-        [&](const auto& candidate) {
-            return paths_equal_insensitive(candidate.first, path);
-        });
-    return insensitive == source_text_overrides->end()
-        ? nullptr
-        : &insensitive->second;
+    const std::string* folded_match = nullptr;
+    for (const auto& candidate : *source_text_overrides) {
+        if (!paths_equal_insensitive(candidate.first, path)) {
+            continue;
+        }
+        if (folded_match != nullptr) {
+            if (fail_on_ambiguity) {
+                if (ambiguous != nullptr) {
+                    *ambiguous = true;
+                }
+                return nullptr;
+            }
+            return folded_match;
+        }
+        folded_match = &candidate.second;
+    }
+    return folded_match;
 }
 
 void append_preprocessed_logical_lines(
@@ -1043,8 +1056,12 @@ void append_preprocessed_logical_lines(
             const fs::path include_path = resolve_include_path(path, include_path_text);
             const std::string include_key = normalize_path(
                 copperfin::platform::path_to_utf8_string(include_path));
-            const std::string* include_source =
-                find_source_text_override(source_text_overrides, include_key);
+            bool include_source_ambiguous = false;
+            const std::string* include_source = find_source_text_override(
+                source_text_overrides,
+                include_key,
+                require_source_text_overrides,
+                &include_source_ambiguous);
             std::error_code exists_error;
             const bool include_exists = fs::exists(include_path, exists_error);
             if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
@@ -1059,7 +1076,8 @@ void append_preprocessed_logical_lines(
                         require_source_text_overrides);
                     state.include_stack.erase(include_key);
                 }
-            } else if (require_source_text_overrides) {
+            } else if (require_source_text_overrides &&
+                       (include_source_ambiguous || !include_exists)) {
                 throw std::runtime_error(runtime_text(
                     "Runtime.Prg.Parser.Error.VerifiedIncludeSourceUnavailable",
                     {{"path", include_key}}));

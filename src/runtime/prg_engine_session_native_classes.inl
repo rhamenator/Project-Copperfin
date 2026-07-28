@@ -45,9 +45,13 @@
             std::error_code ignored;
             const auto has_admitted_source = [&](const std::filesystem::path &candidate)
             {
+                bool ambiguous = false;
                 const auto override = find_source_text_override(
-                    copperfin::platform::path_to_utf8_string(candidate));
+                    copperfin::platform::path_to_utf8_string(candidate),
+                    options.require_source_text_overrides,
+                    &ambiguous);
                 return options.require_source_text_overrides &&
+                    !ambiguous &&
                     override != options.source_text_overrides.end() &&
                     !override->second.empty();
             };

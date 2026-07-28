@@ -25,20 +25,43 @@
         }
 
         std::map<std::string, std::string>::const_iterator find_source_text_override(
-            const std::string &path) const
+            const std::string &path,
+            const bool fail_on_ambiguity = false,
+            bool *ambiguous = nullptr) const
         {
+            if (ambiguous != nullptr)
+            {
+                *ambiguous = false;
+            }
             if (const auto exact = options.source_text_overrides.find(path);
                 exact != options.source_text_overrides.end())
             {
                 return exact;
             }
-            return std::find_if(
-                options.source_text_overrides.begin(),
-                options.source_text_overrides.end(),
-                [&](const auto &candidate)
+            auto folded_match = options.source_text_overrides.end();
+            for (auto candidate = options.source_text_overrides.begin();
+                 candidate != options.source_text_overrides.end();
+                 ++candidate)
+            {
+                if (!paths_equal_insensitive(candidate->first, path))
                 {
-                    return paths_equal_insensitive(candidate.first, path);
-                });
+                    continue;
+                }
+                if (folded_match != options.source_text_overrides.end())
+                {
+                    if (fail_on_ambiguity)
+                    {
+                        if (ambiguous != nullptr)
+                        {
+                            *ambiguous = true;
+                        }
+                        return options.source_text_overrides.end();
+                    }
+                    return folded_match;
+                }
+                folded_match = candidate;
+            }
+            return folded_match;
         }
 
         Program &load_program(const std::string &path)
@@ -52,9 +75,14 @@
             const bool use_startup_source_text =
                 options.startup_source_text.has_value() &&
                 normalized == normalize_path(options.startup_path);
-            const auto source_override = find_source_text_override(normalized);
+            bool source_override_ambiguous = false;
+            const auto source_override = find_source_text_override(
+                normalized,
+                options.require_source_text_overrides,
+                &source_override_ambiguous);
             if (!use_startup_source_text &&
-                source_override == options.source_text_overrides.end() &&
+                (source_override_ambiguous ||
+                 source_override == options.source_text_overrides.end()) &&
                 options.require_source_text_overrides)
             {
                 throw std::runtime_error(runtime_text(

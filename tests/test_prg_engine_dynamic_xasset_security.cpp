@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -449,6 +450,61 @@ void test_strict_do_uses_verified_source_during_replacement() {
     fs::remove_all(root, ignored);
 }
 
+void test_strict_source_overrides_reject_casefold_collisions() {
+    const fs::path root = fs::temp_directory_path() / "copperfin_ambiguous_verified_sources";
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+    fs::create_directories(root);
+
+    const fs::path child_path = root / "child.prg";
+    const fs::path header_path = root / "header.h";
+    const std::string child_source = "PUBLIC cMarker\ncMarker = 'admitted-child'\nRETURN\n";
+
+    auto direct_options = make_runtime_session_options(root / "ChIlD.PRG", root);
+    direct_options.source_text_overrides.emplace(child_path.string(), child_source);
+    direct_options.source_text_overrides.emplace((root / "CHILD.PRG").string(),
+                                                  "PUBLIC cMarker\ncMarker = 'wrong-child'\nRETURN\n");
+    direct_options.require_source_text_overrides = true;
+    std::string direct_error;
+    try
+    {
+        auto direct_session = copperfin::runtime::PrgRuntimeSession::create(direct_options);
+        direct_error = direct_session.run(copperfin::runtime::DebugResumeAction::continue_run).message;
+    }
+    catch (const std::exception &error)
+    {
+        direct_error = error.what();
+    }
+    expect(direct_error.find("Verified package source is unavailable") != std::string::npos,
+           "strict direct source loading should fail closed on ambiguous folded overrides: " + direct_error);
+
+    auto include_options = make_runtime_session_options(root / "main.prg", root);
+    include_options.startup_source_text =
+        "#INCLUDE 'HEADER.H'\n"
+        "PUBLIC cMarker\n"
+        "cMarker = SOURCE_VALUE\n"
+        "RETURN\n";
+    include_options.source_text_overrides.emplace(header_path.string(),
+                                                  "#DEFINE SOURCE_VALUE 'first-header'\n");
+    include_options.source_text_overrides.emplace((root / "Header.H").string(),
+                                                  "#DEFINE SOURCE_VALUE 'second-header'\n");
+    include_options.require_source_text_overrides = true;
+    std::string include_error;
+    try
+    {
+        auto include_session = copperfin::runtime::PrgRuntimeSession::create(include_options);
+        include_error = include_session.run(copperfin::runtime::DebugResumeAction::continue_run).message;
+    }
+    catch (const std::exception &error)
+    {
+        include_error = error.what();
+    }
+    expect(include_error.find("Verified package include source is unavailable") != std::string::npos,
+           "strict #INCLUDE should fail closed on ambiguous folded source overrides: " + include_error);
+
+    fs::remove_all(root, ignored);
+}
+
 void test_strict_do_and_call_use_admitted_source_when_paths_are_absent() {
     const fs::path root = fs::temp_directory_path() / "copperfin_dynamic_prg_admitted_without_paths";
     std::error_code ignored;
@@ -563,6 +619,7 @@ int main() {
     test_dynamic_xasset_bootstrap_cleanup();
     test_dynamic_xasset_failed_write_cleanup();
     test_strict_do_uses_verified_source_during_replacement();
+    test_strict_source_overrides_reject_casefold_collisions();
     test_strict_do_and_call_use_admitted_source_when_paths_are_absent();
     test_strict_spawn_uses_admitted_source_when_path_is_absent();
     return test_failures() == 0 ? 0 : 1;
