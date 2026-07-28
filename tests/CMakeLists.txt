@@ -4988,6 +4988,7 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions_interop_01.cpp
     test_prg_engine_runtime_surface_functions_interop_02.cpp
     test_prg_engine_runtime_surface_functions_keypress.cpp
+    test_prg_engine_runtime_surface_functions_interactivechange.cpp
     test_prg_engine_runtime_surface_functions_interop_03.cpp
     test_prg_engine_runtime_surface_functions_interop_04.cpp
     test_prg_engine_runtime_surface_functions_interop_05.cpp

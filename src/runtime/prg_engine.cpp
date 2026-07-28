@@ -3985,7 +3985,9 @@ namespace copperfin::runtime
             normalized_base_class == "form" ||
             normalized_base_class == "formset" ||
             normalized_base_class == "olecontrol" ||
-            normalized_base_class == "toolbar";
+            normalized_base_class == "toolbar" ||
+            normalized_base_class == "listbox" ||
+            normalized_base_class == "combobox";
         if (!supports_runtime_window_handle)
         {
             return;
@@ -10786,6 +10788,8 @@ namespace copperfin::runtime
             const auto target_found = ole_objects.find(*keypress_target);
             if (target_found != ole_objects.end())
             {
+                const auto before_interactive_change_signature =
+                    native_list_control_selection_signature(target_found->second);
                 // WM_KEYDOWN carries Alt in bit 29. Shift and Ctrl state are
                 // supplied by the platform adapter in a future host-specific
                 // bridge because they are not encoded in this message.
@@ -10808,6 +10812,29 @@ namespace copperfin::runtime
                                                     " key=" + std::to_string(wparam),
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     last_result = requested_nodefault ? 1 : 0;
+
+                    const auto after_interactive_change_signature =
+                        native_list_control_selection_signature(target_found->second);
+                    if (before_interactive_change_signature.has_value() &&
+                        after_interactive_change_signature.has_value() &&
+                        *before_interactive_change_signature != *after_interactive_change_signature)
+                    {
+                        bool ignored_nodefault = false;
+                        if (invoke_native_object_method_if_present(
+                                target_found->second,
+                                "InteractiveChange",
+                                stack.back(),
+                                {},
+                                {},
+                                &ignored_nodefault,
+                                nullptr)
+                                .has_value())
+                        {
+                            events.push_back({.category = "prg.event.interactivechange",
+                                              .detail = target_found->second.prog_id,
+                                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                        }
+                    }
                 }
             }
         }

@@ -541,6 +541,7 @@ namespace copperfin::runtime_surface_tests
     void test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
     void test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
     void test_native_keypress_dispatch_and_nodefault_preserve_event_loop_state();
+    void test_native_list_control_interactivechange_dispatches_for_changed_input();
     void test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
     void test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
     void test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();

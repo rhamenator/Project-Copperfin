@@ -51,6 +51,17 @@ not translate arbitrary operating-system exception text or change any machine
 contract; future user-facing managed surfaces should follow the same catalog-first
 pattern.
 
+Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
+`WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
+`KeyPress` and invokes `InteractiveChange` only when the effective selection or
+value changes. ComboBox/ListBox objects now receive stable synthetic window handles
+for this existing headless message path. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; `KeyPress`,
+`NODEFAULT`, the event loop, and existing `ProgrammaticChange` behavior remain
+covered. Native keyboard navigation, focus/popup/text input, rendering, and hosted
+Windows validation are separate boundaries. Future user-facing text remains
+catalog-first.
+
 Windows Deep Validation `30326601931` completed with native CTest `315/315` in
 `516.66s`, VSIX build/resource verification, and both managed language-service
 stages passing. Its net472 process-runner stage failed at
