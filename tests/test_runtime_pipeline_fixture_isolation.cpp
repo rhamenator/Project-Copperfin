@@ -25,6 +25,27 @@ namespace {
 constexpr auto kProbeTimeout = std::chrono::seconds(10);
 std::atomic_uint fixture_namespace_sequence{0U};
 
+#if defined(_WIN32)
+std::filesystem::path normalize_windows_fixture_root_spelling(
+    const std::filesystem::path& candidate) {
+    std::wstring buffer(256U, L'\0');
+    for (;;) {
+        const DWORD length = ::GetLongPathNameW(
+            candidate.c_str(),
+            buffer.data(),
+            static_cast<DWORD>(buffer.size()));
+        if (length == 0U) {
+            return candidate;
+        }
+        if (length < buffer.size()) {
+            buffer.resize(length);
+            return std::filesystem::path(buffer);
+        }
+        buffer.assign(static_cast<std::size_t>(length) + 1U, L'\0');
+    }
+}
+#endif
+
 std::filesystem::path create_fixture_namespace_root() {
     const std::filesystem::path base = std::filesystem::temp_directory_path();
 #if defined(_WIN32)
@@ -38,7 +59,14 @@ std::filesystem::path create_fixture_namespace_root() {
             ("cfp-" + std::to_string(process_id) + "-" + std::to_string(sequence));
         std::error_code error;
         if (std::filesystem::create_directory(candidate, error)) {
+#if defined(_WIN32)
+            // Windows runners may expose TEMP through an 8.3 alias such as
+            // RUNNER~1. Keep exact provenance assertions independent of that
+            // host spelling while retaining the actual directory-entry name.
+            return normalize_windows_fixture_root_spelling(candidate);
+#else
             return candidate;
+#endif
         }
         if (error && error != std::errc::file_exists) {
             throw std::runtime_error("Unable to create runtime-pipeline fixture namespace.");
