@@ -11,13 +11,22 @@ or skips. The preceding Windows run `30322581189` was cancelled before CTest
 after a later product push superseded it and is neither a pass nor a product
 failure.
 
+Exact-head Windows Native Validation `30329037587` subsequently passed
+`315/315` CTest cases in `557.26s`, and Windows Deep Validation
+`30329053296` passed its required native and managed stages. The deep run
+passed native CTest `315/315` in `503.96s`, VSIX/resource verification,
+managed VSIX and language-service tests, the net472 process-runner fixture,
+standalone Studio and designer builds, all required designer smoke
+assertions, and the PRG debugger smoke. Its runtime-package, xAsset,
+report, and menu sample stages were intentionally skipped because the run
+used `require_vfp9_samples=false`; no VFP9-sample coverage is claimed.
+
 #4621 and #4750 are closed. The hosted Windows/VFP9/Visual Studio evidence
 recorded for #4621 remains the accepted release-evidence baseline; the current
 native rerun is a later exact-head corroboration. The remaining explicit
 release prerequisites are the open safety traceability review under #4403 and
-the externally provisioned package-signing/trust registry under #4409, and the
-separately dispatched exact-head deep-validation workflow. Do not claim the
-complete RC evidence gate until those prerequisites are resolved.
+the externally provisioned package-signing/trust registry under #4409. Do not
+claim the complete RC evidence gate until those prerequisites are resolved.
 
 Windows Deep Validation `30326601931` completed with native CTest `315/315` in
 `516.66s`, VSIX build/resource verification, and both managed language-service
@@ -27,15 +36,18 @@ designer, package, debugger, and xAsset stages were skipped. The failure is
 tracked in #4756; the current code change retries the bounded Windows
 `taskkill /T /F` fallback, while Windows rerun evidence remains required.
 
+The replacement exact-head deep run `30329053296` passed the process-runner
+stage and the later non-sample stages. This closes the implementation/testing
+acceptance for #4756; the sample-dependent stages remain a separate hosted
+VFP9 evidence requirement.
+
 Windows Codex independently validated the #4756 fix at implementation head
 `93d44395f`: the real net472 `cmd.exe`/PowerShell/`taskkill.exe`
 process-tree fixture passed once through `dotnet run` and five additional
 serial `--no-build` repetitions, for `6/6` passes. The repetitions completed
 in `10.69`-`10.90s` after the initial `16.34s` run, with no child-termination
-or cleanup-budget assertion failure. This settles the observed timing concern
-for the fixture but does not replace the still-running full Windows Deep
-Validation workflow or its later Studio, designer, package, debugger, and
-xAsset stages.
+or cleanup-budget assertion failure. The subsequent exact-head deep run
+`30329053296` independently passed the same process-runner stage.
 
 The workflow timeout hardening for #4755 is in `bd7e1d4c9`: manual Windows
 Deep Validation now passes CTest `--timeout 180`, matching the local Windows
@@ -55,7 +67,11 @@ security `30324522761` passed. Generated Launcher Validation `30326599223`
 passed its POSIX and Windows process tests (`1/1` each), Environment and
 Executable Path Validation `30326600206` passed `7/7`, and DECLARE ABI
 Validation `30326601002` passed its managed plus three adjacent targets on
-both Win32 and x64. Windows Deep Validation `30326601931` remains pending.
+both Win32 and x64. The exact-head replacement matrix is now authoritative:
+Windows Native `30329037587` passed `315/315` in `557.26s`, and Windows Deep
+Validation `30329053296` passed. The four sample-dependent deep stages were
+skipped by the explicit `require_vfp9_samples=false` input and remain
+unclaimed.
 
 Fresh safety validation is archived in
 `docs/safety/traceability-report-2026-07-28.md` at synchronized documentation
