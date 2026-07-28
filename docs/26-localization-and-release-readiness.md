@@ -20,6 +20,16 @@ Localized text must be separated from stable protocol values:
 - Missing keys fall back to the stable key instead of returning blank text.
 - Locale selection must be deterministic and testable. Portable C++ surfaces use `--locale <tag>` where practical and honor `COPPERFIN_LOCALE`; existing .NET Studio surfaces retain their documented host-specific locale selection until migrated.
 
+## Current Validation Evidence
+
+At synchronized head `2417603ea`,
+`COPPERFIN_BUILD_JOBS=2 ./scripts/validate-posix.sh` rebuilt the native tree and
+passed all `316/316` CTest cases in `301.53s`. The two expected
+platform-conditional tests, `test_build_host_utf8_launcher_paths` and
+`test_generated_launcher_process`, were skipped. Hosted Windows Native
+Validation `30314709007` remains in progress, so the POSIX result is recorded
+as partial release evidence rather than a complete RC claim.
+
 ## Resource Layout
 
 The portable C++ catalog lives under `resources/locales/<locale>/strings.json` and installs to `share/copperfin/locales`. The first C++ surface routed through it is `copperfin_inspect` usage text; machine-readable inspection fields remain invariant.

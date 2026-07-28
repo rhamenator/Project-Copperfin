@@ -114,6 +114,13 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
+Current release evidence: at synchronized head `2417603ea`,
+`COPPERFIN_BUILD_JOBS=2 ./scripts/validate-posix.sh` rebuilt the native tree and
+passed all `316/316` CTest cases in `301.53s`, with only the two expected
+platform-conditional skips. Hosted Windows Native Validation `30314709007` is
+still running; the project therefore does not yet claim a complete
+cross-platform RC gate.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).
