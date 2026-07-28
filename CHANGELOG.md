@@ -1,3 +1,5 @@
+- 2026-07-28: Closed #4771 after Claude/Windows review and macOS Native Validation `30353802078` corroborated the focused CommandButton Default/Cancel implementation at product head `f9f44a786`. Enabled filtering, ENTER focus precedence, NODEFAULT suppression, Click telemetry, and stack-frugal dispatch remain covered; full UI/RC boundaries stay separate.
+
 - 2026-07-28: Implemented #4772 under #3866 at product head `4957a62c3`. Strict PRG/header source-text overrides now preserve exact and unique-folded matches but fail closed on multiple folded-only candidates across direct loading, `#INCLUDE`, and strict DO admission. Local PRG, dynamic-xAsset security, and runtime-surface targets pass `3/3`; hosted review remains pending.
 
 - 2026-07-28: Closed #4770 after exact-head native Windows validation seq778 passed the focused verified DBF security, database lifecycle, and runtime-surface targets `3/3` at product `f9f44a786`. The previously failing folded-only CDX ambiguity now fails closed through both table-snapshot and cursor-order inspection; Linux coverage and Claude review also pass.

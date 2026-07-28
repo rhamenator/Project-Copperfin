@@ -37,9 +37,11 @@ implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,
 database-lifecycle, and runtime-surface targets `3/3`, including the prior
-folded-only CDX failure. #4771 remains open; Claude and Windows have accepted
-its unchanged behavior, while hosted macOS/full-matrix corroboration remains
-pending. Do not claim the complete RC evidence gate from either child alone.
+folded-only CDX failure. #4771 is also closed after Claude/Windows review and
+macOS Native Validation `30353802078` at the same product head. Full RC
+matrix, focus traversal, keyboard buffering, and hosted pixel UI remain
+separate evidence boundaries. Do not claim the complete RC evidence gate from
+either child alone.
 
 The next strict-reader slice, #4772 under #3866, is implemented at product
 head `4957a62c3`. It closes the separate source-text override ambiguity path:

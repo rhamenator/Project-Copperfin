@@ -56,8 +56,9 @@ and #4771 includes disabled-button filtering plus focused CommandButton ENTER
 precedence when a host supplies a target handle. The three focused Linux
 targets pass `3/3`; exact-head Windows validation seq778 closed #4770 after
 passing those targets `3/3`, including the prior folded-only CDX failure.
-Claude and Windows have reviewed #4771; its remaining hosted macOS/full-matrix
-evidence is pending, so #4771 remains open.
+Claude and Windows reviewed #4771, and exact-head macOS Native Validation
+`30353802078` passed at `f9f44a786`; the child is closed as implementation-
+complete. Its full RC matrix and UI rendering boundaries remain separate.
 The new #4772 strict PRG source-admission correction is at product head
 `4957a62c3`; its focused local PRG, dynamic-xAsset security, and runtime-surface
 targets pass `3/3`, with exact-head hosted review pending.

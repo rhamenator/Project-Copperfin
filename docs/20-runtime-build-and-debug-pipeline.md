@@ -33,6 +33,11 @@ after `KeyPress` permits default processing. A selected ordinary no-argument
 existing contracts. Focus traversal, keyboard buffering, toolbar arbitration,
 pixel UI, and hosted Windows behavior remain separate.
 
+#4771's focused implementation is closed after Linux, Windows, Claude, and
+macOS Native Validation `30353802078` corroboration at product head
+`f9f44a786`. Full RC matrix coverage, focus traversal, keyboard buffering,
+toolbar arbitration, and hosted pixel UI remain separate contracts.
+
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Parenthesized dynamic targets such as `DO (cTarget)` and `DO (&cTargetHolder)` now evaluate through the same heap-backed iterative frame machine, preserving `WITH` arguments and deterministic missing-target behavior under #3217/#4722. Package dependency discovery remains literal-only; arbitrary external paths, dynamic xAssets, and control-flow forms remain separate runtime boundaries.
 
 Current native components:

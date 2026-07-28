@@ -6,8 +6,9 @@
   head `f9f44a786` contains the final #4770 strict index-snapshot correction
   and the #4771 keyboard-action correction; the three focused POSIX targets
   pass `3/3`. Exact-head Windows validation seq778 also passes the three
-  targets `3/3`, closing #4770; #4771 remains open for its remaining hosted
-  macOS/full-matrix evidence, and no broader RC gate is claimed here.
+  targets `3/3`, closing #4770; #4771 is also closed after exact-head macOS
+  Native Validation `30353802078` and Claude review. No broader RC gate is
+  claimed here.
 
 - Strict PRG source-admission correction #4772 is implemented at product head
   `4957a62c3`. Direct source loading, strict `#INCLUDE`, and DO admission now
