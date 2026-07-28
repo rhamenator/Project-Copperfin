@@ -1,3 +1,13 @@
+- 2026-07-28: Implemented runtime child #4773 under #3217 at product head
+  `d2c6d525e`. Native PRG `WM_KEYDOWN` now performs default forward Tab
+  traversal through deduplicated direct focusable controls ordered by
+  `TabIndex`, skipping `TabStop=.F.`, invisible, and disabled controls and
+  wrapping at the end. The destination uses the existing
+  `Valid`/`LostFocus`/`ActiveControl`/`GotFocus` path, while `KeyPress
+  NODEFAULT` cancels traversal. Focused runtime-surface coverage passes `1/1`
+  locally; reverse Shift+Tab, nested-container, keyboard-buffering, hosted UI,
+  and pixel-level behavior remain separate.
+
 - 2026-07-28: Closed #4772 under #3866 at product head `71ac05cac`. Strict PRG/header source-text lookup preserves exact-key authority, retains one unique folded compatibility match, and fails closed on multiple folded-only candidates across direct loading, strict `#INCLUDE`, and DO admission. The follow-up restores unconditional rejection for unadmitted includes even when a same-named disk file exists; local focused tests and exact-head native Windows validation seq785 pass `3/3`.
 
 - 2026-07-28: Added cross-platform evidence for closed #4772: macOS Native Validation `30356725909` passed the full native matrix at the exact corrected product commit `71ac05cac`, complementing the focused native Windows and portable regression evidence.

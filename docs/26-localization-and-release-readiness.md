@@ -67,6 +67,12 @@ and exact-head native Windows validation seq785 corroborate the correction;
 macOS Native Validation `30356725909` also passed the full native matrix at
 the exact corrected product commit. Remaining release-matrix evidence is
 separate.
+Runtime child #4773 under #3217 is implemented at product head `d2c6d525e`:
+default forward Tab traversal now uses deduplicated `TabIndex` order, skips
+non-tab-stop/invisible/disabled direct controls, wraps, preserves the existing
+focus transition semantics, and honors `KeyPress NODEFAULT`. The focused
+runtime-surface CTest passes `1/1` on Linux; hosted review and the remaining
+keyboard/input/UI boundaries are separate release evidence.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

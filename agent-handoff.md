@@ -56,6 +56,16 @@ native Windows validation seq785 rebuilt and passed the same three targets
 matrix at the exact corrected product commit. The remaining release matrix is
 separate from this implementation slice.
 
+Runtime child #4773 under #3217 is implemented and pushed at product head
+`d2c6d525e`. Native `WM_KEYDOWN` Tab now advances through the owning Form's
+deduplicated direct focusable children by `TabIndex`, skips non-tab-stop,
+invisible, and disabled controls, wraps, and reuses the existing focus
+transition path. `KeyPress NODEFAULT` cancels the default action. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1` on Linux;
+Claude, Windows, and macOS review remains requested, and reverse Shift+Tab,
+nested-container traversal, keyboard buffering, and hosted UI remain separate
+contracts. Do not claim the complete RC evidence gate from this child alone.
+
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
 Windows path values before calling C environment APIs. This prevents silent
