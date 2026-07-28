@@ -391,6 +391,17 @@ DQ/DV/HZ, and primary-hazard checks; strict mode again reported only
 safety gate is procedural/independent-review state, not a validator or product
 regression.
 
+The latest #4403 audit found no technical contradiction. Windows Codex seq868
+identified two closure gaps: the live issue needed an explicit per-DQ
+DQ-to-DV-to-HZ mapping, and no arm's-length qualified reviewer had signed
+off. The mapping is now recorded in the live issue and archived report at
+documentation head `06b67a94e`; Claude seq869 confirmed the updated structure
+and independently reran the permissive/strict validators, with strict mode
+still failing only because #4403 is open. Claude and Windows Codex provide
+technical corroboration only because they participated in related work; do
+not close #4403 until a genuinely separate qualified reviewer signs off and
+the strict validator passes.
+
 The validator was rerun again on 2026-07-28 against fresh issue JSON at
 synchronized head `30ff4ec38`; permissive mode passed and strict mode again
 reported exactly that single open-issue error. Current reports are

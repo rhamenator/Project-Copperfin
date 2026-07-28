@@ -1,3 +1,11 @@
+- 2026-07-28: Refreshed #4403 safety traceability at documentation head
+  `06b67a94e`. Added an explicit per-DQ DQ-to-DV-to-HZ mapping to the archived
+  report and live issue after the Windows audit identified that gap. The
+  permissive validator remains passing and strict validation still reports
+  only the intentional open-issue gate; technical corroboration is recorded,
+  but no arm's-length sign-off, safety closure, or protected #4409 signing is
+  claimed.
+
 - 2026-07-28: Implemented language-service child #4795 under #27 at product
   head `d18d9d1fc`. The managed FoxPro project symbol/signature index now
   recognizes singular `LPARAMETER` declarations alongside

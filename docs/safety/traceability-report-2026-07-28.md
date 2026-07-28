@@ -3,8 +3,8 @@
 ## Scope
 
 - Repository: `rhamenator/Project-Copperfin`
-- Synchronized documentation head before this report update: `c1e691be0`
-- Product/test implementation head: `b2e44535d`
+- Synchronized documentation head before this report update: `06b67a94e`
+- Product/test implementation head: `30ff4ec38`
 - Issue set: `#4403`
 - Hazard coverage: primary hazards required
 - Validator: `scripts/validate-safety-traceability.ps1`
@@ -49,7 +49,7 @@ independent stale-documentation finding. The report does not claim formal
 ## Current-State Follow-Up
 
 On 2026-07-28, the validator was rerun against fresh live issue JSON at
-synchronized head `30ff4ec38`. Permissive validation again passed all
+synchronized product head `30ff4ec38`. Permissive validation again passed all
 structural, DQ/DV/HZ, and primary-hazard checks. Strict validation again
 reported exactly one failure: `Issue is not closed (state=OPEN)` for #4403.
 The reports were written to `/tmp/copperfin-safety-permissive-current.json`
@@ -57,9 +57,18 @@ and `/tmp/copperfin-safety-strict-current.json`; this follow-up confirms the
 gate remains procedural and independent-review state, not a validator or
 product regression.
 
+The Windows read-only audit in coordination seq868 identified the missing
+explicit per-DQ mapping and the absent arm's-length sign-off. The mapping was
+added to this report and the live issue in documentation commit `06b67a94e`.
+Claude's coordination seq869 review confirmed that the mapping and evidence
+remain structurally consistent, while also confirming that Claude is not the
+required arm's-length reviewer because it participated in related
+implementation reviews. No safety closure is claimed until a separate
+qualified reviewer signs off and the strict validator is rerun successfully.
+
 ## Independent Review Status
 
-Claude's read-only review recorded in coordination seq760 independently
+Claude's earlier read-only review recorded in coordination seq760
 rechecked the DQ/DV/HZ structure, recovery walkthrough, hosted Windows/VFP9/
 Visual Studio evidence, rollback plan, and strict validator result. It found
 the evidence structurally complete and identified the stale `docs/26` section;
