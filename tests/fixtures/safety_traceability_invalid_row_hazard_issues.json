@@ -7,5 +7,14 @@
       { "name": "documentation" }
     ],
     "body": "## Documentation Requirement IDs\n\n- DQ-row-hazard\n\n## Documentation Verification IDs\n\n- DV-row-hazard\n\n## Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-row-hazard | DV-row-hazard | HZ-system-failure-01; HZ-not-declared; HZ-not-in-register |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  },
+  {
+    "number": 4806,
+    "title": "[docs-safety] HZ-NONE mixed mapping row",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" }
+    ],
+    "body": "## Documentation Requirement IDs\n\n- DQ-no-hazard-row\n\n## Documentation Verification IDs\n\n- DV-no-hazard-row\n\n## Hazard Linkage IDs\n\n- HZ-NONE\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-no-hazard-row | DV-no-hazard-row | HZ-NONE; HZ-system-failure-01 |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
   }
 ]

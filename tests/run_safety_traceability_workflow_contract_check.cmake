@@ -190,6 +190,11 @@ function(assert_invalid_row_hazard_fixture)
         message(FATAL_ERROR
             "Safety validator did not report the unknown mapping-row hazard: ${all_output}")
     endif()
+    string(FIND "${all_output}" "outside the sole explicit no-hazard path" mixed_no_hazard_row_index)
+    if(mixed_no_hazard_row_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject HZ-NONE mixed with a real row hazard: ${all_output}")
+    endif()
     file(REMOVE "${invalid_report}")
 endfunction()
 
