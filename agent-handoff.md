@@ -16,8 +16,8 @@ Windows review of #4802 found and reproduced a follow-up defect: an arbitrary
 `HZ-NONE` token could waive missing DQ/DV cells on an extra mapping row. The
 #4803 correction makes row completeness unconditional and derives the no-hazard
 exemption only from the declared `Hazard Linkage IDs` section. The focused
-workflow contract adds a mixed valid-plus-malformed `HZ-NONE` fixture; review
-and exact-head hosted validation remain required.
+workflow contract adds a mixed valid-plus-malformed `HZ-NONE` fixture, and the
+correction is closed after exact-head review.
 
 Windows review then found that `HZ-NONE` also needed to be exclusive. The #4804
 correction rejects a `Hazard Linkage IDs` section that combines `HZ-NONE` with a
@@ -73,9 +73,11 @@ shadow/removal protection are covered by the focused runtime-surface CTest
 the issue only after the normal implementation review/validation handoff.
 
 This section is authoritative over the historical log below. The synchronized
-branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `9599204ed`, with coordination-only documentation and
-review commits following the product/validation slice. The broad validation
+branch is `main` and is synchronized with `origin/main`; the latest safety
+validation implementation head is `d68a2fc5e`, with the synchronized
+coordination head at `b2ebc10d6`. The current hosted matrix has green VSIX,
+Linux managed UI, and security gates; native, installer, executable-path, and
+Windows validation jobs remain in progress. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
 `30324522773` passed `315/315` CTest cases in `530.97s` with no failures
@@ -102,9 +104,12 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused product validation remains at product head `f669fd51c`; the
-latest standalone validation contract is at `f0734f262`. This product head includes
-the #4800 fault-procedure preservation slice and its focused regression tests.
+Current focused product validation for the latest safety slice is at source head
+`d68a2fc5e`; the synchronized branch tip is `b2ebc10d6`. The latest standalone
+validation contract remains the complete `f0734f262` run, and the focused safety
+workflow contract passes `1/1` at the current head. The current source head
+includes the #4800 fault-procedure preservation slice and its focused regression
+tests.
 The latest runtime cleanup head also removes the redundant Form-only ForeColor
 slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
