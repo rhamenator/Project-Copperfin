@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `20a5210c1`, with coordination-only documentation and
+implementation head is `89c669593`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `20a5210c1`; the latest runtime
+Current focused validation is at product head `89c669593`; the latest runtime
 cleanup head also removes the redundant Form-only ForeColor slice from #4788.
 #4788 is an evidence correction, not a new product capability: the existing
 generic visual ForeColor contract already covers Form and visual child
@@ -43,12 +43,23 @@ and explicit localized no-match feedback. Catalog parity passed, the managed
 DesignerSmokeTests build is clean, and `SmokeProjectWorkspaceEntryActivation`
 passed all assertions in Mono offscreen mode. The synchronized documentation
 head is updated in the same slice record.
-#4790 is implemented at product head `20a5210c1`: native PRG `Form.WhatsThisHelp`
+#4790 is implemented at product head `20a5210c1` and is now closed after
+independent Claude/Windows corroboration: native PRG `Form.WhatsThisHelp`
 now has the VFPSource-used `.F.` default, direct and PEM logical normalization,
 derived declaration preservation, and built-in reflection protection. The focused
 runtime-surface CTest passes `1/1`; help lookup, F1 routing, What's This cursor or
-window chrome, rendering, and hosted UI remain separate boundaries. Independent
-Claude/Windows/macOS review is pending before closing the child.
+window chrome, rendering, and hosted UI remain separate boundaries.
+#4791 is implemented at product head `89c669593`: native PRG `PROGRAM()` reports
+the active routine name and `PROGRAM(-1)` reports active program-stack depth from
+the heap-backed frame machine. The focused runtime-surface CTest passes `1/1`.
+The clean VFPSource ReportBuilder setup probe completes normally and in debug
+mode, reaching 210 statements; hosted Windows and macOS exact-head review remain
+required before closure.
+#4792 is implemented at the same head: the parser accepts VFP's singular
+`LPARAMETER` abbreviation, allowing the ReportBuilder `AppendToLog` method to
+preserve string coercion and complete at `frxsetup.prg:250`. It shares the same
+focused test and hosted-review gate as #4791. The two expected missing sample
+assets are warnings, not claims of complete VFP9 asset coverage.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and

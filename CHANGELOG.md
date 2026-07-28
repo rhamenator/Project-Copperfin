@@ -1,3 +1,15 @@
+- 2026-07-28: Implemented runtime children #4791 and #4792 under #3217 at
+  product head `89c669593`. Native PRG `PROGRAM()` now reports the active
+  routine name and `PROGRAM(-1)` reports the active heap-backed program-stack
+  depth, preserving the existing error-procedure fallback and stack-frugal
+  execution path. The parser now accepts VFP's singular `LPARAMETER` form,
+  preserving string concatenation in the VFPSource ReportBuilder method path.
+  The focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`,
+  and a clean VFPSource ReportBuilder setup probe completes in both normal and
+  debug launches with 210 executed statements. The two expected missing sample
+  assets remain warnings; local Linux `WIN32API` behavior and hosted Windows
+  validation remain separate compatibility boundaries.
+
 - 2026-07-28: Implemented runtime child #4790 under #3217 at product head
   `20a5210c1`. Native PRG `Form.WhatsThisHelp` now follows the mounted VFP9
   sample contract with a `.F.` default, logical normalization for direct and

@@ -33,6 +33,14 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent native PRG compatibility slices: `#4791` and `#4792` under `#3217`
+  implement VFP `PROGRAM()` routine-name and `PROGRAM(-1)` stack-depth
+  introspection plus the singular `LPARAMETER` parser abbreviation used by
+  VFPSource ReportBuilder. The focused runtime-surface CTest passes `1/1`, and
+  a clean ReportBuilder setup probe completes in normal and debug launches with
+  210 statements. Keep the two expected missing sample assets, local Linux
+  `WIN32API`, hosted Windows/macOS review, and broader VFP9 parity as explicit
+  boundaries rather than treating this probe as full runtime coverage.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,
