@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Exact-head Windows corroboration for runtime child #4753 (2026-07-28): at synchronized documentation head `b4a5b6cb9` and implementation `ff9417a4a`, VS 2026/MSBuild 18.8.2 Release built `test_localization`, `test_prg_engine`, `test_prg_engine_runtime_surface_functions`, and `test_xasset_methods`; CTest passed `4/4` with no failures. This confirms the defined-menu lifecycle slice on native Windows; the broader current-head matrix remains separate release evidence.
+
 - Runtime menu lifecycle note (2026-07-28, #4753 under #3217): native PRG now
   recognizes session-local `DEFINE MENU` declarations and requires a matching
   case-insensitive definition before `ACTIVATE MENU`. `DEACTIVATE MENU` leaves
