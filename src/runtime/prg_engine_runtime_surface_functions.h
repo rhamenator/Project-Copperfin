@@ -35,6 +35,7 @@ struct RuntimeSurfaceCursorSnapshot {
 struct RuntimeProgramStackFrame {
     std::string routine_name;
     std::string file_path;
+    bool procedure_context = false;
 };
 
 struct NativeListControlCellReference {

@@ -12,6 +12,14 @@
             !ignored && std::filesystem::exists(status) && !std::filesystem::is_directory(status));
     }
     if (function == "sys") {
+        const auto format_sys16_frame = [](const std::string& routine_name,
+                                           const std::string& file_path,
+                                           bool procedure_context) {
+            if (!procedure_context || routine_name.empty() || file_path.empty()) {
+                return file_path;
+            }
+            return std::string("PROCEDURE ") + routine_name + " " + file_path;
+        };
         if (!arguments.empty()) {
             const long long sys_code = std::llround(value_as_number(arguments[0]));
             if (sys_code == 3) {
@@ -33,11 +41,17 @@
                 if (arguments.size() >= 2U && program_stack_frame_callback) {
                     const long long level = safe_int_argument(1U, 0);
                     if (const auto stack_frame = program_stack_frame_callback(level); stack_frame.has_value()) {
-                        return make_string_value(stack_frame->file_path);
+                        return make_string_value(format_sys16_frame(
+                            stack_frame->routine_name,
+                            stack_frame->file_path,
+                            stack_frame->procedure_context));
                     }
                     return make_string_value({});
                 }
-                return make_string_value(frame_file_path);
+                return make_string_value(format_sys16_frame(
+                    current_program_name,
+                    frame_file_path,
+                    current_program_name != "main"));
             }
             if (sys_code == 2018) {
                 return make_string_value(uppercase_copy(runtime_error_parameter(last_error_message)));

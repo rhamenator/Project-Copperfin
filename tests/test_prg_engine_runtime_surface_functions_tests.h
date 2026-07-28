@@ -17,6 +17,7 @@ namespace copperfin::runtime_surface_tests
     void test_expression_runtime_surface_extensions();
     void test_program_reports_active_name_and_stack_depth();
     void test_indexed_program_and_sys16_stack_introspection();
+    void test_sys16_preserves_procedure_context();
     void test_singular_lparameter_binds_object_method_text_for_concatenation();
     void test_array_element_native_property_expression_access();
     void test_local_optimistic_table_buffering();

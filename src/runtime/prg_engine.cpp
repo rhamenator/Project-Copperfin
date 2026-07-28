@@ -638,6 +638,7 @@ namespace copperfin::runtime
             std::vector<CaseState> cases;
             std::vector<WithState> withs;
             std::vector<TryState> tries;
+            bool procedure_context = false;
             std::string native_method_class_name;
             std::string native_method_name;
             bool requested_nodefault = false;
@@ -1414,7 +1415,10 @@ namespace copperfin::runtime
                 }
 
                 const Frame &stack_frame = stack[frame_index];
-                return RuntimeProgramStackFrame{stack_frame.routine_name, stack_frame.file_path};
+                return RuntimeProgramStackFrame{
+                    stack_frame.routine_name,
+                    stack_frame.file_path,
+                    stack_frame.procedure_context};
             },
             error_handler,
             shutdown_handler,

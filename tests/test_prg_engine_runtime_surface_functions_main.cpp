@@ -8,6 +8,7 @@ int main()
     test_expression_runtime_surface_extensions();
     test_program_reports_active_name_and_stack_depth();
     test_indexed_program_and_sys16_stack_introspection();
+    test_sys16_preserves_procedure_context();
     test_singular_lparameter_binds_object_method_text_for_concatenation();
     test_array_element_native_property_expression_access();
     test_filesize_expression_function();

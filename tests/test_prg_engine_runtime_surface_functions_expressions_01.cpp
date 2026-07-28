@@ -1144,6 +1144,8 @@ namespace copperfin::runtime_surface_tests
             "cMainPath0 = SYS(16, 0)\n"
             "cMainPath1 = SYS(16, 1)\n"
             "cMainPath2 = SYS(16, 2)\n"
+            "PUBLIC cNestedName0, cNestedName1, cNestedName2, cNestedName3, "
+            "cNestedPath0, cNestedPath1, cNestedPath2, cNestedPath3\n"
             "DO CaptureIndexedProgramStack\n"
             "RETURN\n"
             "PROCEDURE CaptureIndexedProgramStack\n"
@@ -1192,6 +1194,58 @@ namespace copperfin::runtime_surface_tests
         expect_same_source_file("cnestedpath1");
         expect_same_source_file("cnestedpath2");
         expect(value("cnestedpath3").empty(), "out-of-range nested SYS(16,3) should be empty");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_sys16_preserves_procedure_context()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_sys16_procedure_context";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "sys16_procedure_context.prg";
+        write_text(
+            main_path,
+            "cEntryPath = SYS(16)\n"
+            "cEntryIndexedPath = SYS(16, 1)\n"
+            "PUBLIC cCurrentContext, cIndexedContext, cIndexedEntryPath\n"
+            "DO CaptureSys16Context\n"
+            "RETURN\n"
+            "PROCEDURE CaptureSys16Context\n"
+            "cCurrentContext = SYS(16)\n"
+            "cIndexedContext = SYS(16, 2)\n"
+            "cIndexedEntryPath = SYS(16, 1)\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "SYS(16) procedure-context script should complete: " + state.message);
+
+        const auto value = [&](const std::string& name)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " should be captured");
+            return it == state.globals.end()
+                       ? std::string{}
+                       : copperfin::runtime::format_value(it->second);
+        };
+        const std::string expected_context =
+            "PROCEDURE CaptureSys16Context " + main_path.string();
+        expect(value("centrypath") == main_path.string(),
+               "entry SYS(16) should remain a plain file path");
+        expect(value("centryindexedpath") == main_path.string(),
+               "entry indexed SYS(16) should remain a plain file path");
+        expect(value("ccurrentcontext") == expected_context,
+               "current SYS(16) should preserve procedure context");
+        expect(value("cindexedcontext") == expected_context,
+               "indexed SYS(16) should preserve procedure context");
+        expect(value("cindexedentrypath") == main_path.string(),
+               "indexed SYS(16) should preserve entry-frame path behavior");
 
         fs::remove_all(temp_root, ignored);
     }

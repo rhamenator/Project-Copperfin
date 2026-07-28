@@ -131,6 +131,7 @@
             Frame frame;
             frame.file_path = normalize_path(path);
             frame.routine_name = routine.name;
+            frame.procedure_context = true;
             frame.routine = &routine;
             frame.call_arguments = std::move(call_arguments);
             frame.call_argument_references = std::move(call_argument_references);
@@ -153,6 +154,7 @@
             Frame frame;
             frame.file_path = normalize_path(path);
             frame.routine_name = routine_name;
+            frame.procedure_context = true;
             frame.routine = &routine;
             frame.call_arguments = std::move(call_arguments);
             frame.call_argument_references = std::move(call_argument_references);
