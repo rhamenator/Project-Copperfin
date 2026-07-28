@@ -3226,9 +3226,11 @@ namespace copperfin::runtime
 
             if (normalized_base_class == "container" || normalized_base_class == "page")
             {
+                std::vector<long long> child_tab_prefix = pending.tab_prefix;
+                child_tab_prefix.push_back(read_tab_index(child_found->second));
                 for (const int nested_handle : collect_native_owned_child_handles(child_found->second))
                 {
-                    pending_objects.push_back({nested_handle, visible, enabled, pending.tab_prefix});
+                    pending_objects.push_back({nested_handle, visible, enabled, child_tab_prefix});
                 }
             }
             else if (normalized_base_class == "pageframe")
@@ -3259,11 +3261,13 @@ namespace copperfin::runtime
                     continue;
                 }
 
+                std::vector<long long> page_tab_prefix = pending.tab_prefix;
+                page_tab_prefix.push_back(read_tab_index(child_found->second));
                 pending_objects.push_back({
                     page_members[page_index].child_object->handle,
                     visible,
                     enabled,
-                    pending.tab_prefix});
+                    page_tab_prefix});
             }
             else if (normalized_base_class == "commandgroup" && property_is_true("tabstop"))
             {

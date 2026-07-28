@@ -800,4 +800,150 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_tab_preserves_nested_parent_order()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_nested_parent_order";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_nested_parent_order.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFormHwnd, nGotFocus, cLastFocus\n"
+            "nGotFocus = 0\n"
+            "cLastFocus = ''\n"
+            "oForm = CREATEOBJECT('NestedParentOrderForm')\n"
+            "oForm.before.TabIndex = 1\n"
+            "oForm.middle.TabIndex = 2\n"
+            "oForm.host.TabIndex = 3\n"
+            "oForm.host.inner.TabIndex = 1\n"
+            "oForm.activeFrame.TabIndex = 4\n"
+            "oForm.activeFrame.pageOne.pageChild.TabIndex = 0\n"
+            "oForm.after.TabIndex = 5\n"
+            "oForm.before.SetFocus()\n"
+            "nFormHwnd = oForm.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS NestedParentOrderForm AS Form\n"
+            "    ADD OBJECT before AS NestedParentOrderBox WITH cId = 'before'\n"
+            "    ADD OBJECT middle AS NestedParentOrderBox WITH cId = 'middle'\n"
+            "    ADD OBJECT host AS ParentOrderContainer\n"
+            "    ADD OBJECT activeFrame AS ParentOrderPageFrame WITH ActivePage = 1\n"
+            "    ADD OBJECT after AS NestedParentOrderFinishButton WITH cId = 'after'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentOrderContainer AS Container\n"
+            "    ADD OBJECT inner AS NestedParentOrderBox WITH cId = 'inner'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentOrderPageFrame AS PageFrame\n"
+            "    ADD OBJECT pageOne AS ParentOrderPage\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentOrderPage AS Page\n"
+            "    ADD OBJECT pageChild AS NestedParentOrderBox WITH cId = 'page-child'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NestedParentOrderBox AS ListBox\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'after'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NestedParentOrderFinishButton AS CommandButton\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'after'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Nested parent-order Tab fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_global = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found == state.globals.end())
+            {
+                return static_cast<std::intptr_t>(0);
+            }
+            return static_cast<std::intptr_t>(std::stoll(copperfin::runtime::format_value(found->second)));
+        };
+        const std::intptr_t form_hwnd = read_global("nformhwnd");
+
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "Nested parent-order Tab dispatch should restore the event loop: " + state.message);
+        };
+        const auto check_focus = [&](const std::string &expected)
+        {
+            const auto found = state.globals.find("clastfocus");
+            expect(found != state.globals.end(), "clastfocus should be present");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       "clastfocus expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        const auto dispatch_tab = [&]()
+        {
+            const auto result = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+            expect(result.has_value() && *result == 0,
+                   "Nested parent-order Tab should dispatch with the modeled default result");
+            resume_event_loop();
+        };
+
+        dispatch_tab();
+        check_focus("middle");
+        dispatch_tab();
+        check_focus("inner");
+        dispatch_tab();
+        check_focus("page-child");
+        dispatch_tab();
+        check_focus("after");
+
+        const auto finish = session.dispatch_windows_message(form_hwnd, 0x0100, 67, 0);
+        expect(finish.has_value() && *finish == 0,
+               "Nested parent-order fixture should finish through its final control");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "Nested parent-order fixture should complete after CLEAR EVENTS: " + state.message);
+        const auto focus_count = state.globals.find("ngotfocus");
+        expect(focus_count != state.globals.end() &&
+                   copperfin::runtime::format_value(focus_count->second) == "5",
+               "Nested parent-order fixture should focus five eligible controls exactly once");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }

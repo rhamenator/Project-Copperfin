@@ -542,6 +542,7 @@ int main()
         test_native_keypress_tab_traverses_nested_containers();
         test_native_keypress_tab_traverses_active_pageframe_page_only();
         test_native_keypress_tab_traverses_commandgroup_children();
+        test_native_keypress_tab_preserves_nested_parent_order();
         test_native_list_control_interactivechange_dispatches_for_changed_input();
         test_native_form_keypreview_dispatches_before_child_keypress();
         test_native_click_dispatches_on_left_button_release();
