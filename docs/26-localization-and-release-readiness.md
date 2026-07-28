@@ -101,9 +101,10 @@ Linux, Claude, and exact-head Windows focused validation pass for both slices.
 Runtime child #4777 is implemented at product head `5b43e7a26`: OptionGroup
 is one parent-level Tab stop and Windows-compatible arrow selection updates
 eligible child buttons and group/child Value state. Its focused Linux test
-passes; exact-head Windows/macOS review remains pending. None of these focused
-slices closes the broader RC matrix, safety gate, signing registry, or hosted
-pixel-UI evidence.
+passes, with Claude and Windows focused behavior corroborated; #4777 is
+implementation-complete. Full current-head Windows/macOS workflows remain
+separate RC evidence. None of these focused slices closes the broader RC
+matrix, safety gate, signing registry, or hosted pixel-UI evidence.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
