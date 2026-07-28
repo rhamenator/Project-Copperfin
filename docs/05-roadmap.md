@@ -115,7 +115,7 @@ evidence follows that gate and includes:
 - known limitations and compatibility exceptions
 
 Current implementation head is `ff9417a4a` (synchronized documentation head
-`061a7abbf`), including runtime child #4753's defined-menu lifecycle slice.
+`9a22142bd`), including runtime child #4753's defined-menu lifecycle slice.
 Hosted Linux Native `30322581213` passed `316/316` in `172.41s`, and hosted
 macOS Native `30322581188` passed `316/316` in `223.95s`, with only the two
 expected platform-conditional skips. Current-head installers

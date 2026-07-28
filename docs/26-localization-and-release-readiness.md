@@ -23,7 +23,7 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The current implementation head is `ff9417a4a` (synchronized documentation
-head `061a7abbf`), which includes runtime child #4753's defined-menu lifecycle
+head `9a22142bd`), which includes runtime child #4753's defined-menu lifecycle
 slice. Hosted Linux Native `30322581213` passed all `316/316` CTest cases in
 `172.41s`, and hosted macOS Native `30322581188` passed `316/316` in
 `223.95s`, with only the two expected platform-conditional skips. Current-head
