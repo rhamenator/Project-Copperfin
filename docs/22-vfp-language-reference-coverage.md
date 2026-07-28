@@ -1,5 +1,7 @@
 # VFP Language Reference Coverage
 
+- Independent local POSIX validation (2026-07-28): at documentation head `d19d1ee6c` and implementation `ff9417a4a`, `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` passed `316/316` tests in `211.09s`. Only `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` were skipped by their expected platform guards. Hosted Windows Native remains the broader release gate.
+
 - Exact-head Windows corroboration for runtime child #4753 (2026-07-28): at synchronized documentation head `b4a5b6cb9` and implementation `ff9417a4a`, VS 2026/MSBuild 18.8.2 Release built `test_localization`, `test_prg_engine`, `test_prg_engine_runtime_surface_functions`, and `test_xasset_methods`; CTest passed `4/4` with no failures. This confirms the defined-menu lifecycle slice on native Windows; the broader current-head matrix remains separate release evidence.
 
 - Runtime menu lifecycle note (2026-07-28, #4753 under #3217): native PRG now
