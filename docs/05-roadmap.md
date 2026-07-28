@@ -120,11 +120,11 @@ completion regression slice. Hosted Linux Native `30324522759` passed
 `316/316` in `171.47s`, and hosted macOS Native `30324522748` passed `316/316`
 in `207.83s`, with only the two expected platform-conditional skips. At the
 same head, managed UI `30324522752`, VSIX `30324522769`, installers
-`30324522738`, and security `30324522761` passed. The current managed-only
-test-slice change did not rerun the separately scoped generated-launcher,
-Windows environment, DECLARE ABI, or executable-path workflows; their prior
-green evidence remains historical and does not substitute for exact-head
-reruns where required. Windows Native `30322581189` was cancelled during the
+`30324522738`, and security `30324522761` passed. The push-triggered
+managed-only test slice did not rerun the separately scoped generated-launcher,
+Windows environment, DECLARE ABI, or executable-path workflows; their exact-
+head manual results are recorded below. Windows Native `30322581189` was
+cancelled during the
 native build after a later product-code push superseded it; it reached no
 CTest result and is not treated as a pass or failure. Replacement Windows
 Native run `30324522773` passed `315/315` in `530.97s` at test-slice head
