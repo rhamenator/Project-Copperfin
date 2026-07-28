@@ -1,3 +1,11 @@
+- 2026-07-28: Closed runtime child #4774 under #3217 at product head
+  `29391e3d2` after Claude seq795 and exact-head Windows validation seq794
+  passed. Default forward Tab traversal now discovers nested `Container`
+  descendants with an explicit worklist, propagates ancestor `Visible`/
+  `Enabled`, and preserves the existing ordering and focus transition. Local,
+  Claude, and Windows focused tests pass; PageFrame/OptionGroup/CommandGroup,
+  reverse Shift+Tab, and full macOS/RC validation remain separate.
+
 - 2026-07-28: Closed runtime child #4773 under #3217 after Claude review seq790
   and exact-head Windows validation seq789 passed at product `d2c6d525e`.
   Local focused runtime-surface and explicit-focus lifecycle tests pass `2/2`;

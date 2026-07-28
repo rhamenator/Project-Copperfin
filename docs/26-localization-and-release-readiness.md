@@ -75,6 +75,12 @@ runtime-surface CTest passes `1/1` on Linux; Claude review seq790 and exact-head
 Windows validation seq789 also pass, so #4773 is implementation-complete.
 The remaining macOS/full-RC and keyboard/input/UI boundaries are separate
 release evidence.
+Runtime child #4774 is also closed as implementation-complete at product head
+`29391e3d2`: default forward Tab traversal now descends through nested
+`Container` descendants iteratively, propagates ancestor visibility/enabled
+state, and preserves the existing ordering and focus contracts. Local CTest,
+Claude seq795, and Windows seq794 pass; PageFrame/OptionGroup/CommandGroup,
+reverse Shift+Tab, and full macOS/RC validation remain separate evidence.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

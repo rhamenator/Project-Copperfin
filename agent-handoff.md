@@ -68,6 +68,17 @@ traversal, keyboard buffering, hosted UI, and the full macOS/RC matrix remain
 separate contracts. Do not claim the complete RC evidence gate from this child
 alone.
 
+Runtime child #4774 under #3217 is closed as implementation-complete at
+product head `29391e3d2`. It extends default forward Tab traversal through
+nested `Container` descendants with an explicit worklist, ancestor
+`Visible`/`Enabled` propagation, duplicate-reference suppression, and the
+existing `TabIndex`/`TabStop` focus transition. The focused runtime-surface
+CTest passes `1/1` on Linux; Claude seq795 and exact-head Windows validation
+seq794 also pass the strengthened parent-state fixture. Keep the scope
+Container-only: PageFrame/OptionGroup/CommandGroup, reverse Shift+Tab,
+keyboard buffering, hosted UI, and full macOS/RC evidence remain separate.
+Do not claim the complete RC evidence gate from this child alone.
+
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
 Windows path values before calling C environment APIs. This prevents silent
