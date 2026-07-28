@@ -47,18 +47,24 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   heap-backed frame machine, including VFP `0/1` master aliases and empty
   out-of-range results. The focused runtime-surface CTest passes `1/1`, and a
   fresh clean ReportBuilder package completes in normal and debug launches with
-  210 statements. Hosted Windows/macOS review and broader VFP9 parity remain
-  explicit boundaries. Follow-up child `#4794` records the remaining
+  210 statements. Windows validation seq861 passed the corrected focused
+  runtime-surface CTest at tested descendant `d18d9d1fc`; #4793 is closed as
+  implementation-complete, while broader VFP9 parity remains a separate
+  boundary. Follow-up child `#4794` records the remaining
   procedure-context formatting that VFP9 and VFPSource may expose through
   `SYS(16)`. Child `#4794` is implemented at product head `e842e4e1e`, and
   focused runtime-surface coverage passes `1/1`; entry frames retain plain
   paths while procedure and method frames preserve the VFP context form.
+  Windows validation seq861 passed the exact focused target for both children;
+  #4794 is closed as implementation-complete.
 - Recent managed language-service slice: `#4795` under `#27` extends the
   project symbol/signature index to recognize singular `LPARAMETER` alongside
   `LPARAMETERS`. Dotted project-method signature help preserves parameter
   names and default expressions, and the focused Release language-service
-  suite passes all tests. Native parser behavior remains the separate #4792
-  contract; hosted exact-head review is still required.
+  suite passes all tests. Windows validation seq862 passed the exact Release
+  run at tested descendant `e092f12bc`; #4795 is closed as
+  implementation-complete. Native parser behavior remains the separate #4792
+  contract.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

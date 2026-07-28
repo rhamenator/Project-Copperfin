@@ -3,8 +3,9 @@
   recognizes singular `LPARAMETER` declarations alongside
   `LPARAMETERS`, preserving parameter names, default expressions, dotted
   method lookup, and invariant signature contracts. The focused
-  `Copperfin.LanguageServiceTests` suite passes all tests; runtime/parser
-  behavior remains covered separately by #4792.
+  `Copperfin.LanguageServiceTests` suite passes all tests. Windows validation
+  seq862 independently passed the exact Release run at tested descendant
+  `e092f12bc`; runtime/parser behavior remains covered separately by #4792.
 
 - 2026-07-28: Implemented runtime child #4793 under #3217 at product head
   `a796a31dc`. Native PRG indexed `PROGRAM(nLevel)` and `SYS(16,nLevel)` now
@@ -14,7 +15,8 @@
   focused runtime-surface CTest passes `1/1`; a fresh clean VFPSource
   ReportBuilder package completes in normal and debug launches with 210
   statements and two expected missing sample-asset warnings. Hosted Windows
-  and macOS exact-head validation remain required. Follow-up child #4794 tracks
+  and macOS exact-head validation were superseded by Windows validation seq861;
+  #4793 is closed as implementation-complete. Follow-up child #4794 tracks
   VFP9's optional `PROCEDURE <routine> <file>` context formatting for `SYS(16)`.
 
 - 2026-07-28: Implemented runtime child #4794 under #3217 at product head
@@ -22,7 +24,9 @@
   and VFP procedure/method context formatting. The focused runtime-surface CTest
   passes `1/1`. The #4793 nested-stack fixture also now declares its cross-frame
   captures `PUBLIC` after cross-platform review found a test-scoping defect;
-  this correction does not change runtime behavior.
+  this correction does not change runtime behavior. Windows validation seq861
+  passed the exact focused runtime-surface CTest at tested descendant
+  `d18d9d1fc`; #4794 is closed as implementation-complete.
 
 - 2026-07-28: Closed runtime children #4791 and #4792 after independent Claude
   review seq851 and Windows validation seq852. The exact tested descendant

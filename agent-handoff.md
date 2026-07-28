@@ -69,23 +69,29 @@ warnings. Indexed `PROGRAM(nLevel)` remains a separate #4793 boundary.
 `SYS(16,nLevel)` resolve master, nested, and out-of-range heap-backed frames with
 VFP's `0/1` master aliases and empty out-of-range results. The focused
 runtime-surface CTest passes `1/1`, and a fresh clean VFPSource ReportBuilder
-package completes in normal and debug launches with 210 statements. Hosted
-Windows/macOS exact-head review remains required before closure. Follow-up child
-#4794 tracks VFP9's optional `PROCEDURE <routine> <file>` context formatting for
-`SYS(16)`. It is implemented at product head `e842e4e1e`: entry frames retain
-plain paths while procedure and method frames preserve the context form for
-current and indexed calls. The focused runtime-surface CTest passes `1/1`.
+package completes in normal and debug launches with 210 statements. Windows
+validation seq861 passed the corrected focused runtime-surface CTest at tested
+descendant `d18d9d1fc`; #4793 is closed as implementation-complete. Follow-up
+child #4794 tracks VFP9's optional `PROCEDURE <routine> <file>` context
+formatting for `SYS(16)`. It is implemented at product head `e842e4e1e`: entry
+frames retain plain paths while procedure and method frames preserve the
+context form for current and indexed calls. The focused runtime-surface CTest
+passes `1/1`.
 The #4793 fixture's missing `PUBLIC` declarations were corrected after the
 cross-platform failures in seq856 and seq857; those failures were test-scoping
-defects, not runtime failures. Hosted Windows/macOS exact-head review remains
-required for both children.
+defects, not runtime failures. Windows validation seq861 passed the exact
+focused runtime-surface CTest for both children; #4794 is closed as
+implementation-complete. Broader VFP9 parity and the RC matrix remain separate.
 #4795 is implemented at product head `d18d9d1fc`: the managed
 `FoxProIntelliSenseCatalog` now recognizes singular `LPARAMETER` declarations
 and returns dotted project-method signature help with parameter names and
 default expressions preserved. The focused
-`Copperfin.LanguageServiceTests` Release run passes all tests. This is a
-managed indexing/signature surface only; native parser behavior remains the
-separate #4792 contract, and exact-head hosted review remains requested.
+`Copperfin.LanguageServiceTests` Release run passes all tests. Windows
+validation seq862 passed the exact Release run at tested descendant
+`e092f12bc`; #4795 is closed as implementation-complete. This is a managed
+indexing/signature surface only; native parser behavior remains the separate
+#4792 contract. Broader language-service scope and the RC matrix remain
+separate.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
