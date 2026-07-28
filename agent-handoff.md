@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `7d436cf13`, with coordination-only documentation and
+implementation head is `aa88defa6`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -32,7 +32,7 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
-Current focused validation is at product head `7d436cf13`. #4623 is closed as
+Current focused validation is at product head `aa88defa6`. #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
 exact-head Windows seq778 both pass the three focused verified-file,
@@ -2136,6 +2136,14 @@ Read only what is needed for the chosen slice:
 #4780 under #3217 is implemented at product head `faca165e5` from mounted VFP9 help evidence: native PRG `Form.ShowInTaskbar` now has the documented `.T.` default, read-only runtime/reflection behavior, design-time/class declaration preservation, and rejected direct/PEM/dynamic mutation. `cmake --build build --target test_prg_engine_runtime_surface_functions -j2`, `git diff --check`, and focused CTest pass (`1/1`) on Linux. The property is ignored unless `ShowWindow = 2`; taskbar registration, rendering, and hosted Windows UI remain separate. Exact-head Windows/macOS validation is still required before any cross-platform closure claim.
 
 #4779 under #3866 is implemented at product head `7d4eb8739`: strict verified runtime primary, memo, and index snapshots are created with native exclusive semantics before downstream parsers reopen them. POSIX uses `O_EXCL|O_NOFOLLOW|O_CLOEXEC`, mode `0600`, and `fsync`; Windows uses `CREATE_NEW`, no sharing, and `FlushFileBuffers`. The focused `test_prg_engine_verified_dbf_security` target passes `1/1` on Linux. This hardens pre-existing-leaf and partial-write exposure but does not claim retained-handle plumbing or same-user post-create race closure; keep those in parent #3866. The change preserves logical paths, localized diagnostics, and all machine-readable contracts.
+# 2026-07-28 F1 child #4782 is implemented at product head `aa88defa6`: the
+shared Project Explorer now has an independent localized filter matching
+relative paths, names, type titles, and group metadata. Matching entries retain
+their group hierarchy and invariant identity, existing activation still opens
+the selected eligible asset, and no-match state is explicit. The focused
+`SmokeProjectWorkspaceEntryActivation` test and localized project-workspace
+selectors pass on Linux/Mono; `git diff --check` is clean. Windows VSIX and
+hosted UI validation remain RC evidence gates.
 # 2026-07-28 F1 child #4781 is implemented at product head `7d436cf13`: the
 shared project Database pane now has an independent localized filter instead
 of reusing Data Explorer state, preserves connector/query-path model objects

@@ -417,9 +417,10 @@ report/label fidelity) closed on 2026-07-24 — the newest closure in the whole
 repo. Lane D's packaging pipeline and debugger, lane F's VS/standalone hosts,
 and lane G's language service are substantially shipped in focused slices.
 Recent F1 utility-pane slices made Task List, Code References, Data Explorer,
-Object Browser, and Database workflows interactive in both host modes; the
-Database pane now owns its filter and exposes selection details for connector
-and query-path contracts. Recent G1/G2/G3
+Object Browser, Database, and Project Explorer workflows interactive in both
+host modes; the Database pane now owns its filter and exposes selection details
+for connector and query-path contracts, while Project Explorer now filters
+without losing group hierarchy. Recent G1/G2/G3
 slices tightened project symbol resolution, references, rename, signature
 help, completions, and source-derived metadata. **What's left:** hosted
 Windows, mounted-VFP9, and Visual Studio validation remain release-evidence

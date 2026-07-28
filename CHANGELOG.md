@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented F1 child #4782 at product head `aa88defa6`.
+  The shared Project Explorer now has an independent localized filter that
+  matches project paths, names, type titles, and group metadata while
+  preserving grouped hierarchy, invariant entry identity, activation, and an
+  explicit no-match state. The focused project-workspace smoke test and
+  localized workspace selectors pass on Linux/Mono.
+
 - 2026-07-28: Implemented F1 child #4781 at product head `7d436cf13`.
   The shared project Database pane now has its own localized connector/query-path
   filter, preserves connector and query-path objects behind invariant list-item
