@@ -2,6 +2,14 @@
 
 ## Current State
 
+The required Windows DesignerSmoke wrapper now terminates and disposes its
+Copperfin-owned child process from `finally`, including when the wrapper
+itself fails after launch. The managed smoke runner already closes and
+disposes its own WinForms owner/floating-tool-window trees before writing the
+status marker. Future test runs must retain this ownership boundary: close
+Copperfin-created windows and processes, but never close user-launched
+standalone Studio or Visual Studio windows.
+
 The #4403/#4802 safety-validation slice now parses the explicit Markdown
 `DQ/DV/HZ Mapping` table instead of checking identifier presence only. Every
 declared DQ and DV must appear in a mapping row, mapped DQ/DV identifiers must

@@ -570,6 +570,12 @@ require_text("scripts/run-required-designer-smoke.ps1"
     "WaitForExit($timeoutMilliseconds)"
     "bounded designer smoke process wait")
 require_text("scripts/run-required-designer-smoke.ps1"
+    "if (-not $process.HasExited)"
+    "designer smoke process final cleanup guard")
+require_text("scripts/run-required-designer-smoke.ps1"
+    "$process.Dispose()"
+    "designer smoke process final disposal")
+require_text("scripts/run-required-designer-smoke.ps1"
     "DESIGNER_SMOKE_RESULT: kind=timeout"
     "designer smoke timeout classification")
 require_text("scripts/run-required-designer-smoke.ps1"

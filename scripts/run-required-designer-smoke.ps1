@@ -89,5 +89,19 @@ try {
     Write-Output "DESIGNER_SMOKE_RESULT: kind=passed"
 }
 finally {
+    if ($null -ne $process) {
+        try {
+            if (-not $process.HasExited) {
+                $process.Kill()
+                [void]$process.WaitForExit(5000)
+            }
+        }
+        catch {
+            Write-Warning ("Unable to terminate designer smoke process {0} during cleanup: {1}" -f $process.Id, $_.Exception.Message)
+        }
+        finally {
+            $process.Dispose()
+        }
+    }
     Remove-Item -Recurse -Force -LiteralPath $tempRoot -ErrorAction SilentlyContinue
 }

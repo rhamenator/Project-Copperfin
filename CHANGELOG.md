@@ -1,3 +1,9 @@
+- 2026-07-28: Hardened the required Windows DesignerSmoke wrapper so its
+  `finally` cleanup terminates and disposes the Copperfin-owned smoke process
+  on every wrapper exit path, including wrapper-side failures. The existing
+  harness form cleanup remains limited to Copperfin-owned WinForms trees and
+  does not close user-launched Studio or Visual Studio windows.
+
 - 2026-07-28: Hardened the safety traceability validator under #4403/#4805.
   Mapping-row hazard identifiers must now be both declared in the issue's
   `Hazard Linkage IDs` section and present in the controlled hazard register;
