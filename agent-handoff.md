@@ -2392,10 +2392,11 @@ catalog, or machine-readable contract changed.
 
 # 2026-07-28 Roadmap evidence refresh: `docs/05-roadmap.md` now reflects the
 current exact-head release matrix for product head `364e62058` and coordination
-head `bf2e33fd0`. Linux Managed UI, VSIX, and Security Supply Chain are green;
-the remaining native, installer, and Windows validation runs are still in
-progress. RC readiness remains unclaimed, with #4403 independent safety
-sign-off and #4409 protected launcher trust still open.
+head `bf2e33fd0`. Linux Managed UI, Linux Native, macOS Native, VSIX, Security
+Supply Chain, Windows environment/path, DECLARE ABI, executable-path, and
+installer runs are green; Windows Native remains active. RC readiness remains
+unclaimed, with #4403 independent safety sign-off and #4409 protected launcher
+trust still open.
 
 # 2026-07-28 Independent local POSIX validation: synchronized head
 `792f1840c` passed `316/316` CTest cases in `224.56s` with only the expected
@@ -2410,3 +2411,8 @@ macOS Native `30404819331`, Windows Environment and Executable Path
 and Standalone Installers `30404819272` runs in addition to the previously
 recorded green lanes. Linux Native `30404819262` and Windows Native
 `30404819387` remain in progress; RC readiness is not claimed.
+
+# 2026-07-28 Hosted matrix update: Linux Native `30404819262` completed
+successfully. Windows Native `30404819387` is now the sole active exact-head
+matrix job. RC readiness remains unclaimed pending that result and the
+separate #4403/#4409 release gates.

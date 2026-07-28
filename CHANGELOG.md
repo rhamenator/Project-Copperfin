@@ -1,3 +1,8 @@
+- 2026-07-28: Linux Native `30404819262` completed successfully in the exact-
+  head matrix. Windows Native `30404819387` is now the sole active hosted
+  validation job; RC readiness remains unclaimed pending that result and the
+  external safety and launcher-trust gates.
+
 - 2026-07-28: Updated the exact-head RC matrix evidence after macOS Native,
   Windows environment/path, DECLARE ABI, executable-path, and installer jobs
   completed successfully. Only Linux Native and Windows Native remain active;
