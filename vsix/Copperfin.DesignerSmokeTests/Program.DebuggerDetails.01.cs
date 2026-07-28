@@ -132,12 +132,16 @@ internal static partial class Program
         var threadedApply = Task.Run(() => InvokeAssetEditorVoid(control, "ApplyDebugSession", session));
         var expectedCallStackHeader = new CopperfinLocalization("qps-ploc")
             .Text("AssetEditor.Summary.CallStack");
+        var debuggerSummaryBox = GetPrivateField<RichTextBox>(control, "debuggerSummaryBox")
+            ?? throw new InvalidOperationException("Could not read private debugger summary box.");
         var threadedSummaryUpdated = WaitUntil(
             TimeSpan.FromSeconds(3),
-            () => GetPrivateField<RichTextBox>(control, "debuggerSummaryBox").Text.Contains(
+            () => debuggerSummaryBox.Text.Contains(
                 expectedCallStackHeader,
                 StringComparison.Ordinal));
+#pragma warning disable VSTHRD002 // This smoke test intentionally joins after pumping the UI loop.
         threadedApply.GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
         Expect(threadedSummaryUpdated,
             "debugger session application should marshal the summary update to the WinForms control thread");
     }
