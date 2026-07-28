@@ -1,0 +1,11 @@
+[
+  {
+    "number": 4812,
+    "title": "[docs-safety] Mixed valid and malformed HZ-NONE rows",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" }
+    ],
+    "body": "## Documentation Requirement IDs\n\n- DQ-mixed-valid\n\n## Documentation Verification IDs\n\n- DV-mixed-valid\n\n## Hazard Linkage IDs\n\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-mixed-valid | DV-mixed-valid | HZ-system-failure-01 |\n|  |  | HZ-NONE |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  }
+]

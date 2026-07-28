@@ -296,10 +296,11 @@ foreach ($issue in $issues) {
 
     $dqMatches = [regex]::Matches($body, '\bDQ-[A-Za-z0-9-]+\b')
     $dvMatches = [regex]::Matches($body, '\bDV-[A-Za-z0-9-]+\b')
-    $hzMatches = [regex]::Matches($body, '\bHZ-[A-Za-z0-9-]+\b')
 
     $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Requirement IDs") -Prefix DQ)
     $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Verification IDs") -Prefix DV)
+    $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Hazard Linkage IDs") -Prefix HZ)
+    $hasExplicitNoHazard = $declaredHzIds -contains "HZ-NONE"
     $mappingSection = Get-MarkdownSection -Body $body -Heading "DQ/DV/HZ Mapping"
     $mappingRows = @(Get-TraceabilityMappingRows -Body $body)
 
@@ -309,8 +310,8 @@ foreach ($issue in $issues) {
     if ($dvMatches.Count -eq 0) {
         $issueErrors += "Missing DV-* identifier(s)."
     }
-    if ($hzMatches.Count -eq 0 -and $upperBody -notmatch '\bHZ-NONE\b') {
-        $issueErrors += "Missing HZ-* identifier(s) or explicit HZ-none rationale."
+    if ($declaredHzIds.Count -eq 0) {
+        $issueErrors += "Missing Hazard Linkage IDs section."
     }
 
     if ($declaredDqIds.Count -eq 0) {
@@ -326,8 +327,7 @@ foreach ($issue in $issues) {
     }
 
     $issueHazards = @{}
-    foreach ($match in $hzMatches) {
-        $id = $match.Value.ToUpperInvariant()
+    foreach ($id in $declaredHzIds) {
         $issueHazards[$id] = $true
         if ($id -ne "HZ-NONE" -and -not $knownHazards.ContainsKey($id)) {
             $issueErrors += "Unknown hazard identifier: $id (not found in hazard register)."
@@ -343,10 +343,8 @@ foreach ($issue in $issues) {
             continue
         }
         if ($row.DqIds.Count -eq 0 -or $row.DvIds.Count -eq 0 -or $row.HzIds.Count -eq 0) {
-            if ($upperBody -notmatch '\bHZ-NONE\b' -or $row.HzIds.Count -eq 0) {
-                $issueErrors += "Mapping row must contain at least one DQ, DV, and HZ identifier: $($row.Raw)"
-                continue
-            }
+            $issueErrors += "Mapping row must contain at least one DQ, DV, and HZ identifier: $($row.Raw)"
+            continue
         }
 
         foreach ($id in $row.DqIds) {
@@ -376,7 +374,7 @@ foreach ($issue in $issues) {
             $issueErrors += "Declared DV identifier is not mapped: $id"
         }
     }
-    if ($upperBody -notmatch '\bHZ-NONE\b') {
+    if (-not $hasExplicitNoHazard) {
         foreach ($id in $issueHazards.Keys) {
             if (-not $mappedHzIds.ContainsKey($id)) {
                 $issueErrors += "Declared HZ identifier is not mapped: $id"
@@ -393,7 +391,7 @@ foreach ($issue in $issues) {
             }
         }
 
-        if (-not $hasPrimary -and $upperBody -notmatch '\bHZ-NONE\b') {
+        if (-not $hasPrimary -and -not $hasExplicitNoHazard) {
             $issueErrors += "No primary hazard linked. Expected at least one of: $($primaryHazardIds -join ', ')."
         }
     }

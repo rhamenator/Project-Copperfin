@@ -120,6 +120,29 @@ function(assert_no_hazard_fixture)
     file(REMOVE "${no_hazard_report}")
 endfunction()
 
+function(assert_invalid_hz_none_row_fixture)
+    set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-hz-none-row-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_invalid_hz_none_row_issues.json"
+            -ReportPath "${invalid_report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted a malformed HZ-NONE mapping row")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "Mapping row must contain at least one DQ, DV, and HZ identifier"
+        malformed_row_index)
+    if(malformed_row_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not report the malformed HZ-NONE mapping row: ${all_output}")
+    endif()
+    file(REMOVE "${invalid_report}")
+endfunction()
+
 require_text("uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
     "pinned checkout action")
 require_text("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
@@ -164,6 +187,7 @@ if(POWERSHELL_EXECUTABLE)
 
     assert_invalid_mapping_fixture()
     assert_no_hazard_fixture()
+    assert_invalid_hz_none_row_fixture()
 
     assert_invalid_issue_numbers([=[2201"; Write-Output injected]=])
     assert_invalid_issue_numbers([=[2201; Write-Output injected]=])

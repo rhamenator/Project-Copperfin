@@ -5,6 +5,12 @@
   The focused workflow contract passes `1/1`; live #4403 permissive validation
   passes, while strict mode reports only the expected open-issue gate.
 
+- 2026-07-28: Corrected the safety mapping validator under #4803 after Windows
+  review found that an arbitrary `HZ-NONE` token could waive missing DQ/DV cells
+  on a mapping row. Row completeness is now unconditional, and the no-hazard
+  exemption is derived only from the declared Hazard Linkage IDs section. The
+  focused workflow contract now covers a mixed valid-plus-malformed fixture.
+
 - 2026-07-28: Hardened `scripts/validate-posix.sh` under #4801 so local
   Linux/macOS validation bounds each CTest case to 180 seconds and preserves
   the configured test parallelism, matching the hosted native action and

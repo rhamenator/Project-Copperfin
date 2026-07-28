@@ -12,6 +12,13 @@ At live #4403 state, permissive validation passes and strict validation reports
 only `Issue is not closed (state=OPEN)`; independent reviewer sign-off remains
 unclaimed.
 
+Windows review of #4802 found and reproduced a follow-up defect: an arbitrary
+`HZ-NONE` token could waive missing DQ/DV cells on an extra mapping row. The
+#4803 correction makes row completeness unconditional and derives the no-hazard
+exemption only from the declared `Hazard Linkage IDs` section. The focused
+workflow contract adds a mixed valid-plus-malformed `HZ-NONE` fixture; review
+and exact-head hosted validation remain required.
+
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
 `scripts/validate-posix.sh` that the hosted native action and Windows script
