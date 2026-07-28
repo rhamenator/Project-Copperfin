@@ -3152,20 +3152,37 @@ namespace copperfin::runtime
         struct TabStopCandidate
         {
             int handle = 0;
-            long long tab_index = 0;
+            std::vector<long long> tab_order;
         };
         struct PendingTabObject
         {
             int handle = 0;
             bool ancestor_visible = true;
             bool ancestor_enabled = true;
+            std::vector<long long> tab_prefix;
+        };
+        const auto read_tab_index = [](const RuntimeOleObjectState &object)
+        {
+            if (const auto property = object.properties.find("tabindex");
+                property != object.properties.end())
+            {
+                try
+                {
+                    return static_cast<long long>(std::llround(value_as_number(property->second)));
+                }
+                catch (...)
+                {
+                    return 0LL;
+                }
+            }
+            return 0LL;
         };
         std::vector<TabStopCandidate> candidates;
         std::vector<PendingTabObject> pending_objects;
         std::set<int> seen_handles;
         for (const int child_handle : collect_native_owned_child_handles(*owner_form))
         {
-            pending_objects.push_back({child_handle, true, true});
+            pending_objects.push_back({child_handle, true, true, {}});
         }
 
         while (!pending_objects.empty())
@@ -3197,20 +3214,9 @@ namespace copperfin::runtime
                 normalized_base_class != "page" &&
                 property_is_true("tabstop") && visible && enabled)
             {
-                long long tab_index = 0LL;
-                if (const auto property = child_found->second.properties.find("tabindex");
-                    property != child_found->second.properties.end())
-                {
-                    try
-                    {
-                        tab_index = std::llround(value_as_number(property->second));
-                    }
-                    catch (...)
-                    {
-                        tab_index = 0LL;
-                    }
-                }
-                candidates.push_back({pending.handle, tab_index});
+                std::vector<long long> tab_order = pending.tab_prefix;
+                tab_order.push_back(read_tab_index(child_found->second));
+                candidates.push_back({pending.handle, std::move(tab_order)});
             }
 
             if (!visible || !enabled)
@@ -3222,7 +3228,7 @@ namespace copperfin::runtime
             {
                 for (const int nested_handle : collect_native_owned_child_handles(child_found->second))
                 {
-                    pending_objects.push_back({nested_handle, visible, enabled});
+                    pending_objects.push_back({nested_handle, visible, enabled, pending.tab_prefix});
                 }
             }
             else if (normalized_base_class == "pageframe")
@@ -3256,7 +3262,21 @@ namespace copperfin::runtime
                 pending_objects.push_back({
                     page_members[page_index].child_object->handle,
                     visible,
-                    enabled});
+                    enabled,
+                    pending.tab_prefix});
+            }
+            else if (normalized_base_class == "commandgroup" && property_is_true("tabstop"))
+            {
+                const std::vector<long long> group_tab_prefix{
+                    pending.tab_prefix.begin(),
+                    pending.tab_prefix.end()};
+                const long long group_tab_index = read_tab_index(child_found->second);
+                std::vector<long long> child_tab_prefix = group_tab_prefix;
+                child_tab_prefix.push_back(group_tab_index);
+                for (const int nested_handle : collect_native_owned_child_handles(child_found->second))
+                {
+                    pending_objects.push_back({nested_handle, visible, enabled, child_tab_prefix});
+                }
             }
         }
 
@@ -3270,9 +3290,9 @@ namespace copperfin::runtime
             candidates.end(),
             [](const TabStopCandidate &left, const TabStopCandidate &right)
             {
-                if (left.tab_index != right.tab_index)
+                if (left.tab_order != right.tab_order)
                 {
-                    return left.tab_index < right.tab_index;
+                    return left.tab_order < right.tab_order;
                 }
                 return left.handle < right.handle;
             });
@@ -10883,6 +10903,30 @@ namespace copperfin::runtime
                 {
                     keypress_target = handle;
                     break;
+                }
+            }
+
+            if (keypress_target.has_value())
+            {
+                const auto target_found = ole_objects.find(*keypress_target);
+                if (target_found != ole_objects.end() &&
+                    (normalize_identifier(trim_copy(target_found->second.base_class_name)) == "form" ||
+                     normalize_identifier(trim_copy(target_found->second.base_class_name)) == "formset"))
+                {
+                    const auto active_control = target_found->second.properties.find("activecontrol");
+                    if (active_control != target_found->second.properties.end())
+                    {
+                        if (const auto resolved_active_control = resolve_ole_object(active_control->second);
+                            resolved_active_control.has_value())
+                        {
+                            const std::string active_base_class = normalize_identifier(
+                                trim_copy((*resolved_active_control)->base_class_name));
+                            if (wparam == 9 || active_base_class == "commandbutton")
+                            {
+                                keypress_target = (*resolved_active_control)->handle;
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -663,4 +663,141 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_tab_traverses_commandgroup_children()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_commandgroup_traversal";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_commandgroup_traversal.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFormHwnd, nGotFocus, cLastFocus\n"
+            "nGotFocus = 0\n"
+            "cLastFocus = ''\n"
+            "oForm = CREATEOBJECT('CommandGroupTabForm')\n"
+            "oForm.first.TabIndex = 1\n"
+            "oForm.cmdGroup.TabIndex = 2\n"
+            "oForm.cmdGroup.cmdFirst.TabIndex = 1\n"
+            "oForm.cmdGroup.cmdSkip.TabIndex = 2\n"
+            "oForm.cmdGroup.cmdSkip.TabStop = .F.\n"
+            "oForm.cmdGroup.cmdDisabled.TabIndex = 3\n"
+            "oForm.cmdGroup.cmdDisabled.Enabled = .F.\n"
+            "oForm.cmdGroup.cmdSecond.TabIndex = 4\n"
+            "oForm.blockedEnabled.TabIndex = 0\n"
+            "oForm.blockedEnabled.Enabled = .F.\n"
+            "oForm.blockedVisible.TabIndex = 0\n"
+            "oForm.blockedVisible.Visible = .F.\n"
+            "oForm.third.TabIndex = 5\n"
+            "oForm.first.SetFocus()\n"
+            "nFormHwnd = oForm.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS CommandGroupTabForm AS Form\n"
+            "    ADD OBJECT first AS CommandGroupTabButton WITH cId = 'first'\n"
+            "    ADD OBJECT cmdGroup AS TabCommandGroup\n"
+            "    ADD OBJECT blockedEnabled AS TabCommandGroup WITH TabIndex = 0\n"
+            "    ADD OBJECT blockedVisible AS TabCommandGroup WITH TabIndex = 0\n"
+            "    ADD OBJECT third AS CommandGroupTabButton WITH cId = 'third'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabCommandGroup AS CommandGroup\n"
+            "    ADD OBJECT cmdFirst AS CommandGroupTabButton WITH cId = 'group-first'\n"
+            "    ADD OBJECT cmdSkip AS CommandGroupTabButton WITH cId = 'skip'\n"
+            "    ADD OBJECT cmdDisabled AS CommandGroupTabButton WITH cId = 'disabled'\n"
+            "    ADD OBJECT cmdSecond AS CommandGroupTabButton WITH cId = 'group-second'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CommandGroupTabButton AS CommandButton\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'third'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "CommandGroup Tab fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_hwnd = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found == state.globals.end())
+            {
+                return static_cast<std::intptr_t>(0);
+            }
+            return static_cast<std::intptr_t>(std::stoll(copperfin::runtime::format_value(found->second)));
+        };
+        const std::intptr_t form_hwnd = read_hwnd("nformhwnd");
+
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "CommandGroup Tab dispatch should restore the event loop: " + state.message);
+        };
+        const auto check_focus = [&](const std::string &expected)
+        {
+            const auto found = state.globals.find("clastfocus");
+            expect(found != state.globals.end(), "clastfocus should be present");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       "clastfocus expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        const auto first_tab = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+        expect(first_tab.has_value() && *first_tab == 0,
+               "Tab should enter the first eligible CommandGroup button");
+        resume_event_loop();
+        check_focus("group-first");
+
+        const auto group_first_tab = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+        expect(group_first_tab.has_value() && *group_first_tab == 0,
+               "Tab should advance through CommandGroup-local TabIndex order");
+        resume_event_loop();
+        check_focus("group-second");
+
+        const auto group_second_tab = session.dispatch_windows_message(form_hwnd, 0x0100, 9, 0);
+        expect(group_second_tab.has_value() && *group_second_tab == 0,
+               "Tab should leave the CommandGroup after its eligible buttons");
+        resume_event_loop();
+        check_focus("third");
+
+        const auto finish = session.dispatch_windows_message(form_hwnd, 0x0100, 67, 0);
+        expect(finish.has_value() && *finish == 0,
+               "The CommandGroup Tab fixture should finish through its third control");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "CommandGroup Tab fixture should complete after CLEAR EVENTS: " + state.message);
+        check_focus("third");
+        const auto focus_count = state.globals.find("ngotfocus");
+        expect(focus_count != state.globals.end() &&
+                   copperfin::runtime::format_value(focus_count->second) == "4",
+               "CommandGroup Tab fixture should focus first, two group buttons, and third exactly once");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }
