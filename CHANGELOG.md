@@ -1,3 +1,11 @@
+- 2026-07-28: Implemented language-service child #4795 under #27 at product
+  head `d18d9d1fc`. The managed FoxPro project symbol/signature index now
+  recognizes singular `LPARAMETER` declarations alongside
+  `LPARAMETERS`, preserving parameter names, default expressions, dotted
+  method lookup, and invariant signature contracts. The focused
+  `Copperfin.LanguageServiceTests` suite passes all tests; runtime/parser
+  behavior remains covered separately by #4792.
+
 - 2026-07-28: Implemented runtime child #4793 under #3217 at product head
   `a796a31dc`. Native PRG indexed `PROGRAM(nLevel)` and `SYS(16,nLevel)` now
   resolve master, nested, and out-of-range heap-backed frames with VFP's `0/1`

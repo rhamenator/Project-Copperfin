@@ -53,6 +53,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `SYS(16)`. Child `#4794` is implemented at product head `e842e4e1e`, and
   focused runtime-surface coverage passes `1/1`; entry frames retain plain
   paths while procedure and method frames preserve the VFP context form.
+- Recent managed language-service slice: `#4795` under `#27` extends the
+  project symbol/signature index to recognize singular `LPARAMETER` alongside
+  `LPARAMETERS`. Dotted project-method signature help preserves parameter
+  names and default expressions, and the focused Release language-service
+  suite passes all tests. Native parser behavior remains the separate #4792
+  contract; hosted exact-head review is still required.
 - Recent native PRG parity slice: `#4790` under #3217 exposes the VFPSource-used
   `Form.WhatsThisHelp` logical property with a `.F.` default, direct and PEM
   reflection writes, numeric/logical normalization, derived-class preservation,

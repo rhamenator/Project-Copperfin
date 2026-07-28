@@ -4,7 +4,7 @@
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest product/test
-implementation head is `a796a31dc`, with coordination-only documentation and
+implementation head is `d18d9d1fc`, with coordination-only documentation and
 review commits following the product slice. The broad validation
 baseline remains the `93d44395f` run set. The product/test implementation head for the
 completed broad Windows native run remains `b07d30d9c`. Windows Native Validation
@@ -79,6 +79,13 @@ The #4793 fixture's missing `PUBLIC` declarations were corrected after the
 cross-platform failures in seq856 and seq857; those failures were test-scoping
 defects, not runtime failures. Hosted Windows/macOS exact-head review remains
 required for both children.
+#4795 is implemented at product head `d18d9d1fc`: the managed
+`FoxProIntelliSenseCatalog` now recognizes singular `LPARAMETER` declarations
+and returns dotted project-method signature help with parameter names and
+default expressions preserved. The focused
+`Copperfin.LanguageServiceTests` Release run passes all tests. This is a
+managed indexing/signature surface only; native parser behavior remains the
+separate #4792 contract, and exact-head hosted review remains requested.
 #4623 is closed as
 implementation-complete; its remaining hosted evidence is release validation,
 not an unfinished runtime-safety slice. #4770 is also closed: Linux and
