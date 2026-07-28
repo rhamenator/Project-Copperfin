@@ -81,8 +81,9 @@ the issue only after the normal implementation review/validation handoff.
 
 This section is authoritative over the historical log below. The synchronized
 branch is `main` and is synchronized with `origin/main`; the latest safety
-validation implementation head is `37366143c`, with the synchronized
-coordination head at `5cb66d04f`. The current hosted matrix for that head has
+validation implementation head is `37366143c`; synchronized coordination
+commits follow that source head. The current hosted matrix for the synchronized
+branch tip has
 not completed; the preceding head's green VSIX, Linux managed UI, and security
 gates are not being carried forward as exact-head evidence. Native, installer,
 executable-path, and Windows validation remain pending for the new head. The
@@ -114,7 +115,7 @@ the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
 Current focused product validation for the latest safety slice is at source head
-`37366143c`; the synchronized branch tip is `5cb66d04f`. The latest standalone
+`37366143c`; synchronized coordination commits follow that source head. The latest standalone
 validation contract remains the complete `f0734f262` run, and the focused safety
 workflow contract passes `1/1` at the current head. The current source head
 includes the #4800 fault-procedure preservation slice and its focused regression

@@ -118,8 +118,9 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest safety-validation implementation head is `37366143c`; the synchronized
-coordination branch tip is `5cb66d04f`. The hosted matrix for this head has not
+The latest safety-validation implementation head is `37366143c`; synchronized
+coordination commits follow that source head. The hosted matrix for the
+synchronized branch tip has not
 completed, so prior green lanes are not being claimed as exact-head evidence;
 native, installer, executable-path, and Windows jobs remain pending or in
 progress. The product behavior head for #4800 remains `f669fd51c`. The broad
