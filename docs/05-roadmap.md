@@ -121,6 +121,11 @@ platform-conditional skips. Hosted Windows Native Validation `30314709007` is
 still running; the project therefore does not yet claim a complete
 cross-platform RC gate.
 
+The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
+`c95cf269d`; the package/document/install contract subset passed `4/4`. This is
+local Linux evidence only and does not substitute for Windows/macOS installers,
+hosted UI validation, or the protected signing gate.
+
 For a document-by-document accounting of what the project's own specification
 documents require versus what the code currently delivers, see
 [31-specification-compliance-gap-analysis.md](31-specification-compliance-gap-analysis.md).

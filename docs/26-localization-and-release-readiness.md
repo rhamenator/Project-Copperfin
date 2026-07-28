@@ -30,6 +30,11 @@ platform-conditional tests, `test_build_host_utf8_launcher_paths` and
 Validation `30314709007` remains in progress, so the POSIX result is recorded
 as partial release evidence rather than a complete RC claim.
 
+Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
+the package/document/install contract subset passed `4/4`. Installer resources
+and package names remain machine-stable across locales; this local result does
+not substitute for Windows/macOS installer jobs or protected signing evidence.
+
 ## Resource Layout
 
 The portable C++ catalog lives under `resources/locales/<locale>/strings.json` and installs to `share/copperfin/locales`. The first C++ surface routed through it is `copperfin_inspect` usage text; machine-readable inspection fields remain invariant.
