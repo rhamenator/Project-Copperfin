@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current runtime-safety and strict-reader status (2026-07-28): #4623 is
+  implementation-complete and closed after focused containment and debugger
+  recovery coverage for PRG, SCX/VCX, MNX, FRX, and LBX fault paths. Product
+  head `f9f44a786` contains the final #4770 strict index-snapshot correction
+  and the #4771 keyboard-action correction; the three focused POSIX targets
+  pass `3/3`. Hosted Windows and macOS exact-head validation remains in
+  progress, so those two children remain open and no closure is claimed here.
+
 - Current test-slice status (2026-07-28): implementation head `b07d30d9c` adds the managed language-service regression coverage for sibling-project procedure completions; it does not change native runtime sources. Windows Native Validation `30324522773` passed `315/315` at that head with no failures or skips. Generated Launcher Validation `30326599223`, Windows Environment and Executable Path Validation `30326600206`, and Windows DECLARE ABI Validation `30326601002` also passed; Windows Deep Validation `30326601931` remains pending. The synchronized documentation commits are excluded from the native workflow's product/test path.
 
 - Independent local POSIX validation (2026-07-28, prior native implementation head): at documentation head `d19d1ee6c` and implementation `ff9417a4a`, `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` passed `316/316` tests in `211.09s`. Only `test_build_host_utf8_launcher_paths` and `test_generated_launcher_process` were skipped by their expected platform guards. Hosted Windows Native remains the broader release gate.

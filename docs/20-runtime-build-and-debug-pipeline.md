@@ -10,9 +10,11 @@ Strict generic and database-component readers now reject ambiguous case-folded
 admitted-byte matches under #3866/#4770 instead of selecting an arbitrary
 override. Exact keys remain authoritative, unique case-folded matches preserve
 the existing Windows/VFP compatibility behavior, and ordinary non-strict
-filesystem reads are unchanged. The focused verified-file, database-lifecycle,
-and runtime-surface tests pass on POSIX; exact-head hosted Windows review
-remains required.
+filesystem reads are unchanged. At product head `f9f44a786`, strict table
+snapshot materialization and cursor-order inspection also use that helper;
+the focused verified-file, database-lifecycle, and runtime-surface tests pass
+`3/3` on POSIX, while exact-head hosted Windows and macOS review remains in
+progress.
 
 The modeled `WM_KEYDOWN` path now supplies the missing headless default-action
 boundary under #3217/#4771: ENTER selects the owning Form's deterministic

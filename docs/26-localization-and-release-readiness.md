@@ -48,20 +48,15 @@ traceability or protected package signing.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
-Windows path/package contract validation. #4757-#4768 have focused Linux
-coverage, with exact-head Windows corroboration recorded for the reviewed
-runtime slices; the latest right-button slice #4768 was validated by both
-Claude and Windows Codex. #4769's IR-manifest `DEFINE MENU` correction has a
-focused `test_runtime_pipeline` pass (`1/1`) at `b2e44535d`, with exact-head
-Windows corroboration in seq763 at `da52ce8ec`; the issue is closed. #4770 is
-the next focused strict-reader hardening slice and remains pending exact-head
-review. #4771 is implemented at product head `540d27402` with focused Linux
-runtime-surface coverage, including disabled-button filtering and focused
-target precedence when a host supplies a CommandButton handle; exact-head
-Windows/macOS review remains pending.
-#4770's final index-snapshot correction is now at product head `f9f44a786`;
-the folded-only CDX/FPT collision suite passes locally and exact-head Windows
-validation remains pending.
+Windows path/package contract validation. #4757-#4769 are closed with their
+focused implementation and hosted evidence. The current product correction
+head is `f9f44a786`: #4770 now routes both strict table snapshot materialization
+and cursor-order inspection through the ambiguity-safe database-byte helper,
+and #4771 includes disabled-button filtering plus focused CommandButton ENTER
+precedence when a host supplies a target handle. The three focused Linux
+targets pass `3/3`; Claude has reviewed the exact correction, while hosted
+Windows and macOS runs `30353802047` and `30353802078` remain in progress.
+Neither child is closed until those exact-head results resolve.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

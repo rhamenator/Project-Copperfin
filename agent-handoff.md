@@ -32,6 +32,15 @@ release prerequisites are the open safety traceability review under #4403 and
 the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites are resolved.
 
+Current focused validation is at product head `f9f44a786`. #4623 is closed as
+implementation-complete; its remaining hosted evidence is release validation,
+not an unfinished runtime-safety slice. #4770 and #4771 remain open pending
+exact-head hosted results: Linux focused verified-file, database-lifecycle,
+and runtime-surface targets pass `3/3`, Claude has reviewed the correction, and
+Windows Native `30353802047` plus macOS Native `30353802078` are still in
+progress. Do not close either child or claim their hosted corroboration until
+those runs resolve.
+
 The shared cross-platform environment boundary now rejects variable names that
 contain `=` or embedded NULs, and rejects embedded NULs in assigned values or
 Windows path values before calling C environment APIs. This prevents silent
