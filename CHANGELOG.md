@@ -9,8 +9,9 @@
   Independent review then found that the first matcher also accepted bare
   `PARAMETER`; the correction narrows it to `LPARAMETER`, `LPARAMETERS`, and
   `PARAMETERS`, with a negative regression test for the unsupported bare form.
-  The focused Release suite passes all tests; hosted review of this correction
-  remains pending.
+  The focused Release suite passes all tests. Claude seq866 independently
+  rebuilt and ran the exact corrected Release suite successfully; #4795 is
+  closed as implementation-complete.
 
 - 2026-07-28: Implemented runtime child #4793 under #3217 at product head
   `a796a31dc`. Native PRG indexed `PROGRAM(nLevel)` and `SYS(16,nLevel)` now
