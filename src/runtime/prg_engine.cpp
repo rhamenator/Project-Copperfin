@@ -3191,7 +3191,10 @@ namespace copperfin::runtime
             };
             const bool visible = pending.ancestor_visible && property_is_true("visible");
             const bool enabled = pending.ancestor_enabled && property_is_true("enabled");
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(child_found->second.base_class_name));
             if (is_native_focusable_runtime_object(child_found->second) &&
+                normalized_base_class != "page" &&
                 property_is_true("tabstop") && visible && enabled)
             {
                 long long tab_index = 0LL;
@@ -3210,13 +3213,50 @@ namespace copperfin::runtime
                 candidates.push_back({pending.handle, tab_index});
             }
 
-            if (visible && enabled &&
-                normalize_identifier(trim_copy(child_found->second.base_class_name)) == "container")
+            if (!visible || !enabled)
+            {
+                continue;
+            }
+
+            if (normalized_base_class == "container" || normalized_base_class == "page")
             {
                 for (const int nested_handle : collect_native_owned_child_handles(child_found->second))
                 {
                     pending_objects.push_back({nested_handle, visible, enabled});
                 }
+            }
+            else if (normalized_base_class == "pageframe")
+            {
+                long long active_page = 0LL;
+                if (const auto property = child_found->second.properties.find("activepage");
+                    property != child_found->second.properties.end())
+                {
+                    try
+                    {
+                        active_page = std::llround(value_as_number(property->second));
+                    }
+                    catch (...)
+                    {
+                        active_page = 0LL;
+                    }
+                }
+
+                if (active_page <= 0LL)
+                {
+                    continue;
+                }
+
+                const auto page_members = collect_native_pageframe_page_members(child_found->second);
+                const auto page_index = static_cast<std::size_t>(active_page - 1LL);
+                if (page_index >= page_members.size() || page_members[page_index].child_object == nullptr)
+                {
+                    continue;
+                }
+
+                pending_objects.push_back({
+                    page_members[page_index].child_object->handle,
+                    visible,
+                    enabled});
             }
         }
 

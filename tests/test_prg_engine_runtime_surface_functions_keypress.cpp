@@ -531,4 +531,136 @@ namespace copperfin::runtime_surface_tests
 
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_tab_traverses_active_pageframe_page_only()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_active_pageframe_traversal";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_active_pageframe_traversal.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFirstHwnd, nActiveHwnd, nThirdHwnd, nGotFocus, cLastFocus\n"
+            "nGotFocus = 0\n"
+            "cLastFocus = ''\n"
+            "oForm = CREATEOBJECT('PageFrameTabForm')\n"
+            "oForm.first.TabIndex = 1\n"
+            "oForm.activeFrame.pageOne.active.TabIndex = 2\n"
+            "oForm.activeFrame.pageOne.inactive.TabStop = .F.\n"
+            "oForm.activeFrame.pageOne.blocked.TabStop = .F.\n"
+            "oForm.activeFrame.pageTwo.inactive.TabIndex = 0\n"
+            "oForm.blockedEnabled.pageOne.blocked.TabIndex = 0\n"
+            "oForm.blockedEnabled.Enabled = .F.\n"
+            "oForm.blockedVisible.pageOne.blocked.TabIndex = 0\n"
+            "oForm.blockedVisible.Visible = .F.\n"
+            "oForm.third.TabIndex = 4\n"
+            "oForm.first.SetFocus()\n"
+            "nFirstHwnd = oForm.first.hWnd\n"
+            "nActiveHwnd = oForm.activeFrame.pageOne.active.hWnd\n"
+            "nThirdHwnd = oForm.third.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS PageFrameTabForm AS Form\n"
+            "    ADD OBJECT first AS PageFrameTabBox WITH cId = 'first'\n"
+            "    ADD OBJECT activeFrame AS TabPageFrame WITH ActivePage = 1\n"
+            "    ADD OBJECT blockedEnabled AS TabPageFrame WITH ActivePage = 1\n"
+            "    ADD OBJECT blockedVisible AS TabPageFrame WITH ActivePage = 1\n"
+            "    ADD OBJECT third AS PageFrameTabBox WITH cId = 'third'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabPageFrame AS PageFrame\n"
+            "    ADD OBJECT pageOne AS TabPage\n"
+            "    ADD OBJECT pageTwo AS TabPage\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabPage AS Page\n"
+            "    ADD OBJECT active AS PageFrameTabBox WITH cId = 'active'\n"
+            "    ADD OBJECT inactive AS PageFrameTabBox WITH cId = 'inactive'\n"
+            "    ADD OBJECT blocked AS PageFrameTabBox WITH cId = 'blocked'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS PageFrameTabBox AS ListBox\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 67 AND THIS.cId = 'third'\n"
+            "            CLEAR EVENTS\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Active PageFrame Tab fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_hwnd = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found == state.globals.end())
+            {
+                return static_cast<std::intptr_t>(0);
+            }
+            return static_cast<std::intptr_t>(std::stoll(copperfin::runtime::format_value(found->second)));
+        };
+        const std::intptr_t first_hwnd = read_hwnd("nfirsthwnd");
+        const std::intptr_t active_hwnd = read_hwnd("nactivehwnd");
+        const std::intptr_t third_hwnd = read_hwnd("nthirdhwnd");
+
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "Active PageFrame Tab dispatch should restore the event loop: " + state.message);
+        };
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        const auto first_tab = session.dispatch_windows_message(first_hwnd, 0x0100, 9, 0);
+        expect(first_tab.has_value() && *first_tab == 0,
+               "Tab should enter the active PageFrame page");
+        resume_event_loop();
+        check("clastfocus", "active");
+
+        const auto active_tab = session.dispatch_windows_message(active_hwnd, 0x0100, 9, 0);
+        expect(active_tab.has_value() && *active_tab == 0,
+               "Tab should leave the active PageFrame page for the next form control");
+        resume_event_loop();
+        check("clastfocus", "third");
+
+        const auto finish = session.dispatch_windows_message(third_hwnd, 0x0100, 67, 0);
+        expect(finish.has_value() && *finish == 0,
+               "The active PageFrame Tab fixture should finish through its third control");
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "Active PageFrame Tab fixture should complete after CLEAR EVENTS: " + state.message);
+        check("clastfocus", "third");
+        check("ngotfocus", "3");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }
