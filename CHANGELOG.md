@@ -2,6 +2,8 @@
 
 - 2026-07-28: Independent local contract verification at coordination head `b25bf6c9f` passed the three package-trust/provisioning contracts (`3/3`) and `test_runtime_pipeline` (`1/1` in `42.00s`). Signer shell syntax and `git diff --check` also passed. This is portable contract evidence only; Windows enforced signing, mounted-VFP9 sample stages, and safety closure remain separate gates.
 
+- 2026-07-28: Mounted VFP9 ISO asset validation at coordination head `f687ba0ac` passed the native report/label real-sample subset `40/40` in `13.85s` against the original `invoice.frx/.frt` and `cust.lbx/.lbt` fixtures. The result covers report/label fidelity and round trips only; it is not Windows VFP9 execution or Visual Studio/runtime smoke evidence.
+
 - 2026-07-28: Implemented #4756's bounded net472 Windows process-tree cleanup retry. The .NET Framework runner now gives `taskkill /T /F` a two-attempt, bounded completion path before falling back to root termination, preserving timeout, output, exit-code, and POSIX behavior. Linux managed tests and the managed compile contract pass; exact-head Windows Deep Validation `30329053296` later passed the net472 process-runner stage.
 
 - 2026-07-28: Hardened Windows Deep Validation under #4755 by adding the existing 180-second per-test CTest timeout to the manual workflow and its contract test. This bounds a hung native test without reducing the complete inventory or bounded parallelism, allowing later VSIX, Studio, debugger, and xAsset stages to produce evidence on subsequent runs.

@@ -96,6 +96,15 @@ portable package-trust and runtime-package contracts only; it does not replace
 the Windows enforced-signing run, mounted-VFP9 sample stages, or #4403
 independent review.
 
+Mounted VFP9 ISO asset evidence at coordination head `f687ba0ac` passed the
+complete native report/label real-sample subset: `40/40` CTest tests in
+`13.85s`, using `/run/media/rich/VFPPROD1/.../samples/solution/reports` for
+the original `invoice.frx/.frt` and `cust.lbx/.lbt` fixtures. The coverage
+includes section/grouping and placed-object edits, settings, preview and
+delete/restore behavior, and no-op/property round trips. This is native
+asset-fidelity evidence only; it does not claim Windows VFP9 execution,
+Visual Studio UI behavior, or the runtime/xAsset/menu smoke stages.
+
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,
 not to the current state above.
