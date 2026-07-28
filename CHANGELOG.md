@@ -1,3 +1,9 @@
+- 2026-07-28: Refreshed the handoff and roadmap release matrix at product
+  head `7587be12f`: Security Supply Chain, VSIX, Linux Managed UI, and
+  Executable Path are green; Windows Native and the remaining hosted native,
+  launcher, environment, DECLARE, macOS, and installer jobs remain in
+  progress. RC readiness is still unclaimed.
+
 - 2026-07-28: Reconciled the durable roadmap and VFP language-coverage notes
   with product head `7587be12f`. The exact-head hosted matrix has green
   Security Supply Chain and Linux Managed UI jobs while the remaining platform

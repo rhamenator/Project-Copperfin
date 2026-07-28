@@ -120,9 +120,10 @@ evidence follows that gate and includes:
 
 The current release-validation product head is `7587be12f`; the synchronized
 documentation head records this evidence state. The exact-head matrix is still
-running, so RC readiness is not claimed. Security Supply Chain `30408081069` and Linux Managed UI
-`30408081037` are green; Windows Native `30408081049`, VSIX `30408081057`,
-Executable Path `30408081029`, Generated Launcher `30408081016`, Linux Native
+running, so RC readiness is not claimed. Security Supply Chain `30408081069`,
+VSIX `30408081057`, Linux Managed UI `30408081037`, and Executable Path
+`30408081029` are green; Windows Native `30408081049`, Generated Launcher
+`30408081016`, Linux Native
 `30408081006`, Windows DECLARE ABI `30408081004`, macOS Native `30408081003`,
 Windows Environment and Executable Path `30408080996`, and Standalone
 Installers `30408080995` remain in progress as of this update. The earlier
