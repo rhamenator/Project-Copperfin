@@ -2403,3 +2403,10 @@ platform-conditional skips `test_build_host_utf8_launcher_paths` and
 `test_generated_launcher_process`. The run was headless and no Copperfin UI
 process remained afterward. Hosted native and installer jobs remain separate
 release evidence.
+
+# 2026-07-28 Hosted matrix update: exact-head product validation has green
+macOS Native `30404819331`, Windows Environment and Executable Path
+`30404819386`, Executable Path `30404819239`, Windows DECLARE ABI `30404819228`,
+and Standalone Installers `30404819272` runs in addition to the previously
+recorded green lanes. Linux Native `30404819262` and Windows Native
+`30404819387` remain in progress; RC readiness is not claimed.

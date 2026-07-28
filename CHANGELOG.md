@@ -1,3 +1,9 @@
+- 2026-07-28: Updated the exact-head RC matrix evidence after macOS Native,
+  Windows environment/path, DECLARE ABI, executable-path, and installer jobs
+  completed successfully. Only Linux Native and Windows Native remain active;
+  RC readiness is still unclaimed until those jobs and the external trust and
+  safety gates complete.
+
 - 2026-07-28: Independent local POSIX validation at synchronized head
   `792f1840c` passed `316/316` CTest cases in `224.56s` with only the two
   documented platform-conditional skips for UTF-8 launcher paths and generated

@@ -120,11 +120,11 @@ evidence follows that gate and includes:
 
 The current release-validation product head is `364e62058`, with coordination
 head `bf2e33fd0`. The exact-head matrix is still running, so RC readiness is
-not claimed: Linux Managed UI `30404819438`, VSIX `30404819312`, and Security
-Supply Chain `30404819335` are green, while Linux Native `30404819262`, macOS
-Native `30404819331`, Windows Native `30404819387`, Windows Environment and
+not claimed: Linux Managed UI `30404819438`, macOS Native `30404819331`, VSIX
+`30404819312`, Security Supply Chain `30404819335`, Windows Environment and
 Executable Path `30404819386`, Executable Path `30404819239`, Windows DECLARE
-ABI `30404819228`, and Standalone Installers `30404819272` remain in progress.
+ABI `30404819228`, and Standalone Installers `30404819272` are green. Linux
+Native `30404819262` and Windows Native `30404819387` remain in progress.
 The earlier accepted hosted baselines remain historical evidence only and are
 not substituted for this exact-head matrix. Independent safety sign-off under
 #4403 and protected launcher-trust provisioning under #4409 remain separate
