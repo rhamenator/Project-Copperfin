@@ -22,8 +22,10 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
-The latest broad implementation baseline is product head `93d44395f`. Hosted
-Linux Native `30329037575` and macOS Native `30329037567` passed their native
+The latest broad implementation baseline is product head `93d44395f`; the
+latest product implementation head is `b2e44535d` and the synchronized
+documentation branch is `da52ce8ec`. Hosted Linux Native `30329037575` and
+macOS Native `30329037567` passed their native
 matrices, Linux managed UI `30329037628`, VSIX `30329037609`, installers
 `30329037566`, and the security supply-chain gate `30329037556` passed, and
 Windows Native `30329037587` passed `315/315` CTest cases. Windows Deep
@@ -50,8 +52,9 @@ Windows path/package contract validation. #4757-#4768 have focused Linux
 coverage, with exact-head Windows corroboration recorded for the reviewed
 runtime slices; the latest right-button slice #4768 was validated by both
 Claude and Windows Codex. #4769's IR-manifest `DEFINE MENU` correction has a
-focused `test_runtime_pipeline` pass (`1/1`) at the current implementation
-head, while hosted validation of that newer package change remains pending.
+focused `test_runtime_pipeline` pass (`1/1`) at `b2e44535d`; the hosted CI
+matrix for that newer package change is still in progress, so no additional
+platform pass is claimed here.
 The focused localization test also passes `1/1` locally across the four
 catalogs. The strict safety traceability gate remains open only because #4403
 is not closed and requires genuinely arm's-length reviewer sign-off; #4409's

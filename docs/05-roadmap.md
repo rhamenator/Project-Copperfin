@@ -114,10 +114,12 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-Current product implementation head is `93d44395f`. Hosted Linux Native
-`30329037575`, macOS Native `30329037567`, Linux managed UI `30329037628`, VSIX
-`30329037609`, installers `30329037566`, and the security supply-chain gate
-`30329037556` all completed successfully at that head. Windows Native
+The latest product implementation head is `b2e44535d`. The synchronized
+documentation branch also contains coordination-only review and evidence
+updates through `da52ce8ec`. The broad hosted baseline remains the successful
+`93d44395f` evidence set: Linux Native `30329037575`, macOS Native
+`30329037567`, Linux managed UI `30329037628`, VSIX `30329037609`, installers
+`30329037566`, and security supply-chain gate `30329037556`. Windows Native
 `30329037587` passed `315/315` CTest cases in `557.26s`. Windows Deep
 Validation `30329053296` passed native CTest `315/315` in `503.96s`, VSIX and
 managed tests, the net472 process-runner fixture, standalone Studio and
