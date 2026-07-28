@@ -1,3 +1,8 @@
+- 2026-07-28: Reconciled the release-readiness evidence pointer at coordination
+  head `d17c0bd68`. The exact-head Windows Native job `30404819387` remains in
+  progress; #4403 still requires arm's-length safety sign-off and #4409 still
+  requires protected launcher-trust provisioning. RC readiness is not claimed.
+
 - 2026-07-28: Claude independently corroborated the local POSIX matrix at
   coordination head `f2776b336`: CTest passed `316/316` in `217.52s`, with only
   the documented UTF-8 launcher-path and generated-launcher-process skips.

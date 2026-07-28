@@ -119,7 +119,7 @@ evidence follows that gate and includes:
 - known limitations and compatibility exceptions
 
 The current release-validation product head is `364e62058`, with coordination
-head `65bd80c80`. The exact-head matrix is still running, so RC readiness is
+head `d17c0bd68`. The exact-head matrix is still running, so RC readiness is
 not claimed: Linux Managed UI `30404819438`, macOS Native `30404819331`, VSIX
 `30404819312`, Security Supply Chain `30404819335`, Windows Environment and
 Executable Path `30404819386`, Executable Path `30404819239`, Windows DECLARE

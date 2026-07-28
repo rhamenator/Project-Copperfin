@@ -2421,3 +2421,9 @@ separate #4403/#4409 release gates.
 `f2776b336`, a separate headless full CTest run passed `316/316` in `217.52s`
 with only `test_build_host_utf8_launcher_paths` and
 `test_generated_launcher_process` skipped. No UI process was left running.
+
+# 2026-07-28 Release-readiness evidence pointer: the synchronized coordination
+head is now `d17c0bd68` while the product-validation head remains `364e62058`.
+Windows Native job `30404819387` is still in progress. RC readiness remains
+unclaimed pending that result, genuinely arm's-length #4403 safety sign-off,
+and protected #4409 launcher-trust provisioning.
