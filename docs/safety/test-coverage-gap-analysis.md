@@ -114,26 +114,13 @@ test_memo_sidecar_os_write_error_preserves_consistency
 
 **Hazard linkage:** None direct, but contributes to HZ-runtime-crash-01 if a zero-record table causes a null dereference
 
-**What is missing:**
+**Current evidence:** `tests/test_prg_engine_control_flow.cpp` and the
+aggregate/table-mutation test sources cover empty-table navigation, scans,
+aggregates, and zero-record copy/append paths.
 
-- No test for `SCATTER MEMVAR` on a zero-record table (should produce all-empty variables without error).
-- No test for `SCAN` on an empty table (body should not execute; `RECCOUNT()` should return 0).
-- No test for `COUNT`, `SUM`, `AVERAGE` on an empty table (should return 0 without crashing).
-- No test for `COPY TO` from an empty table (should produce a valid empty DBF, not a zero-byte file).
-- No test for `LOCATE FOR` on an empty table (should set EOF() and produce a "not found" state, not crash).
-- No test for `GO TOP` or `GO BOTTOM` on an empty table.
-
-**Priority:** Medium. These are "degenerate but valid" inputs. VFP's documented behavior for all of them is well-defined; the runtime must match it without crashing.
-
-**Suggested new tests:**
-
-```text
-test_scan_on_empty_table_does_not_execute_body
-test_aggregate_commands_on_empty_table_return_zero
-test_locate_on_empty_table_sets_eof
-test_go_top_bottom_on_empty_table_does_not_crash
-test_copy_to_from_empty_table_produces_valid_empty_dbf
-```
+**Status:** The focused empty/degenerate cases are implemented and tested.
+The full command surface remains outside this targeted gap, so this is not an
+exhaustive VFP parity claim.
 
 ---
 
@@ -257,14 +244,14 @@ test_transaction_rollback_leaves_table_unchanged
 | GAP-01 | Numeric overflow / NaN / zero-divide | HZ-data-corruption-01, HZ-runtime-crash-01 | **High** | 4 |
 | GAP-02 | Malformed DBF header inputs | HZ-data-corruption-01, HZ-runtime-crash-01 | **High** | 5 |
 | GAP-03 | Disk I/O failure injection | HZ-data-corruption-01, HZ-system-failure-01 | **High** | 3 |
-| GAP-04 | Empty / degenerate table inputs | HZ-runtime-crash-01 | **Medium** | 5 |
+| GAP-04 | Empty / degenerate table inputs | HZ-runtime-crash-01 | **Closed for focused cases** | 0 |
 | GAP-05 | String field boundary conditions | HZ-data-corruption-01 | **Medium** | 3 |
 | GAP-06 | Security subsystem boundary | HZ-runtime-debug-01 | **Medium** | 5 |
 | GAP-07 | Guardrail boundary precision | HZ-runtime-crash-01 | **Low-Medium** | 3 |
 | GAP-08 | Multi-session / work area isolation | HZ-data-corruption-01 | **Medium** | 2 |
 | GAP-09 | Diagnostic error reporting depth | HZ-runtime-debug-01 | **Low** | 1 |
 
-**Total suggested new tests:** 31 (across all gaps)
+**Total suggested new tests:** 26 (across all remaining gaps)
 
 ---
 
@@ -275,12 +262,11 @@ Highest-risk gaps first (following the HZ-data-corruption-01 priority from the h
 1. **GAP-03** (disk I/O failure) — most likely to cause real data loss in production; implement staged-write rollback unit test first as it does not require OS-level disk-full simulation.
 2. **GAP-01** (numeric overflow / zero-divide) — crash and silent-truncation risk; straightforward to implement in the PRG engine test harness.
 3. **GAP-02** (malformed DBF header) — requires crafting adversarial byte arrays; builds on existing pattern in `test_dbf_table.cpp`.
-4. **GAP-04** (empty table inputs) — low implementation cost; high VFP parity value.
-5. **GAP-06** (security boundary) — important for audit forensic claim; moderate cost.
-6. **GAP-05** (string boundary) — VFP parity; low cost.
-7. **GAP-08** (multi-session isolation) — higher setup cost; depends on work area session model completeness.
-8. **GAP-07** (guardrail boundary precision) — low value relative to cost; defer until other gaps are closed.
-9. **GAP-09** (diagnostic depth) — low value; defer.
+4. **GAP-06** (security boundary) — important for audit forensic claim; moderate cost.
+5. **GAP-05** (string boundary) — VFP parity; low cost.
+6. **GAP-08** (multi-session isolation) — higher setup cost; depends on work area session model completeness.
+7. **GAP-07** (guardrail boundary precision) — low value relative to cost; defer until other gaps are closed.
+8. **GAP-09** (diagnostic depth) — low value; defer.
 
 ---
 

@@ -1,3 +1,4 @@
+- 2026-07-28: Reconciled `docs/safety/test-coverage-gap-analysis.md` with the current test tree: GAP-04 no longer lists empty-table navigation, scan, aggregate, and zero-record copy/append cases as missing. The focused safety contract test passes; this does not claim exhaustive VFP command-surface parity.
 - 2026-07-28: Windows Native Validation `30322581189` was cancelled during its native build after a later product-code push superseded it; the log reached no CTest result, so it is not classified as a test failure or pass. Replacement run `30324522773` is running at test-slice head `b07d30d9c`; the complete cross-platform RC gate remains unclaimed.
 
 - 2026-07-28: Added child #4754 under #27 to cover cross-file language-service completions. `Copperfin.LanguageServiceTests` passes on Linux, proving a sibling-project procedure is returned with the existing invariant `symbol` kind and project description; no product behavior or machine contract changed.

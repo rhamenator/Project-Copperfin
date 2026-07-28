@@ -18,6 +18,11 @@ the externally provisioned package-signing/trust registry under #4409. Do not
 claim the complete RC evidence gate until those prerequisites and the active
 native run are resolved.
 
+The safety gap analysis now marks GAP-04 as closed for its focused empty-table
+cases; its aggregate, navigation, scan, and zero-record copy/append coverage
+was already present in the test tree. The full VFP command surface remains a
+separate parity boundary.
+
 The entries below are a chronological historical handoff log. Older wording
 such as “pending” or “open” applies to the historical head named in that entry,
 not to the current state above.
