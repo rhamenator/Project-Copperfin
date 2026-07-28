@@ -1250,6 +1250,13 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        bool set_native_focus(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &effective_member_path,
+            const Frame &source_frame);
+        bool move_native_focus_to_next_tab_stop(
+            RuntimeOleObjectState &runtime_object,
+            const Frame &source_frame);
         bool write_native_property_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
@@ -3003,6 +3010,248 @@ namespace copperfin::runtime
             argument_references);
     }
 
+    bool PrgRuntimeSession::Impl::set_native_focus(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &effective_member_path,
+        const Frame &frame)
+    {
+        if (!is_native_focusable_runtime_object(runtime_object))
+        {
+            return false;
+        }
+
+        const PrgValue runtime_object_reference =
+            make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+        std::optional<PrgValue> previous_active_control;
+        bool focus_changed = true;
+        bool suppress_focus_transition = false;
+        if (const auto owner_form_reference = native_object_owner_form_reference(runtime_object);
+            owner_form_reference.has_value())
+        {
+            if (auto owner_form = resolve_ole_object(*owner_form_reference);
+                owner_form.has_value())
+            {
+                if (const auto current_active_control =
+                        read_native_property_if_present(**owner_form, "activecontrol", frame);
+                    current_active_control.has_value())
+                {
+                    previous_active_control = *current_active_control;
+                }
+                if (previous_active_control.has_value())
+                {
+                    if (auto previous_control = resolve_ole_object(*previous_active_control);
+                        previous_control.has_value())
+                    {
+                        focus_changed = (*previous_control)->handle != runtime_object.handle;
+                        if (focus_changed)
+                        {
+                            last_popped_frame_requested_nodefault = false;
+                            bool valid_requested_nodefault = false;
+                            const auto valid_result =
+                                invoke_native_object_method_if_present(
+                                    **previous_control,
+                                    "valid",
+                                    frame,
+                                    {},
+                                    {},
+                                    &valid_requested_nodefault);
+                            (void)consume_last_popped_frame_requested_nodefault();
+                            const bool validation_rejected =
+                                valid_result.has_value() &&
+                                valid_result->kind != PrgValueKind::empty &&
+                                !value_as_bool(*valid_result);
+                            if (validation_rejected || valid_requested_nodefault)
+                            {
+                                suppress_focus_transition = true;
+                            }
+                        }
+                        if (focus_changed && !suppress_focus_transition)
+                        {
+                            last_popped_frame_requested_nodefault = false;
+                            bool lost_focus_requested_nodefault = false;
+                            (void)invoke_native_object_method_if_present(
+                                **previous_control,
+                                "lostfocus",
+                                frame,
+                                {},
+                                {},
+                                &lost_focus_requested_nodefault);
+                            (void)consume_last_popped_frame_requested_nodefault();
+                            suppress_focus_transition = lost_focus_requested_nodefault;
+                        }
+                    }
+                }
+                if (!suppress_focus_transition)
+                {
+                    (void)write_native_property_if_present(
+                        **owner_form,
+                        "activecontrol",
+                        runtime_object_reference,
+                        frame);
+                }
+            }
+        }
+        else if (!suppress_focus_transition &&
+                 normalize_identifier(trim_copy(runtime_object.base_class_name)) == "form")
+        {
+            (void)write_native_property_if_present(
+                runtime_object,
+                "activecontrol",
+                runtime_object_reference,
+                frame);
+        }
+        if (!suppress_focus_transition)
+        {
+            note_representative_active_form(runtime_object);
+            if (focus_changed)
+            {
+                last_popped_frame_requested_nodefault = false;
+                bool got_focus_requested_nodefault = false;
+                (void)invoke_native_object_method_if_present(
+                    runtime_object,
+                    "gotfocus",
+                    frame,
+                    {},
+                    {},
+                    &got_focus_requested_nodefault);
+                (void)consume_last_popped_frame_requested_nodefault();
+            }
+        }
+        runtime_object.last_action = effective_member_path + "()";
+        ++runtime_object.action_count;
+        events.push_back({.category = "prg.object.setfocus",
+                          .detail = runtime_object.prog_id + "." + effective_member_path,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        return true;
+    }
+
+    bool PrgRuntimeSession::Impl::move_native_focus_to_next_tab_stop(
+        RuntimeOleObjectState &runtime_object,
+        const Frame &frame)
+    {
+        RuntimeOleObjectState *owner_form = nullptr;
+        if (const auto owner_form_reference = native_object_owner_form_reference(runtime_object);
+            owner_form_reference.has_value())
+        {
+            if (auto resolved_form = resolve_ole_object(*owner_form_reference);
+                resolved_form.has_value())
+            {
+                owner_form = *resolved_form;
+            }
+        }
+        else if (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "form")
+        {
+            owner_form = &runtime_object;
+        }
+
+        if (owner_form == nullptr)
+        {
+            return false;
+        }
+
+        struct TabStopCandidate
+        {
+            int handle = 0;
+            long long tab_index = 0;
+        };
+        std::vector<TabStopCandidate> candidates;
+        std::set<int> seen_handles;
+        for (const int child_handle : collect_native_owned_child_handles(*owner_form))
+        {
+            if (!seen_handles.insert(child_handle).second)
+            {
+                continue;
+            }
+            const auto child_found = ole_objects.find(child_handle);
+            if (child_found == ole_objects.end() ||
+                !is_native_focusable_runtime_object(child_found->second))
+            {
+                continue;
+            }
+
+            const auto property_is_true = [&](const std::string &property_name)
+            {
+                const auto property = child_found->second.properties.find(property_name);
+                return property == child_found->second.properties.end() ||
+                    value_as_bool(property->second);
+            };
+            if (!property_is_true("tabstop") ||
+                !property_is_true("visible") ||
+                !property_is_true("enabled"))
+            {
+                continue;
+            }
+
+            long long tab_index = 0LL;
+            if (const auto property = child_found->second.properties.find("tabindex");
+                property != child_found->second.properties.end())
+            {
+                try
+                {
+                    tab_index = std::llround(value_as_number(property->second));
+                }
+                catch (...)
+                {
+                    tab_index = 0LL;
+                }
+            }
+            candidates.push_back({child_handle, tab_index});
+        }
+
+        if (candidates.empty())
+        {
+            return false;
+        }
+
+        std::sort(
+            candidates.begin(),
+            candidates.end(),
+            [](const TabStopCandidate &left, const TabStopCandidate &right)
+            {
+                if (left.tab_index != right.tab_index)
+                {
+                    return left.tab_index < right.tab_index;
+                }
+                return left.handle < right.handle;
+            });
+
+        std::size_t next_index = 0U;
+        const auto current = std::find_if(
+            candidates.begin(),
+            candidates.end(),
+            [&](const TabStopCandidate &candidate)
+            {
+                return candidate.handle == runtime_object.handle;
+            });
+        if (current != candidates.end())
+        {
+            next_index = static_cast<std::size_t>(std::distance(candidates.begin(), current) + 1U) %
+                candidates.size();
+        }
+
+        auto next_object = ole_objects.find(candidates[next_index].handle);
+        if (next_object == ole_objects.end())
+        {
+            return false;
+        }
+
+        bool requested_nodefault = false;
+        if (const auto native_result = invoke_native_object_method_if_present(
+                next_object->second,
+                "setfocus",
+                frame,
+                {},
+                {},
+                &requested_nodefault);
+            native_result.has_value())
+        {
+            (void)consume_last_popped_frame_requested_nodefault();
+            return true;
+        }
+
+        return set_native_focus(next_object->second, "SetFocus", frame);
+    }
+
     PrgValue PrgRuntimeSession::Impl::invoke_runtime_object_member(
         RuntimeOleObjectState &runtime_object,
         const std::string &effective_member_path,
@@ -3665,108 +3914,7 @@ namespace copperfin::runtime
         if (leaf == "setfocus" &&
             is_native_focusable_runtime_object(*target_object))
         {
-            const PrgValue runtime_object_reference =
-                make_string_value("object:" + target_object->prog_id + "#" + std::to_string(target_object->handle));
-            std::optional<PrgValue> previous_active_control;
-            bool focus_changed = true;
-            bool suppress_focus_transition = false;
-            if (const auto owner_form_reference = native_object_owner_form_reference(*target_object);
-                owner_form_reference.has_value())
-            {
-                if (auto owner_form = resolve_ole_object(*owner_form_reference);
-                    owner_form.has_value())
-                {
-                    if (const auto current_active_control =
-                            read_native_property_if_present(**owner_form, "activecontrol", frame);
-                        current_active_control.has_value())
-                    {
-                        previous_active_control = *current_active_control;
-                    }
-                    if (previous_active_control.has_value())
-                    {
-                        if (auto previous_control = resolve_ole_object(*previous_active_control);
-                            previous_control.has_value())
-                        {
-                            focus_changed = (*previous_control)->handle != target_object->handle;
-                            if (focus_changed)
-                            {
-                                last_popped_frame_requested_nodefault = false;
-                                bool valid_requested_nodefault = false;
-                                const auto valid_result =
-                                    invoke_native_object_method_if_present(
-                                        **previous_control,
-                                        "valid",
-                                        frame,
-                                        {},
-                                        {},
-                                        &valid_requested_nodefault);
-                                (void)consume_last_popped_frame_requested_nodefault();
-                                const bool validation_rejected =
-                                    valid_result.has_value() &&
-                                    valid_result->kind != PrgValueKind::empty &&
-                                    !value_as_bool(*valid_result);
-                                if (validation_rejected || valid_requested_nodefault)
-                                {
-                                    suppress_focus_transition = true;
-                                }
-                            }
-                            if (focus_changed && !suppress_focus_transition)
-                            {
-                                last_popped_frame_requested_nodefault = false;
-                                bool lost_focus_requested_nodefault = false;
-                                (void)invoke_native_object_method_if_present(
-                                    **previous_control,
-                                    "lostfocus",
-                                    frame,
-                                    {},
-                                    {},
-                                    &lost_focus_requested_nodefault);
-                                (void)consume_last_popped_frame_requested_nodefault();
-                                suppress_focus_transition = lost_focus_requested_nodefault;
-                            }
-                        }
-                    }
-                    if (!suppress_focus_transition)
-                    {
-                        (void)write_native_property_if_present(
-                            **owner_form,
-                            "activecontrol",
-                            runtime_object_reference,
-                            frame);
-                    }
-                }
-            }
-            else if (!suppress_focus_transition &&
-                     normalize_identifier(trim_copy(target_object->base_class_name)) == "form")
-            {
-                (void)write_native_property_if_present(
-                    *target_object,
-                    "activecontrol",
-                    runtime_object_reference,
-                    frame);
-            }
-            if (!suppress_focus_transition)
-            {
-                note_representative_active_form(*target_object);
-                if (focus_changed)
-                {
-                    last_popped_frame_requested_nodefault = false;
-                    bool got_focus_requested_nodefault = false;
-                    (void)invoke_native_object_method_if_present(
-                        *target_object,
-                        "gotfocus",
-                        frame,
-                        {},
-                        {},
-                        &got_focus_requested_nodefault);
-                    (void)consume_last_popped_frame_requested_nodefault();
-                }
-            }
-            target_object->last_action = effective_member_path + "()";
-            ++target_object->action_count;
-            events.push_back({.category = "prg.object.setfocus",
-                              .detail = target_object->prog_id + "." + effective_member_path,
-                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            (void)set_native_focus(*target_object, effective_member_path, frame);
             return make_empty_value();
         }
         if (leaf == "resettodefault" && !target_object->class_hierarchy.empty())
@@ -11214,6 +11362,14 @@ namespace copperfin::runtime
                                               .detail = target_found->second.prog_id,
                                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                         }
+                    }
+                }
+
+                if (!requested_nodefault && wparam == 9)
+                {
+                    if (move_native_focus_to_next_tab_stop(target_found->second, stack.back()))
+                    {
+                        last_result = 0;
                     }
                 }
 

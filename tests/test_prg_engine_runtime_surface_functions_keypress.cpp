@@ -271,4 +271,138 @@ namespace copperfin::runtime_surface_tests
                "Default/Cancel activation should emit one invariant click event per action");
         fs::remove_all(temp_root, ignored);
     }
+
+    void test_native_keypress_tab_traverses_tabstops_and_wraps()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() /
+                                   "copperfin_runtime_keypress_tab_traversal";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "keypress_tab_traversal.prg";
+        write_text(
+            main_path,
+            "PUBLIC nFirstHwnd, nThirdHwnd, nTabCalls, nGotFocus, cLastFocus, lCancelThird\n"
+            "nTabCalls = 0\n"
+            "nGotFocus = 0\n"
+            "cLastFocus = ''\n"
+            "lCancelThird = .F.\n"
+            "oForm = CREATEOBJECT('TabForm')\n"
+            "oForm.first.TabIndex = 1\n"
+            "oForm.skipped.TabIndex = 2\n"
+            "oForm.skipped.TabStop = .F.\n"
+            "oForm.disabled.TabIndex = 3\n"
+            "oForm.disabled.Enabled = .F.\n"
+            "oForm.third.TabIndex = 4\n"
+            "oForm.first.SetFocus()\n"
+            "nFirstHwnd = oForm.first.hWnd\n"
+            "nThirdHwnd = oForm.third.hWnd\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS TabForm AS Form\n"
+            "    ADD OBJECT first AS TabBox WITH cId = 'first', TabIndex = 1\n"
+            "    ADD OBJECT skipped AS TabBox WITH cId = 'skipped', TabIndex = 2, TabStop = .F.\n"
+            "    ADD OBJECT disabled AS TabBox WITH cId = 'disabled', TabIndex = 3, Enabled = .F.\n"
+            "    ADD OBJECT third AS TabBox WITH cId = 'third', TabIndex = 4\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabBox AS ListBox\n"
+            "    cId = ''\n"
+            "    FUNCTION KeyPress\n"
+            "        LPARAMETERS tnKeyCode, tnShiftAltCtrl\n"
+            "        IF tnKeyCode = 9\n"
+            "            nTabCalls = nTabCalls + 1\n"
+            "            IF THIS.cId = 'third' AND lCancelThird\n"
+            "                NODEFAULT\n"
+            "            ENDIF\n"
+            "        ENDIF\n"
+            "        IF tnKeyCode = 67\n"
+            "            lCancelThird = .T.\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE GotFocus\n"
+            "        nGotFocus = nGotFocus + 1\n"
+            "        cLastFocus = THIS.cId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                   state.waiting_for_events,
+               "Tab traversal fixture should pause in READ EVENTS: " + state.message);
+        if (state.reason != copperfin::runtime::DebugPauseReason::event_loop ||
+            !state.waiting_for_events)
+        {
+            return;
+        }
+
+        const auto read_hwnd = [&](const std::string &name)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found == state.globals.end())
+            {
+                return static_cast<std::intptr_t>(0);
+            }
+            return static_cast<std::intptr_t>(std::stoll(copperfin::runtime::format_value(found->second)));
+        };
+        const std::intptr_t first_hwnd = read_hwnd("nfirsthwnd");
+        const std::intptr_t third_hwnd = read_hwnd("nthirdhwnd");
+
+        const auto resume_event_loop = [&]()
+        {
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   "Tab dispatch should restore the event loop: " + state.message);
+        };
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be present");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        const auto first_tab = session.dispatch_windows_message(first_hwnd, 0x0100, 9, 0);
+        expect(first_tab.has_value() && *first_tab == 0,
+               "Tab from the first control should advance focus");
+        resume_event_loop();
+        check("clastfocus", "third");
+
+        const auto wrap_tab = session.dispatch_windows_message(third_hwnd, 0x0100, 9, 0);
+        expect(wrap_tab.has_value() && *wrap_tab == 0,
+               "Tab from the last control should wrap focus");
+        resume_event_loop();
+        check("clastfocus", "first");
+
+        const auto enable_cancel = session.dispatch_windows_message(first_hwnd, 0x0100, 67, 0);
+        expect(enable_cancel.has_value() && *enable_cancel == 0,
+               "A normal key should reach the focused control before cancellation is enabled");
+        resume_event_loop();
+
+        const auto third_again = session.dispatch_windows_message(first_hwnd, 0x0100, 9, 0);
+        expect(third_again.has_value() && *third_again == 0,
+               "Tab should still reach the third control after skipped controls");
+        resume_event_loop();
+        check("clastfocus", "third");
+
+        const auto cancelled_tab = session.dispatch_windows_message(third_hwnd, 0x0100, 9, 0);
+        expect(cancelled_tab.has_value() && *cancelled_tab == 1,
+               "NODEFAULT in the third control should cancel default Tab traversal");
+        resume_event_loop();
+        check("clastfocus", "third");
+        check("ntabcalls", "4");
+        check("ngotfocus", "4");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }
