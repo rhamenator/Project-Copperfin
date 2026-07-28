@@ -1,3 +1,26 @@
+- 2026-07-28: Implemented runtime child #4777 under #3217 at product head
+  `5b43e7a26`. Native OptionGroup is now one parent-level Tab stop; child
+  OptionButtons remain out of Tab traversal, while Windows-compatible arrow
+  keys select enabled/visible buttons in local TabIndex order, preserve
+  declaration-stable Value ordinals, synchronize group/child selection state,
+  and raise InteractiveChange. The focused runtime-surface CTest passes 1/1
+  locally; Windows/macOS exact-head review remains pending. DOS-compatible
+  KEYCOMP behavior, reverse Shift+Tab, keyboard buffering, and hosted rendering
+  remain separate boundaries.
+
+- 2026-07-28: Closed runtime child #4778 under #3217 after correcting the
+  hierarchical TabIndex ordering exposed by #4776. Product `b642f81c5` carries
+  Container and active PageFrame parent TabIndex prefixes into descendant sort
+  paths; Linux, Claude, and exact-head Windows focused validation pass at
+  `c16ca4aa1`, including the standalone sibling-vs-nested regression repro.
+
+- 2026-07-28: Closed runtime child #4776 under #3217 at product head
+  `73408bfff`. CommandGroup child traversal now uses group-parent plus
+  child-local TabIndex ordering, preserves filtering, and routes windowless
+  CommandButton Tab/finish messages through the owning Form active-control
+  fallback. Linux, Claude, and exact-head Windows focused validation pass;
+  OptionGroup behavior is tracked separately in #4777.
+
 - 2026-07-28: Closed runtime child #4775 under #3217 at product head
   `bdd033690` after Claude seq797 and exact-head Windows validation seq799
   passed. Default forward Tab traversal now descends through only the active

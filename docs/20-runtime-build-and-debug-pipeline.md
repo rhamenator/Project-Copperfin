@@ -73,8 +73,21 @@ pages and `Page` objects as candidates, and preserves ancestor `Visible`/
 `Enabled`, `TabStop`, ordering, deduplication, and focus-transition behavior.
 The focused runtime-surface CTest passes `1/1` locally; Claude seq797 and exact-
 head Windows validation seq799 also pass. The macOS/full-RC matrix remains
-separate evidence, and #4776 tracks the remaining OptionGroup/CommandGroup
-container-like traversal gap.
+separate evidence.
+
+Runtime child #4776 is closed at product `73408bfff`: CommandGroup children
+use the group-parent plus child-local TabIndex sequence, while the group frame
+is not added as a second candidate; Linux, Claude, and exact-head Windows
+focused validation pass. The follow-up #4778 correction at product
+`b642f81c5` prefixes Container and active PageFrame parent TabIndex values into
+descendant sort paths, fixing sibling bypass and passing Linux, Claude, and
+exact-head Windows focused validation. Runtime child #4777 is implemented at
+product `5b43e7a26`: OptionGroup is a single parent-level Tab stop and
+Windows-compatible arrow keys select eligible child OptionButtons by local
+TabIndex while preserving group/child Value state. Its Linux focused test
+passes; exact-head Windows/macOS review remains pending. DOS-compatible
+KEYCOMP, reverse Shift+Tab, keyboard buffering, and hosted pixel UI remain
+separate contracts.
 
 Packaged PRG startup now discovers literal, non-dynamic `DO <program>` dependencies from staged PRG sources, preserves VFP case-insensitive path resolution, stages only project-contained `.PRG`/`.MPR` targets, and recursively scans admitted targets under #110/#4714. The parser also accepts VFP9's `PROC name` abbreviation as a procedure declaration, so same-file `DO` calls in corpus sources such as ReportOutput resolve through the ordinary stack-frugal frame path under #3217/#4715. VFP's indirect `STORE ... TO ([NAME])` form now expands a defined target macro before assignment under #3217/#4716. Parenthesized dynamic targets such as `DO (cTarget)` and `DO (&cTargetHolder)` now evaluate through the same heap-backed iterative frame machine, preserving `WITH` arguments and deterministic missing-target behavior under #3217/#4722. Package dependency discovery remains literal-only; arbitrary external paths, dynamic xAssets, and control-flow forms remain separate runtime boundaries.
 

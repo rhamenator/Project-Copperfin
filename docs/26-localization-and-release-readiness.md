@@ -91,8 +91,19 @@ default forward Tab traversal now descends through only the active native
 ancestor visibility/enabled filtering, TabStop filtering, deterministic order,
 and focus transitions. Local focused CTest, Claude seq797, and exact-head
 Windows validation seq799 pass. The macOS job for the broader exact-head
-matrix remains in progress and is not claimed as slice evidence; #4776 tracks
-the remaining OptionGroup/CommandGroup traversal slice.
+matrix remains in progress and is not claimed as slice evidence.
+Runtime child #4776 is closed at product head `73408bfff`; CommandGroup
+children use group-parent plus child-local TabIndex ordering and preserve the
+existing filtering and focus contracts. Runtime child #4778 is closed at
+product head `b642f81c5`; Container and active PageFrame parent TabIndex values
+now prefix descendant sort paths, with the sibling-bypass regression covered.
+Linux, Claude, and exact-head Windows focused validation pass for both slices.
+Runtime child #4777 is implemented at product head `5b43e7a26`: OptionGroup
+is one parent-level Tab stop and Windows-compatible arrow selection updates
+eligible child buttons and group/child Value state. Its focused Linux test
+passes; exact-head Windows/macOS review remains pending. None of these focused
+slices closes the broader RC matrix, safety gate, signing registry, or hosted
+pixel-UI evidence.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
