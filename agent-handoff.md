@@ -147,6 +147,15 @@ coverage protects the mapping and removes the `-Wswitch` warning. The existing
 manifest schema and all other opcode names remain unchanged. Future
 user-facing text remains catalog-first.
 
+Safety documentation follow-up for #4403: an independent read-only review
+(coordination seq760) found the DQ/DV/HZ structure and current evidence sound,
+but identified a stale `docs/26-localization-and-release-readiness.md`
+validation section. That section has now been refreshed to distinguish the
+accepted #4621 hosted Windows/VFP9/Visual Studio evidence and broad native
+baseline from the newer focused #4757-#4769 slices. It still makes no safety
+closure or RC claim: genuine arm's-length reviewer sign-off, strict #4403
+closure, and protected #4409 package signing remain required.
+
 Runtime child #4758 under #3217 adds the next modeled list-control input boundary:
 `WM_KEYDOWN` dispatch captures a stable ComboBox/ListBox selection signature around
 `KeyPress` and invokes `InteractiveChange` only when the effective selection or

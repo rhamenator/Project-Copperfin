@@ -22,39 +22,40 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
-The current implementation head is `b07d30d9c`, which includes runtime child
-#4753's defined-menu lifecycle slice and the #4754 cross-file project-procedure
-completion regression slice. Hosted Linux Native `30324522759` passed all
-`316/316` CTest cases in `171.47s`, and hosted macOS Native `30324522748`
-passed `316/316` in `207.83s`, with only the two expected platform-conditional
-skips. At the same head, managed UI `30324522752`, VSIX `30324522769`,
-installers `30324522738`, and security `30324522761` passed. The push-triggered
-managed-only test slice did not rerun the separately scoped generated-launcher,
-Windows environment, DECLARE ABI, or executable-path workflows; their exact-
-head manual results are recorded below. Windows Native `30322581189` was
-cancelled during the
-native build after a later product-code push superseded it; it reached no CTest
-result and is not treated as a pass or failure.
-Hosted Windows Native `30324522773` passed `315/315` in `530.97s` at test-slice
-head `b07d30d9c`, with no failures or skips. Generated Launcher Validation
-`30326599223` passed its POSIX and Windows process tests (`1/1` each), Windows
-Environment and Executable Path Validation `30326600206` passed `7/7`, and
-Windows DECLARE ABI Validation `30326601002` passed its managed plus three
-adjacent targets on both Win32 and x64. Windows Deep Validation `30326601931`
-remains pending. The safety traceability review and protected signing registry
-remain separate release gates.
-The prior corrected-head evidence remains valid: hosted Linux Native
-`30320046770` passed all `316/316` CTest cases in `175.76s`, with only the two
-expected platform-conditional skips; hosted macOS Native `30320046738` passed
-`316/316` in `218.31s`, and Windows Environment and Executable Path Validation
-`30320046758` passed. The earlier Windows
-Native `30317113993` failed only `test_runtime_pipeline` (`314/315` passed)
-because its full-suite fixture compared short `RUNNER~1` temp paths with the
-product's long directory-entry spelling; test-only correction `73cdd5f57`
-normalizes the fixture namespace with `GetLongPathNameW`. The earlier local
-POSIX validation at `2417603ea` passed `316/316` in `301.53s`, skipping only
-`test_build_host_utf8_launcher_paths` and `test_generated_launcher_process`.
-The current-head evidence remains partial until Windows Native finishes.
+The latest broad implementation baseline is product head `93d44395f`. Hosted
+Linux Native `30329037575` and macOS Native `30329037567` passed their native
+matrices, Linux managed UI `30329037628`, VSIX `30329037609`, installers
+`30329037566`, and the security supply-chain gate `30329037556` passed, and
+Windows Native `30329037587` passed `315/315` CTest cases. Windows Deep
+Validation `30329053296` passed native CTest `315/315`, VSIX and managed
+checks, the net472 process-runner fixture, standalone Studio/designer builds,
+designer smoke assertions, and PRG debugger smoke. That deep run deliberately
+used `require_vfp9_samples=false`, so it does not claim the sample-dependent
+RuntimePackage, xAsset, Report, or Menu stages.
+
+The hosted Windows reconciliation recorded under closed issue #4621 supplies
+the remaining accepted evidence at its validated heads: installed VFP9
+discovery, real/copy `invoice.frx` editing and reload, report/label workflows,
+clean VSIX lifecycle and SHA-256 identity, standalone Studio, and hosted
+Visual Studio Command and Terminal pane observations. Windows Codex also ran
+the four installed-VFP9 sample-dependent equivalents twice at implementation
+head `93d44395f`; the artifacts are recorded under
+`E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\`. These
+results close the hosted Windows/VFP9 evidence issue, but do not close safety
+traceability or protected package signing.
+
+Subsequent focused runtime/package slices are independently tracked rather
+than silently folded into the broad baseline. #4750 is closed after its
+Windows path/package contract validation. #4757-#4768 have focused Linux
+coverage, with exact-head Windows corroboration recorded for the reviewed
+runtime slices; the latest right-button slice #4768 was validated by both
+Claude and Windows Codex. #4769's IR-manifest `DEFINE MENU` correction has a
+focused `test_runtime_pipeline` pass (`1/1`) at the current implementation
+head, while hosted validation of that newer package change remains pending.
+The focused localization test also passes `1/1` locally across the four
+catalogs. The strict safety traceability gate remains open only because #4403
+is not closed and requires genuinely arm's-length reviewer sign-off; #4409's
+protected external package-signing registry remains a separate release gate.
 
 Local CPack at `c95cf269d` generated the Linux DEB, RPM, and TGZ artifacts, and
 the package/document/install contract subset passed `4/4`. Current-head
