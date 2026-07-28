@@ -300,7 +300,8 @@ foreach ($issue in $issues) {
     $declaredDqIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Requirement IDs") -Prefix DQ)
     $declaredDvIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Documentation Verification IDs") -Prefix DV)
     $declaredHzIds = @(Get-TraceabilityIds -Text (Get-MarkdownSection -Body $body -Heading "Hazard Linkage IDs") -Prefix HZ)
-    $hasExplicitNoHazard = $declaredHzIds -contains "HZ-NONE"
+    $hasNoHazardId = $declaredHzIds -contains "HZ-NONE"
+    $hasExplicitNoHazard = $declaredHzIds.Count -eq 1 -and $hasNoHazardId
     $mappingSection = Get-MarkdownSection -Body $body -Heading "DQ/DV/HZ Mapping"
     $mappingRows = @(Get-TraceabilityMappingRows -Body $body)
 
@@ -312,6 +313,8 @@ foreach ($issue in $issues) {
     }
     if ($declaredHzIds.Count -eq 0) {
         $issueErrors += "Missing Hazard Linkage IDs section."
+    } elseif ($hasNoHazardId -and -not $hasExplicitNoHazard) {
+        $issueErrors += "HZ-NONE cannot be combined with other hazard identifiers."
     }
 
     if ($declaredDqIds.Count -eq 0) {

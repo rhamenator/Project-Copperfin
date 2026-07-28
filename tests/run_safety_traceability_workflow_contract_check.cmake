@@ -143,6 +143,29 @@ function(assert_invalid_hz_none_row_fixture)
     file(REMOVE "${invalid_report}")
 endfunction()
 
+function(assert_invalid_mixed_hazard_fixture)
+    set(invalid_report "${CMAKE_CURRENT_BINARY_DIR}/safety-traceability-invalid-mixed-hazard-report.json")
+    execute_process(
+        COMMAND "${POWERSHELL_EXECUTABLE}" -NoLogo -NoProfile -NonInteractive -File
+            "${SOURCE_DIR}/scripts/validate-safety-traceability.ps1"
+            -IssueJsonPath "${SOURCE_DIR}/tests/fixtures/safety_traceability_invalid_mixed_hazard_issues.json"
+            -ReportPath "${invalid_report}"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE standard_output
+        ERROR_VARIABLE standard_error)
+    if(result EQUAL 0)
+        message(FATAL_ERROR "Safety validator accepted a mixed HZ-NONE hazard declaration")
+    endif()
+    set(all_output "${standard_output}\n${standard_error}")
+    string(FIND "${all_output}" "HZ-NONE cannot be combined with other hazard identifiers"
+        mixed_hazard_index)
+    if(mixed_hazard_index EQUAL -1)
+        message(FATAL_ERROR
+            "Safety validator did not reject the mixed HZ-NONE hazard declaration: ${all_output}")
+    endif()
+    file(REMOVE "${invalid_report}")
+endfunction()
+
 require_text("uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2"
     "pinned checkout action")
 require_text("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
@@ -188,6 +211,7 @@ if(POWERSHELL_EXECUTABLE)
     assert_invalid_mapping_fixture()
     assert_no_hazard_fixture()
     assert_invalid_hz_none_row_fixture()
+    assert_invalid_mixed_hazard_fixture()
 
     assert_invalid_issue_numbers([=[2201"; Write-Output injected]=])
     assert_invalid_issue_numbers([=[2201; Write-Output injected]=])

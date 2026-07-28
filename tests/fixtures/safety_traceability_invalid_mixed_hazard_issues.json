@@ -1,0 +1,11 @@
+[
+  {
+    "number": 4813,
+    "title": "[docs-safety] Mixed HZ-NONE and real hazard declaration",
+    "state": "closed",
+    "labels": [
+      { "name": "documentation" }
+    ],
+    "body": "## Documentation Requirement IDs\n\n- DQ-mixed-hazard\n\n## Documentation Verification IDs\n\n- DV-mixed-hazard\n\n## Hazard Linkage IDs\n\n- HZ-NONE\n- HZ-system-failure-01\n\n## DQ/DV/HZ Mapping\n\n| Documentation requirement | Verification evidence | Controlled hazards |\n| --- | --- | --- |\n| DQ-mixed-hazard | DV-mixed-hazard | HZ-NONE |\n\nProcedural Delta Map\nMisuse Analysis\nSeverity: low\nIndependent Review\nSimulation walkthrough\nRollback plan and field notification plan"
+  }
+]

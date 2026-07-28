@@ -11,6 +11,10 @@
   exemption is derived only from the declared Hazard Linkage IDs section. The
   focused workflow contract now covers a mixed valid-plus-malformed fixture.
 
+- 2026-07-28: Hardened the safety validator under #4804 so `HZ-NONE` is valid
+  only as the sole declared hazard. Mixed no-hazard and real-hazard declarations
+  now fail explicitly, with regression coverage for the rejected combination.
+
 - 2026-07-28: Hardened `scripts/validate-posix.sh` under #4801 so local
   Linux/macOS validation bounds each CTest case to 180 seconds and preserves
   the configured test parallelism, matching the hosted native action and

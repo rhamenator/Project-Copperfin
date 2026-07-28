@@ -19,6 +19,11 @@ exemption only from the declared `Hazard Linkage IDs` section. The focused
 workflow contract adds a mixed valid-plus-malformed `HZ-NONE` fixture; review
 and exact-head hosted validation remain required.
 
+Windows review then found that `HZ-NONE` also needed to be exclusive. The #4804
+correction rejects a `Hazard Linkage IDs` section that combines `HZ-NONE` with a
+real hazard, and adds a mixed-declaration regression fixture. Valid explicit
+no-hazard and ordinary hazard paths remain covered.
+
 The validation-infrastructure slice for #4801 adds the same 180-second
 per-test CTest timeout and configured test parallelism to
 `scripts/validate-posix.sh` that the hosted native action and Windows script
