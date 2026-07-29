@@ -4,7 +4,10 @@
   numeric literals now preserve invariant `e`/`E` exponents and optional
   exponent signs through expression parsing before shared conversion. The
   end-to-end parser-class CTest covers positive, negative, and signed
-  exponents and passes `1/1`; locale-sensitive separators remain rejected.
+  exponents; the complete focused #4824 matrix passes `10/10` across PRG,
+  control flow, string/math, data I/O, runtime surface, DBF, visual assets,
+  Studio host, SQL metadata, and index optimization. Locale-sensitive
+  separators remain rejected.
 
 - SYS(2022) Windows missing-path correction (2026-07-29, #4823 under #3217):
   normalized nonexistent file/directory inputs now return character `0`

@@ -2,8 +2,10 @@
   PRG execution. Numeric literals now consume invariant `e`/`E` exponent
   syntax, including an optional exponent sign, before shared parsing. The
   end-to-end parser-class runtime fixture covers positive, negative, and
-  explicitly signed exponents and passes `1/1`; locale-sensitive separators
-  and machine contracts are unchanged.
+  explicitly signed exponents, and the complete focused #4824 matrix passes
+  `10/10` across PRG, control flow, string/math, data I/O, runtime surface,
+  DBF, visual assets, Studio host, SQL metadata, and index optimization;
+  locale-sensitive separators and machine contracts are unchanged.
 
 - 2026-07-29: Preserved the Windows #4823 `SYS(2022)` missing-path contract
   after volume-root resolution. `GetFileAttributesW` now rejects a normalized

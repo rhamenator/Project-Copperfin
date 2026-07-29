@@ -6,8 +6,14 @@ The #4824 expression-parser follow-up now carries invariant `e`/`E` exponent
 syntax, including an optional exponent sign, into the shared numeric parser
 instead of stopping the literal at its mantissa. An end-to-end PRG fixture
 covers positive, negative, and explicitly signed exponents; the focused
-`test_prg_engine_parser_classes` CTest passes `1/1`. Locale-sensitive decimal
-separators and machine-readable contracts remain unchanged.
+`test_prg_engine_parser_classes` CTest passes `1/1`, and the complete focused
+#4824 matrix passes `10/10` across PRG, control flow, string/math, data I/O,
+runtime surface, DBF, visual assets, Studio host, SQL metadata, and index
+optimization. Locale-sensitive decimal separators and machine-readable
+contracts remain unchanged. Current-head Windows/macOS corroboration of the
+new end-to-end expression fixture remains requested through the agent channel;
+do not treat that pending review as an implementation failure or as full RC
+evidence.
 
 The #4824 RESTORE FROM currency boundary is now ABI-independent. `Y:` values
 use exact invariant decimal-to-scaled-`int64` conversion with VFP-style
