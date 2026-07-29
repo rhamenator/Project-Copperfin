@@ -17,6 +17,14 @@ must use invariant period-decimal rules. User locale belongs at display and
 localized-message boundaries; comma-decimal host settings must never silently
 change a machine value or parser result.
 
+The #4845/#109 visual-asset undo-path slice is implementation-complete. Undo
+journal asset-hash directories and fixed-width numeric entry filenames now
+serialize with `std::locale::classic()`, so culture changes cannot hide a
+journal or corrupt its monotonic history after entry 999. A seeded grouped-
+locale regression checks stable root identity, exact 1000/1001 filenames,
+preserved earlier bytes, latest status, and post-boundary undo behavior.
+Cross-platform review is required before closure.
+
 The #4839/#109 currency-stringification slice is implementation-complete.
 DBF `Y` display values and runtime `PrgValue` currency text now use
 `std::locale::classic()`, preventing host digit grouping from corrupting the

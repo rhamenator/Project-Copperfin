@@ -89,6 +89,7 @@ std::filesystem::path visual_asset_undo_root_directory(const std::string& path) 
         std::filesystem::absolute(copperfin::platform::path_from_utf8_string(path)));
     const auto hash = static_cast<unsigned long long>(std::hash<std::string>{}(normalized));
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "asset_" << std::hex << std::setw(16) << std::setfill('0') << hash;
     return std::filesystem::temp_directory_path() / "copperfin_visual_asset_undo" / stream.str();
 }
@@ -309,6 +310,7 @@ bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUn
     }
 
     std::ostringstream file_name;
+    file_name.imbue(std::locale::classic());
     file_name << std::setw(20) << std::setfill('0') << next_index << ".bin";
     const auto entry_path = entries_directory / file_name.str();
     if (!write_visual_asset_undo_entry(entry_path, entry)) {

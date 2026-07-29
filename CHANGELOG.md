@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4845/#109 visual-asset undo journal paths against
+  grouped host cultures. Asset-hash directories and fixed-width numeric entry
+  filenames now use the classic locale, preserving journal identity and
+  monotonic history beyond entry 999. A seeded boundary regression verifies
+  stable roots, invariant 1000/1001 filenames, no overwritten history, and
+  correct latest-entry undo behavior.
+
 - 2026-07-29: Hardened #4844/#109 SAVE/RESTORE array metadata against grouped
   host cultures. Persisted row and column counts now use the classic locale,
   preventing grouping separators from truncating large arrays during restore.
