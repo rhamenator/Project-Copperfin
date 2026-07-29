@@ -1,3 +1,9 @@
+- 2026-07-29: Hardened #4837/#109 visual asset geometry serialization against
+  host culture. Fractional FRX/LBX/form geometry now uses classic-locale
+  period-decimal text, while integer rounding and trimming remain unchanged.
+  The visual asset editor regression poisons the process-global locale and
+  verifies fractional geometry output remains parseable invariant text.
+
 - 2026-07-29: Corrected #4836/#3217 CPCURRENT() handling after invalid
   code-page sentinel hardening. CPCURRENT() and CPCURRENT(0) now treat
   sentinel 0 as no valid configured page and retain host-code-page fallback,

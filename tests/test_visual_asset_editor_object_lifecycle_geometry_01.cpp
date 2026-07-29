@@ -5,7 +5,34 @@
 #include "test_visual_asset_editor_support.h"
 #include "../src/vfp/visual_asset_editor_support.h"
 
+#include <locale>
+
 namespace cf_test_visual_asset_editor {
+namespace {
+
+class comma_decimal_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class scoped_global_locale {
+public:
+    explicit scoped_global_locale(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~scoped_global_locale() { std::locale::global(previous_); }
+
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
+
+private:
+    std::locale previous_;
+};
+
+}  // namespace
+
 void test_visual_geometry_parsing_uses_invariant_decimal_text() {
     const auto fractional = copperfin::vfp::parse_visual_geometry_number("6666.667");
     expect(fractional.has_value() && std::abs(*fractional - 6666.667) < 0.000001,
@@ -18,6 +45,12 @@ void test_visual_geometry_parsing_uses_invariant_decimal_text() {
     expect(!copperfin::vfp::parse_visual_geometry_number("6666,667").has_value() &&
                !copperfin::vfp::parse_visual_geometry_number("6666.667 trailing").has_value(),
            "FRX/LBX native geometry should reject culture-specific separators and trailing input");
+
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
+    expect(copperfin::vfp::format_visual_geometry_number(1.25) == "1.25" &&
+               copperfin::vfp::format_visual_geometry_number(2.5) == "2.5",
+           "FRX/LBX native geometry should serialize fractional values with invariant decimal text");
 }
 
 void test_align_visual_objects_to_anchor_geometry() {

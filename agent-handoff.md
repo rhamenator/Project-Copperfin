@@ -17,6 +17,14 @@ must use invariant period-decimal rules. User locale belongs at display and
 localized-message boundaries; comma-decimal host settings must never silently
 change a machine value or parser result.
 
+The #4837/#109 visual-geometry serialization slice is implementation-complete.
+`format_visual_geometry_number()` now uses `std::locale::classic()` for
+fractional FRX/LBX/form geometry output, preserving period-decimal text while
+retaining existing integer rounding and trailing-zero trimming. The visual
+asset editor test poisons the process-global locale and verifies `1.25` and
+`2.5` remain invariant; Linux focused CTest passes under default, `C`, and
+`C.utf8`. Cross-platform review remains required before issue closure.
+
 The #4835/#109 binary/intermediate double-serialization slice is
 implementation-complete. Generated PRG INSERT expressions, DBF binary-double
 display values, and DBC numeric property values now imbue their streams with

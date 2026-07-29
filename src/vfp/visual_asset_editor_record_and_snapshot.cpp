@@ -8,6 +8,8 @@
 #include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
 
+#include <locale>
+
 namespace copperfin::vfp {
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
@@ -189,6 +191,7 @@ std::optional<double> parse_visual_geometry_number(const std::string& text) {
 std::string format_visual_geometry_number(double value) {
     const double rounded = std::round(value);
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     if (std::abs(value - rounded) < 0.0005) {
         stream << static_cast<long long>(rounded);
         return stream.str();
