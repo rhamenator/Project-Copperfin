@@ -1,3 +1,10 @@
+- 2026-07-29: Consolidated #4824 invariant floating-point parsing into the
+  portable `cf_platform_support` seam and migrated native visual assets, DBF
+  double fields, runtime, and Studio consumers to it. Nonfinite values remain
+  explicitly opt-in for DBF `B` fields, preserving `NaN`/`+/-INF` compatibility;
+  finite machine/VFP values remain locale-independent. The focused VFP, DBF,
+  Studio, and runtime-surface matrix passes `4/4`.
+
 - 2026-07-29: Extended #4824 through SQL property metadata. SQLGETPROP
   numeric properties and numeric-looking raw property values now use the
   locale-independent parser; missing values remain numeric zero and malformed

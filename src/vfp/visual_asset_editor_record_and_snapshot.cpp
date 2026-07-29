@@ -5,9 +5,8 @@
 #include "visual_asset_editor_support.h"
 
 #include "dbf_table_raw_mutation.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
-
-#include <charconv>
 
 namespace copperfin::vfp {
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
@@ -184,21 +183,7 @@ std::optional<double> parse_visual_geometry_number(const std::string& text) {
         return std::nullopt;
     }
 
-    const char* begin = trimmed.data();
-    const char* end = begin + trimmed.size();
-    if (*begin == '+') {
-        ++begin;
-    }
-    if (begin == end) {
-        return std::nullopt;
-    }
-
-    double value = 0.0;
-    const auto parsed = std::from_chars(begin, end, value, std::chars_format::general);
-    if (parsed.ec != std::errc{} || parsed.ptr != end || !std::isfinite(value)) {
-        return std::nullopt;
-    }
-    return value;
+    return copperfin::platform::try_parse_invariant_double(trimmed);
 }
 
 std::string format_visual_geometry_number(double value) {

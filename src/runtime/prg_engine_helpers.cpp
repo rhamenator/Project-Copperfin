@@ -4,11 +4,11 @@
 
 #include "prg_engine_helpers.h"
 
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <cctype>
 #include <cmath>
 #include <ctime>
@@ -19,7 +19,6 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
-#include <string_view>
 #include <vector>
 
 #if defined(_WIN32)
@@ -347,29 +346,7 @@ std::string normalize_index_value(std::string value) {
 }
 
 std::optional<double> try_parse_invariant_double(std::string_view value) {
-    if (value.empty()) {
-        return std::nullopt;
-    }
-
-    // VFP source and persisted numeric fields use a period as the decimal
-    // separator. Floating-point from_chars is locale-independent, unlike
-    // strtod/std::stod, and therefore remains stable under a user's display
-    // culture.
-    const char* begin = value.data();
-    const char* end = begin + value.size();
-    if (*begin == '+') {
-        ++begin;
-    }
-    if (begin == end) {
-        return std::nullopt;
-    }
-
-    double parsed = 0.0;
-    const auto result = std::from_chars(begin, end, parsed, std::chars_format::general);
-    if (result.ec != std::errc{} || result.ptr != end || !std::isfinite(parsed)) {
-        return std::nullopt;
-    }
-    return parsed;
+    return copperfin::platform::try_parse_invariant_double(value);
 }
 
 std::optional<double> try_parse_numeric_index_value(const std::string& value) {

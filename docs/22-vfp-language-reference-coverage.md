@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant parser consolidation (2026-07-29, #4824 under #3217): the
+  shared portable `cf_platform_support` parser now serves runtime, native
+  visual assets, DBF, and Studio. DBF `B` fields explicitly preserve
+  `NaN`/`+/-INF`; finite machine/VFP values remain locale-independent. Focused
+  VFP/DBF/Studio/runtime-surface CTest matrix passes `4/4`.
+
 - Culture-invariant SQL metadata follow-up (2026-07-29, #4824 under #3217):
   SQLGETPROP numeric and numeric-looking raw-property values now use the
   locale-independent parser. Missing numeric properties remain zero, malformed

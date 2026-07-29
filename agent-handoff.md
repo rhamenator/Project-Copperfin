@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 parser consolidation now lives in the portable `cf_platform_support`
+library and is shared by runtime, native visual assets, DBF, and Studio. DBF
+double-field parsing explicitly opts into preserving `NaN` and `+/-INF`, while
+finite machine/VFP values remain locale-independent. The rebuilt focused matrix
+passes `test_vfp_assets`, `test_dbf_table`, `test_studio_host`, and
+`test_prg_engine_runtime_surface_functions` `4/4`.
+
 The #4824 SQL metadata follow-up removes the remaining locale-sensitive
 `std::stod` calls from SQLGETPROP numeric and numeric-looking raw-property
 paths. Missing numeric properties remain zero; malformed raw values remain

@@ -94,6 +94,7 @@ endfunction()
 
 add_library(cf_platform_support
     src/platform/executable_path.cpp
+    src/platform/invariant_numeric.cpp
 )
 
 target_include_directories(cf_platform_support

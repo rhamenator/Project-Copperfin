@@ -4,6 +4,8 @@
 
 #include "vs_launch_contract_internal.h"
 
+#include "copperfin/platform/invariant_numeric.h"
+
 #include <mutex>
 
 namespace copperfin::studio {
@@ -26,21 +28,11 @@ bool parse_double_value(const std::string& text, double& value) {
     if (text.empty() || std::isspace(static_cast<unsigned char>(text.front()))) {
         return false;
     }
-    const char* begin = text.data();
-    const char* end = begin + text.size();
-    if (*begin == '+') {
-        ++begin;
-    }
-    if (begin == end) {
+    const auto parsed = copperfin::platform::try_parse_invariant_double(text);
+    if (!parsed.has_value()) {
         return false;
     }
-
-    double parsed = 0.0;
-    const auto result = std::from_chars(begin, end, parsed, std::chars_format::general);
-    if (result.ec != std::errc{} || result.ptr != end || !std::isfinite(parsed)) {
-        return false;
-    }
-    value = parsed;
+    value = *parsed;
     return true;
 }
 

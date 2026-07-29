@@ -9,6 +9,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 #include "copperfin/vfp/sidecar_path.h"
 
@@ -769,15 +770,11 @@ DbfWriteResult write_field_bytes(
             const std::string text = trim_both(value);
             double parsed = 0.0;
             if (!text.empty()) {
-                std::size_t consumed = 0U;
-                try {
-                    parsed = std::stod(text, &consumed);
-                } catch (const std::exception&) {
+                const auto parsed_value = copperfin::platform::try_parse_invariant_double(text, true);
+                if (!parsed_value.has_value()) {
                     return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleValueInvalid"), .record_count = header.record_count};
                 }
-                if (consumed != text.size()) {
-                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleValueInvalid"), .record_count = header.record_count};
-                }
+                parsed = *parsed_value;
             }
 
             std::array<std::uint8_t, 8U> raw{};
