@@ -1570,6 +1570,8 @@
   "Runtime.Prg.Numeric.Error.NonNegativeArgumentRequired": "[!! {function} řëqüïřëš å ñøñ-ñëġåţïvë åřġüɱëñţ (ġøţ {value}) !!]",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requires a current local record",
+  "Runtime.Prg.Records.Error.AliasNotFound": "[!! Åļïåš ïš ñøţ ƒøüñð !!]",
+  "Runtime.Prg.Records.Error.TableBufferingNotEnabled": "[!! †åɓļë ɓüƒƒëřïñğ ïš ñøţ ëñåɓļëð !!]",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "[ͼAPPEND BLANK is not supported with row buffering mode {mode}ͽ]",
   "Runtime.Prg.Records.Error.OptimisticBufferConflict": "[ͼBuffered record {recno} in {alias} changed before {command}ͽ]",
   "Runtime.Prg.Records.Error.CursorBufferingNotEnabled": "[ͼ{command} requires cursor bufferingͽ]",

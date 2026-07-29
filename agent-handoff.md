@@ -6,11 +6,12 @@ The #4827/#3217 `GETNEXTMODIFIED()` slice is implementation-complete. Native
 PRG `GETNEXTMODIFIED()` traverses pending buffered records in ascending record
 number for the selected cursor or explicit alias/work-area target, accepts the
 VFP compatibility `lNoFire` argument, and returns zero after the pending set is
-exhausted or when buffering is disabled or row-buffered (modes 1/2/3). Only
-table-buffered modes 4/5 are eligible, matching VFP9's documented contract.
-Focused `test_prg_engine_work_areas` passes `1/1`, including regression checks
-for both row-buffering modes and `pt_BR.UTF-8`/`de_DE.UTF-8` executions. This is
-focused runtime evidence, not full RC evidence.
+exhausted. Only table-buffered modes 4/5 are eligible; modes 1/2/3 raise
+localized VFP error 1596, missing arguments raise 1229, and missing aliases
+raise 13, matching the reviewed VFP9 contract. Focused
+`test_prg_engine_work_areas` passes `1/1`, including all of those error-boundary
+checks and both row-buffering modes. This is focused runtime evidence, not full
+RC evidence.
 
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 `AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,

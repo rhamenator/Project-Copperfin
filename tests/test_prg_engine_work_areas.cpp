@@ -2111,6 +2111,19 @@ void test_getnextmodified_traverses_buffered_records() {
     write_text(
         main_path,
         "USE '" + table_path.string() + "' ALIAS People\n"
+        "PUBLIC nErrorCount, nError1, nError2, nError3, nError4, nError5\n"
+        "nErrorCount = 0\n"
+        "nError1 = 0\n"
+        "nError2 = 0\n"
+        "nError3 = 0\n"
+        "nError4 = 0\n"
+        "nError5 = 0\n"
+        "ON ERROR DO HandleGetNextModifiedError\n"
+        "nNoArguments = GETNEXTMODIFIED()\n"
+        "nRowBufferingDisabled = GETNEXTMODIFIED(0)\n"
+        "=CURSORSETPROP('Buffering', 5, 'People')\n"
+        "nMissingAlias = GETNEXTMODIFIED(0, 'MissingAlias')\n"
+        "ON ERROR\n"
         "=CURSORSETPROP('Buffering', 5, 'People')\n"
         "GO 1\n"
         "REPLACE NAME WITH 'CHANGED'\n"
@@ -2123,6 +2136,7 @@ void test_getnextmodified_traverses_buffered_records() {
         "nWorkArea = GETNEXTMODIFIED(0, 1, .T.)\n"
         "=TABLEREVERT(.T., 'People')\n"
         "nAfterRevert = GETNEXTMODIFIED(0, 'People')\n"
+        "ON ERROR DO HandleGetNextModifiedError\n"
         "=CURSORSETPROP('Buffering', 3, 'People')\n"
         "GO 1\n"
         "REPLACE NAME WITH 'ROW-OPTIMISTIC'\n"
@@ -2132,7 +2146,23 @@ void test_getnextmodified_traverses_buffered_records() {
         "GO 1\n"
         "REPLACE NAME WITH 'ROW-PESSIMISTIC'\n"
         "nRowBufferedPessimistic = GETNEXTMODIFIED(0, 'People')\n"
-        "RETURN\n");
+        "ON ERROR\n"
+        "RETURN\n"
+        "PROCEDURE HandleGetNextModifiedError\n"
+        "nErrorCount = nErrorCount + 1\n"
+        "IF nErrorCount = 1\n"
+        "    nError1 = ERROR()\n"
+        "ELSEIF nErrorCount = 2\n"
+        "    nError2 = ERROR()\n"
+        "ELSEIF nErrorCount = 3\n"
+        "    nError3 = ERROR()\n"
+        "ELSEIF nErrorCount = 4\n"
+        "    nError4 = ERROR()\n"
+        "ELSEIF nErrorCount = 5\n"
+        "    nError5 = ERROR()\n"
+        "ENDIF\n"
+        "RETURN\n"
+        "ENDPROC\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -2154,8 +2184,12 @@ void test_getnextmodified_traverses_buffered_records() {
     check("nalias", "1");
     check("nworkarea", "1");
     check("nafterrevert", "0");
-    check("nrowbufferedoptimistic", "0");
-    check("nrowbufferedpessimistic", "0");
+    check("nerrorcount", "5");
+    check("nerror1", "1229");
+    check("nerror2", "1596");
+    check("nerror3", "13");
+    check("nerror4", "1596");
+    check("nerror5", "1596");
 
     fs::remove_all(temp_root, ignored);
 }

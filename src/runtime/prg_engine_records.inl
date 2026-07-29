@@ -1869,14 +1869,24 @@
             {
                 if (arguments.empty())
                 {
-                    return make_number_value(0.0);
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Dll.Error.TooFewArguments"),
+                        1229);
                 }
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
                     : resolve_cursor_target({});
-                if (cursor == nullptr || cursor->buffering_mode < 4 || cursor->buffering_mode > 5)
+                if (cursor == nullptr)
                 {
-                    return make_number_value(0.0);
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.AliasNotFound"),
+                        13);
+                }
+                if (cursor->buffering_mode < 4 || cursor->buffering_mode > 5)
+                {
+                    throw PrgCompatibilityError(
+                        runtime_text("Runtime.Prg.Records.Error.TableBufferingNotEnabled"),
+                        1596);
                 }
 
                 const double requested_record = value_as_number(arguments[0]);
