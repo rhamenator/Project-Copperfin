@@ -37,6 +37,20 @@ std::string host_os_name() {
 #endif
 }
 
+std::string make_legal_runtime_temp_file_name() {
+    static std::atomic<std::uint64_t> sequence{0U};
+    const auto ticks = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+    const std::uint64_t serial = sequence.fetch_add(1U, std::memory_order_relaxed);
+    const std::uint64_t value = 10000000U + ((ticks + serial) % 90000000U);
+
+    std::ostringstream result;
+    result << std::setw(8) << std::setfill('0') << value;
+    return result.str();
+}
+
 bool is_windows_drive_absolute_path(const std::string& value) {
     return value.size() >= 3U &&
         std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&

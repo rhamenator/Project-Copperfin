@@ -522,6 +522,7 @@ namespace copperfin::runtime_surface_tests
             "lPutEnvClear = PUTENV('" + env_name + "', '')\n"
             "cGetEnvCleared = GETENV('" + env_name + "')\n"
             "cSys3 = SYS(3)\n"
+            "cSys3Second = SYS(3)\n"
             "cSys7 = SYS(7)\n"
             "cSys11 = SYS(11)\n"
             "cSys13 = SYS(13)\n"
@@ -565,8 +566,26 @@ namespace copperfin::runtime_surface_tests
         check("csys13", "0");
 
         const auto sys3_value = state.globals.find("csys3");
-        expect(sys3_value != state.globals.end() && !copperfin::runtime::format_value(sys3_value->second).empty(),
-               "SYS(3) should expose a non-empty runtime build token");
+        const auto sys3_second_value = state.globals.find("csys3second");
+        if (sys3_value == state.globals.end() || sys3_second_value == state.globals.end())
+        {
+            expect(false, "SYS(3) should expose two temporary filename values");
+        }
+        else
+        {
+            const std::string first = copperfin::runtime::format_value(sys3_value->second);
+            const std::string second = copperfin::runtime::format_value(sys3_second_value->second);
+            const auto legal_name = [](const std::string& value) {
+                return value.size() == 8U &&
+                    std::isdigit(static_cast<unsigned char>(value.front())) != 0 &&
+                    std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+                        return std::isdigit(ch) != 0;
+                    });
+            };
+            expect(legal_name(first), "SYS(3) should return an eight-digit legal filename component");
+            expect(legal_name(second), "a second SYS(3) value should remain a legal filename component");
+            expect(first != second, "successive SYS(3) calls should not collide in one runtime session");
+        }
 
         const auto sys7_value = state.globals.find("csys7");
         expect(sys7_value != state.globals.end() && !copperfin::runtime::format_value(sys7_value->second).empty(),

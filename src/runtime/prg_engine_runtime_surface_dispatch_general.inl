@@ -23,7 +23,10 @@
         if (!arguments.empty()) {
             const long long sys_code = std::llround(value_as_number(arguments[0]));
             if (sys_code == 3) {
-                return make_string_value("Copperfin Runtime 0.1");
+                // VFP9 SYS(3) is a legal temporary filename component, not
+                // a product/version descriptor. Keep it extension-free so
+                // callers can append the file type they need.
+                return make_string_value(make_legal_runtime_temp_file_name());
             }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
