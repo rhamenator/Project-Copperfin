@@ -2,6 +2,14 @@
 
 ## Current State
 
+The #4820 SYS(2030) slice implements VFP9's numeric, session-local
+debug-feature switch. `SYS(2030)` starts at `0`, optional values `0` and `1`
+update it, invalid values preserve the current state, and the portable
+implementation does not control the host debugger or UI. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`, including
+return-kind and fresh-session isolation coverage. Product commit:
+`ab8812e4d`.
+
 The #4808/#4809 runtime slices implement VFP9 `WVISIBLE(WindowName)` and
 `WEXIST(WindowName)` for Copperfin's modeled headless window surface.
 `WVISIBLE("")` and `WEXIST("")` report the modeled main application window;

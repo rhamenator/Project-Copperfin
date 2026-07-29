@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current SYS(2030) status (2026-07-28, #4820 under #3217): the runtime now
+  implements the mounted VFP9 contract as a numeric, session-local
+  debug-feature switch. `SYS(2030)` starts at `0`; `SYS(2030, 1)` enables the
+  state and `SYS(2030, 0)` disables it, while unsupported setter values leave
+  the current state unchanged. The portable implementation does not enable
+  or alter the host debugger or UI. Focused runtime-surface CTest coverage
+  passes `1/1`, including return-kind and fresh-session isolation checks.
+
 - Current SYS(2024) status (2026-07-28, #4819 under #3217): the runtime now
   returns character `N` when no report/label is active or the current report
   has not been interrupted, and records character `Y` when active report

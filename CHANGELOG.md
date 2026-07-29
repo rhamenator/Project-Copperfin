@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4820 under #3217. Native PRG `SYS(2030)` now
+  returns and updates a numeric, session-local debug-feature switch for
+  supported values `0` and `1`; invalid setter values preserve the current
+  state and do not affect the host debugger or UI. Focused runtime-surface
+  CTest coverage passes `1/1`, including return-kind and fresh-session
+  isolation checks.
+
 - 2026-07-28: Followed up #4819 in `7f64c6d0f` with deterministic positive-Y
   coverage for `SYS(2024)`: an active preview cancellation records the
   invariant `report.interrupted` event while preserving the existing
