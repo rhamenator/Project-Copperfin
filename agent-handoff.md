@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4845/#109 visual-asset undo journal slice is implementation-complete and
+awaits focused Windows/MSVC and macOS/AppleClang review. Undo-root hash names
+and fixed-width journal stems now use `std::locale::classic()`, while existing
+stems require complete ASCII-digit parsing through `std::from_chars`; new
+entries avoid collisions and `uint64_t` overflow. The public visual-editor
+regression performs 1001 real edits under grouped punctuation, preserves the
+first journal bytes, confirms latest history remains available, and undoes the
+post-boundary edit back to its prior value. Linux `test_visual_asset_editor`
+passes at the current implementation head; this is focused evidence, not full
+RC evidence.
+
 The #4836/#3217 code-page compatibility correction is implementation-complete.
 `CPCURRENT()` and `CPCURRENT(0)` now treat invalid-configuration sentinel
 `0` as no valid configured page and preserve the host-code-page fallback.

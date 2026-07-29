@@ -19,7 +19,7 @@ int main() {
     test_visual_asset_raw_malformed_layouts_fail_without_writes();
     test_update_visual_object_property_rewrites_properties_memo();
     test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets();
-    test_visual_asset_undo_paths_remain_invariant_under_grouped_locale();
+    test_visual_asset_undo_journal_filenames_are_locale_invariant();
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step();

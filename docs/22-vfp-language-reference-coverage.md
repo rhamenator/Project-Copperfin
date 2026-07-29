@@ -196,6 +196,16 @@
   semantics. The focused `test_prg_engine_runtime_surface_functions` CTest
   passes `1/1`, including concurrent generator coverage.
 
+- Current visual-asset undo status (2026-07-29, #4845 under #109): undo-root
+  hash names and fixed-width journal stems now serialize with the classic
+  locale, and existing stems require complete ASCII-digit parsing rather than
+  unchecked-prefix conversion. New entries avoid collisions and unsigned-index
+  overflow. The public visual-editor regression performs 1001 real edits under
+  grouped punctuation, preserves the first journal bytes, keeps latest history
+  available, and undoes the post-boundary entry to its prior value. Focused
+  Linux validation passes; Windows/MSVC and macOS/AppleClang review remains
+  separate evidence.
+
 - Current SYS(3004)/SYS(3006) status (2026-07-28, #4816 under #2348): the
   runtime models VFP9's automation locale state per PRG runtime session.
   `SYS(3004)` returns the current LCID as character text, defaulting to

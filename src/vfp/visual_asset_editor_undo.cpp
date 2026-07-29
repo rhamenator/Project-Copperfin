@@ -6,6 +6,8 @@
 
 #include "copperfin/platform/path.h"
 
+#include <charconv>
+#include <locale>
 #include <new>
 #include <stdexcept>
 
@@ -80,6 +82,20 @@ bool undo_change_targets_asset(
         path,
         change.record_index,
         change.property_name).has_value();
+}
+
+std::optional<std::uint64_t> parse_visual_asset_undo_index(const std::filesystem::path& path) {
+    const auto stem = path.stem().string();
+    if (stem.empty()) {
+        return std::nullopt;
+    }
+
+    std::uint64_t index = 0U;
+    const auto parsed = std::from_chars(stem.data(), stem.data() + stem.size(), index);
+    if (parsed.ec != std::errc{} || parsed.ptr != stem.data() + stem.size()) {
+        return std::nullopt;
+    }
+    return index;
 }
 
 }  // namespace
@@ -301,18 +317,37 @@ bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUn
 
     const auto existing_files = list_visual_asset_undo_entry_files(path);
     std::uint64_t next_index = 1U;
-    if (!existing_files.empty()) {
-        try {
-            next_index = static_cast<std::uint64_t>(std::stoull(existing_files.back().stem().string())) + 1U;
-        } catch (...) {
-            next_index = static_cast<std::uint64_t>(existing_files.size()) + 1U;
+    for (const auto& existing_file : existing_files) {
+        const auto existing_index = parse_visual_asset_undo_index(existing_file);
+        if (existing_index.has_value() && *existing_index >= next_index) {
+            if (*existing_index == std::numeric_limits<std::uint64_t>::max()) {
+                error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
+                return false;
+            }
+            next_index = *existing_index + 1U;
         }
     }
 
-    std::ostringstream file_name;
-    file_name.imbue(std::locale::classic());
-    file_name << std::setw(20) << std::setfill('0') << next_index << ".bin";
-    const auto entry_path = entries_directory / file_name.str();
+    std::filesystem::path entry_path;
+    for (;;) {
+        std::ostringstream file_name;
+        file_name.imbue(std::locale::classic());
+        file_name << std::setw(20) << std::setfill('0') << next_index << ".bin";
+        entry_path = entries_directory / file_name.str();
+        std::error_code exists_error;
+        if (!std::filesystem::exists(entry_path, exists_error)) {
+            if (exists_error) {
+                error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
+                return false;
+            }
+            break;
+        }
+        if (next_index == std::numeric_limits<std::uint64_t>::max()) {
+            error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
+            return false;
+        }
+        ++next_index;
+    }
     if (!write_visual_asset_undo_entry(entry_path, entry)) {
         error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
         return false;

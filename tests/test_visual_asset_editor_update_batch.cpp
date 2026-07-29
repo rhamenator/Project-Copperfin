@@ -4,7 +4,6 @@
 
 #include "test_visual_asset_editor_support.h"
 #include "test_environment_support.h"
-#include "../src/vfp/visual_asset_editor_support.h"
 
 #include <cstring>
 #include <functional>
@@ -16,22 +15,21 @@ namespace cf_test_visual_asset_editor {
 
 namespace {
 
-class undo_grouped_numpunct final : public std::numpunct<char> {
+class grouped_numpunct final : public std::numpunct<char> {
 protected:
-    char do_decimal_point() const override { return ','; }
     char do_thousands_sep() const override { return '.'; }
     std::string do_grouping() const override { return "\3"; }
 };
 
-class undo_global_locale_guard final {
+class scoped_global_locale {
 public:
-    explicit undo_global_locale_guard(const std::locale& replacement)
+    explicit scoped_global_locale(const std::locale& replacement)
         : previous_(std::locale::global(replacement)) {}
 
-    ~undo_global_locale_guard() { std::locale::global(previous_); }
+    ~scoped_global_locale() { std::locale::global(previous_); }
 
-    undo_global_locale_guard(const undo_global_locale_guard&) = delete;
-    undo_global_locale_guard& operator=(const undo_global_locale_guard&) = delete;
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
 
 private:
     std::locale previous_;
@@ -361,90 +359,100 @@ void test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_visual_asset_undo_paths_remain_invariant_under_grouped_locale() {
+void test_visual_asset_undo_journal_filenames_are_locale_invariant() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
-        ("copperfin_visual_editor_undo_locale_tests_" + std::to_string(_getpid()));
+        ("copperfin_visual_editor_locale_undo_tests_" + std::to_string(_getpid()));
     std::error_code ignored;
     fs::remove_all(temp_dir, ignored);
     fs::create_directories(temp_dir);
 
-    const fs::path asset_path = temp_dir / "undo-locale.frx";
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "HPOS", .type = 'N', .length = 10U}
-    };
+    const fs::path asset_path = temp_dir / "sample.scx";
+    const auto undo_root = visual_asset_undo_root_for_test(asset_path);
+    fs::remove_all(undo_root, ignored);
     const auto create_result = copperfin::vfp::create_dbf_table_file(
-        asset_path.string(), fields, {{"300"}});
-    expect(create_result.ok, "#4845: grouped-locale undo fixture should be writable");
-
-    const fs::path undo_root_before =
-        copperfin::vfp::visual_asset_undo_root_directory(asset_path.string());
-    fs::remove_all(undo_root_before, ignored);
-    const fs::path entries_directory = undo_root_before / "entries";
-    const auto seeded_bytes = make_legacy_scalar_undo_journal();
-    const fs::path early_entry = entries_directory / "00000000000000000002.bin";
-    write_test_binary_file(early_entry, seeded_bytes);
-    write_test_binary_file(entries_directory / "00000000000000000999.bin", seeded_bytes);
-    const auto early_entry_before = read_file_bytes(early_entry);
-
-    const std::locale grouping_locale(std::locale::classic(), new undo_grouped_numpunct());
-    undo_global_locale_guard locale_guard(grouping_locale);
-
-    const fs::path undo_root_during =
-        copperfin::vfp::visual_asset_undo_root_directory(asset_path.string());
-    expect(undo_root_during == undo_root_before,
-        "#4845: undo journal root identity should not change with grouped host punctuation");
-
-    std::string error;
-    const bool boundary_recorded = copperfin::vfp::record_visual_asset_undo_entry(
         asset_path.string(),
-        {.record_index = 0U,
-         .property_name = "HPOS",
-         .prior_value = "100",
-         .prior_value_exists = true,
-         .label = "Boundary entry"},
-        error);
-    expect(boundary_recorded, "#4845: undo entry 1000 should be recorded: " + error);
-    error.clear();
-    const bool latest_recorded = copperfin::vfp::record_visual_asset_undo_entry(
-        asset_path.string(),
-        {.record_index = 0U,
-         .property_name = "HPOS",
-         .prior_value = "200",
-         .prior_value_exists = true,
-         .label = "Latest entry"},
-        error);
-    expect(latest_recorded, "#4845: undo entry 1001 should be recorded: " + error);
+        {
+            {.name = "OBJTYPE", .type = 'N', .length = 2U},
+            {.name = "HPOS", .type = 'N', .length = 10U}
+        },
+        {{"8", "0"}});
+    expect(create_result.ok, "#4845: visual undo locale fixture should be writable");
+    const auto grouped_locale = std::locale(std::locale::classic(), new grouped_numpunct());
+    std::vector<std::uint8_t> first_entry_bytes;
+    {
+        scoped_global_locale locale_guard(grouped_locale);
+        for (std::size_t index = 1U; index <= 1001U; ++index) {
+            const auto update_result = copperfin::vfp::update_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = "HPOS",
+                .property_value = std::to_string(index)
+            });
+            expect(update_result.ok,
+                   "#4845: grouped locale should not prevent visual undo journal creation");
+            if (index == 1U) {
+                if (!fs::exists(undo_root / "entries")) {
+                    expect(false, "#4845: first grouped-locale edit failed: " + update_result.error);
+                    fs::remove_all(undo_root, ignored);
+                    fs::remove_all(temp_dir, ignored);
+                    return;
+                }
+                const auto files = fs::directory_iterator(undo_root / "entries");
+                std::vector<fs::path> first_files;
+                for (const auto& file : files) {
+                    if (file.is_regular_file()) {
+                        first_files.push_back(file.path());
+                    }
+                }
+                if (first_files.size() == 1U) {
+                    first_entry_bytes = read_file_bytes(first_files.front());
+                }
+            }
+        }
+    }
 
-    const auto files = copperfin::vfp::list_visual_asset_undo_entry_files(asset_path.string());
-    expect(files.size() == 4U,
-        "#4845: boundary writes should create distinct journal files without overwriting history");
-    expect(fs::exists(entries_directory / "00000000000000001000.bin"),
-        "#4845: undo index 1000 should use an invariant fixed-width filename");
-    expect(fs::exists(entries_directory / "00000000000000001001.bin"),
-        "#4845: undo index 1001 should remain monotonic after the grouping boundary");
-    expect(read_file_bytes(early_entry) == early_entry_before,
-        "#4845: post-boundary writes should not truncate an earlier undo entry");
+    std::vector<fs::path> files;
+    for (const auto& file : fs::directory_iterator(undo_root / "entries")) {
+        if (file.is_regular_file()) {
+            files.push_back(file.path());
+        }
+    }
+    std::sort(files.begin(), files.end());
+    expect(files.size() == 1001U, "#4845: crossing index 1000 should preserve all journal entries");
+    bool digit_only_names = true;
+    for (const auto& file : files) {
+        const auto stem = file.stem().string();
+        digit_only_names = digit_only_names && stem.size() == 20U &&
+            std::all_of(stem.begin(), stem.end(), [](const char value) {
+                return value >= '0' && value <= '9';
+            });
+    }
+    expect(digit_only_names, "#4845: journal stems should remain fixed-width ASCII digits");
 
-    const auto latest_status = copperfin::vfp::query_visual_object_undo(asset_path.string());
-    expect(latest_status.available && latest_status.label == "Latest entry",
-        "#4845: undo status should select the latest post-boundary journal entry");
-    const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
-    expect(undo_result.ok, "#4845: latest post-boundary journal entry should remain undoable");
-    const auto restored = copperfin::vfp::query_visual_object_property({
-        .path = asset_path.string(),
-        .record_index = 0U,
-        .object_name = {},
-        .unique_id = {},
-        .property_name = "HPOS"
-    });
-    expect(restored.ok && restored.value == "200",
-        "#4845: undo should apply the latest post-boundary prior value");
-    const auto prior_status = copperfin::vfp::query_visual_object_undo(asset_path.string());
-    expect(prior_status.available && prior_status.label == "Boundary entry",
-        "#4845: undoing entry 1001 should reveal entry 1000 next");
+    if (files.size() == 1001U) {
+        expect(!first_entry_bytes.empty(), "#4845: the first journal entry should retain its bytes");
+        const auto status = copperfin::vfp::query_visual_object_undo(asset_path.string());
+        expect(status.available,
+               "#4845: latest undo status should remain available after index 1000");
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
+        expect(undo_result.ok, "#4845: post-boundary journal entry should remain undoable");
+        const auto restored_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS"
+        });
+        expect(restored_property.ok && restored_property.value == "1000",
+               "#4845: undo should restore the prior value from the post-boundary entry");
+        expect(read_file_bytes(files.front()) == first_entry_bytes,
+               "#4845: recording the post-boundary entry must not overwrite earlier history");
+    }
 
-    fs::remove_all(undo_root_before, ignored);
+    fs::remove_all(undo_root, ignored);
     fs::remove_all(temp_dir, ignored);
 }
 
