@@ -1,7 +1,8 @@
 - 2026-07-29: Implemented the VFP9 `AT_C()` character-safe expression
   function under #4825/#3217. It returns 1-based UTF-8 scalar positions with
-  case-sensitive matching, occurrence selection, and the existing zero/no-match
-  boundaries. `ATCC()` remains the case-insensitive scalar-safe path, while
+  case-sensitive matching, occurrence selection, and direct empty-search plus
+  zero/negative/out-of-range occurrence coverage. `ATCC()` remains the
+  case-insensitive scalar-safe path, while
   byte-oriented `AT()`/`ATC()` behavior is unchanged. Focused
   `test_prg_engine_functions` and `test_prg_engine_string_math_functions`
   pass `2/2`, including `pt_BR.UTF-8` and `de_DE.UTF-8` executions.

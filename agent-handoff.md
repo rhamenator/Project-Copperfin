@@ -5,7 +5,8 @@
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 `AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,
 preserves VFP's case-sensitive matching, supports occurrence selection, and
-returns zero for empty/missing/out-of-range searches. `ATCC()` remains the
+returns zero for empty/missing/out-of-range searches while zero or negative
+occurrences select the first match. `ATCC()` remains the
 case-insensitive scalar-safe path; existing byte-oriented `AT()`/`ATC()`
 contracts are unchanged. Focused `test_prg_engine_functions` and
 `test_prg_engine_string_math_functions` pass `2/2`, and the function target
