@@ -402,6 +402,40 @@ double available_disk_space(const std::string& raw_path, const std::string& defa
     return ignored ? 0.0 : static_cast<double>(info.available);
 }
 
+std::string disk_cluster_size(const std::string& raw_path, const std::string& default_directory) {
+    std::filesystem::path path = filesystem_probe_path(raw_path, default_directory);
+#if defined(_WIN32)
+    const std::string trimmed_path = trim_copy(raw_path);
+    if (trimmed_path.size() == 1U && std::isalpha(static_cast<unsigned char>(trimmed_path.front())) != 0) {
+        path = copperfin::platform::path_from_utf8_string(trimmed_path + ":\\");
+    } else if (trimmed_path.size() == 2U && trimmed_path[1U] == ':' &&
+               std::isalpha(static_cast<unsigned char>(trimmed_path.front())) != 0) {
+        path = copperfin::platform::path_from_utf8_string(trimmed_path + "\\");
+    }
+
+    DWORD sectors_per_cluster = 0U;
+    DWORD bytes_per_sector = 0U;
+    if (!::GetDiskFreeSpaceW(
+            path.c_str(),
+            &sectors_per_cluster,
+            &bytes_per_sector,
+            nullptr,
+            nullptr) ||
+        sectors_per_cluster == 0U || bytes_per_sector == 0U) {
+        return "0";
+    }
+    return std::to_string(
+        static_cast<unsigned long long>(sectors_per_cluster) *
+        static_cast<unsigned long long>(bytes_per_sector));
+#else
+    struct statvfs info {};
+    if (::statvfs(path.c_str(), &info) != 0 || info.f_frsize == 0U) {
+        return "0";
+    }
+    return std::to_string(static_cast<unsigned long long>(info.f_frsize));
+#endif
+}
+
 int drive_type_value(const std::string& raw_path, const std::string& default_directory) {
     std::error_code ignored;
     const std::filesystem::path path = filesystem_probe_path(raw_path, default_directory);

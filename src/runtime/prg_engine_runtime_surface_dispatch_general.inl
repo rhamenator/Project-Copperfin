@@ -189,6 +189,14 @@
             if (sys_code == 2020) {
                 return make_string_value(format_value(make_number_value(available_disk_space({}, default_directory))));
             }
+            if (sys_code == 2022) {
+                // VFP9 SYS(2022) returns the disk allocation-unit size as
+                // character text for the default or supplied disk/path.
+                const std::string disk_name = arguments.size() >= 2U
+                    ? value_as_string(arguments[1])
+                    : std::string{};
+                return make_string_value(disk_cluster_size(disk_name, default_directory));
+            }
             if (sys_code == 2023) {
                 std::error_code ignored;
                 return make_string_value(copperfin::platform::path_to_utf8_string(

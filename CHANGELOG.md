@@ -1,3 +1,9 @@
+- 2026-07-28: Implemented #4823 under #3217. Native PRG `SYS(2022 [, cDiskName])`
+  now returns the cross-platform disk allocation-unit size as character text,
+  using `GetDiskFreeSpaceW` on Windows and `statvfs` on POSIX. Default and
+  explicit-path queries are covered; unavailable paths return character `0`.
+  Focused runtime-surface CTest coverage passes `1/1`.
+
 - 2026-07-28: Implemented #4821 under #3217. Native PRG `SYS(2021, nIndexNumber
   [, nWorkArea | cTableAlias])` now returns filtered index/tag `FOR`
   expressions as character text from the existing open-cursor metadata. Invalid,

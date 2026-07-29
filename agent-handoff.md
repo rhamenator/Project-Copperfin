@@ -2,6 +2,12 @@
 
 ## Current State
 
+The #4823 SYS(2022) slice implements VFP9 disk-cluster-size lookup as
+character text. Windows uses `GetDiskFreeSpaceW`; macOS/Linux use `statvfs`.
+Default-disk and explicit-path queries return the allocation-unit size, while
+unavailable paths return character `0`. Focused runtime-surface CTest coverage
+passes `1/1`; hosted Windows/macOS review is queued.
+
 The #4821 SYS(2021) follow-up corrects physical order numbering: each open
 order retains one runtime-only slot, including an empty slot for unfiltered
 orders, and remote/synthetic cursors do not expose order metadata. Mixed

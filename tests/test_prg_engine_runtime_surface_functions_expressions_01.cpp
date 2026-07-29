@@ -90,6 +90,9 @@ namespace copperfin::runtime_surface_tests
             "cSysCurrent = SYS(2003)\n"
             "cSysTemp = SYS(2023)\n"
             "cSysDisk = SYS(2020)\n"
+            "cSysCluster = SYS(2022)\n"
+            "cSysClusterPath = SYS(2022, 'runtime_surface_extensions.prg')\n"
+            "cSysClusterMissing = SYS(2022, 'missing-cluster-path')\n"
             "lSysDiskPositive = VAL(cSysDisk) > 0\n"
             "cTransformDefault = TRANSFORM(x)\n"
             "cTransformPicture = TRANSFORM(3.14159, '999.00')\n"
@@ -337,6 +340,19 @@ namespace copperfin::runtime_surface_tests
         const auto temp_value = state.globals.find("csystemp");
         expect(temp_value != state.globals.end() && !copperfin::runtime::format_value(temp_value->second).empty(),
                "SYS(2023) should expose a non-empty temporary path");
+        const auto cluster_value = state.globals.find("csyscluster");
+        const auto cluster_path_value = state.globals.find("csysclusterpath");
+        expect(cluster_value != state.globals.end() && cluster_value->second.kind == copperfin::runtime::PrgValueKind::string &&
+                   std::stoull(copperfin::runtime::format_value(cluster_value->second)) > 0U,
+               "SYS(2022) should return a positive cluster size as character text");
+        expect(cluster_path_value != state.globals.end() && cluster_path_value->second.kind == copperfin::runtime::PrgValueKind::string &&
+                   copperfin::runtime::format_value(cluster_path_value->second) == copperfin::runtime::format_value(cluster_value->second),
+               "SYS(2022) should resolve a supplied path to the same filesystem cluster size");
+        const auto cluster_missing_value = state.globals.find("csysclustermissing");
+        expect(cluster_missing_value != state.globals.end() &&
+                   cluster_missing_value->second.kind == copperfin::runtime::PrgValueKind::string &&
+                   copperfin::runtime::format_value(cluster_missing_value->second) == "0",
+               "SYS(2022) should return character zero for an unavailable path");
 
         fs::remove_all(temp_root, ignored);
     }

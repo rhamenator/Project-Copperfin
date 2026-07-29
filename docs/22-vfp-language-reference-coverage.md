@@ -1,5 +1,10 @@
 # VFP Language Reference Coverage
 
+- Current SYS(2022) status (2026-07-28, #4823 under #3217): the runtime now
+  returns the default or supplied disk/path allocation-unit size as character
+  text, using native Windows and POSIX filesystem seams. Unavailable paths
+  return character `0`; focused runtime-surface CTest coverage passes `1/1`.
+
 - SYS(2021) review correction (2026-07-28, #4821): filtered-index lookup now
   preserves one slot per physical order, so an unfiltered order does not shift
   later 1-based positions. Remote and synthetic cursors do not expose order
