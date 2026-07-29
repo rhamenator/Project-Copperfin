@@ -120,8 +120,9 @@ evidence follows that gate and includes:
 
 The latest implementation head is `40a0ca9f1`. The prior exact-head matrix
 for `5fead206e` is superseded by the #4810 codepage-boundary correction and
-#4811 SYS(3) compatibility slice; no replacement matrix is published yet, so
-RC readiness is not claimed. The
+#4811 SYS(3) compatibility slice. Replacement hosted validation is running at
+coordination/test head `e9515cc76`, which contains that implementation head;
+RC readiness is not claimed until it resolves. The
 earlier accepted hosted baselines remain historical evidence only. Independent
 safety sign-off under #4403 and protected launcher-trust provisioning under
 #4409 remain separate release gates.

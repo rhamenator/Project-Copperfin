@@ -5,8 +5,9 @@
   localization routing are unchanged.
 
 - 2026-07-28: The #4811 product head `40a0ca9f1` supersedes the currently
-  running exact-head release matrix at `87bea0388`; replacement exact-head
-  validation is required and RC readiness remains unclaimed.
+  running exact-head release matrix at `87bea0388`. Replacement hosted
+  validation is running at coordination/test head `e9515cc76`, which contains
+  the product head; RC readiness remains unclaimed until it resolves.
 
 - 2026-07-28: Corrected the #4807 codepage boundary under #4810. VFP9 treats
   `CODEPAGE` as a startup item in `CONFIG.FPW`; it is not a live `SET` command.

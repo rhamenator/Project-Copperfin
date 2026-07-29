@@ -14,8 +14,9 @@ behavior, which remain separate release evidence.
 
 The latest implementation head is `40a0ca9f1`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
-codepage-boundary correction and #4811 SYS(3) compatibility slice, and no
-replacement matrix is published yet. RC readiness is not claimed while
+codepage-boundary correction and #4811 SYS(3) compatibility slice. Replacement
+hosted validation is running at coordination/test head `e9515cc76`, which
+contains that implementation head. RC readiness is not claimed while
 exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
 remain open. The worktree is synchronized, and no Copperfin-owned process or
