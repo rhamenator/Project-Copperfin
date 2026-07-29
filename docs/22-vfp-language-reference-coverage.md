@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- Expression exponent grammar follow-up (2026-07-29, #4824 under #3217): PRG
+  numeric literals now preserve invariant `e`/`E` exponents and optional
+  exponent signs through expression parsing before shared conversion. The
+  end-to-end parser-class CTest covers positive, negative, and signed
+  exponents and passes `1/1`; locale-sensitive separators remain rejected.
+
 - SYS(2022) Windows missing-path correction (2026-07-29, #4823 under #3217):
   normalized nonexistent file/directory inputs now return character `0`
   before volume-root resolution, while valid file, nested, drive-root, UNC,

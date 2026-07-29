@@ -6,6 +6,7 @@
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -642,6 +643,41 @@ void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
         "nonfinite parsing should remain available only to explicit binary-field consumers");
 }
 
+void test_expression_numeric_literals_preserve_exponent_grammar() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_expression_numeric_exponents";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "numeric_exponents.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "nPositive = 1.25e2\n"
+        "nNegative = 1.25e-2\n"
+        "nSigned = 1e+5 + 2\n"
+        "RETURN\n");
+
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        copperfin::test_support::make_runtime_session_options(program_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    copperfin::test_support::expect(state.completed,
+                                    "PRG expression exponent fixture should complete: " + state.message);
+    const auto positive = state.globals.find("npositive");
+    const auto negative = state.globals.find("nnegative");
+    const auto signed_exponent = state.globals.find("nsigned");
+    copperfin::test_support::expect(
+        positive != state.globals.end() && copperfin::runtime::format_value(positive->second) == "125",
+        "PRG expression parser should preserve positive exponent literals");
+    copperfin::test_support::expect(
+        negative != state.globals.end() && copperfin::runtime::format_value(negative->second) == "0.0125",
+        "PRG expression parser should preserve negative exponent literals");
+    copperfin::test_support::expect(
+        signed_exponent != state.globals.end() && copperfin::runtime::format_value(signed_exponent->second) == "100002",
+        "PRG expression parser should preserve explicitly signed exponent literals");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parse_declare_dll_preserves_vfp_parameter_contract() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_declare_dll";
     std::error_code ignored;
@@ -755,6 +791,7 @@ int main() {
     test_parse_include_and_define_constants_expand_before_class_body_parsing();
     test_parse_conditional_preprocessor_branches_and_header_guards();
     test_invariant_numeric_parser_preserves_vfp_decimal_contract();
+    test_expression_numeric_literals_preserve_exponent_grammar();
     test_parse_declare_dll_preserves_vfp_parameter_contract();
 
     if (copperfin::test_support::test_failures() != 0) {

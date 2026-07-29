@@ -3219,6 +3219,19 @@
                     }
                     break;
                 }
+                if (position_ < text_.size() && (text_[position_] == 'e' || text_[position_] == 'E'))
+                {
+                    ++position_;
+                    if (position_ < text_.size() && (text_[position_] == '+' || text_[position_] == '-'))
+                    {
+                        ++position_;
+                    }
+                    while (position_ < text_.size() &&
+                           std::isdigit(static_cast<unsigned char>(text_[position_])) != 0)
+                    {
+                        ++position_;
+                    }
+                }
                 const std::string literal = text_.substr(start, position_ - start);
                 if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
                 {

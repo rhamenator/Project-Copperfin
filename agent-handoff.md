@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 expression-parser follow-up now carries invariant `e`/`E` exponent
+syntax, including an optional exponent sign, into the shared numeric parser
+instead of stopping the literal at its mantissa. An end-to-end PRG fixture
+covers positive, negative, and explicitly signed exponents; the focused
+`test_prg_engine_parser_classes` CTest passes `1/1`. Locale-sensitive decimal
+separators and machine-readable contracts remain unchanged.
+
 The #4824 RESTORE FROM currency boundary is now ABI-independent. `Y:` values
 use exact invariant decimal-to-scaled-`int64` conversion with VFP-style
 half-away-from-zero rounding, preserving exact `INT64_MIN`/`INT64_MAX` values
