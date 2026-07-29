@@ -25,16 +25,21 @@
 - Current SYS(3) status (2026-07-28, #4811 under #3217): the runtime returns
   an extension-free eight-digit numeric temporary filename component, matching
   VFP9's legal-file-name contract and the temp alias/file composition used by
-  FFC and VFPSource. Successive calls are distinct within one runtime session;
-  `SYS(2015)` remains separate procedure-name semantics. The focused
-  `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
+  FFC and VFPSource. Values now derive from a once-seeded monotonic atomic
+  sequence, so concurrent calls remain distinct until the finite 90-million
+  value space is exhausted. `SYS(2015)` remains separate procedure-name
+  semantics. The focused `test_prg_engine_runtime_surface_functions` CTest
+  passes `1/1`, including concurrent generator coverage.
 
 - Current SYS(2015) status (2026-07-28, #4812 under #3217): the runtime now
   returns a unique ten-character identifier beginning with `_` and followed
   by nine ASCII base-36 characters, matching VFP9's documented procedure,
   alias, cursor, and file-name contract. FFC uses this surface extensively for
-  generated names. Successive calls remain distinct within one runtime
-  session; the focused runtime-surface CTest passes `1/1`.
+  generated names. Values now derive from a once-seeded monotonic atomic
+  sequence, removing clock rollback and interleaving collision paths until
+  the finite nine-character base-36 space is exhausted. The focused
+  runtime-surface CTest passes `1/1`, including concurrent generator
+  coverage.
 
 - Current SYS(2014) status (2026-07-28, #4814 under #3217): the runtime now
   returns a lexical path relative to the current runtime default directory or
@@ -53,7 +58,7 @@
   empty string. The focused runtime-surface CTest passes `1/1`.
 
 - Current SYS(2029) status (2026-07-28, #4813 under #3217): the runtime now
-  reports the numeric DBF header table type for the selected physical cursor
+  returns a numeric `PrgValue` containing the DBF header table type for the selected physical cursor
   or a case-insensitive alias, including the VFP table value `48` for a normal
   VFP DBF. No table, unknown aliases, invalid or unavailable physical bytes,
   and remote/synthetic cursors return `0`. The type is runtime metadata only;

@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `9878fd4a4`. The prior exact-head
+The latest implementation head is `91f2ab8a9`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
 codepage-boundary correction, #4811 SYS(3), and #4812 SYS(2015)
 compatibility slices. The replacement matrix at coordination/test head
@@ -35,16 +35,24 @@ validation matrix.
 
 The #4811 SYS(3) slice now returns an extension-free eight-digit numeric legal
 temporary filename component instead of the previous product/version string.
-Successive calls are distinct within one runtime session, which supports the
-temp alias/file composition used by FFC and VFPSource. The focused
-`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; `SYS(2015)`
-remains a separate procedure-name contract.
+Values derive from a once-seeded monotonic atomic sequence, so concurrent calls
+remain distinct until the finite 90-million value space is exhausted. This
+supports the temp alias/file composition used by FFC and VFPSource. The
+focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`,
+including concurrent generator coverage; `SYS(2015)` remains a separate
+procedure-name contract.
+
+The #4812 SYS(2015) correction likewise derives the ten-character identifier
+from a once-seeded monotonic atomic sequence, removing clock rollback and
+interleaving collision paths until the finite base-36 space is exhausted. The
+same focused CTest covers concurrent calls.
 
 The #4813 SYS(2029) slice now reports the numeric DBF header table type for the
 selected physical cursor or a case-insensitive alias. The ordinary VFP DBF
 fixture returns `48`; no table, unknown aliases, invalid/unavailable physical
 bytes, and remote/synthetic cursors return `0`. The metadata stays internal to
-runtime inspection and is not serialized into the portable cursor XML format.
+runtime inspection and is not serialized into the portable cursor XML format;
+the returned `PrgValue` is numeric, not formatted character data.
 The focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
 Windows and macOS read-only review remains requested before closing #4813.
 

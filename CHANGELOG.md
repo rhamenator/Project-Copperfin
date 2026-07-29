@@ -1,3 +1,15 @@
+- 2026-07-28: Corrected the #4811/#4812 generator contracts after independent
+  Windows review. `SYS(3)` and `SYS(2015)` now derive values solely from
+  once-seeded monotonic atomic sequences instead of combining per-call clock
+  reads with a counter, eliminating interleaving and clock-rollback collision
+  paths. Concurrent regression coverage passes in the focused runtime-surface
+  CTest; finite name-space exhaustion remains explicitly documented.
+
+- 2026-07-28: Corrected #4813 after independent Windows review. `SYS(2029)`
+  now returns a numeric runtime value rather than formatted character data;
+  focused regression coverage asserts both `PrgValueKind::number` and table
+  values for physical, alias, and unavailable-table cases.
+
 - 2026-07-28: Implemented #4815 under #3217. Native PRG `SYS(2000)` now
   enumerates regular wildcard file matches in deterministic case-insensitive
   filename order, with first/next/exhaustion semantics and per-data-session
