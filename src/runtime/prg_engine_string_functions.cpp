@@ -5,6 +5,8 @@
 #include "prg_engine_string_functions.h"
 
 #include "prg_engine_helpers.h"
+#include "localized_text.h"
+#include "prg_compatibility_error.h"
 
 #include <algorithm>
 #include <cmath>
@@ -413,6 +415,14 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
     if ((function == "at_c" || function == "atc" || function == "atcc") && arguments.size() >= 2U) {
+        if (function == "at_c" && arguments.size() >= 3U) {
+            const double requested_occurrence = value_as_number(arguments[2]);
+            if (!std::isfinite(requested_occurrence) || requested_occurrence <= 0.0) {
+                throw PrgCompatibilityError(
+                    runtime_text("Runtime.Prg.String.Error.InvalidOccurrence"),
+                    11);
+            }
+        }
         const std::size_t occurrence = arguments.size() >= 3U
                                            ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
                                            : 1U;

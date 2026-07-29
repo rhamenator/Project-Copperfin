@@ -17,6 +17,7 @@
 #include "prg_engine_table_structure_helpers.h"
 #include "prg_engine_date_time_functions.h"
 #include "prg_engine_string_functions.h"
+#include "prg_compatibility_error.h"
 #include "win64_native_call.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
@@ -99,24 +100,6 @@ namespace copperfin::runtime
         constexpr std::uint32_t kWindowsMiddleButtonDownMessage = 0x0207U;
         constexpr std::uint32_t kWindowsMiddleButtonUpMessage = 0x0208U;
         constexpr std::intptr_t kWindowsAltContextBit = static_cast<std::intptr_t>(1) << 29;
-
-        class PrgCompatibilityError final : public std::runtime_error
-        {
-        public:
-            PrgCompatibilityError(std::string message, int error_code)
-                : std::runtime_error(std::move(message)),
-                  error_code_(error_code)
-            {
-            }
-
-            [[nodiscard]] int error_code() const noexcept
-            {
-                return error_code_;
-            }
-
-        private:
-            int error_code_;
-        };
 
         class PrgPropagatedRuntimeError final : public std::runtime_error
         {

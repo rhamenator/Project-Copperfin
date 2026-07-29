@@ -2837,5 +2837,6 @@
   "AssetEditor.Summary.LabelTargetShape": "Forma de destino",
   "AssetEditor.Summary.LabelComplexity": "Complejidad",
   "AssetEditor.Summary.LabelStrategy": "Estrategia",
-  "AssetEditor.Summary.LabelDeterministicFirst": "Determinista primero"
+  "AssetEditor.Summary.LabelDeterministicFirst": "Determinista primero",
+  "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido."
 }

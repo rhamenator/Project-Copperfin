@@ -2837,5 +2837,6 @@
   "AssetEditor.Summary.LabelTargetShape": "[Target Shape]",
   "AssetEditor.Summary.LabelComplexity": "[Complexity]",
   "AssetEditor.Summary.LabelStrategy": "[Strategy]",
-  "AssetEditor.Summary.LabelDeterministicFirst": "[Deterministic First]"
+  "AssetEditor.Summary.LabelDeterministicFirst": "[Deterministic First]",
+  "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]"
 }

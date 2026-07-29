@@ -176,8 +176,7 @@ namespace
             "n_at_c = AT_C('FE', 'caféFE猫FE', 2)\n"
             "n_at_c_unicode = AT_C('é', 'café猫')\n"
             "n_at_c_case = AT_C('fe', 'caféFE猫FE')\n"
-            "n_at_c_zero = AT_C('FE', 'caféFE猫FE', 0)\n"
-            "n_at_c_negative = AT_C('FE', 'caféFE猫FE', -1)\n"
+            "n_at_c_fraction = AT_C('FE', 'caféFE猫FE', 1.5)\n"
             "n_at_c_empty = AT_C('', 'caféFE猫FE')\n"
             "n_at_c_missing = AT_C('FE', 'caféFE猫FE', 3)\n"
             "n_ratc = RATC('FE', 'caféFE猫FE', 1)\n"
@@ -250,8 +249,7 @@ namespace
         check("n_at_c", "8");
         check("n_at_c_unicode", "4");
         check("n_at_c_case", "0");
-        check("n_at_c_zero", "5");
-        check("n_at_c_negative", "5");
+        check("n_at_c_fraction", "5");
         check("n_at_c_empty", "0");
         check("n_at_c_missing", "0");
         check("n_ratc", "8");
@@ -261,6 +259,66 @@ namespace
         check("c_stuffc", "cafX");
         check("c_stuffc_zero", "Xcafé猫");
         check("c_stuffc_negative", "Xcafé猫");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_at_c_rejects_nonpositive_occurrence()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_at_c_invalid_occurrence";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "at_c_invalid_occurrence.prg";
+        write_text(
+            main_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC nCapturedCount\n"
+            "PUBLIC cCapturedMessage\n"
+            "PUBLIC nAfterError\n"
+            "nCapturedCode = 0\n"
+            "nCapturedCount = 0\n"
+            "cCapturedMessage = ''\n"
+            "nAfterError = 0\n"
+            "ON ERROR DO HandleAtCError\n"
+            "nUnexpected = AT_C('FE', 'caféFE猫FE', 0)\n"
+            "ON ERROR\n"
+            "ON ERROR DO HandleAtCError\n"
+            "nUnexpectedNegative = AT_C('FE', 'caféFE猫FE', -1)\n"
+            "ON ERROR\n"
+            "nAfterError = 42\n"
+            "RETURN\n"
+            "PROCEDURE HandleAtCError\n"
+            "nCapturedCount = nCapturedCount + 1\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "AT_C invalid-occurrence script should recover through ON ERROR");
+
+        const auto code = state.globals.find("ncapturedcode");
+        const auto message = state.globals.find("ccapturedmessage");
+        const auto after_error = state.globals.find("naftererror");
+        expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
+               "AT_C occurrence zero should report VFP error 11");
+        const auto count = state.globals.find("ncapturedcount");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "2",
+               "AT_C zero and negative occurrences should both report through ON ERROR");
+        const std::string captured_message = message == state.globals.end()
+            ? std::string{}
+            : copperfin::runtime::format_value(message->second);
+        expect(message != state.globals.end() &&
+                   (captured_message.find("Function argument value, type, or count is invalid") != std::string::npos ||
+                    captured_message.find("[!! ") == 0U),
+               "AT_C occurrence zero should use the localized invalid-argument message");
+        expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
+               "AT_C invalid occurrence should resume after its ON ERROR handler");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -654,6 +712,7 @@ int main()
     test_macro_expression_indirection();
     test_double_ampersand_comment_stripping_respects_nested_text();
     test_type_and_null_expression_functions();
+    test_at_c_rejects_nonpositive_occurrence();
     test_type_and_transform_expression_depth();
     test_macro_dot_suffix_form();
     test_parameter_default_expressions_support_macros();
