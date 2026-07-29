@@ -98,6 +98,7 @@ void test_report_settings_fallback_root_gridv_round_trips();
 void test_report_settings_case_insensitive_expr_field_round_trips();
 void test_report_settings_topmargin_and_tag_memo_round_trips();
 void test_fractional_report_section_moves_follow_layout_membership();
+void test_visual_geometry_parsing_uses_invariant_decimal_text();
 void test_report_label_character_field_writes_preserve_leading_spaces();
 template <typename AssignTextProperty>
 void test_visual_object_text_property_assigns_text(
