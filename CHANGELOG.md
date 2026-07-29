@@ -1,3 +1,9 @@
+- 2026-07-29: Hardened #4848/#109 generated debug-manifest numeric metadata
+  against grouped host cultures. License seats, perpetual-version limits,
+  security-role counts, and other numeric inspection fields now use the
+  classic locale. The existing license/redaction materialization contract runs
+  under adversarial punctuation with 1,234 seats and requires invariant text.
+
 - 2026-07-29: Hardened #4846/#109 generated library source provenance against
   grouped host cultures. DLL/FLL API and FXP/APP debug manifest line numbers
   now use classic-locale decimal text. The existing escaped-path regression

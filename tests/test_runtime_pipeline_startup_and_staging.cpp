@@ -4,9 +4,32 @@
 
 #include "test_runtime_pipeline_support.h"
 
+#include <locale>
+
 namespace cf_test_runtime_pipeline {
 
 namespace {
+
+class debug_manifest_grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class debug_manifest_global_locale_guard final {
+public:
+    explicit debug_manifest_global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~debug_manifest_global_locale_guard() { std::locale::global(previous_); }
+
+    debug_manifest_global_locale_guard(const debug_manifest_global_locale_guard&) = delete;
+    debug_manifest_global_locale_guard& operator=(const debug_manifest_global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
 
 void expect_manifest_reports_startup_asset_copied(
     const std::string& runtime_manifest,
@@ -547,10 +570,13 @@ void test_runtime_package_license_fields_stay_debug_only() {
     plan.license_type = "perpetual";
     plan.license_id = "test-license-id";
     plan.license_licensee = "Copperfin Test Licensee";
-    plan.license_seats = 7;
+    plan.license_seats = 1234;
     plan.license_subscription_expires = "2027-12-31";
     plan.license_perpetual_max_major_version = 9;
     plan.license_source_path = (project_dir / "licenses" / "project-copperfin.license.json").string();
+
+    const std::locale grouping_locale(std::locale::classic(), new debug_manifest_grouped_numpunct());
+    debug_manifest_global_locale_guard locale_guard(grouping_locale);
 
     const auto result = copperfin::runtime::materialize_runtime_package(
         plan,

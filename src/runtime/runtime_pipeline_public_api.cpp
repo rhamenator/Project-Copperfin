@@ -15,6 +15,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
+#include <locale>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -2531,6 +2532,7 @@ std::string build_debug_manifest_text(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "debug_manifest_version=" << kDebugManifestVersion << "\n";
     stream << "manifest_value_encoding=backslash-v1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";

@@ -2,6 +2,14 @@
 
 ## Current State
 
+The #4848/#109 generated debug-manifest numeric-metadata slice is
+implementation-complete. Debug inspection fields now serialize through a
+classic-locale stream, preventing grouped host punctuation from changing
+license-seat, perpetual-version, security-role, and related numeric values.
+The existing license/redaction materialization contract runs with 1234 seats
+under grouped punctuation and preserves invariant values plus runtime/debug
+separation. Cross-platform review is required before closure.
+
 The #4846/#109 generated library source-provenance slice is
 implementation-complete. Shared DLL/FLL API and FXP/APP debug manifest source
 locations now serialize line numbers with `std::locale::classic()`. The
