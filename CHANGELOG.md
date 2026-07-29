@@ -1,3 +1,10 @@
+- 2026-07-29: Completed native macOS Release validation for product/test head
+  `52e56cd82`: all `316/316` registered tests passed in `481.41s`, with only
+  the two documented platform-conditional skips. At the later synchronized
+  test-only head, the hardened POSIX launcher test passes and all four native
+  numeric-consumer targets pass under the default environment,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`. No product behavior changed.
+
 - 2026-07-29: Removed the remaining six locale-sensitive `std::stod` calls
   from native tests. Test-side parsing of Copperfin-formatted numeric values
   now uses the shared invariant parser, so comma-decimal host cultures cannot

@@ -120,12 +120,15 @@ evidence follows that gate and includes:
 
 The latest product implementation head is `52e56cd82`. Earlier exact-head
 matrices are superseded by subsequent runtime and localization corrections,
-including the #4825 `AT_C()` and #4827 `GETNEXTMODIFIED()` slices. The focused
+including the #4825 `AT_C()` and #4827 `GETNEXTMODIFIED()` slices. Focused
 Linux and Windows evidence for `52e56cd82` includes the #4827 work-area
-regression, clean four-locale execution, and stable VFP9 error contracts;
-the current macOS native workflow remains the required exact-head platform
-run. RC readiness is not claimed until that run resolves and the remaining
-release gates are satisfied. Earlier accepted hosted baselines remain
+regression, clean four-locale execution, and stable VFP9 error contracts. The
+native macOS Release matrix at that product/test head passes `316/316` in
+`481.41s`, with only the two documented platform-conditional skips. At the
+later synchronized test-only #4828/#4829 descendant, the affected POSIX
+launcher and invariant-numeric targets also pass on macOS, including numeric
+checks under `pt_BR.UTF-8` and `de_DE.UTF-8`. This does not claim hosted UI
+evidence or complete RC readiness. Earlier accepted hosted baselines remain
 historical evidence only. Independent safety sign-off under #4403 and
 protected launcher-trust provisioning under #4409 remain separate release
 gates.

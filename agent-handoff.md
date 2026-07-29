@@ -2,6 +2,15 @@
 
 ## Current State
 
+Native macOS Release validation is complete for latest product/test head
+`52e56cd82`: Apple Clang built the tree and CTest passed `316/316` in
+`481.41s`, with only the documented `test_build_host_utf8_launcher_paths` and
+`test_generated_launcher_process` platform skips. The later synchronized
+test-only #4828/#4829 descendant also passes the hardened POSIX launcher test
+and the four affected numeric-consumer targets; the numeric targets pass under
+the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`. This is native,
+headless platform evidence, not hosted UI evidence or the complete RC gate.
+
 The #4827/#3217 `GETNEXTMODIFIED()` slice is implementation-complete. Native
 PRG `GETNEXTMODIFIED()` traverses pending buffered records in ascending record
 number for the selected cursor or explicit alias/work-area target, accepts the
