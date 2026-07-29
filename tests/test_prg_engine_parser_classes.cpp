@@ -598,6 +598,25 @@ void test_parse_conditional_preprocessor_branches_and_header_guards() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
+    using copperfin::runtime::try_parse_invariant_double;
+
+    const auto decimal = try_parse_invariant_double("1.25");
+    copperfin::test_support::expect(
+        decimal.has_value() && *decimal == 1.25,
+        "VFP numeric parsing should use the invariant period decimal separator");
+
+    const auto exponent = try_parse_invariant_double("+1.25e2");
+    copperfin::test_support::expect(
+        exponent.has_value() && *exponent == 125.0,
+        "VFP numeric parsing should preserve exponent and leading-plus forms");
+
+    copperfin::test_support::expect(
+        !try_parse_invariant_double("1,25").has_value() &&
+            !try_parse_invariant_double("1.25 trailing").has_value(),
+        "comma-decimal and trailing-input forms must not alter invariant machine parsing");
+}
+
 void test_parse_declare_dll_preserves_vfp_parameter_contract() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_declare_dll";
     std::error_code ignored;
@@ -710,6 +729,7 @@ int main() {
     test_parse_declarative_child_external_prg_sources();
     test_parse_include_and_define_constants_expand_before_class_body_parsing();
     test_parse_conditional_preprocessor_branches_and_header_guards();
+    test_invariant_numeric_parser_preserves_vfp_decimal_contract();
     test_parse_declare_dll_preserves_vfp_parameter_contract();
 
     if (copperfin::test_support::test_failures() != 0) {

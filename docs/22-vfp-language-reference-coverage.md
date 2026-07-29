@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant numeric parsing slice (2026-07-29, #4824 under #3217):
+  PRG preprocessor literals, expression literals, string-to-number coercion,
+  and numeric index evaluation now use a shared locale-independent parser.
+  VFP period-decimal and exponent forms remain stable under host display
+  culture; comma-decimal and trailing-input forms are rejected. Focused
+  `test_prg_engine` and `test_prg_engine_parser_classes` CTests pass `2/2`.
+  Asset, SQL, and launcher numeric call sites remain separate follow-up work.
+
 - Current SYS(2022) status (2026-07-28, #4823 under #3217): the runtime now
   returns the default or supplied disk/path allocation-unit size as character
   text, using native Windows and POSIX filesystem seams. Unavailable paths

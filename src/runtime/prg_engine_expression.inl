@@ -3225,7 +3225,12 @@
                     }
                     break;
                 }
-                return std::stod(text_.substr(start, position_ - start));
+                const std::string literal = text_.substr(start, position_ - start);
+                if (const auto parsed = try_parse_invariant_double(literal); parsed.has_value())
+                {
+                    return *parsed;
+                }
+                throw std::invalid_argument("invalid invariant numeric literal");
             }
 
             bool match(const std::string &value)

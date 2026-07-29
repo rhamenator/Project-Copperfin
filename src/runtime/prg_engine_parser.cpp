@@ -587,12 +587,7 @@ std::optional<double> try_parse_preprocessor_numeric_literal(const std::string& 
     if (text.empty()) {
         return std::nullopt;
     }
-    char* end = nullptr;
-    const double value = std::strtod(text.c_str(), &end);
-    if (end == text.c_str() || *end != '\0') {
-        return std::nullopt;
-    }
-    return value;
+    return try_parse_invariant_double(text);
 }
 
 PreprocessorScalarValue parse_preprocessor_scalar_value(const std::string& text) {

@@ -11,6 +11,7 @@
 #include <ctime>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::runtime {
@@ -46,6 +47,7 @@ bool is_memory_variable_reference_text(const std::string& value);
 std::string collapse_identifier(const std::string& value);
 std::string unquote_identifier(std::string value);
 std::string normalize_index_value(std::string value);
+std::optional<double> try_parse_invariant_double(std::string_view value);
 std::optional<double> try_parse_numeric_index_value(const std::string& value);
 int compare_index_keys(
     const std::string& left,

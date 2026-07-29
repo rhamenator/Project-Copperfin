@@ -1,3 +1,12 @@
+- 2026-07-29: Started #4824 under #3217. A shared locale-independent
+  floating-point parser now covers PRG preprocessor literals, expression
+  literals, string-to-number coercion, and numeric index evaluation using
+  `std::from_chars`. Period decimal and exponent forms remain stable under a
+  user's display culture; comma-decimal and trailing-input forms are rejected.
+  Focused `test_prg_engine` and `test_prg_engine_parser_classes` CTests pass
+  `2/2`. Asset, SQL, and launcher numeric call sites remain separate follow-up
+  work under #4824.
+
 - 2026-07-28: Implemented #4823 under #3217. Native PRG `SYS(2022 [, cDiskName])`
   now returns the cross-platform disk allocation-unit size as character text,
   using `GetDiskFreeSpaceW` on Windows and `statvfs` on POSIX. Default and

@@ -2,6 +2,15 @@
 
 ## Current State
 
+The initial #4824 culture-invariant numeric-parsing slice replaces
+locale-sensitive conversion in PRG preprocessor literals, expression literals,
+string-to-number coercion, and numeric index evaluation with a shared
+`std::from_chars` parser. VFP period-decimal and exponent forms remain stable
+under the host display culture; comma-decimal and trailing-input forms are
+rejected. `test_prg_engine` and `test_prg_engine_parser_classes` pass `2/2`.
+Asset, SQL, and launcher numeric call sites remain open follow-up scope under
+#4824. No Copperfin-owned process or test window was left running.
+
 The #4823 SYS(2022) slice implements VFP9 disk-cluster-size lookup as
 character text. Windows uses `GetDiskFreeSpaceW`; macOS/Linux use `statvfs`.
 Default-disk and explicit-path queries return the allocation-unit size, while
