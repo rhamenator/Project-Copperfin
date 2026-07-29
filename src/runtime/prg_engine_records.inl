@@ -1870,7 +1870,7 @@
                 if (arguments.empty())
                 {
                     throw PrgCompatibilityError(
-                        runtime_text("Runtime.Prg.Dll.Error.TooFewArguments"),
+                        runtime_text("Runtime.Prg.Records.Error.TooFewArguments"),
                         1229);
                 }
                 CursorState *cursor = arguments.size() >= 2U

@@ -1572,6 +1572,7 @@
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requiere un registro local actual",
   "Runtime.Prg.Records.Error.AliasNotFound": "No se encontro el alias",
   "Runtime.Prg.Records.Error.TableBufferingNotEnabled": "El bufer de tabla no esta habilitado",
+  "Runtime.Prg.Records.Error.TooFewArguments": "Faltan argumentos.",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "APPEND BLANK no es compatible con el modo de bufer de filas {mode}",
   "Runtime.Prg.Records.Error.OptimisticBufferConflict": "El registro almacenado en búfer {recno} de {alias} cambio antes de {command}",
   "Runtime.Prg.Records.Error.CursorBufferingNotEnabled": "{command} requiere el búfer del cursor",

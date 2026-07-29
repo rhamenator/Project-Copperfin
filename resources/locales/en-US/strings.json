@@ -1166,6 +1166,7 @@
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requires a current local record",
   "Runtime.Prg.Records.Error.AliasNotFound": "Alias is not found",
   "Runtime.Prg.Records.Error.TableBufferingNotEnabled": "Table buffering is not enabled",
+  "Runtime.Prg.Records.Error.TooFewArguments": "Too few arguments.",
   "Runtime.Prg.Records.Error.RowBufferingAppendUnsupported": "APPEND BLANK is not supported with row buffering mode {mode}",
   "Runtime.Prg.Records.Error.OptimisticBufferConflict": "Buffered record {recno} in {alias} changed before {command}",
   "Runtime.Prg.Records.Error.CursorBufferingNotEnabled": "{command} requires cursor buffering",
