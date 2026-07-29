@@ -1493,6 +1493,8 @@
 
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
+            report_interrupted = false;
+            active_report_status = 0;
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
             const std::string normalized_asset_path = copperfin::platform::path_to_utf8_string(asset_path.lexically_normal());
             const auto display_alias = options.source_path_display_aliases.find(normalized_asset_path);

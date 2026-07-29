@@ -77,6 +77,10 @@
                         ? static_cast<double>(*snapshot->table_type)
                         : 0.0);
             }
+            if (sys_code == 2024) {
+                // VFP9 SYS(2024) reports report interruption as character Y/N.
+                return make_string_value(set_callback("__sys2024__"));
+            }
             if (sys_code == 2040) {
                 // VFP9 SYS(2040) reports the session-local report state:
                 // 0 means no report, 1 means preview, and 2 means output.

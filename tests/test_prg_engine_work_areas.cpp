@@ -52,7 +52,9 @@ void write_synthetic_report_surface(const std::filesystem::path& asset_path) {
     expect(create_result.ok, "synthetic report surface fixture should be created");
 }
 
-void write_synthetic_report_status_surface(const std::filesystem::path& asset_path) {
+void write_synthetic_report_status_surface(
+    const std::filesystem::path& asset_path,
+    const std::string& expression = "SYS(2040)") {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
@@ -65,7 +67,7 @@ void write_synthetic_report_status_surface(const std::filesystem::path& asset_pa
     };
     const std::vector<std::vector<std::string>> records{
         {"9", "9", "detail header expression", "", "0", "", "200", "detail-header-guid"},
-        {"8", "", "SYS(2040)", "100", "20", "700", "100", "report-status-guid"}
+        {"8", "", expression, "100", "20", "700", "100", "report-status-guid"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
@@ -311,6 +313,9 @@ void test_sys2040_report_status_tracks_preview_and_output() {
     const auto preview_status = preview_session.evaluate_watch_expression("SYS(2040)");
     expect(preview_status.ok && copperfin::runtime::format_value(preview_status.value) == "1",
            "SYS(2040) should report preview status while REPORT FORM PREVIEW is active");
+    const auto preview_interrupted = preview_session.evaluate_watch_expression("SYS(2024)");
+    expect(preview_interrupted.ok && copperfin::runtime::format_value(preview_interrupted.value) == "N",
+           "SYS(2024) should report an uninterrupted active preview as character N");
     expect(preview_session.dispatch_event_handler("closepreview"),
            "SYS(2040) preview fixture should dispatch its cleanup handler");
     const auto after_preview_state = preview_session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -325,7 +330,7 @@ void test_sys2040_report_status_tracks_preview_and_output() {
     const fs::path output_path = temp_root / "status_output.txt";
     const fs::path output_program = temp_root / "status_output.prg";
     write_named_age_dbf(table_path, {{"Alice", 20}});
-    write_synthetic_report_status_surface(temp_root / "status_output.frx");
+    write_synthetic_report_status_surface(temp_root / "status_output.frx", "SYS(2024)");
     write_text(
         output_program,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
@@ -337,8 +342,8 @@ void test_sys2040_report_status_tracks_preview_and_output() {
     const auto output_state = output_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(output_state.completed, "SYS(2040) output fixture should complete");
     const std::string output_text = read_text(output_path);
-    expect(output_text.find("object_exprs=1:2") != std::string::npos,
-           "SYS(2040) should report output status while a report row is rendered");
+    expect(output_text.find("object_exprs=1:N") != std::string::npos,
+           "SYS(2024) should report an uninterrupted output as character N");
 
     fs::remove_all(temp_root, ignored);
 }

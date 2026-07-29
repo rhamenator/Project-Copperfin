@@ -3562,6 +3562,7 @@
                 waiting_for_events = false;
                 restore_event_loop_after_dispatch = false;
                 active_report_status = 0;
+                report_interrupted = false;
                 events.push_back({.category = "runtime.event_loop",
                                   .detail = "CLEAR EVENTS",
                                   .location = statement.location});
@@ -11045,6 +11046,12 @@
             case StatementKind::cancel_statement:
             {
                 // CANCEL — abort execution and return to top level
+                if (active_report_status != 0)
+                {
+                    report_interrupted = true;
+                    active_report_status = 0;
+                    waiting_for_events = false;
+                }
                 events.push_back({.category = "runtime.cancel",
                                   .detail = "CANCEL",
                                   .location = statement.location});
