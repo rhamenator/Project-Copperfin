@@ -531,6 +531,12 @@ namespace copperfin::runtime_surface_tests
             "cSys7 = SYS(7)\n"
             "cSys11 = SYS(11)\n"
             "cSys13 = SYS(13)\n"
+            "cSys3004Default = SYS(3004)\n"
+            "cSys3006German = SYS(3006, 1031)\n"
+            "cSys3004German = SYS(3004)\n"
+            "cSys3006Restore = SYS(3006, VAL(cSys3004Default))\n"
+            "cSys3004Restored = SYS(3004)\n"
+            "cSys3006NoArgument = SYS(3006)\n"
             "RETURN\n"
             "\n"
             "PROCEDURE pcount_helper\n"
@@ -567,6 +573,12 @@ namespace copperfin::runtime_surface_tests
         check("cgetenvunicode", unicode_env_value);
         check("lputenvclear", "true");
         check("cgetenvcleared", "");
+        check("csys3004default", "1033");
+        check("csys3006german", "");
+        check("csys3004german", "1031");
+        check("csys3006restore", "");
+        check("csys3004restored", "1033");
+        check("csys3006noargument", "");
         check("csys11", "0");
         check("csys13", "0");
 
@@ -661,6 +673,17 @@ namespace copperfin::runtime_surface_tests
                "concurrent SYS(3) calls should produce distinct values");
         expect(collect_concurrent_values(2015) == 16U,
                "concurrent SYS(2015) calls should produce distinct values");
+
+        const fs::path isolated_path = temp_root / "sys3004_isolated.prg";
+        write_text(isolated_path, "cLocale = SYS(3004)\nRETURN\n");
+        const auto isolated_state = copperfin::runtime::PrgRuntimeSession::create(
+                                         make_runtime_session_options(isolated_path.string(), temp_root.string()))
+                                         .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(isolated_state.completed, "a fresh runtime session should complete SYS(3004) isolation check");
+        const auto isolated_locale = isolated_state.globals.find("clocale");
+        expect(isolated_locale != isolated_state.globals.end() &&
+                   copperfin::runtime::format_value(isolated_locale->second) == "1033",
+               "SYS(3006) changes must remain isolated to the originating runtime session");
 
         fs::remove_all(temp_root, ignored);
     }

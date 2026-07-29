@@ -1089,6 +1089,10 @@ namespace copperfin::runtime
         std::size_t resumable_expression_depth = 0U;
         ExpressionContinuation *active_expression_continuation = nullptr;
         std::map<int, std::map<std::string, std::string>> set_state_by_session;
+        // VFP's SYS(3004)/SYS(3006) automation locale is runtime state. Keep
+        // it session-local so PRG code cannot mutate the host process locale.
+        int automation_language_id = 1033;
+        int automation_locale_id = 1033;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
         std::map<int, int> next_api_handle_by_session;
@@ -2201,6 +2205,31 @@ namespace copperfin::runtime
                         return std::string{};
                     }
                     return state.matches[state.next_match++];
+                }
+                if (trimmed_option_name == "__sys3004__")
+                {
+                    return std::to_string(automation_locale_id);
+                }
+                constexpr std::string_view sys3006_prefix = "__sys3006__\x1f";
+                if (trimmed_option_name.starts_with(sys3006_prefix))
+                {
+                    try
+                    {
+                        const int language_id = std::stoi(
+                            trimmed_option_name.substr(sys3006_prefix.size()));
+                        automation_language_id = language_id;
+                        // The common VFP/FFC language IDs are also the LCIDs
+                        // they expect to save and restore (1031, 1033, and
+                        // the other IDs documented by SYS(3005)). Preserve
+                        // the supplied identity without invoking host locale
+                        // APIs or inventing a platform-specific sort policy.
+                        automation_locale_id = language_id;
+                    }
+                    catch (...)
+                    {
+                        return std::string{};
+                    }
+                    return std::string{};
                 }
                 if (trimmed_option_name == "__textmerge_delimiters__")
                 {

@@ -77,6 +77,21 @@
                         ? static_cast<double>(*snapshot->table_type)
                         : 0.0);
             }
+            if (sys_code == 3004) {
+                // VFP9 returns the session automation LCID as character text.
+                return make_string_value(set_callback("__sys3004__"));
+            }
+            if (sys_code == 3006) {
+                // SYS(3006) changes the runtime language/locale identity and
+                // returns an empty character value. The session callback keeps
+                // this portable and isolated from the host process locale.
+                if (arguments.size() >= 2U) {
+                    return make_string_value(set_callback(
+                        std::string("__sys3006__\x1f") +
+                        std::to_string(safe_int_argument(1U, 0))));
+                }
+                return make_string_value({});
+            }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
             }
