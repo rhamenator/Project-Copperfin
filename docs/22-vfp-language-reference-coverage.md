@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant RESTORE FROM follow-up (2026-07-29, #4824 under #3217):
+  serialized `N:` numeric and `Y:` currency values now use the shared
+  locale-independent parser. Comma-decimal input is rejected, malformed input
+  still restores as zero, and out-of-range currency scaling is contained
+  before narrowing. Focused data-I/O CTest coverage passes `1/1`.
+
 - Culture-invariant runtime value follow-up (2026-07-29, #4824 under #3217):
   `VAL()`, aggregate/TOTAL conversion, DBF numeric-field materialization, and
   TXNLEVEL callback parsing now use the shared invariant parser. Currency,

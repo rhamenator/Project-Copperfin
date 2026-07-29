@@ -1,3 +1,10 @@
+- 2026-07-29: Completed the #4824 RESTORE FROM follow-up. Serialized `N:`
+  values and `Y:` currency values now use locale-independent parsing, so
+  comma-decimal text is rejected consistently across host cultures. Currency
+  scaling rejects nonfinite and out-of-range values before narrowing, while
+  malformed input still restores as zero. `test_prg_engine_data_io` passes
+  `1/1`.
+
 - 2026-07-29: Extended #4824 through runtime value materialization. `VAL()`,
   aggregate/TOTAL numeric conversion, DBF numeric-field materialization, and
   TXNLEVEL callback parsing now use the shared invariant parser. Currency

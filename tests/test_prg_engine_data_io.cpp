@@ -55,6 +55,7 @@ int main() {
     test_restore_from_without_additive_clears_stale_arrays();
     test_restore_from_without_additive_clears_private_shadow_state();
     test_restore_from_rejects_numeric_trailing_garbage();
+    test_restore_from_parses_numeric_values_invariantly();
     test_copy_to_emits_event();
     test_copy_to_creates_destination_dbf();
     test_copy_structure_to_creates_empty_schema();

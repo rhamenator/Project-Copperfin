@@ -4,6 +4,8 @@
 
 #include "test_prg_engine_data_io_support.h"
 
+#include "copperfin/platform/invariant_numeric.h"
+
 namespace cf_test_prg_engine_data_io {
 void test_save_to_writes_variables_to_file() {
     namespace fs = std::filesystem;
@@ -442,6 +444,76 @@ void test_restore_from_rejects_numeric_trailing_garbage() {
     if (after_bad != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_bad->second) == "0",
             "RESTORE FROM should reject numerics with trailing garbage and fall back to 0");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_restore_from_parses_numeric_values_invariantly() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_invariant_numeric";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    expect(!copperfin::platform::try_parse_invariant_double("12,5000").has_value(),
+        "invariant numeric parser should reject comma-decimal text");
+
+    const fs::path mem_path = temp_root / "numeric.mem";
+    write_text(
+        mem_path,
+        "nperiod=N:12.5\n"
+        "ncomma=N:12,5\n"
+        "ycurrency=Y:12.5000\n"
+        "ycomma=Y:12,5000\n"
+        "yoverflow=Y:922337203685477.5808\n");
+
+    const fs::path main_path = temp_root / "restore_invariant_numeric.prg";
+    write_text(
+        main_path,
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "period = nPeriod\n"
+        "comma = nComma\n"
+        "currency = yCurrency\n"
+        "currency_comma = yComma\n"
+        "currency_overflow = yOverflow\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RESTORE FROM invariant numeric script should complete");
+
+    const auto period = state.globals.find("period");
+    const auto comma = state.globals.find("comma");
+    const auto currency = state.globals.find("currency");
+    const auto currency_comma = state.globals.find("currency_comma");
+    const auto currency_overflow = state.globals.find("currency_overflow");
+    expect(period != state.globals.end(), "RESTORE FROM should materialize period-decimal numeric values");
+    expect(comma != state.globals.end(), "RESTORE FROM should materialize comma-decimal numeric values");
+    expect(currency != state.globals.end(), "RESTORE FROM should materialize currency values");
+    expect(currency_comma != state.globals.end(), "RESTORE FROM should materialize comma-decimal currency values");
+    expect(currency_overflow != state.globals.end(), "RESTORE FROM should materialize overflowing currency values");
+    if (period != state.globals.end()) {
+        expect(copperfin::runtime::format_value(period->second) == "12.5",
+            "RESTORE FROM should parse period-decimal numeric values");
+    }
+    if (comma != state.globals.end()) {
+        expect(copperfin::runtime::format_value(comma->second) == "0",
+            "RESTORE FROM should reject comma-decimal numeric values");
+    }
+    if (currency != state.globals.end()) {
+        expect(currency->second.kind == copperfin::runtime::PrgValueKind::currency &&
+                   copperfin::runtime::format_value(currency->second) == "12.5000",
+               "RESTORE FROM should parse period-decimal currency values with four-decimal fidelity");
+    }
+    if (currency_comma != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_comma->second) == "0.0000",
+            "RESTORE FROM should reject comma-decimal currency values");
+    }
+    if (currency_overflow != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_overflow->second) == "0.0000",
+            "RESTORE FROM should reject out-of-range currency values");
     }
 
     fs::remove_all(temp_root, ignored);

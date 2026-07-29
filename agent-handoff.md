@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 RESTORE FROM follow-up now parses serialized `N:` numeric and `Y:`
+currency values through the shared locale-independent parser. Comma-decimal
+forms are rejected across host cultures, malformed input still restores as
+zero, and currency scaling rejects nonfinite/out-of-range values before the
+`int64_t` conversion. The focused `test_prg_engine_data_io` CTest passes
+`1/1`.
+
 The shared #4824 invariant numeric parser now includes an Apple-libc++ fallback
 for toolchains without floating-point `std::from_chars`. The fallback uses a
 classic-locale, no-skip, full-consumption stream so period-decimal/exponent and

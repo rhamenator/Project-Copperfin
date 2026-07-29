@@ -7431,21 +7431,32 @@
                         }
                         else if (value_type_code == 'N')
                         {
-                            const std::string numeric_text = trim_copy(value_text);
-                            char *number_end = nullptr;
-                            const double parsed = std::strtod(numeric_text.c_str(), &number_end);
-                            restored_value = (number_end != numeric_text.c_str() && number_end != nullptr && *number_end == '\0')
-                                                 ? make_number_value(parsed)
+                            const auto parsed = try_parse_invariant_double(trim_copy(value_text));
+                            restored_value = parsed.has_value()
+                                                 ? make_number_value(*parsed)
                                                  : make_number_value(0.0);
                         }
                         else if (value_type_code == 'Y')
                         {
-                            try
+                            const auto parsed = try_parse_invariant_double(trim_copy(value_text));
+                            if (parsed.has_value())
                             {
-                                restored_value = make_currency_value(
-                                    static_cast<std::int64_t>(std::llround(std::stod(trim_copy(value_text)) * 10000.0)));
+                                const long double scaled = static_cast<long double>(*parsed) * 10000.0L;
+                                const long double rounded = std::round(scaled);
+                                const long double minimum =
+                                    static_cast<long double>(std::numeric_limits<std::int64_t>::min());
+                                const long double maximum =
+                                    static_cast<long double>(std::numeric_limits<std::int64_t>::max());
+                                if (std::isfinite(scaled) && rounded >= minimum && rounded <= maximum)
+                                {
+                                    restored_value = make_currency_value(static_cast<std::int64_t>(rounded));
+                                }
+                                else
+                                {
+                                    restored_value = make_currency_value(0);
+                                }
                             }
-                            catch (...)
+                            else
                             {
                                 restored_value = make_currency_value(0);
                             }

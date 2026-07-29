@@ -120,6 +120,7 @@ void test_save_to_except_pattern_filters_variables();
 void test_save_restore_auto_mem_extension_without_explicit_extension();
 void test_save_restore_round_trips_escaped_string_and_types();
 void test_restore_from_rejects_numeric_trailing_garbage();
+void test_restore_from_parses_numeric_values_invariantly();
 void test_restore_from_without_additive_clears_prior_globals();
 void test_restore_from_honors_current_frame_local_bindings();
 void test_save_restore_round_trips_arrays();
