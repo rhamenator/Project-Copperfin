@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/localization/localization.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -313,10 +314,13 @@ namespace
         const std::string captured_message = message == state.globals.end()
             ? std::string{}
             : copperfin::runtime::format_value(message->second);
-        expect(message != state.globals.end() &&
-                   (captured_message.find("Function argument value, type, or count is invalid") != std::string::npos ||
-                    captured_message.find("[!! ") == 0U),
-               "AT_C occurrence zero should use the localized invalid-argument message");
+        const auto catalog = copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+        const std::string expected_message = catalog.translate(
+            "Runtime.Prg.String.Error.InvalidOccurrence");
+        expect(message != state.globals.end() && captured_message == expected_message,
+               "AT_C occurrence zero should use the active locale's invalid-argument message");
         expect(after_error != state.globals.end() && copperfin::runtime::format_value(after_error->second) == "42",
                "AT_C invalid occurrence should resume after its ON ERROR handler");
 
