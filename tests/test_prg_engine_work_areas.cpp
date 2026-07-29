@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
@@ -2112,12 +2113,18 @@ void test_getnextmodified_traverses_buffered_records() {
         main_path,
         "USE '" + table_path.string() + "' ALIAS People\n"
         "PUBLIC nErrorCount, nError1, nError2, nError3, nError4, nError5\n"
+        "PUBLIC cError1, cError2, cError3, cError4, cError5\n"
         "nErrorCount = 0\n"
         "nError1 = 0\n"
         "nError2 = 0\n"
         "nError3 = 0\n"
         "nError4 = 0\n"
         "nError5 = 0\n"
+        "cError1 = ''\n"
+        "cError2 = ''\n"
+        "cError3 = ''\n"
+        "cError4 = ''\n"
+        "cError5 = ''\n"
         "ON ERROR DO HandleGetNextModifiedError\n"
         "nNoArguments = GETNEXTMODIFIED()\n"
         "nRowBufferingDisabled = GETNEXTMODIFIED(0)\n"
@@ -2152,14 +2159,19 @@ void test_getnextmodified_traverses_buffered_records() {
         "nErrorCount = nErrorCount + 1\n"
         "IF nErrorCount = 1\n"
         "    nError1 = ERROR()\n"
+        "    cError1 = MESSAGE()\n"
         "ELSEIF nErrorCount = 2\n"
         "    nError2 = ERROR()\n"
+        "    cError2 = MESSAGE()\n"
         "ELSEIF nErrorCount = 3\n"
         "    nError3 = ERROR()\n"
+        "    cError3 = MESSAGE()\n"
         "ELSEIF nErrorCount = 4\n"
         "    nError4 = ERROR()\n"
+        "    cError4 = MESSAGE()\n"
         "ELSEIF nErrorCount = 5\n"
         "    nError5 = ERROR()\n"
+        "    cError5 = MESSAGE()\n"
         "ENDIF\n"
         "RETURN\n"
         "ENDPROC\n");
@@ -2190,6 +2202,21 @@ void test_getnextmodified_traverses_buffered_records() {
     check("nerror3", "13");
     check("nerror4", "1596");
     check("nerror5", "1596");
+
+    const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    const std::string too_few_arguments = catalog.translate(
+        "Runtime.Prg.Records.Error.TooFewArguments");
+    const std::string table_buffering_not_enabled = catalog.translate(
+        "Runtime.Prg.Records.Error.TableBufferingNotEnabled");
+    const std::string alias_not_found = catalog.translate(
+        "Runtime.Prg.Records.Error.AliasNotFound");
+    check("cerror1", too_few_arguments);
+    check("cerror2", table_buffering_not_enabled);
+    check("cerror3", alias_not_found);
+    check("cerror4", table_buffering_not_enabled);
+    check("cerror5", table_buffering_not_enabled);
 
     fs::remove_all(temp_root, ignored);
 }

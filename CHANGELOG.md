@@ -1,8 +1,9 @@
 - 2026-07-29: Corrected the #4827/#3217 `GETNEXTMODIFIED()` contract to match
   VFP9: table-buffered modes 4/5 traverse pending records, while modes 1/2/3
   raise localized error 1596; missing arguments and aliases preserve errors
-  1229 and 13. Regression coverage exercises those boundaries and both row
-  buffering modes. The #4825 `AT_C()` focused test also covers nonfinite
+  1229 and 13. Regression coverage exercises those boundaries, verifies their
+  active-locale `MESSAGE()` text, and covers both row buffering modes. The
+  #4825 `AT_C()` focused test also covers nonfinite
   occurrence values through `EXP(10000)` and verifies localized error 11 under
   all four application locales.
 

@@ -8,7 +8,9 @@ number for the selected cursor or explicit alias/work-area target, accepts the
 VFP compatibility `lNoFire` argument, and returns zero after the pending set is
 exhausted. Only table-buffered modes 4/5 are eligible; modes 1/2/3 raise
 localized VFP error 1596, missing arguments raise 1229, and missing aliases
-raise 13, matching the reviewed VFP9 contract. Focused
+raise 13, matching the reviewed VFP9 contract. Exact `MESSAGE()` text for
+those boundaries is resolved and asserted through the active locale catalog;
+final cross-platform review of that message correction is pending. Focused
 `test_prg_engine_work_areas` passes `1/1`, including all of those error-boundary
 checks and both row-buffering modes. This is focused runtime evidence, not full
 RC evidence.
