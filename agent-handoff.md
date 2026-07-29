@@ -21,6 +21,12 @@ focused validation is accepted; issue #4851 is closed. These formatters remain
 canonical machine/runtime text without changing user-selected `SET DATE`
 display. This is focused evidence, not full RC evidence.
 
+The #4852/#109 APP archive-length slice is implementation-complete. The
+`copperfin_content_archive_v1` writer now serializes staged byte counts through
+a classic-locale stream. Its 1,234-byte declared-asset regression preserves
+payload bytes and SHA-256, and rejects grouped `1.234` metadata under the
+Linux locale matrix. Cross-platform review is required before closure.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

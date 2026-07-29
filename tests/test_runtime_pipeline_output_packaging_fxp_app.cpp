@@ -247,9 +247,11 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(project_dir);
 
+    const std::string large_text(1234U, 'L');
     write_text(project_dir / "main.prg", "DO helper\nRETURN\n");
     write_text(project_dir / "helper.prg", "WAIT WINDOW 'archived'\nRETURN\n");
     write_text(project_dir / "config.txt", "mode=demo");
+    write_text(project_dir / "large.txt", large_text);
     write_text(project_dir / "sample.scx", "screen-bytes");
     write_text(project_dir / "sample.sct", "screen-sidecar-bytes");
     write_text(project_dir / "sample.frx", "report-bytes");
@@ -275,8 +277,9 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
         {.record_index = 2U, .name = "helper.prg", .relative_path = "helper.prg", .type_title = "Program"},
         {.record_index = 3U, .name = "config.txt", .relative_path = "config.txt", .type_title = "Text"},
-        {.record_index = 4U, .name = "sample.scx", .relative_path = "sample.scx", .type_title = "Form"},
-        {.record_index = 5U, .name = "sample.frx", .relative_path = "sample.frx", .type_title = "Report"}
+        {.record_index = 4U, .name = "large.txt", .relative_path = "large.txt", .type_title = "Text"},
+        {.record_index = 5U, .name = "sample.scx", .relative_path = "sample.scx", .type_title = "Form"},
+        {.record_index = 6U, .name = "sample.frx", .relative_path = "sample.frx", .type_title = "Report"}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -303,6 +306,8 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     expect(fs::path(plan.app_archive_manifest_path).filename() == "ArchiveDemo.app.contents",
            "app-output plan should derive a matching archive-manifest filename");
 
+    const std::locale grouping_locale(std::locale::classic(), new compiler_manifest_grouped_numpunct());
+    const compiler_manifest_global_locale_guard locale_guard(grouping_locale);
     const auto result = copperfin::runtime::materialize_runtime_package(
         plan,
         copperfin::security::default_native_security_profile(),
@@ -325,6 +330,8 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output package should still stage supporting program assets");
         expect(fs::exists(fs::path(result.plan.content_root) / "config.txt"),
                "app-output package should still stage non-program assets");
+        expect(fs::exists(fs::path(result.plan.content_root) / "large.txt"),
+               "app-output package should still stage a large declared asset");
         expect(fs::exists(fs::path(result.plan.content_root) / "sample.scx"),
                "app-output package should still stage declared xAsset files");
         expect(fs::exists(fs::path(result.plan.content_root) / "sample.sct"),
@@ -376,6 +383,8 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output primary archive should carry supporting program payloads");
         expect(archive_payloads.contains("config.txt"),
                "app-output primary archive should carry non-program payloads");
+        expect(archive_payloads.contains("large.txt"),
+               "app-output primary archive should carry the large declared payload");
         expect(archive_payloads.contains("sample.scx"),
                "app-output primary archive should carry declared xAsset payloads");
         expect(archive_payloads.contains("sample.sct"),
@@ -395,6 +404,21 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         if (archive_payloads.contains("config.txt")) {
             expect(archive_payloads.at("config.txt") == "mode=demo",
                    "app-output primary archive should preserve non-program asset bytes");
+        }
+        if (archive_payloads.contains("large.txt")) {
+            expect(archive_payloads.at("large.txt") == large_text,
+                   "app-output primary archive should preserve the large asset bytes");
+        }
+        const auto large_digest = copperfin::security::sha256_hex_for_text(large_text);
+        expect(large_digest.ok,
+               "app-output large asset fixture should have a deterministic digest");
+        if (large_digest.ok) {
+            const std::string expected_content_line =
+                "content=large.txt|DeclaredAsset|true|1234|" + large_digest.hex_digest + "\n";
+            expect(app_archive.find(expected_content_line) != std::string::npos,
+                   "app-output archive should preserve the exact invariant byte count and digest for the large asset");
+            expect(app_archive.find("content=large.txt|DeclaredAsset|true|1.234|") == std::string::npos,
+                   "app-output archive should reject grouped punctuation in the large asset byte count");
         }
         if (archive_payloads.contains("sample.scx")) {
             expect(archive_payloads.at("sample.scx") == "screen-bytes",

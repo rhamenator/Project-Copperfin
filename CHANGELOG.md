@@ -11,6 +11,12 @@
   culture-specific grouping; user-selected `SET DATE` display remains
   separate. Cross-platform review remains required before closure.
 
+- 2026-07-29: Implemented #4852/#109 APP archive-length hardening. The
+  `copperfin_content_archive_v1` writer now serializes staged byte counts with
+  the classic locale, and the 1,234-byte asset regression preserves payload
+  bytes/SHA-256 while rejecting grouped `1.234` metadata. Cross-platform review
+  remains required before closure.
+
 - 2026-07-29: Hardened #4849/#109 generated compiler source-line metadata
   against grouped host cultures. AST JSON, IR JSON, and FXP token/primary
   contracts now serialize statement coordinates with classic-locale decimal

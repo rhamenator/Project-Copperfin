@@ -189,6 +189,7 @@ bool write_app_archive_primary_output(
     const RuntimePackagePlan& filesystem_plan,
     std::string& error) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "copperfin_app_archive_version=1\n";
     stream << "archive_contract=copperfin_content_archive_v1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
