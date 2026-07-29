@@ -413,10 +413,22 @@ std::string disk_cluster_size(const std::string& raw_path, const std::string& de
         path = copperfin::platform::path_from_utf8_string(trimmed_path + "\\");
     }
 
+    // GetDiskFreeSpaceW requires a volume root, not an arbitrary file or
+    // directory path. Resolve the supplied path first so nested files and
+    // UNC/mounted-volume paths use the same volume as the default query.
+    std::wstring volume_root(32768U, L'\0');
+    if (!::GetVolumePathNameW(
+            path.c_str(),
+            volume_root.data(),
+            static_cast<DWORD>(volume_root.size()))) {
+        return "0";
+    }
+    volume_root.resize(std::wcslen(volume_root.c_str()));
+
     DWORD sectors_per_cluster = 0U;
     DWORD bytes_per_sector = 0U;
     if (!::GetDiskFreeSpaceW(
-            path.c_str(),
+            volume_root.c_str(),
             &sectors_per_cluster,
             &bytes_per_sector,
             nullptr,

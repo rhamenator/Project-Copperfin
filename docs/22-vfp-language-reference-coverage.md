@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- SYS(2022) Windows path correction (2026-07-29, #4823 under #3217): existing
+  file and nested-path inputs now resolve to their volume root before the
+  Windows allocation-unit query, preserving character return and unavailable
+  path boundaries while covering the file-path defect identified by hosted
+  review.
+
 - Culture-invariant RESTORE FROM follow-up (2026-07-29, #4824 under #3217):
   serialized `N:` numeric and `Y:` currency values now use the shared
   locale-independent parser. Comma-decimal input is rejected, malformed input

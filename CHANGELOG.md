@@ -1,3 +1,9 @@
+- 2026-07-29: Corrected the Windows #4823 `SYS(2022)` path seam. Existing
+  files, nested directories, UNC paths, and mounted-volume paths are resolved
+  to their volume root with `GetVolumePathNameW` before querying allocation
+  units; drive-letter normalization and POSIX `statvfs` behavior are
+  unchanged. Runtime-surface coverage now includes a nested file path.
+
 - 2026-07-29: Completed the #4824 RESTORE FROM follow-up. Serialized `N:`
   values and `Y:` currency values now use locale-independent parsing, so
   comma-decimal text is rejected consistently across host cultures. Currency

@@ -2,6 +2,12 @@
 
 ## Current State
 
+The Windows #4823 `SYS(2022)` path correction now resolves existing files,
+nested directories, UNC paths, and mounted-volume paths to a volume root with
+`GetVolumePathNameW` before calling `GetDiskFreeSpaceW`. Drive-letter handling,
+POSIX `statvfs`, character return contracts, and unavailable-path zero behavior
+remain unchanged; runtime-surface coverage includes a nested file path.
+
 The #4824 RESTORE FROM follow-up now parses serialized `N:` numeric and `Y:`
 currency values through the shared locale-independent parser. Comma-decimal
 forms are rejected across host cultures, malformed input still restores as

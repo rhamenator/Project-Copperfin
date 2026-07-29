@@ -17,6 +17,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cwchar>
 #include <cstdlib>
 #include <cerrno>
 #include <filesystem>
