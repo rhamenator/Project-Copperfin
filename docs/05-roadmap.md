@@ -118,20 +118,22 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `52e56cd82`. Earlier exact-head
-matrices are superseded by subsequent runtime and localization corrections,
-including the #4825 `AT_C()` and #4827 `GETNEXTMODIFIED()` slices. Focused
-Linux and Windows evidence for `52e56cd82` includes the #4827 work-area
-regression, clean four-locale execution, and stable VFP9 error contracts. The
-native macOS Release matrix at that product/test head passes `316/316` in
-`481.41s`, with only the two documented platform-conditional skips. At the
-later synchronized test-only #4828/#4829 descendant, the affected POSIX
-launcher and invariant-numeric targets also pass on macOS, including numeric
-checks under `pt_BR.UTF-8` and `de_DE.UTF-8`. This does not claim hosted UI
-evidence or complete RC readiness. Earlier accepted hosted baselines remain
-historical evidence only. Independent safety sign-off under #4403 and
-protected launcher-trust provisioning under #4409 remain separate release
-gates.
+The latest product implementation head is `960fc8eb3`. The current exact-head
+hosted matrix has green Linux Managed UI (`30490155252`), Visual Studio VSIX
+(`30490155223`), and Security Supply Chain (`30490155212`) lanes. The Linux
+Native, macOS Native, Windows Native, Windows Environment/Executable Path,
+Windows DECLARE ABI, executable-path, and standalone-installer lanes remain
+in progress at that same head; queued or running jobs are not release
+evidence. The supply-chain lane produced exactly one non-expired
+`cyclonedx-sbom` artifact after #4847 pinned Syft `v1.50.0`.
+
+#4846 generated-manifest provenance is accepted on Linux, macOS/AppleClang,
+and Windows/MSVC, and #4847's hosted SBOM gate is closed. #4621's hosted
+Windows/VFP9/Visual Studio reconciliation remains accepted as historical
+evidence for its validated binaries, while the current-head matrix continues
+to run. This does not claim complete RC readiness. Independent safety sign-off
+under #4403 and protected launcher-trust provisioning under #4409 remain
+separate release gates.
 
 Independent local POSIX validation at synchronized head `792f1840c` passed
 `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` with
