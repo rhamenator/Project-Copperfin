@@ -349,6 +349,123 @@ std::optional<double> try_parse_invariant_double(std::string_view value, const b
     return copperfin::platform::try_parse_invariant_double(value, allow_nonfinite);
 }
 
+std::optional<std::int64_t> try_parse_invariant_currency(std::string_view value) {
+    const std::string text = trim_copy(std::string(value));
+    if (text.empty()) {
+        return std::nullopt;
+    }
+
+    std::size_t position = 0U;
+    bool negative = false;
+    if (text[position] == '+' || text[position] == '-') {
+        negative = text[position] == '-';
+        ++position;
+    }
+    if (position == text.size()) {
+        return std::nullopt;
+    }
+
+    std::string digits;
+    digits.reserve(text.size());
+    std::size_t fractional_digits = 0U;
+    bool saw_digit = false;
+    while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+        digits.push_back(text[position++]);
+        saw_digit = true;
+    }
+    if (position < text.size() && text[position] == '.') {
+        ++position;
+        while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+            digits.push_back(text[position++]);
+            ++fractional_digits;
+            saw_digit = true;
+        }
+    }
+    if (!saw_digit) {
+        return std::nullopt;
+    }
+
+    std::int64_t exponent = 0;
+    if (position < text.size() && (text[position] == 'e' || text[position] == 'E')) {
+        ++position;
+        bool exponent_negative = false;
+        if (position < text.size() && (text[position] == '+' || text[position] == '-')) {
+            exponent_negative = text[position] == '-';
+            ++position;
+        }
+        if (position == text.size() || std::isdigit(static_cast<unsigned char>(text[position])) == 0) {
+            return std::nullopt;
+        }
+
+        constexpr std::int64_t exponent_limit = 1000000;
+        std::int64_t exponent_value = 0;
+        while (position < text.size() && std::isdigit(static_cast<unsigned char>(text[position])) != 0) {
+            const std::int64_t digit = static_cast<std::int64_t>(text[position++] - '0');
+            if (exponent_value < exponent_limit) {
+                exponent_value = std::min(exponent_limit, exponent_value * 10 + digit);
+            }
+        }
+        exponent = exponent_negative ? -exponent_value : exponent_value;
+    }
+    if (position != text.size()) {
+        return std::nullopt;
+    }
+
+    const std::size_t first_nonzero = digits.find_first_not_of('0');
+    if (first_nonzero == std::string::npos) {
+        return std::int64_t{0};
+    }
+    digits.erase(0U, first_nonzero);
+
+    const std::int64_t scale = 4 + exponent - static_cast<std::int64_t>(fractional_digits);
+    const std::uint64_t magnitude_limit = negative
+                                               ? static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1U
+                                               : static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    std::string integer_digits;
+    bool round_up = false;
+    if (scale >= 0) {
+        if (digits.size() > 19U || scale > static_cast<std::int64_t>(19U - digits.size())) {
+            return std::nullopt;
+        }
+        integer_digits = digits;
+        integer_digits.append(static_cast<std::size_t>(scale), '0');
+    } else {
+        const std::int64_t discarded_count = -scale;
+        const std::size_t drop = discarded_count >= static_cast<std::int64_t>(digits.size())
+                                     ? digits.size()
+                                     : static_cast<std::size_t>(discarded_count);
+        const std::size_t kept_count = digits.size() - drop;
+        integer_digits = digits.substr(0U, kept_count);
+        if (drop > 0U && discarded_count <= static_cast<std::int64_t>(digits.size())) {
+            round_up = digits[kept_count] >= '5';
+        }
+    }
+
+    if (integer_digits.size() > 19U) {
+        return std::nullopt;
+    }
+    std::uint64_t magnitude = 0U;
+    for (const char digit : integer_digits) {
+        magnitude = magnitude * 10U + static_cast<std::uint64_t>(digit - '0');
+    }
+    if (round_up) {
+        if (magnitude == std::numeric_limits<std::uint64_t>::max()) {
+            return std::nullopt;
+        }
+        ++magnitude;
+    }
+    if (magnitude > magnitude_limit) {
+        return std::nullopt;
+    }
+    if (negative) {
+        if (magnitude == magnitude_limit) {
+            return std::numeric_limits<std::int64_t>::min();
+        }
+        return -static_cast<std::int64_t>(magnitude);
+    }
+    return static_cast<std::int64_t>(magnitude);
+}
+
 std::optional<double> try_parse_numeric_index_value(const std::string& value) {
     const std::string trimmed = trim_copy(value);
     if (trimmed.empty()) {

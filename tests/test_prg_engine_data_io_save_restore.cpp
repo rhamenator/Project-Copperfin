@@ -466,7 +466,14 @@ void test_restore_from_parses_numeric_values_invariantly() {
         "ncomma=N:12,5\n"
         "ycurrency=Y:12.5000\n"
         "ycomma=Y:12,5000\n"
-        "yoverflow=Y:922337203685477.5808\n");
+        "ymin=Y:-922337203685477.5808\n"
+        "ymax=Y:922337203685477.5807\n"
+        "yoverflow=Y:922337203685477.5808\n"
+        "yunderflow=Y:-922337203685477.5809\n"
+        "yroundmax=Y:922337203685477.58075\n"
+        "yroundmin=Y:-922337203685477.58075\n"
+        "ysmall=Y:0.00005\n"
+        "ytiny=Y:0.000005\n");
 
     const fs::path main_path = temp_root / "restore_invariant_numeric.prg";
     write_text(
@@ -476,7 +483,14 @@ void test_restore_from_parses_numeric_values_invariantly() {
         "comma = nComma\n"
         "currency = yCurrency\n"
         "currency_comma = yComma\n"
+        "currency_min = yMin\n"
+        "currency_max = yMax\n"
         "currency_overflow = yOverflow\n"
+        "currency_underflow = yUnderflow\n"
+        "currency_round_max = yRoundMax\n"
+        "currency_round_min = yRoundMin\n"
+        "currency_small = ySmall\n"
+        "currency_tiny = yTiny\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -488,12 +502,26 @@ void test_restore_from_parses_numeric_values_invariantly() {
     const auto comma = state.globals.find("comma");
     const auto currency = state.globals.find("currency");
     const auto currency_comma = state.globals.find("currency_comma");
+    const auto currency_min = state.globals.find("currency_min");
+    const auto currency_max = state.globals.find("currency_max");
     const auto currency_overflow = state.globals.find("currency_overflow");
+    const auto currency_underflow = state.globals.find("currency_underflow");
+    const auto currency_round_max = state.globals.find("currency_round_max");
+    const auto currency_round_min = state.globals.find("currency_round_min");
+    const auto currency_small = state.globals.find("currency_small");
+    const auto currency_tiny = state.globals.find("currency_tiny");
     expect(period != state.globals.end(), "RESTORE FROM should materialize period-decimal numeric values");
     expect(comma != state.globals.end(), "RESTORE FROM should materialize comma-decimal numeric values");
     expect(currency != state.globals.end(), "RESTORE FROM should materialize currency values");
     expect(currency_comma != state.globals.end(), "RESTORE FROM should materialize comma-decimal currency values");
+    expect(currency_min != state.globals.end(), "RESTORE FROM should materialize minimum currency values");
+    expect(currency_max != state.globals.end(), "RESTORE FROM should materialize maximum currency values");
     expect(currency_overflow != state.globals.end(), "RESTORE FROM should materialize overflowing currency values");
+    expect(currency_underflow != state.globals.end(), "RESTORE FROM should materialize underflowing currency values");
+    expect(currency_round_max != state.globals.end(), "RESTORE FROM should materialize maximum rounding values");
+    expect(currency_round_min != state.globals.end(), "RESTORE FROM should materialize minimum rounding values");
+    expect(currency_small != state.globals.end(), "RESTORE FROM should materialize sub-cent rounding values");
+    expect(currency_tiny != state.globals.end(), "RESTORE FROM should materialize tiny currency values");
     if (period != state.globals.end()) {
         expect(copperfin::runtime::format_value(period->second) == "12.5",
             "RESTORE FROM should parse period-decimal numeric values");
@@ -511,9 +539,37 @@ void test_restore_from_parses_numeric_values_invariantly() {
         expect(copperfin::runtime::format_value(currency_comma->second) == "0.0000",
             "RESTORE FROM should reject comma-decimal currency values");
     }
+    if (currency_min != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_min->second) == "-922337203685477.5808",
+            "RESTORE FROM should preserve the minimum currency value");
+    }
+    if (currency_max != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_max->second) == "922337203685477.5807",
+            "RESTORE FROM should preserve the maximum currency value");
+    }
     if (currency_overflow != state.globals.end()) {
         expect(copperfin::runtime::format_value(currency_overflow->second) == "0.0000",
             "RESTORE FROM should reject out-of-range currency values");
+    }
+    if (currency_underflow != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_underflow->second) == "0.0000",
+            "RESTORE FROM should reject underflowing currency values");
+    }
+    if (currency_round_max != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_round_max->second) == "0.0000",
+            "RESTORE FROM should reject positive currency rounding carry beyond INT64_MAX");
+    }
+    if (currency_round_min != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_round_min->second) == "-922337203685477.5808",
+            "RESTORE FROM should allow negative currency rounding carry to INT64_MIN");
+    }
+    if (currency_small != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_small->second) == "0.0001",
+            "RESTORE FROM should round a half-unit currency value away from zero");
+    }
+    if (currency_tiny != state.globals.end()) {
+        expect(copperfin::runtime::format_value(currency_tiny->second) == "0.0000",
+            "RESTORE FROM should not round values below a half-unit currency value up");
     }
 
     fs::remove_all(temp_root, ignored);

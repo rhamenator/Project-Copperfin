@@ -2,11 +2,20 @@
 
 ## Current State
 
+The #4824 RESTORE FROM currency boundary is now ABI-independent. `Y:` values
+use exact invariant decimal-to-scaled-`int64` conversion with VFP-style
+half-away-from-zero rounding, preserving exact `INT64_MIN`/`INT64_MAX` values
+and rejecting one-unit overflow/underflow and rounding carry. The focused
+`test_prg_engine_data_io` CTest passes `1/1`; this removes the MSVC
+double-precision `long double` boundary defect found in review.
+
 The Windows #4823 `SYS(2022)` path correction now resolves existing files,
 nested directories, UNC paths, and mounted-volume paths to a volume root with
 `GetVolumePathNameW` before calling `GetDiskFreeSpaceW`. Drive-letter handling,
 POSIX `statvfs`, character return contracts, and unavailable-path zero behavior
 remain unchanged; runtime-surface coverage includes a nested file path.
+The Windows seam also validates the normalized target with `GetFileAttributesW`
+first, preserving character `0` for nonexistent supplied paths.
 
 The #4824 RESTORE FROM follow-up now parses serialized `N:` numeric and `Y:`
 currency values through the shared locale-independent parser. Comma-decimal

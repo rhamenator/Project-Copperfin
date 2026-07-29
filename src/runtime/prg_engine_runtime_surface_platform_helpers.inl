@@ -413,6 +413,10 @@ std::string disk_cluster_size(const std::string& raw_path, const std::string& de
         path = copperfin::platform::path_from_utf8_string(trimmed_path + "\\");
     }
 
+    if (::GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) {
+        return "0";
+    }
+
     // GetDiskFreeSpaceW requires a volume root, not an arbitrary file or
     // directory path. Resolve the supplied path first so nested files and
     // UNC/mounted-volume paths use the same volume as the default query.

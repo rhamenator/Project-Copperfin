@@ -1,5 +1,16 @@
 # VFP Language Reference Coverage
 
+- SYS(2022) Windows missing-path correction (2026-07-29, #4823 under #3217):
+  normalized nonexistent file/directory inputs now return character `0`
+  before volume-root resolution, while valid file, nested, drive-root, UNC,
+  and mounted-volume inputs retain allocation-unit behavior.
+
+- Culture-invariant RESTORE currency boundary correction (2026-07-29, #4824
+  under #3217): `Y:` values now use exact decimal-to-scaled-`int64` conversion
+  with VFP-style half-away-from-zero rounding, preserving exact signed bounds
+  and rejecting one-unit overflow/underflow and rounding carry independently
+  of the host ABI. Focused data-I/O CTest coverage passes `1/1`.
+
 - SYS(2022) Windows path correction (2026-07-29, #4823 under #3217): existing
   file and nested-path inputs now resolve to their volume root before the
   Windows allocation-unit query, preserving character return and unavailable

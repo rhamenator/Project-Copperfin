@@ -7438,23 +7438,10 @@
                         }
                         else if (value_type_code == 'Y')
                         {
-                            const auto parsed = try_parse_invariant_double(trim_copy(value_text));
+                            const auto parsed = try_parse_invariant_currency(value_text);
                             if (parsed.has_value())
                             {
-                                const long double scaled = static_cast<long double>(*parsed) * 10000.0L;
-                                const long double rounded = std::round(scaled);
-                                const long double minimum =
-                                    static_cast<long double>(std::numeric_limits<std::int64_t>::min());
-                                const long double maximum =
-                                    static_cast<long double>(std::numeric_limits<std::int64_t>::max());
-                                if (std::isfinite(scaled) && rounded >= minimum && rounded <= maximum)
-                                {
-                                    restored_value = make_currency_value(static_cast<std::int64_t>(rounded));
-                                }
-                                else
-                                {
-                                    restored_value = make_currency_value(0);
-                                }
+                                restored_value = make_currency_value(*parsed);
                             }
                             else
                             {

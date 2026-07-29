@@ -1,3 +1,17 @@
+- 2026-07-29: Preserved the Windows #4823 `SYS(2022)` missing-path contract
+  after volume-root resolution. `GetFileAttributesW` now rejects a normalized
+  nonexistent file or directory before `GetVolumePathNameW`, while valid drive
+  roots, UNC shares, mounted volumes, files, and nested directories continue
+  through the allocation-unit query.
+
+- 2026-07-29: Hardened the #4824 RESTORE FROM currency boundary for MSVC and
+  other ABIs where `long double` has double precision. `Y:` values now use
+  exact invariant decimal-to-scaled-`int64` conversion with VFP-style
+  half-away-from-zero rounding, preserving exact `INT64_MIN`/`INT64_MAX`
+  currency values while rejecting one-unit overflow, underflow, and rounding
+  carry. Tiny-value rounding coverage remains explicit; `test_prg_engine_data_io`
+  passes `1/1`.
+
 - 2026-07-29: Corrected the Windows #4823 `SYS(2022)` path seam. Existing
   files, nested directories, UNC paths, and mounted-volume paths are resolved
   to their volume root with `GetVolumePathNameW` before querying allocation
