@@ -57,6 +57,7 @@ bool parse_sortable_datetime(
 
 std::string format_sortable_datetime(int year, int month, int day, int hour, int minute, int second) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0')
            << std::setw(4) << year
            << std::setw(2) << month
@@ -69,6 +70,7 @@ std::string format_sortable_datetime(int year, int month, int day, int hour, int
 
 std::string format_sortable_date(int year, int month, int day) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0')
            << std::setw(4) << year
            << std::setw(2) << month
@@ -145,6 +147,7 @@ std::string format_runtime_time_for_set(
     int second,
     const std::function<std::string(const std::string&)>& set_callback) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0');
     if (use_twelve_hour_clock(set_callback)) {
         const bool afternoon = hour >= 12;
@@ -176,6 +179,7 @@ std::string format_runtime_date_for_set(
     const std::string mark = date_mark(set_callback);
 
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0');
     const auto write_year = [&]() {
         if (century) {
@@ -964,6 +968,7 @@ std::optional<PrgValue> evaluate_date_time_function(
             return make_string_value(std::string{});
         }
         std::ostringstream stream;
+        stream.imbue(std::locale::classic());
         stream << std::setfill('0')
                << std::setw(4) << year
                << std::setw(2) << month

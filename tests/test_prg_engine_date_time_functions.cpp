@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <locale>
 #include <system_error>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -21,8 +22,38 @@ namespace
 
     using namespace copperfin::test_support;
 
+    class comma_decimal_numpunct final : public std::numpunct<char>
+    {
+    protected:
+        char do_decimal_point() const override { return ','; }
+        char do_thousands_sep() const override { return '.'; }
+        std::string do_grouping() const override { return "\3"; }
+    };
+
+    class global_locale_guard final
+    {
+    public:
+        explicit global_locale_guard(const std::locale &replacement)
+            : previous_(std::locale::global(replacement))
+        {
+        }
+
+        ~global_locale_guard()
+        {
+            std::locale::global(previous_);
+        }
+
+        global_locale_guard(const global_locale_guard &) = delete;
+        global_locale_guard &operator=(const global_locale_guard &) = delete;
+
+    private:
+        std::locale previous_;
+    };
+
     void test_date_time_expression_functions()
     {
+        const std::locale grouping_locale(std::locale::classic(), new comma_decimal_numpunct());
+        global_locale_guard locale_guard(grouping_locale);
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_date_time";
         std::error_code ignored;

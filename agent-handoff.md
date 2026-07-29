@@ -27,13 +27,23 @@ DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
 Linux, Windows/MSVC, and macOS/AppleClang review is accepted at the expanded
 head; this is focused cross-platform evidence, not full RC evidence.
 
-The #4840/#109 DBF DateTime display slice is implementation-complete.
+The #4841/#109 runtime date/time formatting slice is implementation-complete.
+Sortable DTOC/TTOC/DTOS/STOD text and SET-controlled date/time presentation
+now use `std::locale::classic()` for numeric component streams, preventing host
+digit grouping from corrupting compact and parser-facing values. The focused
+date/time fixture runs under adversarial comma-decimal punctuation with period
+grouping and preserves compact/presentation output, round trips, 12/24-hour
+behavior, century settings, and date marks. Cross-platform review is required
+before closure.
+
+The #4840/#109 DBF DateTime display slice is implementation-complete and
+cross-platform reviewed.
 The `T` decoder now uses `std::locale::classic()` for its
 `julian:<integer> millis:<integer>` text, preserving exact binary storage and
 the existing parser contract under grouped host cultures. The shared
 Currency/DateTime round-trip fixture installs comma-decimal punctuation with
-period digit grouping before reading the records; cross-platform review is
-required before closure.
+period digit grouping before reading the records; Linux, Windows/MSVC, and
+macOS/AppleClang focused validation is accepted.
 
 The #4837/#109 visual-geometry serialization slice is implementation-complete.
 `format_visual_geometry_number()` now uses `std::locale::classic()` for

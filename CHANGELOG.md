@@ -1,3 +1,11 @@
+- 2026-07-29: Hardened #4841/#109 runtime date/time formatting against grouped
+  host cultures. Sortable DTOC/TTOC/DTOS/STOD text and SET-controlled date/time
+  presentation now serialize numeric components with the classic locale while
+  preserving intentional SET DATE/MARK/HOURS/SECONDS behavior. The focused
+  date/time regression runs its existing compact, presentation, round-trip,
+  12/24-hour, century, and date-mark matrix under adversarial comma-decimal
+  punctuation with period digit grouping.
+
 - 2026-07-29: Hardened #4840/#109 DBF DateTime display serialization against
   grouped host cultures. `T` fields now preserve the invariant
   `julian:<integer> millis:<integer>` text contract while retaining exact
