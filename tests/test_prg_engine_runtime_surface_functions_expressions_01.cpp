@@ -523,6 +523,8 @@ namespace copperfin::runtime_surface_tests
             "cGetEnvCleared = GETENV('" + env_name + "')\n"
             "cSys3 = SYS(3)\n"
             "cSys3Second = SYS(3)\n"
+            "cSys2015 = SYS(2015)\n"
+            "cSys2015Second = SYS(2015)\n"
             "cSys7 = SYS(7)\n"
             "cSys11 = SYS(11)\n"
             "cSys13 = SYS(13)\n"
@@ -585,6 +587,28 @@ namespace copperfin::runtime_surface_tests
             expect(legal_name(first), "SYS(3) should return an eight-digit legal filename component");
             expect(legal_name(second), "a second SYS(3) value should remain a legal filename component");
             expect(first != second, "successive SYS(3) calls should not collide in one runtime session");
+        }
+
+        const auto sys2015_value = state.globals.find("csys2015");
+        const auto sys2015_second_value = state.globals.find("csys2015second");
+        if (sys2015_value == state.globals.end() || sys2015_second_value == state.globals.end())
+        {
+            expect(false, "SYS(2015) should expose two unique procedure names");
+        }
+        else
+        {
+            const std::string first = copperfin::runtime::format_value(sys2015_value->second);
+            const std::string second = copperfin::runtime::format_value(sys2015_second_value->second);
+            const auto legal_name = [](const std::string& value) {
+                return value.size() == 10U && value.front() == '_' &&
+                    std::all_of(value.begin() + 1, value.end(), [](unsigned char ch) {
+                        return std::isdigit(ch) != 0 ||
+                            (ch >= 'A' && ch <= 'Z');
+                    });
+            };
+            expect(legal_name(first), "SYS(2015) should return a ten-character VFP identifier");
+            expect(legal_name(second), "a second SYS(2015) value should remain a legal VFP identifier");
+            expect(first != second, "successive SYS(2015) calls should not collide in one runtime session");
         }
 
         const auto sys7_value = state.globals.find("csys7");

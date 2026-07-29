@@ -51,6 +51,26 @@ std::string make_legal_runtime_temp_file_name() {
     return result.str();
 }
 
+std::string make_unique_runtime_procedure_name() {
+    static std::atomic<std::uint64_t> sequence{0U};
+    constexpr std::uint64_t base36_modulus = 101559956668416ULL;
+    constexpr char base36_digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const auto ticks = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count());
+    const std::uint64_t serial = sequence.fetch_add(1U, std::memory_order_relaxed);
+    std::uint64_t value = (ticks + serial) % base36_modulus;
+
+    std::string result(10U, '0');
+    result.front() = '_';
+    for (std::size_t index = result.size(); index-- > 1U;) {
+        result[index] = base36_digits[value % 36U];
+        value /= 36U;
+    }
+    return result;
+}
+
 bool is_windows_drive_absolute_path(const std::string& value) {
     return value.size() >= 3U &&
         std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&

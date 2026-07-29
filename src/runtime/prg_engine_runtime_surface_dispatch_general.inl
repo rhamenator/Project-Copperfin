@@ -28,6 +28,11 @@
                 // callers can append the file type they need.
                 return make_string_value(make_legal_runtime_temp_file_name());
             }
+            if (sys_code == 2015) {
+                // VFP9 SYS(2015) is a ten-character identifier for generated
+                // procedure, alias, cursor, and file names.
+                return make_string_value(make_unique_runtime_procedure_name());
+            }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
             }
