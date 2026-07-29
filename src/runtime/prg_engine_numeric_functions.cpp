@@ -14,10 +14,12 @@
 #include <cstdint>
 #include <limits>
 #include <iomanip>
+#include <locale>
 #include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace copperfin::runtime {
 
@@ -39,18 +41,62 @@ std::string numeric_domain_error(
         });
 }
 
-std::optional<double> round_decimal_value(const double value, const int decimal_places) {
-    if (!std::isfinite(value) || decimal_places < -308 || decimal_places > 308) {
+std::optional<std::string> format_floating_text(const double value) {
+#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
+    // Apple libc++ may not provide floating-point std::to_chars/std::from_chars.
+    // Use a locale-stable fallback only on that platform/STL combination.
+    std::ostringstream formatter;
+    formatter.imbue(std::locale::classic());
+    formatter << std::setprecision(std::numeric_limits<double>::digits10) << value;
+    const std::string text = formatter.str();
+    if (text.empty()) {
         return std::nullopt;
     }
-
+    return text;
+#else
     std::array<char, 128> buffer{};
     const auto converted = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
     if (converted.ec != std::errc{}) {
         return std::nullopt;
     }
+    return std::string(buffer.data(), converted.ptr);
+#endif
+}
 
-    std::string text(buffer.data(), converted.ptr);
+std::optional<double> parse_floating_text(const std::string_view text) {
+#if defined(__APPLE__) && defined(_LIBCPP_VERSION)
+    std::istringstream parser{std::string{text}};
+    parser.imbue(std::locale::classic());
+    double value = 0.0;
+    parser >> value;
+    if (parser.fail()) {
+        return std::nullopt;
+    }
+    parser >> std::ws;
+    if (!parser.eof()) {
+        return std::nullopt;
+    }
+    return value;
+#else
+    double value = 0.0;
+    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
+    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size()) {
+        return std::nullopt;
+    }
+    return value;
+#endif
+}
+
+std::optional<double> round_decimal_value(const double value, const int decimal_places) {
+    if (!std::isfinite(value) || decimal_places < -308 || decimal_places > 308) {
+        return std::nullopt;
+    }
+
+    const auto text_value = format_floating_text(value);
+    if (!text_value.has_value()) {
+        return std::nullopt;
+    }
+    std::string text = *text_value;
     const bool negative = !text.empty() && text.front() == '-';
     if (negative) {
         text.erase(text.begin());
@@ -134,13 +180,11 @@ std::optional<double> round_decimal_value(const double value, const int decimal_
         rounded_text.insert(static_cast<std::size_t>(rounded_decimal_index), 1U, '.');
     }
 
-    double rounded_value = 0.0;
-    const auto parsed = std::from_chars(
-        rounded_text.data(), rounded_text.data() + rounded_text.size(), rounded_value);
-    if (parsed.ec != std::errc{} || parsed.ptr != rounded_text.data() + rounded_text.size()) {
+    const auto rounded_value = parse_floating_text(rounded_text);
+    if (!rounded_value.has_value()) {
         return std::nullopt;
     }
-    return negative ? -rounded_value : rounded_value;
+    return negative ? -*rounded_value : *rounded_value;
 }
 
 }  // namespace

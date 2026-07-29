@@ -102,6 +102,14 @@ std::filesystem::path find_dotnet_root(const std::filesystem::path& dotnet_path)
     if (!home.has_value()) {
         return {};
     }
+    std::error_code canonical_error;
+    const std::filesystem::path resolved_dotnet_path =
+        std::filesystem::weakly_canonical(dotnet_path, canonical_error);
+    if (!canonical_error &&
+        std::filesystem::is_regular_file(resolved_dotnet_path) &&
+        resolved_dotnet_path.filename() == "dotnet") {
+        return resolved_dotnet_path.parent_path();
+    }
     std::error_code iterator_error;
     for (std::filesystem::directory_iterator it(*home, iterator_error), end;
          it != end;
@@ -118,9 +126,9 @@ std::filesystem::path find_dotnet_root(const std::filesystem::path& dotnet_path)
             return it->path();
         }
     }
-    if (std::filesystem::is_regular_file(dotnet_path) &&
+    if (std::filesystem::is_regular_file(resolved_dotnet_path.empty() ? dotnet_path : resolved_dotnet_path) &&
         read_text(dotnet_path).rfind("#!", 0U) != 0U) {
-        return dotnet_path.parent_path();
+        return (resolved_dotnet_path.empty() ? dotnet_path : resolved_dotnet_path).parent_path();
     }
     return {};
 }
