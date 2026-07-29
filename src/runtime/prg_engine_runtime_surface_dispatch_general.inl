@@ -62,6 +62,20 @@
                     '\x1f' + value_as_string(arguments[1]);
                 return make_string_value(set_callback(request));
             }
+            if (sys_code == 2012) {
+                // VFP9 SYS(2012) returns the physical memo block size as
+                // character text for the selected open table.
+                const std::string cursor_designator = arguments.size() >= 2U
+                    ? value_as_string(arguments[1])
+                    : std::string{};
+                const auto snapshot = snapshot_cursor_callback
+                    ? snapshot_cursor_callback(cursor_designator)
+                    : std::nullopt;
+                return make_string_value(
+                    snapshot.has_value() && snapshot->memo_field_block_size.has_value()
+                        ? std::to_string(*snapshot->memo_field_block_size)
+                        : std::string("0"));
+            }
             if (sys_code == 2021) {
                 // VFP9 SYS(2021) returns the 1-based filtered-index expression
                 // from the selected cursor without changing cursor state.
@@ -103,9 +117,12 @@
                 // VFP9 SYS(2030) reports and changes a session-local numeric
                 // debug-feature switch; it does not control the host debugger.
                 if (arguments.size() >= 2U) {
-                    return make_number_value(std::stod(set_callback(
-                        std::string("__sys2030__\x1f") +
-                        std::to_string(safe_int_argument(1U, 0)))));
+                    const auto requested = strict_binary_switch_argument(1U);
+                    if (requested.has_value()) {
+                        return make_number_value(std::stod(set_callback(
+                            std::string("__sys2030__\x1f") +
+                            std::to_string(*requested))));
+                    }
                 }
                 return make_number_value(std::stod(set_callback("__sys2030__")));
             }

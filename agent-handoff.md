@@ -2,6 +2,26 @@
 
 ## Current State
 
+The #4821 SYS(2021) follow-up corrects physical order numbering: each open
+order retains one runtime-only slot, including an empty slot for unfiltered
+orders, and remote/synthetic cursors do not expose order metadata. Mixed
+unfiltered/filtered IDX regression coverage passes in the focused runtime
+surface CTest.
+
+The #4820 SYS(2030) follow-up now validates setter values before dispatch.
+Only exact binary values are accepted; nonnumeric, empty, fractional, and
+other invalid values preserve the session-local switch. Focused regression
+coverage passes `1/1`.
+
+The #4822 SYS(2012) slice implements VFP9 memo-field block-size lookup as
+character text through the existing open-cursor metadata seam. Physical DBF
+memo sidecars are resolved with the cross-platform case-folding helper;
+missing, non-memo, synthetic, remote, ambiguous, and unavailable tables return
+character `0`. The value is runtime-only and does not alter cursor position or
+portable cursor XML. The rebuilt `test_prg_engine_runtime_surface_functions`
+target passes `1/1`, including character return and zero-return boundary
+coverage.
+
 The #4821 SYS(2021) slice implements VFP9 filtered-index-expression lookup
   through the existing open-cursor metadata. It returns the 1-based `FOR`
   expression as character text, supports explicit aliases, returns empty text

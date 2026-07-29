@@ -2549,10 +2549,13 @@ namespace copperfin::runtime
 
                 RuntimeSurfaceCursorSnapshot snapshot;
                 snapshot.alias = cursor->alias;
-                for (const CursorState::OrderState &order : cursor->orders)
+                if (!cursor->remote && !cursor->source_path.empty())
                 {
-                    if (!order.for_expression.empty())
+                    for (const CursorState::OrderState &order : cursor->orders)
                     {
+                        // Preserve one slot per physical order so SYS(2021)'s
+                        // 1-based order number is not compressed by unfiltered
+                        // tags.
                         snapshot.filtered_index_expressions.push_back(order.for_expression);
                     }
                 }
@@ -2580,6 +2583,11 @@ namespace copperfin::runtime
                     {
                         snapshot.code_page = vfp::dbf_code_page_from_mark(header_result.header.code_page_mark);
                         snapshot.table_type = static_cast<int>(header_result.header.version);
+                        if (const auto block_size = vfp::read_memo_field_block_size(header_path);
+                            block_size.has_value())
+                        {
+                            snapshot.memo_field_block_size = static_cast<int>(*block_size);
+                        }
                     }
                     if (!snapshot_root.empty())
                     {

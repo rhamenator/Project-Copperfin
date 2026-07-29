@@ -17,6 +17,7 @@ int main()
     test_sys2014_returns_minimum_runtime_path();
     test_sys2000_enumerates_wildcard_file_matches();
     test_sys2029_reports_dbf_table_type();
+    test_sys2012_reports_memo_field_block_size();
     test_sys2030_debug_feature_state_is_session_local();
     test_sys2021_returns_filtered_index_expressions();
     test_object_reflection_runtime_surface_functions();

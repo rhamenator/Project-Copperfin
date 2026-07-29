@@ -227,6 +227,54 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         return default_value;
     };
+    auto strict_binary_switch_argument = [&](std::size_t index) -> std::optional<int> {
+        if (index >= arguments.size()) {
+            return std::nullopt;
+        }
+        const PrgValue& value = arguments[index];
+        const auto integral_binary_value = [](double numeric) -> std::optional<int> {
+            if (!std::isfinite(numeric) || std::trunc(numeric) != numeric ||
+                (numeric != 0.0 && numeric != 1.0)) {
+                return std::nullopt;
+            }
+            return static_cast<int>(numeric);
+        };
+        switch (value.kind) {
+            case PrgValueKind::boolean:
+                return value.boolean_value ? 1 : 0;
+            case PrgValueKind::number:
+                return integral_binary_value(value.number_value);
+            case PrgValueKind::currency:
+                return integral_binary_value(value_as_number(value));
+            case PrgValueKind::int64:
+                return value.int64_value == 0 || value.int64_value == 1
+                    ? std::optional<int>(static_cast<int>(value.int64_value))
+                    : std::nullopt;
+            case PrgValueKind::uint64:
+                return value.uint64_value == 0U || value.uint64_value == 1U
+                    ? std::optional<int>(static_cast<int>(value.uint64_value))
+                    : std::nullopt;
+            case PrgValueKind::string: {
+                const std::string text = trim_copy(value.string_value);
+                if (text.empty()) {
+                    return std::nullopt;
+                }
+                try {
+                    std::size_t consumed = 0U;
+                    const double parsed = std::stod(text, &consumed);
+                    if (consumed != text.size()) {
+                        return std::nullopt;
+                    }
+                    return integral_binary_value(parsed);
+                } catch (...) {
+                    return std::nullopt;
+                }
+            }
+            case PrgValueKind::empty:
+                return std::nullopt;
+        }
+        return std::nullopt;
+    };
     auto safe_int64_argument = [&](std::size_t index, std::int64_t default_value) {
         if (index >= arguments.size()) {
             return default_value;

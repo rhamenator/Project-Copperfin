@@ -1283,6 +1283,42 @@ std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, s
             bytes.begin() + static_cast<std::ptrdiff_t>(payload_end)};
 }
 
+std::optional<std::uint16_t> read_memo_field_block_size(const std::string& table_path) {
+    const std::vector<std::uint8_t> table_bytes = read_binary_file(table_path);
+    if (table_bytes.empty()) {
+        return std::nullopt;
+    }
+
+    const DbfParseResult header_result = parse_dbf_header(table_bytes);
+    if (!header_result.ok || table_bytes.size() < header_result.header.header_length) {
+        return std::nullopt;
+    }
+
+    bool has_memo_field = false;
+    for (const RawFieldDescriptor& field : read_raw_field_descriptors(table_bytes)) {
+        if (is_memo_pointer_field(field.type)) {
+            has_memo_field = true;
+            break;
+        }
+    }
+    if (!has_memo_field) {
+        return std::nullopt;
+    }
+
+    const SidecarPathResolution memo_resolution = resolve_memo_sidecar_path(table_path);
+    if (memo_resolution.ambiguous || !memo_resolution.path.has_value()) {
+        return std::nullopt;
+    }
+    const std::vector<std::uint8_t> memo_bytes = read_binary_file(
+        platform::path_to_utf8_string(*memo_resolution.path));
+    if (memo_bytes.size() < 8U) {
+        return std::nullopt;
+    }
+
+    const std::uint16_t block_size = read_be_u16(memo_bytes, 6U);
+    return block_size == 0U ? std::nullopt : std::optional<std::uint16_t>(block_size);
+}
+
 DbfTableParseResult parse_dbf_table_from_file(
     const std::string& path,
     std::size_t max_records,

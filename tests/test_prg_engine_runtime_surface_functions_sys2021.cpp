@@ -15,9 +15,11 @@ namespace copperfin::runtime_surface_tests
         fs::create_directories(temp_root);
 
         const fs::path table_path = temp_root / "people.dbf";
-        const fs::path index_path = temp_root / "people.idx";
+        const fs::path index_path = temp_root / "people.dbf.idx";
+        const fs::path filtered_index_path = temp_root / "people.idx";
         write_simple_dbf(table_path, {{"ALPHA", 20}, {"BRAVO", 30}});
-        write_synthetic_idx_with_for(index_path, "UPPER(NAME)", "DELETED() = .F.");
+        write_synthetic_idx(index_path, "NAME");
+        write_synthetic_idx_with_for(filtered_index_path, "UPPER(NAME)", "DELETED() = .F.");
 
         const fs::path main_path = temp_root / "sys2021.prg";
         write_text(
@@ -25,8 +27,8 @@ namespace copperfin::runtime_surface_tests
             "USE '" + table_path.string() + "' ALIAS People IN 0\n"
             "nBeforeRecno = RECNO()\n"
             "cCurrent = SYS(2021, 1)\n"
-            "cAlias = SYS(2021, 1, 'People')\n"
-            "cOutOfRange = SYS(2021, 2)\n"
+            "cAlias = SYS(2021, 2, 'People')\n"
+            "cOutOfRange = SYS(2021, 3)\n"
             "cInvalid = SYS(2021, 0)\n"
             "nAfterRecno = RECNO()\n"
             "cNoCursor = SYS(2021, 1, 'MissingAlias')\n"
@@ -50,8 +52,8 @@ namespace copperfin::runtime_surface_tests
         if (current != state.globals.end())
         {
             expect(current->second.kind == copperfin::runtime::PrgValueKind::string &&
-                       copperfin::runtime::format_value(current->second) == "DELETED() = .F.",
-                   "SYS(2021) should return the filtered index expression as character text");
+                       copperfin::runtime::format_value(current->second).empty(),
+                   "SYS(2021) should preserve an empty slot for an unfiltered first order");
         }
         expect(value("calias") == "DELETED() = .F.",
                "SYS(2021) should resolve an explicit alias through the cursor seam");

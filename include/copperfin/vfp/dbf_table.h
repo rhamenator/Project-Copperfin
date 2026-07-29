@@ -90,4 +90,10 @@ DbfWriteResult zap_dbf_table_file(const std::string& path);
     const std::string& sidecar_path,
     std::uint32_t block_number);
 
+// Returns the physical memo-field block size from a table's resolved memo
+// sidecar, or no value when the table has no memo field or the sidecar cannot
+// be resolved safely.
+[[nodiscard]] std::optional<std::uint16_t> read_memo_field_block_size(
+    const std::string& table_path);
+
 }  // namespace copperfin::vfp

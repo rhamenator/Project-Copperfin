@@ -1,5 +1,22 @@
 # VFP Language Reference Coverage
 
+- SYS(2021) review correction (2026-07-28, #4821): filtered-index lookup now
+  preserves one slot per physical order, so an unfiltered order does not shift
+  later 1-based positions. Remote and synthetic cursors do not expose order
+  metadata. Mixed unfiltered/filtered IDX regression coverage passes `1/1`.
+
+- SYS(2030) review correction (2026-07-28, #4820): setter inputs are validated
+  before the session-local switch is changed. Only exact binary values are
+  accepted; nonnumeric, empty, fractional, and other invalid values preserve
+  the current state. Focused runtime-surface CTest coverage passes `1/1`.
+
+- Current SYS(2012) status (2026-07-28, #4822 under #3217): the runtime now
+  returns the resolved DBF memo sidecar block size as character text for the
+  selected open memo table, including explicit alias lookup. Missing, non-memo,
+  synthetic, remote, ambiguous, and unavailable tables return character `0`;
+  cursor position and portable cursor XML remain unchanged. Focused
+  runtime-surface CTest coverage passes `1/1`.
+
 - Current SYS(2021) status (2026-07-28, #4821 under #3217): the runtime now
   returns the 1-based filtered index/tag `FOR` expression for the selected
   open cursor as character text, using the existing parsed order metadata.

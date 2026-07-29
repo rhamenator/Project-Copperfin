@@ -5679,3 +5679,19 @@ It is intentionally append-only and mirrors shipped history rather than planned 
   Managed catalog parity passed, the DesignerSmokeTests project built with
   zero warnings/errors, and the exact `SmokeProjectWorkspaceEntryActivation`
   WinForms smoke passed all assertions under Mono offscreen mode.
+2026-07-28: Implemented #4822 under #3217. Native PRG `SYS(2012 [, nWorkArea
+| cTableAlias])` now returns the resolved DBF memo sidecar block size as
+character text for open memo tables. Missing, non-memo, synthetic, remote,
+ambiguous, and unavailable tables return character `0`; cursor position and
+portable cursor contracts remain unchanged. Focused runtime-surface CTest
+coverage passes `1/1`.
+2026-07-28: Corrected the #4821 SYS(2021) implementation after independent
+Windows/macOS review. Physical order slots are now preserved even when a tag
+has no `FOR` expression, and remote/synthetic cursors cannot leak order
+metadata into the result. Added mixed-order regression coverage.
+
+2026-07-28: Corrected the #4820 SYS(2030) setter boundary after independent
+Windows/macOS review. Only exact binary values are accepted; nonnumeric,
+empty, fractional, and other invalid values preserve the session state instead
+of being silently rounded or defaulted. Focused runtime-surface CTest coverage
+passes `1/1`.

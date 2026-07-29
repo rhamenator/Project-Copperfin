@@ -34,6 +34,9 @@ struct RuntimeSurfaceCursorSnapshot {
     // Runtime-only filtered index metadata used by SYS(2021). This is
     // intentionally not serialized into the portable cursor XML contract.
     std::vector<std::string> filtered_index_expressions;
+    // Runtime-only physical memo metadata used by SYS(2012). This is
+    // intentionally not serialized into the portable cursor XML contract.
+    std::optional<int> memo_field_block_size;
     std::vector<RuntimeSurfaceCursorField> fields;
     std::vector<RuntimeSurfaceCursorRow> rows;
 };
