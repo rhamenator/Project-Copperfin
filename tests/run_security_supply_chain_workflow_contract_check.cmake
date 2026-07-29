@@ -47,6 +47,8 @@ require_text("uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # 
     "pinned checkout action")
 require_text("uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0"
     "pinned SBOM action")
+require_text("syft-version: v1.50.0"
+    "explicit available Syft release pin")
 require_text("uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"
     "pinned authoritative artifact uploader")
 require_text("uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0"

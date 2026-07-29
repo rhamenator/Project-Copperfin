@@ -2917,3 +2917,12 @@ head is now `d17c0bd68` while the product-validation head remains `364e62058`.
 Windows Native job `30404819387` is still in progress. RC readiness remains
 unclaimed pending that result, genuinely arm's-length #4403 safety sign-off,
 and protected #4409 launcher-trust provisioning.
+
+# 2026-07-29 Supply-chain follow-up #4847 under #4046: the hosted security
+workflow was failing before SBOM generation because Anchore SBOM Action
+`v0.24.0` implicitly requested nonexistent Syft `v1.42.3` (HTTP 404). The
+workflow now explicitly requests available Syft `v1.50.0`, and the local CMake
+workflow contract requires that pin. Artifact ownership remains unchanged:
+Anchore generates only, `actions/upload-artifact` publishes exactly one
+`cyclonedx-sbom`, and the Trivy HIGH/CRITICAL gate remains enabled. A fresh
+hosted run is required before closing #4847.

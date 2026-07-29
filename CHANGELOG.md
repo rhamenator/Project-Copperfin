@@ -6029,3 +6029,9 @@ Windows/macOS review. Only exact binary values are accepted; nonnumeric,
 empty, fractional, and other invalid values preserve the session state instead
 of being silently rounded or defaulted. Focused runtime-surface CTest coverage
 passes `1/1`.
+
+- 2026-07-29: Corrected supply-chain child #4847 under #4046. The Security
+  Supply Chain Gate now explicitly pins Anchore SBOM generation to available
+  Syft release `v1.50.0`; the checked workflow no longer depends on the
+  action's stale implicit `v1.42.3` selection. The single CycloneDX artifact
+  owner, read-only permissions, and Trivy gate remain unchanged.
