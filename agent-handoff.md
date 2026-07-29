@@ -30,8 +30,9 @@ Numeric values used by preprocessor text/substrings comparisons now serialize
 with `std::locale::classic()`, preserving period-decimal conditional
 compilation semantics. The parser regression poisons the process-global locale
 and verifies `1.25 $ "1.25"` selects the true branch; Linux focused CTest
-passes under default, `C`, and `C.utf8`. Cross-platform review remains required
-before issue closure.
+passes under default, `C`, and `C.utf8`. Full POSIX validation at the current
+head passes `316/316`, with only the documented launcher-process skips.
+Cross-platform review remains required before issue closure.
 
 The #4835/#109 binary/intermediate double-serialization slice is
 implementation-complete. Generated PRG INSERT expressions, DBF binary-double
