@@ -27,12 +27,14 @@ DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
 Linux, Windows/MSVC, and macOS/AppleClang review is accepted at the expanded
 head; this is focused cross-platform evidence, not full RC evidence.
 
-The #4844/#109 SAVE/RESTORE array-metadata slice is implementation-complete.
+The #4844/#109 SAVE/RESTORE array-metadata slice is implementation-complete
+and cross-platform reviewed.
 Persisted row and column counts now serialize with `std::locale::classic()`,
 so grouped host punctuation cannot truncate large arrays during restore. The
 existing mixed-type round trip now runs with adversarial comma-decimal
 punctuation across 1000 rows and checks invariant dimensions plus distinct
-rows 999 and 1000. Cross-platform review is required before closure.
+rows 999 and 1000. Linux, Windows/MSVC, and macOS/AppleClang focused
+validation is accepted.
 
 The #4843/#109 SYLK coordinate slice is implementation-complete and
 cross-platform reviewed. SYLK table
