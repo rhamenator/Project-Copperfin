@@ -221,15 +221,11 @@ std::optional<PrgValue> evaluate_string_function(
             }
         }
         double result = 0.0;
-        try {
-            const std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
-            if (currency) {
-                return make_currency_value(parse_currency_scaled_value(numeric_text).value_or(0));
-            }
-            result = std::stod(numeric_text);
-        } catch (...) {
-            result = 0.0;
+        const std::string numeric_text = src.substr(numeric_start, numeric_end - numeric_start);
+        if (currency) {
+            return make_currency_value(parse_currency_scaled_value(numeric_text).value_or(0));
         }
+        result = try_parse_invariant_double(numeric_text).value_or(0.0);
         return make_number_value(result);
     }
     if (function == "occurs" && arguments.size() >= 2U) {

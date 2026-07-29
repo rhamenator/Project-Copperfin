@@ -1840,14 +1840,8 @@
                 if (function == "txnlevel")
                 {
                     const std::string level_text = trim_copy(set_callback_("TXNLEVEL"));
-                    try
-                    {
-                        return make_number_value(std::stod(level_text.empty() ? "0" : level_text));
-                    }
-                    catch (...)
-                    {
-                        return make_number_value(0.0);
-                    }
+                    return make_number_value(
+                        try_parse_invariant_double(level_text.empty() ? "0" : level_text).value_or(0.0));
                 }
                 if (function == "dodefault")
                 {

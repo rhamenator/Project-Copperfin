@@ -1,3 +1,11 @@
+- 2026-07-29: Extended #4824 through runtime value materialization. `VAL()`,
+  aggregate/TOTAL numeric conversion, DBF numeric-field materialization, and
+  TXNLEVEL callback parsing now use the shared invariant parser. Currency
+  scaling, malformed/overflow tolerance, and explicit DBF `B` nonfinite
+  preservation remain intact. `test_prg_engine`,
+  `test_prg_engine_control_flow`, and `test_prg_engine_string_math_functions`
+  pass `3/3`.
+
 - 2026-07-29: Extended #4824 to index optimization. Numeric literal
   recognition for seek planning now uses the shared locale-independent parser,
   preserving invariant decimal/full-input behavior without changing index

@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant runtime value follow-up (2026-07-29, #4824 under #3217):
+  `VAL()`, aggregate/TOTAL conversion, DBF numeric-field materialization, and
+  TXNLEVEL callback parsing now use the shared invariant parser. Currency,
+  malformed/overflow, and DBF `B` nonfinite boundaries remain unchanged.
+  Focused PRG/string/control-flow CTest matrix passes `3/3`.
+
 - Culture-invariant index-planning follow-up (2026-07-29, #4824 under #3217):
   numeric literal recognition used by seek optimization now uses the shared
   locale-independent parser without changing index selection contracts.

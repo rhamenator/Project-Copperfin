@@ -1453,14 +1453,11 @@
                 {
                     return make_number_value(0.0);
                 }
-                try
+                if (const auto parsed = try_parse_invariant_double(text, field_type == 'B'); parsed.has_value())
                 {
-                    return make_number_value(std::stod(text));
+                    return make_number_value(*parsed);
                 }
-                catch (const std::exception &)
-                {
-                    return make_string_value(field.display_value);
-                }
+                return make_string_value(field.display_value);
             }
             if (field_type == 'D')
             {

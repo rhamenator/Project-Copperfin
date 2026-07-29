@@ -345,8 +345,8 @@ std::string normalize_index_value(std::string value) {
     return value;
 }
 
-std::optional<double> try_parse_invariant_double(std::string_view value) {
-    return copperfin::platform::try_parse_invariant_double(value);
+std::optional<double> try_parse_invariant_double(std::string_view value, const bool allow_nonfinite) {
+    return copperfin::platform::try_parse_invariant_double(value, allow_nonfinite);
 }
 
 std::optional<double> try_parse_numeric_index_value(const std::string& value) {

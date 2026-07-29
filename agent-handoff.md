@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 runtime value-materialization follow-up migrates `VAL()`,
+aggregate/TOTAL numeric conversion, DBF numeric-field materialization, and
+TXNLEVEL callback parsing to the shared invariant parser. Currency scaling,
+malformed/overflow tolerance, and explicit DBF `B` nonfinite preservation are
+unchanged. `test_prg_engine`, `test_prg_engine_control_flow`, and
+`test_prg_engine_string_math_functions` pass `3/3`.
+
 The #4824 index-optimizer follow-up now uses the shared portable invariant
 numeric parser for numeric literal recognition during seek planning. Index
 selection behavior is unchanged; `test_prg_engine_index_seek_optimization`
