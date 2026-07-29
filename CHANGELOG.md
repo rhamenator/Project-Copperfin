@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4818 under #3217. Native PRG `SYS(2040)` now
+  returns numeric report status per runtime session: `0` when idle, `1` while
+  a report or label preview is active, and `2` while output is rendered. The
+  status resets after preview cleanup and after successful or failed output;
+  focused work-area/report CTest coverage passes `1/1` without changing report
+  output or machine-readable contracts.
+
 - 2026-07-28: Implemented #4817 under #3217. Native PRG `SYS(2019)` and
   `SYS(2019, 1)` now expose the discovered external `CONFIG.FPW` path as
   character text, while selector `2` and missing configuration files return

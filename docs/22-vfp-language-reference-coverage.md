@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current SYS(2040) status (2026-07-28, #4818 under #3217): the runtime now
+  returns numeric report state per PRG runtime session: `0` when no report or
+  label is active, `1` while a preview is in its event loop, and `2` while
+  report/label output is being rendered. `CLEAR EVENTS` resets preview state,
+  and output resets the status on both success and failure. Focused
+  work-area/report CTest coverage passes `1/1`; SYS(2024) interruption and
+  broader ReportListener parity remain separate boundaries.
+
 - Current modeled-window status (2026-07-28, #4808/#4809 under #3217): the
   shared headless PRG runtime implements the VFP9 `WVISIBLE(WindowName)` and
   `WEXIST(WindowName)` contracts for modeled windows. An empty name reports

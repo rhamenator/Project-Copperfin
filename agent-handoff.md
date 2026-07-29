@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `2eaaa43f5`. Prior exact-head release
+The latest implementation head is `cd6ed713d`. Prior exact-head release
 matrices are superseded by the #4810 codepage correction, the #4811/#4812
 monotonic generator corrections, the numeric #4813 SYS(2029) correction, and
 the #4814/#4815 runtime slices, the #4816 automation-locale slice, and the
@@ -22,6 +22,13 @@ exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
 remain open. The worktree is synchronized, and no Copperfin-owned process or
 test window is left running.
+
+The #4818 SYS(2040) slice adds session-local report state to the native PRG
+runtime: `0` is idle, `1` is an active report/label preview, and `2` is active
+output rendering. Preview cleanup through `CLEAR EVENTS` and successful or
+failed output both return the state to `0`; the focused
+`test_prg_engine_work_areas` CTest passes `1/1`. SYS(2024) interruption
+semantics and broader ReportListener parity remain separate runtime slices.
 
 The #4810 correction restores the VFP9 `CODEPAGE` boundary: it is read from
 `CONFIG.FPW` at startup, not changed by a live `SET CODEPAGE TO n` command.
