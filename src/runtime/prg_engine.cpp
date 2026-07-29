@@ -778,6 +778,14 @@ namespace copperfin::runtime
             std::string dotnet_method_name;
         };
 
+        struct Sys2000EnumerationState
+        {
+            std::string skeleton;
+            std::string base_directory;
+            std::vector<std::string> matches;
+            std::size_t next_match = 0U;
+        };
+
         struct DataSessionState
         {
             struct RelationState
@@ -1092,6 +1100,7 @@ namespace copperfin::runtime
         int next_ole_handle = 1;
         std::map<int, DataSessionState> data_sessions;
         std::map<int, std::string> default_directory_by_session;
+        std::map<int, Sys2000EnumerationState> sys2000_enumeration_by_session;
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
@@ -2116,6 +2125,82 @@ namespace copperfin::runtime
                 {
                     const std::string designator = trimmed_option_name.substr(dbused_prefix.size());
                     return database_is_open(designator) ? std::string{"1"} : std::string{"0"};
+                }
+                constexpr std::string_view sys2000_prefix = "__sys2000__\x1f";
+                if (trimmed_option_name.starts_with(sys2000_prefix))
+                {
+                    const std::string payload = trimmed_option_name.substr(sys2000_prefix.size());
+                    const std::size_t operation_end = payload.find('\x1f');
+                    if (operation_end == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+
+                    const bool next_match_requested = payload.substr(0U, operation_end) == "next";
+                    const std::string skeleton = payload.substr(operation_end + 1U);
+                    Sys2000EnumerationState &state = sys2000_enumeration_by_session[current_data_session];
+                    const std::string base_directory = current_default_directory();
+                    if (!next_match_requested || state.skeleton != skeleton || state.base_directory != base_directory)
+                    {
+                        state = Sys2000EnumerationState{
+                            .skeleton = skeleton,
+                            .base_directory = base_directory,
+                            .matches = {},
+                            .next_match = 0U};
+
+                        std::string normalized_skeleton = skeleton;
+                        std::replace(
+                            normalized_skeleton.begin(),
+                            normalized_skeleton.end(),
+                            '\\',
+                            static_cast<char>(std::filesystem::path::preferred_separator));
+                        std::filesystem::path pattern_path =
+                            copperfin::platform::path_from_utf8_string(normalized_skeleton);
+                        if (pattern_path.is_relative())
+                        {
+                            pattern_path =
+                                copperfin::platform::path_from_utf8_string(base_directory) / pattern_path;
+                        }
+
+                        const std::filesystem::path directory = pattern_path.has_parent_path()
+                            ? pattern_path.parent_path()
+                            : copperfin::platform::path_from_utf8_string(base_directory);
+                        const std::string pattern =
+                            copperfin::platform::path_to_utf8_string(pattern_path.filename());
+                        std::error_code directory_error;
+                        std::filesystem::directory_iterator iterator(directory, directory_error);
+                        const std::filesystem::directory_iterator end;
+                        while (!directory_error && iterator != end)
+                        {
+                            const std::filesystem::directory_entry entry = *iterator;
+                            std::error_code entry_error;
+                            if (entry.is_regular_file(entry_error) &&
+                                wildcard_match_insensitive(
+                                    pattern,
+                                    copperfin::platform::path_to_utf8_string(entry.path().filename())))
+                            {
+                                state.matches.push_back(
+                                    copperfin::platform::path_to_utf8_string(entry.path().filename()));
+                            }
+                            iterator.increment(directory_error);
+                        }
+
+                        std::sort(
+                            state.matches.begin(),
+                            state.matches.end(),
+                            [](const std::string &left, const std::string &right)
+                            {
+                                const std::string left_folded = lowercase_copy(left);
+                                const std::string right_folded = lowercase_copy(right);
+                                return left_folded == right_folded ? left < right : left_folded < right_folded;
+                            });
+                    }
+
+                    if (state.next_match >= state.matches.size())
+                    {
+                        return std::string{};
+                    }
+                    return state.matches[state.next_match++];
                 }
                 if (trimmed_option_name == "__textmerge_delimiters__")
                 {

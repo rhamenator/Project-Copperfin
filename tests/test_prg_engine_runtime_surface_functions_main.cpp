@@ -15,6 +15,7 @@ int main()
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
     test_sys2014_returns_minimum_runtime_path();
+    test_sys2000_enumerates_wildcard_file_matches();
     test_sys2029_reports_dbf_table_type();
     test_object_reflection_runtime_surface_functions();
     test_native_prg_amembers_visibility_filters();

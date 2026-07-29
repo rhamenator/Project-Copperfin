@@ -714,6 +714,70 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_sys2000_enumerates_wildcard_file_matches()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sys2000";
+        const fs::path base_path = temp_root / "base";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(base_path / "nested");
+        write_text(base_path / "a.txt", "a");
+        write_text(base_path / "B.txt", "b");
+        write_text(base_path / "ignore.prg", "prg");
+        write_text(base_path / "nested" / "child.txt", "child");
+
+        const fs::path main_path = base_path / "sys2000.prg";
+        write_text(
+            main_path,
+            "cFirst = SYS(2000, '*.txt')\n"
+            "cSecond = SYS(2000, '*.txt', 1)\n"
+            "cExhausted = SYS(2000, '*.txt', 1)\n"
+            "cReset = SYS(2000, '*.txt')\n"
+            "cSessionOneBeforeSwitch = SYS(2000, '*.txt', 1)\n"
+            "SET DATASESSION TO 2\n"
+            "cSessionTwoFirst = SYS(2000, '*.txt')\n"
+            "cSessionTwoSecond = SYS(2000, '*.txt', 1)\n"
+            "SET DATASESSION TO 1\n"
+            "cSessionOneAfterSwitch = SYS(2000, '*.txt', 1)\n"
+            "cPrg = SYS(2000, '*.prg')\n"
+            "cMissing = SYS(2000, 'missing/*.txt')\n"
+            "cNested = SYS(2000, 'nested/*.txt')\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), base_path.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("SYS(2000) script should complete: ") + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be assigned");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("cfirst", "a.txt");
+        check("csecond", "B.txt");
+        check("cexhausted", "");
+        check("creset", "a.txt");
+        check("csessiononebeforeswitch", "B.txt");
+        check("csessiontwofirst", "a.txt");
+        check("csessiontwosecond", "B.txt");
+        check("csessiononeafterswitch", "");
+        check("cprg", "ignore.prg");
+        check("cmissing", "");
+        check("cnested", "child.txt");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_object_reflection_runtime_surface_functions()
     {
         namespace fs = std::filesystem;

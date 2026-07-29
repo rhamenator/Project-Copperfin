@@ -48,6 +48,20 @@
                     base_path,
                     default_directory));
             }
+            if (sys_code == 2000) {
+                // VFP9 SYS(2000) enumerates regular files in deterministic
+                // order; the SET callback owns per-data-session continuation.
+                if (arguments.size() < 2U || !set_callback) {
+                    return make_string_value({});
+                }
+                const bool next_match_requested = arguments.size() >= 3U &&
+                    safe_int_argument(2U, 0) == 1;
+                const std::string request =
+                    std::string("__sys2000__\x1f") +
+                    (next_match_requested ? "next" : "first") +
+                    '\x1f' + value_as_string(arguments[1]);
+                return make_string_value(set_callback(request));
+            }
             if (sys_code == 2029) {
                 // VFP9 SYS(2029) reports the physical DBF table type for the
                 // current cursor or the requested alias. Synthetic and
