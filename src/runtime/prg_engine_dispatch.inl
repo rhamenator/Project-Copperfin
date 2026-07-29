@@ -11051,6 +11051,9 @@
                     report_interrupted = true;
                     active_report_status = 0;
                     waiting_for_events = false;
+                    events.push_back({.category = "report.interrupted",
+                                      .detail = "Y",
+                                      .location = statement.location});
                 }
                 events.push_back({.category = "runtime.cancel",
                                   .detail = "CANCEL",

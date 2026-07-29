@@ -326,6 +326,35 @@ void test_sys2040_report_status_tracks_preview_and_output() {
                copperfin::runtime::format_value(after_preview->second) == "0",
            "SYS(2040) should reset to idle after preview cleanup");
 
+    const fs::path interrupted_program = temp_root / "status_interrupted.prg";
+    write_text(
+        interrupted_program,
+        "REPORT FORM '" + preview_asset.string() + "' PREVIEW\n"
+        "RETURN\n"
+        "PROCEDURE interruptpreview\n"
+        "CANCEL\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    auto interrupted_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(interrupted_program.string(), temp_root.string()));
+    const auto interrupted_preview = interrupted_session.run(
+        copperfin::runtime::DebugResumeAction::continue_run);
+    expect(interrupted_preview.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "SYS(2024) interruption fixture should enter the report event loop");
+    expect(interrupted_session.dispatch_event_handler("interruptpreview"),
+           "SYS(2024) interruption fixture should dispatch its cancellation handler");
+    const auto interrupted_event_state = interrupted_session.run(
+        copperfin::runtime::DebugResumeAction::continue_run);
+    expect(interrupted_event_state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "SYS(2024) interruption should restore the existing event-loop contract after handler dispatch");
+    expect(std::any_of(
+               interrupted_event_state.events.begin(),
+               interrupted_event_state.events.end(),
+               [](const copperfin::runtime::RuntimeEvent& event) {
+                   return event.category == "report.interrupted" && event.detail == "Y";
+               }),
+           "SYS(2024) should record Y when CANCEL interrupts an active preview");
+
     const fs::path table_path = temp_root / "status_people.dbf";
     const fs::path output_path = temp_root / "status_output.txt";
     const fs::path output_program = temp_root / "status_output.prg";
