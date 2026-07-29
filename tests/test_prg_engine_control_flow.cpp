@@ -36,6 +36,7 @@ int main() {
     test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
+    test_total_numeric_formatting_ignores_global_locale();
     test_aggregate_helpers_tolerate_non_numeric_field_text();
     test_total_command_tolerates_non_numeric_field_text();
     test_total_command_errors_use_default_locale_messages();

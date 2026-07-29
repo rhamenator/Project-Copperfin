@@ -4,7 +4,47 @@
 
 #include "test_prg_engine_control_flow_support.h"
 
+#include <locale>
+
 namespace cf_test_prg_engine_control_flow {
+
+namespace {
+
+class comma_decimal_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class scoped_global_locale {
+public:
+    explicit scoped_global_locale(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~scoped_global_locale() { std::locale::global(previous_); }
+
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
+
+private:
+    std::locale previous_;
+};
+
+}  // namespace
+
+void test_total_numeric_formatting_ignores_global_locale() {
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
+
+    expect(
+        copperfin::runtime::format_total_numeric_value(1234.5, 2U) == "1234.50",
+        "TOTAL decimal formatting should remain period-decimal under a comma-decimal global locale");
+    expect(
+        copperfin::runtime::format_total_numeric_value(1234.5, 0U) == "1235",
+        "TOTAL integral rounding should remain unchanged under a comma-decimal global locale");
+}
+
 void test_aggregate_functions_respect_visibility() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregates";

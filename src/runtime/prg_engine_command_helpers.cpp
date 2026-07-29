@@ -11,6 +11,7 @@
 #include <cctype>
 #include <cmath>
 #include <iomanip>
+#include <locale>
 #include <sstream>
 #include <utility>
 
@@ -325,6 +326,7 @@ AggregateScopeClause parse_aggregate_scope_clause(const std::string& text, std::
 
 std::string format_total_numeric_value(double value, std::uint8_t decimal_count) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     if (decimal_count == 0U) {
         stream << static_cast<long long>(std::llround(value));
     } else {

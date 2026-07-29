@@ -2,6 +2,15 @@
 
 ## Current State
 
+The #4834/#109 `TOTAL` numeric-formatting slice is implementation-complete.
+The aggregate formatter now imbues its numeric stream with
+`std::locale::classic()`, preserving period-decimal machine text even when an
+embedding host installs comma-decimal global C++ punctuation. The existing
+aggregate/control-flow target passes `1/1` under the default,
+`pt_BR.UTF-8`, and `de_DE.UTF-8` environments, including a process-global
+comma-decimal regression. This is focused runtime evidence, not full RC
+evidence.
+
 The #4833/#3217 invalid-code-page follow-up is implementation-complete.
 `CONFIG.FPW CODEPAGE` now distinguishes explicit malformed/unsupported values
 from absent or `AUTO` configuration. Invalid values use deterministic sentinel

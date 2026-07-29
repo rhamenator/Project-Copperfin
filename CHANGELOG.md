@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4834/#109 `TOTAL` numeric output against host
+  cultures. The aggregate formatter now uses the classic locale for its
+  period-decimal machine text, so a comma-decimal global C++ locale cannot
+  corrupt written TOTAL values. The existing aggregate/control-flow target
+  passes `1/1` under the default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+  environments, including a process-global comma-decimal regression.
+
 - 2026-07-29: Completed #4833 under #3217 by separating malformed
   `CONFIG.FPW CODEPAGE` from absent/`AUTO` configuration. Explicitly invalid
   or unsupported values now use deterministic sentinel `0`, so `SET('CODEPAGE')`
