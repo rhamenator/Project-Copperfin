@@ -4,7 +4,6 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/localization/localization.h"
-#include "prg_engine_locale_code_page.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -775,6 +774,7 @@ namespace
             "cConfiguredCodePage = SET('CODEPAGE')\n"
             "nCurrentCodePage = CPCURRENT()\n"
             "nCurrentCodePageZero = CPCURRENT(0)\n"
+            "nHostCodePage = CPCURRENT(1)\n"
             "RETURN\n");
 
         const auto check_invalid_configuration = [&](const std::string& value, const std::string& description) {
@@ -795,8 +795,14 @@ namespace
                     copperfin::runtime::format_value(configured_code_page->second) == "0",
                 description + " CONFIG.FPW CODEPAGE must expose the deterministic invalid sentinel through SET()");
 
-            const std::string expected_host_code_page = std::to_string(
-                copperfin::runtime::detail::default_host_code_page());
+            const auto host_code_page = state.globals.find("nhostcodepage");
+            expect(
+                host_code_page != state.globals.end(),
+                description + " CPCURRENT(1) host query must be captured");
+            const std::string expected_host_code_page =
+                host_code_page == state.globals.end()
+                    ? std::string{}
+                    : copperfin::runtime::format_value(host_code_page->second);
             const auto current_code_page = state.globals.find("ncurrentcodepage");
             expect(
                 current_code_page != state.globals.end() &&

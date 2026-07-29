@@ -2,8 +2,9 @@
   code-page sentinel hardening. CPCURRENT() and CPCURRENT(0) now treat
   sentinel 0 as no valid configured page and retain host-code-page fallback,
   while SET('CODEPAGE') remains 0 and ISLEADBYTE() continues to fail closed.
-  Malformed and unsupported configuration regressions pass in the default,
-  pt_BR.UTF-8, and de_DE.UTF-8 environments.
+  Malformed and unsupported configuration regressions compare those results
+  with the public `CPCURRENT(1)` host query, avoiding private-header coupling,
+  and pass in the default, pt_BR.UTF-8, and de_DE.UTF-8 environments.
 
 - 2026-07-29: Clarified the numeric culture boundary across the runtime.
   Machine/VFP numeric parsing and serialization use invariant period-decimal
