@@ -8,8 +8,8 @@ serialize statement coordinates through classic-locale streams. The existing
 FXP materialization fixture installs grouped host punctuation, places a real
 statement at line 1234, and preserves exact integer coordinates across all four
 artifacts plus existing statement, scope, and exclusion behavior.
-Cross-platform review is required before closure; this is focused evidence,
-not full RC evidence.
+Linux, macOS/AppleClang, and Windows/MSVC focused validation is accepted; issue
+#4849 is closed. This is focused evidence, not full RC evidence.
 
 The #4848/#109 generated debug-manifest numeric-metadata slice is
 implementation-complete and cross-platform reviewed. Debug inspection fields
