@@ -1,5 +1,12 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant launch-contract follow-up (2026-07-29, #4824 under #3217):
+  VSIX/Studio floating command arguments now use locale-independent
+  `std::from_chars`, preserving invariant decimal/exponent/leading-plus forms
+  and rejecting comma-decimal/trailing-input forms. Option names, diagnostics,
+  and JSON contracts remain unchanged; `test_studio_host` CTest passes `1/1`.
+  SQL and runtime-property numeric conversions remain separate follow-up work.
+
 - Culture-invariant native asset parsing follow-up (2026-07-29, #4824 under
   #3217): FRX/LBX HPOS, VPOS, WIDTH, and HEIGHT now parse invariant fractional
   text with locale-independent `std::from_chars`. Comma-decimal and

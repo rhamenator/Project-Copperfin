@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 launch-contract follow-up migrates VSIX/Studio floating command
+argument parsing from locale-sensitive `strtod` to locale-independent
+`std::from_chars`. Period-decimal, exponent, leading-plus, comma-decimal
+rejection, and trailing-input rejection are covered by `test_studio_host`
+CTest 1/1. Option names, diagnostics, and JSON contracts are unchanged; SQL
+and runtime-property numeric conversions remain separate #4824 scope.
+
 The #4824 native asset follow-up migrates FRX/LBX HPOS, VPOS, WIDTH, and
 HEIGHT parsing from locale-sensitive `strtod` to locale-independent
 `std::from_chars`. Fractional invariant values such as `6666.667`, optional

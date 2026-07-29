@@ -3,8 +3,20 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_studio_host_support.h"
+#include "../src/studio/vs_launch_contract_internal.h"
 
 namespace cf_test_studio_host {
+void test_launch_numeric_parsing_uses_invariant_decimal_text() {
+    double value = 0.0;
+    expect(copperfin::studio::parse_double_value("1.25", value) && value == 1.25,
+           "VSIX/Studio launch numeric parsing should use the invariant period decimal separator");
+    expect(copperfin::studio::parse_double_value("+1.25e2", value) && value == 125.0,
+           "VSIX/Studio launch numeric parsing should preserve exponent and leading-plus forms");
+    expect(!copperfin::studio::parse_double_value("1,25", value) &&
+               !copperfin::studio::parse_double_value("1.25 trailing", value),
+           "VSIX/Studio launch numeric parsing should reject comma-decimal and trailing-input forms");
+}
+
 void test_parse_launch_arguments_for_align_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",

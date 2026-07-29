@@ -1,3 +1,10 @@
+- 2026-07-29: Extended #4824 to the VSIX/Studio launch contract. Floating
+  command-argument parsing now uses locale-independent `std::from_chars`,
+  preserving period-decimal, exponent, and leading-plus forms while rejecting
+  comma-decimal and trailing-input forms. Option names, diagnostics, and JSON
+  contracts are unchanged; `test_studio_host` passes `1/1`. SQL/runtime
+  property conversions remain separate follow-up work.
+
 - 2026-07-29: Extended #4824 to native FRX/LBX geometry. HPOS, VPOS, WIDTH,
   and HEIGHT parsing now uses locale-independent `std::from_chars`, so
   fractional invariant values such as `6666.667` remain stable under the host

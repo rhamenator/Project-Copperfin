@@ -68,6 +68,7 @@ void test_open_document_includes_prg_static_diagnostics();
 // ==== Diagnostics, help, and session/open-mode launch-argument tests ====
 void test_launch_parse_errors_resolve_through_localization_catalog();
 void test_parse_launch_arguments();
+void test_launch_numeric_parsing_uses_invariant_decimal_text();
 void test_parse_launch_arguments_rejects_unknown_switch();
 void test_parse_launch_arguments_rejects_unknown_undo_mode();
 

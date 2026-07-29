@@ -26,10 +26,18 @@ bool parse_double_value(const std::string& text, double& value) {
     if (text.empty() || std::isspace(static_cast<unsigned char>(text.front()))) {
         return false;
     }
-    char* end = nullptr;
-    errno = 0;
-    const double parsed = std::strtod(text.c_str(), &end);
-    if (errno != 0 || end != text.c_str() + text.size()) {
+    const char* begin = text.data();
+    const char* end = begin + text.size();
+    if (*begin == '+') {
+        ++begin;
+    }
+    if (begin == end) {
+        return false;
+    }
+
+    double parsed = 0.0;
+    const auto result = std::from_chars(begin, end, parsed, std::chars_format::general);
+    if (result.ec != std::errc{} || result.ptr != end || !std::isfinite(parsed)) {
         return false;
     }
     value = parsed;

@@ -16,6 +16,7 @@ int main() {
     test_document_default_catalog_refreshes_when_locale_changes();
     test_launch_parse_errors_resolve_through_localization_catalog();
     test_parse_launch_arguments();
+    test_launch_numeric_parsing_uses_invariant_decimal_text();
     test_parse_launch_arguments_rejects_numeric_selector_errors();
     test_parse_launch_arguments_for_clear_property();
     test_parse_launch_arguments_rejects_ambiguous_property_command();
