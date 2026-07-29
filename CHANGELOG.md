@@ -3,6 +3,9 @@
   locale, preventing host digit grouping from corrupting the explicit
   period-decimal/four-fraction-digit contract. Adversarial coverage preserves
   positive, negative, zero, fractional, and scaled-integer boundary values.
+  Focused DBF and runtime targets pass under the default, `C`, and `C.utf8`
+  environments with an adversarial comma-decimal/grouping locale installed
+  in-process.
 
 - 2026-07-29: Hardened #4838/#109 preprocessor numeric stringification
   against host culture. Numeric values used by preprocessor text/substrings

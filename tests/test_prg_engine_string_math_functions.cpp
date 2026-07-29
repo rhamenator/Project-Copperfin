@@ -126,6 +126,22 @@ namespace
                 (digit_picture.has_value() ? copperfin::runtime::value_as_string(*digit_picture) : "<none>"));
     }
 
+    void test_currency_stringification_ignores_grouping_locale()
+    {
+        const std::locale grouping_locale(std::locale::classic(), new comma_decimal_numpunct());
+        global_locale_guard locale_guard(grouping_locale);
+
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(123456789)) == "12345.6789",
+            "#4839: positive currency stringification should not group the whole part under a host locale");
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(-234565000)) == "-23456.5000",
+            "#4839: negative currency stringification should preserve the invariant whole/fraction boundary");
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(0)) == "0.0000",
+            "#4839: zero currency stringification should preserve four fractional digits");
+    }
+
     void test_string_and_math_expression_functions()
     {
         namespace fs = std::filesystem;
@@ -1216,6 +1232,7 @@ namespace
 int main()
 {
     test_numeric_formatting_ignores_host_global_locale();
+    test_currency_stringification_ignores_grouping_locale();
     test_string_and_math_expression_functions();
     test_index_expression_trim_functions_preserve_non_space_whitespace();
     test_index_expression_padl_truncation_matches_runtime_padl();

@@ -1726,6 +1726,41 @@ void test_currency_and_datetime_field_round_trip() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_currency_display_ignores_grouping_locale() {
+    const std::locale grouping_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(grouping_locale);
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_currency_locale_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "currency_locale.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "POSITIVE", .type = 'Y', .length = 8U},
+        {.name = "NEGATIVE", .type = 'Y', .length = 8U},
+        {.name = "ZERO", .type = 'Y', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"12345.6789", "-23456.5000", "0.0000"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#4839: currency locale fixture should be created");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "#4839: currency locale fixture should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 1U) {
+        const auto& values = parse_result.table.records[0].values;
+        expect(values[0].display_value == "12345.6789", "#4839: DBF positive currency display should not group digits");
+        expect(values[1].display_value == "-23456.5000", "#4839: DBF negative currency display should remain period-decimal");
+        expect(values[2].display_value == "0.0000", "#4839: DBF zero currency display should preserve four fractional digits");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_double_field_create_replace_and_append_round_trip() {
     const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
     scoped_global_locale locale_guard(comma_locale);
@@ -2994,6 +3029,7 @@ int main(int argc, char* argv[]) {
     test_indexed_table_mutations_succeed_with_production_flags_and_companions();
     test_integer_field_create_replace_and_append_round_trip();
     test_currency_and_datetime_field_round_trip();
+    test_currency_display_ignores_grouping_locale();
     test_double_field_create_replace_and_append_round_trip();
     test_append_blank_supports_opaque_field_layouts();
     test_replace_opaque_field_round_trips_hex_payloads();

@@ -23,7 +23,10 @@ DBF `Y` display values and runtime `PrgValue` currency text now use
 explicit period separator and four fractional digits. Focused DBF boundary and
 runtime value regressions poison the process-global locale and preserve
 positive, negative, zero, fractional, and scaled-integer values. Cross-platform
-review remains required before issue closure.
+runtime value regressions poison the process-global locale and preserve
+positive, negative, zero, fractional, and scaled-integer values. The focused
+DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
+Cross-platform review remains required before issue closure.
 
 The #4837/#109 visual-geometry serialization slice is implementation-complete.
 `format_visual_geometry_number()` now uses `std::locale::classic()` for
@@ -33,14 +36,17 @@ asset editor test poisons the process-global locale and verifies `1.25` and
 `2.5` remain invariant; Linux focused CTest passes under default, `C`, and
 `C.utf8`. Cross-platform review remains required before issue closure.
 
-The #4838/#109 preprocessor stringification slice is implementation-complete.
+The #4838/#109 preprocessor stringification slice is implementation-complete
+and cross-platform reviewed.
 Numeric values used by preprocessor text/substrings comparisons now serialize
 with `std::locale::classic()`, preserving period-decimal conditional
 compilation semantics. The parser regression poisons the process-global locale
 and verifies `1.25 $ "1.25"` selects the true branch; Linux focused CTest
 passes under default, `C`, and `C.utf8`. Full POSIX validation at the current
 head passes `316/316`, with only the documented launcher-process skips.
-Cross-platform review remains required before issue closure.
+Windows/MSVC and macOS/AppleClang each pass the focused parser test under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; this is focused cross-platform
+evidence, not full RC evidence.
 
 The #4835/#109 binary/intermediate double-serialization slice is
 implementation-complete. Generated PRG INSERT expressions, DBF binary-double
