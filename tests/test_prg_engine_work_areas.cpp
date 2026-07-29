@@ -22,6 +22,7 @@
 #define _getpid getpid
 #endif
 #include <sstream>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -32,6 +33,22 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+std::string active_runtime_text(
+    std::string_view key,
+    const copperfin::localization::PlaceholderMap& placeholders = {}) {
+    return copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale()).translate(key, placeholders);
+}
+
+std::string active_call_depth_fault() {
+    return active_runtime_text(
+        "Runtime.Prg.Core.Error.RuntimeFault",
+        {{"detail", active_runtime_text(
+            "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+            {{"limit", "1024"}})}});
+}
 
 void write_synthetic_report_surface(const std::filesystem::path& asset_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -236,8 +253,11 @@ void test_use_missing_target_uses_localized_error() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
            "missing USE target should pause with an error");
-    expect(state.message == "Unable to resolve USE target: " + expected_path.string(),
-           "missing USE target error should route through the default locale catalog");
+    expect(
+        state.message == active_runtime_text(
+            "Runtime.Prg.Cursor.Error.UseTargetResolveFailed",
+            {{"path", expected_path.string()}}),
+        "missing USE target error should route through the active locale catalog");
 
     const auto x_value = state.globals.find("x");
     expect(x_value == state.globals.end(), "statements after missing USE target should not execute");
@@ -518,8 +538,11 @@ void test_report_form_missing_asset_uses_localized_error() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
            "missing report asset should pause with an error");
-    expect(state.message == "Unable to resolve report asset: " + report_path.string(),
-           "missing report asset error should route through the default locale catalog");
+    expect(
+        state.message == active_runtime_text(
+            "Runtime.Prg.ReportAsset.Error.ResolveFailed",
+            {{"path", report_path.string()}}),
+        "missing report asset error should route through the active locale catalog");
 
     const auto x_value = state.globals.find("x");
     expect(x_value == state.globals.end(), "statements after missing report asset should not execute");
@@ -1384,7 +1407,7 @@ void test_skip_delta_uses_heap_backed_frame_continuations() {
     const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!deep_state.completed, "deep SKIP delta recursion should stop at the configured call-depth guard");
     expect(
-        deep_state.message.find("maximum call depth") != std::string::npos,
+        deep_state.message == active_call_depth_fault(),
         "deep SKIP delta recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
 
     const fs::path side_effect_path = temp_root / "skip_side_effect.prg";
@@ -1451,7 +1474,7 @@ void test_go_record_expression_uses_heap_backed_frame_continuations() {
     const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!deep_state.completed, "deep GO record recursion should stop at the configured call-depth guard");
     expect(
-        deep_state.message.find("maximum call depth") != std::string::npos,
+        deep_state.message == active_call_depth_fault(),
         "deep GO record recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
 
     const fs::path side_effect_path = temp_root / "go_side_effect.prg";
@@ -1517,7 +1540,7 @@ void test_unlock_record_expression_uses_heap_backed_frame_continuations() {
     const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!deep_state.completed, "deep UNLOCK RECORD recursion should stop at the configured call-depth guard");
     expect(
-        deep_state.message.find("maximum call depth") != std::string::npos,
+        deep_state.message == active_call_depth_fault(),
         "deep UNLOCK RECORD recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
 
     const fs::path side_effect_path = temp_root / "unlock_side_effect.prg";
@@ -1578,7 +1601,7 @@ void test_use_target_expression_uses_heap_backed_frame_continuations() {
     const auto deep_state = deep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!deep_state.completed, "deep USE target recursion should stop at the configured call-depth guard");
     expect(
-        deep_state.message.find("maximum call depth") != std::string::npos,
+        deep_state.message == active_call_depth_fault(),
         "deep USE target recursion should report Copperfin's call-depth diagnostic instead of overflowing the host stack");
 
     const fs::path side_effect_path = temp_root / "use_side_effect.prg";
