@@ -12,11 +12,11 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `40a0ca9f1`. The prior exact-head
+The latest implementation head is `97f20f6fa`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
-codepage-boundary correction and #4811 SYS(3) compatibility slice. Replacement
-hosted validation is running at coordination/test head `e9515cc76`, which
-contains that implementation head. RC readiness is not claimed while
+codepage-boundary correction, #4811 SYS(3), and #4812 SYS(2015)
+compatibility slices. The replacement matrix at coordination/test head
+`e9515cc76` is superseded; a new exact-head matrix is required. RC readiness is not claimed while
 exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
 remain open. The worktree is synchronized, and no Copperfin-owned process or

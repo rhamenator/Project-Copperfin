@@ -118,11 +118,10 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest implementation head is `40a0ca9f1`. The prior exact-head matrix
-for `5fead206e` is superseded by the #4810 codepage-boundary correction and
-#4811 SYS(3) compatibility slice. Replacement hosted validation is running at
-coordination/test head `e9515cc76`, which contains that implementation head;
-RC readiness is not claimed until it resolves. The
+The latest implementation head is `97f20f6fa`. The prior exact-head matrix
+at coordination/test head `e9515cc76` is superseded by the #4812 SYS(2015)
+compatibility slice; replacement hosted validation is required, and RC
+readiness is not claimed until it resolves. The
 earlier accepted hosted baselines remain historical evidence only. Independent
 safety sign-off under #4403 and protected launcher-trust provisioning under
 #4409 remain separate release gates.

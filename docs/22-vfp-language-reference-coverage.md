@@ -29,6 +29,13 @@
   `SYS(2015)` remains separate procedure-name semantics. The focused
   `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
 
+- Current SYS(2015) status (2026-07-28, #4812 under #3217): the runtime now
+  returns a unique ten-character identifier beginning with `_` and followed
+  by nine ASCII base-36 characters, matching VFP9's documented procedure,
+  alias, cursor, and file-name contract. FFC uses this surface extensively for
+  generated names. Successive calls remain distinct within one runtime
+  session; the focused runtime-surface CTest passes `1/1`.
+
 - Current fault-context status (2026-07-28, #4800 under #3217): native PRG
   diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and
   related error metadata bound to the original fault procedure while an

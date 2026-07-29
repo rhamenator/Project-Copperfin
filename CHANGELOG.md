@@ -1,3 +1,13 @@
+- 2026-07-28: Implemented #4812 under #3217. Native PRG `SYS(2015)` now
+  returns unique ten-character `_`-prefixed base-36 identifiers for generated
+  procedures, aliases, cursors, and file stems, matching the mounted VFP9
+  help contract and FFC usage. Focused runtime-surface CTest passes `1/1`;
+  machine contracts and localization routing are unchanged.
+
+- 2026-07-28: The #4812 product head `97f20f6fa` supersedes the active hosted
+  validation coordination head `e9515cc76`; replacement exact-head validation
+  is required and RC readiness remains unclaimed.
+
 - 2026-07-28: Implemented #4811 under #3217. Native PRG `SYS(3)` now returns
   a distinct, extension-free eight-digit numeric legal temporary filename
   component suitable for VFP9/FFC/VFPSource temp alias and file composition;
