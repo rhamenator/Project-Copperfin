@@ -6,7 +6,32 @@
 
 #include "copperfin/platform/invariant_numeric.h"
 
+#include <locale>
+
 namespace cf_test_prg_engine_data_io {
+namespace {
+class save_restore_grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class save_restore_global_locale_guard final {
+public:
+    explicit save_restore_global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~save_restore_global_locale_guard() { std::locale::global(previous_); }
+
+    save_restore_global_locale_guard(const save_restore_global_locale_guard&) = delete;
+    save_restore_global_locale_guard& operator=(const save_restore_global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
+}  // namespace
+
 void test_save_to_writes_variables_to_file() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_to";
@@ -670,15 +695,20 @@ void test_save_restore_round_trips_arrays() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const std::locale grouping_locale(std::locale::classic(), new save_restore_grouped_numpunct());
+    save_restore_global_locale_guard locale_guard(grouping_locale);
+
     const fs::path mem_path = temp_root / "arrays.mem";
     const fs::path main_path = temp_root / "save_restore_arrays.prg";
     write_text(
         main_path,
-        "DIMENSION aValues[2,2]\n"
+        "DIMENSION aValues[1000,2]\n"
         "aValues[1,1] = 'left'\n"
         "aValues[1,2] = 12.5\n"
         "aValues[2,1] = .T.\n"
         "aValues[2,2] = '01/15/2026'\n"
+        "aValues[999,1] = 'row-999'\n"
+        "aValues[1000,1] = 'row-1000'\n"
         "SAVE TO '" + mem_path.string() + "'\n"
         "DIMENSION aValues[1]\n"
         "aValues[1] = 'stale'\n"
@@ -690,6 +720,8 @@ void test_save_restore_round_trips_arrays() {
         "restored_12 = aValues[1,2]\n"
         "restored_21 = aValues[2,1]\n"
         "restored_22 = aValues[2,2]\n"
+        "restored_999 = aValues[999,1]\n"
+        "restored_1000 = aValues[1000,1]\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -705,6 +737,8 @@ void test_save_restore_round_trips_arrays() {
     const auto restored_12 = state.globals.find("restored_12");
     const auto restored_21 = state.globals.find("restored_21");
     const auto restored_22 = state.globals.find("restored_22");
+    const auto restored_999 = state.globals.find("restored_999");
+    const auto restored_1000 = state.globals.find("restored_1000");
 
     expect(restored_type != state.globals.end(), "restored array TYPE() should be captured");
     expect(restored_rows != state.globals.end(), "restored array rows should be captured");
@@ -713,13 +747,15 @@ void test_save_restore_round_trips_arrays() {
     expect(restored_12 != state.globals.end(), "restored array [1,2] should be captured");
     expect(restored_21 != state.globals.end(), "restored array [2,1] should be captured");
     expect(restored_22 != state.globals.end(), "restored array [2,2] should be captured");
+    expect(restored_999 != state.globals.end(), "restored array [999,1] should be captured");
+    expect(restored_1000 != state.globals.end(), "restored array [1000,1] should be captured");
 
     if (restored_type != state.globals.end()) {
         expect(copperfin::runtime::format_value(restored_type->second) == "A",
             "RESTORE FROM should recreate saved arrays");
     }
     if (restored_rows != state.globals.end()) {
-        expect(copperfin::runtime::format_value(restored_rows->second) == "2",
+        expect(copperfin::runtime::format_value(restored_rows->second) == "1000",
             "RESTORE FROM should recreate the saved array row count");
     }
     if (restored_cols != state.globals.end()) {
@@ -742,11 +778,19 @@ void test_save_restore_round_trips_arrays() {
         expect(copperfin::runtime::format_value(restored_22->second) == "01/15/2026",
             "RESTORE FROM should preserve date-like array elements");
     }
+    if (restored_999 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_999->second) == "row-999",
+            "#4844: RESTORE FROM should preserve row 999 before the grouping boundary");
+    }
+    if (restored_1000 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(restored_1000->second) == "row-1000",
+            "#4844: RESTORE FROM should preserve row 1000 at the grouping boundary");
+    }
 
     if (fs::exists(mem_path)) {
         const std::string contents = read_text(mem_path);
-        expect(contents.find("avalues=A:2,2|") != std::string::npos,
-            "SAVE TO should serialize arrays with dimensions");
+        expect(contents.find("avalues=A:1000,2|") != std::string::npos,
+            "#4844: SAVE TO should serialize array dimensions invariantly under grouped locales");
     }
 
     fs::remove_all(temp_root, ignored);

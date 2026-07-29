@@ -7165,6 +7165,7 @@
                     }
 
                     std::ostringstream array_payload;
+                    array_payload.imbue(std::locale::classic());
                     array_payload << array.rows << "," << array.columns;
                     for (const auto &element : array.values)
                     {

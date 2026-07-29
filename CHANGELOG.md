@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4844/#109 SAVE/RESTORE array metadata against grouped
+  host cultures. Persisted row and column counts now use the classic locale,
+  preventing grouping separators from truncating large arrays during restore.
+  A 1000-row round-trip regression uses adversarial comma-decimal punctuation
+  and verifies invariant dimensions plus distinct rows across the grouping
+  boundary.
+
 - 2026-07-29: Hardened #4843/#109 SYLK serialization against grouped host
   cultures. Table dimensions and cell row/column coordinates now use the
   classic locale, preventing grouped coordinate text from collapsing records
