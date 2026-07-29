@@ -1,3 +1,9 @@
+- 2026-07-29: Hardened #4839/#109 currency stringification against host
+  culture. DBF `Y` display values and runtime currency text now use the classic
+  locale, preventing host digit grouping from corrupting the explicit
+  period-decimal/four-fraction-digit contract. Adversarial coverage preserves
+  positive, negative, zero, fractional, and scaled-integer boundary values.
+
 - 2026-07-29: Hardened #4838/#109 preprocessor numeric stringification
   against host culture. Numeric values used by preprocessor text/substrings
   comparisons now serialize with classic-locale period-decimal text, so

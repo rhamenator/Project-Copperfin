@@ -1104,6 +1104,7 @@ std::string value_as_string(const PrgValue& value) {
             const std::uint64_t whole = magnitude / 10000U;
             const std::uint64_t fraction = magnitude % 10000U;
             std::ostringstream stream;
+            stream.imbue(std::locale::classic());
             if (negative) {
                 stream << '-';
             }

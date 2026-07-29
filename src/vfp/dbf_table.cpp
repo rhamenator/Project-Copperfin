@@ -585,6 +585,7 @@ std::string format_currency_display_value(std::int64_t scaled) {
         : static_cast<std::uint64_t>(scaled);
 
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     if (negative && magnitude != 0U) {
         stream << '-';
     }

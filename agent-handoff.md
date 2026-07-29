@@ -17,6 +17,14 @@ must use invariant period-decimal rules. User locale belongs at display and
 localized-message boundaries; comma-decimal host settings must never silently
 change a machine value or parser result.
 
+The #4839/#109 currency-stringification slice is implementation-complete.
+DBF `Y` display values and runtime `PrgValue` currency text now use
+`std::locale::classic()`, preventing host digit grouping from corrupting the
+explicit period separator and four fractional digits. Focused DBF boundary and
+runtime value regressions poison the process-global locale and preserve
+positive, negative, zero, fractional, and scaled-integer values. Cross-platform
+review remains required before issue closure.
+
 The #4837/#109 visual-geometry serialization slice is implementation-complete.
 `format_visual_geometry_number()` now uses `std::locale::classic()` for
 fractional FRX/LBX/form geometry output, preserving period-decimal text while

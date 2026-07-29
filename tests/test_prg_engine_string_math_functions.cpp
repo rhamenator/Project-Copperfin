@@ -29,6 +29,7 @@ namespace
     protected:
         char do_decimal_point() const override { return ','; }
         char do_thousands_sep() const override { return '.'; }
+        std::string do_grouping() const override { return "\3"; }
     };
 
     class global_locale_guard final
@@ -75,6 +76,12 @@ namespace
         expect(
             copperfin::runtime::value_as_string(copperfin::runtime::make_number_value(1234.5)) == "1234.5",
             "#4832: ordinary numeric-to-string conversion should use invariant punctuation");
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(12345678)) == "1234.5678" &&
+                copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(-12345678)) == "-1234.5678" &&
+                copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(0)) == "0.0000" &&
+                copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(1)) == "0.0001",
+            "#4839: currency stringification should ignore host digit grouping and preserve scaled values");
 
         const std::string display = copperfin::runtime::format_value_for_display(
             copperfin::runtime::make_number_value(1234.5),

@@ -2661,15 +2661,17 @@ void test_currency_field_boundary_values() {
     expect(replace_min.ok,
            "GAP-01: max negative currency boundary should be accepted");
 
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok, "GAP-01: currency boundary table should remain readable");
     if (parse_result.ok && parse_result.table.records.size() == 2U &&
         parse_result.table.records[0].values.size() >= 2U &&
         parse_result.table.records[1].values.size() >= 2U) {
         expect(parse_result.table.records[0].values[1].display_value == "922337203685477.5807",
-               "GAP-01: positive currency boundary should round-trip exactly");
+               "#4839: positive currency boundary should ignore host digit grouping");
         expect(parse_result.table.records[1].values[1].display_value == "-922337203685477.5807",
-               "GAP-01: negative currency boundary should round-trip exactly");
+               "#4839: negative currency boundary should ignore host digit grouping");
     }
 
     fs::remove_all(temp_dir, ignored);
