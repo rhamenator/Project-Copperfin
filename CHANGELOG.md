@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4850/#109 runtime asset-record metadata against
+  grouped host cultures. Portable `app.cfmanifest` asset record indices now
+  use the classic locale, matching the already invariant `app.cfdebug` output.
+  The existing FXP materialization regression uses record indices 1234/1235
+  under adversarial punctuation and requires exact runtime/debug parity while
+  preserving paths, hashes, booleans, startup selection, and separation.
+
 - 2026-07-29: Hardened #4849/#109 generated compiler source-line metadata
   against grouped host cultures. AST JSON, IR JSON, and FXP token/primary
   contracts now serialize statement coordinates with classic-locale decimal

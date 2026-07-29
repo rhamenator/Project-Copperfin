@@ -70,10 +70,10 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     workspace.build_plan.output_kind = "fxp";
     workspace.build_plan.build_target = "x64 Visual FoxPro tokenized program";
     workspace.build_plan.startup_item = "main.prg";
-    workspace.build_plan.startup_record_index = 1U;
+    workspace.build_plan.startup_record_index = 1234U;
     workspace.entries = {
-        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program", .excluded = true},
-        {.record_index = 2U, .name = "excluded_helper.prg", .relative_path = "excluded_helper.prg", .type_title = "Program", .excluded = true}
+        {.record_index = 1234U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program", .excluded = true},
+        {.record_index = 1235U, .name = "excluded_helper.prg", .relative_path = "excluded_helper.prg", .type_title = "Program", .excluded = true}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -202,6 +202,13 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(runtime_manifest.find("asset=1234|main.prg|") != std::string::npos,
+               "runtime manifest should preserve invariant asset record index 1234 under grouped punctuation");
+        expect(debug_manifest.find("asset=1234|main.prg|") != std::string::npos,
+               "debug manifest should preserve the same invariant asset record index under grouped punctuation");
+        expect(runtime_manifest.find("asset=1.234|main.prg|") == std::string::npos &&
+                   debug_manifest.find("asset=1.234|main.prg|") == std::string::npos,
+               "runtime and debug manifests should reject grouped asset record indices");
         expect(runtime_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output manifest should record FXP output kind");
         expect(runtime_manifest.find("primary_output_path=") == std::string::npos,

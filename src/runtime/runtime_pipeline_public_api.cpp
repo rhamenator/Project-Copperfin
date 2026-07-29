@@ -2477,6 +2477,7 @@ std::string build_runtime_manifest_text(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "manifest_version=" << kRuntimeManifestVersion << "\n";
     stream << "manifest_value_encoding=backslash-v1\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
