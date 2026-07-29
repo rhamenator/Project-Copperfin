@@ -72,10 +72,10 @@
                 const auto snapshot = snapshot_cursor_callback
                     ? snapshot_cursor_callback(cursor_designator)
                     : std::nullopt;
-                return make_string_value(format_value(make_number_value(
+                return make_number_value(
                     snapshot.has_value() && snapshot->table_type.has_value()
                         ? static_cast<double>(*snapshot->table_type)
-                        : 0.0)));
+                        : 0.0);
             }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);

@@ -39,12 +39,15 @@ std::string host_os_name() {
 
 std::string make_legal_runtime_temp_file_name() {
     static std::atomic<std::uint64_t> sequence{0U};
-    const auto ticks = static_cast<std::uint64_t>(
+    constexpr std::uint64_t name_space = 90000000U;
+    static const std::uint64_t seed = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::steady_clock::now().time_since_epoch())
-            .count());
+            .count()) % name_space;
     const std::uint64_t serial = sequence.fetch_add(1U, std::memory_order_relaxed);
-    const std::uint64_t value = 10000000U + ((ticks + serial) % 90000000U);
+    // The eight-digit VFP name space is finite. Calls are collision-free until
+    // all 90 million legal values have been consumed by this process.
+    const std::uint64_t value = 10000000U + ((seed + serial) % name_space);
 
     std::ostringstream result;
     result << std::setw(8) << std::setfill('0') << value;
@@ -55,12 +58,14 @@ std::string make_unique_runtime_procedure_name() {
     static std::atomic<std::uint64_t> sequence{0U};
     constexpr std::uint64_t base36_modulus = 101559956668416ULL;
     constexpr char base36_digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const auto ticks = static_cast<std::uint64_t>(
+    static const std::uint64_t seed = static_cast<std::uint64_t>(
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch())
-            .count());
+            .count()) % base36_modulus;
     const std::uint64_t serial = sequence.fetch_add(1U, std::memory_order_relaxed);
-    std::uint64_t value = (ticks + serial) % base36_modulus;
+    // The nine-character base-36 suffix is finite but large; the monotonic
+    // sequence removes clock rollback and interleaving collision paths.
+    std::uint64_t value = (seed + serial) % base36_modulus;
 
     std::string result(10U, '0');
     result.front() = '_';

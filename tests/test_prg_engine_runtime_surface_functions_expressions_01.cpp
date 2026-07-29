@@ -1,5 +1,8 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
 
+#include <future>
+#include <set>
+
 namespace copperfin::runtime_surface_tests
 {
     void test_array_element_native_property_expression_access()
@@ -615,6 +618,50 @@ namespace copperfin::runtime_surface_tests
         expect(sys7_value != state.globals.end() && !copperfin::runtime::format_value(sys7_value->second).empty(),
                "SYS(7) should expose a non-empty host descriptor");
 
+        const auto collect_concurrent_values = [&](long long sys_code)
+        {
+            constexpr std::size_t worker_count = 16U;
+            const fs::path unique_value_path =
+                temp_root / ("concurrent_unique_value_" + std::to_string(sys_code) + ".prg");
+            write_text(
+                unique_value_path,
+                "cValue = SYS(" + std::to_string(sys_code) + ")\nRETURN\n");
+            std::vector<std::future<std::string>> workers;
+            workers.reserve(worker_count);
+            for (std::size_t worker = 0U; worker < worker_count; ++worker)
+            {
+                workers.emplace_back(std::async(
+                    std::launch::async,
+                    [unique_value_path, temp_root]()
+                    {
+                        const fs::path source_path = unique_value_path;
+                        const auto concurrent_state = copperfin::runtime::PrgRuntimeSession::create(
+                                                          make_runtime_session_options(
+                                                              source_path.string(),
+                                                              temp_root.string()))
+                                                          .run(copperfin::runtime::DebugResumeAction::continue_run);
+                        const auto value = concurrent_state.globals.find("cvalue");
+                        return concurrent_state.completed && value != concurrent_state.globals.end()
+                            ? copperfin::runtime::format_value(value->second)
+                            : std::string{};
+                    }));
+            }
+
+            std::set<std::string> values;
+            for (auto &worker : workers)
+            {
+                const std::string value = worker.get();
+                expect(!value.empty(), "concurrent SYS generator session should complete");
+                values.insert(value);
+            }
+            return values.size();
+        };
+
+        expect(collect_concurrent_values(3) == 16U,
+               "concurrent SYS(3) calls should produce distinct values");
+        expect(collect_concurrent_values(2015) == 16U,
+               "concurrent SYS(2015) calls should produce distinct values");
+
         fs::remove_all(temp_root, ignored);
     }
 
@@ -646,23 +693,25 @@ namespace copperfin::runtime_surface_tests
         expect(state.completed,
                std::string("SYS(2029) script should complete: ") + state.message);
 
-        const auto check = [&](const std::string& name, const std::string& expected)
+        const auto check_number = [&](const std::string& name, double expected)
         {
             const auto found = state.globals.find(name);
             expect(found != state.globals.end(), name + " should be assigned");
             if (found != state.globals.end())
             {
-                expect(copperfin::runtime::format_value(found->second) == expected,
-                       name + " expected '" + expected + "' got '" +
-                           copperfin::runtime::format_value(found->second) + "'");
+                expect(found->second.kind == copperfin::runtime::PrgValueKind::number,
+                       name + " should retain numeric SYS(2029) type");
+                expect(found->second.number_value == expected,
+                       name + " expected numeric value " + std::to_string(expected) + " got " +
+                           std::to_string(found->second.number_value));
             }
         };
 
-        check("nnotable", "0");
-        check("ncurrenttabletype", "48");
-        check("naliastabletype", "48");
-        check("nunknowntabletype", "0");
-        check("nafterclosetabletype", "0");
+        check_number("nnotable", 0.0);
+        check_number("ncurrenttabletype", 48.0);
+        check_number("naliastabletype", 48.0);
+        check_number("nunknowntabletype", 0.0);
+        check_number("nafterclosetabletype", 0.0);
 
         fs::remove_all(temp_root, ignored);
     }
