@@ -118,11 +118,11 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest implementation head is `91f2ab8a9`. Earlier exact-head matrices
+The latest implementation head is `6164b740a`. Earlier exact-head matrices
 are superseded by the #4810 codepage correction, the #4811/#4812 monotonic
 generator corrections, the numeric #4813 SYS(2029) correction, and the #4814
-and #4815 runtime slices. A replacement hosted matrix is active at the
-`91f2ab8a9` product head; any later product commit requires a new exact-head
+and #4815 runtime slices, plus #4816 automation-locale state. A replacement
+hosted matrix is active at the prior `91f2ab8a9` product head; any later product commit requires a new exact-head
 run. RC readiness is not claimed until the active matrix resolves. The
 earlier accepted hosted baselines remain historical evidence only. Independent
 safety sign-off under #4403 and protected launcher-trust provisioning under

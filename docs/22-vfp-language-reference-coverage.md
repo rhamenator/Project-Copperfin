@@ -31,6 +31,16 @@
   semantics. The focused `test_prg_engine_runtime_surface_functions` CTest
   passes `1/1`, including concurrent generator coverage.
 
+- Current SYS(3004)/SYS(3006) status (2026-07-28, #4816 under #2348): the
+  runtime models VFP9's automation locale state per PRG runtime session.
+  `SYS(3004)` returns the current LCID as character text, defaulting to
+  `1033`; `SYS(3006, nLanguageID)` preserves the supplied FFC-compatible
+  language/LCID identity and returns an empty character value. This portable
+  model does not mutate the Linux, macOS, or Windows process locale and keeps
+  native OLE/ActiveX localization as a separate host-integration boundary.
+  The focused runtime-surface CTest covers save/restore and fresh-session
+  isolation.
+
 - Current SYS(2015) status (2026-07-28, #4812 under #3217): the runtime now
   returns a unique ten-character identifier beginning with `_` and followed
   by nine ASCII base-36 characters, matching VFP9's documented procedure,

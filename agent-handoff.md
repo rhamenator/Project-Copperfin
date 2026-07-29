@@ -12,10 +12,11 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `91f2ab8a9`. Prior exact-head release
+The latest implementation head is `6164b740a`. Prior exact-head release
 matrices are superseded by the #4810 codepage correction, the #4811/#4812
 monotonic generator corrections, the numeric #4813 SYS(2029) correction, and
-the #4814/#4815 runtime slices. The exact-head matrix at `91f2ab8a9` is
+the #4814/#4815 runtime slices and the #4816 automation-locale slice. The
+exact-head matrix at `91f2ab8a9` is
 active; any later product commit requires a replacement run. RC readiness is not claimed while
 exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
@@ -69,6 +70,17 @@ exhaustion behavior is stateful per data session; a new skeleton or default
 directory resets the enumeration, while missing directories return an empty
 string. The focused `test_prg_engine_runtime_surface_functions` CTest passes
 `1/1`; Windows and macOS read-only review is requested before closing #4815.
+
+The #4816 SYS(3004)/SYS(3006) slice models the VFP9 automation locale state
+inside each PRG runtime session. `SYS(3004)` returns character LCID text,
+defaulting to `1033`; `SYS(3006, nLanguageID)` stores the supplied
+FFC-compatible language/LCID identity and returns an empty character value.
+The implementation deliberately does not mutate the host process locale, so
+Linux, macOS, and Windows share the same portable behavior while native
+OLE/ActiveX localization remains a separate host-integration boundary. The
+focused runtime-surface CTest passes `1/1`, including save/restore and fresh
+session isolation. Windows and macOS read-only review is requested before
+closing #4816.
 
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper

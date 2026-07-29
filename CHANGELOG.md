@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4816 under #2348. Native PRG `SYS(3004)` now
+  returns the session automation Locale ID as character text, and
+  `SYS(3006, nLanguageID)` updates the session-local FFC-compatible identity
+  while returning an empty character value. The runtime does not mutate the
+  host process locale; focused runtime-surface CTest coverage passes `1/1`
+  for save/restore and fresh-session isolation.
+
 - 2026-07-28: Corrected the #4811/#4812 generator contracts after independent
   Windows review. `SYS(3)` and `SYS(2015)` now derive values solely from
   once-seeded monotonic atomic sequences instead of combining per-call clock
