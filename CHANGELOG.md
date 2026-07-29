@@ -9,7 +9,9 @@
 - 2026-07-29: Implemented the #4831/#3217 `ISLEADBYTE()` compatibility slice.
   The runtime now applies the effective configured VFP code page, recognizes
   the documented lead-byte ranges for CP932, CP936, CP949, and CP950, and
-  fails closed for single-byte, UTF-8, invalid, and unsupported code pages.
+  fails closed for single-byte, UTF-8, and unsupported effective code pages.
+  Invalid or absent `CONFIG.FPW CODEPAGE` currently falls back to the host code
+  page; deterministic invalid-configuration behavior is tracked by #4833.
   Direct range tests and the configured `CONFIG.FPW` PRG fixture pass `2/2`
   under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`.
 

@@ -23,8 +23,10 @@ headless platform evidence, not hosted UI evidence or the complete RC gate.
 The #4831/#3217 `ISLEADBYTE()` slice is implementation-complete. Native PRG
 now reads the effective configured VFP code page through the existing session
 `SET('CODEPAGE')` contract and applies lead-byte rules for CP932, CP936, CP949,
-and CP950. Single-byte and UTF-8 pages, invalid configuration, unsupported
-pages, empty input, and bytes outside the documented ranges return false.
+and CP950. Single-byte and UTF-8 pages, unsupported effective pages, empty
+input, and bytes outside the documented ranges return false. Invalid or absent
+`CONFIG.FPW CODEPAGE` currently falls back to the host code page; deterministic
+invalid-configuration behavior is tracked by follow-up #4833.
 Focused direct range coverage and a configured `CONFIG.FPW` PRG fixture pass
 `2/2` under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`. The
 change does not alter numeric parsing, display-locale behavior, or machine
