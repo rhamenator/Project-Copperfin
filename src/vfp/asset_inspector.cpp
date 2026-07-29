@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <locale>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -1282,6 +1283,7 @@ std::vector<DbcProperty> decode_dbc_properties_blob(const std::vector<std::uint8
                 std::memcpy(&d, blob.data() + pos, 8U);
                 pos += 8U;
                 std::ostringstream ss;
+                ss.imbue(std::locale::classic());
                 ss.precision(15);
                 ss << d;
                 prop.value = ss.str();

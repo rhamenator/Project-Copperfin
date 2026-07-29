@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <locale>
 #include <mutex>
 #include <optional>
 #include <sstream>
@@ -1145,6 +1146,7 @@ DecodedDbfValue decode_value(
             std::copy_n(raw.begin(), 8U, storage.begin());
             std::memcpy(&value, storage.data(), storage.size());
             std::ostringstream stream;
+            stream.imbue(std::locale::classic());
             stream.precision(15);
             stream << value;
             return trim_both(stream.str());

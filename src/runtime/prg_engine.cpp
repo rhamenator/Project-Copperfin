@@ -45,6 +45,7 @@
 #include <map>
 #include <iterator>
 #include <limits>
+#include <locale>
 #include <mutex>
 #include <new>
 #include <optional>
@@ -262,6 +263,7 @@ namespace copperfin::runtime
             if (value.kind == PrgValueKind::number)
             {
                 std::ostringstream stream;
+                stream.imbue(std::locale::classic());
                 stream << std::setprecision(std::numeric_limits<double>::max_digits10)
                        << value.number_value;
                 return stream.str();

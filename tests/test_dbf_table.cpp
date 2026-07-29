@@ -18,6 +18,7 @@
 #include <unistd.h>
 #define _getpid getpid
 #endif
+#include <locale>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -34,6 +35,27 @@ void expect(bool condition, const std::string& message) {
         ++failures;
     }
 }
+
+class comma_decimal_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class scoped_global_locale {
+public:
+    explicit scoped_global_locale(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~scoped_global_locale() { std::locale::global(previous_); }
+
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
+
+private:
+    std::locale previous_;
+};
 
 std::size_t count_missing_locale_keys(
     const copperfin::localization::LocalizedCatalog& catalog,
@@ -1705,6 +1727,8 @@ void test_currency_and_datetime_field_round_trip() {
 }
 
 void test_double_field_create_replace_and_append_round_trip() {
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_double_tests_" + std::to_string(_getpid()));

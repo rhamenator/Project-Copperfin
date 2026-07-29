@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4835/#109 binary/intermediate double-serialization slice is
+implementation-complete. Generated PRG INSERT expressions, DBF binary-double
+display values, and DBC numeric property values now imbue their streams with
+`std::locale::classic()`, preserving period-decimal machine text independent
+of host/global culture. The DBF double round-trip regression poisons the
+process-global locale; the focused DBF, asset, and PRG targets pass `3/3` in
+each of the default, `pt_BR.UTF-8`, and `de_DE.UTF-8` environments. The DBC
+property writer remains text-oriented, so its binary numeric decoder was
+source-reviewed rather than fed through that writer. This is focused runtime
+evidence, not full RC evidence.
+
 The #4834/#109 `TOTAL` numeric-formatting slice is implementation-complete.
 The aggregate formatter now imbues its numeric stream with
 `std::locale::classic()`, preserving period-decimal machine text even when an
