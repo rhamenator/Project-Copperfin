@@ -5,6 +5,7 @@
 #include "prg_engine_runtime_config.h"
 
 #include "copperfin/platform/path.h"
+#include "prg_engine_locale_code_page.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -42,6 +43,23 @@ std::optional<std::size_t> parse_size_option(const std::string& value) {
             return std::nullopt;
         }
         return parsed;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+std::optional<int> parse_code_page_option(const std::string& value) {
+    const std::string normalized = uppercase_copy(trim_copy(value));
+    if (normalized.empty() || normalized == "AUTO") {
+        return std::nullopt;
+    }
+    try {
+        const long long parsed = std::stoll(normalized);
+        if (parsed < 1 || parsed > 65535 ||
+            !detail::is_supported_vfp_code_page(static_cast<int>(parsed))) {
+            return std::nullopt;
+        }
+        return static_cast<int>(parsed);
     } catch (...) {
         return std::nullopt;
     }
@@ -104,6 +122,8 @@ std::optional<RuntimeConfigFile> try_load_runtime_config_file(const std::filesys
             if (const auto parsed = parse_size_option(value)) {
                 config.scheduler_yield_sleep_ms = *parsed;
             }
+        } else if (key == "CODEPAGE") {
+            config.code_page = parse_code_page_option(value);
         }
     }
 
@@ -149,6 +169,9 @@ void apply_runtime_config_defaults(RuntimeSessionOptions& options, const Runtime
     }
     if (options.scheduler_yield_sleep_ms == k_default_yield_sleep_ms && config.scheduler_yield_sleep_ms.has_value()) {
         options.scheduler_yield_sleep_ms = *config.scheduler_yield_sleep_ms;
+    }
+    if (!options.configured_code_page.has_value() && config.code_page.has_value()) {
+        options.configured_code_page = *config.code_page;
     }
     if (trim_copy(options.temp_directory).empty() && config.temp_directory.has_value()) {
         options.temp_directory = *config.temp_directory;

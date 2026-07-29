@@ -2247,6 +2247,13 @@ namespace copperfin::runtime
                                : found_fields->second;
                 }
 
+                if (normalized_name == "codepage")
+                {
+                    return options.configured_code_page.has_value()
+                               ? std::to_string(*options.configured_code_page)
+                               : std::to_string(detail::default_host_code_page());
+                }
+
                 if (normalized_name == "relation" || normalized_name == "skip")
                 {
                     CursorState *parent = resolve_cursor_target(std::to_string(current_selected_work_area()));
@@ -2326,10 +2333,6 @@ namespace copperfin::runtime
                     {
                         return std::string("1950");
                     }
-                    if (normalized_name == "codepage")
-                    {
-                        return std::to_string(detail::default_host_code_page());
-                    }
                     if (normalized_name == "collate")
                     {
                         return std::string("MACHINE");
@@ -2357,7 +2360,6 @@ namespace copperfin::runtime
                     normalized_name == "fweek" ||
                     normalized_name == "reprocess" ||
                     normalized_name == "decimals" ||
-                    normalized_name == "codepage" ||
                     normalized_name == "collate" ||
                     normalized_name == "point" ||
                     normalized_name == "separator" ||

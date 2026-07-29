@@ -228,6 +228,8 @@ struct RuntimeSessionOptions {
     std::string temp_directory;
     std::size_t scheduler_yield_statement_interval = 4096;
     std::size_t scheduler_yield_sleep_ms = 1;
+    // CODEPAGE is a CONFIG.FPW startup setting in VFP9, not a live SET command.
+    std::optional<int> configured_code_page;
     // Windows is the only modeled OptionGroup keyboard contract. DOS remains
     // explicit and unsupported until its distinct navigation semantics land.
     RuntimeKeyboardCompatibility keyboard_compatibility = RuntimeKeyboardCompatibility::windows;

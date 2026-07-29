@@ -585,7 +585,7 @@
     // - 1 => current OS code page regardless of CODEPAGE config
     // - 2 => underlying OS code page (MS-DOS/OEM on Windows)
     //
-    // The configured CODEPAGE value is scoped to the current data session;
+    // CODEPAGE is a startup configuration value, not a data-session SET state;
     // omitted and 0 read it back while 1 and 2 remain host/OEM queries.
     if (function == "cpcurrent") {
         const int type_flag = arguments.empty() ? 0 : static_cast<int>(std::llround(value_as_number(arguments[0])));

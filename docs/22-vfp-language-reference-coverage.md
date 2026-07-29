@@ -11,14 +11,16 @@
   focused runtime-surface CTest passes `1/1`; hosted window-manager behavior
   remains separate evidence.
 
-- Current codepage status (2026-07-28, #4807 under #3217): supported VFP
-  `SET CODEPAGE TO n` values are stored independently per data session.
-  `SET("CODEPAGE")` and omitted/zero `CPCURRENT()` return the configured
-  session value, while `CPCURRENT(1)` and `CPCURRENT(2)` remain host and OEM
-  queries; unsupported values preserve the previous setting. The focused
-  runtime-surface and locale-codepage tests pass locally. Windows/macOS
-  corroboration remains pending, and DBF encoding, `CPCONVERT()`, and other
-  machine contracts are unchanged.
+- Current codepage status (2026-07-28, #4810 correction under #3217): VFP9
+  treats `CODEPAGE` as a startup item in `CONFIG.FPW`, not as a live
+  `SET CODEPAGE TO n` command. Copperfin reads supported numeric `CODEPAGE`
+  values from that file, treats `CODEPAGE=AUTO` and an absent item as the host
+  code page, and keeps the value stable for the runtime session. `CPCURRENT()`
+  and `CPCURRENT(0)` return that configured value, while `CPCURRENT(1)` and
+  `CPCURRENT(2)` remain host and OEM queries. A live `SET CODEPAGE TO n` does
+  not mutate the value. Focused runtime-surface and locale-codepage tests pass
+  locally; DBF encoding, `CPCONVERT()`, and other machine contracts are
+  unchanged.
 
 - Current fault-context status (2026-07-28, #4800 under #3217): native PRG
   diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and

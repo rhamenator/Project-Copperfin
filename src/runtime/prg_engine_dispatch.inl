@@ -5421,15 +5421,6 @@
                     {
                         current_set_state()[normalized_name] = std::to_string(evaluate_set_integer_value(option_value, 1950, 1, 9999));
                     }
-                    else if (normalized_name == "codepage")
-                    {
-                        const int configured_code_page = evaluate_set_integer_value(
-                            option_value, 0, 0, 65535);
-                        if (detail::is_supported_vfp_code_page(configured_code_page))
-                        {
-                            current_set_state()[normalized_name] = std::to_string(configured_code_page);
-                        }
-                    }
                     else if (normalized_name == "date")
                     {
                         const std::string date_value = evaluate_set_string_value(option_value, "MDY");

@@ -1,3 +1,9 @@
+- 2026-07-28: Corrected the #4807 codepage boundary under #4810. VFP9 treats
+  `CODEPAGE` as a startup item in `CONFIG.FPW`; it is not a live `SET` command.
+  Copperfin now reads supported numeric configuration values, uses the host
+  code page for absent or `AUTO` configuration, preserves `CPCURRENT()` 0/1/2
+  semantics, and prevents `SET CODEPAGE TO n` from mutating runtime state.
+
 - 2026-07-28: Implemented the modeled VFP9 `WVISIBLE(WindowName)` runtime
   surface under #4808. The main application window, named visual windows, and
   live `Show()`/`Hide()`/`Visible` state are covered case-insensitively; unknown
@@ -30,13 +36,10 @@
   Security Supply Chain and Linux Managed UI jobs while the remaining platform
   and package jobs are still in progress; RC readiness remains unclaimed.
 
-- 2026-07-28: Implemented the narrow VFP `SET CODEPAGE TO n` contract under
-  #4807. Supported code pages are stored independently per data session;
-  `SET("CODEPAGE")` and omitted/zero `CPCURRENT()` return the configured value,
-  while `CPCURRENT(1)` and `CPCURRENT(2)` continue to report host and OEM
-  values. Unsupported values preserve the prior setting. The focused runtime
-  surface test passes locally; machine-readable contracts and conversion
-  policy are unchanged.
+- 2026-07-28: The initial #4807 codepage implementation was superseded by
+  #4810 after primary VFP9 documentation confirmed that `CODEPAGE` is a
+  `CONFIG.FPW` startup item rather than a live `SET` command. See the current
+  correction entry above for the supported boundary and regression evidence.
 
 - 2026-07-28: Reconciled the release-readiness evidence pointer at coordination
   head `d17c0bd68`. The exact-head Windows Native job `30404819387` remains in

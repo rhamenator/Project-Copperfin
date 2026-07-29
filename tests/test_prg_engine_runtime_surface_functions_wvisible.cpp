@@ -27,6 +27,24 @@ namespace copperfin::runtime_surface_tests
             "lDirectHidden = WVISIBLE('VisibilityForm')\n"
             "oForm.Visible = .T.\n"
             "lDirectShown = WVISIBLE('VisibilityForm')\n"
+            "oToolbar = CREATEOBJECT('VisibilityToolbar')\n"
+            "lToolbarVisible = WVISIBLE('visibilitytoolbar')\n"
+            "lToolbarExists = WEXIST('visibilitytoolbar')\n"
+            "oToolbar.Visible = .F.\n"
+            "lToolbarHidden = WVISIBLE('VisibilityToolbar')\n"
+            "lToolbarHiddenExists = WEXIST('VisibilityToolbar')\n"
+            "oList = CREATEOBJECT('VisibilityList')\n"
+            "lListVisible = WVISIBLE('visibilitylist')\n"
+            "lListExists = WEXIST('visibilitylist')\n"
+            "oList.Visible = .F.\n"
+            "lListHidden = WVISIBLE('VisibilityList')\n"
+            "lListHiddenExists = WEXIST('VisibilityList')\n"
+            "oCombo = CREATEOBJECT('VisibilityCombo')\n"
+            "lComboVisible = WVISIBLE('visibilitycombo')\n"
+            "lComboExists = WEXIST('visibilitycombo')\n"
+            "oCombo.Visible = .F.\n"
+            "lComboHidden = WVISIBLE('VisibilityCombo')\n"
+            "lComboHiddenExists = WEXIST('VisibilityCombo')\n"
             "oPlain = CREATEOBJECT('PlainObject')\n"
             "lNonVisual = WVISIBLE('PlainObject')\n"
             "lNonVisualExists = WEXIST('PlainObject')\n"
@@ -34,6 +52,12 @@ namespace copperfin::runtime_surface_tests
             "lUnknownExists = WEXIST('missing-window')\n"
             "RETURN\n"
             "DEFINE CLASS VisibilityForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS VisibilityToolbar AS Toolbar\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS VisibilityList AS ListBox\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS VisibilityCombo AS ComboBox\n"
             "ENDDEFINE\n"
             "DEFINE CLASS PlainObject AS Custom\n"
             "ENDDEFINE\n");
@@ -67,6 +91,18 @@ namespace copperfin::runtime_surface_tests
         check("lshown", "true");
         check("ldirecthidden", "false");
         check("ldirectshown", "true");
+        check("ltoolbarvisible", "true");
+        check("ltoolbarexists", "true");
+        check("ltoolbarhidden", "false");
+        check("ltoolbarhiddenexists", "true");
+        check("llistvisible", "true");
+        check("llistexists", "true");
+        check("llisthidden", "false");
+        check("llisthiddenexists", "true");
+        check("lcombovisible", "true");
+        check("lcomboexists", "true");
+        check("lcombohidden", "false");
+        check("lcombohiddenexists", "true");
         check("lnonvisual", "false");
         check("lnonvisualexists", "false");
         check("lunknown", "false");

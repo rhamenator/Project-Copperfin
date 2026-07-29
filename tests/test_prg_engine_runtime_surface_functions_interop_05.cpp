@@ -451,6 +451,8 @@ namespace copperfin::runtime_surface_tests
             "nCpCurrentUni   = CPCURRENT(2)\n"
             "nCpCurrentBad   = CPCURRENT(99)\n"
             "nCpConfiguredBefore = CPCURRENT()\n"
+            // VFP9 documents CODEPAGE only in CONFIG.FPW; this command must
+            // not mutate the startup configuration value.
             "SET CODEPAGE TO 1251\n"
             "nCpConfigured    = CPCURRENT()\n"
             "nCpConfiguredZero = CPCURRENT(0)\n"
@@ -459,7 +461,7 @@ namespace copperfin::runtime_surface_tests
             "SET DATASESSION TO 2\n"
             "nCpSessionTwoDefault = CPCURRENT()\n"
             "SET CODEPAGE TO 932\n"
-            "nCpSessionTwoConfigured = CPCURRENT()\n"
+            "nCpSessionTwoAfterSet = CPCURRENT()\n"
             "SET DATASESSION TO 1\n"
             "nCpSessionOneRestored = CPCURRENT()\n"
             "SET CODEPAGE TO 99999\n"
@@ -509,14 +511,14 @@ namespace copperfin::runtime_surface_tests
         check("ncpcurrentuni",  expected_host_oem_code_page_text);
         check("ncpcurrentbad",  expected_host_code_page_text);
         check("ncpconfiguredbefore", expected_host_code_page_text);
-        check("ncpconfigured", "1251");
-        check("ncpconfiguredzero", "1251");
+        check("ncpconfigured", expected_host_code_page_text);
+        check("ncpconfiguredzero", expected_host_code_page_text);
         check("ncpconfiguredhost", expected_host_code_page_text);
-        check("ccpconfiguredset", "1251");
+        check("ccpconfiguredset", expected_host_code_page_text);
         check("ncpsessiontwodefault", expected_host_code_page_text);
-        check("ncpsessiontwoconfigured", "932");
-        check("ncpsessiononerestored", "1251");
-        check("ncpinvalidretains", "1251");
+        check("ncpsessiontwoafterset", expected_host_code_page_text);
+        check("ncpsessiononerestored", expected_host_code_page_text);
+        check("ncpinvalidretains", expected_host_code_page_text);
         check("ccpconverted",   "hello");
         check("ncpdbf",         "0");
         check("cpict",          "current.bmp");
@@ -585,6 +587,60 @@ namespace copperfin::runtime_surface_tests
             expect(varread_event->detail.find("result=\"\"") != std::string::npos,
                 "VARREAD event should include the deterministic empty-string result");
         }
+
+        const fs::path configured_root = temp_root / "configured";
+        fs::create_directories(configured_root);
+        const fs::path configured_path = configured_root / "cpcurrent.prg";
+        write_text(configured_root / "config.fpw", "CODEPAGE = 1251\n");
+        write_text(
+            configured_path,
+            "nConfigured = CPCURRENT()\n"
+            "nConfiguredZero = CPCURRENT(0)\n"
+            "nConfiguredHost = CPCURRENT(1)\n"
+            "nConfiguredOem = CPCURRENT(2)\n"
+            "cConfiguredSet = SET('CODEPAGE')\n"
+            "SET CODEPAGE TO 932\n"
+            "nAfterLiveSet = CPCURRENT()\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession configured_session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(configured_path.string(), configured_root.string()));
+        const auto configured_state = configured_session.run(
+            copperfin::runtime::DebugResumeAction::continue_run);
+        expect(configured_state.completed, "CONFIG.FPW CPCURRENT script should complete");
+        const auto check_configured = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = configured_state.globals.find(name);
+            if (it == configured_state.globals.end())
+            {
+                expect(false, name + " configured variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+        check_configured("nconfigured", "1251");
+        check_configured("nconfiguredzero", "1251");
+        check_configured("nconfiguredhost", expected_host_code_page_text);
+        check_configured("nconfiguredoem", expected_host_oem_code_page_text);
+        check_configured("cconfiguredset", "1251");
+        check_configured("nafterliveset", "1251");
+
+        write_text(configured_root / "config.fpw", "CODEPAGE = AUTO\n");
+        copperfin::runtime::PrgRuntimeSession auto_session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(configured_path.string(), configured_root.string()));
+        const auto auto_state = auto_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(auto_state.completed, "CONFIG.FPW AUTO CPCURRENT script should complete");
+        const auto auto_configured = auto_state.globals.find("nconfigured");
+        const auto auto_after_live_set = auto_state.globals.find("nafterliveset");
+        expect(auto_configured != auto_state.globals.end() &&
+                   copperfin::runtime::format_value(auto_configured->second) == expected_host_code_page_text,
+               "CONFIG.FPW CODEPAGE=AUTO should use the host code page");
+        expect(auto_after_live_set != auto_state.globals.end() &&
+                   copperfin::runtime::format_value(auto_after_live_set->second) == expected_host_code_page_text,
+               "CODEPAGE=AUTO should remain stable after a live SET CODEPAGE command");
 
         fs::remove_all(temp_root, ignored);
     }

@@ -24,13 +24,13 @@ arm's-length safety sign-off and #4409 protected launcher-trust gate remain
 open. The worktree is synchronized, and no Copperfin-owned process or test
 window is left running.
 
-The #4807 runtime slice now honors the supported VFP `SET CODEPAGE TO n`
-contract per data session. `SET("CODEPAGE")` and omitted/zero `CPCURRENT()`
-return the configured session value; `CPCURRENT(1)` and `CPCURRENT(2)` remain
-host and OEM queries. Unsupported values are ignored so the previous setting
-survives, and the default remains the detected host code page. The focused
-`test_prg_engine_runtime_surface_functions` target passes locally, including
-session isolation and invalid-value regression coverage. This slice does not
+The #4810 correction restores the VFP9 `CODEPAGE` boundary: it is read from
+`CONFIG.FPW` at startup, not changed by a live `SET CODEPAGE TO n` command.
+Supported numeric configuration values are returned by `SET("CODEPAGE")` and
+omitted/zero `CPCURRENT()`; `CODEPAGE=AUTO` and an absent item use the host
+code page, while `CPCURRENT(1)` and `CPCURRENT(2)` remain host and OEM
+queries. Focused coverage verifies configuration loading, `AUTO` fallback,
+data-session isolation, and resistance to live SET mutation. This does not
 change DBF header encoding, `CPCONVERT()` policy, JSON keys, or other machine
 contracts. Windows/macOS native corroboration remains part of the hosted
 validation matrix.

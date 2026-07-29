@@ -25,6 +25,7 @@ struct RuntimeConfigFile {
     std::optional<std::string> temp_directory;
     std::optional<std::size_t> scheduler_yield_statement_interval;
     std::optional<std::size_t> scheduler_yield_sleep_ms;
+    std::optional<int> code_page;
     std::string source_path;
 };
 
