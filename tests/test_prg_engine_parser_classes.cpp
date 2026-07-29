@@ -631,11 +631,15 @@ void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
         "comma-decimal, whitespace, trailing-input, range, and malformed-sign errors must be rejected");
 
     const auto nan = try_parse_invariant_double("NaN", true);
+    const auto lowercase_nan = try_parse_invariant_double("nan", true);
     const auto positive_infinity = try_parse_invariant_double("+INF", true);
+    const auto lowercase_infinity = try_parse_invariant_double("infinity", true);
     const auto negative_infinity = try_parse_invariant_double("-INF", true);
     copperfin::test_support::expect(
         nan.has_value() && std::isnan(*nan) &&
+            lowercase_nan.has_value() && std::isnan(*lowercase_nan) &&
             positive_infinity.has_value() && std::isinf(*positive_infinity) && *positive_infinity > 0.0 &&
+            lowercase_infinity.has_value() && std::isinf(*lowercase_infinity) && *lowercase_infinity > 0.0 &&
             negative_infinity.has_value() && std::isinf(*negative_infinity) && *negative_infinity < 0.0 &&
             !try_parse_invariant_double("NaN").has_value() &&
             !try_parse_invariant_double("+INF").has_value() &&

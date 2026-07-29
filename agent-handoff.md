@@ -41,6 +41,14 @@ results aligned with the product's period-decimal machine/VFP contract. The
 focused runtime/visual-asset targets pass `2/2` under the default environment,
 `pt_BR.UTF-8`, and `de_DE.UTF-8`; no product parser or machine contract changed.
 
+The #4830 cross-platform correction fixes the Apple-libc++ fallback's explicit
+nonfinite grammar. When `allow_nonfinite=true`, `NaN`, `INF`/`INFINITY`, and
+signed/case variants are recognized before finite stream extraction; the
+default path still rejects them. This restores the intentional DBF double-field
+contract on Apple without changing finite invariant parsing. Focused DBF and
+parser tests pass `2/2` on Linux; the failed macOS matrix is being rerun at the
+corrected head.
+
 The #4827 focused work-area regression is locale-complete on Linux: CTest and
 direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and
 `qps-ploc`. Error 1229, 13, and 1596 assertions compare active-catalog text,

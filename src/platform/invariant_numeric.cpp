@@ -6,6 +6,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <limits>
 #include <locale>
 #include <sstream>
 #include <string>
@@ -29,6 +30,25 @@ std::optional<double> try_parse_invariant_double(std::string_view value, const b
     } else if (*begin == '-') {
         if (begin + 1 == end || begin[1] == '+' || begin[1] == '-') {
             return std::nullopt;
+        }
+    }
+
+    if (allow_nonfinite) {
+        const bool negative = value.front() == '-';
+        const char* token_begin =
+            (value.front() == '+' || negative) ? value.data() + 1 : value.data();
+        std::string token{token_begin, end};
+        for (char& character : token) {
+            if (character >= 'A' && character <= 'Z') {
+                character = static_cast<char>(character - 'A' + 'a');
+            }
+        }
+        if (token == "nan") {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        if (token == "inf" || token == "infinity") {
+            const double infinity = std::numeric_limits<double>::infinity();
+            return negative ? -infinity : infinity;
         }
     }
 

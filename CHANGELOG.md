@@ -5,6 +5,12 @@
   numeric-consumer targets pass under the default environment,
   `pt_BR.UTF-8`, and `de_DE.UTF-8`. No product behavior changed.
 
+- 2026-07-29: Fixed the Apple-libc++ invariant numeric fallback for explicit
+  nonfinite DBF binary-field values. `NaN`, `INF`/`INFINITY`, and signed or
+  case variants now parse consistently when the consumer opts in, while the
+  default parser still rejects nonfinite values. The focused DBF and parser
+  tests pass `2/2`; this addresses the macOS native-matrix failures.
+
 - 2026-07-29: Removed the remaining six locale-sensitive `std::stod` calls
   from native tests. Test-side parsing of Copperfin-formatted numeric values
   now uses the shared invariant parser, so comma-decimal host cultures cannot
