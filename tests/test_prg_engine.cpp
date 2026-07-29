@@ -101,6 +101,20 @@ void test_insert_select_numeric_serialization_ignores_global_locale() {
     expect(inserted != state.globals.end() &&
                copperfin::runtime::format_value(inserted->second) == "1",
            "INSERT SELECT should materialize one row when numeric text remains period-decimal");
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(destination_path.string(), 10U);
+    expect(persisted.ok && persisted.table.records.size() == 1U,
+           "INSERT SELECT should persist the destination row for numeric-value verification");
+    if (persisted.ok && persisted.table.records.size() == 1U) {
+        const auto value = std::find_if(
+            persisted.table.records.front().values.begin(),
+            persisted.table.records.front().values.end(),
+            [](const auto& field) { return field.field_name == "VALUE"; });
+        const std::string actual_value = value == persisted.table.records.front().values.end()
+            ? "<missing>"
+            : value->display_value;
+        expect(value != persisted.table.records.front().values.end() && actual_value == "1.5",
+               "INSERT SELECT should persist the invariant numeric result 1.5 (got " + actual_value + ")");
+    }
 
     fs::remove_all(temp_root, ignored);
 }

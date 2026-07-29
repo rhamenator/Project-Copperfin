@@ -17,9 +17,9 @@
   numeric property values now use the classic locale, keeping period-decimal
   machine text independent of host/global culture. The DBF double round-trip
   regression runs under a poisoned comma-decimal global locale. A generated
-  `INSERT ... SELECT` regression now exercises the PRG row serializer under
-  the same adversarial locale; the focused DBF, asset, and PRG targets pass
-  `3/3` in each of the default,
+  `INSERT ... SELECT` regression now exercises the PRG row serializer and
+  verifies the persisted numeric result under the same adversarial locale;
+  the focused DBF, asset, and PRG targets pass `3/3` in each of the default,
   `pt_BR.UTF-8`, and `de_DE.UTF-8` environments.
 
 - 2026-07-29: Hardened #4834/#109 `TOTAL` numeric output against host
