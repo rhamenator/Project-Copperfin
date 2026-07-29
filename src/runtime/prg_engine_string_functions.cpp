@@ -330,6 +330,11 @@ std::optional<PrgValue> evaluate_string_function(
         }
         return make_number_value(static_cast<double>(score));
     }
+    if (function == "likec" && arguments.size() >= 2U) {
+        return make_boolean_value(wildcard_match_utf8_scalar_case_sensitive_local(
+            value_as_string(arguments[0]),
+            value_as_string(arguments[1])));
+    }
     if (function == "like" && arguments.size() >= 2U) {
         return make_boolean_value(wildcard_match_case_sensitive_local(
             value_as_string(arguments[0]),

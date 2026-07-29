@@ -90,6 +90,37 @@ std::vector<std::string> utf8_scalars_local(const std::string& text) {
     return scalars;
 }
 
+bool wildcard_match_utf8_scalar_case_sensitive_local(
+    const std::string& pattern,
+    const std::string& text) {
+    const std::vector<std::string> pattern_scalars = utf8_scalars_local(pattern);
+    const std::vector<std::string> text_scalars = utf8_scalars_local(text);
+    std::size_t pattern_index = 0U;
+    std::size_t text_index = 0U;
+    std::size_t star_index = std::string::npos;
+    std::size_t star_text_index = 0U;
+    while (text_index < text_scalars.size()) {
+        if (pattern_index < pattern_scalars.size() &&
+            (pattern_scalars[pattern_index] == "?" ||
+             pattern_scalars[pattern_index] == text_scalars[text_index])) {
+            ++pattern_index;
+            ++text_index;
+        } else if (pattern_index < pattern_scalars.size() && pattern_scalars[pattern_index] == "*") {
+            star_index = pattern_index++;
+            star_text_index = text_index;
+        } else if (star_index != std::string::npos) {
+            pattern_index = star_index + 1U;
+            text_index = ++star_text_index;
+        } else {
+            return false;
+        }
+    }
+    while (pattern_index < pattern_scalars.size() && pattern_scalars[pattern_index] == "*") {
+        ++pattern_index;
+    }
+    return pattern_index == pattern_scalars.size();
+}
+
 std::string fold_ascii_case_preserving_utf8_local(const std::string& text) {
     std::string folded = text;
     for (char& ch : folded) {

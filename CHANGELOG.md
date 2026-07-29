@@ -1,3 +1,10 @@
+- 2026-07-29: Implemented the VFP9 `LIKEC()` character-safe wildcard
+  function under #4826/#3217. `*` matches any number of validated UTF-8
+  scalar sequences and `?` matches exactly one scalar, while matching remains
+  case-sensitive and locale-independent. Existing byte-oriented `LIKE()`
+  behavior is unchanged. Focused `test_prg_engine_functions` passes `1/1`,
+  including `pt_BR.UTF-8` and `de_DE.UTF-8` executions.
+
 - 2026-07-29: Implemented the VFP9 `AT_C()` character-safe expression
   function under #4825/#3217. It returns 1-based UTF-8 scalar positions with
   case-sensitive matching, occurrence selection, and direct empty-search plus

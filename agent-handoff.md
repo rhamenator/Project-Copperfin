@@ -13,6 +13,14 @@ contracts are unchanged. Focused `test_prg_engine_functions` and
 also passes under `pt_BR.UTF-8` and `de_DE.UTF-8`. This is focused runtime
 evidence, not full RC evidence.
 
+The #4826/#3217 `LIKEC()` slice is implementation-complete. Native PRG
+`LIKEC()` now matches wildcard patterns over validated UTF-8 scalar sequences:
+`*` consumes any number of characters and `?` consumes one character. Matching
+is case-sensitive and locale-independent; existing byte-oriented `LIKE()`
+behavior is unchanged. The focused `test_prg_engine_functions` CTest passes
+`1/1`, including `pt_BR.UTF-8` and `de_DE.UTF-8` executions. This is focused
+runtime evidence, not full RC evidence.
+
 The #4824 expression-parser follow-up now carries invariant `e`/`E` exponent
 syntax, including an optional exponent sign, into the shared numeric parser
 instead of stopping the literal at its mantissa. An end-to-end PRG fixture

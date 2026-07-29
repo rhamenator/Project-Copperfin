@@ -602,6 +602,51 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_likec_matches_utf8_scalars_without_changing_like()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_likec";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "likec.prg";
+        write_text(
+            main_path,
+            "lScalarQuestion = LIKEC('?','é')\n"
+            "lScalarQuestionTooMany = LIKEC('??','é')\n"
+            "lMixedPattern = LIKEC('c?fé','café')\n"
+            "lStarPattern = LIKEC('*猫*','前猫後')\n"
+            "lMismatch = LIKEC('c?fé','cafe')\n"
+            "lCaseSensitive = LIKEC('ABC','abc')\n"
+            "lByteLike = LIKE('?', 'é')\n"
+            "RETURN\n");
+
+        const copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "LIKEC UTF-8 scalar script should complete");
+
+        const auto check = [&](const std::string& name, bool expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " result should be present");
+            if (it != state.globals.end()) {
+                expect(it->second.boolean_value == expected,
+                       name + " should be " + (expected ? "true" : "false"));
+            }
+        };
+        check("lscalarquestion", true);
+        check("lscalarquestiontoomany", false);
+        check("lmixedpattern", true);
+        check("lstarpattern", true);
+        check("lmismatch", false);
+        check("lcasesensitive", false);
+        check("lbytelike", false);
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -614,6 +659,7 @@ int main()
     test_parameter_default_expressions_support_macros();
     test_macro_alias_qualified_field_access();
     test_return_expression_values_are_preserved_in_runtime_state();
+    test_likec_matches_utf8_scalars_without_changing_like();
 
     if (test_failures() != 0)
     {
