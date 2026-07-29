@@ -13,6 +13,11 @@ hashes, booleans, startup selection, and runtime/debug separation.
 Linux, macOS/AppleClang, and Windows/MSVC focused validation is accepted; issue
 #4850 is closed. This is focused evidence, not full RC evidence.
 
+The #4851/#109 canonical date-text slice is in progress. DBF ISO dates and
+runtime date/datetime strings now have grouped-locale regressions queued for
+the focused implementation/test pass; these formatters must remain canonical
+machine/runtime text without changing user-selected `SET DATE` display.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing
