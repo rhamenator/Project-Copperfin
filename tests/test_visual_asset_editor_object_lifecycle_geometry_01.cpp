@@ -3,8 +3,23 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_visual_asset_editor_support.h"
+#include "../src/vfp/visual_asset_editor_support.h"
 
 namespace cf_test_visual_asset_editor {
+void test_visual_geometry_parsing_uses_invariant_decimal_text() {
+    const auto fractional = copperfin::vfp::parse_visual_geometry_number("6666.667");
+    expect(fractional.has_value() && std::abs(*fractional - 6666.667) < 0.000001,
+           "FRX/LBX native geometry should parse invariant fractional decimal text");
+
+    const auto leading_plus = copperfin::vfp::parse_visual_geometry_number("+1.25");
+    expect(leading_plus.has_value() && std::abs(*leading_plus - 1.25) < 0.000001,
+           "FRX/LBX native geometry should preserve an optional leading plus");
+
+    expect(!copperfin::vfp::parse_visual_geometry_number("6666,667").has_value() &&
+               !copperfin::vfp::parse_visual_geometry_number("6666.667 trailing").has_value(),
+           "FRX/LBX native geometry should reject culture-specific separators and trailing input");
+}
+
 void test_align_visual_objects_to_anchor_geometry() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /

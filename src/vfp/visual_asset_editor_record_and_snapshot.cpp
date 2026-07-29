@@ -7,6 +7,8 @@
 #include "dbf_table_raw_mutation.h"
 #include "copperfin/vfp/dbf_text_encoding.h"
 
+#include <charconv>
+
 namespace copperfin::vfp {
 const DbfRecordValue* find_record_value(const DbfRecord& record, const std::string& field_name) {
     const std::string requested_field_name = normalize_visual_property_name(field_name);
@@ -182,10 +184,18 @@ std::optional<double> parse_visual_geometry_number(const std::string& text) {
         return std::nullopt;
     }
 
-    errno = 0;
-    char* parse_end = nullptr;
-    const double value = std::strtod(trimmed.c_str(), &parse_end);
-    if (parse_end == trimmed.c_str() || parse_end == nullptr || *parse_end != '\0' || errno == ERANGE) {
+    const char* begin = trimmed.data();
+    const char* end = begin + trimmed.size();
+    if (*begin == '+') {
+        ++begin;
+    }
+    if (begin == end) {
+        return std::nullopt;
+    }
+
+    double value = 0.0;
+    const auto parsed = std::from_chars(begin, end, value, std::chars_format::general);
+    if (parsed.ec != std::errc{} || parsed.ptr != end || !std::isfinite(value)) {
         return std::nullopt;
     }
     return value;

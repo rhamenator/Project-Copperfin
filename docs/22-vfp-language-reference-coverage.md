@@ -1,5 +1,12 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant native asset parsing follow-up (2026-07-29, #4824 under
+  #3217): FRX/LBX HPOS, VPOS, WIDTH, and HEIGHT now parse invariant fractional
+  text with locale-independent `std::from_chars`. Comma-decimal and
+  trailing-input forms are rejected without changing serialized fields or
+  display formatting. `test_visual_asset_editor` CTest passes `1/1`; SQL and
+  launcher numeric call sites remain separate follow-up work.
+
 - Culture-invariant numeric parsing slice (2026-07-29, #4824 under #3217):
   PRG preprocessor literals, expression literals, string-to-number coercion,
   and numeric index evaluation now use a shared locale-independent parser.

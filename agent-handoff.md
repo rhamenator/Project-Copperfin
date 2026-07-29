@@ -2,6 +2,14 @@
 
 ## Current State
 
+The #4824 native asset follow-up migrates FRX/LBX HPOS, VPOS, WIDTH, and
+HEIGHT parsing from locale-sensitive `strtod` to locale-independent
+`std::from_chars`. Fractional invariant values such as `6666.667`, optional
+leading plus, comma-decimal rejection, and trailing-input rejection are covered
+by `test_visual_asset_editor` CTest 1/1. No serialized field or display-format
+contract changed. SQL and launcher numeric call sites remain separate #4824
+follow-up scope; no Copperfin-owned process or test window remains running.
+
 The initial #4824 culture-invariant numeric-parsing slice replaces
 locale-sensitive conversion in PRG preprocessor literals, expression literals,
 string-to-number coercion, and numeric index evaluation with a shared

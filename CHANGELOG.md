@@ -1,3 +1,10 @@
+- 2026-07-29: Extended #4824 to native FRX/LBX geometry. HPOS, VPOS, WIDTH,
+  and HEIGHT parsing now uses locale-independent `std::from_chars`, so
+  fractional invariant values such as `6666.667` remain stable under the host
+  culture. Comma-decimal and trailing-input forms are rejected; no serialized
+  field or display-format contract changed. `test_visual_asset_editor` passes
+  `1/1`. SQL and launcher numeric call sites remain separate follow-up work.
+
 - 2026-07-29: Started #4824 under #3217. A shared locale-independent
   floating-point parser now covers PRG preprocessor literals, expression
   literals, string-to-number coercion, and numeric index evaluation using

@@ -32,6 +32,7 @@ int main() {
     test_report_settings_case_insensitive_expr_field_round_trips();
     test_report_settings_topmargin_and_tag_memo_round_trips();
     test_fractional_report_section_moves_follow_layout_membership();
+    test_visual_geometry_parsing_uses_invariant_decimal_text();
     test_report_label_character_field_writes_preserve_leading_spaces();
     test_query_visual_object_property_reads_selected_values();
     test_clear_visual_object_property_resets_selected_values();
