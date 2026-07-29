@@ -1,3 +1,10 @@
+- 2026-07-29: Extended #4824 through the runtime SYS/CODEPAGE conversion
+  seam. SYS(2030), SYS(2040), and CPCurrent callback values, plus strict
+  numeric string arguments, now use locale-independent parsing. A comma-
+  decimal SYS(2030) string cannot change the session switch; existing default
+  and invalid-input boundaries remain intact. The focused runtime-surface
+  CTest passes `1/1`.
+
 - 2026-07-29: Extended #4824 to the VSIX/Studio launch contract. Floating
   command-argument parsing now uses locale-independent `std::from_chars`,
   preserving period-decimal, exponent, and leading-plus forms while rejecting

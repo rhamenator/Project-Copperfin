@@ -1,5 +1,12 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant runtime-surface follow-up (2026-07-29, #4824 under #3217):
+  strict PRG SYS argument handling and SYS(2030), SYS(2040), and CPCurrent
+  callback values now use locale-independent numeric parsing. A comma-decimal
+  SYS(2030) string preserves the session state; existing invalid/default
+  boundaries and public return contracts remain unchanged. Focused runtime
+  surface CTest passes `1/1`.
+
 - Culture-invariant launch-contract follow-up (2026-07-29, #4824 under #3217):
   VSIX/Studio floating command arguments now use locale-independent
   `std::from_chars`, preserving invariant decimal/exponent/leading-plus forms

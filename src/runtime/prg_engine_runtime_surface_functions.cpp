@@ -217,12 +217,14 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 return static_cast<int>(value.int64_value);
             case PrgValueKind::uint64:
                 return static_cast<int>(value.uint64_value);
-            case PrgValueKind::string:
-                try {
-                    return value.string_value.empty() ? default_value : static_cast<int>(std::llround(std::stod(value.string_value)));
-                } catch (...) {
+            case PrgValueKind::string: {
+                const std::string text = trim_copy(value.string_value);
+                if (text.empty()) {
                     return default_value;
                 }
+                const auto parsed = try_parse_invariant_double(text);
+                return parsed.has_value() ? static_cast<int>(std::llround(*parsed)) : default_value;
+            }
             case PrgValueKind::empty:
                 return default_value;
         }
@@ -260,16 +262,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 if (text.empty()) {
                     return std::nullopt;
                 }
-                try {
-                    std::size_t consumed = 0U;
-                    const double parsed = std::stod(text, &consumed);
-                    if (consumed != text.size()) {
-                        return std::nullopt;
-                    }
-                    return integral_binary_value(parsed);
-                } catch (...) {
-                    return std::nullopt;
-                }
+                const auto parsed = try_parse_invariant_double(text);
+                return parsed.has_value() ? integral_binary_value(*parsed) : std::nullopt;
             }
             case PrgValueKind::empty:
                 return std::nullopt;

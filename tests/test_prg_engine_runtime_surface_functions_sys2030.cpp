@@ -25,6 +25,8 @@ namespace copperfin::runtime_surface_tests
             "nAfterInvalid = SYS(2030)\n"
             "nInvalidString = SYS(2030, 'invalid')\n"
             "nAfterInvalidString = SYS(2030)\n"
+            "nCommaString = SYS(2030, '1,0')\n"
+            "nAfterCommaString = SYS(2030)\n"
             "nEmpty = SYS(2030, '')\n"
             "nAfterEmpty = SYS(2030)\n"
             "nFraction = SYS(2030, 0.5)\n"
@@ -65,6 +67,7 @@ namespace copperfin::runtime_surface_tests
         expect(value("ninvalid") == "1" && value("nafterinvalid") == "1",
                "invalid SYS(2030) setter values should preserve the current state");
         expect(value("ninvalidstring") == "1" && value("nafterinvalidstring") == "1" &&
+                   value("ncommastring") == "1" && value("naftercommastring") == "1" &&
                    value("nempty") == "1" && value("nafterempty") == "1" &&
                    value("nfraction") == "1" && value("nafterfraction") == "1",
                "nonnumeric, empty, and fractional SYS(2030) setters should preserve the current state");

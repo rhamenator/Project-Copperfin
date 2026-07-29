@@ -2,6 +2,13 @@
 
 ## Current State
 
+The #4824 runtime-surface follow-up replaces locale-sensitive numeric
+conversion in strict PRG SYS argument handling and SYS(2030), SYS(2040), and
+CPCurrent callback values with the invariant parser. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`, including a
+comma-decimal SYS(2030) string that must preserve the current state. Existing
+default/invalid-input boundaries and public return contracts remain unchanged.
+
 The #4824 launch-contract follow-up migrates VSIX/Studio floating command
 argument parsing from locale-sensitive `strtod` to locale-independent
 `std::from_chars`. Period-decimal, exponent, leading-plus, comma-decimal

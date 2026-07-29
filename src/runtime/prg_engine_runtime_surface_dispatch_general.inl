@@ -119,17 +119,20 @@
                 if (arguments.size() >= 2U) {
                     const auto requested = strict_binary_switch_argument(1U);
                     if (requested.has_value()) {
-                        return make_number_value(std::stod(set_callback(
+                        const auto updated = try_parse_invariant_double(set_callback(
                             std::string("__sys2030__\x1f") +
-                            std::to_string(*requested))));
+                            std::to_string(*requested)));
+                        return make_number_value(updated.value_or(0.0));
                     }
                 }
-                return make_number_value(std::stod(set_callback("__sys2030__")));
+                return make_number_value(
+                    try_parse_invariant_double(set_callback("__sys2030__")).value_or(0.0));
             }
             if (sys_code == 2040) {
                 // VFP9 SYS(2040) reports the session-local report state:
                 // 0 means no report, 1 means preview, and 2 means output.
-                return make_number_value(std::stod(set_callback("__sys2040__")));
+                return make_number_value(
+                    try_parse_invariant_double(set_callback("__sys2040__")).value_or(0.0));
             }
             if (sys_code == 3004) {
                 // VFP9 returns the session automation LCID as character text.
@@ -732,9 +735,9 @@
         }
         if (type_flag == 0) {
             const std::string configured = set_callback("CODEPAGE");
-            try {
-                return make_number_value(std::stod(configured));
-            } catch (const std::exception&) {
+            if (const auto parsed = try_parse_invariant_double(configured); parsed.has_value()) {
+                return make_number_value(*parsed);
+            } else {
                 // Preserve the host fallback if a malformed state value is
                 // encountered rather than leaking a runtime exception.
             }
