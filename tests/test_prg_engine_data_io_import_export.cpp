@@ -4,7 +4,32 @@
 
 #include "test_prg_engine_data_io_support.h"
 
+#include <locale>
+
 namespace cf_test_prg_engine_data_io {
+namespace {
+class grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class global_locale_guard final {
+public:
+    explicit global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~global_locale_guard() { std::locale::global(previous_); }
+
+    global_locale_guard(const global_locale_guard&) = delete;
+    global_locale_guard& operator=(const global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
+}  // namespace
+
 void test_copy_to_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_localization";
@@ -1366,16 +1391,26 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
         {.name = "AGE", .type = 'N', .length = 3U},
         {.name = "ACTIVE", .type = 'L', .length = 1U},
     };
-    const std::vector<std::vector<std::string>> source_records{
+    std::vector<std::vector<std::string>> source_records{
         {"Ava", "7", "true"},
         {"Ben", "42", "false"},
     };
+    for (std::size_t row = 3U; row <= 1000U; ++row) {
+        source_records.push_back({
+            "Row" + std::to_string(row),
+            std::to_string(row % 100U),
+            row % 2U == 0U ? "true" : "false",
+        });
+    }
     const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
     expect(source_create.ok, "TYPE SYLK source fixture should be created");
 
     const fs::path dest_path = temp_root / "dest.dbf";
     const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
     expect(dest_create.ok, "TYPE SYLK destination fixture should be created");
+
+    const std::locale grouping_locale(std::locale::classic(), new grouped_numpunct());
+    global_locale_guard locale_guard(grouping_locale);
 
     const std::string sylk_path = (temp_root / "people.slk").string();
     const fs::path main_path = temp_root / "sylk_round_trip.prg";
@@ -1407,9 +1442,12 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
     if (fs::exists(sylk_path)) {
         const std::string sylk_text = read_text(sylk_path);
         expect(sylk_text.find("ID;P") != std::string::npos &&
-               sylk_text.find("B;Y") != std::string::npos &&
+               sylk_text.find("B;Y1001;X3") != std::string::npos &&
+               sylk_text.find("C;Y1000;X1;K\"Row999\"") != std::string::npos &&
+               sylk_text.find("C;Y1001;X1;K\"Row1000\"") != std::string::npos &&
                sylk_text.find("\nE\n") != std::string::npos,
-            "COPY TO TYPE SYLK should emit SYLK-style table markers");
+            "#4843: COPY TO TYPE SYLK should emit invariant dimensions and boundary coordinates (prefix: '" +
+                sylk_text.substr(0U, std::min<std::size_t>(sylk_text.size(), 80U)) + "')");
     }
 
     const auto check = [&](const std::string &name, const std::string &expected)
@@ -1429,10 +1467,12 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
     check("nage2", "42");
     check("lactive2", "false");
 
-    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 1005U);
     expect(result.ok, "APPEND FROM TYPE SYLK destination DBF should remain readable");
-    expect(result.table.records.size() == 2U, "APPEND FROM TYPE SYLK should append both interchange rows");
-    if (result.ok && result.table.records.size() == 2U) {
+    expect(result.table.records.size() == 1000U,
+        "#4843: APPEND FROM TYPE SYLK should preserve all rows across grouped-coordinate thresholds (got " +
+            std::to_string(result.table.records.size()) + ")");
+    if (result.ok && result.table.records.size() == 1000U) {
         expect(result.table.records[0U].values[0U].display_value == "Ava",
             "TYPE SYLK row 1 should preserve NAME");
         expect(result.table.records[0U].values[1U].display_value == "7",
@@ -1445,6 +1485,14 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
             "TYPE SYLK row 2 should preserve AGE");
         expect(result.table.records[1U].values[2U].display_value == "false",
             "TYPE SYLK row 2 should preserve ACTIVE");
+        expect(result.table.records[998U].values[0U].display_value == "Row999" &&
+               result.table.records[998U].values[1U].display_value == "99" &&
+               result.table.records[998U].values[2U].display_value == "false",
+            "#4843: TYPE SYLK row 999 should survive the first grouped-coordinate boundary");
+        expect(result.table.records[999U].values[0U].display_value == "Row1000" &&
+               result.table.records[999U].values[1U].display_value == "0" &&
+               result.table.records[999U].values[2U].display_value == "true",
+            "#4843: TYPE SYLK row 1000 should remain distinct after round trip");
     }
 
     fs::remove_all(temp_root, ignored);

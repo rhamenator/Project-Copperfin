@@ -706,6 +706,7 @@
             const std::vector<std::vector<std::string>> &rows)
         {
             std::ostringstream sylk;
+            sylk.imbue(std::locale::classic());
             sylk << "ID;PCopperfin\n";
             sylk << "B;Y" << (rows.size() + 1U) << ";X" << fields.size() << "\n";
 

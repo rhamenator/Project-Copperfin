@@ -27,12 +27,21 @@ DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
 Linux, Windows/MSVC, and macOS/AppleClang review is accepted at the expanded
 head; this is focused cross-platform evidence, not full RC evidence.
 
-The #4842/#109 `SYS(3)` filename slice is implementation-complete. Its
+The #4843/#109 SYLK coordinate slice is implementation-complete. SYLK table
+dimensions and cell row/column coordinates now serialize with
+`std::locale::classic()`, so host grouping cannot collapse distinct rows when
+the interchange parser reads them. A 1000-row grouped-locale round trip checks
+invariant `B;Y1001` and boundary coordinates, exact record count, and rows 999
+and 1000. Cross-platform review is required before closure.
+
+The #4842/#109 `SYS(3)` filename slice is implementation-complete and
+cross-platform reviewed. Its
 fixed-width eight-digit numeric stream now uses `std::locale::classic()`, so
 host grouping cannot introduce illegal punctuation or change generated path
 length. The existing SYS fixture runs under adversarial grouped punctuation
 and preserves sequential/concurrent uniqueness plus `SYS(2015)`'s separate
-base-36 contract. Cross-platform review is required before closure.
+base-36 contract. Linux, Windows/MSVC, and macOS/AppleClang focused validation
+is accepted.
 
 The #4841/#109 runtime date/time formatting slice is implementation-complete.
 Sortable DTOC/TTOC/DTOS/STOD text and SET-controlled date/time presentation

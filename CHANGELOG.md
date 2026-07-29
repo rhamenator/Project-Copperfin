@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4843/#109 SYLK serialization against grouped host
+  cultures. Table dimensions and cell row/column coordinates now use the
+  classic locale, preventing grouped coordinate text from collapsing records
+  when parsed. A 1000-row COPY TO / APPEND FROM TYPE SYLK regression runs under
+  adversarial comma-decimal punctuation and verifies invariant boundary
+  coordinates plus exact record-count and boundary-record fidelity.
+
 - 2026-07-29: Hardened #4842/#109 `SYS(3)` generated filename components
   against grouped host cultures. The fixed-width eight-digit stream now uses
   the classic locale, preserving the documented digits-only filename contract
