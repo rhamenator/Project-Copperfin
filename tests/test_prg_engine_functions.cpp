@@ -768,28 +768,33 @@ namespace
         fs::create_directories(temp_root);
 
         const fs::path main_path = temp_root / "isleadbyte_invalid.prg";
-        write_text(temp_root / "config.fpw", "CODEPAGE = not-a-code-page\n");
         write_text(
             main_path,
             "lConfiguredLead = ISLEADBYTE(CHR(129))\n"
             "cConfiguredCodePage = SET('CODEPAGE')\n"
             "RETURN\n");
 
-        const auto state = copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(main_path.string(), temp_root.string()))
-            .run(copperfin::runtime::DebugResumeAction::continue_run);
-        expect(state.completed, "invalid CONFIG.FPW CODEPAGE script should complete");
+        const auto check_invalid_configuration = [&](const std::string& value, const std::string& description) {
+            write_text(temp_root / "config.fpw", "CODEPAGE = " + value + "\n");
+            const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()))
+                .run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.completed, description + " CONFIG.FPW CODEPAGE script should complete");
 
-        const auto lead = state.globals.find("lconfiguredlead");
-        expect(
-            lead != state.globals.end() && !lead->second.boolean_value,
-            "invalid CONFIG.FPW CODEPAGE must make ISLEADBYTE fail closed independent of host ACP");
+            const auto lead = state.globals.find("lconfiguredlead");
+            expect(
+                lead != state.globals.end() && !lead->second.boolean_value,
+                description + " CONFIG.FPW CODEPAGE must make ISLEADBYTE fail closed independent of host ACP");
 
-        const auto configured_code_page = state.globals.find("cconfiguredcodepage");
-        expect(
-            configured_code_page != state.globals.end() &&
-                copperfin::runtime::format_value(configured_code_page->second) == "0",
-            "invalid CONFIG.FPW CODEPAGE must expose the deterministic invalid sentinel through SET()");
+            const auto configured_code_page = state.globals.find("cconfiguredcodepage");
+            expect(
+                configured_code_page != state.globals.end() &&
+                    copperfin::runtime::format_value(configured_code_page->second) == "0",
+                description + " CONFIG.FPW CODEPAGE must expose the deterministic invalid sentinel through SET()");
+        };
+
+        check_invalid_configuration("not-a-code-page", "malformed");
+        check_invalid_configuration("99999", "unsupported");
 
         fs::remove_all(temp_root, ignored);
     }
