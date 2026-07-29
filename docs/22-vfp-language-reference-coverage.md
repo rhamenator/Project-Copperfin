@@ -7,7 +7,8 @@
   exponents; the complete focused #4824 matrix passes `10/10` across PRG,
   control flow, string/math, data I/O, runtime surface, DBF, visual assets,
   Studio host, SQL metadata, and index optimization. Locale-sensitive
-  separators remain rejected.
+  separators remain rejected, and malformed `1e`, `1e+`, and `1e-` forms
+  fault directly through PRG execution.
 
 - SYS(2022) Windows missing-path correction (2026-07-29, #4823 under #3217):
   normalized nonexistent file/directory inputs now return character `0`

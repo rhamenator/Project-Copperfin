@@ -675,6 +675,24 @@ void test_expression_numeric_literals_preserve_exponent_grammar() {
         signed_exponent != state.globals.end() && copperfin::runtime::format_value(signed_exponent->second) == "100002",
         "PRG expression parser should preserve explicitly signed exponent literals");
 
+    const char* invalid_literals[] = {"1e", "1e+", "1e-"};
+    for (const char* invalid_literal : invalid_literals)
+    {
+        const fs::path invalid_program_path = temp_root / (std::string("invalid_") + invalid_literal + ".prg");
+        copperfin::test_support::write_text(
+            invalid_program_path,
+            std::string("nInvalid = ") + invalid_literal + "\n"
+            "RETURN\n");
+        auto invalid_session = copperfin::runtime::PrgRuntimeSession::create(
+            copperfin::test_support::make_runtime_session_options(
+                invalid_program_path.string(), temp_root.string(), false));
+        const auto invalid_state = invalid_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        copperfin::test_support::expect(
+            !invalid_state.completed &&
+                invalid_state.message.find("invalid invariant numeric literal") != std::string::npos,
+            std::string("PRG expression parser should reject malformed exponent literal ") + invalid_literal);
+    }
+
     fs::remove_all(temp_root, ignored);
 }
 
