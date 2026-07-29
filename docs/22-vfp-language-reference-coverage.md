@@ -9,6 +9,15 @@
   `de_DE.UTF-8` Linux focused runs pass; macOS/AppleClang and Windows/MSVC
   review remains required.
 
+- Strict runtime integer culture boundary (2026-07-29, #4854 under #3217):
+  runtime configuration limits/code pages and SYS(2326/2327) string handle
+  arguments now require complete invariant base-10 tokens. Grouped or trailing
+  punctuation is rejected instead of being truncated into a different integer;
+  valid signs, defaults, range checks, and public contracts remain unchanged.
+  Linux control-flow and runtime-surface focused tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; macOS/AppleClang and Windows/MSVC review
+  remains required.
+
 - Numeric culture boundary (2026-07-29, #4824/#4835 under #3217): VFP
   literals, machine-readable numeric fields, runtime conversions, and
   serialized values use invariant period-decimal parsing/serialization.

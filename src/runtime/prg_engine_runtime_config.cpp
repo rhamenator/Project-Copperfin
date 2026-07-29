@@ -5,6 +5,7 @@
 #include "prg_engine_runtime_config.h"
 
 #include "copperfin/platform/path.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "prg_engine_locale_code_page.h"
 #include "prg_engine_helpers.h"
 
@@ -37,15 +38,11 @@ std::optional<std::size_t> parse_size_option(const std::string& value) {
     if (trimmed.empty()) {
         return std::nullopt;
     }
-    try {
-        const std::size_t parsed = static_cast<std::size_t>(std::stoull(trimmed));
-        if (parsed == 0U) {
-            return std::nullopt;
-        }
-        return parsed;
-    } catch (...) {
+    const auto parsed = copperfin::platform::try_parse_invariant_integer<std::size_t>(trimmed);
+    if (!parsed.has_value() || *parsed == 0U) {
         return std::nullopt;
     }
+    return parsed;
 }
 
 std::optional<int> parse_code_page_option(const std::string& value) {
@@ -53,16 +50,12 @@ std::optional<int> parse_code_page_option(const std::string& value) {
     if (normalized.empty() || normalized == "AUTO") {
         return std::nullopt;
     }
-    try {
-        const long long parsed = std::stoll(normalized);
-        if (parsed < 1 || parsed > 65535 ||
-            !detail::is_supported_vfp_code_page(static_cast<int>(parsed))) {
-            return std::nullopt;
-        }
-        return static_cast<int>(parsed);
-    } catch (...) {
+    const auto parsed = copperfin::platform::try_parse_invariant_integer<long long>(normalized);
+    if (!parsed.has_value() || *parsed < 1 || *parsed > 65535 ||
+        !detail::is_supported_vfp_code_page(static_cast<int>(*parsed))) {
         return std::nullopt;
     }
+    return static_cast<int>(*parsed);
 }
 
 std::optional<RuntimeConfigFile> try_load_runtime_config_file(const std::filesystem::path& path) {

@@ -5,6 +5,7 @@
 #include "prg_engine_runtime_surface_functions.h"
 
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
@@ -288,11 +289,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             case PrgValueKind::uint64:
                 return static_cast<std::int64_t>(value.uint64_value);
             case PrgValueKind::string:
-                try {
-                    return static_cast<std::int64_t>(std::stoll(trim_copy(value.string_value)));
-                } catch (...) {
-                    return default_value;
+                if (const auto parsed = copperfin::platform::try_parse_invariant_integer<std::int64_t>(
+                        trim_copy(value.string_value));
+                    parsed.has_value()) {
+                    return *parsed;
                 }
+                return default_value;
             case PrgValueKind::empty:
                 return default_value;
         }

@@ -225,6 +225,7 @@ void test_runtime_guardrail_limits_statement_budget_without_crashing_host();
 void test_runtime_guardrail_limits_loop_iterations_without_crashing_host();
 void test_runtime_guardrail_errors_localize_without_changing_behavior();
 void test_config_fpw_overrides_runtime_limits();
+void test_config_fpw_rejects_grouped_integer_tokens();
 void test_config_fpw_custom_limit_is_enforced_at_boundary();
 void test_config_fpw_overrides_temp_directory_default();
 void test_close_command_closes_all_work_areas();

@@ -273,6 +273,34 @@ void test_config_fpw_overrides_runtime_limits() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_config_fpw_rejects_grouped_integer_tokens() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_config_grouped_integer";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(temp_root / "config.fpw", "MAX_CALL_DEPTH = 1.234\n");
+    const fs::path main_path = temp_root / "grouped_config.prg";
+    write_text(
+        main_path,
+        "DO a\n"
+        "RETURN\n"
+        "PROCEDURE a\n"
+        "DO b\n"
+        "RETURN\n"
+        "PROCEDURE b\n"
+        "RETURN\n");
+
+    const auto state = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string(), false))
+        .run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "grouped CONFIG.FPW integer tokens should be rejected instead of truncating to a smaller limit");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_config_fpw_custom_limit_is_enforced_at_boundary() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_config_custom_call_depth_boundary";

@@ -600,6 +600,7 @@ namespace copperfin::runtime_surface_tests
             "lToolbarHwndReadOnly = PEMSTATUS(oToolbar, 'hWnd', 5)\n"
             "lSetFormHwnd = SETPEM(oForm, 'hWnd', 88)\n"
             "nScreenWHandle = SYS(2326, nScreenHwnd)\n"
+            "nGroupedWHandle = SYS(2326, STR(nScreenHwnd) + '.0')\n"
             "nVfpWHandle = SYS(2326, nVfpHwnd)\n"
             "nFormWHandle = SYS(2326, nFormHwnd)\n"
             "nToolbarWHandle = SYS(2326, nToolbarHwnd)\n"
@@ -744,6 +745,7 @@ namespace copperfin::runtime_surface_tests
         check("ltoolbarhwndreadonly", "true");
         check("lsetformhwnd", "false");
         check("nscreenwhandle", "900001");
+        check("ngroupedwhandle", "0");
         check("nvfpwhandle", "900002");
         check("nscreenroundtrip", "1001");
         check("nvfproundtrip", "1000");

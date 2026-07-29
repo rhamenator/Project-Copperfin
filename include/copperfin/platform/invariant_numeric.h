@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <charconv>
 #include <optional>
 #include <string_view>
 
@@ -15,5 +16,27 @@ namespace copperfin::platform {
 [[nodiscard]] std::optional<double> try_parse_invariant_double(
     std::string_view value,
     bool allow_nonfinite = false);
+
+template <typename Integer>
+[[nodiscard]] std::optional<Integer> try_parse_invariant_integer(std::string_view value) {
+    if (value.empty()) {
+        return std::nullopt;
+    }
+    if (value.front() == '+') {
+        value.remove_prefix(1U);
+        if (value.empty()) {
+            return std::nullopt;
+        }
+    }
+
+    Integer parsed{};
+    const char* begin = value.data();
+    const char* end = begin + value.size();
+    const auto result = std::from_chars(begin, end, parsed, 10);
+    if (result.ec != std::errc{} || result.ptr != end) {
+        return std::nullopt;
+    }
+    return parsed;
+}
 
 }  // namespace copperfin::platform

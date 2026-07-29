@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4854/#3217 runtime integer parsing. Runtime config
+  limits/code pages and SYS(2326/2327) handle strings now require complete
+  invariant base-10 tokens, so grouped or trailing punctuation cannot be
+  silently truncated into a different integer. Valid signs, defaults, range
+  checks, and public contracts remain unchanged; cross-platform review remains
+  required before closure.
+
 - 2026-07-29: Hardened #4853/#109 asset-inspector JSON against grouped host
   cultures. Database/catalog JSON numeric fields now use a classic-locale
   stream, and the existing asset-inspector regression exercises record index

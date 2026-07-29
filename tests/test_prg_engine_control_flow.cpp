@@ -64,6 +64,7 @@ int main() {
     test_runtime_guardrail_limits_loop_iterations_without_crashing_host();
     test_static_diagnostic_flags_likely_infinite_do_while_loop();
     test_config_fpw_overrides_runtime_limits();
+    test_config_fpw_rejects_grouped_integer_tokens();
     test_config_fpw_custom_limit_is_enforced_at_boundary();
     test_config_fpw_overrides_temp_directory_default();
     test_elseif_control_flow_executes_matching_branch();
