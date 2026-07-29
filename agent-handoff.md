@@ -3,9 +3,10 @@
 ## Current State
 
 The #4848/#109 generated debug-manifest numeric-metadata slice is
-implementation-complete. Debug inspection fields now serialize through a
-classic-locale stream, preventing grouped host punctuation from changing
-license-seat, perpetual-version, security-role, and related numeric values.
+implementation-complete and cross-platform reviewed. Debug inspection fields
+now serialize through a classic-locale stream, preventing grouped host
+punctuation from changing license-seat, perpetual-version, security-role, and
+related numeric values.
 The existing license/redaction materialization contract runs with 1234 seats
 under grouped punctuation and preserves invariant values plus runtime/debug
 separation. Linux, macOS/AppleClang, and Windows/MSVC focused validation is
