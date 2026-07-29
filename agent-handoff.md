@@ -2,6 +2,12 @@
 
 ## Current State
 
+The #4824 SQL metadata follow-up removes the remaining locale-sensitive
+`std::stod` calls from SQLGETPROP numeric and numeric-looking raw-property
+paths. Missing numeric properties remain zero; malformed raw values remain
+text rather than throwing; property names and return contracts are unchanged.
+`test_prg_engine_sql_cursors_metadata` CTest passes `1/1`.
+
 The #4824 runtime-surface follow-up replaces locale-sensitive numeric
 conversion in strict PRG SYS argument handling and SYS(2030), SYS(2040), and
 CPCurrent callback values with the invariant parser. The focused

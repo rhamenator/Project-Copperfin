@@ -1,5 +1,11 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant SQL metadata follow-up (2026-07-29, #4824 under #3217):
+  SQLGETPROP numeric and numeric-looking raw-property values now use the
+  locale-independent parser. Missing numeric properties remain zero, malformed
+  raw values remain text, and property names/return contracts are unchanged.
+  Focused SQL metadata CTest passes `1/1`.
+
 - Culture-invariant runtime-surface follow-up (2026-07-29, #4824 under #3217):
   strict PRG SYS argument handling and SYS(2030), SYS(2040), and CPCurrent
   callback values now use locale-independent numeric parsing. A comma-decimal

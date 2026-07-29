@@ -957,12 +957,16 @@
             if (normalized_name == "batchmode")
             {
                 const auto property = found->second.properties.find(normalized_name);
-                return property == found->second.properties.end() ? make_number_value(0.0) : make_number_value(std::stod(property->second));
+                return property == found->second.properties.end()
+                    ? make_number_value(0.0)
+                    : make_number_value(try_parse_invariant_double(property->second).value_or(0.0));
             }
             if (normalized_name == "waittime" || normalized_name == "packetsize")
             {
                 const auto property = found->second.properties.find(normalized_name);
-                return property == found->second.properties.end() ? make_number_value(0.0) : make_number_value(std::stod(property->second));
+                return property == found->second.properties.end()
+                    ? make_number_value(0.0)
+                    : make_number_value(try_parse_invariant_double(property->second).value_or(0.0));
             }
 
             const auto property = found->second.properties.find(normalized_name);
@@ -975,7 +979,10 @@
             if (!raw_value.empty() && std::all_of(raw_value.begin(), raw_value.end(), [](unsigned char ch)
                                                   { return std::isdigit(ch) != 0 || ch == '-' || ch == '.'; }))
             {
-                return make_number_value(std::stod(raw_value));
+                if (const auto parsed = try_parse_invariant_double(raw_value); parsed.has_value())
+                {
+                    return make_number_value(*parsed);
+                }
             }
             return make_string_value(raw_value);
         }

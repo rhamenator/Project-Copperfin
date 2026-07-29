@@ -1,3 +1,9 @@
+- 2026-07-29: Extended #4824 through SQL property metadata. SQLGETPROP
+  numeric properties and numeric-looking raw property values now use the
+  locale-independent parser; missing values remain numeric zero and malformed
+  raw values remain text instead of throwing. `test_prg_engine_sql_cursors_metadata`
+  passes `1/1`; SQL property names and return contracts are unchanged.
+
 - 2026-07-29: Extended #4824 through the runtime SYS/CODEPAGE conversion
   seam. SYS(2030), SYS(2040), and CPCurrent callback values, plus strict
   numeric string arguments, now use locale-independent parsing. A comma-
