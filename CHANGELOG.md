@@ -4,6 +4,11 @@
   code page for absent or `AUTO` configuration, preserves `CPCURRENT()` 0/1/2
   semantics, and prevents `SET CODEPAGE TO n` from mutating runtime state.
 
+- 2026-07-28: The prior exact-head release matrix at `5fead206e` is
+  superseded by the #4810 correction at implementation head `87bea0388`.
+  Replacement exact-head release validation is required; RC readiness remains
+  unclaimed.
+
 - 2026-07-28: Implemented the modeled VFP9 `WVISIBLE(WindowName)` runtime
   surface under #4808. The main application window, named visual windows, and
   live `Show()`/`Hide()`/`Visible` state are covered case-insensitively; unknown

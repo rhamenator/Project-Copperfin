@@ -118,18 +118,12 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The current release-validation product head is `5fead206e`; its exact-head
-matrix is still running, so RC readiness is not claimed. Security Supply Chain
-`30409802813` is green. VSIX `30409802837`, Linux Managed UI `30409802818`,
-Executable Path `30409802812`, Windows Native `30409802844`, Windows DECLARE
-ABI `30409802925`, Windows Environment and Executable Path `30409802889`, and
-Standalone Installers `30409802824` are in progress; Generated Launcher
-`30409802860`, Linux Native `30409802834`, and macOS Native `30409802799` are
-queued. Audit Containment `30409440035` is an older superseded run. The
-earlier accepted hosted baselines remain historical evidence only and are not
-substituted for this exact-head matrix. Independent safety sign-off under
-#4403 and protected launcher-trust provisioning under #4409 remain separate
-release gates.
+The latest implementation head is `87bea0388`. The prior exact-head matrix
+for `5fead206e` is superseded by the #4810 codepage-boundary correction, and
+no replacement matrix is published yet; RC readiness is not claimed. The
+earlier accepted hosted baselines remain historical evidence only. Independent
+safety sign-off under #4403 and protected launcher-trust provisioning under
+#4409 remain separate release gates.
 
 Independent local POSIX validation at synchronized head `792f1840c` passed
 `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` with

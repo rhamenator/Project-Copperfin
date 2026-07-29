@@ -12,17 +12,13 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `5fead206e`, and its exact-head
-release-validation matrix is still running. Security Supply Chain
-`30409802813` is green. VSIX `30409802837`, Linux Managed UI `30409802818`,
-Executable Path `30409802812`, Windows Native `30409802844`, Windows DECLARE
-ABI `30409802925`, Windows Environment and Executable Path `30409802889`, and
-Standalone Installers `30409802824` are in progress; Generated Launcher
-`30409802860`, Linux Native `30409802834`, and macOS Native `30409802799` are
-queued. RC readiness is not claimed while this matrix and the separate #4403
-arm's-length safety sign-off and #4409 protected launcher-trust gate remain
-open. The worktree is synchronized, and no Copperfin-owned process or test
-window is left running.
+The latest implementation head is `87bea0388`. The prior exact-head
+release-validation matrix for `5fead206e` is superseded by the #4810
+codepage-boundary correction, and no replacement matrix is published yet. RC
+readiness is not claimed while exact-head validation, the separate #4403
+arm's-length safety sign-off, and the #4409 protected launcher-trust gate
+remain open. The worktree is synchronized, and no Copperfin-owned process or
+test window is left running.
 
 The #4810 correction restores the VFP9 `CODEPAGE` boundary: it is read from
 `CONFIG.FPW` at startup, not changed by a live `SET CODEPAGE TO n` command.
