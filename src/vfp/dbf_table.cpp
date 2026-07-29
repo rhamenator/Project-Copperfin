@@ -1177,6 +1177,7 @@ DecodedDbfValue decode_value(
             const std::uint32_t julian_day = read_le_u32(raw, 0U);
             const std::uint32_t millis = read_le_u32(raw, 4U);
             std::ostringstream stream;
+            stream.imbue(std::locale::classic());
             stream << "julian:" << julian_day << " millis:" << millis;
             return stream.str();
         }

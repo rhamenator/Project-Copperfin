@@ -22,11 +22,18 @@ DBF `Y` display values and runtime `PrgValue` currency text now use
 `std::locale::classic()`, preventing host digit grouping from corrupting the
 explicit period separator and four fractional digits. Focused DBF boundary and
 runtime value regressions poison the process-global locale and preserve
-positive, negative, zero, fractional, and scaled-integer values. Cross-platform
-runtime value regressions poison the process-global locale and preserve
 positive, negative, zero, fractional, and scaled-integer values. The focused
 DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
-Cross-platform review remains required before issue closure.
+Linux, Windows/MSVC, and macOS/AppleClang review is accepted at the expanded
+head; this is focused cross-platform evidence, not full RC evidence.
+
+The #4840/#109 DBF DateTime display slice is implementation-complete.
+The `T` decoder now uses `std::locale::classic()` for its
+`julian:<integer> millis:<integer>` text, preserving exact binary storage and
+the existing parser contract under grouped host cultures. The shared
+Currency/DateTime round-trip fixture installs comma-decimal punctuation with
+period digit grouping before reading the records; cross-platform review is
+required before closure.
 
 The #4837/#109 visual-geometry serialization slice is implementation-complete.
 `format_visual_geometry_number()` now uses `std::locale::classic()` for

@@ -1673,6 +1673,8 @@ void test_integer_field_create_replace_and_append_round_trip() {
 }
 
 void test_currency_and_datetime_field_round_trip() {
+    const std::locale grouping_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(grouping_locale);
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_currency_datetime_tests_" + std::to_string(_getpid()));

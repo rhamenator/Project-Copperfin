@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4840/#109 DBF DateTime display serialization against
+  grouped host cultures. `T` fields now preserve the invariant
+  `julian:<integer> millis:<integer>` text contract while retaining exact
+  binary storage and parser behavior. The existing Currency/DateTime
+  round-trip regression now runs with comma-decimal punctuation and period
+  digit grouping installed in-process.
+
 - 2026-07-29: Hardened #4839/#109 currency stringification against host
   culture. DBF `Y` display values and runtime currency text now use the classic
   locale, preventing host digit grouping from corrupting the explicit
