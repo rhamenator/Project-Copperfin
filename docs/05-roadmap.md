@@ -118,16 +118,17 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `dd52e0a10`. Earlier exact-head
+The latest product implementation head is `52e56cd82`. Earlier exact-head
 matrices are superseded by subsequent runtime and localization corrections,
 including the #4825 `AT_C()` and #4827 `GETNEXTMODIFIED()` slices. The focused
-Linux evidence for `dd52e0a10` includes the #4827 work-area regression and
-four-locale catalog parity; the current Windows and macOS native workflows
-are the required exact-head platform runs. RC readiness is not claimed until
-those runs resolve and the remaining release gates are satisfied. Earlier
-accepted hosted baselines remain historical evidence only. Independent safety
-sign-off under #4403 and protected launcher-trust provisioning under #4409
-remain separate release gates.
+Linux and Windows evidence for `52e56cd82` includes the #4827 work-area
+regression, clean four-locale execution, and stable VFP9 error contracts;
+the current macOS native workflow remains the required exact-head platform
+run. RC readiness is not claimed until that run resolves and the remaining
+release gates are satisfied. Earlier accepted hosted baselines remain
+historical evidence only. Independent safety sign-off under #4403 and
+protected launcher-trust provisioning under #4409 remain separate release
+gates.
 
 Independent local POSIX validation at synchronized head `792f1840c` passed
 `ctest --test-dir build --output-on-failure --timeout 180 --parallel 2` with
