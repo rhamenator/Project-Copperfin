@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <locale>
 #include <mutex>
 #include <optional>
 #include <sstream>
@@ -32,6 +33,7 @@ std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
 
 std::string two_digit(std::uint8_t value) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     if (value < 10U) {
         stream << '0';
     }
@@ -130,6 +132,7 @@ std::string DbfHeader::version_description(const localization::LocalizedCatalog&
 std::string DbfHeader::last_update_iso8601() const {
     const unsigned int year = 1900U + static_cast<unsigned int>(last_update_year);
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << year << '-' << two_digit(last_update_month) << '-' << two_digit(last_update_day);
     return stream.str();
 }

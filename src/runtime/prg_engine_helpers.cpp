@@ -1383,6 +1383,7 @@ bool parse_runtime_date_string(const std::string& raw, int& year, int& month, in
 
 std::string format_runtime_date_string(int year, int month, int day) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0')
            << std::setw(2) << month << '/'
            << std::setw(2) << day << '/'
@@ -1465,6 +1466,7 @@ bool parse_runtime_datetime_string(
 
 std::string format_runtime_datetime_string(int year, int month, int day, int hour, int minute, int second) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::setfill('0')
            << std::setw(2) << month << '/'
            << std::setw(2) << day << '/'
