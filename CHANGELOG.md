@@ -1,3 +1,8 @@
+- 2026-07-28: Followed up #4819 in `7f64c6d0f` with deterministic positive-Y
+  coverage for `SYS(2024)`: an active preview cancellation records the
+  invariant `report.interrupted` event while preserving the existing
+  event-loop pause contract. The focused work-area/report CTest remains `1/1`.
+
 - 2026-07-28: Implemented #4819 under #3217. Native PRG `SYS(2024)` now
   returns character `Y`/`N` for session-local report interruption state,
   recording active-report cancellation and QUIT/async cleanup while resetting

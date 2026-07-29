@@ -5,8 +5,9 @@
   has not been interrupted, and records character `Y` when active report
   execution is cancelled or quit/async cleanup interrupts it. Starting a new
   report or explicitly closing the report event loop clears the state. Focused
-  work-area/report CTest coverage passes `1/1`; full ReportListener parity
-  remains separate.
+  work-area/report CTest coverage passes `1/1`, including active-preview
+  `CANCEL` coverage through the invariant `report.interrupted=Y` event; full
+  ReportListener parity remains separate.
 
 - Current SYS(2040) status (2026-07-28, #4818 under #3217): the runtime now
   returns numeric report state per PRG runtime session: `0` when no report or
