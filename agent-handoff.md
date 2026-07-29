@@ -21,20 +21,23 @@ focused validation is accepted; issue #4851 is closed. These formatters remain
 canonical machine/runtime text without changing user-selected `SET DATE`
 display. This is focused evidence, not full RC evidence.
 
-The #4852/#109 APP archive-length slice is implementation-complete. The
-`copperfin_content_archive_v1` writer now serializes staged byte counts through
-a classic-locale stream. Its 1,234-byte declared-asset regression preserves
-payload bytes and SHA-256, and rejects grouped `1.234` metadata under the
-Linux locale matrix. Cross-platform review is required before closure.
+The #4852/#109 APP archive-length slice is implementation-complete and
+cross-platform reviewed. The `copperfin_content_archive_v1` writer now
+serializes staged byte counts through a classic-locale stream. Its 1,234-byte
+declared-asset regression preserves payload bytes and SHA-256 and rejects
+grouped `1.234` metadata. Linux, macOS/AppleClang, and Windows/MSVC focused
+validation is accepted; issue #4852 is closed. This is focused evidence, not
+full RC evidence.
 
 The #4853/#109 asset-inspector JSON numeric-field slice is
-implementation-complete locally. The database/catalog JSON stream now uses
-`std::locale::classic()`, so record indices and DBF numeric metadata cannot
-inherit grouped host punctuation into machine-readable JSON. The existing
+implementation-complete and cross-platform reviewed. The database/catalog JSON
+stream now uses `std::locale::classic()`, so record indices and DBF numeric
+metadata cannot inherit grouped host punctuation into machine-readable JSON.
+The existing
 asset-inspector regression exercises catalog record index 1234 under grouped
-punctuation and requires exact `1234` rather than `1.234`; default, `C`,
-`pt_BR.UTF-8`, and `de_DE.UTF-8` Linux runs pass. Cross-platform review is
-required before closure. This is focused evidence, not full RC evidence.
+punctuation and requires exact `1234` rather than `1.234`. Linux,
+macOS/AppleClang, and Windows/MSVC focused validation is accepted; issue #4853
+is closed. This is focused evidence, not full RC evidence.
 
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
