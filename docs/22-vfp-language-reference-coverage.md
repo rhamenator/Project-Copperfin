@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- Asset-inspector JSON culture boundary (2026-07-29, #4853 under #109): DBC
+  record indices and DBF numeric metadata now serialize through a classic
+  locale, keeping machine-readable JSON integers invariant when the host uses
+  grouped punctuation. The asset-inspector regression exercises record index
+  1234 and rejects grouped `1.234` while preserving JSON keys, schema, values,
+  and localized display boundaries. Default, `C`, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` Linux focused runs pass; macOS/AppleClang and Windows/MSVC
+  review remains required.
+
 - Numeric culture boundary (2026-07-29, #4824/#4835 under #3217): VFP
   literals, machine-readable numeric fields, runtime conversions, and
   serialized values use invariant period-decimal parsing/serialization.

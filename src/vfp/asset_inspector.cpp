@@ -1546,6 +1546,7 @@ DatabaseExportResult export_database_as_json(
 
     // Build JSON ----------------------------------------------------------
     std::ostringstream json;
+    json.imbue(std::locale::classic());
     json << "{\n";
 
     // -- database metadata block

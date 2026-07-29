@@ -27,6 +27,15 @@ a classic-locale stream. Its 1,234-byte declared-asset regression preserves
 payload bytes and SHA-256, and rejects grouped `1.234` metadata under the
 Linux locale matrix. Cross-platform review is required before closure.
 
+The #4853/#109 asset-inspector JSON numeric-field slice is
+implementation-complete locally. The database/catalog JSON stream now uses
+`std::locale::classic()`, so record indices and DBF numeric metadata cannot
+inherit grouped host punctuation into machine-readable JSON. The existing
+asset-inspector regression exercises catalog record index 1234 under grouped
+punctuation and requires exact `1234` rather than `1.234`; default, `C`,
+`pt_BR.UTF-8`, and `de_DE.UTF-8` Linux runs pass. Cross-platform review is
+required before closure. This is focused evidence, not full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

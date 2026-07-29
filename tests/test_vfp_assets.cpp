@@ -2118,15 +2118,22 @@ void test_export_database_as_json_produces_catalog_json() {
         {.name = "PROPERTIES", .type = 'M', .offset = 81U, .length = 4U, .decimal_count = 0U}
     };
 
-    const std::vector<std::vector<std::string>> records{
+    std::vector<std::vector<std::string>> records{
         {"DATABASE", "northwind", "", ""},
         {"TABLE", "Customers", "northwind", ""},
         {"TABLE", "Orders", "northwind", ""}
     };
+    records.reserve(1234U);
+    for (std::size_t index = records.size(); index < 1233U; ++index) {
+        records.push_back({"TABLE", "Padding" + std::to_string(index), "northwind", ""});
+    }
+    records.push_back({"TABLE", "HighIndex", "northwind", ""});
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(dbc_path.string(), fields, records);
     expect(create_result.ok, "export_database_as_json: DBC fixture should be created");
 
+    const std::locale grouping_locale(std::locale::classic(), new grouped_numpunct());
+    global_locale_guard locale_guard(grouping_locale);
     const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
     expect(result.ok, "export_database_as_json should succeed on a minimal DBC fixture");
     expect(result.error.empty(),
@@ -2144,6 +2151,12 @@ void test_export_database_as_json_produces_catalog_json() {
                "export JSON catalog should contain the Customers table entry");
         expect(result.json.find("\"Orders\"") != std::string::npos,
                "export JSON catalog should contain the Orders table entry");
+        expect(result.json.find("\"record_index\": 1234,") != std::string::npos,
+               "export JSON should preserve invariant high catalog record indices under grouped punctuation");
+        expect(result.json.find("\"record_index\": 1.234,") == std::string::npos,
+               "export JSON should reject grouped punctuation in catalog record indices");
+        expect(result.json.find("\"HighIndex\"") != std::string::npos,
+               "export JSON should retain the high-index catalog object");
         // No .dbf files exist for those tables, so tables block should be empty
         expect(result.json.find("\"tables\": {\n  }") == std::string::npos ||
                result.json.find("\"records\"") == std::string::npos,

@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4853/#109 asset-inspector JSON against grouped host
+  cultures. Database/catalog JSON numeric fields now use a classic-locale
+  stream, and the existing asset-inspector regression exercises record index
+  1234 under adversarial punctuation to require exact `1234` rather than
+  grouped `1.234`. Property values, JSON keys, and localization contracts are
+  unchanged; cross-platform review remains required before closure.
+
 - 2026-07-29: Hardened #4850/#109 runtime asset-record metadata against
   grouped host cultures. Portable `app.cfmanifest` asset record indices now
   use the classic locale, matching the already invariant `app.cfdebug` output.
