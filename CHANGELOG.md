@@ -45,6 +45,20 @@
   field or display-format contract changed. `test_visual_asset_editor` passes
   `1/1`. SQL and launcher numeric call sites remain separate follow-up work.
 
+- 2026-07-29: Restored Apple-libc++ compatibility for #4824's shared invariant
+  numeric parser with a classic-locale stream fallback that preserves its
+  no-leading-whitespace, full-consumption, finite-value contract. Focused
+  native coverage passes on macOS under `pt_BR` and `de_DE` numeric locales;
+  malformed or repeated signs, whitespace, trailing input, comma decimals, and
+  overflow remain rejected, while DBF binary-field consumers retain explicit
+  nonfinite opt-in.
+
+- 2026-07-29: Restored macOS/Apple-libc++ compatibility for decimal `ROUND()`
+  conversion with locale-classic stream formatting/parsing, and made the POSIX
+  launcher validation resolve a symlinked `dotnet` executable before deriving
+  `DOTNET_ROOT`. Focused string/math and generated-launcher process tests pass
+  on macOS, including non-`C` numeric locales.
+
 - 2026-07-29: Started #4824 under #3217. A shared locale-independent
   floating-point parser now covers PRG preprocessor literals, expression
   literals, string-to-number coercion, and numeric index evaluation using

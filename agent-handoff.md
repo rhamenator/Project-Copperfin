@@ -2,6 +2,14 @@
 
 ## Current State
 
+The shared #4824 invariant numeric parser now includes an Apple-libc++ fallback
+for toolchains without floating-point `std::from_chars`. The fallback uses a
+classic-locale, no-skip, full-consumption stream so period-decimal/exponent and
+single-sign grammar remains portable while malformed/repeated signs, comma
+decimals, leading whitespace, trailing input, and overflow remain rejected.
+Explicit DBF binary-field consumers retain nonfinite opt-in. The focused macOS
+native matrix passes, including `pt_BR` and `de_DE` numeric-locale checks.
+
 The #4824 runtime value-materialization follow-up migrates `VAL()`,
 aggregate/TOTAL numeric conversion, DBF numeric-field materialization, and
 TXNLEVEL callback parsing to the shared invariant parser. Currency scaling,

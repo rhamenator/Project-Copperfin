@@ -611,10 +611,35 @@ void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
         exponent.has_value() && *exponent == 125.0,
         "VFP numeric parsing should preserve exponent and leading-plus forms");
 
+    const auto signed_exponent = try_parse_invariant_double("-1.25e-2");
+    copperfin::test_support::expect(
+        signed_exponent.has_value() && *signed_exponent == -0.0125,
+        "VFP numeric parsing should preserve independent mantissa and exponent signs");
+
     copperfin::test_support::expect(
         !try_parse_invariant_double("1,25").has_value() &&
-            !try_parse_invariant_double("1.25 trailing").has_value(),
-        "comma-decimal and trailing-input forms must not alter invariant machine parsing");
+            !try_parse_invariant_double("1.25 trailing").has_value() &&
+            !try_parse_invariant_double(" 1.25").has_value() &&
+            !try_parse_invariant_double("1e9999").has_value() &&
+            !try_parse_invariant_double("+-1").has_value() &&
+            !try_parse_invariant_double("-+1").has_value() &&
+            !try_parse_invariant_double("++1").has_value() &&
+            !try_parse_invariant_double("--1").has_value() &&
+            !try_parse_invariant_double("+").has_value() &&
+            !try_parse_invariant_double("-").has_value(),
+        "comma-decimal, whitespace, trailing-input, range, and malformed-sign errors must be rejected");
+
+    const auto nan = try_parse_invariant_double("NaN", true);
+    const auto positive_infinity = try_parse_invariant_double("+INF", true);
+    const auto negative_infinity = try_parse_invariant_double("-INF", true);
+    copperfin::test_support::expect(
+        nan.has_value() && std::isnan(*nan) &&
+            positive_infinity.has_value() && std::isinf(*positive_infinity) && *positive_infinity > 0.0 &&
+            negative_infinity.has_value() && std::isinf(*negative_infinity) && *negative_infinity < 0.0 &&
+            !try_parse_invariant_double("NaN").has_value() &&
+            !try_parse_invariant_double("+INF").has_value() &&
+            !try_parse_invariant_double("-INF").has_value(),
+        "nonfinite parsing should remain available only to explicit binary-field consumers");
 }
 
 void test_parse_declare_dll_preserves_vfp_parameter_contract() {
