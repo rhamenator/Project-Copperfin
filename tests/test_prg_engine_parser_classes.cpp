@@ -632,19 +632,33 @@ void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
 
     const auto nan = try_parse_invariant_double("NaN", true);
     const auto lowercase_nan = try_parse_invariant_double("nan", true);
+    const auto positive_nan = try_parse_invariant_double("+NaN", true);
+    const auto signed_mixed_case_nan = try_parse_invariant_double("-nAn", true);
+    const auto short_infinity = try_parse_invariant_double("INF", true);
     const auto positive_infinity = try_parse_invariant_double("+INF", true);
     const auto lowercase_infinity = try_parse_invariant_double("infinity", true);
+    const auto uppercase_infinity = try_parse_invariant_double("INFINITY", true);
     const auto negative_infinity = try_parse_invariant_double("-INF", true);
+    const auto signed_mixed_case_infinity =
+        try_parse_invariant_double("-InFiNiTy", true);
     copperfin::test_support::expect(
         nan.has_value() && std::isnan(*nan) &&
             lowercase_nan.has_value() && std::isnan(*lowercase_nan) &&
+            positive_nan.has_value() && std::isnan(*positive_nan) &&
+            signed_mixed_case_nan.has_value() && std::isnan(*signed_mixed_case_nan) &&
+            short_infinity.has_value() && std::isinf(*short_infinity) && *short_infinity > 0.0 &&
             positive_infinity.has_value() && std::isinf(*positive_infinity) && *positive_infinity > 0.0 &&
             lowercase_infinity.has_value() && std::isinf(*lowercase_infinity) && *lowercase_infinity > 0.0 &&
+            uppercase_infinity.has_value() && std::isinf(*uppercase_infinity) && *uppercase_infinity > 0.0 &&
             negative_infinity.has_value() && std::isinf(*negative_infinity) && *negative_infinity < 0.0 &&
+            signed_mixed_case_infinity.has_value() &&
+            std::isinf(*signed_mixed_case_infinity) && *signed_mixed_case_infinity < 0.0 &&
             !try_parse_invariant_double("NaN").has_value() &&
+            !try_parse_invariant_double("-nAn").has_value() &&
             !try_parse_invariant_double("+INF").has_value() &&
-            !try_parse_invariant_double("-INF").has_value(),
-        "nonfinite parsing should remain available only to explicit binary-field consumers");
+            !try_parse_invariant_double("-INF").has_value() &&
+            !try_parse_invariant_double("infinity").has_value(),
+        "signed and case-insensitive nonfinite parsing should remain available only to explicit binary-field consumers");
 }
 
 void test_expression_numeric_literals_preserve_exponent_grammar() {
