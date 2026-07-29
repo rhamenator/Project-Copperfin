@@ -3,15 +3,15 @@
 ## Current State
 
 The #4845/#109 visual-asset undo journal slice is implementation-complete and
-awaits focused Windows/MSVC and macOS/AppleClang review. Undo-root hash names
+cross-platform reviewed. Undo-root hash names
 and fixed-width journal stems now use `std::locale::classic()`, while existing
 stems require complete ASCII-digit parsing through `std::from_chars`; new
 entries avoid collisions and `uint64_t` overflow. The public visual-editor
 regression performs 1001 real edits under grouped punctuation, preserves the
 first journal bytes, confirms latest history remains available, and undoes the
-post-boundary edit back to its prior value. Linux `test_visual_asset_editor`
-passes at the current implementation head; this is focused evidence, not full
-RC evidence.
+post-boundary edit back to its prior value. Linux, Windows/MSVC, and
+macOS/AppleClang focused validation is accepted; this is focused evidence, not
+full RC evidence.
 
 The #4836/#3217 code-page compatibility correction is implementation-complete.
 `CPCURRENT()` and `CPCURRENT(0)` now treat invalid-configuration sentinel
@@ -27,14 +27,6 @@ values, asset/database fields, package metadata, and other machine contracts
 must use invariant period-decimal rules. User locale belongs at display and
 localized-message boundaries; comma-decimal host settings must never silently
 change a machine value or parser result.
-
-The #4845/#109 visual-asset undo-path slice is implementation-complete. Undo
-journal asset-hash directories and fixed-width numeric entry filenames now
-serialize with `std::locale::classic()`, so culture changes cannot hide a
-journal or corrupt its monotonic history after entry 999. A seeded grouped-
-locale regression checks stable root identity, exact 1000/1001 filenames,
-preserved earlier bytes, latest status, and post-boundary undo behavior.
-Cross-platform review is required before closure.
 
 The #4839/#109 currency-stringification slice is implementation-complete.
 DBF `Y` display values and runtime `PrgValue` currency text now use
