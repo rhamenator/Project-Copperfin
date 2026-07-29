@@ -341,6 +341,7 @@
             {
                 waiting_for_events = false;
                 restore_event_loop_after_dispatch = false;
+                active_report_status = 0;
                 events.push_back({.category = "runtime.shutdown_handler",
                                   .detail = "CLEAR EVENTS",
                                   .location = location});
@@ -385,6 +386,7 @@
             }
 
             waiting_for_events = false;
+            active_report_status = 0;
             restore_event_loop_after_dispatch = false;
             event_dispatch_return_depth.reset();
             handling_error = false;

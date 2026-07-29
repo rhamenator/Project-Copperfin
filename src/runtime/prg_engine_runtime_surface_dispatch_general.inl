@@ -77,6 +77,11 @@
                         ? static_cast<double>(*snapshot->table_type)
                         : 0.0);
             }
+            if (sys_code == 2040) {
+                // VFP9 SYS(2040) reports the session-local report state:
+                // 0 means no report, 1 means preview, and 2 means output.
+                return make_number_value(std::stod(set_callback("__sys2040__")));
+            }
             if (sys_code == 3004) {
                 // VFP9 returns the session automation LCID as character text.
                 return make_string_value(set_callback("__sys3004__"));

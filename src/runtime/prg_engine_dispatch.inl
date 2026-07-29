@@ -3561,6 +3561,7 @@
             {
                 waiting_for_events = false;
                 restore_event_loop_after_dispatch = false;
+                active_report_status = 0;
                 events.push_back({.category = "runtime.event_loop",
                                   .detail = "CLEAR EVENTS",
                                   .location = statement.location});

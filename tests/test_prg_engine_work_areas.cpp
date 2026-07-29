@@ -52,6 +52,26 @@ void write_synthetic_report_surface(const std::filesystem::path& asset_path) {
     expect(create_result.ok, "synthetic report surface fixture should be created");
 }
 
+void write_synthetic_report_status_surface(const std::filesystem::path& asset_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "9", "detail header expression", "", "0", "", "200", "detail-header-guid"},
+        {"8", "", "SYS(2040)", "100", "20", "700", "100", "report-status-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    expect(create_result.ok, "synthetic report status fixture should be created");
+}
+
 void write_named_age_dbf(
     const std::filesystem::path& path,
     const std::vector<std::pair<std::string, int>>& records) {
@@ -259,6 +279,66 @@ void test_report_form_to_file_renders_without_event_loop_pause() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "report.render";
     }), "REPORT FORM TO FILE should emit a report.render event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sys2040_report_status_tracks_preview_and_output() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sys2040_report_status";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path preview_asset = temp_root / "status_preview.frx";
+    const fs::path preview_program = temp_root / "status_preview.prg";
+    write_synthetic_report_surface(preview_asset);
+    write_text(
+        preview_program,
+        "REPORT FORM '" + preview_asset.string() + "' PREVIEW\n"
+        "nAfterPreview = SYS(2040)\n"
+        "RETURN\n"
+        "PROCEDURE closepreview\n"
+        "CLEAR EVENTS\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    auto preview_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(preview_program.string(), temp_root.string()));
+    const auto preview_state = preview_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(preview_state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+           "SYS(2040) preview fixture should pause in the report event loop");
+    const auto preview_status = preview_session.evaluate_watch_expression("SYS(2040)");
+    expect(preview_status.ok && copperfin::runtime::format_value(preview_status.value) == "1",
+           "SYS(2040) should report preview status while REPORT FORM PREVIEW is active");
+    expect(preview_session.dispatch_event_handler("closepreview"),
+           "SYS(2040) preview fixture should dispatch its cleanup handler");
+    const auto after_preview_state = preview_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(after_preview_state.completed,
+           "SYS(2040) preview fixture should complete after CLEAR EVENTS");
+    const auto after_preview = after_preview_state.globals.find("nafterpreview");
+    expect(after_preview != after_preview_state.globals.end() &&
+               copperfin::runtime::format_value(after_preview->second) == "0",
+           "SYS(2040) should reset to idle after preview cleanup");
+
+    const fs::path table_path = temp_root / "status_people.dbf";
+    const fs::path output_path = temp_root / "status_output.txt";
+    const fs::path output_program = temp_root / "status_output.prg";
+    write_named_age_dbf(table_path, {{"Alice", 20}});
+    write_synthetic_report_status_surface(temp_root / "status_output.frx");
+    write_text(
+        output_program,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPORT FORM '" + (temp_root / "status_output.frx").string() + "' TO FILE '" + output_path.string() + "'\n"
+        "RETURN\n");
+
+    auto output_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(output_program.string(), temp_root.string()));
+    const auto output_state = output_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(output_state.completed, "SYS(2040) output fixture should complete");
+    const std::string output_text = read_text(output_path);
+    expect(output_text.find("object_exprs=1:2") != std::string::npos,
+           "SYS(2040) should report output status while a report row is rendered");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1939,6 +2019,7 @@ int main() {
     test_use_and_data_session_isolation();
     test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
+    test_sys2040_report_status_tracks_preview_and_output();
     test_label_form_to_file_renders_without_event_loop_pause();
     test_report_and_label_to_file_emit_filtered_data_rows();
     test_report_form_missing_asset_uses_localized_error();

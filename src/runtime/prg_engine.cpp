@@ -1094,6 +1094,9 @@ namespace copperfin::runtime
         // it session-local so PRG code cannot mutate the host process locale.
         int automation_language_id = 1033;
         int automation_locale_id = 1033;
+        // VFP's SYS(2040) report state is session-local and must not depend on
+        // the host UI.  0 = idle, 1 = preview, 2 = output.
+        int active_report_status = 0;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
         std::map<int, int> next_api_handle_by_session;
@@ -2210,6 +2213,10 @@ namespace copperfin::runtime
                 if (trimmed_option_name == "__sys3004__")
                 {
                     return std::to_string(automation_locale_id);
+                }
+                if (trimmed_option_name == "__sys2040__")
+                {
+                    return std::to_string(active_report_status);
                 }
                 constexpr std::string_view sys3006_prefix = "__sys3006__\x1f";
                 if (trimmed_option_name.starts_with(sys3006_prefix))

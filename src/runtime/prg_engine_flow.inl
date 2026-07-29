@@ -1546,6 +1546,7 @@
                 trim_copy(statement.tertiary_expression).empty();
             if (preview_mode)
             {
+                active_report_status = 1;
                 waiting_for_events = true;
                 events.push_back({.category = std::string(category_prefix) + ".preview",
                                   .detail = display_asset_path,
@@ -1558,6 +1559,13 @@
                 }
                 return {.ok = true, .waiting_for_events = true, .frame_returned = false, .message = {}};
             }
+
+            active_report_status = 2;
+            struct ReportStatusResetGuard
+            {
+                Impl &runtime;
+                ~ReportStatusResetGuard() { runtime.active_report_status = 0; }
+            } report_status_reset{*this};
 
             const std::filesystem::path output_path = resolve_report_output_path(statement.tertiary_expression, frame);
             if (output_path.empty())
