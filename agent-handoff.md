@@ -10,10 +10,11 @@ covers positive, negative, and explicitly signed exponents; the focused
 #4824 matrix passes `10/10` across PRG, control flow, string/math, data I/O,
 runtime surface, DBF, visual assets, Studio host, SQL metadata, and index
 optimization. Locale-sensitive decimal separators and machine-readable
-contracts remain unchanged. Current-head Windows/macOS corroboration of the
-new end-to-end expression fixture remains requested through the agent channel;
-do not treat that pending review as an implementation failure or as full RC
-evidence.
+contracts remain unchanged. Apple Clang and MSVC independently rebuilt and
+passed the focused parser-class test; macOS also passed under `pt_BR.UTF-8` and
+`de_DE.UTF-8`. End-to-end execution confirmed malformed `1e`, `1e+`, and `1e-`
+literals fault rather than being locale-coerced. This focused corroboration is
+not full RC evidence.
 
 The #4824 RESTORE FROM currency boundary is now ABI-independent. `Y:` values
 use exact invariant decimal-to-scaled-`int64` conversion with VFP-style

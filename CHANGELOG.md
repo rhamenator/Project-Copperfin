@@ -5,7 +5,10 @@
   explicitly signed exponents, and the complete focused #4824 matrix passes
   `10/10` across PRG, control flow, string/math, data I/O, runtime surface,
   DBF, visual assets, Studio host, SQL metadata, and index optimization;
-  locale-sensitive separators and machine contracts are unchanged.
+  locale-sensitive separators and machine contracts are unchanged. Apple
+  Clang and MSVC focused reviews pass, including macOS runs under
+  `pt_BR.UTF-8` and `de_DE.UTF-8`; malformed exponent suffixes fault rather
+  than being locale-coerced.
 
 - 2026-07-29: Preserved the Windows #4823 `SYS(2022)` missing-path contract
   after volume-root resolution. `GetFileAttributesW` now rejects a normalized
