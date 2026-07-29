@@ -2,7 +2,9 @@
   grouped host cultures. DLL/FLL API and FXP/APP debug manifest line numbers
   now use classic-locale decimal text. The existing escaped-path regression
   runs with adversarial punctuation above line 999 and requires exact `1234`
-  while preserving path-byte round trips and field delimiters.
+  while preserving path-byte round trips and field delimiters. Linux,
+  macOS/AppleClang, and Windows/MSVC focused validation passed; #4846 is
+  closed.
 
 - 2026-07-29: Hardened #4845/#109 visual-asset undo journal identity against
   grouped host cultures. Undo-root hash names and fixed-width journal stems now

@@ -7,7 +7,11 @@ implementation-complete. Shared DLL/FLL API and FXP/APP debug manifest source
 locations now serialize line numbers with `std::locale::classic()`. The
 existing escaped-path regression runs under grouped punctuation at line 1234
 and preserves exact decimal coordinates, path bytes, and delimiter escaping.
-Cross-platform review is required before closure.
+Linux, macOS/AppleClang, and Windows/MSVC focused validation is accepted:
+`test_runtime_pipeline` passes under default, `C`, `pt_BR.UTF-8`, and
+`de_DE.UTF-8` environments on Linux, with valid 3/3 locale runs reported by
+both AppleClang and MSVC. Issue #4846 is closed; this is focused evidence, not
+full RC evidence.
 
 The #4845/#109 visual-asset undo journal slice is implementation-complete and
 cross-platform reviewed. Undo-root hash names
