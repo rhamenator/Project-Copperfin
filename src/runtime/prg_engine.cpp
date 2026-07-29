@@ -2414,6 +2414,7 @@ namespace copperfin::runtime
                     if (header_result.ok)
                     {
                         snapshot.code_page = vfp::dbf_code_page_from_mark(header_result.header.code_page_mark);
+                        snapshot.table_type = static_cast<int>(header_result.header.version);
                     }
                     if (!snapshot_root.empty())
                     {

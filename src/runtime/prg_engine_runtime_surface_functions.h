@@ -28,6 +28,9 @@ struct RuntimeSurfaceCursorRow {
 struct RuntimeSurfaceCursorSnapshot {
     std::string alias;
     std::optional<int> code_page;
+    // Physical DBF metadata used by SYS(2029); this is intentionally not part
+    // of the portable cursor XML contract.
+    std::optional<int> table_type;
     std::vector<RuntimeSurfaceCursorField> fields;
     std::vector<RuntimeSurfaceCursorRow> rows;
 };

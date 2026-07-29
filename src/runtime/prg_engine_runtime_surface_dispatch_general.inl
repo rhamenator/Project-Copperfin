@@ -33,6 +33,21 @@
                 // procedure, alias, cursor, and file names.
                 return make_string_value(make_unique_runtime_procedure_name());
             }
+            if (sys_code == 2029) {
+                // VFP9 SYS(2029) reports the physical DBF table type for the
+                // current cursor or the requested alias. Synthetic and
+                // remote cursors have no physical header, so they report 0.
+                const std::string cursor_designator = arguments.size() >= 2U
+                    ? value_as_string(arguments[1])
+                    : std::string{};
+                const auto snapshot = snapshot_cursor_callback
+                    ? snapshot_cursor_callback(cursor_designator)
+                    : std::nullopt;
+                return make_string_value(format_value(make_number_value(
+                    snapshot.has_value() && snapshot->table_type.has_value()
+                        ? static_cast<double>(*snapshot->table_type)
+                        : 0.0)));
+            }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
             }

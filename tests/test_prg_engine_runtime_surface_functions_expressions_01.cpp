@@ -618,6 +618,55 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_sys2029_reports_dbf_table_type()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sys2029";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "physical.dbf";
+        write_simple_dbf(table_path, {"ALPHA"});
+        const fs::path main_path = temp_root / "sys2029.prg";
+        write_text(
+            main_path,
+            "nNoTable = SYS(2029)\n"
+            "USE 'physical.dbf' ALIAS Physical2029\n"
+            "nCurrentTableType = SYS(2029)\n"
+            "nAliasTableType = SYS(2029, 'physical2029')\n"
+            "nUnknownTableType = SYS(2029, 'missing2029')\n"
+            "USE IN Physical2029\n"
+            "nAfterCloseTableType = SYS(2029)\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("SYS(2029) script should complete: ") + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be assigned");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("nnotable", "0");
+        check("ncurrenttabletype", "48");
+        check("naliastabletype", "48");
+        check("nunknowntabletype", "0");
+        check("nafterclosetabletype", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_object_reflection_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
