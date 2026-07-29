@@ -62,6 +62,24 @@
                     '\x1f' + value_as_string(arguments[1]);
                 return make_string_value(set_callback(request));
             }
+            if (sys_code == 2021) {
+                // VFP9 SYS(2021) returns the 1-based filtered-index expression
+                // from the selected cursor without changing cursor state.
+                const long long requested_index = safe_int_argument(1U, 0);
+                if (requested_index < 1LL || !snapshot_cursor_callback) {
+                    return make_string_value({});
+                }
+                const std::string cursor_designator = arguments.size() >= 3U
+                    ? value_as_string(arguments[2])
+                    : std::string{};
+                const auto snapshot = snapshot_cursor_callback(cursor_designator);
+                if (!snapshot.has_value() ||
+                    static_cast<std::size_t>(requested_index) > snapshot->filtered_index_expressions.size()) {
+                    return make_string_value({});
+                }
+                return make_string_value(
+                    snapshot->filtered_index_expressions[static_cast<std::size_t>(requested_index - 1LL)]);
+            }
             if (sys_code == 2029) {
                 // VFP9 SYS(2029) reports the physical DBF table type for the
                 // current cursor or the requested alias. Synthetic and

@@ -31,6 +31,9 @@ struct RuntimeSurfaceCursorSnapshot {
     // Physical DBF metadata used by SYS(2029); this is intentionally not part
     // of the portable cursor XML contract.
     std::optional<int> table_type;
+    // Runtime-only filtered index metadata used by SYS(2021). This is
+    // intentionally not serialized into the portable cursor XML contract.
+    std::vector<std::string> filtered_index_expressions;
     std::vector<RuntimeSurfaceCursorField> fields;
     std::vector<RuntimeSurfaceCursorRow> rows;
 };

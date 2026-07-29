@@ -2549,6 +2549,13 @@ namespace copperfin::runtime
 
                 RuntimeSurfaceCursorSnapshot snapshot;
                 snapshot.alias = cursor->alias;
+                for (const CursorState::OrderState &order : cursor->orders)
+                {
+                    if (!order.for_expression.empty())
+                    {
+                        snapshot.filtered_index_expressions.push_back(order.for_expression);
+                    }
+                }
                 if (!cursor->remote && !cursor->source_path.empty())
                 {
                     std::filesystem::path snapshot_root;
