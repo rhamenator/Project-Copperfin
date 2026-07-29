@@ -1,3 +1,9 @@
+- 2026-07-28: Implemented #4817 under #3217. Native PRG `SYS(2019)` and
+  `SYS(2019, 1)` now expose the discovered external `CONFIG.FPW` path as
+  character text, while selector `2` and missing configuration files return
+  empty text. The runtime reuses startup discovery without reopening or
+  mutating the file; focused runtime-surface CTest coverage passes `1/1`.
+
 - 2026-07-28: Implemented #4816 under #2348. Native PRG `SYS(3004)` now
   returns the session automation Locale ID as character text, and
   `SYS(3006, nLanguageID)` updates the session-local FFC-compatible identity

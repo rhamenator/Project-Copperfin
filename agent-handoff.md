@@ -12,11 +12,11 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `6164b740a`. Prior exact-head release
+The latest implementation head is `2eaaa43f5`. Prior exact-head release
 matrices are superseded by the #4810 codepage correction, the #4811/#4812
 monotonic generator corrections, the numeric #4813 SYS(2029) correction, and
-the #4814/#4815 runtime slices and the #4816 automation-locale slice. The
-exact-head matrix at `91f2ab8a9` is
+the #4814/#4815 runtime slices, the #4816 automation-locale slice, and the
+#4817 configuration-path slice. The exact-head matrix at `91f2ab8a9` is
 active; any later product commit requires a replacement run. RC readiness is not claimed while
 exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
@@ -81,6 +81,15 @@ OLE/ActiveX localization remains a separate host-integration boundary. The
 focused runtime-surface CTest passes `1/1`, including save/restore and fresh
 session isolation. Windows and macOS read-only review is requested before
 closing #4816.
+
+The #4817 SYS(2019) slice exposes the runtime's existing external
+`CONFIG.FPW` discovery as character text for the default call and selector
+`1`. Selector `2` is explicitly empty because Copperfin has no internal
+executable-bound configuration source, and missing files are empty. The path
+is stored per runtime session without reopening or mutating the file or
+entering package/debug machine contracts. The focused runtime-surface CTest
+passes `1/1`, including character-kind and fresh no-config isolation checks.
+Windows and macOS read-only review is requested before closing #4817.
 
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper

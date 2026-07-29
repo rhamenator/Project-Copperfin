@@ -41,6 +41,15 @@
   The focused runtime-surface CTest covers save/restore and fresh-session
   isolation.
 
+- Current SYS(2019) status (2026-07-28, #4817 under #3217): the runtime now
+  exposes the already-discovered external `CONFIG.FPW` path for `SYS(2019)`
+  and `SYS(2019, 1)` as character text. `SYS(2019, 2)` returns empty text
+  because Copperfin has no internal executable-bound configuration source;
+  missing configuration files also return empty text. The operation does not
+  reopen or mutate the file and does not add the path to package/debug machine
+  contracts. The focused runtime-surface CTest passes `1/1`, including a
+  fresh no-config session.
+
 - Current SYS(2015) status (2026-07-28, #4812 under #3217): the runtime now
   returns a unique ten-character identifier beginning with `_` and followed
   by nine ASCII base-36 characters, matching VFP9's documented procedure,
