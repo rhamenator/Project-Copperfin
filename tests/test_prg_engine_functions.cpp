@@ -712,6 +712,53 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_isleadbyte_uses_configured_code_page()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_isleadbyte";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "isleadbyte.prg";
+        write_text(temp_root / "config.fpw", "CODEPAGE = 932\n");
+        write_text(
+            main_path,
+            "lLowBoundary = ISLEADBYTE(CHR(129))\n"
+            "lFirstRangeUpper = ISLEADBYTE(CHR(159))\n"
+            "lRangeGap = ISLEADBYTE(CHR(160))\n"
+            "lSecondRangeLower = ISLEADBYTE(CHR(224))\n"
+            "lSecondRangeUpper = ISLEADBYTE(CHR(252))\n"
+            "lAboveRange = ISLEADBYTE(CHR(253))\n"
+            "lAscii = ISLEADBYTE('A')\n"
+            "lEmpty = ISLEADBYTE('')\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "ISLEADBYTE configured-code-page script should complete");
+
+        const auto check = [&](const std::string& name, const bool expected) {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " result should be present");
+            if (it != state.globals.end()) {
+                expect(it->second.boolean_value == expected,
+                       name + " should be " + (expected ? "true" : "false"));
+            }
+        };
+        check("llowboundary", true);
+        check("lfirstrangeupper", true);
+        check("lrangegap", false);
+        check("lsecondrangelower", true);
+        check("lsecondrangeupper", true);
+        check("laboverange", false);
+        check("lascii", false);
+        check("lempty", false);
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -726,6 +773,7 @@ int main()
     test_macro_alias_qualified_field_access();
     test_return_expression_values_are_preserved_in_runtime_state();
     test_likec_matches_utf8_scalars_without_changing_like();
+    test_isleadbyte_uses_configured_code_page();
 
     if (test_failures() != 0)
     {

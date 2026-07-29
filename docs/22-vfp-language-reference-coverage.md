@@ -163,6 +163,15 @@
   locally; DBF encoding, `CPCONVERT()`, and other machine contracts are
   unchanged.
 
+- Current `ISLEADBYTE()` status (2026-07-29, #4831 under #3217): the runtime
+  reads the effective configured VFP code page through the existing
+  `SET('CODEPAGE')` contract and applies the documented lead-byte ranges for
+  CP932, CP936, CP949, and CP950. Single-byte and UTF-8 pages, invalid or
+  unsupported pages, empty input, and bytes outside those ranges return false.
+  Focused direct range and configured `CONFIG.FPW` PRG tests pass under the
+  default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`; numeric parsing,
+  display-locale behavior, and machine contracts are unchanged.
+
 - Current SYS(3) status (2026-07-28, #4811 under #3217): the runtime returns
   an extension-free eight-digit numeric temporary filename component, matching
   VFP9's legal-file-name contract and the temp alias/file composition used by

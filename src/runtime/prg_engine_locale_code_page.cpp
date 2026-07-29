@@ -173,4 +173,17 @@ bool is_supported_vfp_code_page(int code_page) {
     }
 }
 
+bool is_lead_byte_for_code_page(const int code_page, const unsigned char byte) {
+    switch (code_page) {
+        case 932:
+            return (byte >= 0x81U && byte <= 0x9FU) || (byte >= 0xE0U && byte <= 0xFCU);
+        case 936:
+        case 949:
+        case 950:
+            return byte >= 0x81U && byte <= 0xFEU;
+        default:
+            return false;
+    }
+}
+
 }  // namespace copperfin::runtime::detail

@@ -19,5 +19,6 @@ int resolve_posix_host_code_page(
 int default_host_code_page();
 int default_host_oem_code_page();
 bool is_supported_vfp_code_page(int code_page);
+bool is_lead_byte_for_code_page(int code_page, unsigned char byte);
 
 }  // namespace copperfin::runtime::detail

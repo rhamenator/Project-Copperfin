@@ -11,6 +11,16 @@ and the four affected numeric-consumer targets; the numeric targets pass under
 the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`. This is native,
 headless platform evidence, not hosted UI evidence or the complete RC gate.
 
+The #4831/#3217 `ISLEADBYTE()` slice is implementation-complete. Native PRG
+now reads the effective configured VFP code page through the existing session
+`SET('CODEPAGE')` contract and applies lead-byte rules for CP932, CP936, CP949,
+and CP950. Single-byte and UTF-8 pages, invalid configuration, unsupported
+pages, empty input, and bytes outside the documented ranges return false.
+Focused direct range coverage and a configured `CONFIG.FPW` PRG fixture pass
+`2/2` under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`. The
+change does not alter numeric parsing, display-locale behavior, or machine
+contracts. This is focused runtime evidence, not full RC evidence.
+
 The #4827/#3217 `GETNEXTMODIFIED()` slice is implementation-complete. Native
 PRG `GETNEXTMODIFIED()` traverses pending buffered records in ascending record
 number for the selected cursor or explicit alias/work-area target, accepts the

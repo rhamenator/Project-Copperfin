@@ -26,7 +26,8 @@
         const std::string& function,
         const std::vector<PrgValue>& arguments,
         const std::function<bool(const std::string&)>& array_exists_callback,
-        const std::function<PrgValue(const std::string&)>& eval_expression_callback);
+        const std::function<PrgValue(const std::string&)>& eval_expression_callback,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_numeric_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments);
@@ -1791,7 +1792,12 @@
                     if (pre.kind == PrgValueKind::boolean) return make_boolean_value(false);
                     return make_boolean_value(false);
                 }
-                if (const auto type_result = evaluate_type_function(function, arguments, array_exists_callback_, eval_expression_callback_))
+                if (const auto type_result = evaluate_type_function(
+                        function,
+                        arguments,
+                        array_exists_callback_,
+                        eval_expression_callback_,
+                        set_callback_))
                 {
                     return *type_result;
                 }

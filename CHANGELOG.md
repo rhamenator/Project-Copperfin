@@ -1,3 +1,10 @@
+- 2026-07-29: Implemented the #4831/#3217 `ISLEADBYTE()` compatibility slice.
+  The runtime now applies the effective configured VFP code page, recognizes
+  the documented lead-byte ranges for CP932, CP936, CP949, and CP950, and
+  fails closed for single-byte, UTF-8, invalid, and unsupported code pages.
+  Direct range tests and the configured `CONFIG.FPW` PRG fixture pass `2/2`
+  under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`.
+
 - 2026-07-29: Completed native macOS Release validation for product/test head
   `52e56cd82`: all `316/316` registered tests passed in `481.41s`, with only
   the two documented platform-conditional skips. At the later synchronized

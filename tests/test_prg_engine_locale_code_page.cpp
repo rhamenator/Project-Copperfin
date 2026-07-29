@@ -15,6 +15,7 @@ namespace {
 
 using copperfin::runtime::detail::parse_posix_locale_code_page;
 using copperfin::runtime::detail::resolve_posix_host_code_page;
+using copperfin::runtime::detail::is_lead_byte_for_code_page;
 using copperfin::test_support::expect;
 
 void expect_code_page(const std::string& text, std::optional<int> expected) {
@@ -77,12 +78,33 @@ void test_posix_fallback_order() {
         "#3961: unparseable sources should retain the deterministic 1252 fallback");
 }
 
+void test_dbcs_lead_byte_ranges() {
+    expect(!is_lead_byte_for_code_page(1252, 0x81U), "single-byte code pages must not report lead bytes");
+    expect(!is_lead_byte_for_code_page(65001, 0xC3U), "UTF-8 must not use DBCS lead-byte rules");
+
+    expect(!is_lead_byte_for_code_page(932, 0x80U), "CP932 byte below the first lead range must be rejected");
+    expect(is_lead_byte_for_code_page(932, 0x81U), "CP932 first lead boundary should be accepted");
+    expect(is_lead_byte_for_code_page(932, 0x9FU), "CP932 first lead range upper boundary should be accepted");
+    expect(!is_lead_byte_for_code_page(932, 0xA0U), "CP932 gap between lead ranges must be rejected");
+    expect(is_lead_byte_for_code_page(932, 0xE0U), "CP932 second lead boundary should be accepted");
+    expect(is_lead_byte_for_code_page(932, 0xFCU), "CP932 second lead range upper boundary should be accepted");
+    expect(!is_lead_byte_for_code_page(932, 0xFDU), "CP932 byte above the lead range must be rejected");
+
+    for (const int code_page : {936, 949, 950}) {
+        expect(!is_lead_byte_for_code_page(code_page, 0x80U), "DBCS byte below the shared lead range must be rejected");
+        expect(is_lead_byte_for_code_page(code_page, 0x81U), "DBCS first lead boundary should be accepted");
+        expect(is_lead_byte_for_code_page(code_page, 0xFEU), "DBCS last lead boundary should be accepted");
+        expect(!is_lead_byte_for_code_page(code_page, 0xFFU), "DBCS byte above the shared lead range must be rejected");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_codeset_and_full_locale_parsing();
     test_malformed_values_do_not_scrape_unrelated_digits();
     test_posix_fallback_order();
+    test_dbcs_lead_byte_ranges();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

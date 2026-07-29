@@ -5,7 +5,9 @@
 #include "prg_engine_type_functions.h"
 
 #include "prg_engine_helpers.h"
+#include "prg_engine_locale_code_page.h"
 
+#include <charconv>
 #include <cctype>
 #include <cmath>
 
@@ -92,7 +94,8 @@ std::optional<PrgValue> evaluate_type_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::function<bool(const std::string&)>& array_exists_callback,
-    const std::function<PrgValue(const std::string&)>& eval_expression_callback) {
+    const std::function<PrgValue(const std::string&)>& eval_expression_callback,
+    const std::function<std::string(const std::string&)>& set_callback) {
     if (function == "empty" && !arguments.empty()) {
         const PrgValue& value = arguments[0];
         if (value.kind == PrgValueKind::empty) {
@@ -201,7 +204,26 @@ std::optional<PrgValue> evaluate_type_function(
         return make_boolean_value(!s.empty() && std::isupper(static_cast<unsigned char>(s[0])) != 0);
     }
     if (function == "isleadbyte" && !arguments.empty()) {
-        return make_boolean_value(false);
+        const std::string value = value_as_string(arguments[0]);
+        if (value.empty()) {
+            return make_boolean_value(false);
+        }
+
+        int code_page = detail::default_host_code_page();
+        const std::string configured_code_page = trim_copy(set_callback("CODEPAGE"));
+        int parsed_code_page = 0;
+        const auto [end, error] = std::from_chars(
+            configured_code_page.data(),
+            configured_code_page.data() + configured_code_page.size(),
+            parsed_code_page);
+        if (!configured_code_page.empty() && error == std::errc{} &&
+            end == configured_code_page.data() + configured_code_page.size()) {
+            code_page = parsed_code_page;
+        }
+
+        return make_boolean_value(detail::is_lead_byte_for_code_page(
+            code_page,
+            static_cast<unsigned char>(value.front())));
     }
 
     return std::nullopt;
