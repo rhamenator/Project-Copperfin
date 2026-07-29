@@ -1,3 +1,9 @@
+- 2026-07-29: Hardened #4846/#109 generated library source provenance against
+  grouped host cultures. DLL/FLL API and FXP/APP debug manifest line numbers
+  now use classic-locale decimal text. The existing escaped-path regression
+  runs with adversarial punctuation above line 999 and requires exact `1234`
+  while preserving path-byte round trips and field delimiters.
+
 - 2026-07-29: Hardened #4845/#109 visual-asset undo journal identity against
   grouped host cultures. Undo-root hash names and fixed-width journal stems now
   use the classic locale, existing indices require complete ASCII-digit parsing,

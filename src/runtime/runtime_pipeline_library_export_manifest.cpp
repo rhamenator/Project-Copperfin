@@ -4,6 +4,8 @@
 
 #include "runtime_pipeline_support.h"
 
+#include <locale>
+
 namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
@@ -286,6 +288,7 @@ std::string build_manifest_parameter_names(const std::vector<std::string>& param
 
 std::string build_manifest_source_location(const SourceLocation& location) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << quote_manifest_value(location.file_path) << "|" << location.line;
     return stream.str();
 }

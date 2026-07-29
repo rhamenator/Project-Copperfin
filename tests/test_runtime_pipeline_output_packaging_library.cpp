@@ -4,12 +4,39 @@
 
 #include "test_runtime_pipeline_output_packaging_support.h"
 
+#include <locale>
+
 namespace cf_test_runtime_pipeline {
 
+namespace {
+class manifest_grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class manifest_global_locale_guard final {
+public:
+    explicit manifest_global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~manifest_global_locale_guard() { std::locale::global(previous_); }
+
+    manifest_global_locale_guard(const manifest_global_locale_guard&) = delete;
+    manifest_global_locale_guard& operator=(const manifest_global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
+}  // namespace
+
 void test_library_manifest_source_location_escaping() {
+    const std::locale grouping_locale(std::locale::classic(), new manifest_grouped_numpunct());
+    manifest_global_locale_guard locale_guard(grouping_locale);
     const std::string source_path =
         "/tmp/copperfin|source\\library\npart-" + std::string("\xC3\xA9") + ".prg";
-    const copperfin::runtime::SourceLocation location{source_path, 37U};
+    const copperfin::runtime::SourceLocation location{source_path, 1234U};
     const std::string encoded = copperfin::runtime::runtime_pipeline_detail::build_manifest_source_location(location);
     const std::size_t separator = encoded.rfind('|');
 
@@ -27,8 +54,8 @@ void test_library_manifest_source_location_escaping() {
            "library source-location encoding should escape newlines");
     expect(decode_manifest_value(encoded.substr(0U, separator)) == source_path,
            "library source-location encoding should round-trip path bytes");
-    expect(encoded.substr(separator + 1U) == "37",
-           "library source-location encoding should preserve the source line");
+    expect(encoded.substr(separator + 1U) == "1234",
+           "#4846: library source-location encoding should preserve invariant source lines");
 }
 
 void test_library_output_package_emits_module_definition_from_prg_routines() {
