@@ -38,10 +38,12 @@ The #4843/#109 SYLK coordinate slice is implementation-complete and
 cross-platform reviewed. SYLK table
 dimensions and cell row/column coordinates now serialize with
 `std::locale::classic()`, so host grouping cannot collapse distinct rows when
-the interchange parser reads them. A 1000-row grouped-locale round trip checks
-invariant `B;Y1001` and boundary coordinates, exact record count, and rows 999
-and 1000. Linux, Windows/MSVC, and macOS/AppleClang focused validation is
-accepted.
+the interchange parser reads them. The parser also requires
+complete locale-independent coordinate tokens and ignores malformed grouped
+tokens rather than truncating them into a different valid row or column. A
+1000-row grouped-locale round trip checks invariant `B;Y1001` and boundary
+coordinates, exact record count, and rows 999 and 1000; focused Linux,
+Windows/MSVC, and macOS/AppleClang validation is accepted.
 
 The #4842/#109 `SYS(3)` filename slice is implementation-complete and
 cross-platform reviewed. Its

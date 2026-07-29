@@ -4,6 +4,12 @@
   A 1000-row round-trip regression uses adversarial comma-decimal punctuation
   and verifies invariant dimensions plus distinct rows across the grouping
   boundary.
+- 2026-07-29: Hardened the #4843/#109 SYLK parser boundary against malformed
+  coordinate tokens. Row and column indices now require complete,
+  locale-independent decimal tokens, so externally supplied grouped text such
+  as `Y1.000` is rejected instead of being silently truncated to row 1. Added
+  regression coverage for the ignored malformed record alongside the valid
+  1000-row grouped-locale round trip.
 
 - 2026-07-29: Hardened #4843/#109 SYLK serialization against grouped host
   cultures. Table dimensions and cell row/column coordinates now use the

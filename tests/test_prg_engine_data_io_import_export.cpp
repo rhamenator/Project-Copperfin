@@ -1495,6 +1495,38 @@ void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
             "#4843: TYPE SYLK row 1000 should remain distinct after round trip");
     }
 
+    const fs::path malformed_dest_path = temp_root / "malformed_dest.dbf";
+    const auto malformed_dest_create =
+        copperfin::vfp::create_dbf_table_file(malformed_dest_path.string(), fields, {});
+    expect(malformed_dest_create.ok, "#4843: malformed-coordinate destination fixture should be created");
+    const fs::path malformed_sylk_path = temp_root / "malformed.slk";
+    write_text(
+        malformed_sylk_path,
+        "ID;PCopperfin\n"
+        "B;Y2;X3\n"
+        "C;Y1.000;X1;K\"Grouped coordinate\"\n"
+        "E\n");
+    const fs::path malformed_main_path = temp_root / "malformed_sylk.prg";
+    write_text(
+        malformed_main_path,
+        "USE '" + malformed_dest_path.string() + "'\n"
+        "APPEND FROM '" + malformed_sylk_path.string() + "' TYPE SYLK\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession malformed_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(malformed_main_path.string(), temp_root.string(), false));
+    const auto malformed_state = malformed_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(malformed_state.completed,
+        "#4843: malformed grouped SYLK coordinate should not abort APPEND FROM: " + malformed_state.message);
+    const auto malformed_rows = malformed_state.globals.find("nrows");
+    expect(malformed_rows != malformed_state.globals.end(),
+        "#4843: malformed grouped SYLK coordinate test should capture the row count");
+    if (malformed_rows != malformed_state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(malformed_rows->second) == "0",
+            "#4843: malformed grouped SYLK coordinate must not truncate into row 1");
+    }
+
     fs::remove_all(temp_root, ignored);
 }
 

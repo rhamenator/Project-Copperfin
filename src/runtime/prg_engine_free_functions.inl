@@ -701,6 +701,24 @@
             return field_type == 'N' || field_type == 'F' || field_type == 'I' || field_type == 'B' || field_type == 'Y';
         }
 
+        std::optional<std::size_t> parse_sylk_coordinate(const std::string &token)
+        {
+            const std::string trimmed = trim_copy(token);
+            if (trimmed.empty())
+            {
+                return std::nullopt;
+            }
+
+            std::size_t value = 0U;
+            const auto parsed = std::from_chars(
+                trimmed.data(), trimmed.data() + trimmed.size(), value, 10);
+            if (parsed.ec != std::errc{} || parsed.ptr != trimmed.data() + trimmed.size())
+            {
+                return std::nullopt;
+            }
+            return value;
+        }
+
         std::string serialize_sylk_table(
             const std::vector<vfp::DbfFieldDescriptor> &fields,
             const std::vector<std::vector<std::string>> &rows)
@@ -762,6 +780,7 @@
                 std::size_t row_index = 0U;
                 std::size_t column_index = 0U;
                 std::string value_token;
+                bool malformed_coordinate = false;
                 std::size_t scan = 2U;
                 while (scan < line.size())
                 {
@@ -769,11 +788,23 @@
                     const std::string token = line.substr(scan, next == std::string::npos ? std::string::npos : next - scan);
                     if (starts_with_insensitive(token, "Y"))
                     {
-                        row_index = static_cast<std::size_t>(std::max<long long>(0LL, std::stoll(trim_copy(token.substr(1U)))));
+                        const auto parsed = parse_sylk_coordinate(token.substr(1U));
+                        if (!parsed.has_value())
+                        {
+                            malformed_coordinate = true;
+                            break;
+                        }
+                        row_index = *parsed;
                     }
                     else if (starts_with_insensitive(token, "X"))
                     {
-                        column_index = static_cast<std::size_t>(std::max<long long>(0LL, std::stoll(trim_copy(token.substr(1U)))));
+                        const auto parsed = parse_sylk_coordinate(token.substr(1U));
+                        if (!parsed.has_value())
+                        {
+                            malformed_coordinate = true;
+                            break;
+                        }
+                        column_index = *parsed;
                     }
                     else if (starts_with_insensitive(token, "K"))
                     {
@@ -786,7 +817,7 @@
                     scan = next + 1U;
                 }
 
-                if (row_index == 0U || column_index == 0U)
+                if (malformed_coordinate || row_index == 0U || column_index == 0U)
                 {
                     continue;
                 }
