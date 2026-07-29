@@ -4,6 +4,8 @@
 
 #include "runtime_pipeline_support.h"
 
+#include <locale>
+
 namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
@@ -312,6 +314,7 @@ void append_ast_routine_json(
 
 std::string build_ast_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "{\n";
     stream << "  \"schema_version\": 1,\n";
     stream << "  \"project_title\": \"" << json_escape(plan.project_title) << "\",\n";
@@ -378,6 +381,7 @@ void append_ir_routine_json(
 
 std::string build_ir_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "{\n";
     stream << "  \"schema_version\": 1,\n";
     stream << "  \"project_title\": \"" << json_escape(plan.project_title) << "\",\n";

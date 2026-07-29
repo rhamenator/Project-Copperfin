@@ -2,6 +2,15 @@
 
 ## Current State
 
+The #4849/#109 generated compiler source-line slice is
+implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
+serialize statement coordinates through classic-locale streams. The existing
+FXP materialization fixture installs grouped host punctuation, places a real
+statement at line 1234, and preserves exact integer coordinates across all four
+artifacts plus existing statement, scope, and exclusion behavior.
+Cross-platform review is required before closure; this is focused evidence,
+not full RC evidence.
+
 The #4848/#109 generated debug-manifest numeric-metadata slice is
 implementation-complete and cross-platform reviewed. Debug inspection fields
 now serialize through a classic-locale stream, preventing grouped host

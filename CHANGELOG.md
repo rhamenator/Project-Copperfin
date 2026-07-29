@@ -1,3 +1,9 @@
+- 2026-07-29: Hardened #4849/#109 generated compiler source-line metadata
+  against grouped host cultures. AST JSON, IR JSON, and FXP token/primary
+  contracts now serialize statement coordinates with classic-locale decimal
+  integers. The focused FXP materialization regression places a statement at
+  line 1234 under adversarial punctuation and verifies all affected artifacts.
+
 - 2026-07-29: Hardened #4848/#109 generated debug-manifest numeric metadata
   against grouped host cultures. License seats, perpetual-version limits,
   security-role counts, and other numeric inspection fields now use the

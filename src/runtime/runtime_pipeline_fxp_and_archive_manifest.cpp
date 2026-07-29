@@ -4,6 +4,8 @@
 
 #include "runtime_pipeline_support.h"
 
+#include <locale>
+
 namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
@@ -117,6 +119,7 @@ void append_fxp_statement_lines(
 
 std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "manifest_version=1\n";
     stream << "output_kind=fxp\n";
     stream << "token_contract=logical_statements\n";

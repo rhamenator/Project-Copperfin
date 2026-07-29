@@ -6,6 +6,31 @@
 
 namespace cf_test_runtime_pipeline {
 
+namespace {
+
+class compiler_manifest_grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class compiler_manifest_global_locale_guard final {
+public:
+    explicit compiler_manifest_global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~compiler_manifest_global_locale_guard() { std::locale::global(previous_); }
+
+    compiler_manifest_global_locale_guard(const compiler_manifest_global_locale_guard&) = delete;
+    compiler_manifest_global_locale_guard& operator=(const compiler_manifest_global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
+
+}  // namespace
+
 void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_fxp_contract";
@@ -17,6 +42,7 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     fs::create_directories(project_dir);
 
     write_text(project_dir / "main.prg",
+               std::string(1233U, '\n') +
                "LOCAL nValue\n"
                "nValue = 1\n"
                "DO worker\n"
@@ -74,6 +100,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     expect(fs::path(plan.fxp_token_manifest_path).filename() == "CompileDemo.fxp.tokens",
            "fxp-output plan should derive a matching token-manifest filename");
 
+    const std::locale grouping_locale(std::locale::classic(), new compiler_manifest_grouped_numpunct());
+    const compiler_manifest_global_locale_guard locale_guard(grouping_locale);
     const auto result = copperfin::runtime::materialize_runtime_package(
         plan,
         copperfin::security::default_native_security_profile(),
@@ -117,6 +145,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output token manifest should list the source program");
         expect(token_manifest.find("statement=MAIN|") != std::string::npos,
                "fxp-output token manifest should include main-scope statements");
+        expect(token_manifest.find("statement=MAIN|1234|LOCAL nValue") != std::string::npos,
+               "fxp-output token manifest should keep source-line coordinates locale invariant");
         expect(token_manifest.find("DO worker") != std::string::npos,
                "fxp-output token manifest should preserve logical statement text");
         expect(token_manifest.find("statement=worker|") != std::string::npos,
@@ -133,9 +163,13 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
         expect(ast_manifest.find("\"relative_path\": \"main.prg\"") != std::string::npos &&
                    ast_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
                "#3881: AST manifest should retain the required excluded startup PRG");
+        expect(ast_manifest.find("\"line\": 1234, \"text\": \"LOCAL nValue\"") != std::string::npos,
+               "AST manifest should keep source-line coordinates locale invariant");
         expect(ir_manifest.find("\"relative_path\": \"main.prg\"") != std::string::npos &&
                    ir_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
                "#3881: IR manifest should retain the required excluded startup PRG");
+        expect(ir_manifest.find("\"line\": 1234, \"opcode\": \"local_declaration\"") != std::string::npos,
+               "IR manifest should keep source-line coordinates locale invariant");
         expect(transpiled_csharp.find("Console.WriteLine(\"hello\");") != std::string::npos,
                "#3881: generated C# should retain the required excluded startup PRG");
         expect(ast_manifest.find("excluded_helper.prg") == std::string::npos &&
@@ -158,6 +192,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output primary output should embed the FXP token-manifest content");
         expect(fxp_contract.find("statement=MAIN|") != std::string::npos,
                "fxp-output primary output should preserve main-scope logical statements");
+        expect(fxp_contract.find("statement=MAIN|1234|LOCAL nValue") != std::string::npos,
+               "fxp-output primary output should preserve locale-invariant source-line coordinates");
         expect(fxp_contract.find("statement=worker|") != std::string::npos,
                "fxp-output primary output should preserve routine-scope logical statements");
         expect(fxp_contract.find("excluded_helper.prg") == std::string::npos &&
