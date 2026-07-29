@@ -2,6 +2,14 @@
 
 ## Current State
 
+The #4827/#3217 `GETNEXTMODIFIED()` slice is implementation-complete. Native
+PRG `GETNEXTMODIFIED()` traverses pending buffered records in ascending record
+number for the selected cursor or explicit alias/work-area target, accepts the
+VFP compatibility `lNoFire` argument, and returns zero after the pending set is
+exhausted or buffering is not enabled. Focused `test_prg_engine_work_areas`
+passes `1/1`, including `pt_BR.UTF-8` and `de_DE.UTF-8` executions. This is
+focused runtime evidence, not full RC evidence.
+
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 `AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,
 preserves VFP's case-sensitive matching, and supports occurrence selection.

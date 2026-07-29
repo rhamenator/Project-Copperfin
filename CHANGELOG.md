@@ -1,3 +1,10 @@
+- 2026-07-29: Implemented the VFP9 `GETNEXTMODIFIED()` buffered-record
+  traversal slice under #4827/#3217. The function now walks pending buffered
+  records in ascending record-number order for selected, alias, and work-area
+  targets, accepts the compatibility `lNoFire` flag, and returns zero when no
+  pending record remains. Focused `test_prg_engine_work_areas` passes `1/1`,
+  including `pt_BR.UTF-8` and `de_DE.UTF-8` executions.
+
 - 2026-07-29: Fixed the #4826 `LIKEC()` focused test for Apple Clang by
   keeping its mutable runtime session non-const and spelling the adjacent
   question-mark fixture without triggering a C++ trigraph warning. The target

@@ -2057,6 +2057,7 @@ void test_set_fields_is_scoped_by_data_session() {
 }  // namespace
 
 void test_two_work_areas_on_same_table_see_consistent_mutations();  // defined below
+void test_getnextmodified_traverses_buffered_records();
 
 int main() {
     test_use_and_data_session_isolation();
@@ -2086,6 +2087,7 @@ int main() {
     test_set_fields_limits_field_lookup();
     test_set_fields_like_and_except_limit_field_lookup();
     test_set_fields_is_scoped_by_data_session();
+    test_getnextmodified_traverses_buffered_records();
     test_two_work_areas_on_same_table_see_consistent_mutations();
 
     if (copperfin::test_support::test_failures() != 0) {
@@ -2094,6 +2096,57 @@ int main() {
     }
     std::cout << "All tests passed.\n";
     return EXIT_SUCCESS;
+}
+
+void test_getnextmodified_traverses_buffered_records() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_getnextmodified";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    const fs::path main_path = temp_root / "getnextmodified.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People\n"
+        "=CURSORSETPROP('Buffering', 5, 'People')\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'CHANGED'\n"
+        "GO 3\n"
+        "REPLACE AGE WITH 99\n"
+        "nFirst = GETNEXTMODIFIED(0)\n"
+        "nSecond = GETNEXTMODIFIED(nFirst)\n"
+        "nNone = GETNEXTMODIFIED(nSecond)\n"
+        "nAlias = GETNEXTMODIFIED(0, 'People')\n"
+        "nWorkArea = GETNEXTMODIFIED(0, 1, .T.)\n"
+        "=TABLEREVERT(.T., 'People')\n"
+        "nAfterRevert = GETNEXTMODIFIED(0, 'People')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GETNEXTMODIFIED buffered-record script should complete");
+
+    const auto check = [&](const std::string& name, const std::string& expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " result should be present");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected " + expected + " but got " + copperfin::runtime::format_value(it->second));
+        }
+    };
+    check("nfirst", "1");
+    check("nsecond", "3");
+    check("nnone", "0");
+    check("nalias", "1");
+    check("nworkarea", "1");
+    check("nafterrevert", "0");
+
+    fs::remove_all(temp_root, ignored);
 }
 
 void test_two_work_areas_on_same_table_see_consistent_mutations() {

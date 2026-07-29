@@ -1841,7 +1841,8 @@
             const std::vector<PrgValue> &arguments)
         {
             if (function != "cursorsetprop" && function != "cursorgetprop" &&
-                function != "tableupdate" && function != "tablerevert")
+                function != "tableupdate" && function != "tablerevert" &&
+                function != "getnextmodified")
             {
                 return std::nullopt;
             }
@@ -1863,6 +1864,30 @@
                     {{"command", command}});
                 return false;
             };
+
+            if (function == "getnextmodified")
+            {
+                if (arguments.empty())
+                {
+                    return make_number_value(0.0);
+                }
+                CursorState *cursor = arguments.size() >= 2U
+                    ? cursor_for_argument(1U)
+                    : resolve_cursor_target({});
+                if (cursor == nullptr || cursor->buffering_mode < 2 || cursor->buffering_mode > 5)
+                {
+                    return make_number_value(0.0);
+                }
+
+                const double requested_record = value_as_number(arguments[0]);
+                const std::size_t start_record = std::isfinite(requested_record) && requested_record > 0.0
+                    ? static_cast<std::size_t>(requested_record)
+                    : 0U;
+                const auto next = cursor->buffered_records.upper_bound(start_record);
+                return next == cursor->buffered_records.end()
+                    ? make_number_value(0.0)
+                    : make_number_value(static_cast<double>(next->first));
+            }
 
             if (function == "cursorgetprop")
             {
