@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <locale>
 #include <optional>
 #include <sstream>
 #include <set>
@@ -631,6 +632,7 @@ std::string stringify_preprocessor_scalar_value(const PreprocessorScalarValue& v
             return value.logical_value ? ".T." : ".F.";
         case PreprocessorScalarValue::Kind::numeric: {
             std::ostringstream buffer;
+            buffer.imbue(std::locale::classic());
             buffer << value.numeric_value;
             return buffer.str();
         }

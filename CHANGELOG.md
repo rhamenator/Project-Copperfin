@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4838/#109 preprocessor numeric stringification
+  against host culture. Numeric values used by preprocessor text/substrings
+  comparisons now serialize with classic-locale period-decimal text, so
+  conditional compilation cannot change under comma-decimal host settings.
+  The parser regression poisons the process-global locale and verifies the
+  fractional `1.25 $ \"1.25\"` condition.
+
 - 2026-07-29: Hardened #4837/#109 visual asset geometry serialization against
   host culture. Fractional FRX/LBX/form geometry now uses classic-locale
   period-decimal text, while integer rounding and trimming remain unchanged.

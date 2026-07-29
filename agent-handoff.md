@@ -25,6 +25,14 @@ asset editor test poisons the process-global locale and verifies `1.25` and
 `2.5` remain invariant; Linux focused CTest passes under default, `C`, and
 `C.utf8`. Cross-platform review remains required before issue closure.
 
+The #4838/#109 preprocessor stringification slice is implementation-complete.
+Numeric values used by preprocessor text/substrings comparisons now serialize
+with `std::locale::classic()`, preserving period-decimal conditional
+compilation semantics. The parser regression poisons the process-global locale
+and verifies `1.25 $ "1.25"` selects the true branch; Linux focused CTest
+passes under default, `C`, and `C.utf8`. Cross-platform review remains required
+before issue closure.
+
 The #4835/#109 binary/intermediate double-serialization slice is
 implementation-complete. Generated PRG INSERT expressions, DBF binary-double
 display values, and DBC numeric property values now imbue their streams with

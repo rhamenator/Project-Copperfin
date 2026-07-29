@@ -10,11 +10,33 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <locale>
 #include <system_error>
 
 namespace {
 
 namespace fs = std::filesystem;
+
+class comma_decimal_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class scoped_global_locale {
+public:
+    explicit scoped_global_locale(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~scoped_global_locale() { std::locale::global(previous_); }
+
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
+
+private:
+    std::locale previous_;
+};
 
 void test_parse_define_class_captures_metadata_and_methods() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_define_class";
@@ -599,6 +621,32 @@ void test_parse_conditional_preprocessor_branches_and_header_guards() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_preprocessor_numeric_text_comparison_ignores_global_locale() {
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_prg_parser_numeric_text_locale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "numeric_text_locale.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "#IF 1.25 $ \"1.25\"\n"
+        "nMatched = 1\n"
+        "#ELSE\n"
+        "nMatched = 0\n"
+        "#ENDIF\n");
+
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    copperfin::test_support::expect(
+        program.main.statements.size() == 1U && program.main.statements[0].expression == "1",
+        "preprocessor numeric text comparisons should remain period-decimal under a comma-decimal global locale");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_invariant_numeric_parser_preserves_vfp_decimal_contract() {
     using copperfin::runtime::try_parse_invariant_double;
 
@@ -826,6 +874,7 @@ int main() {
     test_parse_declarative_child_external_prg_sources();
     test_parse_include_and_define_constants_expand_before_class_body_parsing();
     test_parse_conditional_preprocessor_branches_and_header_guards();
+    test_preprocessor_numeric_text_comparison_ignores_global_locale();
     test_invariant_numeric_parser_preserves_vfp_decimal_contract();
     test_expression_numeric_literals_preserve_exponent_grammar();
     test_parse_declare_dll_preserves_vfp_parameter_contract();
