@@ -40,14 +40,15 @@ macOS/AppleClang, and Windows/MSVC focused validation is accepted; issue #4853
 is closed. This is focused evidence, not full RC evidence.
 
 The #4854/#3217 strict runtime-integer parsing slice is
-implementation-complete locally. The shared invariant integer parser now
+implementation-complete and cross-platform reviewed. The shared invariant integer parser now
 requires complete base-10 tokens, preserving an explicit leading plus while
 rejecting grouped or trailing punctuation. Runtime configuration limits and
 code-page values use it, and SYS(2326/2327) handle strings no longer truncate
 `STR(hwnd) + '.0'` into a valid handle. Control-flow and runtime-surface
-focused tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` Linux
-environments. Cross-platform review is required before closure. This is
-focused evidence, not full RC evidence.
+focused tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4854 is closed. The next selected
+prompt-sized child is #4855, strict invariant parsing for native list-control
+selectors. This is focused evidence, not full RC evidence.
 
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now

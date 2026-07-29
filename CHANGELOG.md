@@ -2,8 +2,8 @@
   limits/code pages and SYS(2326/2327) handle strings now require complete
   invariant base-10 tokens, so grouped or trailing punctuation cannot be
   silently truncated into a different integer. Valid signs, defaults, range
-  checks, and public contracts remain unchanged; cross-platform review remains
-  required before closure.
+  checks, and public contracts remain unchanged. Linux, macOS/AppleClang, and
+  Windows/MSVC focused validation passed; #4854 is closed.
 
 - 2026-07-29: Hardened #4853/#109 asset-inspector JSON against grouped host
   cultures. Database/catalog JSON numeric fields now use a classic-locale
