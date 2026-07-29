@@ -343,6 +343,15 @@ void test_sys2040_report_status_tracks_preview_and_output() {
            "SYS(2024) interruption fixture should enter the report event loop");
     expect(interrupted_session.dispatch_event_handler("interruptpreview"),
            "SYS(2024) interruption fixture should dispatch its cancellation handler");
+    const auto interrupted_step_state = interrupted_session.run(
+        copperfin::runtime::DebugResumeAction::step_into);
+    expect(interrupted_step_state.reason == copperfin::runtime::DebugPauseReason::step,
+           "SYS(2024) interruption should stop after executing the cancellation handler");
+    const auto interrupted_public = interrupted_session.evaluate_watch_expression("SYS(2024)");
+    expect(interrupted_public.ok &&
+               interrupted_public.value.kind == copperfin::runtime::PrgValueKind::string &&
+               copperfin::runtime::format_value(interrupted_public.value) == "Y",
+           "SYS(2024) should return public character Y after CANCEL interrupts an active preview");
     const auto interrupted_event_state = interrupted_session.run(
         copperfin::runtime::DebugResumeAction::continue_run);
     expect(interrupted_event_state.reason == copperfin::runtime::DebugPauseReason::event_loop,

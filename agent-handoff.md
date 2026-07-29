@@ -69,9 +69,11 @@ The #4819 SYS(2024) slice adds session-local character interruption status:
 `N` is returned for idle or uninterrupted reports, and active report/label
 cancel, QUIT cleanup, or asynchronous cancellation records `Y`. Starting a
 new report or explicitly closing the report event loop clears the state. The
-follow-up regression drives active-preview `CANCEL`, preserves the existing
-event-loop pause contract, and asserts the invariant `report.interrupted=Y`
-event. Broader ReportListener parity remains a separate runtime slice.
+follow-up regression steps active-preview `CANCEL` to a valid paused frame,
+asserts the public `SYS(2024)` return as character `Y`, continues to restore the
+existing event-loop pause contract, and retains the invariant
+`report.interrupted=Y` event. Broader ReportListener parity remains a separate
+runtime slice.
 
 The #4810 correction restores the VFP9 `CODEPAGE` boundary: it is read from
 `CONFIG.FPW` at startup, not changed by a live `SET CODEPAGE TO n` command.

@@ -11,10 +11,11 @@
   CTest coverage passes `1/1`, including return-kind and fresh-session
   isolation checks.
 
-- 2026-07-28: Followed up #4819 in `7f64c6d0f` with deterministic positive-Y
-  coverage for `SYS(2024)`: an active preview cancellation records the
-  invariant `report.interrupted` event while preserving the existing
-  event-loop pause contract. The focused work-area/report CTest remains `1/1`.
+- 2026-07-28: Followed up #4819 with direct public positive-Y coverage for
+  `SYS(2024)`: an active preview cancellation is stepped to a valid paused
+  frame, the public function returns character `Y`, and continuing restores the
+  event-loop pause contract while retaining the invariant `report.interrupted`
+  event. The focused work-area/report CTest remains `1/1`.
 
 - 2026-07-28: Implemented #4819 under #3217. Native PRG `SYS(2024)` now
   returns character `Y`/`N` for session-local report interruption state,
