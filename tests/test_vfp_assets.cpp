@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,6 +26,27 @@
 namespace {
 
 int failures = 0;
+
+class grouped_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class global_locale_guard final {
+public:
+    explicit global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~global_locale_guard() { std::locale::global(previous_); }
+
+    global_locale_guard(const global_locale_guard&) = delete;
+    global_locale_guard& operator=(const global_locale_guard&) = delete;
+
+private:
+    std::locale previous_;
+};
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -273,6 +295,8 @@ std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
 }
 
 void test_parse_dbf_header() {
+    const std::locale grouping_locale(std::locale::classic(), new grouped_numpunct());
+    global_locale_guard locale_guard(grouping_locale);
     const auto bytes = make_vfp_header();
     const auto result = copperfin::vfp::parse_dbf_header(bytes);
 
