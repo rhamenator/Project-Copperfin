@@ -120,17 +120,20 @@ std::size_t find_utf8_scalar_occurrence_local(
     const std::string& needle,
     const std::string& haystack,
     std::size_t occurrence,
-    bool reverse) {
+    bool reverse,
+    bool case_insensitive = true) {
     std::vector<std::string> needle_scalars = utf8_scalars_local(needle);
     std::vector<std::string> folded_haystack = utf8_scalars_local(haystack);
     if (needle_scalars.empty() || folded_haystack.size() < needle_scalars.size()) {
         return 0U;
     }
-    for (std::string& scalar : needle_scalars) {
-        scalar = fold_ascii_case_preserving_utf8_local(scalar);
-    }
-    for (std::string& scalar : folded_haystack) {
-        scalar = fold_ascii_case_preserving_utf8_local(scalar);
+    if (case_insensitive) {
+        for (std::string& scalar : needle_scalars) {
+            scalar = fold_ascii_case_preserving_utf8_local(scalar);
+        }
+        for (std::string& scalar : folded_haystack) {
+            scalar = fold_ascii_case_preserving_utf8_local(scalar);
+        }
     }
 
     const std::size_t last_start = folded_haystack.size() - needle_scalars.size();

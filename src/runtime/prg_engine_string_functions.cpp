@@ -407,13 +407,17 @@ std::optional<PrgValue> evaluate_string_function(
         const std::size_t line_index = static_cast<std::size_t>(requested_line);
         return make_string_value(line_index >= 1U && line_index <= lines.size() ? lines[line_index - 1U] : std::string{});
     }
-    if ((function == "atc" || function == "atcc") && arguments.size() >= 2U) {
+    if ((function == "at_c" || function == "atc" || function == "atcc") && arguments.size() >= 2U) {
         const std::size_t occurrence = arguments.size() >= 3U
                                            ? static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[2])))
                                            : 1U;
-        if (function == "atcc") {
+        if (function == "at_c" || function == "atcc") {
             return make_number_value(static_cast<double>(find_utf8_scalar_occurrence_local(
-                value_as_string(arguments[0]), value_as_string(arguments[1]), occurrence, false)));
+                value_as_string(arguments[0]),
+                value_as_string(arguments[1]),
+                occurrence,
+                false,
+                function == "atcc")));
         }
         std::string needle = uppercase_copy(value_as_string(arguments[0]));
         std::string haystack = uppercase_copy(value_as_string(arguments[1]));

@@ -173,6 +173,11 @@ namespace
             "c_leftc = LEFTC('café猫', 4)\n"
             "c_rightc = RIGHTC('café猫', 2)\n"
             "n_atcc = ATCC('FE', 'caféFE猫FE', 2)\n"
+            "n_at_c = AT_C('FE', 'caféFE猫FE', 2)\n"
+            "n_at_c_unicode = AT_C('é', 'café猫')\n"
+            "n_at_c_case = AT_C('fe', 'caféFE猫FE')\n"
+            "n_at_c_zero = AT_C('FE', 'caféFE猫FE', 0)\n"
+            "n_at_c_missing = AT_C('FE', 'caféFE猫FE', 3)\n"
             "n_ratc = RATC('FE', 'caféFE猫FE', 1)\n"
             "c_substrc = SUBSTRC('café猫', 4, 2)\n"
             "c_substrc_zero = SUBSTRC('café猫', 0, 2)\n"
@@ -240,6 +245,11 @@ namespace
         check("c_leftc", "café");
         check("c_rightc", "é猫");
         check("n_atcc", "8");
+        check("n_at_c", "8");
+        check("n_at_c_unicode", "4");
+        check("n_at_c_case", "0");
+        check("n_at_c_zero", "5");
+        check("n_at_c_missing", "0");
         check("n_ratc", "8");
         check("c_substrc", "é猫");
         check("c_substrc_zero", "ca");

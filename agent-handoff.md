@@ -2,6 +2,16 @@
 
 ## Current State
 
+The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
+`AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,
+preserves VFP's case-sensitive matching, supports occurrence selection, and
+returns zero for empty/missing/out-of-range searches. `ATCC()` remains the
+case-insensitive scalar-safe path; existing byte-oriented `AT()`/`ATC()`
+contracts are unchanged. Focused `test_prg_engine_functions` and
+`test_prg_engine_string_math_functions` pass `2/2`, and the function target
+also passes under `pt_BR.UTF-8` and `de_DE.UTF-8`. This is focused runtime
+evidence, not full RC evidence.
+
 The #4824 expression-parser follow-up now carries invariant `e`/`E` exponent
 syntax, including an optional exponent sign, into the shared numeric parser
 instead of stopping the literal at its mantissa. An end-to-end PRG fixture
