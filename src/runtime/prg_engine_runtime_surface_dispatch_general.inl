@@ -33,6 +33,21 @@
                 // procedure, alias, cursor, and file names.
                 return make_string_value(make_unique_runtime_procedure_name());
             }
+            if (sys_code == 2014) {
+                // VFP9 SYS(2014) returns a lexical path relative to the
+                // current or supplied directory; it does not require a file
+                // to exist and must not change the runtime default directory.
+                if (arguments.size() < 2U) {
+                    return make_string_value({});
+                }
+                const std::string base_path = arguments.size() >= 3U
+                    ? value_as_string(arguments[2])
+                    : std::string{};
+                return make_string_value(minimum_runtime_path(
+                    value_as_string(arguments[1]),
+                    base_path,
+                    default_directory));
+            }
             if (sys_code == 2029) {
                 // VFP9 SYS(2029) reports the physical DBF table type for the
                 // current cursor or the requested alias. Synthetic and

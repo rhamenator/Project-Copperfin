@@ -30,6 +30,7 @@ namespace copperfin::runtime_surface_tests
     void test_filesize_expression_function();
     void test_recsize_reclength_expression_functions();
     void test_environment_and_sys_introspection_functions();
+    void test_sys2014_returns_minimum_runtime_path();
     void test_sys2029_reports_dbf_table_type();
     void test_object_reflection_runtime_surface_functions();
     void test_native_prg_amembers_visibility_filters();

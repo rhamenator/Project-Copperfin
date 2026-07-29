@@ -108,6 +108,21 @@ std::filesystem::path filesystem_probe_path(const std::string& raw_path, const s
     return path.lexically_normal();
 }
 
+std::string minimum_runtime_path(
+    const std::string& raw_file_path,
+    const std::string& raw_base_path,
+    const std::string& default_directory) {
+    const std::filesystem::path file_path = filesystem_probe_path(raw_file_path, default_directory);
+    const std::filesystem::path base_path = raw_base_path.empty()
+        ? copperfin::platform::path_from_utf8_string(default_directory).lexically_normal()
+        : filesystem_probe_path(raw_base_path, default_directory);
+    const std::filesystem::path relative_path = file_path.lexically_relative(base_path);
+    if (!relative_path.empty()) {
+        return copperfin::platform::path_to_utf8_string(relative_path.lexically_normal());
+    }
+    return copperfin::platform::path_to_utf8_string(file_path.lexically_normal());
+}
+
 std::string strip_surrounding_quotes(std::string text) {
     text = trim_copy(std::move(text));
     if (text.size() >= 2U) {

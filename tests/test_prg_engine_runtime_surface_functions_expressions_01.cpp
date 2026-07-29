@@ -667,6 +667,53 @@ namespace copperfin::runtime_surface_tests
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_sys2014_returns_minimum_runtime_path()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sys2014";
+        const fs::path base_path = temp_root / "base";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(base_path / "nested");
+
+        const fs::path main_path = base_path / "sys2014.prg";
+        write_text(
+            main_path,
+            "cCurrent = SYS(2014, 'nested/child.prg')\n"
+            "cParent = SYS(2014, '../outside/file.prg')\n"
+            "cExplicit = SYS(2014, 'nested/child.prg', '.')\n"
+            "cExplicitParent = SYS(2014, '../outside/file.prg', 'nested')\n"
+            "cMissing = SYS(2014, 'not-created/file.prg')\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), base_path.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("SYS(2014) script should complete: ") + state.message);
+
+        const std::string separator(1U, fs::path::preferred_separator);
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be assigned");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("ccurrent", "nested" + separator + "child.prg");
+        check("cparent", ".." + separator + "outside" + separator + "file.prg");
+        check("cexplicit", "nested" + separator + "child.prg");
+        check("cexplicitparent", ".." + separator + ".." + separator + "outside" + separator + "file.prg");
+        check("cmissing", "not-created" + separator + "file.prg");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_object_reflection_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
