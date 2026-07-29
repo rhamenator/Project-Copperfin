@@ -145,7 +145,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
     const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
     const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
-    const std::function<bool(const std::string&)>& window_visibility_callback,
+    const std::function<std::optional<bool>(const std::string&)>& window_state_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_prompt_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_count_callback,
@@ -186,9 +186,16 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             set_callback("__dbused__\x1f" + designator) == "1");
     }
     if (function == "wvisible") {
-        return make_boolean_value(
-            window_visibility_callback &&
-            window_visibility_callback(arguments.empty() ? std::string{} : value_as_string(arguments[0])));
+        const std::optional<bool> window_state = window_state_callback
+            ? window_state_callback(arguments.empty() ? std::string{} : value_as_string(arguments[0]))
+            : std::nullopt;
+        return make_boolean_value(window_state.value_or(false));
+    }
+    if (function == "wexist") {
+        const std::optional<bool> window_state = window_state_callback
+            ? window_state_callback(arguments.empty() ? std::string{} : value_as_string(arguments[0]))
+            : std::nullopt;
+        return make_boolean_value(window_state.has_value());
     }
 
     auto safe_int_argument = [&](std::size_t index, int default_value) {

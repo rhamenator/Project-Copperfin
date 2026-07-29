@@ -2838,7 +2838,7 @@ namespace copperfin::runtime
                 }
                 return std::nullopt;
             },
-            [this](const std::string &window_name) -> bool
+            [this](const std::string &window_name) -> std::optional<bool>
             {
                 // WVISIBLE("") denotes the modeled main VFP application window.
                 if (trim_copy(window_name).empty())
@@ -2849,7 +2849,7 @@ namespace copperfin::runtime
                 const std::string normalized_name = normalize_identifier(trim_copy(window_name));
                 if (normalized_name.empty())
                 {
-                    return false;
+                    return std::nullopt;
                 }
 
                 for (const auto &[handle, runtime_object] : ole_objects)
@@ -2870,7 +2870,7 @@ namespace copperfin::runtime
                         return value_as_bool(visible->second);
                     }
                 }
-                return false;
+                return std::nullopt;
             },
             [this](const std::string &name, std::vector<PrgValue> values)
             {

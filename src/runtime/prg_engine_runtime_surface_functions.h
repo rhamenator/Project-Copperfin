@@ -418,7 +418,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
     const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
     const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
-    const std::function<bool(const std::string&)>& window_visibility_callback,
+    const std::function<std::optional<bool>(const std::string&)>& window_state_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_prompt_callback,
     const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_count_callback,

@@ -14,10 +14,13 @@ namespace copperfin::runtime_surface_tests
         write_text(
             main_path,
             "lMainVisible = WVISIBLE('')\n"
+            "lMainExists = WEXIST('')\n"
             "oForm = CREATEOBJECT('VisibilityForm')\n"
             "lInitialVisible = WVISIBLE('visibilityform')\n"
+            "lInitialExists = WEXIST('visibilityform')\n"
             "oForm.Hide()\n"
             "lHidden = WVISIBLE('VisibilityForm')\n"
+            "lHiddenExists = WEXIST('VisibilityForm')\n"
             "oForm.Show()\n"
             "lShown = WVISIBLE('VisibilityForm')\n"
             "oForm.Visible = .F.\n"
@@ -26,7 +29,9 @@ namespace copperfin::runtime_surface_tests
             "lDirectShown = WVISIBLE('VisibilityForm')\n"
             "oPlain = CREATEOBJECT('PlainObject')\n"
             "lNonVisual = WVISIBLE('PlainObject')\n"
+            "lNonVisualExists = WEXIST('PlainObject')\n"
             "lUnknown = WVISIBLE('missing-window')\n"
+            "lUnknownExists = WEXIST('missing-window')\n"
             "RETURN\n"
             "DEFINE CLASS VisibilityForm AS Form\n"
             "ENDDEFINE\n"
@@ -54,13 +59,18 @@ namespace copperfin::runtime_surface_tests
         };
 
         check("lmainvisible", "true");
+        check("lmainexists", "true");
         check("linitialvisible", "true");
+        check("linitialexists", "true");
         check("lhidden", "false");
+        check("lhiddenexists", "true");
         check("lshown", "true");
         check("ldirecthidden", "false");
         check("ldirectshown", "true");
         check("lnonvisual", "false");
+        check("lnonvisualexists", "false");
         check("lunknown", "false");
+        check("lunknownexists", "false");
 
         fs::remove_all(temp_root, ignored);
     }

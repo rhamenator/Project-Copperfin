@@ -10,6 +10,11 @@
   `7587be12f`; those results remain historical until exact-head validation is
   rerun. RC readiness remains unclaimed.
 
+- 2026-07-28: Implemented the paired VFP9 `WEXIST(WindowName)` runtime
+  contract under #4809 by sharing the modeled-window state lookup with
+  `WVISIBLE()`. Hidden modeled windows remain existent, while unknown and
+  non-visual names remain absent; the focused runtime-surface test passes.
+
 - 2026-07-28: Refreshed the handoff and roadmap release matrix at product
   head `7587be12f`: Security Supply Chain, VSIX, Linux Managed UI, and
   Executable Path are green; Windows Native and the remaining hosted native,

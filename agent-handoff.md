@@ -2,12 +2,13 @@
 
 ## Current State
 
-The #4808 runtime slice implements VFP9 `WVISIBLE(WindowName)` for Copperfin's
-modeled headless window surface. `WVISIBLE("")` reports the modeled main
-application window; case-insensitive names for modeled Form/ToolBar/ListBox/
-ComboBox windows follow their live `Visible` property through `Show()`,
-`Hide()`, and direct assignment. Unknown and non-visual objects return false.
-The focused `test_prg_engine_runtime_surface_functions` target passes locally.
+The #4808/#4809 runtime slices implement VFP9 `WVISIBLE(WindowName)` and
+`WEXIST(WindowName)` for Copperfin's modeled headless window surface.
+`WVISIBLE("")` and `WEXIST("")` report the modeled main application window;
+case-insensitive names for modeled Form/ToolBar/ListBox/ComboBox windows remain
+discoverable after `Hide()` while `WVISIBLE()` follows `Show()`, `Hide()`, and
+direct `Visible` assignment. Unknown and non-visual objects are absent. The
+focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 

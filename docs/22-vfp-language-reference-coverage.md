@@ -1,13 +1,15 @@
 # VFP Language Reference Coverage
 
-- Current `WVISIBLE()` status (2026-07-28, #4808 under #3217): the shared
-  headless PRG runtime now implements the VFP9 `WVISIBLE(WindowName)` contract
-  for the modeled window surface. An empty name reports the modeled main VFP
-  application window; case-insensitive named Form/ToolBar/ListBox/ComboBox
-  windows reflect their live `Visible` state after `Show()`, `Hide()`, or
-  direct property assignment. Unknown names and non-visual objects return
-  false without native OS-window enumeration. The focused runtime-surface
-  CTest passes `1/1`; hosted window-manager behavior remains separate evidence.
+- Current modeled-window status (2026-07-28, #4808/#4809 under #3217): the
+  shared headless PRG runtime implements the VFP9 `WVISIBLE(WindowName)` and
+  `WEXIST(WindowName)` contracts for modeled windows. An empty name reports
+  the modeled main VFP application window; case-insensitive named
+  Form/ToolBar/ListBox/ComboBox windows remain discoverable through
+  `WEXIST()` after `Hide()`, while `WVISIBLE()` reflects live `Visible` state
+  after `Show()`, `Hide()`, or direct property assignment. Unknown names and
+  non-visual objects are absent, without native OS-window enumeration. The
+  focused runtime-surface CTest passes `1/1`; hosted window-manager behavior
+  remains separate evidence.
 
 - Current codepage status (2026-07-28, #4807 under #3217): supported VFP
   `SET CODEPAGE TO n` values are stored independently per data session.

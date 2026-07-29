@@ -61,7 +61,7 @@
         const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
         const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
         const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
-        const std::function<bool(const std::string&)>& window_visibility_callback,
+        const std::function<std::optional<bool>(const std::string&)>& window_state_callback,
         const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
         const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_prompt_callback,
         const std::function<std::optional<PrgValue>(const std::vector<PrgValue>&)>& popup_bar_count_callback,
@@ -155,7 +155,7 @@
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
                 std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
                 std::function<std::optional<std::int64_t>(std::int64_t)> hwnd_from_whandle_callback,
-                std::function<bool(const std::string &)> window_visibility_callback,
+                std::function<std::optional<bool>(const std::string &)> window_state_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_prompt_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_count_callback,
@@ -235,7 +235,7 @@
                   write_native_member_callback_(std::move(write_native_member_callback)),
                   whandle_from_hwnd_callback_(std::move(whandle_from_hwnd_callback)),
                   hwnd_from_whandle_callback_(std::move(hwnd_from_whandle_callback)),
-                  window_visibility_callback_(std::move(window_visibility_callback)),
+                  window_state_callback_(std::move(window_state_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
                   popup_prompt_callback_(std::move(popup_prompt_callback)),
                   popup_bar_count_callback_(std::move(popup_bar_count_callback)),
@@ -1897,7 +1897,7 @@
                                                           write_native_member_callback_,
                                                           whandle_from_hwnd_callback_,
                                                           hwnd_from_whandle_callback_,
-                                                          window_visibility_callback_,
+                                                          window_state_callback_,
                                                           assign_array_callback_,
                                                           popup_prompt_callback_,
                                                           popup_bar_count_callback_,
@@ -3555,7 +3555,7 @@
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
             std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;
             std::function<std::optional<std::int64_t>(std::int64_t)> hwnd_from_whandle_callback_;
-            std::function<bool(const std::string &)> window_visibility_callback_;
+            std::function<std::optional<bool>(const std::string &)> window_state_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_prompt_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &)> popup_bar_count_callback_;
