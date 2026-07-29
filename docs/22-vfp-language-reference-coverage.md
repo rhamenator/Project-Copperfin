@@ -44,6 +44,14 @@
   uses this surface for portable report, web-service, automation, and data
   paths. The focused runtime-surface CTest passes `1/1`.
 
+- Current SYS(2000) status (2026-07-28, #4815 under #3217): the runtime now
+  enumerates regular files matching VFP `*`/`?` skeletons in deterministic
+  case-insensitive filename order. A fresh call returns the first match and
+  the optional `1` returns subsequent matches until exhaustion; a new
+  skeleton or default directory resets the enumeration. Continuation state is
+  isolated per data session, and missing directories or non-matches return an
+  empty string. The focused runtime-surface CTest passes `1/1`.
+
 - Current SYS(2029) status (2026-07-28, #4813 under #3217): the runtime now
   reports the numeric DBF header table type for the selected physical cursor
   or a case-insensitive alias, including the VFP table value `48` for a normal

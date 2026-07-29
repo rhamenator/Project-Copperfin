@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `6c0427969`. The prior exact-head
+The latest implementation head is `9878fd4a4`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
 codepage-boundary correction, #4811 SYS(3), and #4812 SYS(2015)
 compatibility slices. The replacement matrix at coordination/test head
@@ -54,6 +54,13 @@ parent traversal for paths that do not exist yet. It does not mutate `SET
 DEFAULT` or other session state. The focused
 `test_prg_engine_runtime_surface_functions` CTest passes `1/1`; Windows and
 macOS read-only review is requested before closing #4814.
+
+The #4815 SYS(2000) slice now enumerates regular files matching VFP wildcard
+patterns in deterministic case-insensitive filename order. First/next and
+exhaustion behavior is stateful per data session; a new skeleton or default
+directory resets the enumeration, while missing directories return an empty
+string. The focused `test_prg_engine_runtime_surface_functions` CTest passes
+`1/1`; Windows and macOS read-only review is requested before closing #4815.
 
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper

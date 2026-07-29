@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4815 under #3217. Native PRG `SYS(2000)` now
+  enumerates regular wildcard file matches in deterministic case-insensitive
+  filename order, with first/next/exhaustion semantics and per-data-session
+  continuation state. Missing directories and non-matches return an empty
+  string. Focused runtime-surface CTest passes `1/1`; filesystem contents and
+  cursor state are unchanged.
+
 - 2026-07-28: Implemented #4814 under #3217. Native PRG `SYS(2014)` now
   returns a lexical path relative to the runtime default directory or an
   optional comparison directory, with portable separator normalization and
