@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4814 under #3217. Native PRG `SYS(2014)` now
+  returns a lexical path relative to the runtime default directory or an
+  optional comparison directory, with portable separator normalization and
+  no filesystem-existence requirement or session-state mutation. Focused
+  runtime-surface CTest passes `1/1`; FFC path-portability usage is covered by
+  the documented VFP9 boundary.
+
 - 2026-07-28: Implemented #4813 under #3217. Native PRG `SYS(2029)` now
   reports the physical DBF header table type for the current cursor or a
   case-insensitive alias, returning `0` when no usable physical table is

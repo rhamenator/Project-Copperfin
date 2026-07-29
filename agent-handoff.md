@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `1837dc161`. The prior exact-head
+The latest implementation head is `6c0427969`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
 codepage-boundary correction, #4811 SYS(3), and #4812 SYS(2015)
 compatibility slices. The replacement matrix at coordination/test head
@@ -47,6 +47,13 @@ bytes, and remote/synthetic cursors return `0`. The metadata stays internal to
 runtime inspection and is not serialized into the portable cursor XML format.
 The focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
 Windows and macOS read-only review remains requested before closing #4813.
+
+The #4814 SYS(2014) slice now returns a lexical path relative to the runtime
+default directory or an optional comparison directory, including normalized
+parent traversal for paths that do not exist yet. It does not mutate `SET
+DEFAULT` or other session state. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; Windows and
+macOS read-only review is requested before closing #4814.
 
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper

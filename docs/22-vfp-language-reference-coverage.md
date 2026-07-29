@@ -36,6 +36,14 @@
   generated names. Successive calls remain distinct within one runtime
   session; the focused runtime-surface CTest passes `1/1`.
 
+- Current SYS(2014) status (2026-07-28, #4814 under #3217): the runtime now
+  returns a lexical path relative to the current runtime default directory or
+  an optional relative/absolute comparison directory, using normalized host
+  separators and parent traversal. The operation does not require the target
+  file to exist and does not mutate `SET DEFAULT` or other session state. FFC
+  uses this surface for portable report, web-service, automation, and data
+  paths. The focused runtime-surface CTest passes `1/1`.
+
 - Current SYS(2029) status (2026-07-28, #4813 under #3217): the runtime now
   reports the numeric DBF header table type for the selected physical cursor
   or a case-insensitive alias, including the VFP table value `48` for a normal
