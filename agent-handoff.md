@@ -46,8 +46,12 @@ nonfinite grammar. When `allow_nonfinite=true`, `NaN`, `INF`/`INFINITY`, and
 signed/case variants are recognized before finite stream extraction; the
 default path still rejects them. This restores the intentional DBF double-field
 contract on Apple without changing finite invariant parsing. Focused DBF and
-parser tests pass `2/2` on Linux; the failed macOS matrix is being rerun at the
-corrected head.
+parser tests pass `2/2` on Linux, Windows/MSVC, and Apple Clang under the
+default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`; the expanded regression
+covers signed, uppercase/lowercase, and mixed-case spellings plus the existing
+finite, malformed, comma-decimal, and overflow checks. The original hosted
+macOS run was superseded after this test-only strengthening; the replacement
+full hosted matrix remains a release-validation run in progress.
 
 The #4827 focused work-area regression is locale-complete on Linux: CTest and
 direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and
