@@ -168,8 +168,10 @@
   `SET('CODEPAGE')` contract and applies the documented lead-byte ranges for
   CP932, CP936, CP949, and CP950. Single-byte and UTF-8 pages, unsupported
   effective pages, empty input, and bytes outside those ranges return false.
-  Invalid or absent `CONFIG.FPW CODEPAGE` currently falls back to the host code
-  page; deterministic invalid-configuration behavior is tracked by #4833.
+  Explicitly invalid or unsupported `CONFIG.FPW CODEPAGE` uses deterministic
+  sentinel `0` and therefore fails closed; absent or `AUTO` configuration
+  continues to fall back to the host code page. The invalid-configuration
+  regression is tracked by #4833.
   Focused direct range and configured `CONFIG.FPW` PRG tests pass under the
   default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`; numeric parsing,
   display-locale behavior, and machine contracts are unchanged.

@@ -1,3 +1,11 @@
+- 2026-07-29: Completed #4833 under #3217 by separating malformed
+  `CONFIG.FPW CODEPAGE` from absent/`AUTO` configuration. Explicitly invalid
+  or unsupported values now use deterministic sentinel `0`, so `SET('CODEPAGE')`
+  exposes `0` and `ISLEADBYTE()` fails closed rather than inheriting a host DBCS
+  code page. Valid configured pages and host fallback behavior remain unchanged.
+  The focused configured-code-page target passes `1/1` under the default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` environments.
+
 - 2026-07-29: Completed runtime numeric-formatting hardening for #4832. The
   `STR()`, numeric `TRANSFORM()` picture, display, index-expression, and
   ordinary `PrgValue` string paths now use the classic locale for intermediate
@@ -10,8 +18,9 @@
   The runtime now applies the effective configured VFP code page, recognizes
   the documented lead-byte ranges for CP932, CP936, CP949, and CP950, and
   fails closed for single-byte, UTF-8, and unsupported effective code pages.
-  Invalid or absent `CONFIG.FPW CODEPAGE` currently falls back to the host code
-  page; deterministic invalid-configuration behavior is tracked by #4833.
+  Invalid or absent `CONFIG.FPW CODEPAGE` behavior is covered separately by
+  #4833; invalid values now use deterministic sentinel `0` while absent/AUTO
+  still falls back to the host code page.
   Direct range tests and the configured `CONFIG.FPW` PRG fixture pass `2/2`
   under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`.
 

@@ -759,6 +759,41 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_isleadbyte_invalid_configured_code_page_fails_closed()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_isleadbyte_invalid_config";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "isleadbyte_invalid.prg";
+        write_text(temp_root / "config.fpw", "CODEPAGE = not-a-code-page\n");
+        write_text(
+            main_path,
+            "lConfiguredLead = ISLEADBYTE(CHR(129))\n"
+            "cConfiguredCodePage = SET('CODEPAGE')\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "invalid CONFIG.FPW CODEPAGE script should complete");
+
+        const auto lead = state.globals.find("lconfiguredlead");
+        expect(
+            lead != state.globals.end() && !lead->second.boolean_value,
+            "invalid CONFIG.FPW CODEPAGE must make ISLEADBYTE fail closed independent of host ACP");
+
+        const auto configured_code_page = state.globals.find("cconfiguredcodepage");
+        expect(
+            configured_code_page != state.globals.end() &&
+                copperfin::runtime::format_value(configured_code_page->second) == "0",
+            "invalid CONFIG.FPW CODEPAGE must expose the deterministic invalid sentinel through SET()");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -774,6 +809,7 @@ int main()
     test_return_expression_values_are_preserved_in_runtime_state();
     test_likec_matches_utf8_scalars_without_changing_like();
     test_isleadbyte_uses_configured_code_page();
+    test_isleadbyte_invalid_configured_code_page_fails_closed();
 
     if (test_failures() != 0)
     {

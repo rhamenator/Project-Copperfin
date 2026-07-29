@@ -26,6 +26,8 @@ struct RuntimeConfigFile {
     std::optional<std::size_t> scheduler_yield_statement_interval;
     std::optional<std::size_t> scheduler_yield_sleep_ms;
     std::optional<int> code_page;
+    // True only when CODEPAGE was explicitly present but malformed or unsupported.
+    bool invalid_code_page = false;
     std::string source_path;
 };
 

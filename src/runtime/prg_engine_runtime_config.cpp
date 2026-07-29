@@ -123,7 +123,14 @@ std::optional<RuntimeConfigFile> try_load_runtime_config_file(const std::filesys
                 config.scheduler_yield_sleep_ms = *parsed;
             }
         } else if (key == "CODEPAGE") {
-            config.code_page = parse_code_page_option(value);
+            const std::string normalized = uppercase_copy(trim_copy(value));
+            if (normalized == "AUTO") {
+                config.code_page.reset();
+                config.invalid_code_page = false;
+            } else {
+                config.code_page = parse_code_page_option(value);
+                config.invalid_code_page = !config.code_page.has_value();
+            }
         }
     }
 
@@ -170,8 +177,12 @@ void apply_runtime_config_defaults(RuntimeSessionOptions& options, const Runtime
     if (options.scheduler_yield_sleep_ms == k_default_yield_sleep_ms && config.scheduler_yield_sleep_ms.has_value()) {
         options.scheduler_yield_sleep_ms = *config.scheduler_yield_sleep_ms;
     }
-    if (!options.configured_code_page.has_value() && config.code_page.has_value()) {
-        options.configured_code_page = *config.code_page;
+    if (!options.configured_code_page.has_value()) {
+        if (config.code_page.has_value()) {
+            options.configured_code_page = *config.code_page;
+        } else if (config.invalid_code_page) {
+            options.configured_code_page = 0;
+        }
     }
     if (trim_copy(options.temp_directory).empty() && config.temp_directory.has_value()) {
         options.temp_directory = *config.temp_directory;

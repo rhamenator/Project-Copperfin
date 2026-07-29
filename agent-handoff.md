@@ -2,6 +2,15 @@
 
 ## Current State
 
+The #4833/#3217 invalid-code-page follow-up is implementation-complete.
+`CONFIG.FPW CODEPAGE` now distinguishes explicit malformed/unsupported values
+from absent or `AUTO` configuration. Invalid values use deterministic sentinel
+`0`, making `SET('CODEPAGE')` return `0` and ensuring `ISLEADBYTE()` fails
+closed on every host instead of inheriting host DBCS state. Valid configured
+pages and host fallback behavior remain unchanged. The focused configured-code-
+page target passes `1/1` under the default environment, `pt_BR.UTF-8`, and
+`de_DE.UTF-8`; this is focused evidence, not full RC evidence.
+
 The #4832 runtime numeric-formatting slice is implementation-complete. Numeric
 intermediate text in `STR()`, numeric `TRANSFORM()` pictures, display and
 index-expression formatting, and ordinary `PrgValue` conversion now imbues
@@ -24,9 +33,9 @@ The #4831/#3217 `ISLEADBYTE()` slice is implementation-complete. Native PRG
 now reads the effective configured VFP code page through the existing session
 `SET('CODEPAGE')` contract and applies lead-byte rules for CP932, CP936, CP949,
 and CP950. Single-byte and UTF-8 pages, unsupported effective pages, empty
-input, and bytes outside the documented ranges return false. Invalid or absent
-`CONFIG.FPW CODEPAGE` currently falls back to the host code page; deterministic
-invalid-configuration behavior is tracked by follow-up #4833.
+input, and bytes outside the documented ranges return false. Explicitly invalid
+or unsupported `CONFIG.FPW CODEPAGE` uses sentinel `0` and therefore fails
+closed; absent or `AUTO` configuration continues to use the host code page.
 Focused direct range coverage and a configured `CONFIG.FPW` PRG fixture pass
 `2/2` under the default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`. The
 change does not alter numeric parsing, display-locale behavior, or machine
