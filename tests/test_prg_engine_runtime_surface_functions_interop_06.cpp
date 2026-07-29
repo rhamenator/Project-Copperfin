@@ -1,4 +1,5 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
+#include "copperfin/platform/invariant_numeric.h"
 
 namespace copperfin::runtime_surface_tests
 {
@@ -60,7 +61,9 @@ namespace copperfin::runtime_surface_tests
             expect(it != state.globals.end(), "nsqlrec from SQL LOOKUP should be set");
             if (it != state.globals.end())
             {
-                const double recno = std::stod(copperfin::runtime::format_value(it->second));
+                const double recno = copperfin::platform::try_parse_invariant_double(
+                                          copperfin::runtime::format_value(it->second))
+                                          .value_or(0.0);
                 expect(recno > 0.0,
                        "SQL LOOKUP should leave the targeted SQL cursor on a found record");
             }
@@ -279,7 +282,9 @@ namespace copperfin::runtime_surface_tests
             expect(it != state.globals.end(), "nsqlrec from SQL LOOKUP macro-argument test should be set");
             if (it != state.globals.end())
             {
-                const double recno = std::stod(copperfin::runtime::format_value(it->second));
+                const double recno = copperfin::platform::try_parse_invariant_double(
+                                          copperfin::runtime::format_value(it->second))
+                                          .value_or(0.0);
                 expect(recno > 0.0,
                        "SQL LOOKUP with macro-expanded arguments should leave the targeted SQL cursor on a found record");
             }

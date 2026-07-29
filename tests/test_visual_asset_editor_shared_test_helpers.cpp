@@ -4,6 +4,7 @@
 
 #include "test_visual_asset_editor_support.h"
 #include "test_environment_support.h"
+#include "copperfin/platform/invariant_numeric.h"
 
 namespace cf_test_visual_asset_editor {
 int failures = 0;
@@ -34,11 +35,8 @@ void expect(bool condition, const std::string& message) {
 }
 
 double parse_number(const std::string& text) {
-    try {
-        return std::stod(text);
-    } catch (...) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
+    return copperfin::platform::try_parse_invariant_double(text).value_or(
+        std::numeric_limits<double>::quiet_NaN());
 }
 
 const copperfin::vfp::DbfRecordValue* find_record_field(

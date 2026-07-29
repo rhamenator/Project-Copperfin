@@ -25,6 +25,13 @@ Release POSIX matrix passes `316/316` in `212.24s`, with only the two documented
 conditional skips. This changes validation behavior only; product runtime and
 machine-readable contracts are unchanged.
 
+The #4829 localization-hardening slice removes the remaining six native-test
+uses of locale-sensitive `std::stod` for Copperfin-formatted values. Those
+tests now use `copperfin::platform::try_parse_invariant_double`, keeping test
+results aligned with the product's period-decimal machine/VFP contract. The
+focused runtime/visual-asset targets pass `2/2` under the default environment,
+`pt_BR.UTF-8`, and `de_DE.UTF-8`; no product parser or machine contract changed.
+
 The #4827 focused work-area regression is locale-complete on Linux: CTest and
 direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and
 `qps-ploc`. Error 1229, 13, and 1596 assertions compare active-catalog text,

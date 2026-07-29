@@ -1,4 +1,5 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
+#include "copperfin/platform/invariant_numeric.h"
 
 #include <future>
 #include <set>
@@ -996,7 +997,11 @@ namespace copperfin::runtime_surface_tests
 
         const auto class_count = state.globals.find("nclasscount");
         const double class_count_value =
-            class_count == state.globals.end() ? -1.0 : std::stod(copperfin::runtime::format_value(class_count->second));
+            class_count == state.globals.end()
+                ? -1.0
+                : copperfin::platform::try_parse_invariant_double(
+                      copperfin::runtime::format_value(class_count->second))
+                      .value_or(-1.0);
          expect(class_count != state.globals.end() && class_count_value == 2.0,
              "ACLASS() should return [class, OBJECT] with two rows");
 

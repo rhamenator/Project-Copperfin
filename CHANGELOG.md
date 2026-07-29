@@ -1,3 +1,9 @@
+- 2026-07-29: Removed the remaining six locale-sensitive `std::stod` calls
+  from native tests. Test-side parsing of Copperfin-formatted numeric values
+  now uses the shared invariant parser, so comma-decimal host cultures cannot
+  create false failures. The focused runtime/visual-asset targets pass `2/2`
+  under the default environment and under `pt_BR.UTF-8` and `de_DE.UTF-8`.
+
 - 2026-07-29: Corrected POSIX generated-launcher validation when CMake's
   selected `dotnet` command is a wrapper script. The test now accepts a .NET
   root only when its `dotnet` executable and `host/fxr` directory are present,

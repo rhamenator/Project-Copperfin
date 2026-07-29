@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
@@ -524,15 +525,9 @@ namespace
         }
         else
         {
-            double seconds = -1.0;
-            try
-            {
-                seconds = std::stod(copperfin::runtime::format_value(seconds_it->second));
-            }
-            catch (...)
-            {
-                seconds = -1.0;
-            }
+            const double seconds = copperfin::platform::try_parse_invariant_double(
+                                       copperfin::runtime::format_value(seconds_it->second))
+                                       .value_or(-1.0);
             expect(seconds >= 0.0 && seconds <= 86399.0,
                    "SECONDS() should return a second-of-day value between 0 and 86399");
         }

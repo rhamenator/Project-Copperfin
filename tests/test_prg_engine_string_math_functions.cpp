@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
@@ -555,15 +556,9 @@ namespace
                 expect(false, name_text + " variable not found");
                 continue;
             }
-            double value = -1.0;
-            try
-            {
-                value = std::stod(copperfin::runtime::format_value(it->second));
-            }
-            catch (...)
-            {
-                value = -1.0;
-            }
+            const double value = copperfin::platform::try_parse_invariant_double(
+                                     copperfin::runtime::format_value(it->second))
+                                     .value_or(-1.0);
             expect(value >= 0.0 && value < 1.0, name_text + " should be in the RAND() range [0, 1)");
         }
 
