@@ -1098,6 +1098,9 @@ namespace copperfin::runtime
         // the host UI.  0 = idle, 1 = preview, 2 = output.
         int active_report_status = 0;
         bool report_interrupted = false;
+        // VFP's SYS(2030) debug-feature switch is session-local; it must not
+        // enable or alter the host debugger or UI.
+        bool debug_features_enabled = false;
         int current_data_session = 1;
         std::map<int, int> next_sql_handle_by_session;
         std::map<int, int> next_api_handle_by_session;
@@ -2222,6 +2225,28 @@ namespace copperfin::runtime
                 if (trimmed_option_name == "__sys2024__")
                 {
                     return report_interrupted ? std::string{"Y"} : std::string{"N"};
+                }
+                if (trimmed_option_name == "__sys2030__")
+                {
+                    return debug_features_enabled ? std::string{"1"} : std::string{"0"};
+                }
+                constexpr std::string_view sys2030_prefix = "__sys2030__\x1f";
+                if (trimmed_option_name.starts_with(sys2030_prefix))
+                {
+                    try
+                    {
+                        const int requested = std::stoi(
+                            trimmed_option_name.substr(sys2030_prefix.size()));
+                        if (requested == 0 || requested == 1)
+                        {
+                            debug_features_enabled = requested == 1;
+                        }
+                    }
+                    catch (...)
+                    {
+                        // Keep the current state when the optional setter is invalid.
+                    }
+                    return debug_features_enabled ? std::string{"1"} : std::string{"0"};
                 }
                 constexpr std::string_view sys3006_prefix = "__sys3006__\x1f";
                 if (trimmed_option_name.starts_with(sys3006_prefix))

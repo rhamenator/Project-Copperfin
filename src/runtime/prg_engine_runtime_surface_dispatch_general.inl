@@ -81,6 +81,16 @@
                 // VFP9 SYS(2024) reports report interruption as character Y/N.
                 return make_string_value(set_callback("__sys2024__"));
             }
+            if (sys_code == 2030) {
+                // VFP9 SYS(2030) reports and changes a session-local numeric
+                // debug-feature switch; it does not control the host debugger.
+                if (arguments.size() >= 2U) {
+                    return make_number_value(std::stod(set_callback(
+                        std::string("__sys2030__\x1f") +
+                        std::to_string(safe_int_argument(1U, 0)))));
+                }
+                return make_number_value(std::stod(set_callback("__sys2030__")));
+            }
             if (sys_code == 2040) {
                 // VFP9 SYS(2040) reports the session-local report state:
                 // 0 means no report, 1 means preview, and 2 means output.

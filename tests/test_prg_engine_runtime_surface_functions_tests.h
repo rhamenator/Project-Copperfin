@@ -33,6 +33,7 @@ namespace copperfin::runtime_surface_tests
     void test_sys2014_returns_minimum_runtime_path();
     void test_sys2000_enumerates_wildcard_file_matches();
     void test_sys2029_reports_dbf_table_type();
+    void test_sys2030_debug_feature_state_is_session_local();
     void test_object_reflection_runtime_surface_functions();
     void test_native_prg_amembers_visibility_filters();
     void test_common_native_oop_function_abbreviations();
