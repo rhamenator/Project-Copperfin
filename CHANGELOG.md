@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened #4842/#109 `SYS(3)` generated filename components
+  against grouped host cultures. The fixed-width eight-digit stream now uses
+  the classic locale, preserving the documented digits-only filename contract
+  and collision behavior. The existing SYS introspection and concurrent
+  uniqueness fixture now runs under adversarial comma-decimal punctuation with
+  period digit grouping while retaining `SYS(2015)` base-36 behavior.
+
 - 2026-07-29: Hardened #4841/#109 runtime date/time formatting against grouped
   host cultures. Sortable DTOC/TTOC/DTOS/STOD text and SET-controlled date/time
   presentation now serialize numeric components with the classic locale while

@@ -27,6 +27,13 @@ DBF and runtime targets also pass under Linux `C` and `C.utf8` process locales.
 Linux, Windows/MSVC, and macOS/AppleClang review is accepted at the expanded
 head; this is focused cross-platform evidence, not full RC evidence.
 
+The #4842/#109 `SYS(3)` filename slice is implementation-complete. Its
+fixed-width eight-digit numeric stream now uses `std::locale::classic()`, so
+host grouping cannot introduce illegal punctuation or change generated path
+length. The existing SYS fixture runs under adversarial grouped punctuation
+and preserves sequential/concurrent uniqueness plus `SYS(2015)`'s separate
+base-36 contract. Cross-platform review is required before closure.
+
 The #4841/#109 runtime date/time formatting slice is implementation-complete.
 Sortable DTOC/TTOC/DTOS/STOD text and SET-controlled date/time presentation
 now use `std::locale::classic()` for numeric component streams, preventing host

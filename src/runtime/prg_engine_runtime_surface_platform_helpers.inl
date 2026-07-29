@@ -50,6 +50,7 @@ std::string make_legal_runtime_temp_file_name() {
     const std::uint64_t value = 10000000U + ((seed + serial) % name_space);
 
     std::ostringstream result;
+    result.imbue(std::locale::classic());
     result << std::setw(8) << std::setfill('0') << value;
     return result.str();
 }

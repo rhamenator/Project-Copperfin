@@ -2,10 +2,42 @@
 #include "copperfin/platform/invariant_numeric.h"
 
 #include <future>
+#include <locale>
 #include <set>
 
 namespace copperfin::runtime_surface_tests
 {
+    namespace
+    {
+        class grouped_numpunct final : public std::numpunct<char>
+        {
+        protected:
+            char do_decimal_point() const override { return ','; }
+            char do_thousands_sep() const override { return '.'; }
+            std::string do_grouping() const override { return "\3"; }
+        };
+
+        class global_locale_guard final
+        {
+        public:
+            explicit global_locale_guard(const std::locale &replacement)
+                : previous_(std::locale::global(replacement))
+            {
+            }
+
+            ~global_locale_guard()
+            {
+                std::locale::global(previous_);
+            }
+
+            global_locale_guard(const global_locale_guard &) = delete;
+            global_locale_guard &operator=(const global_locale_guard &) = delete;
+
+        private:
+            std::locale previous_;
+        };
+    }
+
     void test_array_element_native_property_expression_access()
     {
         namespace fs = std::filesystem;
@@ -526,6 +558,8 @@ namespace copperfin::runtime_surface_tests
 
     void test_environment_and_sys_introspection_functions()
     {
+        const std::locale grouping_locale(std::locale::classic(), new grouped_numpunct());
+        global_locale_guard locale_guard(grouping_locale);
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_env_sys_helpers";
         std::error_code ignored;
