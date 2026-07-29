@@ -1073,6 +1073,7 @@ namespace copperfin::runtime
         std::vector<RuntimeEvent> events;
         RuntimePauseState last_state{};
         std::string startup_default_directory;
+        std::string runtime_config_path;
         std::string last_error_message;
         SourceLocation last_fault_location{};
         std::string last_fault_statement;
@@ -2230,6 +2231,12 @@ namespace copperfin::runtime
                         return std::string{};
                     }
                     return std::string{};
+                }
+                constexpr std::string_view sys2019_prefix = "__sys2019__\x1f";
+                if (trimmed_option_name.starts_with(sys2019_prefix))
+                {
+                    const std::string selector = trimmed_option_name.substr(sys2019_prefix.size());
+                    return selector == "2" ? std::string{} : runtime_config_path;
                 }
                 if (trimmed_option_name == "__textmerge_delimiters__")
                 {
@@ -12565,6 +12572,7 @@ namespace copperfin::runtime
     PrgRuntimeSession PrgRuntimeSession::create(const RuntimeSessionOptions &options)
     {
         RuntimeSessionOptions effective = options;
+        std::string runtime_config_path;
         effective.startup_path = normalize_path(effective.startup_path);
         effective.working_directory = effective.working_directory.empty()
                                           ? copperfin::platform::path_to_utf8_string(
@@ -12575,11 +12583,13 @@ namespace copperfin::runtime
                 copperfin::platform::path_from_utf8_string(effective.startup_path),
                 copperfin::platform::path_from_utf8_string(effective.working_directory)))
         {
+            runtime_config_path = config->source_path;
             apply_runtime_config_defaults(effective, *config);
         }
 
         auto impl = std::make_unique<Impl>(effective);
         impl->startup_default_directory = effective.working_directory;
+        impl->runtime_config_path = std::move(runtime_config_path);
         impl->default_directory_by_session.emplace(1, impl->startup_default_directory);
         impl->data_sessions.try_emplace(1);
         const int application_surface_handle =

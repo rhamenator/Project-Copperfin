@@ -507,6 +507,8 @@ namespace copperfin::runtime_surface_tests
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root);
+        const fs::path config_path = temp_root / "config.fpw";
+        write_text(config_path, "CODEPAGE=1252\n");
 
         const std::string env_name = "COPPERFIN_RUNTIME_SURFACE_ENV_HELPER";
         const std::string unicode_env_name = "COPPERFIN_RUNTIME_SURFACE_ENV_UNICODE";
@@ -537,6 +539,9 @@ namespace copperfin::runtime_surface_tests
             "cSys3006Restore = SYS(3006, VAL(cSys3004Default))\n"
             "cSys3004Restored = SYS(3004)\n"
             "cSys3006NoArgument = SYS(3006)\n"
+            "cSys2019 = SYS(2019)\n"
+            "cSys2019External = SYS(2019, 1)\n"
+            "cSys2019Internal = SYS(2019, 2)\n"
             "RETURN\n"
             "\n"
             "PROCEDURE pcount_helper\n"
@@ -579,6 +584,13 @@ namespace copperfin::runtime_surface_tests
         check("csys3006restore", "");
         check("csys3004restored", "1033");
         check("csys3006noargument", "");
+        check("csys2019", config_path.string());
+        check("csys2019external", config_path.string());
+        check("csys2019internal", "");
+        const auto sys2019_value = state.globals.find("csys2019");
+        expect(sys2019_value != state.globals.end() &&
+                   sys2019_value->second.kind == copperfin::runtime::PrgValueKind::string,
+               "SYS(2019) should retain its documented character return type");
         check("csys11", "0");
         check("csys13", "0");
 
@@ -684,6 +696,19 @@ namespace copperfin::runtime_surface_tests
         expect(isolated_locale != isolated_state.globals.end() &&
                    copperfin::runtime::format_value(isolated_locale->second) == "1033",
                "SYS(3006) changes must remain isolated to the originating runtime session");
+
+        const fs::path no_config_root = temp_root / "sys2019_no_config";
+        fs::create_directories(no_config_root);
+        const fs::path no_config_path = no_config_root / "sys2019_no_config.prg";
+        write_text(no_config_path, "cConfig = SYS(2019)\nRETURN\n");
+        const auto no_config_state = copperfin::runtime::PrgRuntimeSession::create(
+                                          make_runtime_session_options(no_config_path.string(), no_config_root.string()))
+                                          .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(no_config_state.completed, "a no-config runtime session should complete SYS(2019) isolation check");
+        const auto no_config_value = no_config_state.globals.find("cconfig");
+        expect(no_config_value != no_config_state.globals.end() &&
+                   copperfin::runtime::format_value(no_config_value->second).empty(),
+               "SYS(2019) should not inherit another session's configuration path");
 
         fs::remove_all(temp_root, ignored);
     }

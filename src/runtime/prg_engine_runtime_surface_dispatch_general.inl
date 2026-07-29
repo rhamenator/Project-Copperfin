@@ -92,6 +92,15 @@
                 }
                 return make_string_value({});
             }
+            if (sys_code == 2019) {
+                // VFP9 exposes the startup configuration identity without
+                // reopening or changing the CONFIG.FPW file.
+                const int selector = arguments.size() >= 2U
+                    ? safe_int_argument(1U, 1)
+                    : 1;
+                return make_string_value(set_callback(
+                    std::string("__sys2019__\x1f") + std::to_string(selector)));
+            }
             if (sys_code == 5 || sys_code == 2003 || sys_code == 2004) {
                 return make_string_value(default_directory);
             }
