@@ -3,12 +3,12 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/index_seek_optimizer.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "localized_text.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cctype>
-#include <cstdlib>
 #include <limits>
 #include <optional>
 #include <string_view>
@@ -84,10 +84,7 @@ bool is_numeric_literal(const std::string& text) {
     if (trimmed.empty()) {
         return false;
     }
-    char* end = nullptr;
-    const char* begin = trimmed.c_str();
-    const double parsed = std::strtod(begin, &end);
-    return end != begin && *end == '\0' && std::isfinite(parsed) != 0;
+    return copperfin::platform::try_parse_invariant_double(trimmed).has_value();
 }
 
 bool is_literal_text(const std::string& text) {

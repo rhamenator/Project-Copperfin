@@ -1,3 +1,8 @@
+- 2026-07-29: Extended #4824 to index optimization. Numeric literal
+  recognition for seek planning now uses the shared locale-independent parser,
+  preserving invariant decimal/full-input behavior without changing index
+  selection contracts. `test_prg_engine_index_seek_optimization` passes `1/1`.
+
 - 2026-07-29: Consolidated #4824 invariant floating-point parsing into the
   portable `cf_platform_support` seam and migrated native visual assets, DBF
   double fields, runtime, and Studio consumers to it. Nonfinite values remain

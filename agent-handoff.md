@@ -2,6 +2,11 @@
 
 ## Current State
 
+The #4824 index-optimizer follow-up now uses the shared portable invariant
+numeric parser for numeric literal recognition during seek planning. Index
+selection behavior is unchanged; `test_prg_engine_index_seek_optimization`
+CTest passes `1/1`.
+
 The #4824 parser consolidation now lives in the portable `cf_platform_support`
 library and is shared by runtime, native visual assets, DBF, and Studio. DBF
 double-field parsing explicitly opts into preserving `NaN` and `+/-INF`, while

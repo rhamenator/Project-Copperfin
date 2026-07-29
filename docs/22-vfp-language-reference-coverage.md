@@ -1,5 +1,10 @@
 # VFP Language Reference Coverage
 
+- Culture-invariant index-planning follow-up (2026-07-29, #4824 under #3217):
+  numeric literal recognition used by seek optimization now uses the shared
+  locale-independent parser without changing index selection contracts.
+  Focused index-optimization CTest passes `1/1`.
+
 - Culture-invariant parser consolidation (2026-07-29, #4824 under #3217): the
   shared portable `cf_platform_support` parser now serves runtime, native
   visual assets, DBF, and Studio. DBF `B` fields explicitly preserve
