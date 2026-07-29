@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Numeric culture boundary (2026-07-29, #4824/#4835 under #3217): VFP
+  literals, machine-readable numeric fields, runtime conversions, and
+  serialized values use invariant period-decimal parsing/serialization.
+  Display formatting and localized messages remain separate presentation
+  boundaries. Comma-decimal host culture must not reinterpret VFP or machine
+  values; malformed/trailing input is rejected according to each existing
+  contract rather than silently normalized.
+
 - Expression exponent grammar follow-up (2026-07-29, #4824 under #3217): PRG
   numeric literals now preserve invariant `e`/`E` exponents and optional
   exponent signs through expression parsing before shared conversion. The
@@ -158,8 +166,11 @@
   values from that file, treats `CODEPAGE=AUTO` and an absent item as the host
   code page, and keeps the value stable for the runtime session. `CPCURRENT()`
   and `CPCURRENT(0)` return that configured value, while `CPCURRENT(1)` and
-  `CPCURRENT(2)` remain host and OEM queries. A live `SET CODEPAGE TO n` does
-  not mutate the value. Focused runtime-surface and locale-codepage tests pass
+  `CPCURRENT(2)` remain host and OEM queries. Invalid or unsupported explicit
+  configuration exposes sentinel `0` through `SET('CODEPAGE')`, makes
+  `ISLEADBYTE()` fail closed, and leaves `CPCURRENT()`/`CPCURRENT(0)` on the
+  established host-code-page fallback. A live `SET CODEPAGE TO n` does not
+  mutate the value. Focused runtime-surface and locale-codepage tests pass
   locally; DBF encoding, `CPCONVERT()`, and other machine contracts are
   unchanged.
 
@@ -171,7 +182,7 @@
   Explicitly invalid or unsupported `CONFIG.FPW CODEPAGE` uses deterministic
   sentinel `0` and therefore fails closed; absent or `AUTO` configuration
   continues to fall back to the host code page. The invalid-configuration
-  regression is tracked by #4833.
+  regression is covered by #4833 and its CPCURRENT follow-up #4836.
   Focused direct range and configured `CONFIG.FPW` PRG tests pass under the
   default environment, `pt_BR.UTF-8`, and `de_DE.UTF-8`; numeric parsing,
   display-locale behavior, and machine contracts are unchanged.

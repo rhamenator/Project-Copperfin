@@ -1,3 +1,16 @@
+- 2026-07-29: Corrected #4836/#3217 CPCURRENT() handling after invalid
+  code-page sentinel hardening. CPCURRENT() and CPCURRENT(0) now treat
+  sentinel 0 as no valid configured page and retain host-code-page fallback,
+  while SET('CODEPAGE') remains 0 and ISLEADBYTE() continues to fail closed.
+  Malformed and unsupported configuration regressions pass in the default,
+  pt_BR.UTF-8, and de_DE.UTF-8 environments.
+
+- 2026-07-29: Clarified the numeric culture boundary across the runtime.
+  Machine/VFP numeric parsing and serialization use invariant period-decimal
+  rules; user locale affects display and localized text only. Comma-decimal
+  input is not silently reinterpreted as a VFP numeric literal or machine
+  value.
+
 - 2026-07-29: Hardened #4835/#109 binary/intermediate double serialization.
   Generated PRG INSERT expressions, DBF binary-double display values, and DBC
   numeric property values now use the classic locale, keeping period-decimal

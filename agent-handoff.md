@@ -2,6 +2,21 @@
 
 ## Current State
 
+The #4836/#3217 code-page compatibility correction is implementation-complete.
+`CPCURRENT()` and `CPCURRENT(0)` now treat invalid-configuration sentinel
+`0` as no valid configured page and preserve the host-code-page fallback.
+This keeps `SET('CODEPAGE') = 0` and `ISLEADBYTE()` fail-closed behavior
+intact. The malformed and unsupported `CONFIG.FPW CODEPAGE` regressions pass
+under the default, `pt_BR.UTF-8`, and `de_DE.UTF-8` environments.
+Cross-platform review remains required before issue closure; this is focused
+evidence, not full RC evidence.
+
+Numeric culture boundary: parsing and serialization of VFP literals, runtime
+values, asset/database fields, package metadata, and other machine contracts
+must use invariant period-decimal rules. User locale belongs at display and
+localized-message boundaries; comma-decimal host settings must never silently
+change a machine value or parser result.
+
 The #4835/#109 binary/intermediate double-serialization slice is
 implementation-complete. Generated PRG INSERT expressions, DBF binary-double
 display values, and DBC numeric property values now imbue their streams with

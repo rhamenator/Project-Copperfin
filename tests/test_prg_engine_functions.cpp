@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/localization/localization.h"
+#include "prg_engine_locale_code_page.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -772,6 +773,8 @@ namespace
             main_path,
             "lConfiguredLead = ISLEADBYTE(CHR(129))\n"
             "cConfiguredCodePage = SET('CODEPAGE')\n"
+            "nCurrentCodePage = CPCURRENT()\n"
+            "nCurrentCodePageZero = CPCURRENT(0)\n"
             "RETURN\n");
 
         const auto check_invalid_configuration = [&](const std::string& value, const std::string& description) {
@@ -791,6 +794,20 @@ namespace
                 configured_code_page != state.globals.end() &&
                     copperfin::runtime::format_value(configured_code_page->second) == "0",
                 description + " CONFIG.FPW CODEPAGE must expose the deterministic invalid sentinel through SET()");
+
+            const std::string expected_host_code_page = std::to_string(
+                copperfin::runtime::detail::default_host_code_page());
+            const auto current_code_page = state.globals.find("ncurrentcodepage");
+            expect(
+                current_code_page != state.globals.end() &&
+                    copperfin::runtime::format_value(current_code_page->second) == expected_host_code_page,
+                description + " CPCURRENT() must preserve the host fallback when CONFIG.FPW CODEPAGE is invalid");
+
+            const auto current_code_page_zero = state.globals.find("ncurrentcodepagezero");
+            expect(
+                current_code_page_zero != state.globals.end() &&
+                    copperfin::runtime::format_value(current_code_page_zero->second) == expected_host_code_page,
+                description + " CPCURRENT(0) must preserve the host fallback when CONFIG.FPW CODEPAGE is invalid");
         };
 
         check_invalid_configuration("not-a-code-page", "malformed");

@@ -735,11 +735,13 @@
         }
         if (type_flag == 0) {
             const std::string configured = set_callback("CODEPAGE");
-            if (const auto parsed = try_parse_invariant_double(configured); parsed.has_value()) {
+            if (const auto parsed = try_parse_invariant_double(configured);
+                parsed.has_value() && *parsed != 0.0) {
                 return make_number_value(*parsed);
             } else {
-                // Preserve the host fallback if a malformed state value is
-                // encountered rather than leaking a runtime exception.
+                // Preserve the host fallback for absent/invalid state values.
+                // CONFIG.FPW invalid values use SET('CODEPAGE') sentinel 0 so
+                // ISLEADBYTE() can fail closed without changing CPCURRENT().
             }
         }
         return make_number_value(static_cast<double>(current_host_code_page()));
