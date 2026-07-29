@@ -3,14 +3,15 @@
 ## Current State
 
 The #4850/#109 runtime asset-record metadata slice is
-implementation-complete. The portable `app.cfmanifest` stream now serializes
+implementation-complete and cross-platform reviewed. The portable
+`app.cfmanifest` stream now serializes
 asset record indices with `std::locale::classic()`, so grouped host
 punctuation cannot make runtime metadata disagree with the separately invariant
 `app.cfdebug` asset lines. The existing FXP materialization regression uses
 record indices 1234 and 1235 under grouped punctuation and preserves paths,
 hashes, booleans, startup selection, and runtime/debug separation.
-Cross-platform review is required before closure; this is focused evidence,
-not full RC evidence.
+Linux, macOS/AppleClang, and Windows/MSVC focused validation is accepted; issue
+#4850 is closed. This is focused evidence, not full RC evidence.
 
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
