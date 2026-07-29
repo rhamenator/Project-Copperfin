@@ -10,10 +10,20 @@ exhausted. Only table-buffered modes 4/5 are eligible; modes 1/2/3 raise
 localized VFP error 1596, missing arguments raise 1229, and missing aliases
 raise 13, matching the reviewed VFP9 contract. Exact `MESSAGE()` text for
 those boundaries is resolved and asserted through the active locale catalog;
-final cross-platform review of that message correction is pending. Focused
+Linux, Windows/MSVC, and independent macOS review accepted the corrected
+messages and control flow. Focused
 `test_prg_engine_work_areas` passes `1/1`, including all of those error-boundary
 checks and both row-buffering modes. This is focused runtime evidence, not full
 RC evidence.
+
+The #4828 validation-infrastructure slice hardens POSIX generated-launcher
+.NET-root discovery. A CMake-selected `dotnet` wrapper is no longer mistaken
+for an installation root; discovery requires both the `dotnet` executable and
+the `host/fxr` directory. The focused launcher CTest passes with
+`DOTNET_ROOT`, `DOTNET_ROOT_X64`, and `DOTNET_ROLL_FORWARD` unset, and the full
+Release POSIX matrix passes `316/316` in `212.24s`, with only the two documented
+conditional skips. This changes validation behavior only; product runtime and
+machine-readable contracts are unchanged.
 
 The #4827 focused work-area regression is locale-complete on Linux: CTest and
 direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and

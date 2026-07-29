@@ -1,3 +1,11 @@
+- 2026-07-29: Corrected POSIX generated-launcher validation when CMake's
+  selected `dotnet` command is a wrapper script. The test now accepts a .NET
+  root only when its `dotnet` executable and `host/fxr` directory are present,
+  then successfully discovers the user-local .NET 10 installation without
+  externally supplied `DOTNET_ROOT` variables. The full Release POSIX matrix
+  passes `316/316` in `212.24s`, with only the two documented conditional
+  skips.
+
 - 2026-07-29: Completed the localization cleanup for the #4827 work-area
   regression. Missing USE/report assets and all four deep continuation
   call-depth checks now resolve active-catalog diagnostics instead of assuming

@@ -93,9 +93,12 @@ std::vector<std::string> manifest_lines_with_prefix(
 }
 
 std::filesystem::path find_dotnet_root(const std::filesystem::path& dotnet_path) {
+    const auto is_dotnet_root = [](const std::filesystem::path& root) {
+        return std::filesystem::is_regular_file(root / "dotnet") &&
+               std::filesystem::is_directory(root / "host" / "fxr");
+    };
     const auto configured = copperfin::platform::read_environment_path("DOTNET_ROOT");
-    if (configured.has_value() &&
-        std::filesystem::is_regular_file(*configured / "dotnet")) {
+    if (configured.has_value() && is_dotnet_root(*configured)) {
         return *configured;
     }
     const auto home = copperfin::platform::read_environment_path("HOME");
@@ -106,7 +109,7 @@ std::filesystem::path find_dotnet_root(const std::filesystem::path& dotnet_path)
     const std::filesystem::path resolved_dotnet_path =
         std::filesystem::weakly_canonical(dotnet_path, canonical_error);
     if (!canonical_error &&
-        std::filesystem::is_regular_file(resolved_dotnet_path) &&
+        is_dotnet_root(resolved_dotnet_path.parent_path()) &&
         resolved_dotnet_path.filename() == "dotnet") {
         return resolved_dotnet_path.parent_path();
     }
@@ -121,14 +124,14 @@ std::filesystem::path find_dotnet_root(const std::filesystem::path& dotnet_path)
         if (name.rfind(".dotnet", 0U) != 0U) {
             continue;
         }
-        const std::filesystem::path candidate = it->path() / "dotnet";
-        if (std::filesystem::is_regular_file(candidate, iterator_error)) {
+        if (!iterator_error && is_dotnet_root(it->path())) {
             return it->path();
         }
     }
-    if (std::filesystem::is_regular_file(resolved_dotnet_path.empty() ? dotnet_path : resolved_dotnet_path) &&
-        read_text(dotnet_path).rfind("#!", 0U) != 0U) {
-        return (resolved_dotnet_path.empty() ? dotnet_path : resolved_dotnet_path).parent_path();
+    const std::filesystem::path fallback_root =
+        (resolved_dotnet_path.empty() ? dotnet_path : resolved_dotnet_path).parent_path();
+    if (is_dotnet_root(fallback_root)) {
+        return fallback_root;
     }
     return {};
 }
