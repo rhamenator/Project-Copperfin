@@ -1,3 +1,13 @@
+- 2026-07-28: Implemented #4811 under #3217. Native PRG `SYS(3)` now returns
+  a distinct, extension-free eight-digit numeric legal temporary filename
+  component suitable for VFP9/FFC/VFPSource temp alias and file composition;
+  the focused runtime-surface CTest passes `1/1`. Machine contracts and
+  localization routing are unchanged.
+
+- 2026-07-28: The #4811 product head `40a0ca9f1` supersedes the currently
+  running exact-head release matrix at `87bea0388`; replacement exact-head
+  validation is required and RC readiness remains unclaimed.
+
 - 2026-07-28: Corrected the #4807 codepage boundary under #4810. VFP9 treats
   `CODEPAGE` as a startup item in `CONFIG.FPW`; it is not a live `SET` command.
   Copperfin now reads supported numeric configuration values, uses the host

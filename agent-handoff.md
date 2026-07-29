@@ -12,10 +12,11 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `87bea0388`. The prior exact-head
+The latest implementation head is `40a0ca9f1`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
-codepage-boundary correction, and no replacement matrix is published yet. RC
-readiness is not claimed while exact-head validation, the separate #4403
+codepage-boundary correction and #4811 SYS(3) compatibility slice, and no
+replacement matrix is published yet. RC readiness is not claimed while
+exact-head validation, the separate #4403
 arm's-length safety sign-off, and the #4409 protected launcher-trust gate
 remain open. The worktree is synchronized, and no Copperfin-owned process or
 test window is left running.
@@ -30,6 +31,13 @@ data-session isolation, and resistance to live SET mutation. This does not
 change DBF header encoding, `CPCONVERT()` policy, JSON keys, or other machine
 contracts. Windows/macOS native corroboration remains part of the hosted
 validation matrix.
+
+The #4811 SYS(3) slice now returns an extension-free eight-digit numeric legal
+temporary filename component instead of the previous product/version string.
+Successive calls are distinct within one runtime session, which supports the
+temp alias/file composition used by FFC and VFPSource. The focused
+`test_prg_engine_runtime_surface_functions` CTest passes `1/1`; `SYS(2015)`
+remains a separate procedure-name contract.
 
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper

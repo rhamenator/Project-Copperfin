@@ -22,6 +22,13 @@
   locally; DBF encoding, `CPCONVERT()`, and other machine contracts are
   unchanged.
 
+- Current SYS(3) status (2026-07-28, #4811 under #3217): the runtime returns
+  an extension-free eight-digit numeric temporary filename component, matching
+  VFP9's legal-file-name contract and the temp alias/file composition used by
+  FFC and VFPSource. Successive calls are distinct within one runtime session;
+  `SYS(2015)` remains separate procedure-name semantics. The focused
+  `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
+
 - Current fault-context status (2026-07-28, #4800 under #3217): native PRG
   diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and
   related error metadata bound to the original fault procedure while an
