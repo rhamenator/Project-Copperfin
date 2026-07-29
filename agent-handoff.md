@@ -2,6 +2,15 @@
 
 ## Current State
 
+The #4832 runtime numeric-formatting slice is implementation-complete. Numeric
+intermediate text in `STR()`, numeric `TRANSFORM()` pictures, display and
+index-expression formatting, and ordinary `PrgValue` conversion now imbues
+streams with `std::locale::classic()`. This preserves the period-decimal VFP
+and machine-text contract before session display settings apply. A custom
+comma-decimal process-global locale regression passes, as do the focused
+string/math target runs under the default environment, `pt_BR.UTF-8`, and
+`de_DE.UTF-8`. This is focused runtime evidence, not full RC evidence.
+
 Native macOS Release validation is complete for latest product/test head
 `52e56cd82`: Apple Clang built the tree and CTest passed `316/316` in
 `481.41s`, with only the documented `test_build_host_utf8_launcher_paths` and

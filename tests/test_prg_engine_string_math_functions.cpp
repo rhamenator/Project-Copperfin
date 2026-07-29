@@ -5,12 +5,14 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/platform/invariant_numeric.h"
 #include "../src/runtime/prg_engine_helpers.h"
+#include "../src/runtime/prg_engine_string_functions.h"
 #include "prg_engine_test_support.h"
 
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <locale>
 #include <system_error>
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -21,6 +23,101 @@ namespace
 {
 
     using namespace copperfin::test_support;
+
+    class comma_decimal_numpunct final : public std::numpunct<char>
+    {
+    protected:
+        char do_decimal_point() const override { return ','; }
+        char do_thousands_sep() const override { return '.'; }
+    };
+
+    class global_locale_guard final
+    {
+    public:
+        explicit global_locale_guard(const std::locale &replacement)
+            : previous_(std::locale::global(replacement))
+        {
+        }
+
+        ~global_locale_guard()
+        {
+            std::locale::global(previous_);
+        }
+
+        global_locale_guard(const global_locale_guard &) = delete;
+        global_locale_guard &operator=(const global_locale_guard &) = delete;
+
+    private:
+        std::locale previous_;
+    };
+
+    void test_numeric_formatting_ignores_host_global_locale()
+    {
+        const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+        global_locale_guard locale_guard(comma_locale);
+
+        const auto set_callback = [](const std::string &name) {
+            if (name == "DECIMALS") {
+                return std::string{"2"};
+            }
+            if (name == "FIXED") {
+                return std::string{"OFF"};
+            }
+            if (name == "POINT") {
+                return std::string{"."};
+            }
+            if (name == "SEPARATOR") {
+                return std::string{","};
+            }
+            return std::string{};
+        };
+
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_number_value(1234.5)) == "1234.5",
+            "#4832: ordinary numeric-to-string conversion should use invariant punctuation");
+
+        const std::string display = copperfin::runtime::format_value_for_display(
+            copperfin::runtime::make_number_value(1234.5),
+            set_callback);
+        expect(
+            display == "1,234.5",
+            "#4832: display formatting should apply VFP separators after invariant conversion, got " + display);
+
+        const auto str = copperfin::runtime::evaluate_string_function(
+            "str",
+            {copperfin::runtime::make_number_value(1234.5),
+             copperfin::runtime::make_number_value(10.0),
+             copperfin::runtime::make_number_value(2.0)},
+            false,
+            80U,
+            set_callback);
+        expect(
+            str.has_value() && copperfin::runtime::value_as_string(*str) == "   1234.50",
+            "#4832: STR() should not inherit a host comma decimal separator");
+
+        const auto transform = copperfin::runtime::evaluate_string_function(
+            "transform",
+            {copperfin::runtime::make_number_value(1234.5),
+             copperfin::runtime::make_string_value("999,999.99")},
+            false,
+            80U,
+            set_callback);
+        expect(
+            transform.has_value() && copperfin::runtime::value_as_string(*transform) == "1,234.50",
+            "#4832: numeric TRANSFORM() pictures should parse invariant intermediate text");
+
+        const auto digit_picture = copperfin::runtime::evaluate_string_function(
+            "transform",
+            {copperfin::runtime::make_number_value(1234.6),
+             copperfin::runtime::make_string_value("999999")},
+            false,
+            80U,
+            set_callback);
+        expect(
+            digit_picture.has_value() && copperfin::runtime::value_as_string(*digit_picture) == "  1235",
+            "#4832: digit-only numeric pictures should not count a host decimal separator as a digit, got " +
+                (digit_picture.has_value() ? copperfin::runtime::value_as_string(*digit_picture) : "<none>"));
+    }
 
     void test_string_and_math_expression_functions()
     {
@@ -1111,6 +1208,7 @@ namespace
 
 int main()
 {
+    test_numeric_formatting_ignores_host_global_locale();
     test_string_and_math_expression_functions();
     test_index_expression_trim_functions_preserve_non_space_whitespace();
     test_index_expression_padl_truncation_matches_runtime_padl();

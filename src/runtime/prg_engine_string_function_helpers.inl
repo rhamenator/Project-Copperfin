@@ -621,6 +621,7 @@ std::string format_digit_only_numeric_picture(double value, const std::string& p
 
     const bool negative = value < 0.0;
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::fixed << std::setprecision(0) << std::abs(value);
     const std::string digits = stream.str();
     if (digits.size() > width || (negative && digits.size() >= width)) {

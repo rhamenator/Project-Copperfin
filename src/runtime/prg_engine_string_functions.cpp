@@ -14,6 +14,7 @@
 #include <functional>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -45,6 +46,7 @@ std::string format_value_for_display(
     const bool fixed = fixed_setting == "on" || fixed_setting == "true" || fixed_setting == "yes" || fixed_setting == "1";
 
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::fixed << std::setprecision(decimals) << value.number_value;
     std::string formatted = stream.str();
     if (!fixed) {
@@ -589,6 +591,7 @@ std::optional<PrgValue> evaluate_string_function(
                                  ? static_cast<int>(std::max(0.0, value_as_number(arguments[2])))
                                  : 0;
         std::ostringstream stream;
+        stream.imbue(std::locale::classic());
         stream << std::fixed << std::setprecision(decimals) << value_as_number(arguments[0]);
         std::string result = stream.str();
         const int width = arguments.size() >= 2U
@@ -641,6 +644,7 @@ std::optional<PrgValue> evaluate_string_function(
                         }
                     }
                     std::ostringstream stream;
+                    stream.imbue(std::locale::classic());
                     stream << std::fixed << std::setprecision(static_cast<int>(decimals)) << value_as_number(arguments[0]);
                     transformed = apply_numeric_picture_symbols(
                         stream.str(),

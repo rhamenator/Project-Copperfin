@@ -1,3 +1,11 @@
+- 2026-07-29: Completed runtime numeric-formatting hardening for #4832. The
+  `STR()`, numeric `TRANSFORM()` picture, display, index-expression, and
+  ordinary `PrgValue` string paths now use the classic locale for intermediate
+  numeric text, so host C++ cultures cannot replace VFP's period-decimal
+  contract before `SET POINT`/`SET SEPARATOR` are applied. A custom comma-
+  decimal global-locale regression passes in the string/math target, as do
+  its default, `pt_BR.UTF-8`, and `de_DE.UTF-8` runs.
+
 - 2026-07-29: Implemented the #4831/#3217 `ISLEADBYTE()` compatibility slice.
   The runtime now applies the effective configured VFP code page, recognizes
   the documented lead-byte ranges for CP932, CP936, CP949, and CP950, and

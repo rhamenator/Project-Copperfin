@@ -17,6 +17,7 @@
 #include <functional>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -847,6 +848,7 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
                 }
 
                 std::ostringstream formatted;
+                formatted.imbue(std::locale::classic());
                 if (decimals > 0) {
                     formatted << std::fixed << std::setprecision(decimals) << *numeric;
                 } else {
@@ -1080,6 +1082,7 @@ std::string value_as_string(const PrgValue& value) {
             return value.boolean_value ? "true" : "false";
         case PrgValueKind::number: {
             std::ostringstream stream;
+            stream.imbue(std::locale::classic());
             if (std::abs(value.number_value - std::round(value.number_value)) < 0.000001) {
                 stream << std::llround(value.number_value);
             } else {
