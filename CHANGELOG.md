@@ -1,3 +1,9 @@
+- 2026-07-29: Completed the localization cleanup for the #4827 work-area
+  regression. Missing USE/report assets and all four deep continuation
+  call-depth checks now resolve active-catalog diagnostics instead of assuming
+  English. The rebuilt executable passes CTest `1/1` and direct
+  `COPPERFIN_LOCALE` runs `4/4` for `en-US`, `es-419`, `pt-BR`, and `qps-ploc`.
+
 - 2026-07-29: Hardened the #4827 work-area regression against localization.
   Error 13, 1596, and 1229 assertions now compare active-catalog messages,
   including the VFP-required terminal periods. The same target's pre-existing

@@ -20,7 +20,9 @@ direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and
 `qps-ploc`. Error 1229, 13, and 1596 assertions compare active-catalog text,
 including VFP's terminal punctuation, and the target's pre-existing missing-
 asset and call-depth checks no longer hard-code English. This is focused
-localization evidence, not full RC evidence.
+localization evidence, not full RC evidence. The missing USE/report asset and
+four deep continuation call-depth diagnostics are now also verified against
+the active catalog; the direct locale matrix is clean `4/4`.
 
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 `AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,
