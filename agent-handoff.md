@@ -2924,5 +2924,7 @@ workflow was failing before SBOM generation because Anchore SBOM Action
 workflow now explicitly requests available Syft `v1.50.0`, and the local CMake
 workflow contract requires that pin. Artifact ownership remains unchanged:
 Anchore generates only, `actions/upload-artifact` publishes exactly one
-`cyclonedx-sbom`, and the Trivy HIGH/CRITICAL gate remains enabled. A fresh
-hosted run is required before closing #4847.
+`cyclonedx-sbom`, and the Trivy HIGH/CRITICAL gate remains enabled. Hosted
+run `30490155212` passed at exact head `960fc8eb3`; the artifact API reports
+exactly one non-expired `cyclonedx-sbom` artifact of 3,838 bytes. #4847 is
+closed with this evidence.
