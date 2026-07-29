@@ -1,3 +1,10 @@
+- 2026-07-28: Implemented #4819 under #3217. Native PRG `SYS(2024)` now
+  returns character `Y`/`N` for session-local report interruption state,
+  recording active-report cancellation and QUIT/async cleanup while resetting
+  for a new report or explicit event-loop close. Focused work-area/report CTest
+  coverage passes `1/1`; report output and machine-readable contracts remain
+  unchanged.
+
 - 2026-07-28: Implemented #4818 under #3217. Native PRG `SYS(2040)` now
   returns numeric report status per runtime session: `0` when idle, `1` while
   a report or label preview is active, and `2` while output is rendered. The

@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `cd6ed713d`. Prior exact-head release
+The latest implementation head is `8ce1021b0`. Prior exact-head release
 matrices are superseded by the #4810 codepage correction, the #4811/#4812
 monotonic generator corrections, the numeric #4813 SYS(2029) correction, and
 the #4814/#4815 runtime slices, the #4816 automation-locale slice, and the
@@ -27,8 +27,13 @@ The #4818 SYS(2040) slice adds session-local report state to the native PRG
 runtime: `0` is idle, `1` is an active report/label preview, and `2` is active
 output rendering. Preview cleanup through `CLEAR EVENTS` and successful or
 failed output both return the state to `0`; the focused
-`test_prg_engine_work_areas` CTest passes `1/1`. SYS(2024) interruption
-semantics and broader ReportListener parity remain separate runtime slices.
+`test_prg_engine_work_areas` CTest passes `1/1`.
+
+The #4819 SYS(2024) slice adds session-local character interruption status:
+`N` is returned for idle or uninterrupted reports, and active report/label
+cancel, QUIT cleanup, or asynchronous cancellation records `Y`. Starting a
+new report or explicitly closing the report event loop clears the state.
+Broader ReportListener parity remains a separate runtime slice.
 
 The #4810 correction restores the VFP9 `CODEPAGE` boundary: it is read from
 `CONFIG.FPW` at startup, not changed by a live `SET CODEPAGE TO n` command.

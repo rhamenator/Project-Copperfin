@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current SYS(2024) status (2026-07-28, #4819 under #3217): the runtime now
+  returns character `N` when no report/label is active or the current report
+  has not been interrupted, and records character `Y` when active report
+  execution is cancelled or quit/async cleanup interrupts it. Starting a new
+  report or explicitly closing the report event loop clears the state. Focused
+  work-area/report CTest coverage passes `1/1`; full ReportListener parity
+  remains separate.
+
 - Current SYS(2040) status (2026-07-28, #4818 under #3217): the runtime now
   returns numeric report state per PRG runtime session: `0` when no report or
   label is active, `1` while a preview is in its event loop, and `2` while
