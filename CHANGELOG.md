@@ -1,3 +1,10 @@
+- 2026-07-29: Hardened the #4827 work-area regression against localization.
+  Error 13, 1596, and 1229 assertions now compare active-catalog messages,
+  including the VFP-required terminal periods. The same target's pre-existing
+  missing-asset and call-depth assertions now resolve catalog text instead of
+  hard-coding English. CTest and direct `COPPERFIN_LOCALE` runs pass `1/1` and
+  `4/4` for `en-US`, `es-419`, `pt-BR`, and `qps-ploc`.
+
 - 2026-07-29: Corrected the #4827/#3217 `GETNEXTMODIFIED()` contract to match
   VFP9: table-buffered modes 4/5 traverse pending records, while modes 1/2/3
   raise localized error 1596; missing arguments and aliases preserve errors

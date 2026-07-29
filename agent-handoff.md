@@ -15,6 +15,13 @@ final cross-platform review of that message correction is pending. Focused
 checks and both row-buffering modes. This is focused runtime evidence, not full
 RC evidence.
 
+The #4827 focused work-area regression is locale-complete on Linux: CTest and
+direct application-locale runs pass under `en-US`, `es-419`, `pt-BR`, and
+`qps-ploc`. Error 1229, 13, and 1596 assertions compare active-catalog text,
+including VFP's terminal punctuation, and the target's pre-existing missing-
+asset and call-depth checks no longer hard-code English. This is focused
+localization evidence, not full RC evidence.
+
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 `AT_C()` now returns 1-based positions over validated UTF-8 scalar sequences,
 preserves VFP's case-sensitive matching, and supports occurrence selection.
