@@ -289,6 +289,9 @@ namespace
             "ON ERROR DO HandleAtCError\n"
             "nUnexpectedNegative = AT_C('FE', 'caféFE猫FE', -1)\n"
             "ON ERROR\n"
+            "ON ERROR DO HandleAtCError\n"
+            "nUnexpectedNonfinite = AT_C('FE', 'caféFE猫FE', EXP(10000))\n"
+            "ON ERROR\n"
             "nAfterError = 42\n"
             "RETURN\n"
             "PROCEDURE HandleAtCError\n"
@@ -309,8 +312,8 @@ namespace
         expect(code != state.globals.end() && copperfin::runtime::format_value(code->second) == "11",
                "AT_C occurrence zero should report VFP error 11");
         const auto count = state.globals.find("ncapturedcount");
-        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "2",
-               "AT_C zero and negative occurrences should both report through ON ERROR");
+        expect(count != state.globals.end() && copperfin::runtime::format_value(count->second) == "3",
+               "AT_C zero, negative, and nonfinite occurrences should report through ON ERROR");
         const std::string captured_message = message == state.globals.end()
             ? std::string{}
             : copperfin::runtime::format_value(message->second);

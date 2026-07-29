@@ -6,8 +6,10 @@ The #4827/#3217 `GETNEXTMODIFIED()` slice is implementation-complete. Native
 PRG `GETNEXTMODIFIED()` traverses pending buffered records in ascending record
 number for the selected cursor or explicit alias/work-area target, accepts the
 VFP compatibility `lNoFire` argument, and returns zero after the pending set is
-exhausted or buffering is not enabled. Focused `test_prg_engine_work_areas`
-passes `1/1`, including `pt_BR.UTF-8` and `de_DE.UTF-8` executions. This is
+exhausted or when buffering is disabled or row-buffered (modes 1/2/3). Only
+table-buffered modes 4/5 are eligible, matching VFP9's documented contract.
+Focused `test_prg_engine_work_areas` passes `1/1`, including regression checks
+for both row-buffering modes and `pt_BR.UTF-8`/`de_DE.UTF-8` executions. This is
 focused runtime evidence, not full RC evidence.
 
 The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
@@ -15,7 +17,8 @@ The #4825/#3217 `AT_C()` slice is implementation-complete. Native PRG
 preserves VFP's case-sensitive matching, and supports occurrence selection.
 Empty and out-of-range searches return zero; zero, negative, and nonfinite
 occurrence values raise localized VFP error 11, while positive fractional
-occurrences retain VFP's truncation behavior. `ATCC()` remains the
+occurrences retain VFP's truncation behavior. Focused coverage includes
+nonfinite occurrence values produced by ordinary PRG expressions. `ATCC()` remains the
 case-insensitive scalar-safe path; existing byte-oriented `AT()`/`ATC()`
 contracts are unchanged. Focused `test_prg_engine_functions` and
 `test_prg_engine_string_math_functions` pass `2/2`, and the function target

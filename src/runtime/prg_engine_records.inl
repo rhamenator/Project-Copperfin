@@ -1874,7 +1874,7 @@
                 CursorState *cursor = arguments.size() >= 2U
                     ? cursor_for_argument(1U)
                     : resolve_cursor_target({});
-                if (cursor == nullptr || cursor->buffering_mode < 2 || cursor->buffering_mode > 5)
+                if (cursor == nullptr || cursor->buffering_mode < 4 || cursor->buffering_mode > 5)
                 {
                     return make_number_value(0.0);
                 }

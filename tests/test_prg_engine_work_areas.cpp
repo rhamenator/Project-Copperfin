@@ -2123,6 +2123,15 @@ void test_getnextmodified_traverses_buffered_records() {
         "nWorkArea = GETNEXTMODIFIED(0, 1, .T.)\n"
         "=TABLEREVERT(.T., 'People')\n"
         "nAfterRevert = GETNEXTMODIFIED(0, 'People')\n"
+        "=CURSORSETPROP('Buffering', 3, 'People')\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'ROW-OPTIMISTIC'\n"
+        "nRowBufferedOptimistic = GETNEXTMODIFIED(0, 'People')\n"
+        "=TABLEREVERT(.T., 'People')\n"
+        "=CURSORSETPROP('Buffering', 2, 'People')\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'ROW-PESSIMISTIC'\n"
+        "nRowBufferedPessimistic = GETNEXTMODIFIED(0, 'People')\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -2145,6 +2154,8 @@ void test_getnextmodified_traverses_buffered_records() {
     check("nalias", "1");
     check("nworkarea", "1");
     check("nafterrevert", "0");
+    check("nrowbufferedoptimistic", "0");
+    check("nrowbufferedpessimistic", "0");
 
     fs::remove_all(temp_root, ignored);
 }

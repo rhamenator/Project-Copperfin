@@ -1,3 +1,10 @@
+- 2026-07-29: Corrected the #4827/#3217 `GETNEXTMODIFIED()` buffering
+  boundary to match VFP9: traversal now applies only to table-buffered cursors
+  (modes 4/5), while row-buffered modes 2/3 return zero. Regression coverage
+  exercises both optimistic and pessimistic row buffering. The #4825 `AT_C()`
+  focused test now also covers nonfinite occurrence values through `EXP(10000)`
+  and verifies localized error 11 under all four application locales.
+
 - 2026-07-29: Implemented the VFP9 `GETNEXTMODIFIED()` buffered-record
   traversal slice under #4827/#3217. The function now walks pending buffered
   records in ascending record-number order for selected, alias, and work-area
