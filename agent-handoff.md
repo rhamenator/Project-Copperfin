@@ -40,6 +40,14 @@ temp alias/file composition used by FFC and VFPSource. The focused
 `test_prg_engine_runtime_surface_functions` CTest passes `1/1`; `SYS(2015)`
 remains a separate procedure-name contract.
 
+The #4813 SYS(2029) slice now reports the numeric DBF header table type for the
+selected physical cursor or a case-insensitive alias. The ordinary VFP DBF
+fixture returns `48`; no table, unknown aliases, invalid/unavailable physical
+bytes, and remote/synthetic cursors return `0`. The metadata stays internal to
+runtime inspection and is not serialized into the portable cursor XML format.
+The focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
+Windows and macOS read-only review remains requested before closing #4813.
+
 The required Windows DesignerSmoke wrapper now terminates and disposes its
 Copperfin-owned child process from `finally`, including when the wrapper
 itself fails after launch. The managed smoke runner already closes and

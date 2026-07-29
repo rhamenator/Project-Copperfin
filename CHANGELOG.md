@@ -1,3 +1,9 @@
+- 2026-07-28: Implemented #4813 under #3217. Native PRG `SYS(2029)` now
+  reports the physical DBF header table type for the current cursor or a
+  case-insensitive alias, returning `0` when no usable physical table is
+  available. Focused runtime-surface CTest passes `1/1`; remote/synthetic
+  cursor behavior and cursor XML contracts remain unchanged.
+
 - 2026-07-28: Implemented #4812 under #3217. Native PRG `SYS(2015)` now
   returns unique ten-character `_`-prefixed base-36 identifiers for generated
   procedures, aliases, cursors, and file stems, matching the mounted VFP9

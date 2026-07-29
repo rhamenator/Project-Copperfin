@@ -36,6 +36,14 @@
   generated names. Successive calls remain distinct within one runtime
   session; the focused runtime-surface CTest passes `1/1`.
 
+- Current SYS(2029) status (2026-07-28, #4813 under #3217): the runtime now
+  reports the numeric DBF header table type for the selected physical cursor
+  or a case-insensitive alias, including the VFP table value `48` for a normal
+  VFP DBF. No table, unknown aliases, invalid or unavailable physical bytes,
+  and remote/synthetic cursors return `0`. The type is runtime metadata only;
+  it is not added to the portable cursor XML contract. The focused
+  `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
+
 - Current fault-context status (2026-07-28, #4800 under #3217): native PRG
   diagnostic evaluation now keeps `PROGRAM()`, `SYS(16)`, `AERROR()`, and
   related error metadata bound to the original fault procedure while an
