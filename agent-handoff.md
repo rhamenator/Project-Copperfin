@@ -12,7 +12,7 @@ focused `test_prg_engine_runtime_surface_functions` target passes locally.
 This does not claim native OS-window enumeration or hosted window-manager
 behavior, which remain separate release evidence.
 
-The latest implementation head is `97f20f6fa`. The prior exact-head
+The latest implementation head is `1837dc161`. The prior exact-head
 release-validation matrix for `5fead206e` is superseded by the #4810
 codepage-boundary correction, #4811 SYS(3), and #4812 SYS(2015)
 compatibility slices. The replacement matrix at coordination/test head
