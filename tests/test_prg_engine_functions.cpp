@@ -614,7 +614,7 @@ namespace
         write_text(
             main_path,
             "lScalarQuestion = LIKEC('?','é')\n"
-            "lScalarQuestionTooMany = LIKEC('??','é')\n"
+            "lScalarQuestionTooMany = LIKEC('?" "?','é')\n"
             "lMixedPattern = LIKEC('c?fé','café')\n"
             "lStarPattern = LIKEC('*猫*','前猫後')\n"
             "lMismatch = LIKEC('c?fé','cafe')\n"
@@ -622,7 +622,7 @@ namespace
             "lByteLike = LIKE('?', 'é')\n"
             "RETURN\n");
 
-        const copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(main_path.string(), temp_root.string()));
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         expect(state.completed, "LIKEC UTF-8 scalar script should complete");

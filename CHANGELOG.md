@@ -1,3 +1,9 @@
+- 2026-07-29: Fixed the #4826 `LIKEC()` focused test for Apple Clang by
+  keeping its mutable runtime session non-const and spelling the adjacent
+  question-mark fixture without triggering a C++ trigraph warning. The target
+  now builds on macOS, passes its focused CTest `1/1`, and passes direct runs
+  under `pt_BR.UTF-8` and `de_DE.UTF-8`; runtime behavior is unchanged.
+
 - 2026-07-29: Implemented the VFP9 `LIKEC()` character-safe wildcard
   function under #4826/#3217. `*` matches any number of validated UTF-8
   scalar sequences and `?` matches exactly one scalar, while matching remains
