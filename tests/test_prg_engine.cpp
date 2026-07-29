@@ -20,6 +20,7 @@
 #include <unistd.h>
 #define _getpid getpid
 #endif
+#include <locale>
 #include <sstream>
 #include <system_error>
 #include <vector>
@@ -38,6 +39,71 @@ void test_verified_source_errors_are_localized();
 namespace {
 
 using namespace copperfin::test_support;
+
+class comma_decimal_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class scoped_global_locale {
+public:
+    explicit scoped_global_locale(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~scoped_global_locale() { std::locale::global(previous_); }
+
+    scoped_global_locale(const scoped_global_locale&) = delete;
+    scoped_global_locale& operator=(const scoped_global_locale&) = delete;
+
+private:
+    std::locale previous_;
+};
+
+void test_insert_select_numeric_serialization_ignores_global_locale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_insert_select_locale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path destination_path = temp_root / "destination.dbf";
+    const fs::path main_path = temp_root / "main.prg";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "VALUE", .type = 'N', .offset = 1U, .length = 10U, .decimal_count = 2U}
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), fields, {{"1.25"}});
+    const auto destination_create = copperfin::vfp::create_dbf_table_file(
+        destination_path.string(), fields, {});
+    expect(source_create.ok && destination_create.ok,
+           "INSERT SELECT locale fixtures should be created");
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS SourceRows IN 0\n"
+        "USE '" + destination_path.string() + "' ALIAS DestinationRows IN 0\n"
+        "INSERT INTO DestinationRows (VALUE) SELECT VALUE + 0.25 FROM SourceRows\n"
+        "SELECT DestinationRows\n"
+        "nInserted = RECCOUNT()\n"
+        "RETURN\n");
+
+    const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
+    scoped_global_locale locale_guard(comma_locale);
+    auto session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "INSERT SELECT numeric serialization should remain executable under a comma-decimal global locale: " +
+               state.message);
+    const auto inserted = state.globals.find("ninserted");
+    expect(inserted != state.globals.end() &&
+               copperfin::runtime::format_value(inserted->second) == "1",
+           "INSERT SELECT should materialize one row when numeric text remains period-decimal");
+
+    fs::remove_all(temp_root, ignored);
+}
 
 void test_runtime_session_options_contain_temporary_files() {
     namespace fs = std::filesystem;
@@ -1905,6 +1971,7 @@ void test_transaction_commands_without_active_transaction_fault() {
 }  // namespace
 
 int main() {
+    test_insert_select_numeric_serialization_ignores_global_locale();
     test_runtime_session_options_contain_temporary_files();
     test_verified_startup_source_text_overrides_changed_disk_source();
     test_verified_source_errors_are_localized();
