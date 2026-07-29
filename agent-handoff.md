@@ -2,6 +2,14 @@
 
 ## Current State
 
+The #4821 SYS(2021) slice implements VFP9 filtered-index-expression lookup
+  through the existing open-cursor metadata. It returns the 1-based `FOR`
+  expression as character text, supports explicit aliases, returns empty text
+  for invalid/missing/remote/synthetic/out-of-range requests, and preserves
+  cursor position. The metadata is runtime-only and does not alter cursor XML.
+  Focused `test_prg_engine_runtime_surface_functions` CTest passes `1/1`.
+  Product commit: `2412d1500`.
+
 The #4820 SYS(2030) slice implements VFP9's numeric, session-local
 debug-feature switch. `SYS(2030)` starts at `0`, optional values `0` and `1`
 update it, invalid values preserve the current state, and the portable

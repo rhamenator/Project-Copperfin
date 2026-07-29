@@ -1,3 +1,9 @@
+- 2026-07-28: Implemented #4821 under #3217. Native PRG `SYS(2021, nIndexNumber
+  [, nWorkArea | cTableAlias])` now returns filtered index/tag `FOR`
+  expressions as character text from the existing open-cursor metadata. Invalid,
+  missing, remote, and out-of-range requests return empty text without changing
+  cursor state. Focused runtime-surface CTest coverage passes `1/1`.
+
 - 2026-07-28: Implemented #4820 under #3217. Native PRG `SYS(2030)` now
   returns and updates a numeric, session-local debug-feature switch for
   supported values `0` and `1`; invalid setter values preserve the current

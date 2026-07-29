@@ -1,5 +1,13 @@
 # VFP Language Reference Coverage
 
+- Current SYS(2021) status (2026-07-28, #4821 under #3217): the runtime now
+  returns the 1-based filtered index/tag `FOR` expression for the selected
+  open cursor as character text, using the existing parsed order metadata.
+  Explicit aliases use the same cursor-resolution seam; invalid, missing,
+  remote, synthetic, and out-of-range requests return empty text without
+  changing cursor position. The metadata remains runtime-only and is not added
+  to portable cursor XML. Focused runtime-surface CTest coverage passes `1/1`.
+
 - Current SYS(2030) status (2026-07-28, #4820 under #3217): the runtime now
   implements the mounted VFP9 contract as a numeric, session-local
   debug-feature switch. `SYS(2030)` starts at `0`; `SYS(2030, 1)` enables the
