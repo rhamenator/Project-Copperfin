@@ -15,6 +15,10 @@
   `WVISIBLE()`. Hidden modeled windows remain existent, while unknown and
   non-visual names remain absent; the focused runtime-surface test passes.
 
+- 2026-07-29: The #4809 product head `5fead206e` supersedes the prior
+  exact-head hosted matrix. A new matrix is running; no RC evidence is claimed
+  until it resolves at the new head.
+
 - 2026-07-28: Refreshed the handoff and roadmap release matrix at product
   head `7587be12f`: Security Supply Chain, VSIX, Linux Managed UI, and
   Executable Path are green; Windows Native and the remaining hosted native,
