@@ -2,6 +2,18 @@
 
 ## Current State
 
+The #4875/#27 portable include-path slice is implemented at exact product/test
+head `e41325472`. Language-service include resolution now walks actual
+filesystem entries, preferring an exact component and otherwise accepting only
+one ordinal-ignore-case match. External direct and recursive unquoted headers
+preserve their actual path spelling in definition provenance; a case-colliding
+exact match wins, while a non-exact case-fold ambiguity admits neither header.
+Every fixture header lives outside the project root, so ordinary project
+enumeration cannot satisfy the assertions. The Release
+`Copperfin.LanguageServiceTests` harness passes on Linux. Exact-head Windows
+VSIX and cross-platform review remain pending. No user-facing text, catalogs,
+package, runtime, debug, or trust contract changed.
+
 The #4874/#27 editor-symbol include slice is implemented at product head
 `e70c89e87`, with corrected direct regression head `765a31bc7`. The
 language-service project scanner now follows common

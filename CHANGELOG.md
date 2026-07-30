@@ -1,3 +1,12 @@
+- 2026-07-30: Implemented #4875/#27 unique mixed-case include resolution for
+  external editor symbol chains. Each filesystem component now prefers an
+  exact match and otherwise accepts only one case-folded match, preserving the
+  actual matched path spelling; direct and recursive external headers resolve,
+  exact case wins over a case-colliding sibling, and non-exact ambiguity fails
+  closed. All fixture headers are outside the project root, and the Release
+  language-service harness passes on Linux. Exact-head Windows VSIX and
+  cross-platform review remain pending.
+
 - 2026-07-30: Implemented #4874/#27 editor symbol discovery for common
   unquoted VFP `#INCLUDE` operands. Direct and recursively included headers now
   contribute preprocessor definitions and token descriptions without treating

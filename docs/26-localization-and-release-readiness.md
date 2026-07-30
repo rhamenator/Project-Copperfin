@@ -153,6 +153,14 @@ Earlier Windows VSIX run `30522120280` and macOS seq1268 accepted the product
 change but predate the corrected fixture; #4874 is reopened pending exact-head
 hosted Windows validation. Broader #27 remains open.
 
+#4875 at exact product/test head `e41325472` adds no user-facing text or catalog
+keys. It changes only filesystem lookup for external editor include symbols:
+exact components retain precedence, a unique ordinal-ignore-case component
+preserves actual spelling, and ambiguity fails closed. Symbol names,
+descriptions, completion kinds, package/runtime/debug behavior, and trust
+boundaries remain unchanged. The focused Release managed harness passes on
+Linux; exact-head Windows VSIX and cross-platform review remain pending.
+
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
 Windows path/package contract validation. #4757-#4769 are closed with their

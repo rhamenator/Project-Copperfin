@@ -297,6 +297,13 @@ Earlier Windows VSIX run `30522120280` accepted the product change but predates
 the corrected fixture. Issue #4874 is reopened for exact-head hosted Windows
 validation; the broader #27 parent stays open.
 
+Follow-on G1 child #4875 at exact product/test head `e41325472` aligns external
+and recursively external editor include lookup with VFP path casing semantics:
+exact filesystem components win, one unique case-folded match is accepted with
+actual spelling, and ambiguity fails closed. The focused Release managed
+harness passes on Linux; exact-head Windows VSIX and cross-platform review are
+pending, and broader #27 remains open.
+
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three
 `B<n>/#<issue>` occurrences in the repo's history are two unrelated one-off
