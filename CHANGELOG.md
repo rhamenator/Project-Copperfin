@@ -6,7 +6,7 @@
   creating or mutating a DBF. Four-decimal invariant display, ordinary/null
   currency values, field layout, and atomic replacement remain unchanged. The
   focused DBF target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on
-  Linux; cross-platform review remains required.
+  Linux, macOS/AppleClang, and Windows/MSVC; #4866 is closed.
 
 - 2026-07-30: Hardened #4865/#3217 Windows-message handler result coercion.
   String results returned through the native `BINDEVENT()` dispatch lane now
@@ -16,8 +16,8 @@
   Numeric handler results, wildcard bindings, current-event `AEVENTS()`
   metadata, `READ EVENTS` restoration, and localized behavior remain
   unchanged. The focused runtime-surface target passes under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang review
-  remains required.
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
+  Windows/MSVC; #4865 is closed.
 
 - 2026-07-30: Hardened #4864/#3217 opaque runtime object identities. The
   shared `object:<prog-id>#<handle>` parser now requires a complete invariant

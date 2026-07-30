@@ -82,14 +82,15 @@ Windows/MSVC. Issue #4864 is closed.
 Windows-message handler strings remain invariant host-return data and now
 require a complete signed pointer-sized integer before numeric coercion. The
 focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang acceptance and exact-head
-hosted native evidence remain pending.
+`de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC. Issue #4865 is
+closed; exact-head hosted native evidence remains separately nonterminal.
 
 #4866 at product head `416e8d123` adds no user-facing text or catalog keys.
 DBF Currency (`Y`) input remains invariant machine/storage text, and boundary
 rejection uses the existing localized invalid-currency diagnostic. The focused
-DBF target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux;
-AppleClang/MSVC acceptance and exact-head hosted evidence remain pending.
+DBF target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4866 is closed; exact-head hosted
+evidence remains separately nonterminal.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

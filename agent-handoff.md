@@ -10,8 +10,8 @@ signed overflow. One-unit positive/negative overflow is rejected through the
 existing localized error before mutation; focused coverage proves rejected
 replacements leave the existing DBF byte-for-byte unchanged and rejected
 creates materialize no file. The DBF target passes under default,
-`pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux. AppleClang and MSVC review remain
-required before closing #4866. This is focused evidence, not full RC evidence.
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC.
+Issue #4866 is closed. This is focused evidence, not full RC evidence.
 
 The #4865/#3217 Windows-message handler-result slice is implemented at
 product/test head `6b226ba33`. The native `BINDEVENT()` dispatch lane now
@@ -22,8 +22,8 @@ overflowing strings fail closed to zero. The focused headless regression
 dispatches real messages, restores `READ EVENTS`, and preserves numeric
 handler results, wildcard bindings, and current-event `AEVENTS()` metadata.
 The runtime-surface target passes under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8` on Linux and Windows/MSVC. AppleClang review remains required
-before closing #4865. This is focused evidence, not full RC evidence.
+`de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC. Issue #4865 is
+closed. This is focused evidence, not full RC evidence.
 
 The #4864/#3217 opaque runtime object-identity slice is implemented at
 product/test head `d21415cbf`. The shared
