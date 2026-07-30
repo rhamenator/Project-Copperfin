@@ -61,6 +61,7 @@ file(READ "${WORKFLOW}" WORKFLOW_CONTENT)
 foreach(REQUIRED_TEXT IN ITEMS
     "workflow_dispatch:"
     "    environment: release"
+    "permissions:\n  contents: read\n\njobs:"
     "secrets.COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER"
     "secrets.COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM"
     "inputs.signer_key_id"
@@ -78,6 +79,14 @@ foreach(REQUIRED_TEXT IN ITEMS
         message(FATAL_ERROR "Windows launcher trust workflow is missing required contract text: ${REQUIRED_TEXT}")
     endif()
 endforeach()
+
+string(REGEX MATCHALL "contents:[ ]*read" CONTENTS_READ_PERMISSIONS
+    "${WORKFLOW_CONTENT}")
+list(LENGTH CONTENTS_READ_PERMISSIONS CONTENTS_READ_PERMISSION_COUNT)
+if(NOT CONTENTS_READ_PERMISSION_COUNT EQUAL 1)
+    message(FATAL_ERROR
+        "Windows launcher trust workflow must retain exactly one contents: read permission")
+endif()
 
 string(REGEX MATCHALL "environment:[ ]*release" RELEASE_ENVIRONMENT_BINDINGS
     "${WORKFLOW_CONTENT}")
