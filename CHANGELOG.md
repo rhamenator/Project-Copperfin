@@ -1,3 +1,12 @@
+- 2026-07-30: Hardened #4868/#110 generated library API arities against
+  grouped host locales. DLL/OCX and FLL API manifest streams now use the
+  classic locale before serializing parsed PRG parameter counts. A real
+  12-parameter declaration proves both manifests emit invariant `12`, never
+  grouped `1.2`, while export identity, parameter names/order, provenance, and
+  wrapper behavior remain unchanged. The focused runtime-pipeline target passes
+  under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; cross-platform
+  review remains required.
+
 - 2026-07-30: Hardened #4867/#111 report/label fixed-decimal metadata.
   Studio object snapshots and report-layout summaries now share one complete
   fixed-decimal-to-truncated-integer parser. Malformed trailing, grouped,
@@ -6,8 +15,8 @@
   fixed decimals retain their existing truncation. Raw setting provenance,
   report/label identity, stable JSON, localization, and supported layouts
   remain unchanged. Both focused layout/classification targets pass under
-  default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; cross-platform review
-  remains required.
+  default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
+  Windows/MSVC; #4867 is closed.
 
 - 2026-07-30: Hardened #4866/#109 DBF Currency (`Y`) signed-boundary
   admission. Text-to-storage scaling now computes an unsigned magnitude against

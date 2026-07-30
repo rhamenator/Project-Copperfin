@@ -2,6 +2,16 @@
 
 ## Current State
 
+The #4868/#110 generated library API-arity slice is implemented at exact
+product/test head `858e56929`. DLL/OCX and FLL API manifest streams now imbue
+the classic locale before emitting machine-readable parameter counts. A real
+parsed `WideCall` PRG with 12 `LPARAMETERS` proves both manifests emit
+`function_arity=WideCall|12`, never locale-grouped `1.2`, while preserving
+export identity and parameter names/order. `test_runtime_pipeline` passes on
+Linux under default (65.61s), `pt_BR.UTF-8` (89.39s), and `de_DE.UTF-8`
+(63.13s), 3/3 runs. AppleClang and MSVC read-only review remain required before
+closing #4868. This is focused evidence, not full RC evidence.
+
 The #4867/#111 report/label fixed-decimal metadata slice is implemented at
 product/test head `a2a64427d`. Studio document snapshots and report-layout
 summaries share complete fixed-decimal-to-truncated-`int` parsing. Real FRX/LBX
@@ -11,8 +21,8 @@ setup, while raw setting provenance and stable JSON remain inspectable. Valid
 fixed decimals retain truncation. `test_report_layout` and the hosted
 `test_studio_host_report_layout_classifications` executable pass under default,
 `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux (6/6 combinations). AppleClang and
-MSVC review remain required before closing #4867. This is focused evidence,
-not full RC evidence.
+Windows/MSVC pass the same 6/6 combinations at the exact product/test head.
+Issue #4867 is closed. This is focused evidence, not full RC evidence.
 
 The #4866/#109 DBF Currency (`Y`) signed-boundary slice is implemented at
 product/test head `416e8d123`. Text-to-storage scaling computes an unsigned

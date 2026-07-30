@@ -23,7 +23,7 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `a2a64427d`, while subsequent
+latest product implementation head is `858e56929`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
 Native `30329037575` and
 macOS Native `30329037567` passed their native
@@ -96,8 +96,16 @@ evidence remains separately nonterminal.
 FRX/LBX numeric metadata remains invariant storage text; malformed values stay
 visible through existing raw provenance without becoming localized display
 fields or fabricated layout state. Both focused layout/classification targets
-pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
-acceptance and exact-head hosted evidence remain pending.
+pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and
+macOS/AppleClang and Windows/MSVC. Issue #4867 is closed; exact-head hosted
+release evidence remains separate.
+
+#4868 at product head `858e56929` adds no user-facing text or catalog keys.
+Generated DLL/OCX and FLL API manifest arities remain invariant machine
+metadata and now explicitly use the classic locale. The focused
+runtime-pipeline target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+on Linux; AppleClang/MSVC acceptance and exact-head hosted evidence remain
+pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

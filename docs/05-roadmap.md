@@ -118,14 +118,17 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `a2a64427d` (the current branch may
-also contain documentation-only coordination commits). Its exact-head hosted
-matrix is newly triggered and nonterminal. At the preceding product head
-`416e8d123`, Security Supply Chain (`30517001140`), Linux Managed UI
-(`30517001127`), and Visual Studio VSIX (`30517001134`) passed before the later
-product push superseded remaining active lanes. The focused report-layout and
-hosted classification targets pass locally under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8`; this is not a broad RC claim.
+The latest product implementation head is `858e56929` (the current branch may
+also contain documentation-only coordination commits). The focused
+runtime-pipeline target passes locally under default, `pt_BR.UTF-8`, and
+`de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain
+pending. At preceding product head `a2a64427d`, Security Supply Chain
+(`30517688033`), Linux Managed UI (`30517688039`), Executable Path
+(`30517688026`), and Visual Studio VSIX (`30517688000`) passed while the native
+and package lanes remained active. The #4867 report-layout/classification
+targets pass under all three locale environments on Linux, macOS/AppleClang,
+and Windows/MSVC, closing that implementation child. None of this focused or
+superseded hosted evidence is a broad RC claim.
 
 The immediately preceding terminal hosted matrix at product head `ca7889efa`
 is green for Linux Native (`30511406972`), macOS Native

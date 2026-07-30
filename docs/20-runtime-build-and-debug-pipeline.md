@@ -134,6 +134,13 @@ Current package layout:
   - both manifests record package-relative `launcher_artifact` provenance and SHA-256 digests; these lines are inventory, not a claim that the post-launch runtime manifest protects files that execute before it is read
   - the additive `app.cftrust`/`app.cftrust.sig` Windows trust contract is defined in `docs/29-package-trust-contract.md`; the launcher guard now verifies present trust sidecars before managed startup, and release builds must enable `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON` with an out-of-tree approved public-key registry before claiming the Windows fail-closed boundary
 
+Generated DLL/OCX and FLL API manifests are also machine-readable contracts.
+Their `function_arity=<export>|<count>` values use invariant ASCII decimal
+digits regardless of the host locale; parameter names and their source order
+remain separate pipe-delimited fields. Product head `858e56929` covers this
+boundary with a real parsed 12-parameter PRG under default, `pt_BR.UTF-8`, and
+`de_DE.UTF-8`, requiring `12` rather than grouped `1.2` in both manifest forms.
+
 Current CLI flow:
 
 ```powershell
