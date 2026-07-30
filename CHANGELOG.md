@@ -5,8 +5,8 @@
   being rounded into a different row or item. Valid positive selectors,
   default columns, variable/arithmetic expressions, and out-of-range behavior
   remain unchanged. Focused runtime-surface tests pass under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8` Linux locales; cross-platform review remains
-  required before closure.
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
+  Windows/MSVC; #4855 is closed.
 
 - 2026-07-29: Hardened #4854/#3217 runtime integer parsing. Runtime config
   limits/code pages and SYS(2326/2327) handle strings now require complete
