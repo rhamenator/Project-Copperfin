@@ -8,7 +8,8 @@ C# string helper now delegates to the shared complete platform JSON escaper.
 Real PRG statements carrying byte `0x1f` require the canonical six-character
 escape (backslash followed by `u001f`) in AST JSON, IR JSON, and transpiled C#,
 reject the raw byte in every artifact, and the generated C# still compiles.
-The full focused `test_runtime_pipeline` CTest passes `1/1` in 63.33s on Linux.
+The full focused `test_runtime_pipeline` CTest passes `1/1` on Linux under
+default (63.33s), `pt_BR.UTF-8` (60.02s), and `de_DE.UTF-8` (61.27s).
 AppleClang and MSVC read-only acceptance remain required before closure. No
 user-facing text, catalogs, AST/IR fields or schema versions, manifest/debug
 paths, package trust, or stack behavior changed.

@@ -309,8 +309,8 @@ Current D-lane machine-contract evidence includes #4876 at exact product/test
 head `28b2f3322`: AST/IR JSON and generated C# string literals share the
 complete platform control escaper, with real source-derived byte `0x1f`
 coverage across all three generated artifacts. The focused runtime-pipeline
-suite passes on Linux; AppleClang/MSVC acceptance and broader #110/release
-evidence remain pending.
+suite passes on Linux under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`;
+AppleClang/MSVC acceptance and broader #110/release evidence remain pending.
 
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three

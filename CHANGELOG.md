@@ -3,8 +3,8 @@
   now delegates to the shared platform JSON escaper, and real PRG statements
   carrying byte `0x1f` require the canonical backslash-plus-`u001f` form with
   no raw control byte in all three artifacts; generated C# compilation remains
-  covered. Full focused `test_runtime_pipeline` passes on Linux; AppleClang and
-  MSVC review remain pending.
+  covered. Full focused `test_runtime_pipeline` passes on Linux under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; AppleClang and MSVC review remain pending.
 
 - 2026-07-30: Implemented #4875/#27 unique mixed-case include resolution for
   external editor symbol chains. Each filesystem component now prefers an

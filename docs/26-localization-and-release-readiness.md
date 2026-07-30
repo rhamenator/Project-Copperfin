@@ -170,7 +170,8 @@ byte `0x1f` coverage requires canonical backslash-plus-`u001f` output and no
 raw control byte in all three artifacts while generated C# compilation remains
 green. AST/IR fields and schemas, invariant identifiers, manifest/debug paths,
 and package trust remain unchanged. The focused runtime-pipeline suite passes
-on Linux; AppleClang/MSVC acceptance remains pending.
+on Linux under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; AppleClang/MSVC
+acceptance remains pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
