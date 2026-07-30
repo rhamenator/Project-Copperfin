@@ -1,3 +1,17 @@
+- 2026-07-30: Implemented #4889/#26 standalone Studio Edit/Undo routing at
+  product head `631e6b61a` and final combined test head `34d59811d`. Localized
+  Edit/Undo chrome queries the active shared editor's existing undo contracts,
+  refreshes on menu opening/tab changes/invocation, and safely rejects empty or
+  closed documents. Ctrl+Z routes only while document tabs contain focus and
+  bypasses base menu processing otherwise, preserving Command/Terminal input
+  undo even against a competing host-backed document stack. The 12-assertion
+  focused smoke, full standalone sequence, and warning-free Release build pass.
+  Exact final-head Linux UI run `30537389819` and VSIX run `30537389825` pass;
+  artifacts `8757244424` and `8757267024` have recorded SHA-256 digests. Native
+  Windows passes all 13 assertions under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8`, including reversible Win32 single-level undo and clean teardown;
+  #4889 is closed.
+
 - 2026-07-30: Completed #4888/#26 standalone Studio project commands at
   product/test head `192ef78bd`. A localized Project menu now routes Build, Run
   Without Debugging, and Start Debugging to the active PJX editor's existing

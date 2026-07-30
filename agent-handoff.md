@@ -2,6 +2,30 @@
 
 ## Current State
 
+The #4889/#26 standalone Undo-command slice is implemented at product head
+`631e6b61a` and final combined test head `34d59811d`. Copperfin Studio now has
+localized Edit/Undo chrome and Ctrl+Z routing through the active shared editor's
+existing undo contracts. Menu opening refreshes the command text/availability;
+menu invocation remains active-document scoped. Keyboard routing is additionally
+gated to document-tab focus and bypasses base menu processing, so Command and
+Terminal inputs retain their own undo stacks even when a document host advertises
+Undo. Empty and closed-document states reject safely. The focused real WinForms
+smoke passes 12 portable assertions, including competing tool-input and host-
+backed undo stacks, and the complete standalone sequence passes after explicit
+dropdown cleanup. Release DesignerSmoke builds warning-free.
+
+Exact final-head Linux managed-UI run `30537389819` passes and uploads artifact
+`8757244424` with SHA-256
+`eebc0e23c681155d257037db051b7ad40a80696c34bb9bfef5445c9707050591`.
+VSIX run `30537389825` also passes and uploads artifact `8757267024` with
+SHA-256 `21e1fed5e94e2d69dc4036bae8a8acfe4d739ab977a29671894befb667452dba`.
+Native Windows reruns pass all 13 reported assertions under default,
+`pt_BR.UTF-8`, and `de_DE.UTF-8`, including the Win32 reversible single-level
+undo state, with clean process and temporary-root teardown. Linux/macOS reviews
+also pass. #4889 is closed; broader #26/#112 and RC validation remain open. No
+runtime, package, localization-key, or stub fallback contract changed beyond
+the new localized menu labels.
+
 The #4888/#26 standalone project-command slice is implemented at exact product/
 test head `192ef78bd`. Copperfin Studio now exposes localized Project-menu
 Build, Run Without Debugging, and Start Debugging commands using the conventional

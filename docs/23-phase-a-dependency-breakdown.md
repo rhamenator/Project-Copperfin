@@ -33,6 +33,16 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent F2 standalone Undo-command slice: `#4889` adds localized Edit/Undo
+  chrome and routes menu invocation through the active shared editor's existing
+  undo contract. Ctrl+Z is additionally gated to document-tab focus and bypasses
+  base menu routing, preserving Command/Terminal text undo against a competing
+  host-backed document stack. Product head `631e6b61a` and combined test head
+  `34d59811d` pass the focused 12-assertion and full standalone sequences. Exact
+  final-head Linux UI run `30537389819` and VSIX run `30537389825` pass;
+  artifacts `8757244424` and `8757267024` were uploaded. Native Windows passes
+  all 13 assertions under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`, including
+  reversible single-level undo and clean teardown; the child is closed.
 - Recent F2 standalone project-command slice: `#4888` adds localized Project-
   menu Build, Run Without Debugging, and Start Debugging commands with
   Ctrl+Shift+B, Ctrl+F5, and F5. Active PJX gating delegates to the shared editor

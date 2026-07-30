@@ -28,6 +28,17 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current standalone Undo evidence includes #4889 at product head `631e6b61a`
+and final combined test head `34d59811d`: localized Edit/Undo chrome delegates
+to the active shared editor's existing text and host-backed undo contracts.
+Ctrl+Z is document-focus scoped and cannot steal a competing Command/Terminal
+input undo stack; menu invocation remains active-document scoped. The focused
+12-assertion and full standalone UI sequences pass, as do exact final-head Linux
+managed-UI run `30537389819` and VSIX run `30537389825`. Artifacts `8757244424`
+and `8757267024` retain their GitHub SHA-256 digests. Native Windows passes all
+13 assertions in three locale modes, including the reversible Win32 undo state.
+The child is closed; broader #26/#112 and RC validation remain separate.
+
 Current class-property navigation evidence includes #4887 at product/test head
 `9f8f425cf`: Project Insights retains qualified definitions and dotted
 references, rename preview normalizes only unique property names, and ambiguous,
