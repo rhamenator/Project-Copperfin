@@ -1,3 +1,14 @@
+- 2026-07-30: Hardened #4867/#111 report/label fixed-decimal metadata.
+  Studio object snapshots and report-layout summaries now share one complete
+  fixed-decimal-to-truncated-integer parser. Malformed trailing, grouped,
+  multiple-decimal, and overflowing FRX/LBX values cannot prefix-classify an
+  object or section or fabricate page-setup state; valid signed/fractional
+  fixed decimals retain their existing truncation. Raw setting provenance,
+  report/label identity, stable JSON, localization, and supported layouts
+  remain unchanged. Both focused layout/classification targets pass under
+  default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; cross-platform review
+  remains required.
+
 - 2026-07-30: Hardened #4866/#109 DBF Currency (`Y`) signed-boundary
   admission. Text-to-storage scaling now computes an unsigned magnitude against
   the sign-specific 64-bit limit, accepting the exact positive maximum and

@@ -122,6 +122,12 @@
   before file creation or replacement, and preserves invariant four-decimal
   display plus the existing localized invalid-currency diagnostic.
 
+- Report/label fixed-decimal metadata correction (2026-07-30, #4867 under
+  #111): Studio snapshots and layout summaries require complete fixed-decimal
+  integer metadata before truncation, so malformed fractional suffixes cannot
+  prefix-classify FRX/LBX objects/sections or fabricate page-setup state while
+  valid signed/fractional values retain existing behavior.
+
 - SYS(2022) Windows path correction (2026-07-29, #4823 under #3217): existing
   file and nested-path inputs now resolve to their volume root before the
   Windows allocation-unit query, preserving character return and unavailable
