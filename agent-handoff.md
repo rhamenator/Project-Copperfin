@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4869/#110 generated native-wrapper numeric-literal slice is implemented
+at exact product/test head `c86be275f`. DLL/OCX and FLL wrapper C++ now uses
+the classic locale before embedding parsed source lines and parameter counts.
+A real `WideCall` PRG declared on line 1234 with 12 `LPARAMETERS` proves both
+branches emit invariant `1234U` and `12U`, never grouped `1.2.3.4U`/`1.2U`,
+while preserving escaped parameter order/names, export identity, provenance,
+dispatch, and placeholder/admission boundaries. `test_runtime_pipeline` passes
+on Linux under default (61.93s), `pt_BR.UTF-8` (63.00s), and `de_DE.UTF-8`
+(62.97s), 3/3 runs. AppleClang and MSVC review remain required before closing
+#4869. This is focused evidence, not full RC evidence.
+
 The #4868/#110 generated library API-arity slice is implemented at exact
 product/test head `858e56929`. DLL/OCX and FLL API manifest streams now imbue
 the classic locale before emitting machine-readable parameter counts. A real
@@ -9,8 +20,9 @@ parsed `WideCall` PRG with 12 `LPARAMETERS` proves both manifests emit
 `function_arity=WideCall|12`, never locale-grouped `1.2`, while preserving
 export identity and parameter names/order. `test_runtime_pipeline` passes on
 Linux under default (65.61s), `pt_BR.UTF-8` (89.39s), and `de_DE.UTF-8`
-(63.13s), 3/3 runs. AppleClang and MSVC read-only review remain required before
-closing #4868. This is focused evidence, not full RC evidence.
+(63.13s), 3/3 runs, with independent Linux review at channel seq1246.
+AppleClang seq1247 and Windows/MSVC seq1248 pass the same three-locale matrix.
+Issue #4868 is closed. This is focused evidence, not full RC evidence.
 
 The #4867/#111 report/label fixed-decimal metadata slice is implemented at
 product/test head `a2a64427d`. Studio document snapshots and report-layout

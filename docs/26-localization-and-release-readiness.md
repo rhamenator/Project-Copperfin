@@ -23,7 +23,7 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `858e56929`, while subsequent
+latest product implementation head is `c86be275f`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
 Native `30329037575` and
 macOS Native `30329037567` passed their native
@@ -104,8 +104,15 @@ release evidence remains separate.
 Generated DLL/OCX and FLL API manifest arities remain invariant machine
 metadata and now explicitly use the classic locale. The focused
 runtime-pipeline target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
-on Linux; AppleClang/MSVC acceptance and exact-head hosted evidence remain
-pending.
+on Linux, macOS/AppleClang, and Windows/MSVC. Issue #4868 is closed; exact-head
+hosted release evidence remains separate.
+
+#4869 at product head `c86be275f` also adds no user-facing text or catalog
+keys. Generated wrapper source lines and parameter counts are invariant C++
+numeric literals, now explicitly isolated from the host locale. The focused
+runtime-pipeline target passes under default, `pt_BR.UTF-8`, and
+`de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance and exact-head hosted
+evidence remain pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

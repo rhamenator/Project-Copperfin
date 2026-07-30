@@ -140,6 +140,11 @@ digits regardless of the host locale; parameter names and their source order
 remain separate pipe-delimited fields. Product head `858e56929` covers this
 boundary with a real parsed 12-parameter PRG under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8`, requiring `12` rather than grouped `1.2` in both manifest forms.
+The generated native wrapper C++ carries the same invariant boundary: source
+lines and parameter counts are emitted as ASCII decimal unsigned literals.
+Product head `c86be275f` exercises both DLL/OCX and FLL branches with a real
+line-1234, 12-parameter declaration and requires `1234U`/`12U`, never grouped
+tokens that would make the generated source invalid.
 
 Current CLI flow:
 

@@ -118,11 +118,14 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `858e56929` (the current branch may
+The latest product implementation head is `c86be275f` (the current branch may
 also contain documentation-only coordination commits). The focused
 runtime-pipeline target passes locally under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain
-pending. At preceding product head `a2a64427d`, Security Supply Chain
+pending for the native-wrapper numeric-literal child. The preceding API-arity
+head `858e56929` has matching Linux, AppleClang, and MSVC evidence; #4868 is
+closed.
+At product head `a2a64427d`, Security Supply Chain
 (`30517688033`), Linux Managed UI (`30517688039`), Executable Path
 (`30517688026`), and Visual Studio VSIX (`30517688000`) passed while the native
 and package lanes remained active. The #4867 report-layout/classification
