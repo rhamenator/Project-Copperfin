@@ -103,6 +103,7 @@ internal static partial class Program
         TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions();
         TestProjectSignatureHelpUsesInlineRoutineParameters();
         TestProjectLanguageServiceRecognizesProcAbbreviation();
+        TestProjectLanguageServiceDiscoversVisibilityQualifiedMethods();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
         TestProjectProcedureSignatureHelpRejectsBareParameter();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
@@ -2354,6 +2355,59 @@ internal static partial class Program
             Expect(FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "NotARoutine").Count == 0 &&
                    !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "NotARoutine", out _),
                 "longer identifiers beginning with PROCEDURE should not become routine declarations");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectLanguageServiceDiscoversVisibilityQualifiedMethods()
+    {
+        var root = CreateProjectRoot("visibility_qualified_project_methods");
+        try
+        {
+            var sourcePath = Path.Combine(root, "visibility.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROTECTED PROCEDURE NotGlobal" + Environment.NewLine +
+                "HIDDEN FUNCTION AlsoNotGlobal" + Environment.NewLine +
+                "DEFINE CLASS app.secure.editor AS custom" + Environment.NewLine +
+                "PROTECTED PROC SaveInternal" + Environment.NewLine +
+                "LPARAMETERS tcRecordId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "HIDDEN FUNCTION CalculateSecret(tnSeed, tlRefresh = .F.)" + Environment.NewLine +
+                "ENDFUNC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var protectedName = "app.secure.editor.SaveInternal";
+            var protectedSignature = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, protectedName);
+            Expect(protectedSignature.Count == 1 &&
+                   protectedSignature[0].Content == "app.secure.editor.SaveInternal(tcRecordId)" &&
+                   protectedSignature[0].Parameters.Count == 1 &&
+                   protectedSignature[0].Parameters[0].Name == "tcRecordId",
+                "PROTECTED PROC methods should retain following-line project signatures");
+            Expect(FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, protectedName, out var protectedDefinition) &&
+                   protectedDefinition.Kind == "method" && protectedDefinition.LineNumber == 4,
+                "PROTECTED PROC methods should retain qualified definition provenance");
+
+            var hiddenName = "app.secure.editor.CalculateSecret";
+            var hiddenSignature = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, hiddenName);
+            Expect(hiddenSignature.Count == 1 &&
+                   hiddenSignature[0].Content ==
+                       "app.secure.editor.CalculateSecret(tnSeed, tlRefresh = .F.)" &&
+                   hiddenSignature[0].Parameters.Select(parameter => parameter.Name).SequenceEqual(
+                       new[] { "tnSeed", "tlRefresh" }),
+                "HIDDEN FUNCTION methods should retain inline project signatures");
+            Expect(FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, hiddenName, out var hiddenDefinition) &&
+                   hiddenDefinition.Kind == "method" && hiddenDefinition.LineNumber == 7,
+                "HIDDEN FUNCTION methods should retain qualified definition provenance");
+
+            Expect(FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "NotGlobal").Count == 0 &&
+                   !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "NotGlobal", out _) &&
+                   FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "AlsoNotGlobal").Count == 0 &&
+                   !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "AlsoNotGlobal", out _),
+                "visibility-qualified declarations outside a class should not become global symbols");
         }
         finally
         {

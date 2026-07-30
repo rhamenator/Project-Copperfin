@@ -56,6 +56,8 @@ internal static class FoxProIntelliSenseCatalog
 
     private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -614,7 +616,7 @@ internal static class FoxProIntelliSenseCatalog
                     continue;
                 }
 
-                var methodProcedureMatch = ProcedureRegex.Match(line);
+                var methodProcedureMatch = MethodProcedureRegex.Match(line);
                 if (methodProcedureMatch.Success)
                 {
                     var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
@@ -624,7 +626,7 @@ internal static class FoxProIntelliSenseCatalog
                     continue;
                 }
 
-                var methodFunctionMatch = FunctionRegex.Match(line);
+                var methodFunctionMatch = MethodFunctionRegex.Match(line);
                 if (methodFunctionMatch.Success)
                 {
                     var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
