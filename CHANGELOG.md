@@ -1,3 +1,10 @@
+- 2026-07-30: Implemented #4882/#27 project language-service support for VFP's
+  `PROC` abbreviation. Global routines and qualified class methods now retain
+  the same inline/following-line signatures and definition provenance as
+  `PROCEDURE`, while the longer `PROCEDURES` near-match remains rejected. The
+  warning-free four-mode local harness and exact-head Windows VSIX run
+  `30527860407` pass; artifact `8753473175` was uploaded and #4882 is closed.
+
 - 2026-07-30: Implemented #4881/#27 project signature help for inline PRG
   routine declarations. Procedures, functions, and qualified class methods now
   expose inline parameters using matching-parenthesis extraction that preserves

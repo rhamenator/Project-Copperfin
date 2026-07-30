@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1 VFP declaration-alias slice: `#4882` recognizes `PROC` and
+  `PROCEDURE` through the same bounded, case-insensitive project scanner path.
+  Global and qualified class declarations retain following-line/inline
+  signatures and exact definition provenance; the `PROCEDURES` near-match is
+  rejected. The local four-mode matrix and Windows VSIX run `30527860407`
+  pass, and artifact `8753473175` was uploaded.
 - Recent G1 runtime/editor-alignment slice: `#4881` surfaces inline parameter
   clauses from project procedures, functions, and qualified class methods,
   matching the syntax already materialized as implicit `LPARAMETERS` by the

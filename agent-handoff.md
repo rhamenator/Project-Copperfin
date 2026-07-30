@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4882/#27 VFP `PROC` project-symbol slice is implemented at exact product/
+test head `639d31fc8`. The case-insensitive project scanner now gives `PROC` and
+`PROCEDURE` identical global-routine and qualified-class-method semantics.
+Following-line and inline signatures, invariant names, localized descriptions,
+and definition file/line identity are preserved; `PROCEDURES` is explicitly
+rejected as a longer near-match. The Release language-service build has zero
+warnings/errors, and the full harness passes locally under default,
+`pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`. Exact-head Windows VSIX
+run `30527860407` passes all managed/net472 steps and uploads artifact
+`8753473175` with SHA-256
+`4d33091f13ac543682087972bf50883901230bca5c992599a6536ac9ea43a12b`.
+Issue #4882 is closed; broader #27/#112 and RC validation remain open. Runtime/
+stack behavior, catalogs, package/debug, and trust contracts are unchanged.
+
 The #4881/#27 inline project-signature slice is implemented at exact product/
 test head `0867efd1a`. Procedures, functions, and qualified class methods now
 surface inline parameter clauses already supported by the native PRG runtime.
