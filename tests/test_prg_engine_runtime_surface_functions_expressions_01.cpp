@@ -17,6 +17,14 @@ namespace copperfin::runtime_surface_tests
             std::string do_grouping() const override { return "\3"; }
         };
 
+        class every_digit_grouped_numpunct final : public std::numpunct<char>
+        {
+        protected:
+            char do_decimal_point() const override { return ','; }
+            char do_thousands_sep() const override { return '.'; }
+            std::string do_grouping() const override { return "\1"; }
+        };
+
         class global_locale_guard final
         {
         public:
@@ -1220,6 +1228,10 @@ namespace copperfin::runtime_surface_tests
 
     void test_cursor_xml_round_trip_runtime_surface_functions()
     {
+        const std::locale grouping_locale(
+            std::locale::classic(),
+            new every_digit_grouped_numpunct());
+        global_locale_guard locale_guard(grouping_locale);
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_round_trip";
         std::error_code ignored;
@@ -1277,6 +1289,15 @@ namespace copperfin::runtime_surface_tests
         expect(xml_text != state.globals.end() &&
                    copperfin::runtime::format_value(xml_text->second).find("<CopperfinCursor") != std::string::npos,
                "CURSORTOXML() should return Copperfin XML text when output target is omitted");
+        if (xml_text != state.globals.end())
+        {
+            const std::string xml = copperfin::runtime::format_value(xml_text->second);
+            expect(xml.find("width=\"20\"") != std::string::npos &&
+                       xml.find("width=\"2.0\"") == std::string::npos,
+                   "CURSORTOXML() should serialize field widths as invariant ungrouped digits");
+            expect(xml.find("decimals=\"0\"") != std::string::npos,
+                   "CURSORTOXML() should serialize decimal counts as invariant digits");
+        }
         check("lwriteok", "true");
         check("lwritebackslashok", "true");
         check("nloaded", "3");

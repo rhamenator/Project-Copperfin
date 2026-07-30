@@ -2,6 +2,125 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_cursor_xml_numeric_metadata_fails_closed()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_prg_engine_cursor_xml_numeric_metadata";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path existing_path = temp_root / "existing.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "ID", .type = 'N', .length = 4U},
+            {.name = "NAME", .type = 'C', .length = 20U}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            existing_path.string(),
+            fields,
+            {{"1", "ALPHA"}, {"2", "BETA"}});
+        expect(create_result.ok, "XMLTOCURSOR numeric-metadata fixture should be created");
+        const std::string original_bytes = read_text(existing_path);
+
+        const auto cursor_xml = [](const std::string &numeric_attributes)
+        {
+            return std::string("<CopperfinCursor alias=\"Source\"><Fields>") +
+                   "<Field name=\"ID\" type=\"N\" " + numeric_attributes + " />" +
+                   "<Field name=\"NAME\" type=\"C\" width=\"20\" decimals=\"0\" />" +
+                   "</Fields><Rows><Row><Col>3</Col><Col>GAMMA</Col></Row>" +
+                   "</Rows></CopperfinCursor>";
+        };
+        const std::array<std::pair<std::string, std::string>, 7U> malformed_cases{{
+            {"partial_width.xml", "width=\"4junk\" decimals=\"0\""},
+            {"grouped_width.xml", "width=\"2.0\" decimals=\"0\""},
+            {"negative_width.xml", "width=\"-4\" decimals=\"0\""},
+            {"missing_width.xml", "decimals=\"0\""},
+            {"overflow_width.xml", "width=\"999999999999999999999999999999999\" decimals=\"0\""},
+            {"partial_decimals.xml", "width=\"4\" decimals=\"0junk\""},
+            {"missing_decimals.xml", "width=\"4\""}
+        }};
+        for (const auto &[file_name, numeric_attributes] : malformed_cases)
+        {
+            write_text(temp_root / file_name, cursor_xml(numeric_attributes));
+        }
+
+        const fs::path main_path = temp_root / "cursor_xml_numeric_metadata.prg";
+        write_text(
+            main_path,
+            "USE 'existing.dbf' ALIAS ExistingXml\n"
+            "GO 2\n"
+            "nPartialExisting = XMLTOCURSOR('partial_width.xml', 'ExistingXml')\n"
+            "nGroupedNew = XMLTOCURSOR('grouped_width.xml', 'GroupedDest')\n"
+            "nNegativeExisting = XMLTOCURSOR('negative_width.xml', 'ExistingXml')\n"
+            "nMissingWidthNew = XMLTOCURSOR('missing_width.xml', 'MissingWidthDest')\n"
+            "nOverflowExisting = XMLTOCURSOR('overflow_width.xml', 'ExistingXml')\n"
+            "nPartialDecimalsNew = XMLTOCURSOR('partial_decimals.xml', 'PartialDecimalsDest')\n"
+            "nMissingDecimalsNew = XMLTOCURSOR('missing_decimals.xml', 'MissingDecimalsDest')\n"
+            "lGroupedUsed = USED('GroupedDest')\n"
+            "lMissingWidthUsed = USED('MissingWidthDest')\n"
+            "lPartialDecimalsUsed = USED('PartialDecimalsDest')\n"
+            "lMissingDecimalsUsed = USED('MissingDecimalsDest')\n"
+            "cAliasAfterFailures = ALIAS()\n"
+            "nRecnoAfterFailures = RECNO()\n"
+            "nExistingCount = RECCOUNT()\n"
+            "nExistingId = ID\n"
+            "cExistingName = NAME\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+                               make_runtime_session_options(main_path.string(), temp_root.string()))
+                               .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("XMLTOCURSOR malformed numeric metadata should fail safely: ") +
+                   state.message + " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto found = state.globals.find(name);
+            if (found == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        };
+
+        check("npartialexisting", "0");
+        check("ngroupednew", "0");
+        check("nnegativeexisting", "0");
+        check("nmissingwidthnew", "0");
+        check("noverflowexisting", "0");
+        check("npartialdecimalsnew", "0");
+        check("nmissingdecimalsnew", "0");
+        check("lgroupedused", "false");
+        check("lmissingwidthused", "false");
+        check("lpartialdecimalsused", "false");
+        check("lmissingdecimalsused", "false");
+        check("caliasafterfailures", "ExistingXml");
+        check("nrecnoafterfailures", "2");
+        check("nexistingcount", "2");
+        check("nexistingid", "2");
+        check("cexistingname", "BETA");
+
+        expect(read_text(existing_path) == original_bytes,
+               "rejected XMLTOCURSOR numeric metadata should preserve destination bytes");
+        expect(std::count_if(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "runtime.warning";
+        }) >= malformed_cases.size(),
+               "each malformed XMLTOCURSOR numeric field should emit a warning event");
+        expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "runtime.xmltocursor";
+        }),
+               "rejected XMLTOCURSOR numeric metadata should not emit success events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_cardinality_mismatch_preserves_destinations()
     {
         namespace fs = std::filesystem;

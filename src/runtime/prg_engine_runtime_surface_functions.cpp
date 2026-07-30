@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <optional>
 #include <random>
 #include <set>

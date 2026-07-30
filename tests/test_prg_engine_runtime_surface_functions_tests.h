@@ -42,6 +42,7 @@ namespace copperfin::runtime_surface_tests
     void test_cursor_xml_round_trip_runtime_surface_functions();
     void test_cursor_xml_verified_file_bytes_are_enforced();
     void test_cursor_xml_invalid_input_runtime_surface_functions();
+    void test_cursor_xml_numeric_metadata_fails_closed();
     void test_cursor_xml_cardinality_mismatch_preserves_destinations();
     void test_newobject_getpem_setpem_compobj_functions();
     void test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();

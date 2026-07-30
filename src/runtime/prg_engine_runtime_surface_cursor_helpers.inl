@@ -62,6 +62,7 @@ std::string xml_attribute(const std::string& tag_text, const std::string& name) 
 
 std::string serialize_cursor_snapshot_xml(const RuntimeSurfaceCursorSnapshot& snapshot) {
     std::ostringstream xml;
+    xml.imbue(std::locale::classic());
     xml << "<CopperfinCursor alias=\"" << xml_escape(snapshot.alias) << "\">\n";
     xml << "  <Fields>\n";
     for (const auto& field : snapshot.fields) {
@@ -120,19 +121,15 @@ std::optional<RuntimeSurfaceCursorSnapshot> parse_cursor_snapshot_xml(const std:
         field.name = xml_attribute(field_tag, "name");
         const std::string type_text = xml_attribute(field_tag, "type");
         field.type = type_text.empty() ? 'C' : type_text.front();
-        try {
-            field.width = static_cast<std::size_t>(std::stoul(xml_attribute(field_tag, "width")));
-        } catch (...) {
-            field.width = 0U;
-        }
-        try {
-            field.decimals = static_cast<std::size_t>(std::stoul(xml_attribute(field_tag, "decimals")));
-        } catch (...) {
-            field.decimals = 0U;
-        }
-        if (field.name.empty()) {
+        const auto width = copperfin::platform::try_parse_invariant_integer<std::size_t>(
+            xml_attribute(field_tag, "width"));
+        const auto decimals = copperfin::platform::try_parse_invariant_integer<std::size_t>(
+            xml_attribute(field_tag, "decimals"));
+        if (field.name.empty() || !width.has_value() || !decimals.has_value()) {
             return std::nullopt;
         }
+        field.width = *width;
+        field.decimals = *decimals;
         snapshot.fields.push_back(std::move(field));
         scan = field_end + 2U;
     }
