@@ -418,6 +418,7 @@ internal sealed class StudioMainForm : Form
     internal void OpenEditMenuForTest()
     {
         editMenuItem.ShowDropDown();
+        editMenuItem.HideDropDown();
     }
 
     internal bool TryUndoActiveDocumentForTest()
