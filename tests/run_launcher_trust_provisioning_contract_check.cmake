@@ -40,6 +40,7 @@ foreach(REQUIRED_TEXT IN ITEMS
     "removed-inventory-record"
     "duplicate-inventory-record"
     "case-ambiguous-inventory-record"
+    "Substring(\$inventoryPrefix.Length)"
     "modified-signature-sidecar"
     "removed-signature-sidecar"
     "internal_apphost_started"

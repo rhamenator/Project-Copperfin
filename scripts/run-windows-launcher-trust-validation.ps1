@@ -104,7 +104,9 @@ try {
     Write-ExactText $manifestPath $originalManifest
 
     $ambiguousFields = $inventoryLines[0].Split('|')
-    $ambiguousFields[0] = $ambiguousFields[0].ToUpperInvariant()
+    $inventoryPrefix = "launcher_artifact="
+    $ambiguousPath = $ambiguousFields[0].Substring($inventoryPrefix.Length)
+    $ambiguousFields[0] = $inventoryPrefix + $ambiguousPath.ToUpperInvariant()
     Replace-Manifest ($manifestLines + ($ambiguousFields -join '|'))
     Invoke-GuardCase "case-ambiguous-inventory-record" 4 $false
     Write-ExactText $manifestPath $originalManifest
