@@ -86,6 +86,16 @@ remain unchanged. The focused table-mutation suite passes under default,
 review remains required before #4857 can close. This is focused evidence, not
 full RC evidence.
 
+The #4858/#109 xAsset object-type metadata slice is implementation-complete
+locally. Executable-model routing now parses DBF `OBJTYPE` values as complete
+invariant integers, so grouped, decimal, trailing, malformed, and overflowing
+text cannot alias a valid menu/object type. Valid SCX/VCX/MNX routing,
+deleted-record handling, paths, methods/actions, localization, and public
+contracts remain unchanged. The focused xAsset suite passes under default,
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and Windows/MSVC
+review remains required before #4858 can close. This is focused evidence, not
+full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

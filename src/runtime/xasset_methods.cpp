@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "localized_text.h"
 
@@ -134,14 +135,8 @@ std::string build_object_path(const copperfin::vfp::DbfRecord& record) {
 
 int numeric_value_or_default(const copperfin::vfp::DbfRecord& record, std::string_view field_name, int fallback = 0) {
     const std::string value = trim_copy(value_or_empty(record, field_name));
-    if (value.empty()) {
-        return fallback;
-    }
-    try {
-        return std::stoi(value);
-    } catch (...) {
-        return fallback;
-    }
+    const auto parsed = copperfin::platform::try_parse_invariant_integer<int>(value);
+    return parsed.value_or(fallback);
 }
 
 std::string build_menu_owner_path(const copperfin::vfp::DbfRecord& record) {

@@ -902,6 +902,47 @@ void test_build_menu_xasset_activation_uses_vfp_path_stem() {
            "#4753: generated non-shortcut menu bootstrap should define its menu before activation");
 }
 
+void test_build_menu_xasset_rejects_partial_numeric_object_types() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\strict_numeric_types.mnx)";
+    document.kind = copperfin::studio::StudioAssetKind::menu;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4abc"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "TrailingShortcut"}
+        }),
+        make_record(1, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "4.000"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "GroupedShortcut"}
+        }),
+        make_record(2, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "3abc"},
+            {.field_name = "LEVELNAME", .field_type = 'M', .display_value = "TrailingShortcut"},
+            {.field_name = "ITEMNUM", .field_type = 'C', .display_value = "1"},
+            {.field_name = "PROMPT", .field_type = 'M', .display_value = "Invalid item"},
+            {.field_name = "COMMAND", .field_type = 'M', .display_value = "x = 1"}
+        }),
+        make_record(3, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "999999999999999999999999"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "OverflowType"}
+        }),
+        make_record(4, {
+            {.field_name = "OBJTYPE", .field_type = 'N', .display_value = "1"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "ValidMenu"}
+        })
+    };
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(document);
+    expect(model.ok, "#4858: menu model should tolerate invalid numeric object-type metadata");
+    expect(model.activation_kind == "menu",
+           "#4858: trailing/grouped shortcut types must not alias valid OBJTYPE 4");
+    expect(model.activation_target == "strict_numeric_types",
+           "#4858: invalid shortcut types should retain the ordinary menu path-stem target");
+    expect(model.actions.empty(),
+           "#4858: trailing menu-item types must not alias valid OBJTYPE 3 actions");
+}
+
 void test_build_report_xasset_executable_model() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\invoice.frx)";
@@ -1035,6 +1076,7 @@ int main() {
     test_xasset_executable_model_skips_deleted_records();
     test_build_menu_xasset_executable_model();
     test_build_menu_xasset_activation_uses_vfp_path_stem();
+    test_build_menu_xasset_rejects_partial_numeric_object_types();
     test_build_report_xasset_executable_model();
     test_build_label_xasset_executable_model();
     test_build_real_menu_xasset_executable_model();

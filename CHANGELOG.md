@@ -1,3 +1,11 @@
+- 2026-07-29: Hardened #4858/#109 xAsset numeric object-type metadata.
+  Executable-model routing now requires complete invariant integer `OBJTYPE`
+  tokens, so grouped, decimal, trailing, malformed, and overflowing DBF text
+  cannot alias a valid menu/object type. Valid SCX/VCX/MNX routing, deleted
+  records, paths, methods/actions, localization, and public contracts remain
+  unchanged. Focused macOS/AppleClang xAsset tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - 2026-07-29: Hardened #4857/#3217 `SET REPROCESS` retry-budget parsing.
   Numeric policies now require complete invariant integer tokens, so grouped,
   decimal, trailing, negative, and overflowing text cannot become a different

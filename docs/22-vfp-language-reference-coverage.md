@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- xAsset object-type metadata culture boundary (2026-07-29, #4858 under
+  #109): executable-model routing now requires complete invariant integer
+  `OBJTYPE` tokens. Grouped, decimal, trailing, malformed, and overflowing DBF
+  text fails closed to the established fallback instead of aliasing a valid
+  menu/object type. Valid SCX/VCX/MNX routing, deleted-record handling, paths,
+  method/action extraction, localization, and public contracts remain
+  unchanged. Focused macOS/AppleClang tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - `SET REPROCESS` retry-policy culture boundary (2026-07-29, #4857 under
   #3217): numeric retry budgets now require complete invariant integer tokens.
   Grouped, decimal, trailing, negative, and overflowing policy text fails
