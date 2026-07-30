@@ -2,18 +2,34 @@
 
 ## Current State
 
-The #4872/#108 `NEWID()` UUID-text slice is implemented at exact product/test
+The #4873/#112 Studio-host JSON-control-escape slice is implemented at exact
+product/test head `4a75d3273`. Studio-host string escaping now delegates to a
+shared platform helper that emits control escapes with direct hexadecimal
+digit lookup, independent of numeric stream locale. Direct every-digit
+coverage requires exact canonical escapes for quote, backslash, standard
+controls, NUL, `0x1f`, and UTF-8, while the real builder-launch diagnostic
+requires `--unknown\\u001fvalue`, rejects the raw control byte, and preserves
+exit status 2. Full default `test_studio_host_json` (418.61s) and
+`test_platform_models` (1.37s) pass; the exact diagnostic and platform-model
+coverage also pass sequentially under `pt_BR.UTF-8` and `de_DE.UTF-8`.
+AppleClang and MSVC read-only review remain required before closing #4873.
+No user-facing text or catalog keys changed. This is focused evidence, not
+full RC evidence.
+
+The #4872/#108 `NEWID()` UUID-text slice is implementation-complete and
+cross-platform reviewed at exact product/test
 head `1568b7a11`. UUID formatting now binds the classic locale before emitting
 uppercase hexadecimal groups. A dedicated real-PRG fixture installs
 every-digit grouping and requires two distinct identifiers to remain exactly
 36 characters in 8-4-4-4-12 shape, with the v4 version nibble, RFC variant
 nibble, and no locale punctuation. `test_prg_engine_runtime_surface_functions`
 passes on Linux under default (4.89s), `pt_BR.UTF-8` (5.06s), and
-`de_DE.UTF-8` (5.00s), 3/3 valid sequential runs. AppleClang and MSVC review
-remain required before closing #4872. This is focused evidence, not full RC
-evidence.
+`de_DE.UTF-8` (5.00s), 3/3 valid sequential runs. Linux seq1264,
+AppleClang seq1261, and Windows/MSVC seq1263 accept the same three-locale
+contract. Issue #4872 is closed. This is focused evidence, not full RC evidence.
 
-The #4871/#110 APP-archive hex-payload slice is implemented at exact
+The #4871/#110 APP-archive hex-payload slice is implementation-complete and
+cross-platform reviewed at exact
 product/test head `cd6cf9029`. Hex encoding now binds the classic locale so
 each staged byte remains exactly two lowercase hexadecimal digits. The APP
 fixture installs every-digit grouping and carries binary `00 0f 10 ff`,
@@ -21,8 +37,9 @@ requiring canonical `000f10ff`, rejecting grouped punctuation, and recovering
 every byte while retaining byte counts, SHA-256 digests, declared/companion
 admission, and xAsset sidecars. `test_runtime_pipeline` passes on Linux under
 default (61.78s), `pt_BR.UTF-8` (63.35s), and `de_DE.UTF-8` (60.26s), 3/3
-runs. AppleClang and MSVC review remain required before closing #4871. This is
-focused evidence, not full RC evidence.
+runs. Linux seq1264, AppleClang seq1260, and Windows/MSVC seq1262 accept the
+same three-locale contract. Issue #4871 is closed. This is focused evidence,
+not full RC evidence.
 
 The #4870/#109 DIF-dimension slice is implemented at exact product/test head
 `531bbec70`. `COPY TO ... TYPE DIF` binds the classic locale before emitting

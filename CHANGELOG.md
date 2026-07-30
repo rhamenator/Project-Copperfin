@@ -1,10 +1,27 @@
+- 2026-07-30: Hardened #4873/#112 Studio-host JSON control escaping against
+  grouped host locales. A shared platform helper now emits control-byte
+  Unicode escapes through direct hexadecimal digit lookup instead of a numeric
+  stream. Every-digit coverage requires canonical quote, backslash, standard
+  control, NUL, `0x1f`, and UTF-8 handling, while a real builder-launch JSON
+  diagnostic requires `--unknown\\u001fvalue` with no raw control byte. The
+  focused platform-model and Studio-host JSON coverage passes under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC review remains
+  required.
+
+- 2026-07-30: Hardened #4872/#108 `NEWID()` UUID text against grouped host
+  locales. UUID formatting now uses the classic locale, and an every-digit
+  grouped real-PRG fixture requires two distinct canonical uppercase
+  8-4-4-4-12 identifiers with correct v4 version and RFC variant nibbles. The
+  focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4872 is closed.
+
 - 2026-07-30: Hardened #4871/#110 APP archive hexadecimal payloads against
   grouped host locales. Hex encoding now uses the classic locale, and an
   every-digit-grouped binary fixture requires canonical `000f10ff`, rejects
   grouped punctuation, and round-trips `00 0f 10 ff` exactly while preserving
   byte counts, digests, staged assets, and xAsset sidecars. The focused
   runtime-pipeline target passes under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux; cross-platform review remains required.
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4871 is closed.
 
 - 2026-07-30: Hardened #4870/#109 `COPY TO ... TYPE DIF` dimensions against
   grouped host locales. DIF `VECTORS` and `TUPLES` counts now use the classic
@@ -6248,9 +6265,3 @@ passes `1/1`.
   Syft release `v1.50.0`; the checked workflow no longer depends on the
   action's stale implicit `v1.42.3` selection. The single CycloneDX artifact
   owner, read-only permissions, and Trivy gate remain unchanged.
-- 2026-07-30: Hardened #4872/#108 `NEWID()` UUID text against grouped host
-  locales. UUID formatting now uses the classic locale, and an every-digit
-  grouped real-PRG fixture requires two distinct canonical uppercase
-  8-4-4-4-12 identifiers with correct v4 version and RFC variant nibbles. The
-  focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux; cross-platform review remains required.

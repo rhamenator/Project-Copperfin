@@ -124,14 +124,23 @@ release evidence remains separate.
 #4871 at product head `cd6cf9029` adds no user-facing text or catalog keys.
 APP archive byte payloads are invariant lowercase hexadecimal machine data and
 now explicitly use the classic locale. The focused runtime-pipeline target
-passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
-acceptance and exact-head hosted evidence remain pending.
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4871 is closed; exact-head hosted
+release evidence remains separate.
 
 #4872 at product head `1568b7a11` adds no user-facing text or catalog keys.
 `NEWID()` results are invariant uppercase UUID-shaped runtime identifiers and
 now explicitly use the classic locale. The focused runtime-surface target
-passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
-acceptance and exact-head hosted evidence remain pending.
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4872 is closed; exact-head hosted
+release evidence remains separate.
+
+#4873 at product head `4a75d3273` adds no user-facing text or catalog keys.
+Studio-host JSON control escapes are invariant machine data and now use a
+shared platform helper with direct hexadecimal digit lookup. Direct
+every-digit coverage and a real builder-launch JSON diagnostic pass under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance
+and exact-head hosted evidence remain pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

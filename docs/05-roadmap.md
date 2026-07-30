@@ -118,13 +118,14 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `1568b7a11` (the current branch may
-also contain documentation-only coordination commits). The focused PRG
-runtime-surface target passes locally under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain
-pending for the `NEWID()` UUID-text child. The preceding APP-archive
-hex-payload head `cd6cf9029` has matching Linux evidence and still awaits
-AppleClang/MSVC. The preceding DIF-dimension head `531bbec70` has matching
+The latest product implementation head is `4a75d3273` (the current branch may
+also contain documentation-only coordination commits). The focused shared
+platform JSON and Studio-host diagnostic coverage passes locally under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; AppleClang/MSVC review and exact-head
+hosted evidence remain pending for the Studio-host JSON-control-escape child.
+The preceding `NEWID()` UUID-text head `1568b7a11` and APP-archive hex-payload
+head `cd6cf9029` have matching Linux, AppleClang, and MSVC evidence; #4872 and
+#4871 are closed. The preceding DIF-dimension head `531bbec70` has matching
 Linux, AppleClang, and MSVC evidence; #4870 is closed. The preceding
 native-wrapper head `c86be275f` has matching Linux,
 AppleClang, and MSVC evidence; #4869 is closed. The preceding API-arity
