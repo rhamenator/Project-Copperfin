@@ -2999,6 +2999,9 @@ internal static partial class Program
                 "PROCEDURE Configure" + Environment.NewLine +
                 "localShadow = .T." + Environment.NewLine +
                 "THIS.RetryCount = THIS.RetryCount + 1" + Environment.NewLine +
+                "text to lcTemplate noshow" + Environment.NewLine +
+                "THIS.RetryCount = THIS.RetryCount + 100" + Environment.NewLine +
+                "EnDtExT && template complete" + Environment.NewLine +
                 "? laValues[THIS.RetryCount]" + Environment.NewLine +
                 "oOther.Caption = \"Ambiguous\"" + Environment.NewLine +
                 "? \"THIS.RetryCount\" + [THIS.RetryCount] && THIS.RetryCount" + Environment.NewLine +
@@ -3038,7 +3041,9 @@ internal static partial class Program
             var references = insights.RuntimeReferences.FindAll(reference =>
                 reference.Name == "app.editor.RetryCount" && reference.Kind == "member.property");
             Expect(references.Count == 3,
-                "project insights should normalize executable dotted property uses, including array subscripts, without indexing string or comment text");
+                "project insights should normalize executable dotted property uses, including array subscripts, without indexing TEXT block, string, or comment text");
+            Expect(!references.Exists(reference => reference.Line == 8),
+                "project insights should exclude dotted property tokens inside VFP TEXT block bodies");
             Expect(!insights.RuntimeReferences.Exists(reference => reference.Name.EndsWith(".Caption", StringComparison.OrdinalIgnoreCase)),
                 "ambiguous trailing property names should not enter an arbitrary reference set");
 
@@ -3047,8 +3052,9 @@ internal static partial class Program
                 "property rename preview should include the qualified definition and all normalized dotted uses");
             Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "definition" && occurrence.Line == 2) &&
                    preview.Occurrences.Count(occurrence => occurrence.Kind == "reference" && occurrence.Line == 6) == 2 &&
-                   preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Line == 7),
-                "property rename occurrences should preserve declaration and dotted-use line provenance");
+                   preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Line == 10) &&
+                   !preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Line == 8),
+                "property rename occurrences should preserve executable provenance and exclude TEXT block bodies");
         }
         finally
         {

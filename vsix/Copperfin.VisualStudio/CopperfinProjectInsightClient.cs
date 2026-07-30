@@ -33,6 +33,8 @@ internal static class CopperfinProjectInsightClient
     private static readonly Regex DoRegex = new(@"^\s*DO\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex InvocationRegex = new(@"(?<![A-Za-z0-9_#])([A-Za-z_][A-Za-z0-9_\.]*)\s*\(", ProjectRegexOptions);
     private static readonly Regex DottedMemberRegex = new(@"(?<![A-Za-z0-9_#])([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+)(?![A-Za-z0-9_])", ProjectRegexOptions);
+    private static readonly Regex TextBlockStartRegex = new(@"^\s*TEXT(?:\s|$)", ProjectRegexOptions);
+    private static readonly Regex TextBlockEndRegex = new(@"^\s*ENDTEXT\s*(?:&&.*)?$", ProjectRegexOptions);
     private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".prg", ".h", ".hpp", ".ch", ".qpr", ".mpr", ".spr", ".ini", ".xml", ".txt"
@@ -322,10 +324,26 @@ internal static class CopperfinProjectInsightClient
         IReadOnlyList<string> knownPropertySymbols,
         CopperfinProjectInsights insights)
     {
+        var insideTextBlock = false;
         for (var index = 0; index < lines.Count; index++)
         {
             var line = lines[index];
             var lineNumber = index + 1;
+
+            if (insideTextBlock)
+            {
+                if (TextBlockEndRegex.IsMatch(line))
+                {
+                    insideTextBlock = false;
+                }
+                continue;
+            }
+
+            if (TextBlockStartRegex.IsMatch(line))
+            {
+                insideTextBlock = true;
+                continue;
+            }
 
             AddReferenceIfMatch(path, lineNumber, line, DoFormRegex, "do form", insights);
             AddReferenceIfMatch(path, lineNumber, line, ReportFormRegex, "report form", insights);
