@@ -1,17 +1,22 @@
 - 2026-07-30: Bound the manual Windows launcher-trust signer/guard job to the
   fixed GitHub Actions `release` environment under security audit child #4895.
   Workflow contracts require exactly one fixed binding and reject dynamic
-  environment selection. Release guidance requires an administrator-configured
-  reviewer, prevention of self-review, `main` branch restriction, and both
-  approved secrets at environment scope; an absent or unprotected environment
-  is explicitly not release evidence. No environment, reviewer, secret, signer,
-  protected run, localized string, or machine-readable package contract is
-  created or changed by this repository slice; those remain #4409 authority.
-  Exact implementation head `833254e4c` passes hosted Linux/macOS Native
-  `316/316` including the focused provisioning contract, plus the VSIX,
-  managed-UI, installer, security/SBOM, executable-path, Windows
-  environment/path, and DECLARE ABI gates. Fresh permissive safety run
-  `30564527266` passes and
+  environment selection. Independent review found that the focused contract
+  did not lock the exact least-privilege token permission; correction
+  `0a8a43080` now requires the sole `contents: read` permission block, and the
+  same reviewer passes the corrected slice. Release guidance requires an
+  administrator-configured reviewer, prevention of self-review, `main` branch
+  restriction, and both approved secrets at environment scope; an absent or
+  unprotected environment is explicitly not release evidence. No environment,
+  reviewer, secret, signer, protected run, localized string, or machine-readable
+  package contract is created or changed by this repository slice; those remain
+  #4409 authority.
+  Exact corrected test head `0a8a43080` passes hosted Linux/macOS Native
+  `316/316`, including the focused permission/provisioning contract, plus the
+  VSIX, managed-UI, installer, security/SBOM, executable-path, Windows
+  environment/path, and DECLARE ABI gates. The `contents: read` mutation is
+  rejected locally. Fresh corrected-head permissive safety run `30566915484`
+  passes and
   archives its non-secret report; this supporting evidence does not substitute
   for the absent protected environment or approved signer execution.
 

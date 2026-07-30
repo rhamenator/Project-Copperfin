@@ -75,17 +75,22 @@ create or configure the environment: a release administrator must add the
 reviewer, prevent self-review, restrict it to `main`, provision the two
 environment-scoped secrets, and approve the eventual run. The currently absent
 `release` environment therefore remains external #4409 authority, not an
-implementation fallback. Exact implementation head `833254e4c` passes hosted
-Linux Native run `30564419861` (`316/316`, including the focused provisioning
-contract), macOS Native `30564419735` (`316/316`), VSIX `30564419963`, managed
-UI `30564420023`, installers
-`30564419633`, security/SBOM `30564419650`, executable-path `30564419838`,
-Windows environment/path `30564419899`, and DECLARE ABI `30564419640`. Fresh
-permissive safety run `30564527266` passes for #4895 and uploads report artifact
-`8768264112`; GitHub's archive digest is
-`a5516299a05a31c1d56663e0d88493f8d699c75ba54cf95a8589f160bce44700`,
+implementation fallback. Independent review initially blocked because the
+focused contract did not lock the exact least-privilege token permission;
+correction head `0a8a43080` requires the sole `contents: read` block, and the
+same reviewer passes the corrected slice with no remaining finding. Exact
+corrected test head `0a8a43080` passes hosted Linux Native run `30566876881`
+(`316/316`, including the focused permission/provisioning contract), macOS
+Native `30566876815` (`316/316`), VSIX `30566876774`, managed UI `30566876743`,
+installers `30566876716`, security/SBOM `30566876932`, executable-path
+`30566876799`, Windows environment/path `30566876895`, and DECLARE ABI
+`30566876764`. A local `contents: read` mutation is rejected before restoration
+and a passing rerun. Fresh corrected-head permissive safety run `30566915484`
+passes for #4895 and uploads
+report artifact `8769199463`; GitHub's archive digest is
+`20a6a799462adc6606d9c169254220792d01412784cd05dd9c4395ae906c34a6`,
 and the report file SHA-256 is
-`512bd869a4c2d5f4865fa0be582a43560fa75a74e67bc90cc7622add99588a6e`.
+`91ae53f994c504922efe6a9ffad96a29e484e6aa8616d3304e2764e220268658`.
 
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,

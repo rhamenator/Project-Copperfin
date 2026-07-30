@@ -345,11 +345,15 @@ and environment-secret protections apply before the runner receives signing
 authority. Source control does not create or configure that environment. An
 administrator must still establish its protection rules and approved secrets,
 then complete the #4409 run; an absent or unprotected environment is not RC
-evidence. Exact implementation head `833254e4c` passes hosted Linux/macOS
-Native `316/316`, including the focused provisioning contract, plus the VSIX,
+evidence. Independent review found and correction head `0a8a43080` closes one
+test gap by requiring the exact sole `contents: read` permission block; the
+same reviewer passes the corrected slice. Exact corrected test head
+`0a8a43080` passes hosted Linux/macOS Native `316/316`, including the focused
+permission/provisioning contract, plus the VSIX,
 managed-UI, installer, security/SBOM, executable-path, Windows
-environment/path, and DECLARE ABI gates. Permissive safety run `30564527266`
-also passes for #4895; neither result supplies external release authority.
+environment/path, and DECLARE ABI gates. Corrected-head permissive safety run
+`30566915484` also passes for #4895; neither result supplies external release
+authority.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
