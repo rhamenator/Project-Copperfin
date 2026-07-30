@@ -15,6 +15,7 @@ namespace Copperfin.VisualStudio;
 internal static partial class Program
 {
     private const string HoldOutputHandlesArgument = "--copperfin-test-hold-output-handles";
+    private const string HoldOutputTreeArgument = "--copperfin-test-hold-output-tree";
     private static int failures;
 
     private static int Main(string[] args)
@@ -24,6 +25,17 @@ internal static partial class Program
             File.WriteAllText(args[1], Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
             Thread.Sleep(TimeSpan.FromSeconds(30));
             return 0;
+        }
+        if (args.Length == 3 && string.Equals(args[0], HoldOutputTreeArgument, StringComparison.Ordinal))
+        {
+            File.WriteAllText(args[1], Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
+            using var grandchild = Process.Start(CreateManagedTestChildStartInfo(HoldOutputHandlesArgument, args[2]));
+            if (grandchild is null)
+            {
+                return 97;
+            }
+            grandchild.WaitForExit();
+            return grandchild.ExitCode;
         }
 
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
@@ -1983,8 +1995,14 @@ internal static partial class Program
         var grandchildPid = 0;
         try
         {
-            var escapedPowerShellChildPidPath = childPidPath.Replace("'", "''", StringComparison.Ordinal);
-            var escapedPowerShellGrandchildPidPath = grandchildPidPath.Replace("'", "''", StringComparison.Ordinal);
+            var processHostPath = Environment.ProcessPath ?? throw new InvalidOperationException("The managed test host path is unavailable.");
+            var assemblyPath = typeof(Program).Assembly.Location;
+            var assemblyArgument = string.Equals(
+                    Path.GetFileNameWithoutExtension(processHostPath),
+                    "dotnet",
+                    StringComparison.OrdinalIgnoreCase)
+                ? " \"" + assemblyPath + "\""
+                : string.Empty;
             var startInfo = CreateTestScriptStartInfo(
                 root,
                 "timeout_output",
@@ -1993,7 +2011,7 @@ internal static partial class Program
                     "@echo off",
                     "echo before-timeout-stdout",
                     "echo before-timeout-stderr 1>&2",
-                    "powershell.exe -NoProfile -Command \"$grandchild = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + escapedPowerShellChildPidPath + "' -Value $PID; Set-Content -LiteralPath '" + escapedPowerShellGrandchildPidPath + "' -Value $grandchild.Id; Wait-Process -Id $grandchild.Id\"",
+                    "\"" + processHostPath + "\"" + assemblyArgument + " " + HoldOutputTreeArgument + " \"" + childPidPath + "\" \"" + grandchildPidPath + "\"",
                     "exit /b 0"
                 ],
                 unixBody:
@@ -2001,18 +2019,10 @@ internal static partial class Program
                     "#!/bin/sh",
                     "echo before-timeout-stdout",
                     "echo before-timeout-stderr 1>&2",
-                    "(",
-                    "  sleep 30 &",
-                    "  grandchild_pid=$!",
-                    "  printf '%s\\n' \"$grandchild_pid\" > \"" + grandchildPidPath + "\"",
-                    "  wait \"$grandchild_pid\"",
-                    ") &",
-                    "child_pid=$!",
-                    "printf '%s\\n' \"$child_pid\" > \"" + childPidPath + "\"",
-                    "wait \"$child_pid\""
+                    "\"" + processHostPath + "\"" + assemblyArgument + " " + HoldOutputTreeArgument + " \"" + childPidPath + "\" \"" + grandchildPidPath + "\""
                 ]);
 
-            // Allow the Windows fixture to start cmd.exe and both PowerShell processes before timing out.
+            // Allow the Windows fixture to start cmd.exe and both managed helper processes before timing out.
             var timeoutMilliseconds = OperatingSystem.IsWindows() ? 5000 : 300;
             var stopwatch = Stopwatch.StartNew();
             var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds);
@@ -3167,6 +3177,26 @@ internal static partial class Program
             RedirectStandardError = true,
             CreateNoWindow = true
         };
+    }
+
+    private static ProcessStartInfo CreateManagedTestChildStartInfo(params string[] arguments)
+    {
+        var processHostPath = Environment.ProcessPath ?? throw new InvalidOperationException("The managed test host path is unavailable.");
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = processHostPath,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        if (string.Equals(Path.GetFileNameWithoutExtension(processHostPath), "dotnet", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo.ArgumentList.Add(typeof(Program).Assembly.Location);
+        }
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+        return startInfo;
     }
 
     private static void WriteAutomaticHostCandidate(string path)
