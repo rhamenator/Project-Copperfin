@@ -3022,7 +3022,7 @@ internal static partial class Program
             var sourcePath = Path.Combine(root, "main.prg");
             File.WriteAllText(
                 sourcePath,
-                "CREATE CURSOR curLocal (id I, amount N(12, 2), display_name C(40))" + Environment.NewLine +
+                "CREATE CURSOR curLocal (id I, amount N(12, 2), display_name C(40)) && ignored, phantom I)" + Environment.NewLine +
                 "CREATE CURSOR curOther (other_id I)" + Environment.NewLine);
 
             var localMembers = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "curLocal.", string.Empty);
@@ -3038,6 +3038,8 @@ internal static partial class Program
                 "CREATE CURSOR fields from another alias should not leak into member completion");
             Expect(!localMembers.Any(entry => entry.DisplayText == "2" && entry.Kind == "field"),
                 "numeric type precision commas should not create phantom cursor fields");
+            Expect(!localMembers.Any(entry => entry.DisplayText == "phantom" && entry.Kind == "field"),
+                "trailing comments with commas and parentheses should not create phantom cursor fields");
             Expect(localMembers.Any(entry => entry.DisplayText == "Refresh()" && entry.Kind == "member"),
                 "cursor-field completion should preserve generic object members");
 
