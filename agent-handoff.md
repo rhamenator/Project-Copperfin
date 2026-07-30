@@ -67,6 +67,16 @@ native duplicate-signer head `3968fabff`. This completes #4894's
 implementation-side mechanics and platform validation. The externally
 provisioned protected run remains required for #4409 and is not claimed.
 
+Follow-up security audit child #4895 binds the high-trust job to the fixed
+GitHub Actions `release` environment. This enables required-reviewer,
+no-self-review, deployment-branch, and environment-secret protection before
+the runner can receive signer material. Source control deliberately does not
+create or configure the environment: a release administrator must add the
+reviewer, prevent self-review, restrict it to `main`, provision the two
+environment-scoped secrets, and approve the eventual run. The currently absent
+`release` environment therefore remains external #4409 authority, not an
+implementation fallback.
+
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,
 formal closure, and a strict `RequireClosedIssues=true` pass. Issue #4409 still

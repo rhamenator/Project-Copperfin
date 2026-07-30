@@ -339,6 +339,14 @@ environment/path, and DECLARE ABI workflows pass. Generated-launcher run
 `3968fabff`. This evidence completes the missing workflow mechanics; it does
 not provide an approved key, protected run, #4409 closure, or release authority.
 
+Security audit child #4895 binds that manual job to the fixed GitHub Actions
+`release` environment so configured required-reviewer, no-self-review, branch,
+and environment-secret protections apply before the runner receives signing
+authority. Source control does not create or configure that environment. An
+administrator must still establish its protection rules and approved secrets,
+then complete the #4409 run; an absent or unprotected environment is not RC
+evidence.
+
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
 Current-head installer workflow `30511406950` passed the macOS, Linux, and

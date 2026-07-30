@@ -51,6 +51,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `30559417230` passes at duplicate-signer head `3968fabff`. Externally approved
   protected execution remains #4409's release authority and is not substituted
   by this implementation slice.
+- Security audit child `#4895` binds the manual signer/guard job to the fixed
+  GitHub Actions `release` environment and locks that invariant in the workflow
+  contract. Required reviewers, prevention of self-review, `main` branch
+  restriction, environment-scoped approved secrets, and the actual approved
+  run remain external #4409 configuration/evidence rather than repository
+  implementation.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX

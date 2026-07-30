@@ -60,6 +60,13 @@ managed-UI, installer, security, path, and ABI gates are green. No localized
 catalog or invariant diagnostic contract changed in #4894. The approved
 protected signer execution remains an external release gate.
 
+Audit child #4895 additionally binds the signer/guard job to the fixed GitHub
+Actions `release` environment. The release administrator must configure a
+required reviewer, prevent self-review, restrict the environment to `main`,
+and provision both approved secrets at environment scope. The repository does
+not perform or claim those authority-bearing steps, and no localized or
+machine-readable contract changes in this workflow-only slice.
+
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux

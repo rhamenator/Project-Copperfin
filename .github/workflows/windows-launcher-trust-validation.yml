@@ -14,6 +14,7 @@ permissions:
 jobs:
   windows-launcher-trust:
     name: Windows enforced launcher trust provisioning
+    environment: release
     runs-on: windows-latest
     timeout-minutes: 60
     steps:

@@ -1,3 +1,13 @@
+- 2026-07-30: Bound the manual Windows launcher-trust signer/guard job to the
+  fixed GitHub Actions `release` environment under security audit child #4895.
+  Workflow contracts require exactly one fixed binding and reject dynamic
+  environment selection. Release guidance requires an administrator-configured
+  reviewer, prevention of self-review, `main` branch restriction, and both
+  approved secrets at environment scope; an absent or unprotected environment
+  is explicitly not release evidence. No environment, reviewer, secret, signer,
+  protected run, localized string, or machine-readable package contract is
+  created or changed by this repository slice; those remain #4409 authority.
+
 - 2026-07-30: Implemented release-trust audit slice #4894 under #4409. The
   protected Windows workflow now binds an explicit approved signer ID to its
   external registry, derives `app.cftrust` from a finalized exact inventory,

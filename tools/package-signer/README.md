@@ -17,3 +17,9 @@ tools/package-signer/sign-launcher-inventory.sh \
 The input envelope must already have been generated from the finalized package inventory. The tool does not generate or alter `app.cfmanifest`, `app.cfdebug`, or package files. It writes only the versioned UTF-8/LF detached-signature sidecar and uses an atomic replacement within the output directory.
 
 Private keys must remain in a secret manager or protected location outside the checkout. The public key registry is configured separately through `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER`; this tool does not embed, publish, or select trusted keys.
+
+The repository workflow uses the fixed GitHub Actions `release` environment.
+Configure required reviewers, prevent self-review, restrict it to `main`, and
+store both launcher-trust secrets at environment scope before dispatch. Merely
+creating an unprotected environment or repository-level secrets is not release
+evidence.

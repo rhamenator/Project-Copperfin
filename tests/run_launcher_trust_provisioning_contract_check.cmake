@@ -60,6 +60,7 @@ endforeach()
 file(READ "${WORKFLOW}" WORKFLOW_CONTENT)
 foreach(REQUIRED_TEXT IN ITEMS
     "workflow_dispatch:"
+    "    environment: release"
     "secrets.COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER"
     "secrets.COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM"
     "inputs.signer_key_id"
@@ -77,6 +78,21 @@ foreach(REQUIRED_TEXT IN ITEMS
         message(FATAL_ERROR "Windows launcher trust workflow is missing required contract text: ${REQUIRED_TEXT}")
     endif()
 endforeach()
+
+string(REGEX MATCHALL "environment:[ ]*release" RELEASE_ENVIRONMENT_BINDINGS
+    "${WORKFLOW_CONTENT}")
+list(LENGTH RELEASE_ENVIRONMENT_BINDINGS RELEASE_ENVIRONMENT_BINDING_COUNT)
+if(NOT RELEASE_ENVIRONMENT_BINDING_COUNT EQUAL 1)
+    message(FATAL_ERROR
+        "Windows launcher trust workflow must bind exactly one job to the fixed release environment")
+endif()
+
+string(REGEX MATCH "environment:[^\n]*\\$\\{\\{" DYNAMIC_ENVIRONMENT_BINDING
+    "${WORKFLOW_CONTENT}")
+if(DYNAMIC_ENVIRONMENT_BINDING)
+    message(FATAL_ERROR
+        "Windows launcher trust workflow must not select its protected environment dynamically")
+endif()
 
 foreach(FORBIDDEN_TEXT IN ITEMS
     "-----BEGIN PRIVATE KEY-----"

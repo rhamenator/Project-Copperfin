@@ -88,6 +88,31 @@ no push or pull-request
 trigger, so ordinary development and unsigned installer validation remain
 unchanged.
 
+### Protected Release Environment
+
+The signing/guard job is bound to the fixed GitHub Actions environment
+`release`; the environment name is not a dispatch input or expression. Before
+any protected run, a repository administrator must:
+
+1. create the `release` environment and configure one or more required
+   reviewers;
+2. enable prevention of self-review so the dispatcher cannot approve the same
+   run;
+3. restrict deployment branches to `main`;
+4. create environment-scoped
+   `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and
+   `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets; and
+5. confirm the same secret names are not being supplied as repository-level
+   substitutes for the release ceremony.
+
+An environment that is absent, has no required reviewer, permits self-review,
+or admits branches other than `main` is not protected release evidence. The
+job must remain pending until the configured reviewer approves it, and secret
+material must not become available to the runner before that approval. The
+repository intentionally does not create the environment, select its reviewer,
+or provision its secrets in source control; those are external #4409 release
+authority.
+
 The protected job derives a canonical `app.cftrust` from an exact finalized
 fixture inventory, signs it with the external key reference through the native
 PowerShell signer, and invokes the actual enforced launcher guard. A valid
@@ -97,8 +122,9 @@ signature sidecars must all return exit code `4` without starting that apphost.
 Only the signer ID, commit/run identity, finalized direct artifact names/roles
 and SHA-256 digests, invariant case results, and non-secret provisioning facts
 are uploaded. This workflow path is implemented under
-#4894, but it is release evidence only after an externally approved registry
-and key execute it successfully.
+#4894 and its fixed release-environment binding is enforced under #4895, but it
+is release evidence only after an externally approved registry and key execute
+it successfully through the configured environment approval.
 
 ## Platform Policy
 
