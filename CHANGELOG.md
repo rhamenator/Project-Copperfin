@@ -1,3 +1,12 @@
+- 2026-07-30: Hardened #4877/#2348 language-service localization tests by
+  resolving nine localized descriptions from the active Visual Studio UI
+  catalog rather than comparing product output to English literals. Invariant
+  symbol identity, kinds, ranking, provenance, and description precedence stay
+  covered. The full Release harness passes locally under default,
+  `pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`. Exact-head Windows VSIX
+  run `30524464648` passes the full managed suite and uploads artifact
+  `8752248824`; #4877 is closed. No product/catalog behavior changed.
+
 - 2026-07-30: Implemented #4876/#110 complete control escaping for runtime
   compiler AST/IR JSON and generated C# string literals. The pipeline helper
   now delegates to the shared platform JSON escaper, and real PRG statements

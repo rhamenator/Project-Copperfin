@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4877/#2348 managed localization-gate slice is implemented at exact test
+head `7dde622ad`. Nine language-service assertions now resolve the active
+catalog text for alias, class, method, included-define, and cross-file procedure
+descriptions instead of comparing localized product output to English literals.
+Invariant symbol names, kinds, ranking, paths/lines, token identity, and
+context-specific description precedence remain asserted. The full Release
+`Copperfin.LanguageServiceTests` harness builds with zero warnings/errors and
+passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit
+`qps-ploc`. Exact-head Windows VSIX run `30524464648` passes the full managed
+suite and uploads artifact `8752248824` with SHA-256
+`330b5aadb2a6760c9e98665513b3e3a4869c24ba0a9174481370197eb3e01e95`.
+Issue #4877 is closed. No product text, catalogs, runtime, package/debug, VSIX
+host, or trust behavior changed.
+
 The #4876/#110 runtime compiler control-escape slice is implemented at exact
 product/test head `28b2f3322`. The runtime-pipeline AST/IR JSON and generated
 C# string helper now delegates to the shared complete platform JSON escaper.

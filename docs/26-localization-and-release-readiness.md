@@ -163,6 +163,17 @@ Linux, exact-head Windows VSIX run `30522772118` passes the full managed suite,
 and macOS seq1273 accepts the actual-spelling correction. Issue #4875 is
 closed; broader #27 remains open.
 
+#4877 at exact test head `7dde622ad` removes nine English literals from managed
+language-service description assertions. Each expected value now comes from
+`CopperfinLocalization` under the active Visual Studio UI culture, including
+placeholder formatting for class base and originating method type. Invariant
+symbol names, kinds, ranking, paths/lines, token identity, and context-specific
+precedence remain directly asserted. The full Release harness passes locally
+under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`; exact-head
+Windows VSIX run `30524464648` passes the full managed suite and uploads
+artifact `8752248824`. Issue #4877 is closed. The slice adds no product text or
+catalog key.
+
 #4876 at exact product/test head `28b2f3322` adds no user-facing text or catalog
 keys. Runtime compiler AST/IR JSON and generated C# string literals now consume
 the shared locale-independent complete control escaper. Real source-derived

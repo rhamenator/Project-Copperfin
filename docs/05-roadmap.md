@@ -305,6 +305,16 @@ harness passes on Linux, exact-head Windows VSIX run `30522772118` passes the
 full managed suite, and macOS seq1273 accepts the actual-spelling correction.
 Issue #4875 is closed; broader #27 remains open.
 
+Current managed localization-gate child #4877 is implemented at exact test head
+`7dde622ad`. Nine language-service expectations now obtain localized
+descriptions from the active catalog while preserving invariant names, kinds,
+ranking, definition provenance, and context-specific precedence assertions.
+The full Release harness passes locally under default, `pt_BR.UTF-8`,
+`de_DE.UTF-8`, and explicit `qps-ploc`; exact-head Windows VSIX run
+`30524464648` passes the full managed suite and uploads artifact `8752248824`.
+Issue #4877 is closed. This is test-contract hardening only and adds no product
+text or catalog key.
+
 Current D-lane machine-contract evidence includes #4876 at exact product/test
 head `28b2f3322`: AST/IR JSON and generated C# string literals share the
 complete platform control escaper, with real source-derived byte `0x1f`
