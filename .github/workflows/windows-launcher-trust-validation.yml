@@ -25,7 +25,6 @@ jobs:
         env:
           COPPERFIN_TRUST_REGISTRY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER }}
           COPPERFIN_TRUST_SIGNING_KEY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM }}
-          COPPERFIN_TRUST_SIGNER_KEY_ID: ${{ inputs.signer_key_id }}
         run: |
           $ErrorActionPreference = 'Stop'
           if ([string]::IsNullOrWhiteSpace($env:COPPERFIN_TRUST_REGISTRY_SECRET) -or
@@ -39,10 +38,11 @@ jobs:
           [System.IO.File]::WriteAllText($signingKeyPath, $env:COPPERFIN_TRUST_SIGNING_KEY_SECRET, $encoding)
           "COPPERFIN_TRUST_REGISTRY_PATH=$registryPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "COPPERFIN_TRUST_SIGNING_KEY_PATH=$signingKeyPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "COPPERFIN_TRUST_SIGNER_KEY_ID=$env:COPPERFIN_TRUST_SIGNER_KEY_ID" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Validate external trust inputs
         shell: pwsh
+        env:
+          COPPERFIN_TRUST_SIGNER_KEY_ID: ${{ inputs.signer_key_id }}
         run: |
           .\scripts\prepare-windows-launcher-trust.ps1 `
             -RegistryHeaderPath $env:COPPERFIN_TRUST_REGISTRY_PATH `

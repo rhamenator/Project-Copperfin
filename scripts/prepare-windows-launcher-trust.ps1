@@ -95,6 +95,8 @@ if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_ENV)) {
         Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     "COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_REF=$signingKeyPath" |
         Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    "COPPERFIN_TRUST_SIGNER_KEY_ID=$SignerKeyId" |
+        Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 }
 if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_OUTPUT)) {
     "registry_valid=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append

@@ -84,3 +84,11 @@ foreach(FORBIDDEN_TEXT IN ITEMS
         message(FATAL_ERROR "Windows launcher trust workflow contains forbidden text: ${FORBIDDEN_TEXT}")
     endif()
 endforeach()
+
+string(FIND "${WORKFLOW_CONTENT}"
+    "COPPERFIN_TRUST_SIGNER_KEY_ID=\$env:COPPERFIN_TRUST_SIGNER_KEY_ID"
+    UNVALIDATED_SIGNER_ENV_PUBLICATION)
+if(NOT UNVALIDATED_SIGNER_ENV_PUBLICATION EQUAL -1)
+    message(FATAL_ERROR
+        "Windows launcher trust workflow must not publish signer input before preflight validation")
+endif()

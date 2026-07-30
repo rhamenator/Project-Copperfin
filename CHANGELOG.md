@@ -7,7 +7,10 @@
   removed/duplicate/case-ambiguous inventory, and modified/removed signature
   sidecars, uploads no private material, and always removes protected temporary
   inputs. Portable signer/provisioning/workflow/trust contracts and the fixture
-  build pass. This completes the missing workflow mechanics; #4409 still
+  build pass. The signer ID crosses workflow-step boundaries only after its
+  character whitelist and registry binding pass, preventing dispatch input
+  from reaching the runner environment file unvalidated. This completes the
+  missing workflow mechanics; #4409 still
   requires the externally approved protected registry/key and successful
   Windows release run before Copperfin claims the trust boundary.
 
