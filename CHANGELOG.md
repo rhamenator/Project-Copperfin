@@ -1,3 +1,11 @@
+- 2026-07-30: Hardened #4861/#3217 VFP work-area allocation at the upper
+  boundary. Explicit area 32767 no longer increments the signed allocation
+  cursor past the valid range, and automatic allocation wraps to the lowest
+  available area without relying on overflow. Out-of-range selectors fail
+  through the existing localized target diagnostic. Focused work-area tests
+  pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux;
+  macOS/AppleClang and Windows/MSVC review remains required.
+
 - 2026-07-29: Hardened #4860/#3217 numeric work-area designators. Mutable and
   const cursor lookup, `USE ... IN`, `SELECT`, and numeric `SET ORDER` now use
   complete range-checked invariant integer parsing. Oversized all-digit values

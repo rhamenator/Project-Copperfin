@@ -875,6 +875,68 @@ void test_plain_use_reuses_current_selected_work_area() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_work_area_upper_boundary_wraps_without_overflow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_work_area_upper_boundary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_simple_dbf(people_path, {"ALPHA", "BRAVO"});
+    const fs::path main_path = temp_root / "work_area_upper_boundary.prg";
+    write_text(
+        main_path,
+        "SELECT 32767\n"
+        "nBoundaryArea = SELECT()\n"
+        "USE '" + people_path.string() + "' ALIAS People IN 0\n"
+        "nWrappedArea = SELECT()\n"
+        "cWrappedAlias = ALIAS()\n"
+        "SELECT 32767\n"
+        "nBoundaryAreaAgain = SELECT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "work-area upper-boundary script should complete");
+
+    const auto check = [&](const std::string &name, const std::string &expected, const std::string &message) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), message + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected, message);
+        }
+    };
+    check("nboundaryarea", "32767", "SELECT 32767 should preserve the VFP upper work-area boundary");
+    check("nwrappedarea", "1", "SELECT 0 after area 32767 should wrap to the lowest available area");
+    check("cwrappedalias", "People", "wrapped automatic allocation should open the requested alias");
+    check("nboundaryareaagain", "32767", "reselecting area 32767 after wrapping should remain stable");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_work_area_above_vfp_boundary_fails_closed() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_work_area_out_of_range";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "work_area_out_of_range.prg";
+    write_text(main_path, "SELECT 32768\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "out-of-range work-area script should fail closed");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "out-of-range work-area selection should pause with an error");
+    expect(state.message.find("SELECT target work area not found") != std::string::npos,
+           "out-of-range work-area selection should use the existing target diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_select_and_use_in_designator_expressions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_designator_expressions";
@@ -2095,6 +2157,8 @@ int main() {
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();
     test_plain_use_reuses_current_selected_work_area();
+    test_work_area_upper_boundary_wraps_without_overflow();
+    test_work_area_above_vfp_boundary_fails_closed();
     test_select_and_use_in_designator_expressions();
     test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();

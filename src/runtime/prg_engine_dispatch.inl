@@ -4595,6 +4595,15 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
+                    if (*parsed_area > kLastWorkArea)
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                         {{"command", "SELECT"}}) +
+                                            ": " + selection;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
                     target_area = *parsed_area;
                 }
                 else
@@ -4613,6 +4622,15 @@
                 }
 
                 const int selected = select_work_area(target_area);
+                if (selected == 0)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "SELECT"}}) +
+                                        ": " + selection;
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
                 events.push_back({.category = "runtime.select",
                                   .detail = "work area " + std::to_string(selected),
                                   .location = statement.location});

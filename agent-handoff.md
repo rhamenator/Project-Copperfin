@@ -2,6 +2,16 @@
 
 ## Current State
 
+The #4861/#3217 VFP work-area allocation-boundary slice is implemented at the
+current local head. Explicit area 32767 no longer increments the signed
+allocation cursor past the valid VFP range; automatic allocation wraps to the
+lowest available area, and `SELECT(0)` reports zero only when all bounded areas
+are occupied. The focused `test_prg_engine_work_areas` target passes
+sequentially under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, covering
+boundary selection, wrapped `USE ... IN 0`, alias state, and reselection.
+macOS/AppleClang and Windows/MSVC review remains required before closing #4861.
+This is focused evidence, not full RC evidence.
+
 The #4850/#109 runtime asset-record metadata slice is
 implementation-complete and cross-platform reviewed. The portable
 `app.cfmanifest` stream now serializes

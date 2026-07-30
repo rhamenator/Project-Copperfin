@@ -2,22 +2,37 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
+        static constexpr int kFirstWorkArea = 1;
+        static constexpr int kLastWorkArea = 32767;
+
         int next_available_work_area() const
         {
             const auto &session = current_session_state();
-            int candidate = std::max(1, session.next_work_area);
-            while (session.cursors.contains(candidate))
+            int candidate = std::clamp(session.next_work_area, kFirstWorkArea, kLastWorkArea);
+            const int first_candidate = candidate;
+            do
             {
-                ++candidate;
-            }
-            return candidate;
+                if (!session.cursors.contains(candidate))
+                {
+                    return candidate;
+                }
+                candidate = candidate == kLastWorkArea ? kFirstWorkArea : candidate + 1;
+            } while (candidate != first_candidate);
+
+            // SELECT(0) reports zero when the bounded VFP work-area set is full.
+            // Callers that open a cursor will surface their existing target failure.
+            return 0;
         }
 
         int allocate_work_area()
         {
             DataSessionState &session = current_session_state();
             const int allocated = next_available_work_area();
-            session.next_work_area = allocated + 1;
+            if (allocated == 0)
+            {
+                return 0;
+            }
+            session.next_work_area = allocated == kLastWorkArea ? kFirstWorkArea : allocated + 1;
             return allocated;
         }
 
@@ -28,9 +43,13 @@
             {
                 return allocate_work_area();
             }
+            if (requested_area > kLastWorkArea)
+            {
+                return 0;
+            }
             if (requested_area >= session.next_work_area)
             {
-                session.next_work_area = requested_area + 1;
+                session.next_work_area = requested_area == kLastWorkArea ? kFirstWorkArea : requested_area + 1;
             }
             return requested_area;
         }
@@ -1125,6 +1144,13 @@
             {
                 const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(area_text);
                 if (!parsed_area.has_value())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+                        {{"target", area_text}});
+                    return std::nullopt;
+                }
+                if (*parsed_area > kLastWorkArea)
                 {
                     last_error_message = runtime_text(
                         "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",

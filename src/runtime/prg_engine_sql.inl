@@ -398,6 +398,13 @@
             target_area = preserve_selected_work_area
                               ? reserve_work_area(target_area)
                               : select_work_area(target_area);
+            if (target_area == 0)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+                    {{"target", trim_copy(in_expression)}});
+                return false;
+            }
 
             if (!can_open_table_cursor({}, alias, true, true, target_area))
             {
@@ -610,6 +617,13 @@
                 target_area = preserve_selected_work_area
                                   ? reserve_work_area(target_area)
                                   : select_work_area(target_area);
+                if (target_area == 0)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+                        {{"target", trim_copy(in_expression)}});
+                    return false;
+                }
 
                 if (!can_open_table_cursor(resolved_path, alias, false, allow_again, target_area))
                 {
@@ -664,6 +678,13 @@
             target_area = preserve_selected_work_area
                               ? reserve_work_area(target_area)
                               : select_work_area(target_area);
+            if (target_area == 0)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+                    {{"target", trim_copy(in_expression)}});
+                return false;
+            }
 
             if (!can_open_table_cursor(resolved_path, alias, remote, allow_again, target_area))
             {
