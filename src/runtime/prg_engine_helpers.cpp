@@ -913,11 +913,12 @@ bool parse_object_handle_reference(const PrgValue& value, int& handle, std::stri
     }
 
     prog_id = value.string_value.substr(prefix.size(), separator - prefix.size());
-    try {
-        handle = std::stoi(value.string_value.substr(separator + 1U));
-    } catch (...) {
+    const auto parsed_handle = copperfin::platform::try_parse_invariant_integer<int>(
+        std::string_view(value.string_value).substr(separator + 1U));
+    if (!parsed_handle.has_value() || *parsed_handle <= 0) {
         return false;
     }
+    handle = *parsed_handle;
     return true;
 }
 

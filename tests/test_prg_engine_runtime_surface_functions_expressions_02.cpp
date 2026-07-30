@@ -107,10 +107,11 @@ namespace copperfin::runtime_surface_tests
 
         expect(read_text(existing_path) == original_bytes,
                "rejected XMLTOCURSOR numeric metadata should preserve destination bytes");
-        expect(std::count_if(state.events.begin(), state.events.end(), [](const auto &event)
-        {
-            return event.category == "runtime.warning";
-        }) >= malformed_cases.size(),
+        expect(static_cast<std::size_t>(std::count_if(
+                   state.events.begin(), state.events.end(), [](const auto &event)
+                   {
+                       return event.category == "runtime.warning";
+                   })) >= malformed_cases.size(),
                "each malformed XMLTOCURSOR numeric field should emit a warning event");
         expect(std::none_of(state.events.begin(), state.events.end(), [](const auto &event)
         {
@@ -258,6 +259,30 @@ namespace copperfin::runtime_surface_tests
             "lsetunknown = SETPEM(oa, 'nosuchprop', 42)\n"
             "lsetmethod = SETPEM(oa, 'add', 'MyAddProc')\n"
             "cgetmethodafterset = GETPEM(oa, 'add')\n"
+            "cOpaque = ALLTRIM(oa)\n"
+            "cPartial = cOpaque + 'junk'\n"
+            "cGrouped = cOpaque + '.0'\n"
+            "cWhitespace = STRTRAN(cOpaque, '#', '# ')\n"
+            "cZero = 'object:Scripting.Dictionary#0'\n"
+            "cNegative = 'object:Scripting.Dictionary#-1'\n"
+            "cEmpty = 'object:Scripting.Dictionary#'\n"
+            "cOverflow = 'object:Scripting.Dictionary#999999999999999999999999999999999'\n"
+            "cOpaqueType = VARTYPE(cOpaque)\n"
+            "lOpaqueSame = COMPOBJ(cOpaque, oa)\n"
+            "cPartialType = VARTYPE(cPartial)\n"
+            "cPartialTypeByName = TYPE('cPartial')\n"
+            "cGroupedType = VARTYPE(cGrouped)\n"
+            "cWhitespaceType = VARTYPE(cWhitespace)\n"
+            "cZeroType = VARTYPE(cZero)\n"
+            "cNegativeType = VARTYPE(cNegative)\n"
+            "cEmptyType = VARTYPE(cEmpty)\n"
+            "cOverflowType = VARTYPE(cOverflow)\n"
+            "lPartialSame = COMPOBJ(cPartial, oa)\n"
+            "lGroupedSame = COMPOBJ(cGrouped, oa)\n"
+            "nBeforeMalformedSet = GETPEM(oa, 'comparemode')\n"
+            "lMalformedSet = SETPEM(cPartial, 'comparemode', 7)\n"
+            "xMalformedGet = GETPEM(cGrouped, 'comparemode')\n"
+            "nAfterMalformedSet = GETPEM(oa, 'comparemode')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -318,6 +343,30 @@ namespace copperfin::runtime_surface_tests
         check("lsetunknown", "false");       // unknown property → .F.
         check("lsetmethod", "true");         // setting method ref succeeds
         check("cgetmethodafterset", "MyAddProc");  // method ref retrievable as property
+
+        // The string-backed object identity is opaque. Complete positive
+        // handles remain usable, but malformed suffixes stay character data
+        // and cannot alias or mutate the live object.
+        check("copaquetype", "O");
+        check("lopaquesame", "true");
+        check("cpartialtype", "C");
+        check("cpartialtypebyname", "C");
+        check("cgroupedtype", "C");
+        check("cwhitespacetype", "C");
+        check("czerotype", "C");
+        check("cnegativetype", "C");
+        check("cemptytype", "C");
+        check("coverflowtype", "C");
+        check("lpartialsame", "false");
+        check("lgroupedsame", "false");
+        check("nbeforemalformedset", "2");
+        check("lmalformedset", "false");
+        check("naftermalformedset", "2");
+        {
+            const auto it = state.globals.find("xmalformedget");
+            expect(it != state.globals.end() && it->second.kind == copperfin::runtime::PrgValueKind::empty,
+                   "GETPEM malformed object reference should return empty without exposing the live object");
+        }
 
         fs::remove_all(temp_root, ignored);
     }
