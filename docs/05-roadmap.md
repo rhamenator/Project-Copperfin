@@ -118,14 +118,17 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `960fc8eb3`. The current exact-head
-hosted matrix has green Linux Managed UI (`30490155252`), Visual Studio VSIX
-(`30490155223`), and Security Supply Chain (`30490155212`) lanes. The Linux
-Native, macOS Native, Windows Native, Windows Environment/Executable Path,
-Windows DECLARE ABI, executable-path, and standalone-installer lanes remain
-in progress at that same head; queued or running jobs are not release
-evidence. The supply-chain lane produced exactly one non-expired
-`cyclonedx-sbom` artifact after #4847 pinned Syft `v1.50.0`.
+The latest product implementation head is `ca7889efa` (the current branch may
+also contain documentation-only coordination commits). The exact-head hosted
+matrix is green for Linux Native (`30511406972`), macOS Native
+(`30511406973`), Linux Managed UI (`30511406936`), Visual Studio VSIX
+(`30511406957`), standalone installers (`30511406950`), generated launcher
+(`30511406939`), Windows Environment/Executable Path (`30511406944`),
+Windows DECLARE ABI (`30511406975`), executable paths (`30511406982`), and
+Security Supply Chain (`30511407013`). Windows Native (`30511406940`) is still
+queued without a hosted runner, so it is not release evidence. The supply-chain
+lane produced exactly one non-expired `cyclonedx-sbom` artifact after #4847
+pinned Syft `v1.50.0`.
 
 #4846 generated-manifest provenance is accepted on Linux, macOS/AppleClang,
 and Windows/MSVC, and #4847's hosted SBOM gate is closed. #4621's hosted
@@ -161,7 +164,7 @@ Visual Studio UI rerun.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
-Current-head installer workflow `30329037566` passed the macOS, Linux, and
+Current-head installer workflow `30511406950` passed the macOS, Linux, and
 Windows installer jobs and uploaded the expected platform artifacts. Local
 inspection of the downloaded artifacts confirmed the expected host, standalone
 Studio/launcher-guard, and locale-catalog layouts. Artifact packaging still
@@ -174,10 +177,10 @@ inventory without warnings. The net472 process-tree fixture is explicitly
 Windows-only; VSIX compilation remains a Windows/MSBuild gate.
 
 Current-head hosted Linux UI evidence is represented by managed UI run
-`30329037628`; it completed successfully. The current-head Security Supply
-Chain Gate `30329037556` is also green.
+`30511406936`; it completed successfully. The current-head Security Supply
+Chain Gate `30511407013` is also green.
 
-Current-head VSIX evidence is green: run `30329037609` passed the VSIX build
+Current-head VSIX evidence is green: run `30511406957` passed the VSIX build
 and managed validation lane, while Windows Deep Validation independently passed
 localized resource verification, managed VSIX/language-service tests, and the
 net472 process-runner fixture. The Deep run did not execute the mounted-VFP9
