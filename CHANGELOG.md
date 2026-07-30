@@ -1,3 +1,12 @@
+- 2026-07-30: Began the durable recovered-requirements traceability matrix under
+  #4896 with `LLR-VFP-NUM-001`. Shipped VFP9 SP2 Numeric Data Type and `SET
+  POINT` help establish that calculation text uses a period even when the
+  displayed decimal point changes. The row maps that requirement to Copperfin's
+  invariant numeric parser, PRG expression parser, focused parser/data-I/O
+  regressions, and the Apple-libc++ classic-locale fallback. This traceability
+  addition changes no product behavior; broader requirements recovery remains
+  open.
+
 - 2026-07-30: Corrected the current RC roadmap ledger for closed Studio-host
   JSON-control-escape child #4873. Its exact product/test head `4a75d3273` has
   accepted Linux, macOS/AppleClang, and Windows/MSVC focused locale evidence,

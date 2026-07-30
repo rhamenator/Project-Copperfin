@@ -85,6 +85,7 @@ Contents:
 - [`docs/25-engine-concurrency-policy.md`](docs/25-engine-concurrency-policy.md)
 - [`docs/26-localization-and-release-readiness.md`](docs/26-localization-and-release-readiness.md)
 - [`docs/27-known-vfp9-bug-exceptions.md`](docs/27-known-vfp9-bug-exceptions.md)
+- [`docs/32-recovered-requirements-traceability.md`](docs/32-recovered-requirements-traceability.md)
 - [`assets/copperfin-logo.png`](assets/copperfin-logo.png)
 
 Current implementation focus:

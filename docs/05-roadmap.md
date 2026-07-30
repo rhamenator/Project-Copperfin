@@ -418,8 +418,9 @@ cover:
    shipped evidence as of this writing.)*
 6. Build the requirements-to-code-to-test traceability matrix from validated
    VFP9 behavior, shipped documentation, and documented Copperfin exceptions.
-   *(No lane letter was ever assigned; this remains a standing, deferred goal
-   per `docs/28-repository-ontology.md` §7.)*
+   *(No lane letter was ever assigned. The durable matrix has begun in
+   `docs/32-recovered-requirements-traceability.md`; broad recovery remains a
+   standing goal per `docs/28-repository-ontology.md` §7.)*
 
 ## Lettered Lane History
 

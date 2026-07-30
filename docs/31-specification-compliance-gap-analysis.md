@@ -135,9 +135,12 @@ requirement — the runtime must "remain stack-frugal rather than reproducing th
 native-stack failure profile of `VFP.exe`" — is evidenced as implemented in
 `docs/20-runtime-build-and-debug-pipeline.md` ("a heap-backed frame stack inside
 the native runtime session... with a tested `MAXCALLDEPTH` guardrail"), so that
-half of the charter is met. The charter's Requirements Recovery goal (a DO-178-style
-traceability matrix) is explicitly a standing, deferred goal per
-`docs/28-repository-ontology.md` §7 — no matrix exists yet.
+half of the charter is met. The charter's Requirements Recovery goal (a
+DO-178-style traceability matrix) is explicitly a standing goal per
+`docs/28-repository-ontology.md` §7. The durable matrix now begins in
+`docs/32-recovered-requirements-traceability.md`; its first shipped-help-backed
+row recovers the VFP period-decimal calculation contract. Broad subsystem
+coverage remains unfinished.
 
 ### docs/27 — Known VFP9 Bug Exceptions Registry
 
