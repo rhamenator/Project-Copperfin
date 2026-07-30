@@ -312,6 +312,7 @@ std::string build_module_definition_source(const RuntimePackagePlan& plan) {
 
 std::string build_native_wrapper_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << "// Generated Copperfin native wrapper scaffold\n";
     stream << "// This is an honest bridge scaffold, not a finished FoxPro/VFP-compatible runtime wrapper.\n";
     stream << "#include <algorithm>\n";

@@ -79,10 +79,18 @@ void test_library_api_manifest_arities_ignore_grouping_locale() {
     plan.launcher_output_path = (temp_root / "Wide.dll").string();
     plan.exported_symbols = {"WideCall"};
     plan.assets = {{
+        .record_index = 1U,
         .source_path = source_path.string(),
+        .staged_path = {},
         .relative_path = "wide.prg",
+        .type_title = "Program",
+        .excluded = false,
         .exists = true,
-        .copied = true}};
+        .required_for_runtime = true,
+        .package_writable = false,
+        .copied = true,
+        .sha256 = {},
+        .source_resolution_error = {}}};
 
     const std::locale grouping_locale(std::locale::classic(), new manifest_grouped_numpunct());
     manifest_global_locale_guard locale_guard(grouping_locale);
@@ -103,6 +111,74 @@ void test_library_api_manifest_arities_ignore_grouping_locale() {
                fll_manifest.find("function_parameters=WideCall|p01|p02|p03|p04|p05|p06|p07|p08|p09|p10|p11|p12") !=
                    std::string::npos,
            "#4868: invariant arity formatting should preserve parsed parameter order and names");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_library_native_wrapper_numeric_literals_ignore_grouping_locale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_pipeline_library_wrapper_numeric_locale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    std::string source_text;
+    for (std::size_t line = 1U; line < 1234U; ++line) {
+        source_text += "* padding\n";
+    }
+    source_text +=
+        "FUNCTION WideCall\n"
+        "LPARAMETERS p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12\n"
+        "RETURN 1\n"
+        "ENDFUNC\n";
+
+    const fs::path source_path = temp_root / "wide.prg";
+    write_text(source_path, source_text);
+
+    copperfin::runtime::RuntimePackagePlan plan;
+    plan.output_kind = copperfin::runtime::BuildOutputKind::dll;
+    plan.launcher_output_path = (temp_root / "Wide.dll").string();
+    plan.exported_symbols = {"WideCall"};
+    plan.assets = {{
+        .record_index = 1U,
+        .source_path = source_path.string(),
+        .staged_path = {},
+        .relative_path = "wide.prg",
+        .type_title = "Program",
+        .excluded = false,
+        .exists = true,
+        .required_for_runtime = true,
+        .package_writable = false,
+        .copied = true,
+        .sha256 = {},
+        .source_resolution_error = {}}};
+
+    const std::locale grouping_locale(std::locale::classic(), new manifest_grouped_numpunct());
+    manifest_global_locale_guard locale_guard(grouping_locale);
+    const std::string dll_wrapper =
+        copperfin::runtime::runtime_pipeline_detail::build_native_wrapper_source(plan);
+    plan.output_kind = copperfin::runtime::BuildOutputKind::fll;
+    plan.launcher_output_path = (temp_root / "Wide.fll").string();
+    const std::string fll_wrapper =
+        copperfin::runtime::runtime_pipeline_detail::build_native_wrapper_source(plan);
+
+    const std::string parameter_names =
+        "p01\\|p02\\|p03\\|p04\\|p05\\|p06\\|p07\\|p08\\|p09\\|p10\\|p11\\|p12";
+    expect(dll_wrapper.find(", 1234U") != std::string::npos &&
+               fll_wrapper.find(", 1234U") != std::string::npos,
+           "#4869: DLL/OCX and FLL wrapper source lines should remain invariant C++ literals");
+    expect(dll_wrapper.find(", 12U, reinterpret_cast<void*>(&WideCall)") != std::string::npos &&
+               fll_wrapper.find(", 12U, reinterpret_cast<void*>(&WideCall)") != std::string::npos,
+           "#4869: DLL/OCX and FLL wrapper parameter counts should remain invariant C++ literals");
+    expect(dll_wrapper.find(parameter_names) != std::string::npos &&
+               fll_wrapper.find(parameter_names) != std::string::npos,
+           "#4869: invariant wrapper numeric literals should preserve parameter order and names");
+    expect(dll_wrapper.find("1.2.3.4U") == std::string::npos &&
+               fll_wrapper.find("1.2.3.4U") == std::string::npos &&
+               dll_wrapper.find("1.2U") == std::string::npos &&
+               fll_wrapper.find("1.2U") == std::string::npos,
+           "#4869: generated wrapper numeric literals should not inherit digit grouping");
 
     fs::remove_all(temp_root, ignored);
 }
