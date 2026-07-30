@@ -118,7 +118,7 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `a55a35868` (the current branch may
+The latest product implementation head is `cd6cf9029` (the current branch may
 also contain documentation-only coordination commits). The focused
 runtime-pipeline target passes locally under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain

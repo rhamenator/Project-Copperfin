@@ -3,7 +3,7 @@
 ## Current State
 
 The #4871/#110 APP-archive hex-payload slice is implemented at exact
-product/test head `a55a35868`. Hex encoding now binds the classic locale so
+product/test head `cd6cf9029`. Hex encoding now binds the classic locale so
 each staged byte remains exactly two lowercase hexadecimal digits. The APP
 fixture installs every-digit grouping and carries binary `00 0f 10 ff`,
 requiring canonical `000f10ff`, rejecting grouped punctuation, and recovering

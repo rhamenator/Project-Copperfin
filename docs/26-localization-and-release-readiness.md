@@ -120,7 +120,7 @@ explicitly use the classic locale. The focused data-I/O target passes under
 default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC;
 AppleClang acceptance and exact-head hosted evidence remain pending.
 
-#4871 at product head `a55a35868` adds no user-facing text or catalog keys.
+#4871 at product head `cd6cf9029` adds no user-facing text or catalog keys.
 APP archive byte payloads are invariant lowercase hexadecimal machine data and
 now explicitly use the classic locale. The focused runtime-pipeline target
 passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
