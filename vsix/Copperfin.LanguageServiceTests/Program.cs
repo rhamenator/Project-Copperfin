@@ -97,6 +97,7 @@ internal static partial class Program
         TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
         TestUnquotedIncludesFeedRecursiveDefineResolution();
+        TestExternalMixedCaseIncludesResolveUniqueFilesystemSpelling();
         TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
         TestCrossFileProjectBoundaryResolvesProcedureDefinition();
         TestCrossFileProjectBoundaryCompletions();
@@ -2875,6 +2876,82 @@ internal static partial class Program
             var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "REPORT_STATUS_READY");
             Expect(string.Equals(description, "Project preprocessor symbol.", StringComparison.Ordinal),
                 "defines from recursive unquoted includes should participate in token description lookup");
+        }
+        finally
+        {
+            TryDelete(root);
+            TryDelete(externalRoot);
+        }
+    }
+
+    private static void TestExternalMixedCaseIncludesResolveUniqueFilesystemSpelling()
+    {
+        var root = CreateProjectRoot("mixed_case_include_resolution");
+        var externalRoot = Path.Combine(Path.GetTempPath(), "copperfin_language_service_mixed_case_includes", Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(externalRoot);
+
+            var nestedHeaderPath = Path.Combine(externalRoot, "NESTEDDEFS.H");
+            File.WriteAllText(nestedHeaderPath, "#DEFINE MIXED_CASE_NESTED_READY" + Environment.NewLine);
+
+            var headerPath = Path.Combine(externalRoot, "frxbuilder.h");
+            File.WriteAllText(
+                headerPath,
+                "#DEFINE MIXED_CASE_BUILDER_READY" + Environment.NewLine +
+                "#include nesteddefs.h" + Environment.NewLine);
+
+            var exactCollisionPath = Path.Combine(externalRoot, "exactcase.h");
+            File.WriteAllText(exactCollisionPath, "#DEFINE EXACT_CASE_INCLUDE_READY" + Environment.NewLine);
+            var exactFoldedSiblingPath = Path.Combine(externalRoot, "EXACTCASE.H");
+            var supportsCaseDistinctFiles = !File.Exists(exactFoldedSiblingPath);
+            if (supportsCaseDistinctFiles)
+            {
+                File.WriteAllText(exactFoldedSiblingPath, "#DEFINE EXACT_FOLDED_SIBLING_ONLY" + Environment.NewLine);
+                File.WriteAllText(Path.Combine(externalRoot, "ambiguous.h"), "#DEFINE AMBIGUOUS_LOWER_ONLY" + Environment.NewLine);
+                File.WriteAllText(Path.Combine(externalRoot, "AMBIGUOUS.H"), "#DEFINE AMBIGUOUS_UPPER_ONLY" + Environment.NewLine);
+            }
+
+            var sourcePath = Path.Combine(root, "main.prg");
+            var source =
+                $"#include {Path.Combine(externalRoot, "frxBuilder.h")}" + Environment.NewLine +
+                $"#include {exactCollisionPath}" + Environment.NewLine;
+            if (supportsCaseDistinctFiles)
+            {
+                source += $"#include {Path.Combine(externalRoot, "AmBiGuOuS.H")}" + Environment.NewLine;
+            }
+            File.WriteAllText(sourcePath, source);
+
+            var directResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "MIXED_CASE_BUILDER_READY", out var directDefinition);
+            Expect(directResolved, "a unique mixed-case external include should feed define resolution");
+            if (directResolved)
+            {
+                Expect(directDefinition.FilePath == headerPath, "mixed-case external include resolution should preserve actual filesystem spelling");
+            }
+
+            var recursiveResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "MIXED_CASE_NESTED_READY", out var recursiveDefinition);
+            Expect(recursiveResolved, "recursive external includes should use unique mixed-case filesystem resolution");
+            if (recursiveResolved)
+            {
+                Expect(recursiveDefinition.FilePath == nestedHeaderPath, "recursive mixed-case resolution should preserve actual filesystem spelling");
+            }
+
+            var exactResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "EXACT_CASE_INCLUDE_READY", out var exactDefinition);
+            Expect(exactResolved, "an exact include match should win when case-colliding external files exist");
+            if (exactResolved)
+            {
+                Expect(exactDefinition.FilePath == exactCollisionPath, "exact include resolution should retain the exact matched path");
+            }
+
+            if (supportsCaseDistinctFiles)
+            {
+                Expect(!FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "AMBIGUOUS_LOWER_ONLY", out _),
+                    "a case-folded external include ambiguity should not select the lowercase candidate");
+                Expect(!FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "AMBIGUOUS_UPPER_ONLY", out _),
+                    "a case-folded external include ambiguity should not select the uppercase candidate");
+                Expect(!FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "EXACT_FOLDED_SIBLING_ONLY", out _),
+                    "exact include precedence should not scan a case-colliding sibling");
+            }
         }
         finally
         {

@@ -885,22 +885,81 @@ internal static class FoxProIntelliSenseCatalog
         {
             if (Path.IsPathRooted(includePath))
             {
-                return File.Exists(includePath) ? Path.GetFullPath(includePath) : string.Empty;
+                return ResolveExistingFilePath(includePath);
             }
 
             var sourceRelative = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourcePath) ?? string.Empty, includePath));
-            if (File.Exists(sourceRelative))
+            var resolvedSourceRelative = ResolveExistingFilePath(sourceRelative);
+            if (!string.IsNullOrWhiteSpace(resolvedSourceRelative))
             {
-                return sourceRelative;
+                return resolvedSourceRelative;
             }
 
             var rootRelative = Path.GetFullPath(Path.Combine(root, includePath));
-            return File.Exists(rootRelative) ? rootRelative : string.Empty;
+            return ResolveExistingFilePath(rootRelative);
         }
         catch
         {
             return string.Empty;
         }
+    }
+
+    private static string ResolveExistingFilePath(string candidate)
+    {
+        var fullPath = Path.GetFullPath(candidate);
+        if (File.Exists(fullPath))
+        {
+            return fullPath;
+        }
+
+        var pathRoot = Path.GetPathRoot(fullPath);
+        if (string.IsNullOrEmpty(pathRoot))
+        {
+            return string.Empty;
+        }
+
+        var currentPath = pathRoot;
+        var relativePath = fullPath.Substring(pathRoot.Length);
+        var segments = relativePath.Split(
+            new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+            StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var segment in segments)
+        {
+            string? exactMatch = null;
+            string? insensitiveMatch = null;
+            var insensitiveMatchCount = 0;
+            foreach (var entry in Directory.EnumerateFileSystemEntries(currentPath))
+            {
+                var entryName = Path.GetFileName(entry);
+                if (string.Equals(entryName, segment, StringComparison.Ordinal))
+                {
+                    exactMatch = entry;
+                    break;
+                }
+
+                if (string.Equals(entryName, segment, StringComparison.OrdinalIgnoreCase))
+                {
+                    insensitiveMatch = entry;
+                    insensitiveMatchCount++;
+                }
+            }
+
+            if (exactMatch is not null)
+            {
+                currentPath = exactMatch;
+                continue;
+            }
+
+            if (insensitiveMatchCount != 1 || insensitiveMatch is null)
+            {
+                return string.Empty;
+            }
+
+            currentPath = insensitiveMatch;
+        }
+
+        return File.Exists(currentPath) ? Path.GetFullPath(currentPath) : string.Empty;
     }
 
     private static void AddMatch(
