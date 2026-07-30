@@ -21,6 +21,7 @@ internal sealed class StudioMainForm : Form
     private readonly StudioCommandWindowControl commandWindowControl;
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
+    private readonly ToolStripMenuItem openDocumentMenuItem;
     private readonly ToolStripMenuItem closeDocumentMenuItem;
     private readonly ToolStripMenuItem editMenuItem;
     private readonly ToolStripMenuItem undoMenuItem;
@@ -61,14 +62,20 @@ internal sealed class StudioMainForm : Form
 
         var menuStrip = new MenuStrip();
         var fileMenu = new ToolStripMenuItem(this.localization.Text("Studio.FileMenu"));
-        var openItem = new ToolStripMenuItem(this.localization.Text("Studio.OpenMenu"), null, (_, _) => OpenFromPicker());
+        openDocumentMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.OpenMenu"),
+            null,
+            (_, _) => OpenFromPicker())
+        {
+            ShortcutKeys = Keys.Control | Keys.O
+        };
         closeDocumentMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.CloseMenu"), null, (_, _) => CloseActiveDocument())
         {
             ShortcutKeys = Keys.Control | Keys.F4,
             Enabled = false
         };
         var exitItem = new ToolStripMenuItem(this.localization.Text("Studio.ExitMenu"), null, (_, _) => Close());
-        fileMenu.DropDownItems.Add(openItem);
+        fileMenu.DropDownItems.Add(openDocumentMenuItem);
         fileMenu.DropDownItems.Add(closeDocumentMenuItem);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
@@ -284,6 +291,8 @@ internal sealed class StudioMainForm : Form
     internal string? ActiveDocumentPath => documentTabs.SelectedTab?.ToolTipText;
 
     internal string CloseDocumentMenuText => closeDocumentMenuItem.Text;
+
+    internal Keys OpenDocumentShortcutKeys => openDocumentMenuItem.ShortcutKeys;
 
     internal string EditMenuText => editMenuItem.Text;
 

@@ -554,6 +554,8 @@ internal static partial class Program
             Application.DoEvents();
             Expect(form.CloseDocumentMenuText == "&Cerrar",
                 "standalone Close command should use the active locale catalog");
+            Expect(form.OpenDocumentShortcutKeys == (Keys.Control | Keys.O),
+                "standalone Open command should expose the conventional Windows shortcut");
             form.CloseActiveDocument();
             Expect(form.DocumentTabCount == 0,
                 "closing with no standalone document should be a safe no-op");
@@ -584,6 +586,12 @@ internal static partial class Program
             Expect(form.DocumentTabCount == 1 &&
                    string.Equals(form.ActiveDocumentPath, normalizedFirstPath, StringComparison.Ordinal),
                 "a closed standalone path should be reopenable as a fresh tab");
+
+            using var pseudoForm = new StudioMainForm(
+                new CopperfinLocalization(CopperfinLocalization.PseudoLocale),
+                new InMemoryStudioShellLayoutStore());
+            Expect(pseudoForm.OpenDocumentShortcutKeys == (Keys.Control | Keys.O),
+                "standalone Open shortcut should remain invariant under pseudo-localization");
 
             TearDownForm(form);
         }
