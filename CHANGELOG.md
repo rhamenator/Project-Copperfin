@@ -16,9 +16,10 @@
   VSIX, managed-UI, installer, security/SBOM, executable-path, Windows
   environment/path, and DECLARE ABI gates. The `contents: read` mutation is
   rejected locally. Fresh corrected-head permissive safety run `30566915484`
-  passes and
-  archives its non-secret report; this supporting evidence does not substitute
-  for the absent protected environment or approved signer execution.
+  passes and archives its non-secret report; this supporting evidence does not
+  substitute for the absent protected environment or approved signer
+  execution. #4895 is closed after independent review and synchronized
+  evidence; strict post-closure safety run `30568877447` also passes.
 
 - 2026-07-30: Implemented release-trust audit slice #4894 under #4409. The
   protected Windows workflow now binds an explicit approved signer ID to its

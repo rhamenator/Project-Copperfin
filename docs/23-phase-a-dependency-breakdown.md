@@ -62,7 +62,9 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   Linux/macOS Native `316/316`, including the focused permission/provisioning
   contract, plus the VSIX, managed-UI, installer, security/SBOM,
   executable-path, Windows environment/path, and DECLARE ABI gates;
-  corrected-head permissive safety run `30566915484` also passes.
+  corrected-head permissive safety run `30566915484` also passes. #4895 is
+  closed, and strict post-closure safety run `30568877447` passes; #4409 remains
+  open for external release authority.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX

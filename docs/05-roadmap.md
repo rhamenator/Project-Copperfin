@@ -353,7 +353,8 @@ permission/provisioning contract, plus the VSIX,
 managed-UI, installer, security/SBOM, executable-path, Windows
 environment/path, and DECLARE ABI gates. Corrected-head permissive safety run
 `30566915484` also passes for #4895; neither result supplies external release
-authority.
+authority. #4895 is closed after independent review and synchronized evidence;
+strict post-closure safety run `30568877447` passes. #4409 remains open.
 
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.

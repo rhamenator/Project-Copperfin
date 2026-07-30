@@ -91,6 +91,11 @@ report artifact `8769199463`; GitHub's archive digest is
 `20a6a799462adc6606d9c169254220792d01412784cd05dd9c4395ae906c34a6`,
 and the report file SHA-256 is
 `91ae53f994c504922efe6a9ffad96a29e484e6aa8616d3304e2764e220268658`.
+#4895 is closed. Strict post-closure safety run `30568877447` passes and uploads
+artifact `8769944921`; GitHub's archive digest is
+`3ecdd5f5ae00cf55cc79f243c9e2219ffed88c04d20068ca4155339b1b62c092`,
+and the report file SHA-256 is
+`6b846b17119241fc3467c0dd9d86a1ab0c7abfd0f108e781a0bf0b26d3db3219`.
 
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,

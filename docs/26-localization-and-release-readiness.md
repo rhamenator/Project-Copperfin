@@ -72,7 +72,8 @@ slice. That exact corrected head passes hosted Linux/macOS Native `316/316`,
 including the focused permission/provisioning contract, plus the VSIX,
 managed-UI, installer, security/SBOM, executable-path, Windows
 environment/path, and DECLARE ABI gates. Permissive safety run `30566915484`
-also passes without advancing external #4409 authority.
+also passes. #4895 is closed, and strict post-closure safety run `30568877447`
+passes without advancing external #4409 authority.
 
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent
