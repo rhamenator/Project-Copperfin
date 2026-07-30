@@ -6,12 +6,22 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private const uint EmReplaceSel = 0x00C2;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "SendMessageW")]
+    private static extern IntPtr SendMessageReplaceSelection(
+        IntPtr windowHandle,
+        uint message,
+        IntPtr recordUndo,
+        string replacement);
+
     private sealed class InMemoryStudioShellLayoutStore : IStudioShellLayoutStore
     {
         internal StudioShellLayoutState? StoredState { get; set; }
@@ -198,11 +208,9 @@ internal static partial class Program
             };
             editor.Controls.Add(editBox);
             editBox.BringToFront();
-            editBox.ClearUndo();
-            editBox.SelectAll();
-            editBox.SelectedText = "after";
             editBox.Focus();
             Application.DoEvents();
+            ReplaceSelectionWithUndo(editBox, "after");
 
             Expect(editBox.CanUndo,
                 "standalone Undo smoke should create a real focused text edit in the shared editor");
@@ -214,10 +222,9 @@ internal static partial class Program
             Expect(!form.UndoCommandEnabled,
                 "standalone Undo should refresh availability after consuming the active edit");
 
-            editBox.SelectAll();
-            editBox.SelectedText = "after";
             editBox.Focus();
             Application.DoEvents();
+            ReplaceSelectionWithUndo(editBox, "after");
             Expect(form.ProcessCmdKeyForTest(Keys.Control | Keys.Z) &&
                    editBox.Text == "before",
                 "standalone Ctrl+Z should route while focus remains inside the active document");
@@ -225,11 +232,9 @@ internal static partial class Program
             SetCurrentSnapshot(editor, BuildStatusSmokeSnapshot());
             var commandInput = form.CommandWindowInputForTest;
             commandInput.Text = "before command";
-            commandInput.ClearUndo();
-            commandInput.SelectAll();
-            commandInput.SelectedText = "after command";
             commandInput.Focus();
             Application.DoEvents();
+            ReplaceSelectionWithUndo(commandInput, "after command");
             Expect(commandInput.CanUndo && editor.CanHandleUndoCommand(),
                 "standalone shortcut scope smoke should cover competing tool-window and host-backed undo stacks");
             Expect(!form.ProcessCmdKeyForTest(Keys.Control | Keys.Z) &&
@@ -270,6 +275,23 @@ internal static partial class Program
             {
             }
         }
+    }
+
+    private static void ReplaceSelectionWithUndo(TextBoxBase textBox, string replacement)
+    {
+        textBox.ClearUndo();
+        textBox.SelectAll();
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            SendMessageReplaceSelection(
+                textBox.Handle,
+                EmReplaceSel,
+                new IntPtr(1),
+                replacement);
+            return;
+        }
+
+        textBox.SelectedText = replacement;
     }
 
     private static void SmokeStandaloneStudioCommandWindowInteraction()
