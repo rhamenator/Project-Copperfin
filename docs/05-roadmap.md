@@ -28,6 +28,15 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current runtime/editor-alignment evidence includes #4881 at exact product/test
+head `0867efd1a`: project procedures, functions, and qualified class methods
+now expose the inline parameter form already supported by the stack-frugal PRG
+runtime. Matching-parenthesis extraction preserves nested and quoted defaults;
+declarations without inline clauses retain following-line parameter discovery.
+The local four-mode matrix and exact-head Windows VSIX run `30527386804` pass;
+artifact `8753293045` was uploaded. The child is closed, while broader G1 and
+RC validation remain separate.
+
 Current G1 signature-help evidence includes #4880 at exact product/test head
 `95dff1c75`: project `PARAMETERS`/`LPARAMETERS` discovery now separates only
 top-level commas, preserving nested call, bracket/brace, quoted-comma, and

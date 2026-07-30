@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1 runtime/editor-alignment slice: `#4881` surfaces inline parameter
+  clauses from project procedures, functions, and qualified class methods,
+  matching the syntax already materialized as implicit `LPARAMETERS` by the
+  stack-frugal native runtime. Nested calls, brackets/braces, quoted commas,
+  and doubled quote escapes remain intact; following-line declaration lookup
+  is unchanged when no inline clause exists. The local four-mode matrix and
+  Windows VSIX run `30527386804` pass; artifact `8753293045` was uploaded.
 - Recent G1 signature-help slice: `#4880` replaces unconditional comma splitting
   for project `PARAMETERS`/`LPARAMETERS` declarations with top-level lexical
   splitting. Nested parentheses, brackets/braces, quoted commas, and doubled

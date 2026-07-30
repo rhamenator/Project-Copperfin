@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4881/#27 inline project-signature slice is implemented at exact product/
+test head `0867efd1a`. Procedures, functions, and qualified class methods now
+surface inline parameter clauses already supported by the native PRG runtime.
+Matching outer-parenthesis extraction retains nested calls, brackets/braces,
+quoted commas, and doubled quote escapes; declarations without inline clauses
+still use following-line `PARAMETERS`/`LPARAMETERS` discovery. The Release
+language-service build has zero warnings/errors, and the full harness passes
+locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`.
+Exact-head Windows VSIX run `30527386804` passes all managed/net472 steps and
+uploads artifact `8753293045` with SHA-256
+`156f316967b555f1be90461e99b5ec57a84914576da3bdae33a360cea525796e`.
+Issue #4881 is closed; broader #27/#112 and RC validation remain open. Runtime/
+stack behavior, catalogs, package/debug, and trust contracts are unchanged.
+
 The #4880/#27 project signature-help slice is implemented at exact product/test
 head `95dff1c75`. Project `PARAMETERS`/`LPARAMETERS` declarations now split only
 at top-level commas, so defaults containing nested calls, brackets/braces,

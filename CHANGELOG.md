@@ -1,3 +1,11 @@
+- 2026-07-30: Implemented #4881/#27 project signature help for inline PRG
+  routine declarations. Procedures, functions, and qualified class methods now
+  expose inline parameters using matching-parenthesis extraction that preserves
+  nested calls, brackets/braces, quoted commas, and doubled quote escapes;
+  following-line parameter discovery remains the fallback. The warning-free
+  four-mode local harness and exact-head Windows VSIX run `30527386804` pass;
+  artifact `8753293045` was uploaded and #4881 is closed.
+
 - 2026-07-30: Implemented #4880/#27 nesting-aware project signature parameters.
   Language-service discovery now splits `PARAMETERS`/`LPARAMETERS` only at
   top-level commas, preserving nested calls, brackets/braces, quoted commas,
