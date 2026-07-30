@@ -6,11 +6,11 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/path.h"
+#include "copperfin/vfp/report_layout_records.h"
 #include "copperfin/vfp/sidecar_path.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <algorithm>
-#include <charconv>
 #include <filesystem>
 #include <fstream>
 #include <mutex>
@@ -224,19 +224,7 @@ std::optional<int> parse_scaled_int(const vfp::DbfRecord& record, std::string_vi
         return std::nullopt;
     }
 
-    const auto dot = raw.find('.');
-    const std::string integer_portion = dot == std::string::npos ? raw : raw.substr(0U, dot);
-    if (integer_portion.empty()) {
-        return std::nullopt;
-    }
-
-    int value = 0;
-    const auto [ptr, ec] = std::from_chars(integer_portion.data(), integer_portion.data() + integer_portion.size(), value);
-    if (ec != std::errc() || ptr != (integer_portion.data() + integer_portion.size())) {
-        return std::nullopt;
-    }
-
-    return value;
+    return vfp::parse_truncated_fixed_decimal_int(raw);
 }
 
 bool supports_visual_property_blob(const StudioDocumentModel& document) {

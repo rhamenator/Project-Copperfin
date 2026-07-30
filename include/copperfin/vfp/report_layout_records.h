@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include <charconv>
 #include <cmath>
 #include <limits>
+#include <optional>
+#include <string_view>
 
 namespace copperfin::vfp {
 
@@ -20,6 +23,36 @@ inline int truncate_report_layout_geometry(double value, int fallback = 0) {
         return fallback;
     }
     return static_cast<int>(value);
+}
+
+inline std::optional<int> parse_truncated_fixed_decimal_int(std::string_view value) {
+    if (value.empty()) {
+        return std::nullopt;
+    }
+
+    const std::size_t decimal = value.find('.');
+    if (decimal != std::string_view::npos &&
+        value.find('.', decimal + 1U) != std::string_view::npos) {
+        return std::nullopt;
+    }
+    const std::string_view integer = value.substr(0U, decimal);
+    if (integer.empty()) {
+        return std::nullopt;
+    }
+    if (decimal != std::string_view::npos) {
+        for (const char character : value.substr(decimal + 1U)) {
+            if (character < '0' || character > '9') {
+                return std::nullopt;
+            }
+        }
+    }
+
+    int parsed = 0;
+    const auto result = std::from_chars(integer.data(), integer.data() + integer.size(), parsed);
+    if (result.ec != std::errc{} || result.ptr != integer.data() + integer.size()) {
+        return std::nullopt;
+    }
+    return parsed;
 }
 
 } // namespace copperfin::vfp

@@ -9,7 +9,6 @@
 #include "copperfin/vfp/report_layout_records.h"
 
 #include <algorithm>
-#include <charconv>
 #include <cctype>
 #include <filesystem>
 #include <mutex>
@@ -139,19 +138,7 @@ std::optional<int> parse_scaled_int(const DbfRecord& record, std::string_view fi
         return std::nullopt;
     }
 
-    const auto dot = raw.find('.');
-    const std::string integer_portion = dot == std::string::npos ? raw : raw.substr(0U, dot);
-    if (integer_portion.empty()) {
-        return std::nullopt;
-    }
-
-    int value = 0;
-    const auto [ptr, ec] = std::from_chars(integer_portion.data(), integer_portion.data() + integer_portion.size(), value);
-    if (ec != std::errc() || ptr != (integer_portion.data() + integer_portion.size())) {
-        return std::nullopt;
-    }
-
-    return vfp::truncate_report_layout_geometry(static_cast<double>(value));
+    return vfp::parse_truncated_fixed_decimal_int(raw);
 }
 
 int parse_scaled_int_or_default(const DbfRecord& record, std::string_view field_name, int fallback = 0) {
@@ -165,22 +152,7 @@ std::optional<int> parse_named_value_int(const StudioNamedValue& named_value) {
         return std::nullopt;
     }
 
-    const auto dot = raw.find('.');
-    const std::string integer_portion = dot == std::string::npos ? raw : raw.substr(0U, dot);
-    if (integer_portion.empty()) {
-        return std::nullopt;
-    }
-
-    int parsed_value = 0;
-    const auto [ptr, ec] = std::from_chars(
-        integer_portion.data(),
-        integer_portion.data() + integer_portion.size(),
-        parsed_value);
-    if (ec != std::errc() || ptr != integer_portion.data() + integer_portion.size()) {
-        return std::nullopt;
-    }
-
-    return parsed_value;
+    return vfp::parse_truncated_fixed_decimal_int(raw);
 }
 
 std::string band_kind_name(int objcode) {

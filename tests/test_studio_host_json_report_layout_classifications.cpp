@@ -83,10 +83,10 @@ void write_synthetic_report_table_for_invalid_classification_layout_json(
     const std::string huge_type = "999999999999999999999999999999";
     const std::vector<std::vector<std::string>> records{
         {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"type?", "band?", "\"Malformed classification\"", "", "0", "", "500", "malformed-class-guid"},
+        {"5.bad", "53.bad", "\"Malformed classification\"", "", "0", "", "500", "malformed-class-guid"},
         {huge_type, huge_type, "\"Oversized classification\"", "250", "100", "800", "300",
          "oversized-class-guid"},
-        {"deleted?", "deleted?", "\"Deleted classification\"", "400", "700", "900", "350",
+        {"8.2.3", "0.trailing", "\"Deleted classification\"", "400", "700", "900", "350",
          "deleted-class-guid"}
     };
 
@@ -314,8 +314,8 @@ void write_synthetic_report_table_for_invalid_direct_page_setup_layout_json(
         {.name = "UNIQUEID", .type = 'C', .length = 48U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "sideways", "paper?", "margin?", "invalid-direct-live-settings-guid"},
-        {"1", "53", "deleted-sideways", "deleted-paper?", "deleted-margin?",
+        {"1", "53", "2.bad", "9.1junk", "100.2.3", "invalid-direct-live-settings-guid"},
+        {"1", "53", "3.bad", "10.1junk", "200.2.3",
          "invalid-direct-deleted-settings-guid"}
     };
 
@@ -1563,13 +1563,13 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
         expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
                         "#1733: invalid direct settings should still be counted as deleted raw settings");
         expect_contains(summary_process.stdout_text,
-                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"sideways\"",
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"2.bad\"",
                         "#1733: invalid direct orientation provenance should remain inspectable");
         expect_contains(summary_process.stdout_text,
-                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"paper?\"",
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"9.1junk\"",
                         "#1733: invalid direct paper-size provenance should remain inspectable");
         expect_contains(summary_process.stdout_text,
-                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"margin?\"",
+                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"100.2.3\"",
                         "#1733: invalid direct top-margin provenance should remain inspectable");
         expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",
                         "#1733: invalid direct orientation should keep the default orientation code inert");
@@ -1602,15 +1602,15 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
                 "\"name\": \"ORIENTATION\"",
                 "\"recordIndex\": 0",
                 "\"fieldIndex\": 2",
-                "\"value\": \"sideways\"",
+                "\"value\": \"2.bad\"",
                 "\"name\": \"PAPERSIZE\"",
                 "\"recordIndex\": 0",
                 "\"fieldIndex\": 3",
-                "\"value\": \"paper?\"",
+                "\"value\": \"9.1junk\"",
                 "\"name\": \"TOPMARGIN\"",
                 "\"recordIndex\": 0",
                 "\"fieldIndex\": 4",
-                "\"value\": \"margin?\""
+                "\"value\": \"100.2.3\""
             },
             "#1733: invalid direct live selection should expose raw selected-settings metadata");
 
@@ -1635,15 +1635,15 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
                 "\"name\": \"ORIENTATION\"",
                 "\"recordIndex\": 1",
                 "\"fieldIndex\": 2",
-                "\"value\": \"deleted-sideways\"",
+                "\"value\": \"3.bad\"",
                 "\"name\": \"PAPERSIZE\"",
                 "\"recordIndex\": 1",
                 "\"fieldIndex\": 3",
-                "\"value\": \"deleted-paper?\"",
+                "\"value\": \"10.1junk\"",
                 "\"name\": \"TOPMARGIN\"",
                 "\"recordIndex\": 1",
                 "\"fieldIndex\": 4",
-                "\"value\": \"deleted-margin?\""
+                "\"value\": \"200.2.3\""
             },
             "#1733: invalid direct deleted selection should expose raw selected-settings metadata");
     };
