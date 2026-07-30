@@ -63,6 +63,8 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", ProjectRegexOptions);
+    private static readonly Regex EndRoutineRegex = new(@"^\s*END(?:PROC|FUNC)\b", ProjectRegexOptions);
+    private static readonly Regex ClassPropertyRegex = new(@"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=", ProjectRegexOptions);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+(?:""([^""]+)""|<([^>]+)>|([^\s&]+))", ProjectRegexOptions);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
@@ -583,7 +585,13 @@ internal static class FoxProIntelliSenseCatalog
 
         AddEntries(
             completions,
-            index.Methods.Select(method => (ExtractMethodName(method), localization.Format("LanguageService.IntelliSense.Project.MethodMemberFromType", ExtractContainingType(method)))),
+            index.Properties.Select(property => (ExtractMemberName(property), localization.Format("LanguageService.IntelliSense.Project.PropertyMemberFromType", ExtractContainingType(property)))),
+            "property",
+            priority: 0);
+
+        AddEntries(
+            completions,
+            index.Methods.Select(method => (ExtractMemberName(method), localization.Format("LanguageService.IntelliSense.Project.MethodMemberFromType", ExtractContainingType(method)))),
             "member",
             priority: 0);
     }
@@ -598,17 +606,17 @@ internal static class FoxProIntelliSenseCatalog
         return MemberAccessRegex.IsMatch(linePrefix);
     }
 
-    private static string ExtractMethodName(string qualifiedMethodName)
+    private static string ExtractMemberName(string qualifiedMemberName)
     {
-        var separator = qualifiedMethodName.LastIndexOf('.');
-        return separator >= 0 ? qualifiedMethodName.Substring(separator + 1) : qualifiedMethodName;
+        var separator = qualifiedMemberName.LastIndexOf('.');
+        return separator >= 0 ? qualifiedMemberName.Substring(separator + 1) : qualifiedMemberName;
     }
 
-    private static string ExtractContainingType(string qualifiedMethodName)
+    private static string ExtractContainingType(string qualifiedMemberName)
     {
-        var separator = qualifiedMethodName.LastIndexOf('.');
+        var separator = qualifiedMemberName.LastIndexOf('.');
         return separator >= 0
-            ? qualifiedMethodName.Substring(0, separator)
+            ? qualifiedMemberName.Substring(0, separator)
             : CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.ActiveProject");
     }
 
@@ -740,6 +748,7 @@ internal static class FoxProIntelliSenseCatalog
         }
 
         string? currentClassName = null;
+        var insideClassRoutine = false;
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             var line = lines[lineIndex];
@@ -748,6 +757,7 @@ internal static class FoxProIntelliSenseCatalog
             if (classMatch.Success)
             {
                 currentClassName = classMatch.Groups[1].Value;
+                insideClassRoutine = false;
                 index.Classes.Add(currentClassName);
                 TryAddDefinition(index.Definitions, currentClassName, "class", normalizedPath, lineIndex + 1, classMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.ClassSymbolDerivingFrom", classMatch.Groups[2].Value));
                 continue;
@@ -758,12 +768,20 @@ internal static class FoxProIntelliSenseCatalog
                 if (EndDefineRegex.IsMatch(line))
                 {
                     currentClassName = null;
+                    insideClassRoutine = false;
+                    continue;
+                }
+
+                if (EndRoutineRegex.IsMatch(line))
+                {
+                    insideClassRoutine = false;
                     continue;
                 }
 
                 var methodProcedureMatch = MethodProcedureRegex.Match(line);
                 if (methodProcedureMatch.Success)
                 {
+                    insideClassRoutine = true;
                     var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
                     TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
@@ -774,11 +792,31 @@ internal static class FoxProIntelliSenseCatalog
                 var methodFunctionMatch = MethodFunctionRegex.Match(line);
                 if (methodFunctionMatch.Success)
                 {
+                    insideClassRoutine = true;
                     var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
                     TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
                     TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"), TryReadInlineProjectParameterList(line, methodFunctionMatch.Groups[1]));
                     continue;
+                }
+
+                if (!insideClassRoutine)
+                {
+                    var propertyMatch = ClassPropertyRegex.Match(line);
+                    if (propertyMatch.Success)
+                    {
+                        var propertyName = $"{currentClassName}.{propertyMatch.Groups[1].Value}";
+                        index.Properties.Add(propertyName);
+                        TryAddDefinition(
+                            index.Definitions,
+                            propertyName,
+                            "property",
+                            normalizedPath,
+                            lineIndex + 1,
+                            propertyMatch.Groups[1].Index + 1,
+                            localization.Format("LanguageService.IntelliSense.Project.PropertySymbolOnClass", currentClassName));
+                        continue;
+                    }
                 }
             }
 
@@ -1294,6 +1332,11 @@ internal static class FoxProIntelliSenseCatalog
             return true;
         }
 
+        if (TryResolveUniqueProjectPropertyDefinition(index, methodName, out definition))
+        {
+            return true;
+        }
+
         return TryResolveDefinition(index, methodName, out definition);
     }
 
@@ -1337,7 +1380,7 @@ internal static class FoxProIntelliSenseCatalog
     {
         signatures = Array.Empty<FoxProSignatureEntry>();
         var matches = index.Methods
-            .Where(method => string.Equals(ExtractMethodName(method), methodName, StringComparison.OrdinalIgnoreCase))
+            .Where(method => string.Equals(ExtractMemberName(method), methodName, StringComparison.OrdinalIgnoreCase))
             .Take(2)
             .ToList();
         if (matches.Count != 1)
@@ -1361,7 +1404,25 @@ internal static class FoxProIntelliSenseCatalog
     {
         definition = new FoxProDefinitionLocation();
         var matches = index.Methods
-            .Where(method => string.Equals(ExtractMethodName(method), methodName, StringComparison.OrdinalIgnoreCase))
+            .Where(method => string.Equals(ExtractMemberName(method), methodName, StringComparison.OrdinalIgnoreCase))
+            .Take(2)
+            .ToList();
+        if (matches.Count != 1)
+        {
+            return false;
+        }
+
+        return TryResolveDefinition(index, matches[0], out definition);
+    }
+
+    private static bool TryResolveUniqueProjectPropertyDefinition(
+        ProjectSymbolIndex index,
+        string propertyName,
+        out FoxProDefinitionLocation definition)
+    {
+        definition = new FoxProDefinitionLocation();
+        var matches = index.Properties
+            .Where(property => string.Equals(ExtractMemberName(property), propertyName, StringComparison.OrdinalIgnoreCase))
             .Take(2)
             .ToList();
         if (matches.Count != 1)
@@ -1642,6 +1703,7 @@ internal static class FoxProIntelliSenseCatalog
         public HashSet<string> Procedures { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Classes { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Methods { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public HashSet<string> Properties { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Defines { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Aliases { get; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, HashSet<string>> CursorFields { get; } = new(StringComparer.OrdinalIgnoreCase);

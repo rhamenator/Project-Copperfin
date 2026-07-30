@@ -121,6 +121,7 @@ internal static partial class Program
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
         TestQualifiedProjectMethodSignatureHelpAndDefinition();
         TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
+        TestProjectClassPropertiesFeedMemberCompletionAndDefinition();
         TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
         TestUnquotedIncludesFeedRecursiveDefineResolution();
@@ -3186,6 +3187,49 @@ internal static partial class Program
                         "app.customer.editor"),
                     "member access context should surface the originating class path for project method members");
             }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectClassPropertiesFeedMemberCompletionAndDefinition()
+    {
+        var root = CreateProjectRoot("project_property_member_completion");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.editor AS custom" + Environment.NewLine +
+                "Caption = \"Editor\"" + Environment.NewLine +
+                "RetryCount = 3" + Environment.NewLine +
+                "PROCEDURE SaveOrder" + Environment.NewLine +
+                "localShadow = .T." + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "DEFINE CLASS app.other AS custom" + Environment.NewLine +
+                "Caption = \"Other\"" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "oEditor.", string.Empty);
+            Expect(completions.Any(entry => entry.DisplayText == "RetryCount" && entry.Kind == "property" &&
+                       entry.Description == CopperfinLocalization.FromVisualStudioUiCulture().Format(
+                           "LanguageService.IntelliSense.Project.PropertyMemberFromType",
+                           "app.editor")),
+                "member completion should surface class-scope properties with localized originating-class metadata");
+            Expect(!completions.Any(entry => entry.DisplayText == "localShadow" && entry.Kind == "property"),
+                "assignments inside class method bodies should not leak into property completion");
+            Expect(completions.Any(entry => entry.DisplayText == "SaveOrder" && entry.Kind == "member") &&
+                   completions.Any(entry => entry.DisplayText == "Refresh()" && entry.Kind == "member"),
+                "project property completion should preserve project methods and generic members");
+
+            var resolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "oEditor.RetryCount", out var definition);
+            Expect(resolved && definition.Kind == "property" && definition.LineNumber == 3,
+                "a unique instance-style project property should resolve to its declaration");
+            Expect(!FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "oEditor.Caption", out _),
+                "an ambiguous trailing project property name should not resolve to an arbitrary class");
         }
         finally
         {
