@@ -1299,7 +1299,13 @@
                                                        { return std::isdigit(ch) != 0; });
             if (numeric_selection)
             {
-                const std::size_t index = static_cast<std::size_t>(std::max(1, std::stoi(target_name))) - 1U;
+                const auto parsed_index = copperfin::platform::try_parse_invariant_integer<int>(target_name);
+                if (!parsed_index.has_value() || *parsed_index <= 0)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.RequestedOrderMissing");
+                    return false;
+                }
+                const std::size_t index = static_cast<std::size_t>(*parsed_index - 1);
                 if (index >= cursor.orders.size())
                 {
                     last_error_message = runtime_text("Runtime.Prg.Cursor.Error.RequestedOrderMissing");
