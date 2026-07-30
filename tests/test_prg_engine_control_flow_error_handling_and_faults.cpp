@@ -44,6 +44,41 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages() {
         duplicate_table.message == "Table already open in this data session; USE AGAIN is required: " + table_path.string(),
         "duplicate table USE error should interpolate path through the default locale catalog");
 
+    const std::string overflowing_area = "999999999999999999999";
+    const auto overflowing_select = run_error_script(
+        "overflowing_select",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT '" + overflowing_area + "'\n");
+    expect(overflowing_select.reason == copperfin::runtime::DebugPauseReason::error,
+        "SELECT with an overflowing numeric work-area designator should pause with an error");
+    expect(overflowing_select.message == "SELECT target work area not found: " + overflowing_area,
+        "SELECT overflow should use the established target-work-area diagnostic");
+
+    const auto overflowing_use = run_error_script(
+        "overflowing_use",
+        "USE '" + table_path.string() + "' ALIAS People IN '" + overflowing_area + "'\n");
+    expect(overflowing_use.reason == copperfin::runtime::DebugPauseReason::error,
+        "USE with an overflowing numeric work-area designator should pause with an error");
+    expect(overflowing_use.message == "USE target work area not found: " + overflowing_area,
+        "USE overflow should use the established target-work-area diagnostic");
+
+    const auto overflowing_target_functions = run_error_script(
+        "overflowing_target_functions",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "nCount = RECCOUNT('" + overflowing_area + "')\n"
+        "nRecno = RECNO('" + overflowing_area + "')\n"
+        "RETURN\n");
+    expect(overflowing_target_functions.completed,
+        "targeted cursor functions should fail closed for overflowing work-area designators");
+    const auto count = overflowing_target_functions.globals.find("ncount");
+    const auto recno = overflowing_target_functions.globals.find("nrecno");
+    expect(count != overflowing_target_functions.globals.end() &&
+               copperfin::runtime::format_value(count->second) == "0",
+        "RECCOUNT should return zero for an overflowing work-area designator");
+    expect(recno != overflowing_target_functions.globals.end() &&
+               copperfin::runtime::format_value(recno->second) == "0",
+        "RECNO should return zero for an overflowing work-area designator");
+
     const auto missing_order = run_error_script(
         "missing_order",
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"

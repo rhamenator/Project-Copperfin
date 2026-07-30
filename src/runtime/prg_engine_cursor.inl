@@ -164,7 +164,8 @@
                                                        { return std::isdigit(ch) != 0; });
             if (numeric_selection)
             {
-                return find_cursor_by_area(std::stoi(normalized_designator));
+                const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(normalized_designator);
+                return parsed_area.has_value() ? find_cursor_by_area(*parsed_area) : nullptr;
             }
             if (CursorState *cursor = find_cursor_by_alias(normalized_designator))
             {
@@ -190,7 +191,8 @@
                                                        { return std::isdigit(ch) != 0; });
             if (numeric_selection)
             {
-                return find_cursor_by_area(std::stoi(normalized_designator));
+                const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(normalized_designator);
+                return parsed_area.has_value() ? find_cursor_by_area(*parsed_area) : nullptr;
             }
             if (const CursorState *cursor = find_cursor_by_alias(normalized_designator))
             {
@@ -1121,7 +1123,15 @@
                                                        { return std::isdigit(ch) != 0; });
             if (numeric_selection)
             {
-                return std::stoi(area_text);
+                const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(area_text);
+                if (!parsed_area.has_value())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound",
+                        {{"target", area_text}});
+                    return std::nullopt;
+                }
+                return *parsed_area;
             }
 
             CursorState *existing = find_cursor_by_alias(area_text);

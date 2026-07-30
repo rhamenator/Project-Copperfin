@@ -4585,7 +4585,17 @@
                                                            { return std::isdigit(ch) != 0; });
                 if (numeric_selection)
                 {
-                    target_area = std::stoi(selection);
+                    const auto parsed_area = copperfin::platform::try_parse_invariant_integer<int>(selection);
+                    if (!parsed_area.has_value())
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                         {{"command", "SELECT"}}) +
+                                            ": " + selection;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    target_area = *parsed_area;
                 }
                 else
                 {
