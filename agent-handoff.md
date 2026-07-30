@@ -2,18 +2,18 @@
 
 ## Current State
 
-The #4885/#27 cursor-field member-completion slice is complete at product/test
-head `69f190288`. The Visual Studio project scanner now indexes fields from
+The #4885/#27 cursor-field member-completion slice is corrected at product/test
+head `7955966d8`. The Visual Studio project scanner now indexes fields from
 bounded single-line `CREATE CURSOR alias (...)` declarations, preserving
 nested type clauses such as `N(12, 2)`, and exposes those fields only after the
 matching alias member-access expression. Field descriptions use the managed
 localization catalog; invariant alias/field names, the `field` completion kind,
-and generic/class member behavior remain intact. The warning-free full harness
+and generic/class member behavior remain intact. Declaration capture stops at
+the earliest outer close that leaves only whitespace or a trailing `&&`
+comment, preventing comment punctuation from creating phantom fields. The warning-free full harness
 passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
-Exact-head Windows VSIX run `30531865023` passes all managed/net472 steps and
-uploads artifact `8755080597` with SHA-256
-`7559d722ff6c748424c2e50c9527ecf40619089a8ee341bc272ca525ae4043b6`.
-Issue #4885 is closed; broader #27/#112 and RC validation remain open.
+Exact-head hosted follow-up validation is pending. Issue #4885 remains open;
+broader #27/#112 and RC validation remain open.
 
 The #4884/#27 signature-parameter highlighting slice is complete at final
 product/test head `05bd74dc8`. Visual Studio parameter loci now resolve only

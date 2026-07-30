@@ -28,14 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
-Current cursor-member evidence includes #4885 at product/test head
-`69f190288`: bounded single-line `CREATE CURSOR alias (...)` declarations feed
+Current cursor-member evidence includes #4885 at corrective product/test head
+`7955966d8`: bounded single-line `CREATE CURSOR alias (...)` declarations feed
 alias-scoped field completions without splitting nested type clauses such as
 `N(12, 2)`. Localized descriptions are added without changing invariant field
-names/kinds or existing generic/class members. The local four-mode matrix and
-exact-head Windows VSIX run `30531865023` pass; artifact `8755080597` was
-uploaded. The child is closed, while broader G1 and RC validation remain
-separate.
+names/kinds or existing generic/class members. Trailing `&&` comment punctuation
+cannot seed phantom fields. The local four-mode matrix passes; the child remains
+open for exact-head hosted and independent review, while broader G1 and RC
+validation remain separate.
 
 Current signature-highlighting evidence includes #4884 at final product/test
 head `05bd74dc8`: Visual Studio parameter loci advance through real top-level

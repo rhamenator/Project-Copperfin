@@ -37,9 +37,9 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   single-line `CREATE CURSOR alias (...)` statements and offers them only for
   the matching alias member-access context. Nested type clauses remain intact,
   field metadata is localized, and invariant field names/kinds plus generic
-  members are unchanged. Product/test head `69f190288` passes the local
-  four-mode matrix and Windows VSIX run `30531865023`; artifact `8755080597`
-  was uploaded.
+  members are unchanged. Corrective head `7955966d8` also prevents trailing
+  `&&` comment punctuation from seeding phantom fields and passes the local
+  four-mode matrix; exact-head hosted and independent review remain pending.
 - Recent G1 signature-highlighting slice: `#4884` anchors Visual Studio
   parameter loci at actual declaration starts instead of unconstrained name
   matches. Prefix-related names and later names repeated inside earlier default

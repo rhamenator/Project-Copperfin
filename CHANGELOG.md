@@ -4,9 +4,10 @@
   member-access context. Nested type clauses such as `N(12, 2)` remain one
   declaration, field descriptions route through the managed localization
   catalog, and invariant field names/kinds plus generic object members remain
-  unchanged. The warning-free four-mode Release harness and exact-head Windows
-  VSIX run `30531865023` pass at product/test head `69f190288`; artifact
-  `8755080597` was uploaded.
+  unchanged. A macOS closure audit also prevents trailing `&&` comments with
+  commas and closing parentheses from seeding phantom fields. Corrective head
+  `7955966d8` passes the warning-free four-mode Release harness; exact-head
+  hosted follow-up validation remains pending.
 
 - 2026-07-30: Completed #4884/#27 declaration-anchored Visual Studio
   signature-help parameter highlighting. Parameter loci now advance through
