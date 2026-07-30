@@ -1,3 +1,13 @@
+- 2026-07-29: Hardened #4859/#109 persisted `RESTORE FROM` array dimensions.
+  Row and column metadata now requires complete invariant nonnegative integer
+  tokens, and restored cell-count multiplication is checked before allocation.
+  Grouped, decimal, trailing, negative, parser-overflow, and product-overflow
+  shapes fail closed without materializing a prefix-derived array. Valid array
+  dimensions, values/order, scope, additive behavior, invariant SAVE output,
+  localization, and verified-file admission remain unchanged. Focused
+  macOS/AppleClang data-I/O tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - 2026-07-29: Hardened #4858/#109 xAsset numeric object-type metadata.
   Executable-model routing now requires complete invariant integer `OBJTYPE`
   tokens, so grouped, decimal, trailing, malformed, and overflowing DBF text

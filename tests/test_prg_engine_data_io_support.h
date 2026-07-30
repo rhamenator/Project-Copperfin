@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #if defined(_WIN32)
 #include <process.h>
 #else
@@ -124,6 +125,7 @@ void test_restore_from_parses_numeric_values_invariantly();
 void test_restore_from_without_additive_clears_prior_globals();
 void test_restore_from_honors_current_frame_local_bindings();
 void test_save_restore_round_trips_arrays();
+void test_restore_from_rejects_invalid_array_dimensions();
 void test_save_restore_round_trips_public_scope();
 void test_save_to_shadowed_public_name_does_not_persist_public_scope_marker();
 void test_restore_from_without_additive_clears_stale_arrays();

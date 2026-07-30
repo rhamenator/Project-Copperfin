@@ -796,6 +796,66 @@ void test_save_restore_round_trips_arrays() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_restore_from_rejects_invalid_array_dimensions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_array_dimensions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mem_path = temp_root / "invalid_array_dimensions.mem";
+    const std::string size_max = std::to_string(std::numeric_limits<std::size_t>::max());
+    write_text(
+        mem_path,
+        "valid=A:2,2|C:a|C:b|C:c|C:d\n"
+        "grouped=A:1.000,2|C:x|C:y\n"
+        "trailing=A:2abc,1|C:x|C:y\n"
+        "negative=A:-1,2|C:x\n"
+        "parseroverflow=A:" + size_max + "0,1|C:x\n"
+        "productoverflow=A:" + size_max + ",2|C:x\n");
+
+    const fs::path main_path = temp_root / "restore_array_dimensions.prg";
+    write_text(
+        main_path,
+        "RESTORE FROM '" + mem_path.string() + "'\n"
+        "valid_type = TYPE('valid')\n"
+        "valid_rows = ALEN(valid, 1)\n"
+        "valid_cols = ALEN(valid, 2)\n"
+        "valid_last = valid[2,2]\n"
+        "grouped_type = TYPE('grouped')\n"
+        "trailing_type = TYPE('trailing')\n"
+        "negative_type = TYPE('negative')\n"
+        "parser_overflow_type = TYPE('parseroverflow')\n"
+        "product_overflow_type = TYPE('productoverflow')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#4859: RESTORE FROM should fail closed for invalid array dimensions");
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), "#4859: " + name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   "#4859: " + name + " should equal " + expected);
+        }
+    };
+    check("valid_type", "A");
+    check("valid_rows", "2");
+    check("valid_cols", "2");
+    check("valid_last", "d");
+    check("grouped_type", "U");
+    check("trailing_type", "U");
+    check("negative_type", "U");
+    check("parser_overflow_type", "U");
+    check("product_overflow_type", "U");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_save_restore_round_trips_public_scope() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_public_scope";

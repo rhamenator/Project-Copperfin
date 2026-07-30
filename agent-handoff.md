@@ -96,6 +96,18 @@ contracts remain unchanged. The focused xAsset suite passes under default,
 review remains required before #4858 can close. This is focused evidence, not
 full RC evidence.
 
+The #4859/#109 persisted `RESTORE FROM` array-dimension slice is
+implementation-complete locally. Row and column tokens now require complete
+invariant nonnegative integers, and the runtime checks cell-count
+multiplication before resizing. Grouped, decimal, trailing, negative,
+parser-overflow, and product-overflow shapes fail closed without materializing
+a prefix-derived array. Valid shapes, elements/order, scope, additive
+semantics, invariant SAVE output, localization, verified-file admission, and
+public contracts remain unchanged. The focused data-I/O suite passes under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and
+Windows/MSVC review remains required before #4859 can close. This is focused
+evidence, not full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

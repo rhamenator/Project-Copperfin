@@ -1,5 +1,15 @@
 # VFP Language Reference Coverage
 
+- `RESTORE FROM` array-dimension culture boundary (2026-07-29, #4859 under
+  #109): persisted rows and columns now require complete invariant nonnegative
+  integer tokens, and cell-count multiplication is checked before allocation.
+  Grouped, decimal, trailing, negative, parser-overflow, and product-overflow
+  shapes fail closed without materializing a prefix-derived array. Valid
+  arrays, element types/order, scope, additive semantics, invariant SAVE
+  output, localization, verified-file admission, and public contracts remain
+  unchanged. Focused macOS/AppleClang tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - xAsset object-type metadata culture boundary (2026-07-29, #4858 under
   #109): executable-model routing now requires complete invariant integer
   `OBJTYPE` tokens. Grouped, decimal, trailing, malformed, and overflowing DBF

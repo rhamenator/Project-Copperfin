@@ -7473,8 +7473,26 @@
                             continue;
                         }
                         const std::vector<std::string> size_tokens = split_csv_like(array_tokens.front());
-                        const std::size_t rows = size_tokens.empty() ? 0U : static_cast<std::size_t>(std::max(0, std::stoi(trim_copy(size_tokens[0]))));
-                        const std::size_t columns = size_tokens.size() >= 2U ? static_cast<std::size_t>(std::max(1, std::stoi(trim_copy(size_tokens[1])))) : 1U;
+                        if (size_tokens.empty())
+                        {
+                            continue;
+                        }
+                        const auto parsed_rows = copperfin::platform::try_parse_invariant_integer<std::size_t>(
+                            trim_copy(size_tokens[0]));
+                        const auto parsed_columns = size_tokens.size() >= 2U
+                            ? copperfin::platform::try_parse_invariant_integer<std::size_t>(
+                                  trim_copy(size_tokens[1]))
+                            : std::optional<std::size_t>{1U};
+                        if (!parsed_rows.has_value() || !parsed_columns.has_value())
+                        {
+                            continue;
+                        }
+                        const std::size_t rows = *parsed_rows;
+                        const std::size_t columns = std::max<std::size_t>(1U, *parsed_columns);
+                        if (rows > std::numeric_limits<std::size_t>::max() / columns)
+                        {
+                            continue;
+                        }
                         std::vector<PrgValue> values;
                         values.reserve(array_tokens.size() > 0U ? array_tokens.size() - 1U : 0U);
                         for (std::size_t element_index = 1U; element_index < array_tokens.size(); ++element_index)

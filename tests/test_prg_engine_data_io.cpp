@@ -49,6 +49,7 @@ int main() {
     test_save_restore_round_trips_escaped_string_and_types();
     test_restore_from_honors_current_frame_local_bindings();
     test_save_restore_round_trips_arrays();
+    test_restore_from_rejects_invalid_array_dimensions();
     test_save_restore_round_trips_public_scope();
     test_save_to_shadowed_public_name_does_not_persist_public_scope_marker();
     test_restore_from_without_additive_clears_prior_globals();
