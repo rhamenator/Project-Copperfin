@@ -3,10 +3,12 @@
   actual top-level declaration starts instead of unconstrained name searches,
   preventing prefix-related names and names repeated inside earlier default
   expressions from highlighting the wrong text. Nested calls, quoted commas,
-  bracket-expression commas, and built-in optional brackets remain intact. The
-  warning-free four-mode Release harness and exact-head Windows VSIX run
-  `30530040995` pass at `f6d4f224c`; artifact `8754358316` was uploaded and
-  #4884 is closed.
+  bracket-expression commas, and built-in optional brackets remain intact. A
+  macOS closure audit additionally prevents parameter-like names after commas
+  inside bracket/brace defaults from stealing a later declaration locus while
+  keeping optional `[, parameter]` delimiters on the top-level path. The
+  corrected warning-free four-mode Release harness passes; exact-head hosted
+  follow-up validation remains pending.
 
 - 2026-07-30: Completed #4883/#27 visibility-qualified class-method discovery
   across both managed project scanners. `PROTECTED` and `HIDDEN`

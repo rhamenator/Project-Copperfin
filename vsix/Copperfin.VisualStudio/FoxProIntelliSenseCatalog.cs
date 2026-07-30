@@ -456,7 +456,16 @@ internal static class FoxProIntelliSenseCatalog
                 }
                 else if (value == '[')
                 {
-                    bracketDepth++;
+                    var next = index + 1;
+                    while (next < content.Length && char.IsWhiteSpace(content[next]))
+                    {
+                        next++;
+                    }
+
+                    if (next >= content.Length || content[next] != ',')
+                    {
+                        bracketDepth++;
+                    }
                 }
                 else if (value == ']' && bracketDepth > 0)
                 {
