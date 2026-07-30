@@ -28,6 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current class-method discovery evidence includes #4883 at exact product/test
+head `99a23efcf`: `PROTECTED` and `HIDDEN` procedure/function declarations,
+including `PROC`, now retain qualified class identity, inline/following-line
+signatures, and definition provenance without becoming global symbols. The
+local four-mode matrix and exact-head Windows VSIX run `30528297287` pass;
+artifact `8753662479` was uploaded. The child is closed, while broader G1 and
+RC validation remain separate.
+
 Current VFP declaration-alias evidence includes #4882 at exact product/test
 head `639d31fc8`: project scanning now treats `PROC` and `PROCEDURE` alike for
 global routines and qualified class methods, preserving inline/following-line

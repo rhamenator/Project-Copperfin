@@ -2,9 +2,11 @@
   across both managed project scanners. `PROTECTED` and `HIDDEN`
   procedure/function methods, including abbreviated `PROC`, now retain
   qualified definitions, signatures, references, and rename inputs while the
-  same declarations remain excluded at global scope. Focused macOS coverage
-  exercises both scanners in the warning-free four-mode Release harness;
-  exact-head hosted follow-up validation remains pending.
+  same declarations remain excluded at global scope. The initial catalog
+  change passed exact-head Windows VSIX run `30528297287` and uploaded artifact
+  `8753662479`; focused macOS coverage for the follow-up Project Insights
+  correction passes the warning-free four-mode Release harness, with exact-head
+  hosted follow-up validation pending.
 
 - 2026-07-30: Implemented #4882/#27 project language-service support for VFP's
   `PROC` abbreviation across both managed project scanners. Global routines

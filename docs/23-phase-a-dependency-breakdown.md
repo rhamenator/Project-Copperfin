@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1 class-method visibility slice: `#4883` discovers `PROTECTED` and
+  `HIDDEN` procedure/function declarations, including `PROC`, through class-
+  only scanner patterns. Qualified identity, following-line/inline signatures,
+  and exact definition provenance are preserved; visibility-qualified global
+  lookalikes remain rejected. The local four-mode matrix and Windows VSIX run
+  `30528297287` pass, and artifact `8753662479` was uploaded.
 - Recent G1 VFP declaration-alias slice: `#4882` recognizes `PROC` and
   `PROCEDURE` through the same bounded, case-insensitive project scanner path.
   Global and qualified class declarations retain following-line/inline

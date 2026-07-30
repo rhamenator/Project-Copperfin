@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4883/#27 visibility-qualified project-method slice is implemented at exact
+product/test head `99a23efcf`. Class-only scanning now discovers `PROTECTED`
+and `HIDDEN` procedure/function declarations, including abbreviated `PROC`,
+while leaving visibility-qualified lines outside `DEFINE CLASS` absent from
+global symbols. Qualified method identity, localized descriptions, inline and
+following-line signatures, and exact definition file/line provenance remain
+intact. The Release language-service build has zero warnings/errors, and the
+full harness passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and
+explicit `qps-ploc`. Exact-head Windows VSIX run `30528297287` passes all
+managed/net472 steps and uploads artifact `8753662479` with SHA-256
+`c00ed9b3519e404f3757f217c14235a95b1a759b435d6238267b30159ff26a7c`.
+Issue #4883 is closed; broader #27/#112 and RC validation remain open. Runtime
+visibility/stack behavior, catalogs, package/debug, and trust are unchanged.
+
 The #4882/#27 VFP `PROC` project-symbol slice is implemented at exact product/
 test head `639d31fc8`. The case-insensitive project scanner now gives `PROC` and
 `PROCEDURE` identical global-routine and qualified-class-method semantics.
