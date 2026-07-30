@@ -10,9 +10,10 @@ escape (backslash followed by `u001f`) in AST JSON, IR JSON, and transpiled C#,
 reject the raw byte in every artifact, and the generated C# still compiles.
 The full focused `test_runtime_pipeline` CTest passes `1/1` on Linux under
 default (63.33s), `pt_BR.UTF-8` (60.02s), and `de_DE.UTF-8` (61.27s).
-AppleClang and MSVC read-only acceptance remain required before closure. No
-user-facing text, catalogs, AST/IR fields or schema versions, manifest/debug
-paths, package trust, or stack behavior changed.
+AppleClang seq1280 and Windows/MSVC seq1281 pass the same three-locale focused
+matrix with no dissent. Issue #4876 is closed. No user-facing text, catalogs,
+AST/IR fields or schema versions, manifest/debug paths, package trust, or stack
+behavior changed.
 
 The #4875/#27 portable include-path slice is implemented at exact product/test
 head `e41325472`. Language-service include resolution now walks actual
