@@ -58,6 +58,12 @@
         {
             DataSessionState &session = current_session_state();
             requested_area = reserve_work_area(requested_area);
+            if (requested_area == 0)
+            {
+                // Exhaustion is a failure sentinel; a failed SELECT/USE must
+                // leave the previously selected work area unchanged.
+                return 0;
+            }
             session.selected_work_area = requested_area;
             return session.selected_work_area;
         }

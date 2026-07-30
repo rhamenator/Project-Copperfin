@@ -2,7 +2,9 @@
   boundary. Explicit area 32767 no longer increments the signed allocation
   cursor past the valid range, and automatic allocation wraps to the lowest
   available area without relying on overflow. Out-of-range selectors fail
-  through the existing localized target diagnostic. Focused work-area tests
+  through the existing localized target diagnostic. Exhaustion now fails
+  without replacing the previously selected work area with the internal zero
+  sentinel. Focused work-area tests, including all 32,767 occupied areas,
   pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux;
   macOS/AppleClang and Windows/MSVC review remains required.
 

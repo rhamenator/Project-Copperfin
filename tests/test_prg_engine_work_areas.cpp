@@ -937,6 +937,42 @@ void test_work_area_above_vfp_boundary_fails_closed() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_work_area_exhaustion_preserves_selected_area() {
+    namespace fs = std::filesystem;
+    constexpr int last_work_area = 32767;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_work_area_exhaustion";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path people_path = temp_root / "people.dbf";
+    write_simple_dbf(people_path, {});
+    const fs::path main_path = temp_root / "work_area_exhaustion.prg";
+    std::string source;
+    source.reserve(static_cast<std::size_t>(last_work_area) * 64U);
+    for (int area = 1; area <= last_work_area; ++area) {
+        source += "USE '" + people_path.string() + "' ALIAS A" + std::to_string(area);
+        source += area == 1 ? " IN 0\n" : " AGAIN IN 0\n";
+    }
+    source += "SELECT 0\nRETURN\n";
+    write_text(main_path, source);
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "work-area exhaustion should fail closed");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "work-area exhaustion should pause with an error");
+    expect(state.work_area.selected == last_work_area,
+           "failed SELECT 0 should preserve the previously selected work area");
+    expect(state.work_area.aliases.size() == static_cast<std::size_t>(last_work_area),
+           "work-area exhaustion should preserve all previously opened aliases");
+    expect(state.message.find("SELECT target work area not found") != std::string::npos,
+           "work-area exhaustion should use the existing target diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_select_and_use_in_designator_expressions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_designator_expressions";
@@ -2159,6 +2195,7 @@ int main() {
     test_plain_use_reuses_current_selected_work_area();
     test_work_area_upper_boundary_wraps_without_overflow();
     test_work_area_above_vfp_boundary_fails_closed();
+    test_work_area_exhaustion_preserves_selected_area();
     test_select_and_use_in_designator_expressions();
     test_expression_driven_in_targeting_across_local_data_commands();
     test_select_zero_and_use_in_zero_reuse_closed_work_area();

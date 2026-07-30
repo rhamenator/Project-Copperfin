@@ -6,9 +6,12 @@ The #4861/#3217 VFP work-area allocation-boundary slice is implemented at the
 current local head. Explicit area 32767 no longer increments the signed
 allocation cursor past the valid VFP range; automatic allocation wraps to the
 lowest available area, and `SELECT(0)` reports zero only when all bounded areas
-are occupied. The focused `test_prg_engine_work_areas` target passes
-sequentially under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, covering
-boundary selection, wrapped `USE ... IN 0`, alias state, and reselection.
+are occupied. Exhaustion is fail-closed without clobbering the previously
+selected area with the zero sentinel; the focused regression fills all 32,767
+areas and verifies the selection and alias map remain intact after the failed
+`SELECT 0`. The focused `test_prg_engine_work_areas` target passes sequentially
+under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, covering boundary
+selection, wrapped `USE ... IN 0`, alias state, exhaustion, and reselection.
 macOS/AppleClang and Windows/MSVC review remains required before closing #4861.
 This is focused evidence, not full RC evidence.
 
