@@ -23,7 +23,7 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `f4e480ea4`, while subsequent
+latest product implementation head is `d21415cbf`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
 Native `30329037575` and
 macOS Native `30329037567` passed their native
@@ -69,6 +69,14 @@ localized parse-warning path, and the focused runtime-surface target passes
 the same three locale environments on Linux. AppleClang and MSVC acceptance
 for #4863 remain pending; the exact-head hosted matrix is active and is not yet
 broad release evidence.
+
+#4864 at product head `d21415cbf` likewise adds no user-facing text or catalog
+keys. It treats the opaque runtime object-reference spelling as invariant
+machine identity and rejects malformed numeric suffixes before classification
+or lookup, while preserving existing programmatic identifiers and localized
+reflection fallback behavior. The focused runtime-surface target passes under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance
+and the newly started exact-head hosted matrix remain pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

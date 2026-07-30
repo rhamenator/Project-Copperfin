@@ -1,3 +1,14 @@
+- 2026-07-30: Hardened #4864/#3217 opaque runtime object identities. The
+  shared `object:<prog-id>#<handle>` parser now requires a complete invariant
+  positive integer handle before object classification or lookup. Partial,
+  grouped/decimal, whitespace-prefixed, zero, negative, empty, and overflowing
+  suffixes remain character data and cannot alias a live object through
+  `TYPE()` / `VARTYPE()`, `COMPOBJ()`, `GETPEM()`, or `SETPEM()`. Valid
+  internally generated references, programmatic identifiers, reflection,
+  event/ownership paths, and the iterative frame machine remain unchanged.
+  The focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux; cross-platform review remains required.
+
 - 2026-07-30: Hardened #4863/#109 portable cursor XML numeric metadata.
   `CURSORTOXML()` now emits field widths and decimal counts through the classic
   locale, and `XMLTOCURSOR()` requires complete nonnegative invariant values

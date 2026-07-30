@@ -2,6 +2,19 @@
 
 ## Current State
 
+The #4864/#3217 opaque runtime object-identity slice is implemented at
+product/test head `d21415cbf`. The shared
+`object:<prog-id>#<handle>` parser requires a complete invariant positive
+integer before object classification or lookup. Focused coverage derives
+malformed copies from a real live reference and proves partial,
+grouped/decimal, whitespace-prefixed, zero, negative, empty, and overflowing
+suffixes remain character data. They fail `COMPOBJ()`, cannot expose or mutate
+the live object through `GETPEM()` / `SETPEM()`, and leave its property state
+unchanged; valid internal identity remains `O` and compares equal. The focused
+runtime-surface target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+on Linux. AppleClang and MSVC review remain required before closing #4864.
+This is focused evidence, not full RC evidence.
+
 The #4863/#109 portable cursor-XML numeric-metadata slice is implemented at
 product/test head `f4e480ea4`. `CURSORTOXML()` serializes field widths and
 decimal counts through the classic locale, while `XMLTOCURSOR()` requires both

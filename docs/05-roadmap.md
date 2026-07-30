@@ -118,15 +118,15 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `f4e480ea4` (the current branch may
+The latest product implementation head is `d21415cbf` (the current branch may
 also contain documentation-only coordination commits). Its exact-head
-Security Supply Chain gate (`30516083702`) is green; Linux Native
-(`30516083711`), macOS Native (`30516083726`), Windows Native
-(`30516083688`), Linux Managed UI (`30516083680`), Visual Studio VSIX
-(`30516083707`), standalone installers (`30516083689`), generated launcher
-(`30516083677`), Windows Environment/Executable Path (`30516083690`), Windows
-DECLARE ABI (`30516083720`), and executable paths (`30516083699`) are active
-and nonterminal. The focused runtime-surface target passes locally under
+Security Supply Chain gate (`30516342086`) is green; Linux Native
+(`30516342084`), macOS Native (`30516342116`), Windows Native
+(`30516342078`), Linux Managed UI (`30516342108`), Visual Studio VSIX
+(`30516342127`), standalone installers (`30516342117`), generated launcher
+(`30516342051`), Windows Environment/Executable Path (`30516342053`), Windows
+DECLARE ABI (`30516342122`), and executable paths (`30516342165`) are active
+or queued and nonterminal. The focused runtime-surface target passes locally under
 default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; this is not a broad RC claim.
 
 The immediately preceding terminal hosted matrix at product head `ca7889efa`
