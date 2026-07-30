@@ -513,6 +513,7 @@
             const std::vector<std::vector<std::string>> &rows)
         {
             std::ostringstream dif;
+            dif.imbue(std::locale::classic());
             dif << "TABLE\n";
             dif << "0,1\n";
             dif << "\"Copperfin\"\n";

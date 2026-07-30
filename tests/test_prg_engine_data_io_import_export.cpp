@@ -12,7 +12,7 @@ class grouped_numpunct final : public std::numpunct<char> {
 protected:
     char do_decimal_point() const override { return ','; }
     char do_thousands_sep() const override { return '.'; }
-    std::string do_grouping() const override { return "\3"; }
+    std::string do_grouping() const override { return "\1"; }
 };
 
 class global_locale_guard final {
@@ -1294,16 +1294,26 @@ void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
         {.name = "AGE", .type = 'N', .length = 3U},
         {.name = "ACTIVE", .type = 'L', .length = 1U},
     };
-    const std::vector<std::vector<std::string>> source_records{
+    std::vector<std::vector<std::string>> source_records{
         {"Ava", "7", "true"},
         {"Ben", "42", "false"},
     };
+    for (std::size_t row = 3U; row <= 12U; ++row) {
+        source_records.push_back({
+            "Row" + std::to_string(row),
+            std::to_string(row),
+            row % 2U == 0U ? "true" : "false",
+        });
+    }
     const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
     expect(source_create.ok, "TYPE DIF source fixture should be created");
 
     const fs::path dest_path = temp_root / "dest.dbf";
     const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
     expect(dest_create.ok, "TYPE DIF destination fixture should be created");
+
+    const std::locale grouping_locale(std::locale::classic(), new grouped_numpunct());
+    global_locale_guard locale_guard(grouping_locale);
 
     const std::string dif_path = (temp_root / "people.dif").string();
     const fs::path main_path = temp_root / "dif_round_trip.prg";
@@ -1338,6 +1348,11 @@ void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
                dif_text.find("DATA") != std::string::npos &&
                dif_text.find("EOD") != std::string::npos,
             "COPY TO TYPE DIF should emit DIF-style table markers");
+        expect(dif_text.find("VECTORS\n0,3\n") != std::string::npos &&
+                   dif_text.find("TUPLES\n0,13\n") != std::string::npos,
+            "#4870: COPY TO TYPE DIF should emit invariant vector and tuple dimensions");
+        expect(dif_text.find("TUPLES\n0,1.3\n") == std::string::npos,
+            "#4870: COPY TO TYPE DIF dimensions should not inherit digit grouping");
     }
 
     const auto check = [&](const std::string &name, const std::string &expected)
@@ -1357,10 +1372,10 @@ void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
     check("nage2", "42");
     check("lactive2", "false");
 
-    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 20U);
     expect(result.ok, "APPEND FROM TYPE DIF destination DBF should remain readable");
-    expect(result.table.records.size() == 2U, "APPEND FROM TYPE DIF should append both interchange rows");
-    if (result.ok && result.table.records.size() == 2U) {
+    expect(result.table.records.size() == 12U, "APPEND FROM TYPE DIF should append every interchange row");
+    if (result.ok && result.table.records.size() == 12U) {
         expect(result.table.records[0U].values[0U].display_value == "Ava",
             "TYPE DIF row 1 should preserve NAME");
         expect(result.table.records[0U].values[1U].display_value == "7",
