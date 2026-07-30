@@ -2999,6 +2999,7 @@ internal static partial class Program
                 "PROCEDURE Configure" + Environment.NewLine +
                 "localShadow = .T." + Environment.NewLine +
                 "THIS.RetryCount = THIS.RetryCount + 1" + Environment.NewLine +
+                "? laValues[THIS.RetryCount]" + Environment.NewLine +
                 "oOther.Caption = \"Ambiguous\"" + Environment.NewLine +
                 "? \"THIS.RetryCount\" + [THIS.RetryCount] && THIS.RetryCount" + Environment.NewLine +
                 "ENDPROC" + Environment.NewLine +
@@ -3036,16 +3037,17 @@ internal static partial class Program
                 "project insights should exclude method-local assignments from property definitions");
             var references = insights.RuntimeReferences.FindAll(reference =>
                 reference.Name == "app.editor.RetryCount" && reference.Kind == "member.property");
-            Expect(references.Count == 2,
-                "project insights should normalize executable dotted property uses without indexing string or comment text");
+            Expect(references.Count == 3,
+                "project insights should normalize executable dotted property uses, including array subscripts, without indexing string or comment text");
             Expect(!insights.RuntimeReferences.Exists(reference => reference.Name.EndsWith(".Caption", StringComparison.OrdinalIgnoreCase)),
                 "ambiguous trailing property names should not enter an arbitrary reference set");
 
             var preview = CopperfinProjectInsightClient.BuildRenamePreview(snapshot, "THIS.RetryCount");
-            Expect(preview.SymbolName == "app.editor.RetryCount" && preview.Occurrences.Count == 3,
-                "property rename preview should include the qualified definition and both normalized dotted uses");
+            Expect(preview.SymbolName == "app.editor.RetryCount" && preview.Occurrences.Count == 4,
+                "property rename preview should include the qualified definition and all normalized dotted uses");
             Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "definition" && occurrence.Line == 2) &&
-                   preview.Occurrences.Count(occurrence => occurrence.Kind == "reference" && occurrence.Line == 6) == 2,
+                   preview.Occurrences.Count(occurrence => occurrence.Kind == "reference" && occurrence.Line == 6) == 2 &&
+                   preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Line == 7),
                 "property rename occurrences should preserve declaration and dotted-use line provenance");
         }
         finally

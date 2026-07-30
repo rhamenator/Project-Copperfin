@@ -4,10 +4,12 @@
   exact and uniquely resolvable dotted property uses, rejects ambiguous
   trailing names, and includes the definition/references in rename preview.
   Call-shaped members plus quoted, bracket-string, and `&&` comment text remain
-  excluded; existing method reference/rename behavior is unchanged. The
-  warning-free four-mode Release harness and exact-head Windows VSIX run
-  `30533345795` pass at product/test head `3f7eb859f`; artifact `8755644691`
-  was uploaded.
+  excluded; existing method reference/rename behavior is unchanged. A macOS
+  closure audit additionally distinguishes executable array-subscripting
+  brackets from bracket-delimited strings, preserving references such as
+  `laValues[THIS.RetryCount]`. The corrected warning-free four-mode Release
+  harness passes; exact corrected-head hosted and independent review remain
+  pending, superseding the original `3f7eb859f` closure evidence.
 
 - 2026-07-30: Completed #4886/#27/#28/#29 project class-property
   IntelliSense. The Visual Studio scanner now retains identifier assignments at

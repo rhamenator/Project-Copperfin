@@ -499,7 +499,7 @@ internal static class CopperfinProjectInsightClient
             {
                 quote = value;
             }
-            else if (value == '[')
+            else if (value == '[' && !IsBracketSubscriptStart(line, index))
             {
                 bracketString = true;
             }
@@ -510,6 +510,22 @@ internal static class CopperfinProjectInsightClient
         }
 
         return quote != '\0' || bracketString;
+    }
+
+    private static bool IsBracketSubscriptStart(string line, int index)
+    {
+        if (index <= 0)
+        {
+            return false;
+        }
+
+        var previous = line[index - 1];
+        return (previous >= 'A' && previous <= 'Z') ||
+               (previous >= 'a' && previous <= 'z') ||
+               (previous >= '0' && previous <= '9') ||
+               previous == '_' ||
+               previous == ')' ||
+               previous == ']';
     }
 
     private static string ResolvePropertyReferenceName(string reference, IReadOnlyList<string> knownPropertySymbols)
