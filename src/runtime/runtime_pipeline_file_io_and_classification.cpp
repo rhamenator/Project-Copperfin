@@ -578,6 +578,7 @@ std::string read_binary_file(const std::filesystem::path& path, std::string& err
 
 std::string hex_encode_bytes(const std::string& bytes) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     stream << std::hex << std::setfill('0');
     for (const unsigned char byte : bytes) {
         stream << std::setw(2) << static_cast<unsigned int>(byte);
