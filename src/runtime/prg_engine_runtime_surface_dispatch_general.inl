@@ -712,6 +712,7 @@
         const std::uint64_t hi4 = (hi & 0xFFFFFFFFFFFF0FFFULL) | 0x0000000000004000ULL;
         const std::uint64_t lo4 = (lo & 0x3FFFFFFFFFFFFFFFULL) | 0x8000000000000000ULL;
         std::ostringstream oss;
+        oss.imbue(std::locale::classic());
         oss << std::uppercase << std::hex << std::setfill('0')
             << std::setw(8) << ((hi4 >> 32) & 0xFFFFFFFFU) << '-'
             << std::setw(4) << ((hi4 >> 16) & 0xFFFFU) << '-'

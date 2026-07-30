@@ -600,6 +600,7 @@ int main()
     test_same_prg_property_bindevent_object_method_delegates_preserve_current_event_metadata();
     test_external_prg_base_property_bindevent_object_method_delegates_preserve_current_event_metadata();
     test_codepage_and_misc_runtime_surface_functions();
+    test_newid_uuid_text_is_locale_invariant();
     test_cpdbf_reads_table_code_page_metadata();
     test_cpdbf_missing_alias_reports_error();
     test_cpconvert_uses_host_code_page_conversion_with_safe_fallbacks();

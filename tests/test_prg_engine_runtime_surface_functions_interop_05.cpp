@@ -1,7 +1,57 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
 
+#include <locale>
+
 namespace copperfin::runtime_surface_tests
 {
+    namespace
+    {
+        class newid_every_digit_numpunct final : public std::numpunct<char>
+        {
+        protected:
+            char do_thousands_sep() const override { return '.'; }
+            std::string do_grouping() const override { return "\1"; }
+        };
+
+        class newid_global_locale_guard final
+        {
+        public:
+            explicit newid_global_locale_guard(const std::locale &replacement)
+                : previous_(std::locale::global(replacement)) {}
+
+            ~newid_global_locale_guard() { std::locale::global(previous_); }
+
+            newid_global_locale_guard(const newid_global_locale_guard &) = delete;
+            newid_global_locale_guard &operator=(const newid_global_locale_guard &) = delete;
+
+        private:
+            std::locale previous_;
+        };
+
+        bool is_canonical_newid(const std::string &value)
+        {
+            if (value.size() != 36U || value[8] != '-' || value[13] != '-' ||
+                value[18] != '-' || value[23] != '-' || value[14] != '4' ||
+                std::string("89AB").find(value[19]) == std::string::npos)
+            {
+                return false;
+            }
+            for (std::size_t index = 0U; index < value.size(); ++index)
+            {
+                if (index == 8U || index == 13U || index == 18U || index == 23U)
+                {
+                    continue;
+                }
+                const char ch = value[index];
+                if (!((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'F')))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     void test_external_prg_base_property_bindevent_dispatch_preserves_current_event_metadata()
     {
         namespace fs = std::filesystem;
@@ -641,6 +691,56 @@ namespace copperfin::runtime_surface_tests
         expect(auto_after_live_set != auto_state.globals.end() &&
                    copperfin::runtime::format_value(auto_after_live_set->second) == expected_host_code_page_text,
                "CODEPAGE=AUTO should remain stable after a live SET CODEPAGE command");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_newid_uuid_text_is_locale_invariant()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_newid_locale_invariant";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "newid_locale.prg";
+        write_text(
+            main_path,
+            "cId1 = NEWID()\n"
+            "cId2 = NEWID()\n"
+            "RETURN\n");
+
+        const std::locale grouping_locale(
+            std::locale::classic(),
+            new newid_every_digit_numpunct());
+        const newid_global_locale_guard locale_guard(grouping_locale);
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "NEWID locale-invariance script should complete");
+
+        const auto require_string = [&](const std::string &name) -> std::string
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return {};
+            }
+            expect(it->second.kind == copperfin::runtime::PrgValueKind::string,
+                   name + " should remain a string value");
+            return it->second.kind == copperfin::runtime::PrgValueKind::string
+                       ? it->second.string_value
+                       : std::string{};
+        };
+
+        const std::string first = require_string("cid1");
+        const std::string second = require_string("cid2");
+        expect(is_canonical_newid(first),
+               "NEWID should preserve uppercase 8-4-4-4-12 UUID text under every-digit grouping");
+        expect(is_canonical_newid(second),
+               "successive NEWID output should preserve the same invariant UUID shape");
+        expect(first != second, "successive NEWID calls should remain distinct");
 
         fs::remove_all(temp_root, ignored);
     }
