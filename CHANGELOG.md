@@ -12,14 +12,15 @@
   package contract is created or changed by this repository slice; those remain
   #4409 authority.
   Exact corrected test head `0a8a43080` passes hosted Linux/macOS Native
-  `316/316`, including the focused permission/provisioning contract, plus the
-  VSIX, managed-UI, installer, security/SBOM, executable-path, Windows
-  environment/path, and DECLARE ABI gates. The `contents: read` mutation is
-  rejected locally. Fresh corrected-head permissive safety run `30566915484`
-  passes and archives its non-secret report; this supporting evidence does not
-  substitute for the absent protected environment or approved signer
-  execution. #4895 is closed after independent review and synchronized
-  evidence; strict post-closure safety run `30568877447` also passes.
+  `316/316` and Windows Native `315/315`; each platform explicitly passes the
+  focused permission/provisioning contract. The VSIX, managed-UI, installer,
+  security/SBOM, executable-path, Windows environment/path, and DECLARE ABI
+  gates also pass. The `contents: read` mutation is rejected locally. Fresh
+  corrected-head permissive safety run `30566915484` passes and archives its
+  non-secret report; this supporting evidence does not substitute for the
+  absent protected environment or approved signer execution. #4895 is closed
+  after independent review and synchronized evidence; strict post-closure
+  safety run `30568877447` also passes.
 
 - 2026-07-30: Implemented release-trust audit slice #4894 under #4409. The
   protected Windows workflow now binds an explicit approved signer ID to its

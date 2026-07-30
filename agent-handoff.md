@@ -81,12 +81,13 @@ correction head `0a8a43080` requires the sole `contents: read` block, and the
 same reviewer passes the corrected slice with no remaining finding. Exact
 corrected test head `0a8a43080` passes hosted Linux Native run `30566876881`
 (`316/316`, including the focused permission/provisioning contract), macOS
-Native `30566876815` (`316/316`), VSIX `30566876774`, managed UI `30566876743`,
-installers `30566876716`, security/SBOM `30566876932`, executable-path
-`30566876799`, Windows environment/path `30566876895`, and DECLARE ABI
-`30566876764`. A local `contents: read` mutation is rejected before restoration
-and a passing rerun. Fresh corrected-head permissive safety run `30566915484`
-passes for #4895 and uploads
+Native `30566876815` (`316/316`), and Windows Native `30566876897` (`315/315`
+in `609.38s`, including the focused contract). VSIX `30566876774`, managed UI
+`30566876743`, installers `30566876716`, security/SBOM `30566876932`,
+executable-path `30566876799`, Windows environment/path `30566876895`, and
+DECLARE ABI `30566876764` pass. A local `contents: read` mutation is rejected
+before restoration and a passing rerun. Fresh corrected-head permissive safety
+run `30566915484` passes for #4895 and uploads
 report artifact `8769199463`; GitHub's archive digest is
 `20a6a799462adc6606d9c169254220792d01412784cd05dd9c4395ae906c34a6`,
 and the report file SHA-256 is

@@ -59,12 +59,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   implementation. Independent review found and correction head `0a8a43080`
   closes the missing exact `contents: read` regression guard; the same reviewer
   passes the corrected slice. That exact corrected head passes hosted
-  Linux/macOS Native `316/316`, including the focused permission/provisioning
-  contract, plus the VSIX, managed-UI, installer, security/SBOM,
-  executable-path, Windows environment/path, and DECLARE ABI gates;
-  corrected-head permissive safety run `30566915484` also passes. #4895 is
-  closed, and strict post-closure safety run `30568877447` passes; #4409 remains
-  open for external release authority.
+  Linux/macOS Native `316/316` and Windows Native `315/315`; each explicitly
+  passes the focused permission/provisioning contract. The VSIX, managed-UI,
+  installer, security/SBOM, executable-path, Windows environment/path, and
+  DECLARE ABI gates pass; corrected-head permissive safety run `30566915484`
+  also passes. #4895 is closed, and strict post-closure safety run `30568877447`
+  passes; #4409 remains open for external release authority.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX
