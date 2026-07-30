@@ -115,6 +115,7 @@ internal static partial class Program
         TestRenamePreviewCollectsDefinitionAndNormalizedReferences();
         TestProjectInsightsCollectQualifiedAndInstanceStyleMethodCallReferences();
         TestRenamePreviewCollectsProjectMethodDefinitionAndReferences();
+        TestProjectInsightsCollectAndRenameClassProperties();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
         TestCreateCursorFieldsFeedMatchingAliasMemberCompletion();
         TestCompletionCatalogIngestsImplicitUseAndSqlExecAliases();
@@ -2977,6 +2978,75 @@ internal static partial class Program
                 "rename preview should include fully-qualified method call references");
             Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "reference" && occurrence.Detail.Contains("oToolbar.SaveOrder('ANTON')", StringComparison.Ordinal)),
                 "rename preview should include normalized instance-style method call references");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectInsightsCollectAndRenameClassProperties()
+    {
+        var root = CreateProjectRoot("property_reference_rename");
+        try
+        {
+            var sourcePath = Path.Combine(root, "classes.prg");
+            File.WriteAllText(
+                sourcePath,
+                "DEFINE CLASS app.editor AS custom" + Environment.NewLine +
+                "RetryCount = 3" + Environment.NewLine +
+                "Caption = \"Editor\"" + Environment.NewLine +
+                "PROCEDURE Configure" + Environment.NewLine +
+                "localShadow = .T." + Environment.NewLine +
+                "THIS.RetryCount = THIS.RetryCount + 1" + Environment.NewLine +
+                "oOther.Caption = \"Ambiguous\"" + Environment.NewLine +
+                "? \"THIS.RetryCount\" + [THIS.RetryCount] && THIS.RetryCount" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "DEFINE CLASS app.other AS custom" + Environment.NewLine +
+                "Caption = \"Other\"" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "classes.prg",
+                            RelativePath = "classes.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            Expect(insights.DefinedSymbols.Exists(symbol => symbol.Kind == "property" &&
+                       symbol.Name == "app.editor.RetryCount" && symbol.Line == 2),
+                "project insights should retain qualified class-scope property definitions");
+            Expect(!insights.DefinedSymbols.Exists(symbol => symbol.Kind == "property" &&
+                       symbol.Name.EndsWith(".localShadow", StringComparison.OrdinalIgnoreCase)),
+                "project insights should exclude method-local assignments from property definitions");
+            var references = insights.RuntimeReferences.FindAll(reference =>
+                reference.Name == "app.editor.RetryCount" && reference.Kind == "member.property");
+            Expect(references.Count == 2,
+                "project insights should normalize executable dotted property uses without indexing string or comment text");
+            Expect(!insights.RuntimeReferences.Exists(reference => reference.Name.EndsWith(".Caption", StringComparison.OrdinalIgnoreCase)),
+                "ambiguous trailing property names should not enter an arbitrary reference set");
+
+            var preview = CopperfinProjectInsightClient.BuildRenamePreview(snapshot, "THIS.RetryCount");
+            Expect(preview.SymbolName == "app.editor.RetryCount" && preview.Occurrences.Count == 3,
+                "property rename preview should include the qualified definition and both normalized dotted uses");
+            Expect(preview.Occurrences.Exists(occurrence => occurrence.Kind == "definition" && occurrence.Line == 2) &&
+                   preview.Occurrences.Count(occurrence => occurrence.Kind == "reference" && occurrence.Line == 6) == 2,
+                "property rename occurrences should preserve declaration and dotted-use line provenance");
         }
         finally
         {
