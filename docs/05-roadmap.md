@@ -28,6 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current class-property IntelliSense evidence includes #4886 at product/test
+head `bad499421`: class-scope identifier assignments become qualified,
+localized property completions and unique dotted definition targets, while
+method-local assignments, ambiguous trailing names, existing methods, and
+generic members retain safe behavior. The local four-mode matrix and exact-head
+Windows VSIX run `30532752948` pass; artifact `8755431111` was uploaded. The
+child is closed, while broader IDE parents and RC validation remain separate.
+
 Current cursor-member evidence includes #4885 at corrective product/test head
 `7955966d8`: bounded single-line `CREATE CURSOR alias (...)` declarations feed
 alias-scoped field completions without splitting nested type clauses such as

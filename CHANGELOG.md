@@ -1,3 +1,14 @@
+- 2026-07-30: Completed #4886/#27/#28/#29 project class-property
+  IntelliSense. The Visual Studio scanner now retains identifier assignments at
+  `DEFINE CLASS` scope as qualified properties, excludes assignments inside
+  `PROCEDURE`/`FUNCTION` bodies, offers localized `property` completions beside
+  existing method/generic members, and resolves instance-style dotted property
+  definitions only when the trailing project name is unique. Invariant names,
+  kinds, method signatures, and runtime/package/debug contracts are unchanged.
+  The warning-free four-mode Release harness and exact-head Windows VSIX run
+  `30532752948` pass at product/test head `bad499421`; artifact `8755431111`
+  was uploaded.
+
 - 2026-07-30: Completed #4885/#27 `CREATE CURSOR` field-member IntelliSense.
   The Visual Studio project index now retains declared fields from bounded
   single-line cursor declarations and offers them only for the matching alias

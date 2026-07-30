@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1/G2/G3 class-property slice: `#4886` indexes identifier assignments
+  at `DEFINE CLASS` scope as qualified project properties while routine state
+  excludes method-local assignments. Localized property completions preserve
+  methods and generic members; dotted definition fallback resolves unique
+  trailing names and rejects ambiguity. Product/test head `bad499421` passes
+  the local four-mode matrix and Windows VSIX run `30532752948`; artifact
+  `8755431111` was uploaded.
 - Recent G1 cursor-member slice: `#4885` retains declared fields from bounded
   single-line `CREATE CURSOR alias (...)` statements and offers them only for
   the matching alias member-access context. Nested type clauses remain intact,

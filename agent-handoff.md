@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4886/#27/#28/#29 project class-property IntelliSense slice is complete at
+product/test head `bad499421`. The Visual Studio project scanner now indexes
+identifier assignments at `DEFINE CLASS` scope as qualified properties while
+explicit routine-boundary state excludes assignments inside class methods.
+Member access offers localized `property` entries alongside existing project
+methods and generic members. Instance-style dotted property definitions resolve
+only when the trailing project property name is unique, so duplicate names do
+not jump to an arbitrary class. The warning-free full harness passes locally
+under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`. Exact-head Windows
+VSIX run `30532752948` passes all managed/net472 steps and uploads artifact
+`8755431111` with SHA-256
+`744da61b0803d3f5fee36d61dd22d5e9edde7f15990645fc4fc352dcdda59a3d`.
+Issue #4886 is closed; broader IDE parents and RC validation remain open.
+
 The #4885/#27 cursor-field member-completion slice is corrected at product/test
 head `7955966d8`. The Visual Studio project scanner now indexes fields from
 bounded single-line `CREATE CURSOR alias (...)` declarations, preserving
