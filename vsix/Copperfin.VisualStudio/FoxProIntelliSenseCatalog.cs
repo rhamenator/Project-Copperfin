@@ -59,7 +59,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+[\""<]([^\"">]+)[\"">]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+(?:""([^""]+)""|<([^>]+)>|([^\s&]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex UseStatementRegex = new(@"^\s*USE\s+(""[^""]+""|'[^']+'|[^\s]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -663,7 +663,12 @@ internal static class FoxProIntelliSenseCatalog
             var includeMatch = IncludeRegex.Match(line);
             if (includeMatch.Success)
             {
-                var includePath = ResolveIncludePath(normalizedPath, root, includeMatch.Groups[1].Value);
+                var includeOperand = includeMatch.Groups
+                    .Cast<Group>()
+                    .Skip(1)
+                    .First(group => group.Success)
+                    .Value;
+                var includePath = ResolveIncludePath(normalizedPath, root, includeOperand);
                 if (!string.IsNullOrWhiteSpace(includePath) &&
                     TextExtensions.Contains(Path.GetExtension(includePath), StringComparer.OrdinalIgnoreCase))
                 {

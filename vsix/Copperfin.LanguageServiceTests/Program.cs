@@ -96,6 +96,7 @@ internal static partial class Program
         TestMemberAccessCompletionsIncludeProjectMethodsAheadOfGenericMembers();
         TestInstanceStyleProjectMethodFallbackUsesUniqueTrailingMethodName();
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
+        TestUnquotedIncludesFeedRecursiveDefineResolution();
         TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
         TestCrossFileProjectBoundaryResolvesProcedureDefinition();
         TestCrossFileProjectBoundaryCompletions();
@@ -2830,6 +2831,52 @@ internal static partial class Program
         {
             TryDelete(root);
             TryDelete(externalRoot);
+        }
+    }
+
+    private static void TestUnquotedIncludesFeedRecursiveDefineResolution()
+    {
+        var root = CreateProjectRoot("unquoted_include_define_resolution");
+        try
+        {
+            var nestedHeaderPath = Path.Combine(root, "foxpro_reporting.h");
+            File.WriteAllText(nestedHeaderPath, "#DEFINE REPORT_STATUS_READY" + Environment.NewLine);
+
+            var headerPath = Path.Combine(root, "frxBuilder.h");
+            File.WriteAllText(
+                headerPath,
+                "#DEFINE BUILDER_STATUS_READY" + Environment.NewLine +
+                "#include foxpro_reporting.h && common VFP include form" + Environment.NewLine);
+
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "#include frxBuilder.h && trailing comments are not part of the path" + Environment.NewLine +
+                "? BUILDER_STATUS_READY, REPORT_STATUS_READY" + Environment.NewLine);
+
+            var directResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "BUILDER_STATUS_READY", out var directDefinition);
+            Expect(directResolved, "unquoted includes should feed define resolution");
+            if (directResolved)
+            {
+                Expect(directDefinition.FilePath == headerPath, "unquoted include resolution should point to the direct header");
+                Expect(directDefinition.LineNumber == 1, "unquoted include resolution should preserve the direct definition line");
+            }
+
+            var recursiveResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "REPORT_STATUS_READY", out var recursiveDefinition);
+            Expect(recursiveResolved, "unquoted includes should participate in recursive header scanning");
+            if (recursiveResolved)
+            {
+                Expect(recursiveDefinition.FilePath == nestedHeaderPath, "recursive unquoted include resolution should point to the nested header");
+                Expect(recursiveDefinition.LineNumber == 1, "recursive unquoted include resolution should preserve the nested definition line");
+            }
+
+            var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "REPORT_STATUS_READY");
+            Expect(string.Equals(description, "Project preprocessor symbol.", StringComparison.Ordinal),
+                "defines from recursive unquoted includes should participate in token description lookup");
+        }
+        finally
+        {
+            TryDelete(root);
         }
     }
 
