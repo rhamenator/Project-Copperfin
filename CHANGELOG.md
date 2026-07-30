@@ -1,3 +1,14 @@
+- 2026-07-30: Completed #4887/#28 project class-property references and rename
+  preview. Project Insights now applies the same `DEFINE CLASS` routine-scope
+  boundary as IntelliSense, records qualified property definitions, normalizes
+  exact and uniquely resolvable dotted property uses, rejects ambiguous
+  trailing names, and includes the definition/references in rename preview.
+  Call-shaped members plus quoted, bracket-string, and `&&` comment text remain
+  excluded; existing method reference/rename behavior is unchanged. The
+  warning-free four-mode Release harness and exact-head Windows VSIX run
+  `30533345795` pass at product/test head `3f7eb859f`; artifact `8755644691`
+  was uploaded.
+
 - 2026-07-30: Completed #4886/#27/#28/#29 project class-property
   IntelliSense. The Visual Studio scanner now retains identifier assignments at
   `DEFINE CLASS` scope as qualified properties, excludes assignments inside

@@ -2,6 +2,20 @@
 
 ## Current State
 
+The #4887/#28 project class-property reference/rename slice is complete at
+product/test head `3f7eb859f`. Project Insights now records qualified property
+definitions with the same class/routine boundary as IntelliSense and binds
+exact qualified or uniquely resolvable instance-style dotted uses to that
+symbol. Ambiguous trailing property names remain unbound. Call-shaped members,
+quoted text, bracket strings, and trailing `&&` comments cannot fabricate
+property references; rename preview includes the declaration and normalized
+uses without changing existing method behavior. The warning-free full harness
+passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
+Exact-head Windows VSIX run `30533345795` passes all managed/net472 steps and
+uploads artifact `8755644691` with SHA-256
+`47e21408c8da284abfeee604b591e2073cdd167a25969fdb55fc75aaf8565480`.
+Issue #4887 is closed; broader IDE parents and RC validation remain open.
+
 The #4886/#27/#28/#29 project class-property IntelliSense slice is complete at
 product/test head `bad499421`. The Visual Studio project scanner now indexes
 identifier assignments at `DEFINE CLASS` scope as qualified properties while

@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G2 class-property navigation slice: `#4887` carries qualified project
+  property definitions and safe dotted uses into Code References and rename
+  preview. Exact/unique resolution rejects ambiguous trailing names; call-shaped
+  members and string/comment lookalikes remain excluded. Product/test head
+  `3f7eb859f` passes the local four-mode matrix and Windows VSIX run
+  `30533345795`; artifact `8755644691` was uploaded.
 - Recent G1/G2/G3 class-property slice: `#4886` indexes identifier assignments
   at `DEFINE CLASS` scope as qualified project properties while routine state
   excludes method-local assignments. Localized property completions preserve

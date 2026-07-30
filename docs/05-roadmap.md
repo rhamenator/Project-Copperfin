@@ -28,6 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current class-property navigation evidence includes #4887 at product/test head
+`3f7eb859f`: Project Insights retains qualified definitions and safe dotted
+references, rename preview normalizes only unique property names, and ambiguous,
+call-shaped, quoted, bracket-string, or comment lookalikes stay excluded. The
+local four-mode matrix and exact-head Windows VSIX run `30533345795` pass;
+artifact `8755644691` was uploaded. The child is closed, while broader IDE
+parents and RC validation remain separate.
+
 Current class-property IntelliSense evidence includes #4886 at product/test
 head `bad499421`: class-scope identifier assignments become qualified,
 localized property completions and unique dotted definition targets, while
