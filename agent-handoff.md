@@ -9,9 +9,13 @@ the existing quoted and angle-bracket forms. Focused coverage proves direct
 and recursive unquoted headers contribute their definitions and token
 descriptions, and that trailing `&&` comments are not treated as path text;
 the existing quoted external-header regression remains green. The Release
-`Copperfin.LanguageServiceTests` harness passes on Linux. Hosted VSIX and
-Windows acceptance remain pending. No user-facing text, catalogs, package,
-runtime, debug, or trust contract changed.
+`Copperfin.LanguageServiceTests` harness passes on Linux. Exact-head Windows
+VSIX run `30522120280` rebuilt the `net472` extension, passed its managed
+language-service and adjacent managed suites, and uploaded artifact
+`8751223334` with SHA-256
+`ab24019f4db0030f8010ac10413021eb77a2e4c6c235669e7a616e6ebf20a7ed`.
+Issue #4874 is closed; broader #27 remains open. No user-facing text, catalogs,
+package, runtime, debug, or trust contract changed.
 
 The #4873/#112 Studio-host JSON-control-escape slice is implemented at exact
 product/test head `4a75d3273`. Studio-host string escaping now delegates to a

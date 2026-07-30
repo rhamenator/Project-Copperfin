@@ -147,8 +147,9 @@ evidence remain pending.
 keys. It broadens only the invariant language-service parser for VFP
 `#INCLUDE` operands; symbol names, descriptions, completion kinds, package and
 runtime behavior, and trust boundaries are unchanged. The focused Release
-managed harness passes on Linux; hosted VSIX/Windows acceptance remains
-pending.
+managed harness passes on Linux, and exact-head Windows VSIX run `30522120280`
+rebuilt the extension and passed the managed language-service suite. Issue
+#4874 is closed; broader #27 remains open.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

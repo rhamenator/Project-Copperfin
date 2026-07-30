@@ -3,8 +3,10 @@
   contribute preprocessor definitions and token descriptions without treating
   trailing `&&` comments as path text; quoted and angle-bracket behavior,
   localization, and package/runtime trust boundaries remain unchanged. The
-  Release language-service harness passes on Linux; hosted VSIX/Windows
-  acceptance remains pending.
+  Release language-service harness passes on Linux, and exact-head Windows
+  VSIX run `30522120280` rebuilt the extension, passed the full managed
+  language-service suite, and uploaded artifact `8751223334`; #4874 is closed
+  while broader #27 remains open.
 
 - 2026-07-30: Hardened #4873/#112 Studio-host JSON control escaping against
   grouped host locales. A shared platform helper now emits control-byte
