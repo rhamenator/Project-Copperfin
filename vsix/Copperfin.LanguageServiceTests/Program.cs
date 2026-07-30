@@ -2331,6 +2331,8 @@ internal static partial class Program
                 "PROC Refresh(tcScope, tlForce = .F.)" + Environment.NewLine +
                 "ENDPROC" + Environment.NewLine +
                 "ENDDEFINE" + Environment.NewLine +
+                "? SaveOrder('ALFKI')" + Environment.NewLine +
+                "? app.customer.editor.Refresh('current', .T.)" + Environment.NewLine +
                 "PROCEDURES NotARoutine" + Environment.NewLine);
 
             var procedure = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "SaveOrder");
@@ -2355,6 +2357,39 @@ internal static partial class Program
             Expect(FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "NotARoutine").Count == 0 &&
                    !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "NotARoutine", out _),
                 "longer identifiers beginning with PROCEDURE should not become routine declarations");
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "abbreviated.prg",
+                            RelativePath = "abbreviated.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            Expect(insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Kind == "procedure" && symbol.Name == "SaveOrder" && symbol.Line == 1) &&
+                   insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Kind == "method" && symbol.Name == methodName && symbol.Line == 5),
+                "PROC declarations should feed global and qualified project-insight definitions");
+            Expect(insights.RuntimeReferences.Exists(reference =>
+                       reference.Kind == "call" && reference.Name == "SaveOrder") &&
+                   insights.RuntimeReferences.Exists(reference =>
+                       reference.Kind == "call.member" && reference.Name == methodName),
+                "PROC declarations should feed direct and qualified project-insight references");
+            Expect(!insights.DefinedSymbols.Exists(symbol => symbol.Name == "NotARoutine"),
+                "longer PROC-prefixed identifiers should remain excluded from project insights");
         }
         finally
         {
