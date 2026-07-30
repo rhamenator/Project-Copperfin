@@ -3009,7 +3009,9 @@ internal static partial class Program
                 "ENDDEFINE" + Environment.NewLine +
                 "DEFINE CLASS app.other AS custom" + Environment.NewLine +
                 "Caption = \"Other\"" + Environment.NewLine +
-                "ENDDEFINE" + Environment.NewLine);
+                "ENDDEFINE" + Environment.NewLine +
+                "TEXT TO lcUnterminated NOSHOW" + Environment.NewLine +
+                "THIS.RetryCount = THIS.RetryCount + 1000" + Environment.NewLine);
 
             var snapshot = new CopperfinStudioSnapshotDocument
             {
@@ -3044,6 +3046,8 @@ internal static partial class Program
                 "project insights should normalize executable dotted property uses, including array subscripts, without indexing TEXT block, string, or comment text");
             Expect(!references.Exists(reference => reference.Line == 8),
                 "project insights should exclude dotted property tokens inside VFP TEXT block bodies");
+            Expect(!references.Exists(reference => reference.Line == 19),
+                "project insights should conservatively exclude an unterminated TEXT block body through end of file");
             Expect(!insights.RuntimeReferences.Exists(reference => reference.Name.EndsWith(".Caption", StringComparison.OrdinalIgnoreCase)),
                 "ambiguous trailing property names should not enter an arbitrary reference set");
 
