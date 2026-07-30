@@ -11615,14 +11615,8 @@ namespace copperfin::runtime
                 {
                     return 0;
                 }
-                try
-                {
-                    return static_cast<std::intptr_t>(std::stoll(trimmed));
-                }
-                catch (...)
-                {
-                    return 0;
-                }
+                return copperfin::platform::try_parse_invariant_integer<std::intptr_t>(trimmed)
+                    .value_or(0);
             }
             case PrgValueKind::int64:
                 return static_cast<std::intptr_t>(value.int64_value);

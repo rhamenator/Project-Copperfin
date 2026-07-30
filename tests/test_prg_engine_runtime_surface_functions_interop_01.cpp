@@ -440,6 +440,11 @@ namespace copperfin::runtime_surface_tests
             "nAfterUnbindRows = AEVENTS(aAfterUnbind, 1)\n"
             "nRebindExact = BINDEVENT(nMain, 274, oHandler, 'HandleExact')\n"
             "nAfterRebindRows = AEVENTS(aAfterRebind, 1)\n"
+            "nBindValidText = BINDEVENT(nMain, 276, oHandler, 'HandleText')\n"
+            "nBindPartialText = BINDEVENT(nMain, 277, oHandler, 'HandleText')\n"
+            "nBindGroupedText = BINDEVENT(nMain, 278, oHandler, 'HandleText')\n"
+            "nBindOverflowText = BINDEVENT(nMain, 279, oHandler, 'HandleText')\n"
+            "nBindSignedText = BINDEVENT(nMain, 280, oHandler, 'HandleText')\n"
             "READ EVENTS\n"
             "RETURN\n"
             "DEFINE CLASS HandlerThing AS Custom\n"
@@ -454,6 +459,21 @@ namespace copperfin::runtime_surface_tests
             "        nExactCurrentType = aCurrent[3]\n"
             "        cLog = cLog + '[exact:' + TRANSFORM(tnHwnd) + ':' + TRANSFORM(tnMessage) + ':' + TRANSFORM(tnWParam) + ':' + TRANSFORM(tnLParam) + ':' + TRANSFORM(aCurrent[3]) + ']'\n"
             "        RETURN tnWParam + tnLParam\n"
+            "    ENDFUNC\n"
+            "    FUNCTION HandleText\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        DO CASE\n"
+            "        CASE tnMessage = 276\n"
+            "            RETURN '48'\n"
+            "        CASE tnMessage = 277\n"
+            "            RETURN '48junk'\n"
+            "        CASE tnMessage = 278\n"
+            "            RETURN '4.8'\n"
+            "        CASE tnMessage = 279\n"
+            "            RETURN '999999999999999999999999999999999'\n"
+            "        OTHERWISE\n"
+            "            RETURN '-7'\n"
+            "        ENDCASE\n"
             "    ENDFUNC\n"
             "    FUNCTION HandleAll\n"
             "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
@@ -494,6 +514,27 @@ namespace copperfin::runtime_surface_tests
         expect(state.waiting_for_events,
                "Windows-message exact dispatch should return the runtime to waiting_for_events");
 
+        const auto dispatch_text_result = [&](int message, std::intptr_t expected, const std::string &label)
+        {
+            const auto result = session.dispatch_windows_message(1001, message, 0, 0);
+            expect(result.has_value(), label + " should dispatch its exact Windows-message binding");
+            if (result.has_value())
+            {
+                expect(*result == expected,
+                       label + " expected " + std::to_string(expected) + " got " +
+                           std::to_string(*result));
+            }
+            state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop &&
+                       state.waiting_for_events,
+                   label + " should restore the READ EVENTS pause");
+        };
+        dispatch_text_result(276, 48, "valid character message result");
+        dispatch_text_result(277, 0, "partial character message result");
+        dispatch_text_result(278, 0, "grouped/decimal character message result");
+        dispatch_text_result(279, 0, "overflowing character message result");
+        dispatch_text_result(280, -7, "signed character message result");
+
         const auto wildcard_result = session.dispatch_windows_message(2222, 275, 8, 4);
         expect(wildcard_result.has_value(),
                "Windows-message BINDEVENT should dispatch the wildcard hWnd binding");
@@ -523,6 +564,11 @@ namespace copperfin::runtime_surface_tests
         check("nmain", "1001");
         check("nbindexact", "1");
         check("nbindall", "1");
+        check("nbindvalidtext", "1");
+        check("nbindpartialtext", "1");
+        check("nbindgroupedtext", "1");
+        check("nbindoverflowtext", "1");
+        check("nbindsignedtext", "1");
         check("nmessagerows", "2");
         check("nmessagecols", "4");
         check("nrow1hwnd", "1001");
