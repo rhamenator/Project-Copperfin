@@ -46,6 +46,16 @@ head `93d44395f`; the artifacts are recorded under
 results close the hosted Windows/VFP9 evidence issue, but do not close safety
 traceability or protected package signing.
 
+The current focused work-area boundary correction is implemented at product
+head `ca7889efa` under #4861. Linux Native (`30511406972`) and macOS Native
+(`30511406973`) passed the exact corrected source/test head; the focused
+regression fills all 32,767 bounded work areas and verifies that failed
+allocation preserves the prior selection and alias map. The corresponding
+Windows Native workflow (`30511406940`) remains queued without a hosted
+runner, and the independent Windows/MSVC review is still outstanding. This
+pending evidence means #4861 and the MVP RC gate remain open; the product head
+is distinct from documentation-only coordination commits.
+
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
 Windows path/package contract validation. #4757-#4769 are closed with their
