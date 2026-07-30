@@ -239,6 +239,28 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
+The MVP implementation subgoals are complete at final product/test heads
+`8d6c307d4`, `64e162fd4`, and `82b907cd5`. Exact synchronized test-head
+validation at `20ef3b3cb` is green: Native Release Readiness `30550948703`
+passes Linux `316/316`, Windows `315/315`, and macOS `316/316`; Windows Deep
+`30550946359` passes native CTest, VSIX/resources, managed suites, net472,
+standalone Studio, all DesignerSmoke assertions, and PRG debugger smoke.
+Individual native, VSIX `30550923339`, Linux managed-UI `30550923344`,
+installer `30550923408`, and security/SBOM `30550923513` workflows also pass.
+The final release-validation regressions #4891, #4892, and #4893 are closed.
+
+This is implementation-complete RC readiness, not authority to publish the RC.
+The complete RC release evidence gate remains open until #4403 receives genuine
+arm's-length safety sign-off, closes, and passes strict validation, and until
+#4409 receives the approved protected launcher-trust signer/registry secrets and
+passes enforced Windows validation. Permissive primary-hazard safety run
+`30555972170` is green but cannot substitute for that strict closure. The
+hosted Deep runner also lacked VFP9;
+accepted installed-VFP9, mounted-sample, RuntimePackage/xAsset/Report/Menu, and
+live Visual Studio evidence remains the closed #4621 baseline because the final
+changes were catalog/managed/test-only. The v1 roadmap below is prepared and
+remains queued behind those two external release authorities.
+
 The latest product implementation head is `4a75d3273` (the current branch may
 also contain documentation-only coordination commits). The focused shared
 platform JSON and Studio-host diagnostic coverage passes locally under

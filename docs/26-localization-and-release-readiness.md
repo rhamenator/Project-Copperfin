@@ -22,6 +22,33 @@ Localized text must be separated from stable protocol values:
 
 ## Current Validation Evidence
 
+The current MVP implementation/test boundary is `8d6c307d4` for shared catalog
+parity, `64e162fd4` for UI-thread project-workflow publication, and `82b907cd5`
+for the final net472 gate correction. Exact synchronized hosted head
+`20ef3b3cb` passes Native Release Readiness `30550948703` on Linux (`316/316`),
+Windows (`315/315`), and macOS (`316/316`), plus Windows Deep
+`30550946359`, VSIX `30550923339`, Linux managed UI `30550923344`, installers
+`30550923408`, and Security Supply Chain `30550923513`. The VSIX, Linux UI,
+SBOM, and platform installer artifacts retain GitHub-provided SHA-256 digests
+recorded in `agent-handoff.md`.
+
+#4891 restored canonical/shared parity for eight existing managed strings.
+All `en-US`, `es-419`, `pt-BR`, and `qps-ploc` JSON catalogs contain the same
+2,851 keys; placeholders, ampersand accelerators, and pseudo-locale decoration
+remain valid. #4892 and #4893 add no catalog keys and preserve localized status,
+dialog, and diagnostic text while changing only UI publication ordering and
+test-owned process readiness. The final local `test_managed_compile` and full
+`316/316` CTest suite pass. The production-language warning below remains:
+Spanish and Portuguese still require qualified linguistic review.
+
+Implementation is RC-ready, but release authorization remains open. Permissive
+#4403 primary-hazard safety run `30555972170` passes; genuine arm's-length
+review, formal issue closure, and strict validation remain required. #4409
+cannot run its enforced trust gate because no protected repository
+signer/registry secrets are configured. Do not present the MVP RC as released
+or advance the active queue into v1 until those external authorities are
+satisfied.
+
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation head is `531bbec70`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux

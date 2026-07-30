@@ -2,6 +2,58 @@
 
 ## Current State
 
+The MVP implementation tree is complete at final product/test heads
+`8d6c307d4` (catalog parity), `64e162fd4` (project-workflow UI publication),
+and `82b907cd5` (deterministic net472 held-output fixtures). Exact synchronized
+test-head validation at `20ef3b3cb` is green. Consolidated Native Release
+Readiness run `30550948703` passed Linux `316/316` in `216.70s`, Windows
+`315/315` in `646.05s`, and macOS `316/316` in `276.13s`; the two POSIX
+launcher-process cases are the documented platform skips. The separate Linux,
+Windows, and macOS native runs `30550923334`, `30550923392`, and `30550923349`
+also pass.
+
+Windows Deep run `30550946359` passes native CTest `315/315`, VSIX/resource and
+both managed suites, the corrected net472 process runner, standalone Studio and
+DesignerSmoke builds, every DesignerSmoke assertion, and PRG debugger smoke.
+Artifact `8764725327` has GitHub SHA-256
+`2d798b23f0a4c57274c10f85cfb79d0af521a242714bcce80f1fa19f0555282d`.
+This closes #4892 and #4893. The run used `require_vfp9_samples=false`; it does
+not replace the accepted installed-VFP9, mounted-sample, live Visual Studio,
+RuntimePackage, xAsset, Report, and Menu evidence recorded under closed #4621.
+Those product paths were unchanged by the final managed/test-only corrections.
+
+Exact synchronized-head VSIX run `30550923339`, Linux managed-UI run
+`30550923344`, installer run `30550923408`, and Security Supply Chain run
+`30550923513` pass. Their principal artifacts are VSIX `8762800693` (SHA-256
+`dda856ac662ed29d40ca22bb1e5204f709221b19fb20265ab5ffdbc89bf2f716`),
+Linux UI `8762758355` (SHA-256
+`a8a9e941144a352de23a21b7aff681110a94ccdcb4904bd87ad27db6d4c6ec0b`),
+SBOM `8762724081` (SHA-256
+`f18355cfb66f0a2ceb913c6e8e44e65f5b2baf80db0ea311e26dbe27720e696a`),
+and Linux/Windows/macOS installer artifacts `8763241442`, `8763206680`, and
+`8762915124`. Local synchronized-source CTest passed `316/316` in `962.37s`,
+and final `test_managed_compile` passed independently.
+
+#4891 synchronized eight existing managed keys into all four shared catalogs;
+the canonical generator, managed compile, localization parity, explicit locale
+runs, and Linux/macOS/Windows review pass. #4892 marshals project workflow
+result/status/dialog publication through the owning WinForms thread; native
+Windows focused stress passes `30/30`. #4893 removes shell-startup races from
+the separate net472 gate and finally records owned helper PIDs directly from
+`Process.Start`; native Windows stress passes `9/9` with zero residual
+processes. All three RC blockers are closed. No machine-readable, VFP9 runtime,
+package, debug, xAsset, report, or stub-inventory contract changed.
+
+Do not declare the MVP RC released or advance the active queue into v1 yet.
+Issue #4403 still requires a genuinely independent arm's-length safety reviewer,
+formal closure, and a strict `RequireClosedIssues=true` pass. Issue #4409 still
+requires externally provisioned protected signer/registry secrets; `gh secret
+list` remains empty, so the enforced launcher-trust workflow cannot be run
+without new authority. The permissive primary-hazard safety gate is green, but
+it is supporting evidence only: run `30555972170` uploaded report artifact
+`8764789555` with GitHub SHA-256
+`98de3352fa4eebf8f6617efc973db5b48ca3d1362455fc3eec1aaa9618455c63`.
+
 The #4890/#26 standalone Open-shortcut slice is implemented at product/test
 head `9e4b5a286`. Localized File > Open now exposes conventional Ctrl+O through
 the unchanged picker handler; captions, dialog filters, path admission, document

@@ -33,6 +33,28 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- MVP RC implementation validation is green at final test head `82b907cd5` and
+  synchronized hosted head `20ef3b3cb`. Native Release Readiness
+  `30550948703` passes Linux `316/316`, Windows `315/315`, and macOS `316/316`;
+  Windows Deep `30550946359` passes native, VSIX/resources, managed/net472,
+  standalone Studio, DesignerSmoke, and debugger stages. Exact VSIX, Linux UI,
+  installers, security/SBOM, and individual native runs also pass. The v1 queue
+  remains behind external release authorities #4403 and #4409.
+- RC regression `#4893` removes the separate net472 fixture's nested shell and
+  cold-child readiness races. Owning parents record helper PIDs immediately
+  from `Process.Start`; native Windows stress passes `9/9`, exact VSIX
+  `30550923339` passes, and high-load Deep `30550946359` passes the same gate.
+  Production process-runner, package, debug, trust, and localization contracts
+  are unchanged.
+- RC regression `#4892` publishes standalone project-workflow completion only
+  through the owning WinForms thread. Native Windows focused stress passes
+  `30/30`, and Deep `30550946359` completes every DesignerSmoke assertion
+  without the former handle-creation/teardown race.
+- RC regression `#4891` restores shared-catalog parity for eight existing
+  managed Studio/IntelliSense entries. All four catalogs retain 2,851 keys;
+  canonical generation, managed/localization tests, explicit locales, and all
+  platform reviews pass without changing invariant machine contracts.
+
 - Recent F2 standalone Open-shortcut slice: `#4890` gives localized File > Open
   the conventional Ctrl+O accelerator through its unchanged picker handler.
   Product/test head `9e4b5a286` preserves filters, path admission, document

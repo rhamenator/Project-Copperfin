@@ -1,3 +1,41 @@
+- 2026-07-30: Completed the implementation-side MVP RC validation cycle at
+  final test head `82b907cd5` and synchronized hosted head `20ef3b3cb`.
+  Consolidated Native Release Readiness run `30550948703` passed Linux
+  `316/316`, Windows `315/315`, and macOS `316/316`; Windows Deep run
+  `30550946359` passed native CTest, VSIX/resources, managed suites, net472,
+  standalone Studio, every DesignerSmoke assertion, and PRG debugger smoke.
+  Exact-head VSIX, Linux UI, installers, security/SBOM, and individual native
+  workflows are also green. The complete RC release claim remains gated by
+  independent safety closure #4403 and protected launcher-trust provisioning
+  #4409; the hosted Deep runner had no VFP9 corpus, so accepted installed-VFP9
+  and live Visual Studio evidence remains the separate #4621 baseline.
+
+- 2026-07-30: Closed RC blocker #4893 by replacing the separate net472
+  process-runner suite's remaining nested shell helpers with self-hosted managed
+  modes, then removing the final cold-child readiness race. Owning parents now
+  publish child/grandchild PIDs directly from successful `Process.Start`, while
+  inherited handles, timeout/tree-kill, captured output, bounded drain, live-
+  descendant proof, and finally-owned cleanup remain asserted. Production
+  `CopperfinProcessRunner` is unchanged. Native Windows stress passes `9/9`;
+  VSIX run `30550923339` and high-load Deep run `30550946359` pass the corrected
+  net472 gate with no residual processes.
+
+- 2026-07-30: Closed RC blocker #4892 by applying project build/run results,
+  localized status text, and optional dialogs together through the existing
+  WinForms `PostToUi` seam after background execution. The observable result is
+  now published only on the owning UI thread, preventing DesignerSmoke teardown
+  from racing handle creation. Focused portable stress passes `20/20`, native
+  Windows passes `30/30` across default/pt_BR/de_DE, and Windows Deep run
+  `30550946359` completes every DesignerSmoke assertion without the prior
+  `CreateHandle`/`Dispose` exception.
+
+- 2026-07-30: Closed RC blocker #4891 by synchronizing eight existing managed
+  Studio/IntelliSense strings into `en-US`, `es-419`, `pt-BR`, and `qps-ploc`.
+  All catalogs retain identical 2,851-key sets; the canonical generator,
+  managed compile, localization gate, explicit four-locale runs, and Linux,
+  macOS, and Windows review pass. No invariant identifier, placeholder,
+  runtime behavior, or locale-selection contract changed.
+
 - 2026-07-30: Implemented #4890/#26 standalone File > Open Ctrl+O routing at
   product/test head `9e4b5a286`. The conventional Windows shortcut invokes the
   unchanged localized picker path, preserving captions, filters, admission,
