@@ -16,8 +16,8 @@
   Numeric handler results, wildcard bindings, current-event `AEVENTS()`
   metadata, `READ EVENTS` restoration, and localized behavior remain
   unchanged. The focused runtime-surface target passes under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; cross-platform review remains
-  required.
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang review
+  remains required.
 
 - 2026-07-30: Hardened #4864/#3217 opaque runtime object identities. The
   shared `object:<prog-id>#<handle>` parser now requires a complete invariant

@@ -22,8 +22,8 @@ overflowing strings fail closed to zero. The focused headless regression
 dispatches real messages, restores `READ EVENTS`, and preserves numeric
 handler results, wildcard bindings, and current-event `AEVENTS()` metadata.
 The runtime-surface target passes under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8` on Linux. AppleClang and MSVC review remain required before
-closing #4865. This is focused evidence, not full RC evidence.
+`de_DE.UTF-8` on Linux and Windows/MSVC. AppleClang review remains required
+before closing #4865. This is focused evidence, not full RC evidence.
 
 The #4864/#3217 opaque runtime object-identity slice is implemented at
 product/test head `d21415cbf`. The shared

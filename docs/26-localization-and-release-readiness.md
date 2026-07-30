@@ -82,8 +82,8 @@ Windows/MSVC. Issue #4864 is closed.
 Windows-message handler strings remain invariant host-return data and now
 require a complete signed pointer-sized integer before numeric coercion. The
 focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance and the newly triggered
-exact-head hosted matrix remain pending.
+`de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang acceptance and exact-head
+hosted native evidence remain pending.
 
 #4866 at product head `416e8d123` adds no user-facing text or catalog keys.
 DBF Currency (`Y`) input remains invariant machine/storage text, and boundary
