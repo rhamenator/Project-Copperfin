@@ -219,9 +219,15 @@ internal static partial class Program
                 "opening standalone Edit should refresh Undo availability from the active editor state");
             Expect(form.TryUndoActiveDocumentForTest() && editBox.Text == "before",
                 "standalone Undo should route to the active editor's existing focused-text undo stack");
-            Expect(!form.UndoCommandEnabled,
-                "standalone Undo should refresh availability after consuming the active edit");
+            Expect(form.UndoCommandEnabled == editBox.CanUndo,
+                "standalone Undo should refresh availability from the focused text control's native undo state");
+            if (editBox.CanUndo)
+            {
+                Expect(form.TryUndoActiveDocumentForTest() && editBox.Text == "after",
+                    "standalone Undo should preserve the native reversible single-level edit contract");
+            }
 
+            editBox.Text = "before";
             editBox.Focus();
             Application.DoEvents();
             ReplaceSelectionWithUndo(editBox, "after");
