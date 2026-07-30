@@ -2,6 +2,69 @@
 
 namespace copperfin::runtime_surface_tests
 {
+    void test_native_list_control_selectors_reject_partial_integer_tokens()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_selector_integer_tokens";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_selector_integer_tokens.prg";
+        write_text(
+            main_path,
+            "oList = CREATEOBJECT('ListBox')\n"
+            "oList.MultiSelect = .T.\n"
+            "oList.AddListItem('Alpha', 10)\n"
+            "oList.AddListItem('Bravo', 20)\n"
+            "oList.ItemData(1) = 100\n"
+            "oList.ItemData(2) = 200\n"
+            "oList.Selected(2) = .T.\n"
+            "oList.SelectedID(20) = .T.\n"
+            "cValidList = GETPEM(oList, 'List(2)')\n"
+            "cGroupedList = GETPEM(oList, 'List(1.234)')\n"
+            "cTrailingList = GETPEM(oList, 'List(2.0)')\n"
+            "cValidListItem = GETPEM(oList, 'ListItem(20)')\n"
+            "cGroupedListItem = GETPEM(oList, 'ListItem(20.0)')\n"
+            "nValidItemData = GETPEM(oList, 'ItemData(2)')\n"
+            "nGroupedItemData = GETPEM(oList, 'ItemData(1.234)')\n"
+            "lValidSelected = SETPEM(oList, 'Selected(2)', .T.)\n"
+            "lGroupedSelected = SETPEM(oList, 'Selected(1.234)', .T.)\n"
+            "lValidSelectedId = SETPEM(oList, 'SelectedID(20)', .T.)\n"
+            "lGroupedSelectedId = SETPEM(oList, 'SelectedID(20.0)', .T.)\n"
+            "RETURN\n");
+
+        const auto state = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()))
+            .run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native list selector integer script should complete: ") + state.message);
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " should be captured");
+            if (found != state.globals.end()) {
+                expect(copperfin::runtime::format_value(found->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(found->second) + "'");
+            }
+        };
+
+        check("cvalidlist", "Bravo");
+        check("cgroupedlist", "");
+        check("ctrailinglist", "");
+        check("cvalidlistitem", "Bravo");
+        check("cgroupedlistitem", "");
+        check("nvaliditemdata", "200");
+        check("ngroupeditemdata", "");
+        check("lvalidselected", "true");
+        check("lgroupedselected", "false");
+        check("lvalidselectedid", "true");
+        check("lgroupedselectedid", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_control_array_range_properties_stay_coherent()
     {
         namespace fs = std::filesystem;

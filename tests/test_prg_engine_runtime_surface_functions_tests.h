@@ -258,6 +258,7 @@ namespace copperfin::runtime_surface_tests
     void test_native_listbox_moverbars_property_stays_gated_and_builtin();
     void test_native_list_controls_value_assignment_routes_selection();
     void test_native_listbox_autohidescrollbar_property_stays_builtin();
+    void test_native_list_control_selectors_reject_partial_integer_tokens();
     void test_native_list_control_array_range_properties_stay_coherent();
     void test_native_combobox_displaycount_property_stays_builtin();
     void test_native_list_control_nulldisplay_stays_builtin_and_visible();

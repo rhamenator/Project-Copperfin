@@ -5,6 +5,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/invariant_numeric.h"
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 #include "prg_engine_command_helpers.h"
@@ -8269,6 +8270,23 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        const auto evaluate_integer_selector_expression = [&](const std::string& expression)
+            -> std::optional<long long>
+        {
+            const std::string trimmed_expression = trim_copy(expression);
+            if (const auto literal = copperfin::platform::try_parse_invariant_integer<long long>(trimmed_expression);
+                literal.has_value())
+            {
+                return literal;
+            }
+            if (copperfin::platform::try_parse_invariant_double(trimmed_expression).has_value())
+            {
+                return std::nullopt;
+            }
+            const PrgValue evaluated = evaluate_expression(trimmed_expression, source_frame);
+            return static_cast<long long>(std::llround(value_as_number(evaluated)));
+        };
+
         if (normalized_property_name == "header" &&
             is_native_column_runtime_object(runtime_object))
         {
@@ -8348,17 +8366,16 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue row_value = evaluate_expression(row_expression, source_frame);
-            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
-            const long long requested_row = std::llround(value_as_number(row_value));
-            const long long requested_column = std::llround(value_as_number(column_value));
-            if (requested_row < 1LL || requested_column < 1LL)
+            const auto requested_row = evaluate_integer_selector_expression(row_expression);
+            const auto requested_column = evaluate_integer_selector_expression(column_expression);
+            if (!requested_row.has_value() || !requested_column.has_value() ||
+                *requested_row < 1LL || *requested_column < 1LL)
             {
                 return std::nullopt;
             }
             return NativeListControlCellReference{
-                .row_slot = static_cast<std::size_t>(requested_row - 1LL),
-                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+                .row_slot = static_cast<std::size_t>(*requested_row - 1LL),
+                .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
         };
 
         auto resolve_listitem_member_cell = [&]() -> std::optional<NativeListControlItemCellReference>
@@ -8420,17 +8437,16 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue item_id_value = evaluate_expression(item_id_expression, source_frame);
-            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
-            const long long requested_item_id = std::llround(value_as_number(item_id_value));
-            const long long requested_column = std::llround(value_as_number(column_value));
-            if (requested_item_id < 1LL || requested_column < 1LL)
+            const auto requested_item_id = evaluate_integer_selector_expression(item_id_expression);
+            const auto requested_column = evaluate_integer_selector_expression(column_expression);
+            if (!requested_item_id.has_value() || !requested_column.has_value() ||
+                *requested_item_id < 1LL || *requested_column < 1LL)
             {
                 return std::nullopt;
             }
             return NativeListControlItemCellReference{
-                .item_id = requested_item_id,
-                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+                .item_id = *requested_item_id,
+                .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
         };
 
         auto resolve_indextoitemid_member_slot = [&]() -> std::optional<std::size_t>
@@ -8483,13 +8499,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
-            const long long requested_index = std::llround(value_as_number(selector_value));
-            if (requested_index < 1LL)
+            const auto requested_index = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_index.has_value() || *requested_index < 1LL)
             {
                 return std::nullopt;
             }
-            return static_cast<std::size_t>(requested_index - 1LL);
+            return static_cast<std::size_t>(*requested_index - 1LL);
         };
 
         auto resolve_itemidtoindex_member_item_id = [&]() -> std::optional<long long>
@@ -8542,13 +8557,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
-            const long long requested_item_id = std::llround(value_as_number(selector_value));
-            if (requested_item_id < 1LL)
+            const auto requested_item_id = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_item_id.has_value() || *requested_item_id < 1LL)
             {
                 return std::nullopt;
             }
-            return requested_item_id;
+            return *requested_item_id;
         };
 
         const auto perform_property_read = [&]() -> std::optional<PrgValue>
@@ -8975,6 +8989,23 @@ namespace copperfin::runtime
             return false;
         }
 
+        const auto evaluate_integer_selector_expression = [&](const std::string& expression)
+            -> std::optional<long long>
+        {
+            const std::string trimmed_expression = trim_copy(expression);
+            if (const auto literal = copperfin::platform::try_parse_invariant_integer<long long>(trimmed_expression);
+                literal.has_value())
+            {
+                return literal;
+            }
+            if (copperfin::platform::try_parse_invariant_double(trimmed_expression).has_value())
+            {
+                return std::nullopt;
+            }
+            const PrgValue evaluated = evaluate_expression(trimmed_expression, source_frame);
+            return static_cast<long long>(std::llround(value_as_number(evaluated)));
+        };
+
         if (normalized_property_name == "showtips" &&
             normalize_identifier(trim_copy(runtime_object.prog_id)) == "_screen")
         {
@@ -9068,15 +9099,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(
-                *selector_text,
-                source_frame);
-            const long long requested_index = std::llround(value_as_number(selector_value));
-            if (requested_index < 1LL)
+            const auto requested_index = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_index.has_value() || *requested_index < 1LL)
             {
                 return std::nullopt;
             }
-            return static_cast<std::size_t>(requested_index - 1LL);
+            return static_cast<std::size_t>(*requested_index - 1LL);
         };
 
         auto resolve_selectedid_member_item_id = [&]() -> std::optional<long long>
@@ -9129,15 +9157,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(
-                *selector_text,
-                source_frame);
-            const long long requested_item_id = std::llround(value_as_number(selector_value));
-            if (requested_item_id < 1LL)
+            const auto requested_item_id = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_item_id.has_value() || *requested_item_id < 1LL)
             {
                 return std::nullopt;
             }
-            return requested_item_id;
+            return *requested_item_id;
         };
 
         auto resolve_list_member_cell = [&]() -> std::optional<NativeListControlCellReference>
@@ -9199,17 +9224,16 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue row_value = evaluate_expression(row_expression, source_frame);
-            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
-            const long long requested_row = std::llround(value_as_number(row_value));
-            const long long requested_column = std::llround(value_as_number(column_value));
-            if (requested_row < 1LL || requested_column < 1LL)
+            const auto requested_row = evaluate_integer_selector_expression(row_expression);
+            const auto requested_column = evaluate_integer_selector_expression(column_expression);
+            if (!requested_row.has_value() || !requested_column.has_value() ||
+                *requested_row < 1LL || *requested_column < 1LL)
             {
                 return std::nullopt;
             }
             return NativeListControlCellReference{
-                .row_slot = static_cast<std::size_t>(requested_row - 1LL),
-                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+                .row_slot = static_cast<std::size_t>(*requested_row - 1LL),
+                .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
         };
 
         auto resolve_listitem_member_cell = [&]() -> std::optional<NativeListControlItemCellReference>
@@ -9271,17 +9295,16 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue item_id_value = evaluate_expression(item_id_expression, source_frame);
-            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
-            const long long requested_item_id = std::llround(value_as_number(item_id_value));
-            const long long requested_column = std::llround(value_as_number(column_value));
-            if (requested_item_id < 1LL || requested_column < 1LL)
+            const auto requested_item_id = evaluate_integer_selector_expression(item_id_expression);
+            const auto requested_column = evaluate_integer_selector_expression(column_expression);
+            if (!requested_item_id.has_value() || !requested_column.has_value() ||
+                *requested_item_id < 1LL || *requested_column < 1LL)
             {
                 return std::nullopt;
             }
             return NativeListControlItemCellReference{
-                .item_id = requested_item_id,
-                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+                .item_id = *requested_item_id,
+                .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
         };
 
         auto resolve_indextoitemid_member_slot = [&]() -> std::optional<std::size_t>
@@ -9334,13 +9357,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
-            const long long requested_index = std::llround(value_as_number(selector_value));
-            if (requested_index < 1LL)
+            const auto requested_index = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_index.has_value() || *requested_index < 1LL)
             {
                 return std::nullopt;
             }
-            return static_cast<std::size_t>(requested_index - 1LL);
+            return static_cast<std::size_t>(*requested_index - 1LL);
         };
 
         auto resolve_itemidtoindex_member_item_id = [&]() -> std::optional<long long>
@@ -9393,13 +9415,12 @@ namespace copperfin::runtime
                 return std::nullopt;
             }
 
-            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
-            const long long requested_item_id = std::llround(value_as_number(selector_value));
-            if (requested_item_id < 1LL)
+            const auto requested_item_id = evaluate_integer_selector_expression(*selector_text);
+            if (!requested_item_id.has_value() || *requested_item_id < 1LL)
             {
                 return std::nullopt;
             }
-            return requested_item_id;
+            return *requested_item_id;
         };
 
         const auto perform_property_write = [&]() -> bool

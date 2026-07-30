@@ -1,3 +1,13 @@
+- 2026-07-29: Hardened #4855/#3217 native list-control selector parsing.
+  `Selected()`, `SelectedID()`, `List()`, `ListItem()`, `ItemData()`,
+  `IndexToItemID()`, and `ItemIDToIndex()` now require complete invariant
+  integer selectors, and decimal numeric literals are rejected instead of
+  being rounded into a different row or item. Valid positive selectors,
+  default columns, variable/arithmetic expressions, and out-of-range behavior
+  remain unchanged. Focused runtime-surface tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` Linux locales; cross-platform review remains
+  required before closure.
+
 - 2026-07-29: Hardened #4854/#3217 runtime integer parsing. Runtime config
   limits/code pages and SYS(2326/2327) handle strings now require complete
   invariant base-10 tokens, so grouped or trailing punctuation cannot be

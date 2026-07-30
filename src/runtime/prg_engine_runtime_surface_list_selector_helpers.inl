@@ -50,15 +50,11 @@ std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
         return std::nullopt;
     }
 
-    try {
-        const long long requested_index = std::stoll(*selector_text);
-        if (requested_index < 1LL) {
-            return std::nullopt;
-        }
-        return static_cast<std::size_t>(requested_index - 1LL);
-    } catch (const std::exception&) {
+    const auto requested_index = copperfin::platform::try_parse_invariant_integer<long long>(*selector_text);
+    if (!requested_index.has_value() || *requested_index < 1LL) {
         return std::nullopt;
     }
+    return static_cast<std::size_t>(*requested_index - 1LL);
 }
 std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell_impl(
     const RuntimeOleObjectState& runtime_object,
@@ -116,18 +112,15 @@ std::optional<NativeListControlCellReference> parse_native_list_control_list_mem
         return std::nullopt;
     }
 
-    try {
-        const long long requested_row = std::stoll(row_text);
-        const long long requested_column = std::stoll(column_text);
-        if (requested_row < 1LL || requested_column < 1LL) {
-            return std::nullopt;
-        }
-        return NativeListControlCellReference{
-            .row_slot = static_cast<std::size_t>(requested_row - 1LL),
-            .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
-    } catch (const std::exception&) {
+    const auto requested_row = copperfin::platform::try_parse_invariant_integer<long long>(row_text);
+    const auto requested_column = copperfin::platform::try_parse_invariant_integer<long long>(column_text);
+    if (!requested_row.has_value() || !requested_column.has_value() ||
+        *requested_row < 1LL || *requested_column < 1LL) {
         return std::nullopt;
     }
+    return NativeListControlCellReference{
+        .row_slot = static_cast<std::size_t>(*requested_row - 1LL),
+        .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
 }
 
 std::optional<NativeListControlItemCellReference> parse_native_list_control_listitem_member_cell_impl(
@@ -186,18 +179,15 @@ std::optional<NativeListControlItemCellReference> parse_native_list_control_list
         return std::nullopt;
     }
 
-    try {
-        const long long requested_item_id = std::stoll(item_id_text);
-        const long long requested_column = std::stoll(column_text);
-        if (requested_item_id < 1LL || requested_column < 1LL) {
-            return std::nullopt;
-        }
-        return NativeListControlItemCellReference{
-            .item_id = requested_item_id,
-            .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
-    } catch (const std::exception&) {
+    const auto requested_item_id = copperfin::platform::try_parse_invariant_integer<long long>(item_id_text);
+    const auto requested_column = copperfin::platform::try_parse_invariant_integer<long long>(column_text);
+    if (!requested_item_id.has_value() || !requested_column.has_value() ||
+        *requested_item_id < 1LL || *requested_column < 1LL) {
         return std::nullopt;
     }
+    return NativeListControlItemCellReference{
+        .item_id = *requested_item_id,
+        .column_slot = static_cast<std::size_t>(*requested_column - 1LL)};
 }
 
 std::optional<std::size_t> parse_native_list_control_itemdata_member_slot_impl(
@@ -229,15 +219,11 @@ std::optional<std::size_t> parse_native_list_control_itemdata_member_slot_impl(
         return std::nullopt;
     }
 
-    try {
-        const long long requested_index = std::stoll(*selector_text);
-        if (requested_index < 1LL) {
-            return std::nullopt;
-        }
-        return static_cast<std::size_t>(requested_index - 1LL);
-    } catch (const std::exception&) {
+    const auto requested_index = copperfin::platform::try_parse_invariant_integer<long long>(*selector_text);
+    if (!requested_index.has_value() || *requested_index < 1LL) {
         return std::nullopt;
     }
+    return static_cast<std::size_t>(*requested_index - 1LL);
 }
 
 std::optional<long long> parse_native_list_control_selectedid_member_item_id_impl(
@@ -288,15 +274,11 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id_imp
         return std::nullopt;
     }
 
-    try {
-        const long long requested_item_id = std::stoll(*selector_text);
-        if (requested_item_id < 1LL) {
-            return std::nullopt;
-        }
-        return requested_item_id;
-    } catch (const std::exception&) {
+    const auto requested_item_id = copperfin::platform::try_parse_invariant_integer<long long>(*selector_text);
+    if (!requested_item_id.has_value() || *requested_item_id < 1LL) {
         return std::nullopt;
     }
+    return *requested_item_id;
 }
 
 std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot_impl(
@@ -347,15 +329,11 @@ std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot_i
         return std::nullopt;
     }
 
-    try {
-        const long long requested_index = std::stoll(*selector_text);
-        if (requested_index < 1LL) {
-            return std::nullopt;
-        }
-        return static_cast<std::size_t>(requested_index - 1LL);
-    } catch (const std::exception&) {
+    const auto requested_index = copperfin::platform::try_parse_invariant_integer<long long>(*selector_text);
+    if (!requested_index.has_value() || *requested_index < 1LL) {
         return std::nullopt;
     }
+    return static_cast<std::size_t>(*requested_index - 1LL);
 }
 
 std::optional<long long> parse_native_list_control_itemidtoindex_member_item_id_impl(
@@ -406,15 +384,11 @@ std::optional<long long> parse_native_list_control_itemidtoindex_member_item_id_
         return std::nullopt;
     }
 
-    try {
-        const long long requested_item_id = std::stoll(*selector_text);
-        if (requested_item_id < 1LL) {
-            return std::nullopt;
-        }
-        return requested_item_id;
-    } catch (const std::exception&) {
+    const auto requested_item_id = copperfin::platform::try_parse_invariant_integer<long long>(*selector_text);
+    if (!requested_item_id.has_value() || *requested_item_id < 1LL) {
         return std::nullopt;
     }
+    return *requested_item_id;
 }
 
 std::optional<std::size_t> resolve_native_list_control_insert_slot(

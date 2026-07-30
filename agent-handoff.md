@@ -50,6 +50,17 @@ macOS/AppleClang, and Windows/MSVC. Issue #4854 is closed. The next selected
 prompt-sized child is #4855, strict invariant parsing for native list-control
 selectors. This is focused evidence, not full RC evidence.
 
+The #4855/#3217 native list-control selector slice is implementation-complete
+locally. `Selected()`, `SelectedID()`, `List()`, `ListItem()`, `ItemData()`,
+`IndexToItemID()`, and `ItemIDToIndex()` selector helpers now require complete
+invariant integer tokens, and the runtime fallback path rejects decimal numeric
+literals instead of rounding them into another row or item. Valid positive
+selectors, default columns, variable/arithmetic expressions, and out-of-range
+behavior remain unchanged. The focused runtime-surface test passes under the
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` Linux locales; macOS/AppleClang and
+Windows/MSVC review remains required. Issue #4855 remains open pending that
+cross-platform review. This is focused evidence, not full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

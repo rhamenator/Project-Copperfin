@@ -9,6 +9,15 @@
   `de_DE.UTF-8` Linux focused runs pass; macOS/AppleClang and Windows/MSVC
   review remains required.
 
+- Native list-control selector culture boundary (2026-07-29, #4855 under
+  #3217): `Selected()`, `SelectedID()`, `List()`, `ListItem()`, `ItemData()`,
+  `IndexToItemID()`, and `ItemIDToIndex()` now require complete invariant
+  integer selectors. Decimal numeric literals are rejected rather than rounded
+  into another row or item, while valid positive selectors, default columns,
+  variable/arithmetic expressions, and out-of-range behavior remain unchanged.
+  Linux focused runtime-surface tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8`; macOS/AppleClang and Windows/MSVC review remains required.
+
 - Strict runtime integer culture boundary (2026-07-29, #4854 under #3217):
   runtime configuration limits/code pages and SYS(2326/2327) string handle
   arguments now require complete invariant base-10 tokens. Grouped or trailing
