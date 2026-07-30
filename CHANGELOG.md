@@ -5,7 +5,8 @@
   actual enforced guard. The evidence contract proves valid internal-apphost
   start and exit-code-4/no-start behavior for modified and removed artifacts,
   removed/duplicate/case-ambiguous inventory, and modified/removed signature
-  sidecars, uploads no private material, and always removes protected temporary
+  sidecars, archives the finalized direct artifact names/roles and SHA-256
+  digests without private material, and always removes protected temporary
   inputs. Portable signer/provisioning/workflow/trust contracts and the fixture
   build pass. The signer ID crosses workflow-step boundaries only after its
   character whitelist and registry binding pass, preventing dispatch input

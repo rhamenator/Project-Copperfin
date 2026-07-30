@@ -93,8 +93,9 @@ PowerShell signer, and invokes the actual enforced launcher guard. A valid
 signed package must start the internal apphost. Modified and removed artifacts,
 removed/duplicate/case-ambiguous inventory records, and modified or removed
 signature sidecars must all return exit code `4` without starting that apphost.
-Only the signer ID, commit/run identity, invariant case results, and non-secret
-provisioning facts are uploaded. This workflow path is implemented under
+Only the signer ID, commit/run identity, finalized direct artifact names/roles
+and SHA-256 digests, invariant case results, and non-secret provisioning facts
+are uploaded. This workflow path is implemented under
 #4894, but it is release evidence only after an externally approved registry
 and key execute it successfully.
 

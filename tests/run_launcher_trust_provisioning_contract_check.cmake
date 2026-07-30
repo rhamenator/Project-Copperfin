@@ -48,6 +48,8 @@ foreach(REQUIRED_TEXT IN ITEMS
     "removed-signature-sidecar"
     "internal_apphost_started"
     "exit_code"
+    "package_relative_name"
+    "sha256"
 )
     string(FIND "${VALIDATION_SCRIPT_CONTENT}" "${REQUIRED_TEXT}" POSITION)
     if(POSITION EQUAL -1)

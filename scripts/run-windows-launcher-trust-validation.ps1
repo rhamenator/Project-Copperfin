@@ -79,6 +79,17 @@ try {
     if ($inventoryLines.Count -lt 5) {
         throw "Finalized launcher fixture did not contain the required inventory."
     }
+    $inventoryEvidence = @($inventoryLines | ForEach-Object {
+        $fields = $_.Substring("launcher_artifact=".Length).Split('|')
+        if ($fields.Count -ne 3 -or $fields[2] -notmatch '^[0-9a-f]{64}$') {
+            throw "Finalized launcher fixture contained a malformed inventory record."
+        }
+        [ordered]@{
+            package_relative_name = $fields[0]
+            role = $fields[1]
+            sha256 = $fields[2]
+        }
+    })
 
     Invoke-GuardCase "valid-signed-launch" 0 $true
 
@@ -134,6 +145,7 @@ try {
         signer_key_id = $SignerKeyId
         repository_commit = $env:GITHUB_SHA
         workflow_run_id = $env:GITHUB_RUN_ID
+        artifacts = $inventoryEvidence
         cases = $results
     }
     $outputParent = Split-Path -Parent $OutputPath

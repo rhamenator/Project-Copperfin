@@ -51,7 +51,8 @@ Windows path binds an explicit approved signer ID to the registry, uses a
 PowerShell Ed25519 signer over a finalized fixture, proves valid internal-host
 start plus modified/removed artifact, removed/duplicate/case-ambiguous
 inventory, and modified/removed signature failures, and emits only non-secret
-case evidence before cleaning protected inputs. Portable workflow/signer/trust
+case plus finalized artifact-name/role/SHA-256 evidence before cleaning
+protected inputs. Portable workflow/signer/trust
 contracts and the fixture build pass. The signer ID is published across steps
 only after its whitelist and registry binding pass. Duplicate registry IDs
 fail both provisioning and native verification before signature acceptance.
