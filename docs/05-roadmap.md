@@ -29,20 +29,20 @@ Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
 Current class-method discovery evidence includes #4883 at exact product/test
-head `99a23efcf`: `PROTECTED` and `HIDDEN` procedure/function declarations,
+combined head `b3285feab`: `PROTECTED` and `HIDDEN` procedure/function declarations,
 including `PROC`, now retain qualified class identity, inline/following-line
 signatures, and definition provenance without becoming global symbols. The
-local four-mode matrix and exact-head Windows VSIX run `30528297287` pass;
-artifact `8753662479` was uploaded. The child is closed, while broader G1 and
-RC validation remain separate.
+local four-mode matrix and exact-head Windows VSIX run `30528541049` pass;
+artifact `8753733157` was uploaded. The child remains open for independent
+review, while broader G1 and RC validation remain separate.
 
 Current VFP declaration-alias evidence includes #4882 at exact product/test
-head `639d31fc8`: project scanning now treats `PROC` and `PROCEDURE` alike for
+combined head `b3285feab`: both project scanners treat `PROC` and `PROCEDURE` alike for
 global routines and qualified class methods, preserving inline/following-line
 signatures and definition provenance while rejecting the longer `PROCEDURES`
 near-match. The local four-mode matrix and exact-head Windows VSIX run
-`30527860407` pass; artifact `8753473175` was uploaded. The child is closed,
-while broader G1 and RC validation remain separate.
+`30528541049` pass; artifact `8753733157` was uploaded. The child remains open
+for independent review, while broader G1 and RC validation remain separate.
 
 Current runtime/editor-alignment evidence includes #4881 at exact product/test
 head `0867efd1a`: project procedures, functions, and qualified class methods
