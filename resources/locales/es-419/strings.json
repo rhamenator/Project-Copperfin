@@ -2841,5 +2841,13 @@
   "AssetEditor.Summary.LabelComplexity": "Complejidad",
   "AssetEditor.Summary.LabelStrategy": "Estrategia",
   "AssetEditor.Summary.LabelDeterministicFirst": "Determinista primero",
-  "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido."
+  "Runtime.Prg.String.Error.InvalidOccurrence": "El valor, tipo o cantidad del argumento de la función no es válido.",
+  "Studio.EditMenu": "\u0026Editar",
+  "Studio.ProjectMenu": "\u0026Proyecto",
+  "Studio.BuildProjectMenu": "\u0026Compilar proyecto",
+  "Studio.RunProjectMenu": "\u0026Ejecutar sin depurar",
+  "Studio.DebugProjectMenu": "Iniciar \u0026depuraci\u00F3n",
+  "LanguageService.IntelliSense.Project.PropertyMemberFromType": "Miembro de propiedad del proyecto de {0}.",
+  "LanguageService.IntelliSense.Project.PropertySymbolOnClass": "S\u00EDmbolo de propiedad del proyecto en {0}.",
+  "LanguageService.IntelliSense.Project.CursorFieldDiscovered": "Campo de cursor declarado en el c\u00F3digo fuente del proyecto."
 }

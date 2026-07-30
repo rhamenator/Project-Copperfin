@@ -2841,5 +2841,13 @@
   "AssetEditor.Summary.LabelComplexity": "[Complexity]",
   "AssetEditor.Summary.LabelStrategy": "[Strategy]",
   "AssetEditor.Summary.LabelDeterministicFirst": "[Deterministic First]",
-  "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]"
+  "Runtime.Prg.String.Error.InvalidOccurrence": "[!! Fµñçţïøñ åŕğµmëñţ ṽålµë, ţ¥þë, øŕ çöµñţ ïš ïñṽålïð. !!]",
+  "Studio.EditMenu": "[\u0026Edit]",
+  "Studio.ProjectMenu": "[\u0026Project]",
+  "Studio.BuildProjectMenu": "[\u0026Build Project]",
+  "Studio.RunProjectMenu": "[\u0026Run Without Debugging]",
+  "Studio.DebugProjectMenu": "[Start \u0026Debugging]",
+  "LanguageService.IntelliSense.Project.PropertyMemberFromType": "[Project property member from {0}.]",
+  "LanguageService.IntelliSense.Project.PropertySymbolOnClass": "[Project property symbol on {0}.]",
+  "LanguageService.IntelliSense.Project.CursorFieldDiscovered": "[Cursor field declared in project source.]"
 }
