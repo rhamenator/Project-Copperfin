@@ -412,9 +412,9 @@ internal sealed class StudioMainForm : Form
         return RunActiveProjectWorkflow(operation);
     }
 
-    internal void RefreshUndoCommandStateForTest()
+    internal void OpenEditMenuForTest()
     {
-        RefreshUndoCommandState();
+        editMenuItem.ShowDropDown();
     }
 
     internal bool TryUndoActiveDocumentForTest()

@@ -206,9 +206,9 @@ internal static partial class Program
 
             Expect(editBox.CanUndo,
                 "standalone Undo smoke should create a real focused text edit in the shared editor");
-            form.RefreshUndoCommandStateForTest();
+            form.OpenEditMenuForTest();
             Expect(form.UndoCommandEnabled && form.UndoMenuText == "Deshacer",
-                "standalone Undo availability should follow the active editor state");
+                "opening standalone Edit should refresh Undo availability from the active editor state");
             Expect(form.TryUndoActiveDocumentForTest() && editBox.Text == "before",
                 "standalone Undo should route to the active editor's existing focused-text undo stack");
             Expect(!form.UndoCommandEnabled,
