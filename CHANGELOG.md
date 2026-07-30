@@ -1,3 +1,11 @@
+- 2026-07-30: Implemented #4874/#27 editor symbol discovery for common
+  unquoted VFP `#INCLUDE` operands. Direct and recursively included headers now
+  contribute preprocessor definitions and token descriptions without treating
+  trailing `&&` comments as path text; quoted and angle-bracket behavior,
+  localization, and package/runtime trust boundaries remain unchanged. The
+  Release language-service harness passes on Linux; hosted VSIX/Windows
+  acceptance remains pending.
+
 - 2026-07-30: Hardened #4873/#112 Studio-host JSON control escaping against
   grouped host locales. A shared platform helper now emits control-byte
   Unicode escapes through direct hexadecimal digit lookup instead of a numeric
@@ -5,8 +13,8 @@
   control, NUL, `0x1f`, and UTF-8 handling, while a real builder-launch JSON
   diagnostic requires `--unknown\\u001fvalue` with no raw control byte. The
   focused platform-model and Studio-host JSON coverage passes under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC review remains
-  required.
+  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang review passes at channel
+  seq1266 and MSVC review remains required.
 
 - 2026-07-30: Hardened #4872/#108 `NEWID()` UUID text against grouped host
   locales. UUID formatting now uses the classic locale, and an every-digit

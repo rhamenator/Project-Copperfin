@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4874/#27 editor-symbol include slice is implemented at exact product/test
+head `e70c89e87`. The language-service project scanner now follows common
+unquoted VFP include operands such as `#include frxBuilder.h`, in addition to
+the existing quoted and angle-bracket forms. Focused coverage proves direct
+and recursive unquoted headers contribute their definitions and token
+descriptions, and that trailing `&&` comments are not treated as path text;
+the existing quoted external-header regression remains green. The Release
+`Copperfin.LanguageServiceTests` harness passes on Linux. Hosted VSIX and
+Windows acceptance remain pending. No user-facing text, catalogs, package,
+runtime, debug, or trust contract changed.
+
 The #4873/#112 Studio-host JSON-control-escape slice is implemented at exact
 product/test head `4a75d3273`. Studio-host string escaping now delegates to a
 shared platform helper that emits control escapes with direct hexadecimal
@@ -12,7 +23,8 @@ requires `--unknown\\u001fvalue`, rejects the raw control byte, and preserves
 exit status 2. Full default `test_studio_host_json` (418.61s) and
 `test_platform_models` (1.37s) pass; the exact diagnostic and platform-model
 coverage also pass sequentially under `pt_BR.UTF-8` and `de_DE.UTF-8`.
-AppleClang and MSVC read-only review remain required before closing #4873.
+AppleClang read-only review passes at channel seq1266. MSVC review remains
+required before closing #4873.
 No user-facing text or catalog keys changed. This is focused evidence, not
 full RC evidence.
 

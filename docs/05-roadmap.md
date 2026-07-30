@@ -287,6 +287,12 @@ standalone Studio shell, and FoxPro language-service layer."
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Open, no shipped evidence | v1 item 5 |
 
+Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
+project-symbol discovery follows the unquoted `#INCLUDE` form used by the real
+VFPSource ReportBuilder header chain, including recursive headers and trailing
+comment separation. The focused managed harness passes on Linux; hosted VSIX
+and Windows acceptance remain separate, and the broader #27 parent stays open.
+
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three
 `B<n>/#<issue>` occurrences in the repo's history are two unrelated one-off

@@ -140,7 +140,15 @@ Studio-host JSON control escapes are invariant machine data and now use a
 shared platform helper with direct hexadecimal digit lookup. Direct
 every-digit coverage and a real builder-launch JSON diagnostic pass under
 default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance
-and exact-head hosted evidence remain pending.
+AppleClang acceptance passes at channel seq1266; MSVC and exact-head hosted
+evidence remain pending.
+
+#4874 at product/test head `e70c89e87` adds no user-facing text or catalog
+keys. It broadens only the invariant language-service parser for VFP
+`#INCLUDE` operands; symbol names, descriptions, completion kinds, package and
+runtime behavior, and trust boundaries are unchanged. The focused Release
+managed harness passes on Linux; hosted VSIX/Windows acceptance remains
+pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
