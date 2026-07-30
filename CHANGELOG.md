@@ -1,3 +1,13 @@
+- 2026-07-30: Completed #4885/#27 `CREATE CURSOR` field-member IntelliSense.
+  The Visual Studio project index now retains declared fields from bounded
+  single-line cursor declarations and offers them only for the matching alias
+  member-access context. Nested type clauses such as `N(12, 2)` remain one
+  declaration, field descriptions route through the managed localization
+  catalog, and invariant field names/kinds plus generic object members remain
+  unchanged. The warning-free four-mode Release harness and exact-head Windows
+  VSIX run `30531865023` pass at product/test head `69f190288`; artifact
+  `8755080597` was uploaded.
+
 - 2026-07-30: Completed #4884/#27 declaration-anchored Visual Studio
   signature-help parameter highlighting. Parameter loci now advance through
   actual top-level declaration starts instead of unconstrained name searches,
