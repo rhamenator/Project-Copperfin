@@ -56,6 +56,23 @@ internal static partial class Program
             Expect(
                 posixComparer.Equals(upperKey, relativeUpperKey),
                 "relative and absolute paths to the same document should share one POSIX identity");
+            Expect(
+                CopperfinDocumentPathIdentity.TryNormalize(relativeUpperPath, out var tryRelativeUpperKey, isWindowsOverride: false) &&
+                posixComparer.Equals(upperKey, tryRelativeUpperKey),
+                "nullable-safe normalization should preserve valid relative document identity");
+            Expect(
+                CopperfinDocumentPathIdentity.TryNormalize(upperPath, out var tryUpperKey, isWindowsOverride: false) &&
+                posixComparer.Equals(upperKey, tryUpperKey),
+                "nullable-safe normalization should preserve valid absolute document identity");
+            Expect(
+                !CopperfinDocumentPathIdentity.TryNormalize(null, out var nullKey) && string.IsNullOrEmpty(nullKey),
+                "nullable-safe normalization should reject null without leaking a path identity");
+            Expect(
+                !CopperfinDocumentPathIdentity.TryNormalize("  ", out var blankKey) && string.IsNullOrEmpty(blankKey),
+                "nullable-safe normalization should reject blank input without leaking a path identity");
+            Expect(
+                !CopperfinDocumentPathIdentity.TryNormalize("invalid\0path", out var invalidKey) && string.IsNullOrEmpty(invalidKey),
+                "nullable-safe normalization should contain invalid path arguments without leaking a path identity");
 
             var reportPath = Path.Combine(root, "Report.frx");
             var missingCaseAlias = Path.Combine(root, "REPORT.FRX");

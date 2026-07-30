@@ -25,6 +25,28 @@ internal static class CopperfinDocumentPathIdentity
             : CanonicalizeExistingPathSpelling(fullPath);
     }
 
+    internal static bool TryNormalize(
+        string? path,
+        out string normalizedPath,
+        bool? isWindowsOverride = null)
+    {
+        normalizedPath = string.Empty;
+        if (path is null || string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        try
+        {
+            normalizedPath = Normalize(path, isWindowsOverride);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+
     internal static bool IsWithinRoot(
         string root,
         string candidate,

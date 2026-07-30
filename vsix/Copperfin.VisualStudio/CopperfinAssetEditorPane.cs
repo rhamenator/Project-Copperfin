@@ -119,17 +119,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
 
     internal static CopperfinAssetEditorPane? FindForDocument(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        string normalizedPath;
-        try
-        {
-            normalizedPath = CopperfinDocumentPathIdentity.Normalize(path);
-        }
-        catch (ArgumentException)
+        if (!CopperfinDocumentPathIdentity.TryNormalize(path, out var normalizedPath))
         {
             return null;
         }
