@@ -2837,12 +2837,14 @@ internal static partial class Program
     private static void TestUnquotedIncludesFeedRecursiveDefineResolution()
     {
         var root = CreateProjectRoot("unquoted_include_define_resolution");
+        var externalRoot = Path.Combine(Path.GetTempPath(), "copperfin_language_service_unquoted_includes", Guid.NewGuid().ToString("N"));
         try
         {
-            var nestedHeaderPath = Path.Combine(root, "foxpro_reporting.h");
+            Directory.CreateDirectory(externalRoot);
+            var nestedHeaderPath = Path.Combine(externalRoot, "foxpro_reporting.h");
             File.WriteAllText(nestedHeaderPath, "#DEFINE REPORT_STATUS_READY" + Environment.NewLine);
 
-            var headerPath = Path.Combine(root, "frxBuilder.h");
+            var headerPath = Path.Combine(externalRoot, "frxBuilder.h");
             File.WriteAllText(
                 headerPath,
                 "#DEFINE BUILDER_STATUS_READY" + Environment.NewLine +
@@ -2851,7 +2853,7 @@ internal static partial class Program
             var sourcePath = Path.Combine(root, "main.prg");
             File.WriteAllText(
                 sourcePath,
-                "#include frxBuilder.h && trailing comments are not part of the path" + Environment.NewLine +
+                $"#include {headerPath} && trailing comments are not part of the path" + Environment.NewLine +
                 "? BUILDER_STATUS_READY, REPORT_STATUS_READY" + Environment.NewLine);
 
             var directResolved = FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "BUILDER_STATUS_READY", out var directDefinition);
@@ -2877,6 +2879,7 @@ internal static partial class Program
         finally
         {
             TryDelete(root);
+            TryDelete(externalRoot);
         }
     }
 
