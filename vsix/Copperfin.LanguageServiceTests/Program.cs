@@ -14,10 +14,18 @@ namespace Copperfin.VisualStudio;
 
 internal static partial class Program
 {
+    private const string HoldOutputHandlesArgument = "--copperfin-test-hold-output-handles";
     private static int failures;
 
-    private static int Main()
+    private static int Main(string[] args)
     {
+        if (args.Length == 2 && string.Equals(args[0], HoldOutputHandlesArgument, StringComparison.Ordinal))
+        {
+            File.WriteAllText(args[1], Environment.ProcessId.ToString(CultureInfo.InvariantCulture));
+            Thread.Sleep(TimeSpan.FromSeconds(30));
+            return 0;
+        }
+
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
         TestLocalizationCatalogSupportsPseudoLocale();
         TestLocalizationCatalogFallsBackToEnglish();
@@ -2048,7 +2056,14 @@ internal static partial class Program
         var descendantPid = 0;
         try
         {
-            var escapedPowerShellPidPath = descendantPidPath.Replace("'", "''", StringComparison.Ordinal);
+            var processHostPath = Environment.ProcessPath ?? throw new InvalidOperationException("The managed test host path is unavailable.");
+            var assemblyPath = typeof(Program).Assembly.Location;
+            var assemblyArgument = string.Equals(
+                    Path.GetFileNameWithoutExtension(processHostPath),
+                    "dotnet",
+                    StringComparison.OrdinalIgnoreCase)
+                ? " \"" + assemblyPath + "\""
+                : string.Empty;
             var startInfo = CreateTestScriptStartInfo(
                 root,
                 "successful_output_holder",
@@ -2056,15 +2071,20 @@ internal static partial class Program
                 [
                     "@echo off",
                     "echo successful-stdout",
-                    "powershell.exe -NoProfile -Command \"$child = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + escapedPowerShellPidPath + "' -Value $child.Id\"",
+                    "start \"\" /b \"" + processHostPath + "\"" + assemblyArgument + " " + HoldOutputHandlesArgument + " \"" + descendantPidPath + "\"",
+                    ":wait_for_descendant",
+                    "if exist \"" + descendantPidPath + "\" goto descendant_ready",
+                    ">nul 2>&1 ping.exe -n 2 127.0.0.1",
+                    "goto wait_for_descendant",
+                    ":descendant_ready",
                     "exit /b 0"
                 ],
                 unixBody:
                 [
                     "#!/bin/sh",
                     "echo successful-stdout",
-                    "sleep 30 &",
-                    "printf '%s\\n' \"$!\" > \"" + descendantPidPath + "\"",
+                    "\"" + processHostPath + "\"" + assemblyArgument + " " + HoldOutputHandlesArgument + " \"" + descendantPidPath + "\" &",
+                    "while [ ! -s \"" + descendantPidPath + "\" ]; do sleep 0.05; done",
                     "exit 0"
                 ]);
 
