@@ -6,6 +6,7 @@
 #define COPPERFIN_RUNTIME_PIPELINE_SUPPORT_H
 
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/platform/json.h"
 #include "copperfin/platform/path.h"
 #include "localized_text.h"
 #include "copperfin/localization/localization.h"

@@ -22,7 +22,7 @@ void test_runtime_package_emits_ast_manifest_for_prg_sources() {
                "DO worker\n"
                "RETURN\n"
                "PROCEDURE worker\n"
-               "WAIT WINDOW 'ast'\n"
+               "WAIT WINDOW 'ast\x1f" "control'\n"
                "RETURN\n"
                "ENDPROC\n");
     write_text(runtime_host, "runtime-host");
@@ -86,8 +86,10 @@ void test_runtime_package_emits_ast_manifest_for_prg_sources() {
                "ast manifest should preserve main-scope statement text");
         expect(ast_manifest.find("\"name\": \"worker\"") != std::string::npos,
                "ast manifest should emit named routines");
-        expect(ast_manifest.find("\"text\": \"WAIT WINDOW 'ast'\"") != std::string::npos,
-               "ast manifest should preserve routine statement text");
+        expect(ast_manifest.find("\"text\": \"WAIT WINDOW 'ast\\u001fcontrol'\"") != std::string::npos,
+               "ast manifest should canonically escape source control bytes");
+        expect(ast_manifest.find('\x1f') == std::string::npos,
+               "ast manifest should not contain a raw source control byte");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
@@ -119,7 +121,7 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "DEFINE MENU MainMenu\n"
                "RETURN\n"
                "PROCEDURE worker\n"
-               "WAIT WINDOW 'ir'\n"
+               "WAIT WINDOW 'ir\x1f" "control'\n"
                "RETURN\n"
                "ENDPROC\n");
     write_text(runtime_host, "runtime-host");
@@ -189,6 +191,10 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should map DEFINE MENU statements to a stable opcode");
         expect(ir_manifest.find("\"opcode\": \"wait_command\"") != std::string::npos,
                "ir manifest should map WAIT WINDOW statements to a stable opcode");
+        expect(ir_manifest.find("\"text\": \"WAIT WINDOW 'ir\\u001fcontrol'\"") != std::string::npos,
+               "ir manifest should canonically escape source control bytes");
+        expect(ir_manifest.find('\x1f') == std::string::npos,
+               "ir manifest should not contain a raw source control byte");
         expect(ir_manifest.find("\"name\": \"worker\"") != std::string::npos,
                "ir manifest should emit named routines");
 
@@ -222,7 +228,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "READ EVENTS\n"
                "RETURN\n"
                "PROCEDURE worker\n"
-               "WAIT WINDOW 'csharp'\n"
+               "WAIT WINDOW 'csharp\x1f" "control'\n"
                "RETURN\n"
                "ENDPROC\n");
     write_text(runtime_host, "runtime-host");
@@ -285,8 +291,10 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
         expect(transpiled.find("public static void worker()") != std::string::npos ||
                transpiled.find("public static void Worker()") != std::string::npos,
                "csharp transpilation should emit the called FoxPro routine");
-        expect(transpiled.find("Console.WriteLine(\"csharp\");") != std::string::npos,
-               "csharp transpilation should map WAIT WINDOW literal output to Console.WriteLine");
+        expect(transpiled.find("Console.WriteLine(\"csharp\\u001fcontrol\");") != std::string::npos,
+               "csharp transpilation should canonically escape source control bytes");
+        expect(transpiled.find('\x1f') == std::string::npos,
+               "csharp transpilation should not contain a raw source control byte");
         expect(
             transpiled.find("GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement\"") != std::string::npos &&
                 transpiled.find("[\"statementText\"] = \"READ EVENTS\"") != std::string::npos,

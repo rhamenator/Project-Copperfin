@@ -122,31 +122,7 @@ std::string normalize_export_symbol(std::string value) {
 }
 
 std::string json_escape(std::string_view value) {
-    std::string escaped;
-    escaped.reserve(value.size());
-    for (const char ch : value) {
-        switch (ch) {
-            case '\\':
-                escaped += "\\\\";
-                break;
-            case '"':
-                escaped += "\\\"";
-                break;
-            case '\n':
-                escaped += "\\n";
-                break;
-            case '\r':
-                escaped += "\\r";
-                break;
-            case '\t':
-                escaped += "\\t";
-                break;
-            default:
-                escaped.push_back(ch);
-                break;
-        }
-    }
-    return escaped;
+    return copperfin::platform::json_escape_string(value);
 }
 
 std::string extract_declared_parameter_name(const std::string& raw_name) {
