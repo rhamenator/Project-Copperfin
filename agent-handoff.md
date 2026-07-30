@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4872/#108 `NEWID()` UUID-text slice is implemented at exact product/test
+head `1568b7a11`. UUID formatting now binds the classic locale before emitting
+uppercase hexadecimal groups. A dedicated real-PRG fixture installs
+every-digit grouping and requires two distinct identifiers to remain exactly
+36 characters in 8-4-4-4-12 shape, with the v4 version nibble, RFC variant
+nibble, and no locale punctuation. `test_prg_engine_runtime_surface_functions`
+passes on Linux under default (4.89s), `pt_BR.UTF-8` (5.06s), and
+`de_DE.UTF-8` (5.00s), 3/3 valid sequential runs. AppleClang and MSVC review
+remain required before closing #4872. This is focused evidence, not full RC
+evidence.
+
 The #4871/#110 APP-archive hex-payload slice is implemented at exact
 product/test head `cd6cf9029`. Hex encoding now binds the classic locale so
 each staged byte remains exactly two lowercase hexadecimal digits. The APP
@@ -21,8 +32,8 @@ under every-digit grouping requires canonical `0,3` and `0,13`, never grouped
 logical values across all rows. `test_prg_engine_data_io` passes on Linux under
 default (13.40s), `pt_BR.UTF-8` (12.80s), and `de_DE.UTF-8` (13.47s), 3/3
 runs, with independent Linux review at channel seq1255. Windows/MSVC seq1256
-passes the same three-locale matrix; AppleClang review remains required before
-closing #4870. This is focused evidence, not full RC evidence.
+and AppleClang seq1258 pass the same three-locale matrix. Issue #4870 is
+closed. This is focused evidence, not full RC evidence.
 
 The #4869/#110 generated native-wrapper numeric-literal slice is implemented
 at exact product/test head `c86be275f`. DLL/OCX and FLL wrapper C++ now uses

@@ -12,7 +12,7 @@
   canonical `0,3` and `0,13` headers, never grouped `0,1.3`, and all rows
   import back with field order plus character, numeric, and logical values
   intact. The focused data-I/O target passes under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang review remains required.
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4870 is closed.
 
 - 2026-07-30: Hardened #4869/#110 generated native-wrapper numeric literals
   against grouped host locales. DLL/OCX and FLL wrapper source now uses the
@@ -6248,3 +6248,9 @@ passes `1/1`.
   Syft release `v1.50.0`; the checked workflow no longer depends on the
   action's stale implicit `v1.42.3` selection. The single CycloneDX artifact
   owner, read-only permissions, and Trivy gate remain unchanged.
+- 2026-07-30: Hardened #4872/#108 `NEWID()` UUID text against grouped host
+  locales. UUID formatting now uses the classic locale, and an every-digit
+  grouped real-PRG fixture requires two distinct canonical uppercase
+  8-4-4-4-12 identifiers with correct v4 version and RFC variant nibbles. The
+  focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux; cross-platform review remains required.

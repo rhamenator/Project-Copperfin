@@ -118,11 +118,18 @@ closed; exact-head hosted release evidence remains separate.
 DIF `VECTORS`/`TUPLES` dimensions are invariant interchange metadata and now
 explicitly use the classic locale. The focused data-I/O target passes under
 default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC;
-AppleClang acceptance and exact-head hosted evidence remain pending.
+AppleClang passes the same matrix. Issue #4870 is closed; exact-head hosted
+release evidence remains separate.
 
 #4871 at product head `cd6cf9029` adds no user-facing text or catalog keys.
 APP archive byte payloads are invariant lowercase hexadecimal machine data and
 now explicitly use the classic locale. The focused runtime-pipeline target
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
+acceptance and exact-head hosted evidence remain pending.
+
+#4872 at product head `1568b7a11` adds no user-facing text or catalog keys.
+`NEWID()` results are invariant uppercase UUID-shaped runtime identifiers and
+now explicitly use the classic locale. The focused runtime-surface target
 passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
 acceptance and exact-head hosted evidence remain pending.
 

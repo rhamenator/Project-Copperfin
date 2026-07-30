@@ -118,13 +118,15 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `cd6cf9029` (the current branch may
-also contain documentation-only coordination commits). The focused
-runtime-pipeline target passes locally under default, `pt_BR.UTF-8`, and
+The latest product implementation head is `1568b7a11` (the current branch may
+also contain documentation-only coordination commits). The focused PRG
+runtime-surface target passes locally under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain
-pending for the APP-archive hex-payload child. The preceding DIF-dimension head
-`531bbec70` has matching Linux and Windows/MSVC evidence and still awaits
-AppleClang. The preceding native-wrapper head `c86be275f` has matching Linux,
+pending for the `NEWID()` UUID-text child. The preceding APP-archive
+hex-payload head `cd6cf9029` has matching Linux evidence and still awaits
+AppleClang/MSVC. The preceding DIF-dimension head `531bbec70` has matching
+Linux, AppleClang, and MSVC evidence; #4870 is closed. The preceding
+native-wrapper head `c86be275f` has matching Linux,
 AppleClang, and MSVC evidence; #4869 is closed. The preceding API-arity
 head `858e56929` has matching Linux, AppleClang, and MSVC evidence; #4868 is
 closed.
