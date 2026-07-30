@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- Numeric work-area designator culture boundary (2026-07-29, #4860 under
+  #3217): mutable and const cursor lookup, `USE ... IN`, `SELECT`, and numeric
+  `SET ORDER` now require complete range-checked invariant integers.
+  Oversized all-digit selectors fail through established localized
+  target-work-area or missing-order behavior instead of throwing or aliasing
+  another area; targeted `RECCOUNT()` and `RECNO()` retain zero for invalid
+  targets. Focused tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+  on Linux, macOS/AppleClang, and Windows/MSVC; #4860 is closed.
+
 - `RESTORE FROM` array-dimension culture boundary (2026-07-29, #4859 under
   #109): persisted rows and columns now require complete invariant nonnegative
   integer tokens, and cell-count multiplication is checked before allocation.
@@ -8,7 +17,7 @@
   arrays, element types/order, scope, additive semantics, invariant SAVE
   output, localization, verified-file admission, and public contracts remain
   unchanged. Focused tests pass under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4858 is closed.
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4859 is closed.
 
 - xAsset object-type metadata culture boundary (2026-07-29, #4858 under
   #109): executable-model routing now requires complete invariant integer
@@ -16,8 +25,8 @@
   text fails closed to the established fallback instead of aliasing a valid
   menu/object type. Valid SCX/VCX/MNX routing, deleted-record handling, paths,
   method/action extraction, localization, and public contracts remain
-  unchanged. Focused macOS/AppleClang tests pass under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+  unchanged. Focused tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4858 is closed.
 
 - `SET REPROCESS` retry-policy culture boundary (2026-07-29, #4857 under
   #3217): numeric retry budgets now require complete invariant integer tokens.

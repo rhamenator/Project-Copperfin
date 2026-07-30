@@ -95,16 +95,28 @@ contracts remain unchanged. The focused xAsset suite passes under default,
 Issue #4858 is closed. This is focused evidence, not full RC evidence.
 
 The #4859/#109 persisted `RESTORE FROM` array-dimension slice is
-implementation-complete locally. Row and column tokens now require complete
-invariant nonnegative integers, and the runtime checks cell-count
-multiplication before resizing. Grouped, decimal, trailing, negative,
+implementation-complete and cross-platform reviewed. Row and column tokens now
+require complete invariant nonnegative integers, and the runtime checks
+cell-count multiplication before resizing. Grouped, decimal, trailing, negative,
 parser-overflow, and product-overflow shapes fail closed without materializing
 a prefix-derived array. Valid shapes, elements/order, scope, additive
 semantics, invariant SAVE output, localization, verified-file admission, and
 public contracts remain unchanged. The focused data-I/O suite passes under
-default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and
-Windows/MSVC review remains required before #4859 can close. This is focused
-evidence, not full RC evidence.
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
+Windows/MSVC. Issue #4859 is closed. This is focused evidence, not full RC
+evidence.
+
+The #4860/#3217 numeric work-area designator slice is
+implementation-complete and cross-platform reviewed. Mutable and const cursor
+lookup, `USE ... IN`, `SELECT`, and numeric `SET ORDER` now use complete
+range-checked invariant integer parsing. Oversized all-digit values fail
+through the established localized target-work-area or missing-order paths
+instead of throwing or aliasing another area; targeted `RECCOUNT()` and
+`RECNO()` retain zero for invalid targets. The focused control-flow suite
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4860 is closed. The next selected
+prompt-sized child is #4861, guarding the VFP work-area allocator at 32767.
+This is focused evidence, not full RC evidence.
 
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now

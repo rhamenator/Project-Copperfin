@@ -1,3 +1,12 @@
+- 2026-07-29: Hardened #4860/#3217 numeric work-area designators. Mutable and
+  const cursor lookup, `USE ... IN`, `SELECT`, and numeric `SET ORDER` now use
+  complete range-checked invariant integer parsing. Oversized all-digit values
+  fail through established localized target-work-area or missing-order paths
+  instead of throwing or aliasing another area; targeted `RECCOUNT()` and
+  `RECNO()` retain zero for invalid targets. Focused control-flow tests pass
+  under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+  macOS/AppleClang, and Windows/MSVC; #4860 is closed.
+
 - 2026-07-29: Hardened #4859/#109 persisted `RESTORE FROM` array dimensions.
   Row and column metadata now requires complete invariant nonnegative integer
   tokens, and restored cell-count multiplication is checked before allocation.
@@ -5,8 +14,8 @@
   shapes fail closed without materializing a prefix-derived array. Valid array
   dimensions, values/order, scope, additive behavior, invariant SAVE output,
   localization, and verified-file admission remain unchanged. Focused
-  macOS/AppleClang data-I/O tests pass under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8`; Linux and Windows review remains required.
+  data-I/O tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+  macOS/AppleClang, and Windows/MSVC; #4859 is closed.
 
 - 2026-07-29: Hardened #4858/#109 xAsset numeric object-type metadata.
   Executable-model routing now requires complete invariant integer `OBJTYPE`
