@@ -101,6 +101,7 @@ internal static partial class Program
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions();
+        TestProjectSignatureHelpUsesInlineRoutineParameters();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
         TestProjectProcedureSignatureHelpRejectsBareParameter();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
@@ -2261,6 +2262,51 @@ internal static partial class Program
                        "Configure(toOptions = CREATEOBJECT(\"Collection\", 1), tcCaption = \"Save, then close\", tcEscaped = 'it''s, safe', taBounds = [1, 2], tcNext)",
                     "project signature content should retain nested and quoted default-expression commas");
             }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectSignatureHelpUsesInlineRoutineParameters()
+    {
+        var root = CreateProjectRoot("inline_parameter_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "inline.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE SaveOrder(tcCustomerId, tlPreview = .F.)" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "FUNCTION BuildOptions(toSeed = CREATEOBJECT(\"Collection\", 1), tcCaption = 'Save, close')" + Environment.NewLine +
+                "ENDFUNC" + Environment.NewLine +
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROCEDURE Refresh(tcScope, taBounds = [1, 2])" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine);
+
+            var procedure = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "SaveOrder");
+            Expect(procedure.Count == 1 &&
+                   procedure[0].Content == "SaveOrder(tcCustomerId, tlPreview = .F.)" &&
+                   procedure[0].Parameters.Select(parameter => parameter.Name).SequenceEqual(
+                       new[] { "tcCustomerId", "tlPreview" }),
+                "inline PROCEDURE parameters should surface in project signature help");
+
+            var function = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "BuildOptions");
+            Expect(function.Count == 1 && function[0].Parameters.Count == 2 &&
+                   function[0].Content ==
+                       "BuildOptions(toSeed = CREATEOBJECT(\"Collection\", 1), tcCaption = 'Save, close')" &&
+                   function[0].Parameters[0].Name == "toSeed" &&
+                   function[0].Parameters[1].Name == "tcCaption",
+                "inline FUNCTION parameters should retain nested and quoted default-expression commas");
+
+            var method = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "app.customer.editor.Refresh");
+            Expect(method.Count == 1 && method[0].Parameters.Count == 2 &&
+                   method[0].Content == "app.customer.editor.Refresh(tcScope, taBounds = [1, 2])" &&
+                   method[0].Parameters[0].Name == "tcScope" &&
+                   method[0].Parameters[1].Name == "taBounds",
+                "inline class-method parameters should surface with qualified project identity");
         }
         finally
         {

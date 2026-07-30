@@ -620,7 +620,7 @@ internal static class FoxProIntelliSenseCatalog
                     var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
                     TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
-                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"));
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"), TryReadInlineProjectParameterList(line, methodProcedureMatch.Groups[1]));
                     continue;
                 }
 
@@ -630,7 +630,7 @@ internal static class FoxProIntelliSenseCatalog
                     var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
                     TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
-                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"));
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"), TryReadInlineProjectParameterList(line, methodFunctionMatch.Groups[1]));
                     continue;
                 }
             }
@@ -641,7 +641,7 @@ internal static class FoxProIntelliSenseCatalog
                 var name = procedureMatch.Groups[1].Value;
                 index.Procedures.Add(name);
                 TryAddDefinition(index.Definitions, name, "procedure", normalizedPath, lineIndex + 1, procedureMatch.Groups[1].Index + 1, localization.Text("LanguageService.IntelliSense.Project.ProcedureSymbol"));
-                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.ProcedureSignatureDiscovered"));
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.ProcedureSignatureDiscovered"), TryReadInlineProjectParameterList(line, procedureMatch.Groups[1]));
             }
 
             var functionMatch = FunctionRegex.Match(line);
@@ -650,7 +650,7 @@ internal static class FoxProIntelliSenseCatalog
                 var name = functionMatch.Groups[1].Value;
                 index.Procedures.Add(name);
                 TryAddDefinition(index.Definitions, name, "function", normalizedPath, lineIndex + 1, functionMatch.Groups[1].Index + 1, localization.Text("LanguageService.IntelliSense.Project.FunctionSymbol"));
-                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.FunctionSignatureDiscovered"));
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.FunctionSignatureDiscovered"), TryReadInlineProjectParameterList(line, functionMatch.Groups[1]));
             }
 
             AddMatch(index.Defines, index.Definitions, DefineRegex, line, normalizedPath, lineIndex + 1, "define", localization.Text("LanguageService.IntelliSense.Project.PreprocessorSymbol"));
@@ -1239,14 +1239,15 @@ internal static class FoxProIntelliSenseCatalog
         string name,
         IReadOnlyList<string> lines,
         int definitionLineIndex,
-        string documentation)
+        string documentation,
+        string? inlineParameters)
     {
         if (string.IsNullOrWhiteSpace(name) || signatures.ContainsKey(name))
         {
             return;
         }
 
-        var rawParameters = TryReadProjectParameterList(lines, definitionLineIndex);
+        var rawParameters = inlineParameters ?? TryReadProjectParameterList(lines, definitionLineIndex);
         var parameters = ParseProjectParameters(rawParameters);
         var content = parameters.Count == 0
             ? $"{name}()"
@@ -1262,6 +1263,70 @@ internal static class FoxProIntelliSenseCatalog
                 Parameters = parameters
             }
         };
+    }
+
+    private static string? TryReadInlineProjectParameterList(string declaration, Group routineName)
+    {
+        var openParen = routineName.Index + routineName.Length;
+        while (openParen < declaration.Length && char.IsWhiteSpace(declaration[openParen]))
+        {
+            openParen++;
+        }
+
+        if (openParen >= declaration.Length || declaration[openParen] != '(')
+        {
+            return null;
+        }
+
+        var delimiters = new Stack<char>();
+        delimiters.Push(')');
+        var quote = '\0';
+        for (var index = openParen + 1; index < declaration.Length; index++)
+        {
+            var value = declaration[index];
+            if (quote != '\0')
+            {
+                if (value == quote)
+                {
+                    if (index + 1 < declaration.Length && declaration[index + 1] == quote)
+                    {
+                        index++;
+                    }
+                    else
+                    {
+                        quote = '\0';
+                    }
+                }
+                continue;
+            }
+
+            if (value == '\'' || value == '"')
+            {
+                quote = value;
+            }
+            else if (value == '(')
+            {
+                delimiters.Push(')');
+            }
+            else if (value == '[')
+            {
+                delimiters.Push(']');
+            }
+            else if (value == '{')
+            {
+                delimiters.Push('}');
+            }
+            else if (delimiters.Count > 0 && value == delimiters.Peek())
+            {
+                delimiters.Pop();
+                if (delimiters.Count == 0)
+                {
+                    return declaration.Substring(openParen + 1, index - openParen - 1).Trim();
+                }
+            }
+        }
+
+        return null;
     }
 
     private static IReadOnlyList<FoxProSignatureEntry> LocalizeSignatures(
