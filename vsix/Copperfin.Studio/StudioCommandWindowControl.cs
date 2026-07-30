@@ -102,6 +102,8 @@ internal sealed class StudioCommandWindowControl : UserControl
 
     internal string TranscriptText => transcript.Text;
 
+    internal TextBox CommandInputForTest => commandInput;
+
     internal void SubmitCommandForTest(string command)
     {
         commandInput.Text = command;

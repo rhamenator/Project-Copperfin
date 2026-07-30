@@ -214,6 +214,32 @@ internal static partial class Program
             Expect(!form.UndoCommandEnabled,
                 "standalone Undo should refresh availability after consuming the active edit");
 
+            editBox.SelectAll();
+            editBox.SelectedText = "after";
+            editBox.Focus();
+            Application.DoEvents();
+            Expect(form.ProcessCmdKeyForTest(Keys.Control | Keys.Z) &&
+                   editBox.Text == "before",
+                "standalone Ctrl+Z should route while focus remains inside the active document");
+
+            SetCurrentSnapshot(editor, BuildStatusSmokeSnapshot());
+            var commandInput = form.CommandWindowInputForTest;
+            commandInput.Text = "before command";
+            commandInput.ClearUndo();
+            commandInput.SelectAll();
+            commandInput.SelectedText = "after command";
+            commandInput.Focus();
+            Application.DoEvents();
+            Expect(commandInput.CanUndo && editor.CanHandleUndoCommand(),
+                "standalone shortcut scope smoke should cover competing tool-window and host-backed undo stacks");
+            Expect(!form.ProcessCmdKeyForTest(Keys.Control | Keys.Z) &&
+                   commandInput.Text == "after command" &&
+                   GetCurrentSnapshot(editor).CommandUndoAvailable,
+                "standalone Ctrl+Z should propagate without consuming document undo while a tool-window input has focus");
+            commandInput.Undo();
+            Expect(commandInput.Text == "before command",
+                "propagated standalone Ctrl+Z should leave the focused tool-window undo stack available");
+
             form.CloseActiveDocument();
             Application.DoEvents();
             Expect(!form.UndoCommandEnabled && !form.TryUndoActiveDocumentForTest(),

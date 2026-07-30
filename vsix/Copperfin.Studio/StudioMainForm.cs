@@ -244,9 +244,12 @@ internal sealed class StudioMainForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (keyData == (Keys.Control | Keys.Z) && TryUndoActiveDocument())
+        if (keyData == (Keys.Control | Keys.Z))
         {
-            return true;
+            // Do not fall through to the menu strip for Ctrl+Z: a focused tool
+            // window must retain its own undo stack even when the document host
+            // also advertises an undo operation.
+            return documentTabs.ContainsFocus && TryUndoActiveDocument();
         }
 
         return base.ProcessCmdKey(ref msg, keyData);
@@ -420,6 +423,14 @@ internal sealed class StudioMainForm : Form
     internal bool TryUndoActiveDocumentForTest()
     {
         return TryUndoActiveDocument();
+    }
+
+    internal TextBox CommandWindowInputForTest => commandWindowControl.CommandInputForTest;
+
+    internal bool ProcessCmdKeyForTest(Keys keyData)
+    {
+        var message = new Message();
+        return ProcessCmdKey(ref message, keyData);
     }
 
     private string ExecuteCommandWindowInput(string command)
