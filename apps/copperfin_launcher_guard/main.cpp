@@ -312,6 +312,7 @@ bool verify_launcher_trust(
                 catalog,
                 "Runtime.Package.LauncherGuard.Error.TrustUnknownSigner");
             return false;
+        case VerificationStatus::ambiguous_signer:
         case VerificationStatus::malformed_envelope:
         case VerificationStatus::invalid_signature:
             error = localized_message(

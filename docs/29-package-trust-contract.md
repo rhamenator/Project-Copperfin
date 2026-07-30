@@ -79,8 +79,11 @@ the protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and
 `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets plus an explicit non-secret
 approved signer-key ID. It materializes protected inputs only under the
 runner's temporary directory, proves that the signer ID is present in the
-registry, configures the enforced native guard, and removes those inputs even
-when validation fails. The workflow deliberately has no push or pull-request
+registry, rejects record-count mismatches and duplicate signer IDs, configures
+the enforced native guard, and removes those inputs even when validation
+fails. The native verifier independently rejects multiple registry entries for
+the selected signer before signature acceptance. The workflow deliberately has
+no push or pull-request
 trigger, so ordinary development and unsigned installer validation remain
 unchanged.
 

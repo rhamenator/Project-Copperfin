@@ -18,6 +18,7 @@ enum class LauncherInventoryVerificationStatus {
     valid,
     malformed_envelope,
     unknown_signer,
+    ambiguous_signer,
     invalid_signature
 };
 

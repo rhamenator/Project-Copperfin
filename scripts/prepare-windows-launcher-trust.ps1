@@ -63,15 +63,27 @@ if ($signingKeyText -notmatch '(?i)BEGIN\s+PRIVATE KEY') {
 if ($SignerKeyId -notmatch '^[A-Za-z0-9._-]+$') {
     throw "Launcher trust signer key ID is invalid."
 }
-$escapedSignerKeyId = [regex]::Escape($SignerKeyId)
-if ($registryText -notmatch ('"' + $escapedSignerKeyId + '"')) {
-    throw "Launcher trust signer key ID is absent from the approved registry."
-}
-
 $registryEntryMatch = [regex]::Match(
     $registryText,
     'std::array\s*<\s*LauncherInventoryTrustedKey\s*,\s*([1-9][0-9]*)\s*>')
 $registryEntryCount = [int]$registryEntryMatch.Groups[1].Value
+$registryKeyMatches = [regex]::Matches(
+    $registryText,
+    '\{\s*"(?<key_id>[A-Za-z0-9._-]+)"\s*,\s*\{')
+if ($registryKeyMatches.Count -ne $registryEntryCount) {
+    throw "Launcher trust registry key records do not match the declared array size."
+}
+$registryKeyIds = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::Ordinal)
+foreach ($registryKeyMatch in $registryKeyMatches) {
+    $registryKeyId = $registryKeyMatch.Groups['key_id'].Value
+    if (-not $registryKeyIds.Add($registryKeyId)) {
+        throw "Launcher trust registry contains a duplicate signer key ID."
+    }
+}
+if (-not $registryKeyIds.Contains($SignerKeyId)) {
+    throw "Launcher trust signer key ID is absent from the approved registry."
+}
 $output = [ordered]@{
     schema_version = 1
     kind = "windows-launcher-trust-provisioning"

@@ -9,7 +9,10 @@
   inputs. Portable signer/provisioning/workflow/trust contracts and the fixture
   build pass. The signer ID crosses workflow-step boundaries only after its
   character whitelist and registry binding pass, preventing dispatch input
-  from reaching the runner environment file unvalidated. This completes the
+  from reaching the runner environment file unvalidated. Provisioning now
+  rejects registry record-count mismatches and duplicate signer IDs, while the
+  native verifier independently reports an ambiguous signer and fails before
+  signature acceptance if duplicate selected IDs reach it. This completes the
   missing workflow mechanics; #4409 still
   requires the externally approved protected registry/key and successful
   Windows release run before Copperfin claims the trust boundary.

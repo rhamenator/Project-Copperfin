@@ -156,6 +156,19 @@ int main() {
         unknown_signer.status == LauncherInventoryVerificationStatus::unknown_signer,
         "unknown signer IDs must fail closed before signature acceptance");
 
+    const std::array<LauncherInventoryTrustedKey, 2> duplicate_keys{{
+        {"rfc8032", kFixturePublicKey},
+        {"rfc8032", kFixturePublicKey}
+    }};
+    const auto ambiguous_signer =
+        copperfin::package_trust::verify_signed_launcher_inventory(
+            envelope,
+            kFixtureEnvelopeSignature,
+            duplicate_keys);
+    expect(
+        ambiguous_signer.status == LauncherInventoryVerificationStatus::ambiguous_signer,
+        "duplicate trusted signer IDs must fail closed before signature acceptance");
+
     const auto malformed = copperfin::package_trust::verify_signed_launcher_inventory(
         "launcher_inventory_version=1\n"
         "hash_algorithm=sha256\n"

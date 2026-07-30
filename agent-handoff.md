@@ -53,7 +53,9 @@ start plus modified/removed artifact, removed/duplicate/case-ambiguous
 inventory, and modified/removed signature failures, and emits only non-secret
 case evidence before cleaning protected inputs. Portable workflow/signer/trust
 contracts and the fixture build pass. The signer ID is published across steps
-only after its whitelist and registry binding pass. Exact-head hosted Windows compilation,
+only after its whitelist and registry binding pass. Duplicate registry IDs
+fail both provisioning and native verification before signature acceptance.
+Exact-head hosted Windows compilation,
 read-only review, and the externally provisioned protected run remain to be
 recorded before #4894/#4409 closure.
 

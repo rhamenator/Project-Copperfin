@@ -25,6 +25,9 @@ foreach(REQUIRED_TEXT IN ITEMS
     "private_material_outside_repository"
     "windows-launcher-trust-provisioning"
     "signing_key_registry_binding"
+    "registry key records do not match the declared array size"
+    "duplicate signer key ID"
+    "HashSet[string]"
 )
     string(FIND "${SCRIPT_CONTENT}" "${REQUIRED_TEXT}" POSITION)
     if(POSITION EQUAL -1)

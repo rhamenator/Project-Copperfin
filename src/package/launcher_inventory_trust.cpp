@@ -266,13 +266,23 @@ LauncherInventoryVerificationResult verify_signed_launcher_inventory(
         return result;
     }
     result.signer_key_id = signer_key_id;
-    const auto key = std::find_if(trusted_keys.begin(), trusted_keys.end(), [&](const auto& candidate) {
-        return candidate.key_id == signer_key_id;
-    });
-    if (key == trusted_keys.end()) {
+    const auto key_matches = std::count_if(
+        trusted_keys.begin(),
+        trusted_keys.end(),
+        [&](const auto& candidate) {
+            return candidate.key_id == signer_key_id;
+        });
+    if (key_matches == 0U) {
         result.status = LauncherInventoryVerificationStatus::unknown_signer;
         return result;
     }
+    if (key_matches != 1U) {
+        result.status = LauncherInventoryVerificationStatus::ambiguous_signer;
+        return result;
+    }
+    const auto key = std::find_if(trusted_keys.begin(), trusted_keys.end(), [&](const auto& candidate) {
+        return candidate.key_id == signer_key_id;
+    });
     if (!licensing::ed25519_verify_detached(envelope, detached_signature, key->public_key)) {
         result.status = LauncherInventoryVerificationStatus::invalid_signature;
         return result;
