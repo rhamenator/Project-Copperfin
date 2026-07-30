@@ -3408,6 +3408,7 @@ std::string build_native_wrapper_powershell_script_source() {
 
 std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
     const auto parameter_names = collect_library_export_parameter_names(plan);
     const auto parameter_declaration_kinds = collect_library_export_parameter_declaration_kinds(plan);
@@ -3466,6 +3467,7 @@ std::string build_fll_api_manifest_source(const RuntimePackagePlan& plan) {
 
 std::string build_library_api_manifest_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    stream.imbue(std::locale::classic());
     const auto parameter_counts = collect_library_export_parameter_counts(plan);
     const auto parameter_names = collect_library_export_parameter_names(plan);
     const auto parameter_declaration_kinds = collect_library_export_parameter_declaration_kinds(plan);

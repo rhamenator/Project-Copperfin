@@ -13,7 +13,7 @@ class manifest_grouped_numpunct final : public std::numpunct<char> {
 protected:
     char do_decimal_point() const override { return ','; }
     char do_thousands_sep() const override { return '.'; }
-    std::string do_grouping() const override { return "\3"; }
+    std::string do_grouping() const override { return "\1"; }
 };
 
 class manifest_global_locale_guard final {
@@ -56,6 +56,55 @@ void test_library_manifest_source_location_escaping() {
            "library source-location encoding should round-trip path bytes");
     expect(encoded.substr(separator + 1U) == "1234",
            "#4846: library source-location encoding should preserve invariant source lines");
+}
+
+void test_library_api_manifest_arities_ignore_grouping_locale() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() /
+        "copperfin_runtime_pipeline_library_arity_locale";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "wide.prg";
+    write_text(
+        source_path,
+        "FUNCTION WideCall\n"
+        "LPARAMETERS p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12\n"
+        "RETURN 1\n"
+        "ENDFUNC\n");
+
+    copperfin::runtime::RuntimePackagePlan plan;
+    plan.output_kind = copperfin::runtime::BuildOutputKind::dll;
+    plan.launcher_output_path = (temp_root / "Wide.dll").string();
+    plan.exported_symbols = {"WideCall"};
+    plan.assets = {{
+        .source_path = source_path.string(),
+        .relative_path = "wide.prg",
+        .exists = true,
+        .copied = true}};
+
+    const std::locale grouping_locale(std::locale::classic(), new manifest_grouped_numpunct());
+    manifest_global_locale_guard locale_guard(grouping_locale);
+    const std::string library_manifest =
+        copperfin::runtime::runtime_pipeline_detail::build_library_api_manifest_source(plan);
+    const std::string fll_manifest =
+        copperfin::runtime::runtime_pipeline_detail::build_fll_api_manifest_source(plan);
+
+    expect(library_manifest.find("function_arity=WideCall|12") != std::string::npos,
+           "#4868: DLL/OCX API function arity should remain invariant under digit grouping");
+    expect(fll_manifest.find("function_arity=WideCall|12") != std::string::npos,
+           "#4868: FLL API function arity should remain invariant under digit grouping");
+    expect(library_manifest.find("function_arity=WideCall|1.2") == std::string::npos &&
+               fll_manifest.find("function_arity=WideCall|1.2") == std::string::npos,
+           "#4868: generated API manifests should not group machine-readable arity digits");
+    expect(library_manifest.find("function_parameters=WideCall|p01|p02|p03|p04|p05|p06|p07|p08|p09|p10|p11|p12") !=
+               std::string::npos &&
+               fll_manifest.find("function_parameters=WideCall|p01|p02|p03|p04|p05|p06|p07|p08|p09|p10|p11|p12") !=
+                   std::string::npos,
+           "#4868: invariant arity formatting should preserve parsed parameter order and names");
+
+    fs::remove_all(temp_root, ignored);
 }
 
 void test_library_output_package_emits_module_definition_from_prg_routines() {
