@@ -2,19 +2,20 @@
   across both managed project scanners. `PROTECTED` and `HIDDEN`
   procedure/function methods, including abbreviated `PROC`, now retain
   qualified definitions, signatures, references, and rename inputs while the
-  same declarations remain excluded at global scope. The combined correction
-  passes the warning-free macOS four-mode Release harness and
-  exact-head Windows VSIX run `30528541049` at combined head `b3285feab`;
-  artifact `8753733157` was uploaded. Independent review remains pending.
+  same declarations remain excluded at global scope. Corrected combined head
+  `b3285feab` passes the warning-free four-mode Release harness and exact-head
+  Windows VSIX run `30528541049`; artifact `8753733157` was uploaded and #4883
+  is closed.
 
 - 2026-07-30: Implemented #4882/#27 project language-service support for VFP's
   `PROC` abbreviation across both managed project scanners. Global routines
   and qualified class methods now retain the same inline/following-line
   signatures, definitions, references, and rename inputs as `PROCEDURE`, while
-  the longer `PROCEDURES` near-match remains rejected. The combined correction
-  passes the warning-free macOS four-mode Release harness and
-  exact-head Windows VSIX run `30528541049` at combined head `b3285feab`;
-  artifact `8753733157` was uploaded. Independent review remains pending.
+  the longer `PROCEDURES` near-match remains rejected. The initial catalog
+  change passed exact-head Windows VSIX run `30527860407`; corrected combined
+  head `b3285feab` passes the warning-free four-mode Release harness and
+  exact-head Windows VSIX run `30528541049`. Artifact `8753733157` was uploaded
+  and #4882 is reclosed on complete two-scanner evidence.
 
 - 2026-07-30: Implemented #4881/#27 project signature help for inline PRG
   routine declarations. Procedures, functions, and qualified class methods now

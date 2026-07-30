@@ -35,18 +35,18 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 - Recent G1 class-method visibility slice: `#4883` discovers `PROTECTED` and
   `HIDDEN` procedure/function declarations, including `PROC`, through class-
-  only scanner patterns. Qualified identity, following-line/inline signatures,
-  and exact definition provenance are preserved; visibility-qualified global
-  lookalikes remain rejected. The local four-mode matrix and Windows VSIX run
-  `30528541049` pass at combined head `b3285feab`, and artifact `8753733157`
-  was uploaded; independent review remains pending.
+  only patterns in both managed project scanners. Qualified definitions,
+  following-line/inline signatures, member references, and rename inputs are
+  preserved; visibility-qualified globals remain rejected. The corrected
+  combined head `b3285feab` passes the local four-mode matrix and Windows VSIX
+  run `30528541049`; artifact `8753733157` was uploaded.
 - Recent G1 VFP declaration-alias slice: `#4882` recognizes `PROC` and
-  `PROCEDURE` through the same bounded, case-insensitive project scanner path.
-  Global and qualified class declarations retain following-line/inline
-  signatures and exact definition provenance; the `PROCEDURES` near-match is
-  rejected. The local four-mode matrix and Windows VSIX run `30528541049`
-  pass at combined head `b3285feab`, and artifact `8753733157` was uploaded;
-  independent review remains pending.
+  `PROCEDURE` through bounded, case-insensitive paths in both managed project
+  scanners. Global and qualified class declarations retain signatures,
+  definitions, direct/member references, and rename inputs; the `PROCEDURES`
+  near-match is rejected. Corrected combined head `b3285feab` passes the local
+  four-mode matrix and Windows VSIX run `30528541049`; artifact `8753733157`
+  was uploaded.
 - Recent G1 runtime/editor-alignment slice: `#4881` surfaces inline parameter
   clauses from project procedures, functions, and qualified class methods,
   matching the syntax already materialized as implicit `LPARAMETERS` by the

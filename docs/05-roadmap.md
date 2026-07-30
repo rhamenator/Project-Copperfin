@@ -28,21 +28,22 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
-Current class-method discovery evidence includes #4883 at exact product/test
-combined head `b3285feab`: `PROTECTED` and `HIDDEN` procedure/function declarations,
-including `PROC`, now retain qualified class identity, inline/following-line
-signatures, and definition provenance without becoming global symbols. The
-local four-mode matrix and exact-head Windows VSIX run `30528541049` pass;
-artifact `8753733157` was uploaded. The child remains open for independent
-review, while broader G1 and RC validation remain separate.
+Current class-method discovery evidence includes #4883 at corrected combined
+product/test head `b3285feab`: both managed project scanners now recognize
+class-only `PROTECTED` and `HIDDEN` procedure/function declarations, including
+`PROC`. Qualified definitions, signatures, references, and rename inputs are
+preserved without admitting global lookalikes. The local four-mode matrix and
+exact-head Windows VSIX run `30528541049` pass; artifact `8753733157` was
+uploaded. The child is closed, while broader G1 and RC validation remain
+separate.
 
-Current VFP declaration-alias evidence includes #4882 at exact product/test
-combined head `b3285feab`: both project scanners treat `PROC` and `PROCEDURE` alike for
-global routines and qualified class methods, preserving inline/following-line
-signatures and definition provenance while rejecting the longer `PROCEDURES`
-near-match. The local four-mode matrix and exact-head Windows VSIX run
-`30528541049` pass; artifact `8753733157` was uploaded. The child remains open
-for independent review, while broader G1 and RC validation remain separate.
+Current VFP declaration-alias evidence includes #4882 at corrected combined
+product/test head `b3285feab`: both managed project scanners treat `PROC` and
+`PROCEDURE` alike for definitions, signatures, references, and rename inputs
+while rejecting the longer `PROCEDURES` near-match. The local four-mode matrix
+and exact-head Windows VSIX run `30528541049` pass; artifact `8753733157` was
+uploaded. The child is closed, while broader G1 and RC validation remain
+separate.
 
 Current runtime/editor-alignment evidence includes #4881 at exact product/test
 head `0867efd1a`: project procedures, functions, and qualified class methods

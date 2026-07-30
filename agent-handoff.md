@@ -2,34 +2,29 @@
 
 ## Current State
 
-The #4883/#27 visibility-qualified project-method slice is implemented at exact
-combined product/test head `b3285feab`. Both managed project scanners now discover `PROTECTED`
-and `HIDDEN` procedure/function declarations, including abbreviated `PROC`,
-while leaving visibility-qualified lines outside `DEFINE CLASS` absent from
-global symbols. Qualified method identity, localized descriptions, inline and
-following-line signatures, and exact definition file/line provenance remain
-intact. The Release language-service build has zero warnings/errors, and the
-full harness passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and
-explicit `qps-ploc`. Exact-head Windows VSIX run `30528541049` passes all
-managed/net472 steps and uploads artifact `8753733157` with SHA-256
+The #4883/#27 visibility-qualified project-method slice is complete at corrected
+combined product/test head `b3285feab`. Both managed project scanners now
+discover class-only `PROTECTED` and `HIDDEN` procedure/function declarations,
+including abbreviated `PROC`. Qualified definitions, localized signatures,
+member references, and rename inputs remain intact; visibility-qualified lines
+outside `DEFINE CLASS` stay absent from globals. The warning-free full harness
+passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
+Exact-head Windows VSIX run `30528541049` passes all managed/net472 steps and
+uploads artifact `8753733157` with SHA-256
 `af3f8052f3bab584393e78f262218d91092fd4e1b0aad17b046df3f6f3f4e947`.
-Issue #4883 remains open pending independent Linux/Windows review; broader
-#27/#112 and RC validation remain open. Runtime
+Issue #4883 is closed; broader #27/#112 and RC validation remain open. Runtime
 visibility/stack behavior, catalogs, package/debug, and trust are unchanged.
 
-The #4882/#27 VFP `PROC` project-symbol slice is implemented at exact combined
-product/test head `b3285feab`. Both case-insensitive project scanners give `PROC` and
-`PROCEDURE` identical global-routine and qualified-class-method semantics.
-Following-line and inline signatures, invariant names, localized descriptions,
-and definition file/line identity are preserved; `PROCEDURES` is explicitly
-rejected as a longer near-match. The Release language-service build has zero
-warnings/errors, and the full harness passes locally under default,
-`pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`. Exact-head Windows VSIX
-run `30528541049` passes all managed/net472 steps and uploads artifact
+The #4882/#27 VFP `PROC` project-symbol slice is complete at corrected combined
+product/test head `b3285feab`. Both managed project scanners now give `PROC`
+and `PROCEDURE` identical global-routine and qualified-class semantics across
+definitions, signatures, direct/member references, and rename inputs;
+`PROCEDURES` remains rejected. The warning-free full harness passes locally
+under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`. Exact-head Windows
+VSIX run `30528541049` passes all managed/net472 steps and uploads artifact
 `8753733157` with SHA-256
 `af3f8052f3bab584393e78f262218d91092fd4e1b0aad17b046df3f6f3f4e947`.
-Issue #4882 remains open pending independent Linux/Windows review; broader
-#27/#112 and RC validation remain open. Runtime/
+Issue #4882 is closed; broader #27/#112 and RC validation remain open. Runtime/
 stack behavior, catalogs, package/debug, and trust contracts are unchanged.
 
 The #4881/#27 inline project-signature slice is implemented at exact product/
