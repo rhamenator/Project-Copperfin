@@ -23,7 +23,7 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `6b226ba33`, while subsequent
+latest product implementation head is `416e8d123`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
 Native `30329037575` and
 macOS Native `30329037567` passed their native
@@ -66,8 +66,8 @@ passed the transaction-journal target under default, `pt_BR.UTF-8`, and
 catalog keys: portable cursor XML attribute names and runtime event categories
 remain invariant, malformed field widths/decimal counts use the existing
 localized parse-warning path, and the focused runtime-surface target passes
-the same three locale environments on Linux and Windows/MSVC. AppleClang
-acceptance for #4863 remains pending; the superseded hosted matrix is not broad
+the same three locale environments on Linux, macOS/AppleClang, and
+Windows/MSVC. Issue #4863 is closed; this focused acceptance is not broad
 release evidence.
 
 #4864 at product head `d21415cbf` likewise adds no user-facing text or catalog
@@ -75,8 +75,8 @@ keys. It treats the opaque runtime object-reference spelling as invariant
 machine identity and rejects malformed numeric suffixes before classification
 or lookup, while preserving existing programmatic identifiers and localized
 reflection fallback behavior. The focused runtime-surface target passes under
-default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC;
-AppleClang acceptance remains pending.
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
+Windows/MSVC. Issue #4864 is closed.
 
 #4865 at product head `6b226ba33` adds no user-facing text or catalog keys.
 Windows-message handler strings remain invariant host-return data and now
@@ -84,6 +84,12 @@ require a complete signed pointer-sized integer before numeric coercion. The
 focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance and the newly triggered
 exact-head hosted matrix remain pending.
+
+#4866 at product head `416e8d123` adds no user-facing text or catalog keys.
+DBF Currency (`Y`) input remains invariant machine/storage text, and boundary
+rejection uses the existing localized invalid-currency diagnostic. The focused
+DBF target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux;
+AppleClang/MSVC acceptance and exact-head hosted evidence remain pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

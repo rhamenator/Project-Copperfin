@@ -1,3 +1,13 @@
+- 2026-07-30: Hardened #4866/#109 DBF Currency (`Y`) signed-boundary
+  admission. Text-to-storage scaling now computes an unsigned magnitude against
+  the sign-specific 64-bit limit, accepting the exact positive maximum and
+  negative minimum without signed overflow. Values one scaled unit beyond
+  either bound fail through the existing localized currency diagnostic before
+  creating or mutating a DBF. Four-decimal invariant display, ordinary/null
+  currency values, field layout, and atomic replacement remain unchanged. The
+  focused DBF target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on
+  Linux; cross-platform review remains required.
+
 - 2026-07-30: Hardened #4865/#3217 Windows-message handler result coercion.
   String results returned through the native `BINDEVENT()` dispatch lane now
   require a complete invariant signed pointer-sized integer. Valid signed
@@ -18,7 +28,7 @@
   internally generated references, programmatic identifiers, reflection,
   event/ownership paths, and the iterative frame machine remain unchanged.
   The focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang review remains required.
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4864 is closed.
 
 - 2026-07-30: Hardened #4863/#109 portable cursor XML numeric metadata.
   `CURSORTOXML()` now emits field widths and decimal counts through the classic
@@ -30,7 +40,7 @@
   verified-file admission, field/row order, post-parse width/decimal bounding,
   XML names, event categories, and localized warnings remain unchanged. The
   focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux and Windows/MSVC; AppleClang review remains required.
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4863 is closed.
 
 - 2026-07-30: Hardened #4862/#109 persisted transaction recovery journal
   scalars. Journal writers now serialize nesting levels through the classic

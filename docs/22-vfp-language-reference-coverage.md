@@ -116,6 +116,12 @@
   and rejecting one-unit overflow/underflow and rounding carry independently
   of the host ABI. Focused data-I/O CTest coverage passes `1/1`.
 
+- DBF Currency (`Y`) storage-boundary correction (2026-07-30, #4866 under
+  #109): text-to-storage scaling admits the exact positive maximum and negative
+  minimum without signed overflow, rejects one scaled unit beyond either edge
+  before file creation or replacement, and preserves invariant four-decimal
+  display plus the existing localized invalid-currency diagnostic.
+
 - SYS(2022) Windows path correction (2026-07-29, #4823 under #3217): existing
   file and nested-path inputs now resolve to their volume root before the
   Windows allocation-unit query, preserving character return and unavailable

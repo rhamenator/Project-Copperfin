@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4866/#109 DBF Currency (`Y`) signed-boundary slice is implemented at
+product/test head `416e8d123`. Text-to-storage scaling computes an unsigned
+magnitude against the sign-specific `int64` limit, so exact
+`922337203685477.5807` and `-922337203685477.5808` values round-trip without
+signed overflow. One-unit positive/negative overflow is rejected through the
+existing localized error before mutation; focused coverage proves rejected
+replacements leave the existing DBF byte-for-byte unchanged and rejected
+creates materialize no file. The DBF target passes under default,
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux. AppleClang and MSVC review remain
+required before closing #4866. This is focused evidence, not full RC evidence.
+
 The #4865/#3217 Windows-message handler-result slice is implemented at
 product/test head `6b226ba33`. The native `BINDEVENT()` dispatch lane now
 requires string handler results to contain a complete invariant signed
@@ -24,9 +35,8 @@ suffixes remain character data. They fail `COMPOBJ()`, cannot expose or mutate
 the live object through `GETPEM()` / `SETPEM()`, and leave its property state
 unchanged; valid internal identity remains `O` and compares equal. The focused
 runtime-surface target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
-on Linux and Windows/MSVC. AppleClang review remains required before closing
-#4864.
-This is focused evidence, not full RC evidence.
+on Linux, macOS/AppleClang, and Windows/MSVC. Issue #4864 is closed. This is
+focused evidence, not full RC evidence.
 
 The #4863/#109 portable cursor-XML numeric-metadata slice is implemented at
 product/test head `f4e480ea4`. `CURSORTOXML()` serializes field widths and
@@ -37,9 +47,9 @@ round trip and rejects partial, grouped, negative, missing, and overflowing
 metadata. Every malformed case returns zero without creating a new alias,
 mutating an existing destination DBF, changing its selected alias/record, or
 emitting `runtime.xmltocursor` success. The focused runtime-surface target
-passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and
-Windows/MSVC. AppleClang review remains required before closing #4863. This is
-focused evidence, not full RC evidence.
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC. Issue #4863 is closed. This is focused
+evidence, not full RC evidence.
 
 The #4862/#109 persisted transaction-recovery scalar slice is implementation-
 complete and cross-platform reviewed. Journal writers serialize nesting levels

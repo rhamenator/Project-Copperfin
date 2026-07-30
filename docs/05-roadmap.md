@@ -118,16 +118,14 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `6b226ba33` (the current branch may
-also contain documentation-only coordination commits). Its exact-head Security
-Supply Chain (`30516666186`), Linux Managed UI (`30516666159`), and Visual
-Studio VSIX (`30516666169`) lanes are green. Linux Native (`30516666176`),
-macOS Native (`30516666200`), Windows Native (`30516666236`), standalone
-installers (`30516666136`), generated launcher (`30516666171`), Windows
-Environment/Executable Path (`30516666165`), Windows DECLARE ABI
-(`30516666198`), and executable paths (`30516666208`) are active and
-nonterminal. The focused runtime-surface target passes locally under default,
-`pt_BR.UTF-8`, and `de_DE.UTF-8`; this is not a broad RC claim.
+The latest product implementation head is `416e8d123` (the current branch may
+also contain documentation-only coordination commits). Its exact-head hosted
+matrix is newly triggered and nonterminal. At the immediately preceding
+product head `6b226ba33`, Security Supply Chain (`30516666186`), Linux Managed
+UI (`30516666159`), and Visual Studio VSIX (`30516666169`) passed before the
+later product push superseded active lanes. The focused DBF target passes
+locally under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; this is not a broad RC
+claim.
 
 The immediately preceding terminal hosted matrix at product head `ca7889efa`
 is green for Linux Native (`30511406972`), macOS Native
