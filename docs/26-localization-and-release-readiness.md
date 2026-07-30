@@ -143,13 +143,15 @@ default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance
 AppleClang acceptance passes at channel seq1266; MSVC and exact-head hosted
 evidence remain pending.
 
-#4874 at product/test head `e70c89e87` adds no user-facing text or catalog
-keys. It broadens only the invariant language-service parser for VFP
+#4874 at product head `e70c89e87` and corrected direct regression head
+`765a31bc7` adds no user-facing text or catalog keys. It broadens only the
+invariant language-service parser for VFP
 `#INCLUDE` operands; symbol names, descriptions, completion kinds, package and
-runtime behavior, and trust boundaries are unchanged. The focused Release
-managed harness passes on Linux, and exact-head Windows VSIX run `30522120280`
-rebuilt the extension and passed the managed language-service suite. Issue
-#4874 is closed; broader #27 remains open.
+runtime behavior, and trust boundaries are unchanged. The corrected external
+header-chain fixture passes in the focused Release managed harness on Linux.
+Earlier Windows VSIX run `30522120280` and macOS seq1268 accepted the product
+change but predate the corrected fixture; #4874 is reopened pending exact-head
+hosted Windows validation. Broader #27 remains open.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

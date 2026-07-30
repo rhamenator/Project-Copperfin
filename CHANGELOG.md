@@ -2,11 +2,14 @@
   unquoted VFP `#INCLUDE` operands. Direct and recursively included headers now
   contribute preprocessor definitions and token descriptions without treating
   trailing `&&` comments as path text; quoted and angle-bracket behavior,
-  localization, and package/runtime trust boundaries remain unchanged. The
-  Release language-service harness passes on Linux, and exact-head Windows
-  VSIX run `30522120280` rebuilt the extension, passed the full managed
-  language-service suite, and uploaded artifact `8751223334`; #4874 is closed
-  while broader #27 remains open.
+  localization, and package/runtime trust boundaries remain unchanged. A
+  follow-on audit found the original same-root regression could pass through
+  ordinary project header enumeration; corrected head `765a31bc7` moves the
+  direct and recursive headers outside the project root so only the unquoted
+  scanner can discover them. The Release language-service harness passes on
+  Linux. Earlier Windows VSIX run `30522120280` and macOS seq1268 accepted the
+  product change but predate this corrected fixture; #4874 is reopened pending
+  exact-head hosted Windows validation.
 
 - 2026-07-30: Hardened #4873/#112 Studio-host JSON control escaping against
   grouped host locales. A shared platform helper now emits control-byte

@@ -2,20 +2,22 @@
 
 ## Current State
 
-The #4874/#27 editor-symbol include slice is implemented at exact product/test
-head `e70c89e87`. The language-service project scanner now follows common
+The #4874/#27 editor-symbol include slice is implemented at product head
+`e70c89e87`, with corrected direct regression head `765a31bc7`. The
+language-service project scanner now follows common
 unquoted VFP include operands such as `#include frxBuilder.h`, in addition to
 the existing quoted and angle-bracket forms. Focused coverage proves direct
 and recursive unquoted headers contribute their definitions and token
 descriptions, and that trailing `&&` comments are not treated as path text;
-the existing quoted external-header regression remains green. The Release
-`Copperfin.LanguageServiceTests` harness passes on Linux. Exact-head Windows
-VSIX run `30522120280` rebuilt the `net472` extension, passed its managed
-language-service and adjacent managed suites, and uploaded artifact
-`8751223334` with SHA-256
-`ab24019f4db0030f8010ac10413021eb77a2e4c6c235669e7a616e6ebf20a7ed`.
-Issue #4874 is closed; broader #27 remains open. No user-facing text, catalogs,
-package, runtime, debug, or trust contract changed.
+the existing quoted external-header regression remains green. Follow-on audit
+found the original same-root fixture could be satisfied by ordinary project
+header enumeration, so the corrected fixture places both headers outside the
+project root and can only pass through the unquoted include scanner. The
+Release `Copperfin.LanguageServiceTests` harness passes on Linux with that
+direct evidence. Earlier Windows VSIX run `30522120280` and macOS seq1268
+accepted the product change but predate the corrected fixture; #4874 is
+reopened pending exact-head Windows VSIX validation. No user-facing text,
+catalogs, package, runtime, debug, or trust contract changed.
 
 The #4873/#112 Studio-host JSON-control-escape slice is implemented at exact
 product/test head `4a75d3273`. Studio-host string escaping now delegates to a

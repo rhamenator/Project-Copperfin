@@ -290,10 +290,12 @@ standalone Studio shell, and FoxPro language-service layer."
 Current G1 evidence includes #4874 at product/test head `e70c89e87`: editor
 project-symbol discovery follows the unquoted `#INCLUDE` form used by the real
 VFPSource ReportBuilder header chain, including recursive headers and trailing
-comment separation. The focused managed harness passes on Linux, and exact-head
-Windows VSIX run `30522120280` rebuilt the extension and passed the full managed
-language-service suite. Issue #4874 is closed; the broader #27 parent stays
-open.
+comment separation. Corrected direct-evidence head `765a31bc7` places the
+included headers outside the project root so ordinary project enumeration
+cannot satisfy the assertions; the focused managed harness passes on Linux.
+Earlier Windows VSIX run `30522120280` accepted the product change but predates
+the corrected fixture. Issue #4874 is reopened for exact-head hosted Windows
+validation; the broader #27 parent stays open.
 
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three
