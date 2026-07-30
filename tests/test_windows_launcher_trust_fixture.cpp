@@ -9,13 +9,21 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 namespace {
 
+#if !defined(_WIN32)
 constexpr const char* kMarkerEnvironment = "COPPERFIN_TEST_LAUNCHER_TRUST_MARKER";
+#endif
 
 void write_text(const std::filesystem::path& path, const std::string& text) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
@@ -33,12 +41,35 @@ std::string file_digest(const std::filesystem::path& path) {
     return digest.hex_digest;
 }
 
-int run_internal_target() {
-    const char* marker = std::getenv(kMarkerEnvironment);
-    if (marker == nullptr || *marker == '\0') {
-        return 91;
+std::optional<std::filesystem::path> marker_path_from_environment() {
+#if defined(_WIN32)
+    constexpr wchar_t marker_environment[] =
+        L"COPPERFIN_TEST_LAUNCHER_TRUST_MARKER";
+    const DWORD required = GetEnvironmentVariableW(marker_environment, nullptr, 0U);
+    if (required <= 1U) {
+        return std::nullopt;
     }
-    write_text(std::filesystem::path(marker), "managed-apphost-started\n");
+    std::wstring value(required, L'\0');
+    const DWORD written = GetEnvironmentVariableW(
+        marker_environment,
+        value.data(),
+        required);
+    if (written == 0U || written >= required) {
+        return std::nullopt;
+    }
+    value.resize(written);
+    return std::filesystem::path(value);
+#else
+    const char* value = std::getenv(kMarkerEnvironment);
+    if (value == nullptr || *value == '\0') {
+        return std::nullopt;
+    }
+    return std::filesystem::path(value);
+#endif
+}
+
+int run_internal_target(const std::filesystem::path& marker) {
+    write_text(marker, "managed-apphost-started\n");
     return 0;
 }
 
@@ -113,8 +144,9 @@ int prepare_fixture(
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (std::getenv(kMarkerEnvironment) != nullptr) {
-        return run_internal_target();
+    const auto marker = marker_path_from_environment();
+    if (marker.has_value()) {
+        return run_internal_target(*marker);
     }
     if (argc != 5 || std::string(argv[1]) != "--prepare") {
         std::cerr << "usage: test_windows_launcher_trust_fixture --prepare <package-root> <guard> <signer-key-id>\n";
