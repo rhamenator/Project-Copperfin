@@ -907,11 +907,6 @@ internal static class FoxProIntelliSenseCatalog
     private static string ResolveExistingFilePath(string candidate)
     {
         var fullPath = Path.GetFullPath(candidate);
-        if (File.Exists(fullPath))
-        {
-            return fullPath;
-        }
-
         var pathRoot = Path.GetPathRoot(fullPath);
         if (string.IsNullOrEmpty(pathRoot))
         {
