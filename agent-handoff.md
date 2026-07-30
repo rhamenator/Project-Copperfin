@@ -2,6 +2,22 @@
 
 ## Current State
 
+The #4879/#25 nullable editor-path slice is implemented at exact product/test
+head `c990506f0`. Shared `CopperfinDocumentPathIdentity.TryNormalize` now
+contains null, blank, and `ArgumentException`-invalid lookup input while
+delegating valid relative and absolute paths to the existing platform/filesystem
+identity logic. `CopperfinAssetEditorPane.FindForDocument` consumes that seam,
+removing the repeated hosted CS8604 warnings without changing open-pane keys,
+stale weak-reference cleanup, case behavior, or activation. Focused coverage
+includes null, blank, embedded-NUL, relative, and absolute inputs. The full
+Release harness builds with zero warnings/errors and passes locally under
+default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and explicit `qps-ploc`. Exact-head
+Windows VSIX run `30526202072` is warning-clean, passes every managed/net472
+step, and uploads artifact `8752823159` with SHA-256
+`67b8bd47e6f34f2af6b6a6ccc83ace58d042b8048fbb3b3f84efa945c2f88131`.
+Issue #4879 is closed. No user-facing text/catalog, runtime, package/debug, or
+trust behavior changed.
+
 The #4878/#110 managed Windows-gate reliability slice is implemented at exact
 test head `5d6dd4d13`. Both held-output process fixtures now use dedicated modes
 of the already-built managed harness instead of timing-sensitive nested

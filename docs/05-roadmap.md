@@ -36,6 +36,13 @@ stress evidence, macOS seq1289, and exact-head Windows VSIX run `30525728514`
 pass; the run uploads artifact `8752672531`. The child is closed, while the full
 RC matrix remains separate.
 
+Current IDE build-cleanliness evidence includes #4879 at exact product/test
+head `c990506f0`: editor-pane lookup now uses a shared nullable-safe path
+normalization seam with focused null/blank/invalid/relative/absolute coverage.
+Exact-head Windows VSIX run `30526202072` is warning-clean, passes all managed
+and net472 steps, and uploads artifact `8752823159`. Issue #4879 is closed;
+broader IDE and RC validation remain separate.
+
 The shared designer-interaction and report/label implementation trees are
 complete at the current MVP fidelity. Their remaining hosted Windows,
 Visual Studio, and mounted-VFP9 checks are release evidence gates, not reasons

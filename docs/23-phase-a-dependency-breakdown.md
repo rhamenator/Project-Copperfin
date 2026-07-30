@@ -33,6 +33,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent F1 build-cleanliness slice: `#4879` routes nullable editor-pane lookup
+  through shared `TryNormalize` path identity handling. Null, blank, and invalid
+  arguments fail closed; valid relative/absolute paths preserve existing
+  filesystem case identity. Focused managed coverage and the local four-mode
+  matrix pass. Windows VSIX run `30526202072` is warning-clean, passes every
+  managed/net472 step, and uploads artifact `8752823159`.
 - Recent D/F release-gate reliability slice: `#4878` replaces timing-sensitive
   nested-PowerShell held-output fixtures with dedicated modes of the built
   managed harness. The successful-root path records descendant readiness before

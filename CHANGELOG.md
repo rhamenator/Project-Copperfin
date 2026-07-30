@@ -1,3 +1,11 @@
+- 2026-07-30: Closed #4879/#25 by adding nullable-safe document-path
+  normalization for editor-pane lookup. Null, blank, and invalid path arguments
+  now fail lookup without producing an identity; valid paths retain the existing
+  platform/filesystem normalization. This removes the two recurring hosted
+  CS8604 warnings while preserving pane activation and stale-reference cleanup.
+  The local four-mode managed matrix and warning-clean exact-head Windows VSIX
+  run `30526202072` pass; artifact `8752823159` was uploaded.
+
 - 2026-07-30: Hardened #4878/#110 Windows managed process-gate fixtures after
   two hosted runs exposed nested-PowerShell startup timing failures. Dedicated
   managed harness child modes now exercise successful-root held handles and an
