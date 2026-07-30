@@ -7,8 +7,8 @@
   shapes fail closed without materializing a prefix-derived array. Valid
   arrays, element types/order, scope, additive semantics, invariant SAVE
   output, localization, verified-file admission, and public contracts remain
-  unchanged. Focused macOS/AppleClang tests pass under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+  unchanged. Focused tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4858 is closed.
 
 - xAsset object-type metadata culture boundary (2026-07-29, #4858 under
   #109): executable-model routing now requires complete invariant integer
@@ -24,9 +24,9 @@
   Grouped, decimal, trailing, negative, and overflowing policy text fails
   closed with zero retries instead of using a valid numeric prefix. Automatic
   aliases, zero, valid positive budgets, per-data-session state, localized
-  timeout errors, and invariant lock telemetry remain unchanged. Focused
-  macOS/AppleClang tests pass under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8`; Linux and Windows review remains required.
+  timeout errors, and invariant lock telemetry remain unchanged. Focused tests
+  pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+  macOS/AppleClang, and Windows/MSVC; #4857 is closed.
 
 - Asset-inspector JSON culture boundary (2026-07-29, #4853 under #109): DBC
   record indices and DBF numeric metadata now serialize through a classic

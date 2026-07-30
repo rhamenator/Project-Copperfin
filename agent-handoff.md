@@ -76,25 +76,23 @@ issue state and create or select the next prompt-sized child before coding.
 This is focused evidence, not full RC evidence.
 
 The #4857/#3217 `SET REPROCESS` retry-policy slice is
-implementation-complete locally. Numeric retry budgets now use complete
+implementation-complete and cross-platform reviewed. Numeric retry budgets now use complete
 invariant integer parsing, so grouped, decimal, trailing, negative, and
 overflowing text fails closed with zero retries instead of inheriting a valid
 numeric prefix. Automatic aliases, zero, valid positive budgets,
 per-data-session state, localized timeout errors, and invariant lock telemetry
 remain unchanged. The focused table-mutation suite passes under default,
-`pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and Windows/MSVC
-review remains required before #4857 can close. This is focused evidence, not
-full RC evidence.
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC.
+Issue #4857 is closed. This is focused evidence, not full RC evidence.
 
 The #4858/#109 xAsset object-type metadata slice is implementation-complete
-locally. Executable-model routing now parses DBF `OBJTYPE` values as complete
+and cross-platform reviewed. Executable-model routing now parses DBF `OBJTYPE` values as complete
 invariant integers, so grouped, decimal, trailing, malformed, and overflowing
 text cannot alias a valid menu/object type. Valid SCX/VCX/MNX routing,
 deleted-record handling, paths, methods/actions, localization, and public
 contracts remain unchanged. The focused xAsset suite passes under default,
-`pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and Windows/MSVC
-review remains required before #4858 can close. This is focused evidence, not
-full RC evidence.
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC.
+Issue #4858 is closed. This is focused evidence, not full RC evidence.
 
 The #4859/#109 persisted `RESTORE FROM` array-dimension slice is
 implementation-complete locally. Row and column tokens now require complete
