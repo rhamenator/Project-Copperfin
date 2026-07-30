@@ -163,6 +163,15 @@ Linux, exact-head Windows VSIX run `30522772118` passes the full managed suite,
 and macOS seq1273 accepts the actual-spelling correction. Issue #4875 is
 closed; broader #27 remains open.
 
+#4876 at exact product/test head `28b2f3322` adds no user-facing text or catalog
+keys. Runtime compiler AST/IR JSON and generated C# string literals now consume
+the shared locale-independent complete control escaper. Real source-derived
+byte `0x1f` coverage requires canonical backslash-plus-`u001f` output and no
+raw control byte in all three artifacts while generated C# compilation remains
+green. AST/IR fields and schemas, invariant identifiers, manifest/debug paths,
+and package trust remain unchanged. The focused runtime-pipeline suite passes
+on Linux; AppleClang/MSVC acceptance remains pending.
+
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
 Windows path/package contract validation. #4757-#4769 are closed with their

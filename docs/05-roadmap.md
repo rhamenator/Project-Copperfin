@@ -305,6 +305,13 @@ harness passes on Linux, exact-head Windows VSIX run `30522772118` passes the
 full managed suite, and macOS seq1273 accepts the actual-spelling correction.
 Issue #4875 is closed; broader #27 remains open.
 
+Current D-lane machine-contract evidence includes #4876 at exact product/test
+head `28b2f3322`: AST/IR JSON and generated C# string literals share the
+complete platform control escaper, with real source-derived byte `0x1f`
+coverage across all three generated artifacts. The focused runtime-pipeline
+suite passes on Linux; AppleClang/MSVC acceptance and broader #110/release
+evidence remain pending.
+
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three
 `B<n>/#<issue>` occurrences in the repo's history are two unrelated one-off

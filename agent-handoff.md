@@ -2,6 +2,17 @@
 
 ## Current State
 
+The #4876/#110 runtime compiler control-escape slice is implemented at exact
+product/test head `28b2f3322`. The runtime-pipeline AST/IR JSON and generated
+C# string helper now delegates to the shared complete platform JSON escaper.
+Real PRG statements carrying byte `0x1f` require the canonical six-character
+escape (backslash followed by `u001f`) in AST JSON, IR JSON, and transpiled C#,
+reject the raw byte in every artifact, and the generated C# still compiles.
+The full focused `test_runtime_pipeline` CTest passes `1/1` in 63.33s on Linux.
+AppleClang and MSVC read-only acceptance remain required before closure. No
+user-facing text, catalogs, AST/IR fields or schema versions, manifest/debug
+paths, package trust, or stack behavior changed.
+
 The #4875/#27 portable include-path slice is implemented at exact product/test
 head `e41325472`. Language-service include resolution now walks actual
 filesystem entries, preferring an exact component and otherwise accepting only
