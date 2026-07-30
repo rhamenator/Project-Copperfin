@@ -4,6 +4,7 @@
 
 #include "studio_host_main_support.h"
 #include "copperfin/licensing/license_status_display.h"
+#include "copperfin/platform/json.h"
 
 namespace cf_studio_host_main_detail {
 const copperfin::localization::LocalizedCatalog* g_active_catalog = nullptr;
@@ -291,46 +292,7 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
 }
 
 std::string json_escape(const std::string& value) {
-    std::ostringstream stream;
-    for (unsigned char ch : value) {
-        switch (ch) {
-            case '\"':
-                stream << "\\\"";
-                break;
-            case '\\':
-                stream << "\\\\";
-                break;
-            case '\b':
-                stream << "\\b";
-                break;
-            case '\f':
-                stream << "\\f";
-                break;
-            case '\n':
-                stream << "\\n";
-                break;
-            case '\r':
-                stream << "\\r";
-                break;
-            case '\t':
-                stream << "\\t";
-                break;
-            default:
-                if (ch < 0x20U) {
-                    stream << "\\u"
-                           << std::hex
-                           << std::setw(4)
-                           << std::setfill('0')
-                           << static_cast<unsigned int>(ch)
-                           << std::dec
-                           << std::setfill(' ');
-                } else {
-                    stream << static_cast<char>(ch);
-                }
-                break;
-        }
-    }
-    return stream.str();
+    return copperfin::platform::json_escape_string(value);
 }
 
 void print_json_string(const std::string& value) {

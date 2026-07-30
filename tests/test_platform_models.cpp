@@ -5,6 +5,7 @@
 #include "copperfin/platform/database_model.h"
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/extensibility_model.h"
+#include "copperfin/platform/json.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/security/security_model.h"
 #include "test_environment_support.h"
@@ -12,17 +13,48 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <locale>
 #include <string>
 
 namespace {
 
 int failures = 0;
 
+class every_digit_numpunct final : public std::numpunct<char> {
+protected:
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\1"; }
+};
+
+class global_locale_guard final {
+public:
+    explicit global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+    ~global_locale_guard() { std::locale::global(previous_); }
+    global_locale_guard(const global_locale_guard&) = delete;
+    global_locale_guard& operator=(const global_locale_guard&) = delete;
+private:
+    std::locale previous_;
+};
+
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+void test_json_escape_string_is_locale_invariant() {
+    const std::locale grouping_locale(std::locale::classic(), new every_digit_numpunct());
+    const global_locale_guard locale_guard(grouping_locale);
+    std::string value{"\"\\\b\f\n\r\t", 7U};
+    value.push_back('\0');
+    value.push_back(static_cast<char>(0x1f));
+    value += "caf\xC3\xA9";
+    expect(
+        copperfin::platform::json_escape_string(value) ==
+            "\\\"\\\\\\b\\f\\n\\r\\t\\u0000\\u001fcaf\xC3\xA9",
+        "JSON escaping should preserve canonical control escapes and UTF-8 under every-digit grouping");
 }
 
 void test_default_security_profile() {
@@ -803,6 +835,7 @@ void test_platform_environment_helper_reads_and_clears_variables() {
 }  // namespace
 
 int main() {
+    test_json_escape_string_is_locale_invariant();
     test_default_security_profile();
     test_default_extensibility_profile();
     test_dotnet_interop_policy_gateway();

@@ -1550,6 +1550,18 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
         "Unknown builder context token: unknown",
         "#2396: default builder parser diagnostics should preserve en-US prose");
 
+    const std::string control_option = std::string("--unknown") + static_cast<char>(0x1f) + "value";
+    process = run_process_capture(
+        studio_host_path,
+        {"--builder-launch-catalog", "--builder-context", "control", "--json", control_option},
+        temp_root);
+    expect(process.exit_code == 2,
+        "#4873: control-character unknown options should preserve parse-failure exit status");
+    expect_contains(process.stdout_text, "--unknown\\u001fvalue",
+        "#4873: Studio-host JSON should canonically escape control bytes");
+    expect(process.stdout_text.find(static_cast<char>(0x1f)) == std::string::npos,
+        "#4873: Studio-host JSON should not emit raw control bytes");
+
     process = run_process_capture(
         studio_host_path,
         {"--builder-launch-plan", "grid-builder", "--builder-context", "unknown"},
