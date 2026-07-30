@@ -40,6 +40,14 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   standalone Studio, DesignerSmoke, and debugger stages. Exact VSIX, Linux UI,
   installers, security/SBOM, and individual native runs also pass. The v1 queue
   remains behind external release authorities #4403 and #4409.
+- Release-trust audit child `#4894` found that #4409's protected job stopped at
+  provisioning and verifier-unit coverage. The corrected implementation binds
+  an explicit approved signer ID to the external registry, signs a canonical
+  finalized inventory through the Windows signer, invokes the actual enforced
+  guard, proves valid start plus seven fail-closed cases, emits only non-secret
+  evidence, and removes protected temporary inputs. Portable contract/signer
+  validation is green; externally approved protected execution remains #4409's
+  release authority and is not substituted by this implementation slice.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX

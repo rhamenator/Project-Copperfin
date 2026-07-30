@@ -45,9 +45,13 @@ Implementation is RC-ready, but release authorization remains open. Permissive
 #4403 primary-hazard safety run `30555972170` passes; genuine arm's-length
 review, formal issue closure, and strict validation remain required. #4409
 cannot run its enforced trust gate because no protected repository
-signer/registry secrets are configured. Do not present the MVP RC as released
-or advance the active queue into v1 until those external authorities are
-satisfied.
+signer/registry secrets are configured. Audit child #4894 corrects that gate's
+implementation: the protected signer now signs a finalized inventory and the
+actual enforced guard records valid launch and stable exit-code-4 failures
+without exposing private material. That implementation does not replace the
+missing approved signer/registry or its required protected Windows run. Do not
+present the MVP RC as released or advance the active queue into v1 until those
+external authorities are satisfied.
 
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation head is `531bbec70`, while subsequent

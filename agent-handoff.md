@@ -44,6 +44,18 @@ the separate net472 gate and finally records owned helper PIDs directly from
 processes. All three RC blockers are closed. No machine-readable, VFP9 runtime,
 package, debug, xAsset, report, or stub-inventory contract changed.
 
+Release-trust audit child #4894 found and corrects a workflow implementation
+gap under #4409: the protected job previously validated external files but did
+not sign a finalized inventory or invoke the actual enforced guard. The new
+Windows path binds an explicit approved signer ID to the registry, uses a
+PowerShell Ed25519 signer over a finalized fixture, proves valid internal-host
+start plus modified/removed artifact, removed/duplicate/case-ambiguous
+inventory, and modified/removed signature failures, and emits only non-secret
+case evidence before cleaning protected inputs. Portable workflow/signer/trust
+contracts and the fixture build pass. Exact-head hosted Windows compilation,
+read-only review, and the externally provisioned protected run remain to be
+recorded before #4894/#4409 closure.
+
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,
 formal closure, and a strict `RequireClosedIssues=true` pass. Issue #4409 still

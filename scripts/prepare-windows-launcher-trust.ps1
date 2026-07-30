@@ -9,6 +9,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SigningKeyPath,
     [Parameter(Mandatory = $true)]
+    [string]$SignerKeyId,
+    [Parameter(Mandatory = $true)]
     [string]$RepositoryRoot,
     [Parameter(Mandatory = $true)]
     [string]$OutputPath
@@ -58,6 +60,13 @@ if ($registryText -notmatch 'kKnownLauncherInventoryTrustedKeys' -or
 if ($signingKeyText -notmatch '(?i)BEGIN\s+PRIVATE KEY') {
     throw "Launcher trust signing key must be a PEM private-key reference."
 }
+if ($SignerKeyId -notmatch '^[A-Za-z0-9._-]+$') {
+    throw "Launcher trust signer key ID is invalid."
+}
+$escapedSignerKeyId = [regex]::Escape($SignerKeyId)
+if ($registryText -notmatch ('"' + $escapedSignerKeyId + '"')) {
+    throw "Launcher trust signer key ID is absent from the approved registry."
+}
 
 $registryEntryMatch = [regex]::Match(
     $registryText,
@@ -70,6 +79,8 @@ $output = [ordered]@{
     registry_valid = $true
     registry_entry_count = $registryEntryCount
     signing_key_present = $true
+    signer_key_id = $SignerKeyId
+    signing_key_registry_binding = $true
     private_material_outside_repository = $true
 }
 $outputParent = Split-Path -Parent $OutputPath

@@ -616,6 +616,19 @@ add_test(
     COMMAND $<TARGET_FILE:test_package_launcher_inventory_trust>
 )
 
+add_executable(test_windows_launcher_trust_fixture
+    test_windows_launcher_trust_fixture.cpp
+)
+target_link_libraries(test_windows_launcher_trust_fixture PRIVATE
+    cf_package_trust
+    cf_security
+)
+if(MSVC)
+    target_compile_options(test_windows_launcher_trust_fixture PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_windows_launcher_trust_fixture PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_test(
     NAME test_focused_workflow_path_filters
     COMMAND ${CMAKE_COMMAND}

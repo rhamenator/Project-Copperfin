@@ -2,6 +2,11 @@ name: Windows Launcher Trust Validation
 
 on:
   workflow_dispatch:
+    inputs:
+      signer_key_id:
+        description: Approved public signer key ID present in the protected registry
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -20,6 +25,7 @@ jobs:
         env:
           COPPERFIN_TRUST_REGISTRY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER }}
           COPPERFIN_TRUST_SIGNING_KEY_SECRET: ${{ secrets.COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM }}
+          COPPERFIN_TRUST_SIGNER_KEY_ID: ${{ inputs.signer_key_id }}
         run: |
           $ErrorActionPreference = 'Stop'
           if ([string]::IsNullOrWhiteSpace($env:COPPERFIN_TRUST_REGISTRY_SECRET) -or
@@ -33,6 +39,7 @@ jobs:
           [System.IO.File]::WriteAllText($signingKeyPath, $env:COPPERFIN_TRUST_SIGNING_KEY_SECRET, $encoding)
           "COPPERFIN_TRUST_REGISTRY_PATH=$registryPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "COPPERFIN_TRUST_SIGNING_KEY_PATH=$signingKeyPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "COPPERFIN_TRUST_SIGNER_KEY_ID=$env:COPPERFIN_TRUST_SIGNER_KEY_ID" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Validate external trust inputs
         shell: pwsh
@@ -40,6 +47,7 @@ jobs:
           .\scripts\prepare-windows-launcher-trust.ps1 `
             -RegistryHeaderPath $env:COPPERFIN_TRUST_REGISTRY_PATH `
             -SigningKeyPath $env:COPPERFIN_TRUST_SIGNING_KEY_PATH `
+            -SignerKeyId $env:COPPERFIN_TRUST_SIGNER_KEY_ID `
             -RepositoryRoot $env:GITHUB_WORKSPACE `
             -OutputPath (Join-Path $env:RUNNER_TEMP 'copperfin-launcher-trust-provisioning.json')
 
@@ -51,14 +59,35 @@ jobs:
           -DCOPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER="$env:COPPERFIN_TRUST_REGISTRY_PATH"
 
       - name: Build enforced launcher trust targets
-        run: cmake --build build --config Release --parallel 2 --target copperfin_launcher_guard test_package_launcher_inventory_trust
+        run: cmake --build build --config Release --parallel 2 --target copperfin_launcher_guard test_package_launcher_inventory_trust test_windows_launcher_trust_fixture
 
       - name: Run package trust contract tests
         run: ctest --test-dir build -C Release --output-on-failure -R "^(test_package_launcher_inventory_trust)$"
+
+      - name: Exercise approved signer through enforced launcher guard
+        shell: pwsh
+        run: |
+          .\scripts\run-windows-launcher-trust-validation.ps1 `
+            -FixtureExecutable .\build\tests\Release\test_windows_launcher_trust_fixture.exe `
+            -LauncherGuard .\build\Release\copperfin_launcher_guard.exe `
+            -SignerScript .\tools\package-signer\sign-launcher-inventory.ps1 `
+            -SigningKeyPath $env:COPPERFIN_TRUST_SIGNING_KEY_PATH `
+            -SignerKeyId $env:COPPERFIN_TRUST_SIGNER_KEY_ID `
+            -RepositoryRoot $env:GITHUB_WORKSPACE `
+            -OutputPath (Join-Path $env:RUNNER_TEMP 'copperfin-launcher-trust-validation.json')
 
       - name: Upload non-secret provisioning evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-windows-launcher-trust-provisioning
-          path: ${{ runner.temp }}/copperfin-launcher-trust-provisioning.json
+          path: |
+            ${{ runner.temp }}/copperfin-launcher-trust-provisioning.json
+            ${{ runner.temp }}/copperfin-launcher-trust-validation.json
           if-no-files-found: error
+
+      - name: Remove protected trust inputs
+        if: always()
+        shell: pwsh
+        run: |
+          Remove-Item -LiteralPath $env:COPPERFIN_TRUST_REGISTRY_PATH -Force -ErrorAction SilentlyContinue
+          Remove-Item -LiteralPath $env:COPPERFIN_TRUST_SIGNING_KEY_PATH -Force -ErrorAction SilentlyContinue

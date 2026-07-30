@@ -1,3 +1,16 @@
+- 2026-07-30: Implemented release-trust audit slice #4894 under #4409. The
+  protected Windows workflow now binds an explicit approved signer ID to its
+  external registry, derives `app.cftrust` from a finalized exact inventory,
+  signs through a Windows-native PowerShell Ed25519 signer, and exercises the
+  actual enforced guard. The evidence contract proves valid internal-apphost
+  start and exit-code-4/no-start behavior for modified and removed artifacts,
+  removed/duplicate/case-ambiguous inventory, and modified/removed signature
+  sidecars, uploads no private material, and always removes protected temporary
+  inputs. Portable signer/provisioning/workflow/trust contracts and the fixture
+  build pass. This completes the missing workflow mechanics; #4409 still
+  requires the externally approved protected registry/key and successful
+  Windows release run before Copperfin claims the trust boundary.
+
 - 2026-07-30: Completed the implementation-side MVP RC validation cycle at
   final test head `82b907cd5` and synchronized hosted head `20ef3b3cb`.
   Consolidated Native Release Readiness run `30550948703` passed Linux

@@ -322,7 +322,11 @@ Report, and Menu, with the installed VFP9 prerequisite present. The artifacts
 are recorded under the Windows host's
 `E:\Project-Copperfin\artifacts\windows-mounted-vfp9-validation\` path.
 The complete RC evidence gate remains unclaimed while #4403 independent
-review/closure and #4409 protected launcher-trust provisioning remain open;
+review/closure and #4409 protected launcher-trust provisioning remain open.
+The #4894 audit slice corrects the protected job so provisioning now drives an
+external signer over a finalized inventory and exercises the actual enforced
+guard across valid and fail-closed cases; exact protected execution still
+requires the externally approved registry/key pair and does not weaken #4409;
 the accepted #4621 hosted baseline remains separate from an exact-head live
 Visual Studio UI rerun.
 

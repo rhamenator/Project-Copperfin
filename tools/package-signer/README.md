@@ -2,6 +2,11 @@
 
 `sign-launcher-inventory.sh` creates the detached `app.cftrust.sig` sidecar for a finalized canonical `app.cftrust` envelope. It uses OpenSSL's Ed25519 signer and accepts only a key reference to a PEM file outside the repository checkout.
 
+`sign-launcher-inventory.ps1` provides the same fail-closed contract for the
+protected Windows release workflow. Both implementations validate the
+canonical envelope boundary and write the detached sidecar atomically without
+printing private material.
+
 ```sh
 tools/package-signer/sign-launcher-inventory.sh \
   --input app.cftrust \

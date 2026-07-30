@@ -74,7 +74,26 @@ The verifier distinguishes:
 
 The Windows launcher guard now checks present trust sidecars before any managed apphost process starts and keeps exit code `4` for all trust or inventory failures. Human-readable explanations use the active catalog; status codes, signer IDs, envelope keys, role values, and package paths remain invariant. Development builds preserve unsigned fallback when neither sidecar is present. A release build must set `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON` and configure `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` with an approved public-key registry outside the checkout; an empty registry is fail-closed.
 
-The manually dispatched `Windows Launcher Trust Validation` workflow consumes the protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets, materializes both only under the runner's temporary directory, validates the external registry, and configures the enforced native guard. It uploads only a non-secret provisioning report. The workflow deliberately has no push or pull-request trigger so ordinary development and unsigned installer validation remain unchanged; valid signed-launch and tamper-case execution remains a release-candidate evidence step after the approved registry is provisioned.
+The manually dispatched `Windows Launcher Trust Validation` workflow consumes
+the protected `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` and
+`COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` secrets plus an explicit non-secret
+approved signer-key ID. It materializes protected inputs only under the
+runner's temporary directory, proves that the signer ID is present in the
+registry, configures the enforced native guard, and removes those inputs even
+when validation fails. The workflow deliberately has no push or pull-request
+trigger, so ordinary development and unsigned installer validation remain
+unchanged.
+
+The protected job derives a canonical `app.cftrust` from an exact finalized
+fixture inventory, signs it with the external key reference through the native
+PowerShell signer, and invokes the actual enforced launcher guard. A valid
+signed package must start the internal apphost. Modified and removed artifacts,
+removed/duplicate/case-ambiguous inventory records, and modified or removed
+signature sidecars must all return exit code `4` without starting that apphost.
+Only the signer ID, commit/run identity, invariant case results, and non-secret
+provisioning facts are uploaded. This workflow path is implemented under
+#4894, but it is release evidence only after an externally approved registry
+and key execute it successfully.
 
 ## Platform Policy
 
@@ -84,4 +103,12 @@ POSIX and macOS do not claim this Windows trust boundary yet. Until platform-spe
 
 ## Fixture Evidence
 
-`test_package_launcher_inventory_trust` covers canonical ordering, traversal rejection, unknown signer IDs, invalid signatures, strict textual signature-sidecar parsing and signer matching, and an RFC 8032 Ed25519 public verification vector. The Windows `test_generated_launcher_process` regression also proves malformed trust sidecars fail before managed startup. No private or machine-specific key is embedded. Release signing must add a detached signature over the canonical envelope using an external key reference and must exercise valid, modified, removed, duplicate, and ambiguous artifacts through the Windows guard with the approved registry enabled.
+`test_package_launcher_inventory_trust` covers canonical ordering, traversal
+rejection, unknown signer IDs, invalid signatures, strict textual
+signature-sidecar parsing and signer matching, and an RFC 8032 Ed25519 public
+verification vector. The Windows `test_generated_launcher_process` regression
+also proves malformed trust sidecars fail before managed startup. The #4894
+fixture and protected orchestrator cover the external signer-to-guard path and
+record whether the internal apphost started for every case. No private or
+machine-specific key is embedded. The protected workflow must still run with
+the approved registry/key pair before the release trust boundary is claimed.
