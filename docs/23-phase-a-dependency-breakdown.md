@@ -45,9 +45,12 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   an explicit approved signer ID to the external registry, signs a canonical
   finalized inventory through the Windows signer, invokes the actual enforced
   guard, proves valid start plus seven fail-closed cases, emits only non-secret
-  evidence, and removes protected temporary inputs. Portable contract/signer
-  validation is green; externally approved protected execution remains #4409's
-  release authority and is not substituted by this implementation slice.
+  evidence, and removes protected temporary inputs. Exact head `f0c9e06e2`
+  passes Windows native `315/315`, Linux/macOS `316/316`, and the VSIX,
+  managed-UI, installer, security, path, and ABI gates; generated-launcher run
+  `30559417230` passes at duplicate-signer head `3968fabff`. Externally approved
+  protected execution remains #4409's release authority and is not substituted
+  by this implementation slice.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX

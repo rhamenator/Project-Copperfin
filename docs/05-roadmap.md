@@ -330,6 +330,15 @@ requires the externally approved registry/key pair and does not weaken #4409;
 the accepted #4621 hosted baseline remains separate from an exact-head live
 Visual Studio UI rerun.
 
+The implementation-side #4894 matrix is current at exact head `f0c9e06e2`:
+Windows native `30559930672` passes `315/315` after building the new fixture
+with MSVC, Linux `30559930560` and macOS `30559930719` pass `316/316`, and the
+exact VSIX, managed-UI, installer, security/SBOM, executable-path, Windows
+environment/path, and DECLARE ABI workflows pass. Generated-launcher run
+`30559417230` passes at the exact duplicate-signer implementation head
+`3968fabff`. This evidence completes the missing workflow mechanics; it does
+not provide an approved key, protected run, #4409 closure, or release authority.
+
 The same build tree produced Linux DEB, RPM, and TGZ packages with CPack at
 `c95cf269d`; the package/document/install contract subset passed `4/4`.
 Current-head installer workflow `30511406950` passed the macOS, Linux, and

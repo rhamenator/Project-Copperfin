@@ -69,7 +69,8 @@ The verifier distinguishes:
 
 - `valid`: canonical envelope, approved signer ID, and detached signature all verify;
 - `malformed_envelope`: version, fields, ordering, path, digest, sidecar, or signer-ID syntax is invalid;
-- `unknown_signer`: the signer ID is well-formed but absent from the launcher trust registry; and
+- `unknown_signer`: the signer ID is well-formed but absent from the launcher trust registry;
+- `ambiguous_signer`: more than one registry entry claims the selected signer ID; and
 - `invalid_signature`: the approved key exists but the signature does not match the canonical bytes.
 
 The Windows launcher guard now checks present trust sidecars before any managed apphost process starts and keeps exit code `4` for all trust or inventory failures. Human-readable explanations use the active catalog; status codes, signer IDs, envelope keys, role values, and package paths remain invariant. Development builds preserve unsigned fallback when neither sidecar is present. A release build must set `COPPERFIN_ENFORCE_LAUNCHER_TRUST=ON` and configure `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER` with an approved public-key registry outside the checkout; an empty registry is fail-closed.
@@ -116,3 +117,12 @@ fixture and protected orchestrator cover the external signer-to-guard path and
 record whether the internal apphost started for every case. No private or
 machine-specific key is embedded. The protected workflow must still run with
 the approved registry/key pair before the release trust boundary is claimed.
+
+Implementation evidence is current at head `f0c9e06e2`. Windows native run
+`30559930672` built `test_windows_launcher_trust_fixture` with MSVC and passed
+`315/315`; Linux `30559930560` and macOS `30559930719` passed `316/316`.
+Generated-launcher run `30559417230` passed at the exact duplicate-signer head
+`3968fabff`, and independent review confirmed the signer, registry, evidence,
+and cleanup boundaries. Permissive safety run `30559107092` produced artifact
+`8766084663`. These results validate the implementation contract only; the
+approved protected execution required by #4409 remains outstanding.

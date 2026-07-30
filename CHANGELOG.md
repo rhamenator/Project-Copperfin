@@ -14,7 +14,11 @@
   rejects registry record-count mismatches and duplicate signer IDs, while the
   native verifier independently reports an ambiguous signer and fails before
   signature acceptance if duplicate selected IDs reach it. This completes the
-  missing workflow mechanics; #4409 still
+  missing workflow mechanics. Exact head `f0c9e06e2` passes Windows native
+  `315/315` with the new fixture compiled by MSVC, Linux/macOS `316/316`, and
+  the VSIX, managed-UI, installer, security, path, and ABI workflows;
+  generated-launcher run `30559417230` passes at native duplicate-signer head
+  `3968fabff`. Independent source/security review passes. #4409 still
   requires the externally approved protected registry/key and successful
   Windows release run before Copperfin claims the trust boundary.
 

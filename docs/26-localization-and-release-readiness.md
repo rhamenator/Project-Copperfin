@@ -53,8 +53,15 @@ missing approved signer/registry or its required protected Windows run. Do not
 present the MVP RC as released or advance the active queue into v1 until those
 external authorities are satisfied.
 
+The corrected mechanics are platform-validated at exact head `f0c9e06e2`:
+Windows native run `30559930672` passes `315/315` after compiling the fixture
+with MSVC, Linux/macOS native runs pass `316/316`, and the exact VSIX,
+managed-UI, installer, security, path, and ABI gates are green. No localized
+catalog or invariant diagnostic contract changed in #4894. The approved
+protected signer execution remains an external release gate.
+
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `531bbec70`, while subsequent
+latest product implementation/test head is `f0c9e06e2`, while subsequent
 documentation-only coordination commits may advance the branch. Hosted Linux
 Native `30329037575` and
 macOS Native `30329037567` passed their native

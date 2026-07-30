@@ -56,9 +56,16 @@ protected inputs. Portable workflow/signer/trust
 contracts and the fixture build pass. The signer ID is published across steps
 only after its whitelist and registry binding pass. Duplicate registry IDs
 fail both provisioning and native verification before signature acceptance.
-Exact-head hosted Windows compilation,
-read-only review, and the externally provisioned protected run remain to be
-recorded before #4894/#4409 closure.
+Exact implementation/test head `f0c9e06e2` is independently reviewed and its
+hosted matrix is green: Windows native run `30559930672` built the fixture with
+MSVC and passed `315/315` in `528.71s`; Linux `30559930560` and macOS
+`30559930719` passed `316/316`; VSIX `30559930602`, managed UI `30559930577`,
+installers `30559930525`, security/SBOM `30559930703`, executable-path
+`30559930693`, Windows environment/path `30559930470`, and DECLARE ABI
+`30559930574` also pass. Generated-launcher run `30559417230` passes at exact
+native duplicate-signer head `3968fabff`. This completes #4894's
+implementation-side mechanics and platform validation. The externally
+provisioned protected run remains required for #4409 and is not claimed.
 
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,
@@ -66,9 +73,14 @@ formal closure, and a strict `RequireClosedIssues=true` pass. Issue #4409 still
 requires externally provisioned protected signer/registry secrets; `gh secret
 list` remains empty, so the enforced launcher-trust workflow cannot be run
 without new authority. The permissive primary-hazard safety gate is green, but
-it is supporting evidence only: run `30555972170` uploaded report artifact
+it is supporting evidence only: #4403 run `30555972170` uploaded artifact
 `8764789555` with GitHub SHA-256
 `98de3352fa4eebf8f6617efc973db5b48ca3d1362455fc3eec1aaa9618455c63`.
+Fresh #4894 run `30559107092` uploaded report artifact `8766084663`;
+GitHub's archive digest is
+`f1ac90edf2485351522258f95149899e7b53a9acdbf40143798dad56e6182af0`,
+and the report file SHA-256 is
+`b41068a443001d0fef0246e8dc277e30c5c2aee856918ae1ed28516460481177`.
 
 The #4890/#26 standalone Open-shortcut slice is implemented at product/test
 head `9e4b5a286`. Localized File > Open now exposes conventional Ctrl+O through
