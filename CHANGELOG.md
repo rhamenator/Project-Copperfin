@@ -2,10 +2,12 @@
   across both managed project scanners. `PROTECTED` and `HIDDEN`
   procedure/function methods, including abbreviated `PROC`, now retain
   qualified definitions, signatures, references, and rename inputs while the
-  same declarations remain excluded at global scope. Corrected combined head
-  `b3285feab` passes the warning-free four-mode Release harness and exact-head
-  Windows VSIX run `30528541049`; artifact `8753733157` was uploaded and #4883
-  is closed.
+  same declarations remain excluded at global scope. A Windows review then
+  exposed current-culture regex folding under `tr-TR`; corrective head
+  `1bdef1af2` makes every case-insensitive keyword regex in both scanners
+  culture-invariant. The process-first Turkish-culture regression, warning-free
+  four-mode Release harness, and exact-head Windows VSIX run `30529676324`
+  pass; artifact `8754203908` was uploaded and #4883 is reclosed.
 
 - 2026-07-30: Implemented #4882/#27 project language-service support for VFP's
   `PROC` abbreviation across both managed project scanners. Global routines

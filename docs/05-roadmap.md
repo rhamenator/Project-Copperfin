@@ -28,14 +28,15 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
-Current class-method discovery evidence includes #4883 at corrected combined
-product/test head `b3285feab`: both managed project scanners now recognize
+Current class-method discovery evidence includes #4883 at final corrective
+product/test head `1bdef1af2`: both managed project scanners now recognize
 class-only `PROTECTED` and `HIDDEN` procedure/function declarations, including
 `PROC`. Qualified definitions, signatures, references, and rename inputs are
-preserved without admitting global lookalikes. The local four-mode matrix and
-exact-head Windows VSIX run `30528541049` pass; artifact `8753733157` was
-uploaded. The child is closed, while broader G1 and RC validation remain
-separate.
+preserved without admitting global lookalikes. Every case-insensitive keyword
+regex is culture-invariant, with lowercase `tr-TR` coverage initialized before
+either scanner. The local four-mode matrix and exact-head Windows VSIX run
+`30529676324` pass; artifact `8754203908` was uploaded. The child is closed,
+while broader G1 and RC validation remain separate.
 
 Current VFP declaration-alias evidence includes #4882 at corrected combined
 product/test head `b3285feab`: both managed project scanners treat `PROC` and

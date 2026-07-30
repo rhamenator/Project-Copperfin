@@ -2,16 +2,19 @@
 
 ## Current State
 
-The #4883/#27 visibility-qualified project-method slice is complete at corrected
-combined product/test head `b3285feab`. Both managed project scanners now
+The #4883/#27 visibility-qualified project-method slice is complete at final
+corrective product/test head `1bdef1af2`. Both managed project scanners now
 discover class-only `PROTECTED` and `HIDDEN` procedure/function declarations,
 including abbreviated `PROC`. Qualified definitions, localized signatures,
 member references, and rename inputs remain intact; visibility-qualified lines
-outside `DEFINE CLASS` stay absent from globals. The warning-free full harness
-passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
-Exact-head Windows VSIX run `30528541049` passes all managed/net472 steps and
-uploads artifact `8753733157` with SHA-256
-`af3f8052f3bab584393e78f262218d91092fd4e1b0aad17b046df3f6f3f4e947`.
+outside `DEFINE CLASS` stay absent from globals. All case-insensitive ASCII VFP
+keyword regexes in both scanners are culture-invariant, and a process-first
+`tr-TR` regression proves lowercase class/function recognition before static
+regex initialization. The warning-free full harness passes locally under
+default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`. Exact-head Windows VSIX
+run `30529676324` passes all managed/net472 steps and uploads artifact
+`8754203908` with SHA-256
+`c2768a71bde3ea340a41195295dab518527e70f0d713a1f8ff112e23bf10ac1b`.
 Issue #4883 is closed; broader #27/#112 and RC validation remain open. Runtime
 visibility/stack behavior, catalogs, package/debug, and trust are unchanged.
 

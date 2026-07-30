@@ -37,9 +37,11 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `HIDDEN` procedure/function declarations, including `PROC`, through class-
   only patterns in both managed project scanners. Qualified definitions,
   following-line/inline signatures, member references, and rename inputs are
-  preserved; visibility-qualified globals remain rejected. The corrected
-  combined head `b3285feab` passes the local four-mode matrix and Windows VSIX
-  run `30528541049`; artifact `8753733157` was uploaded.
+  preserved; visibility-qualified globals remain rejected. Corrective head
+  `1bdef1af2` also makes all case-insensitive keyword regexes culture-invariant
+  and locks lowercase recognition under process-first `tr-TR`. The local
+  four-mode matrix and Windows VSIX run `30529676324` pass; artifact
+  `8754203908` was uploaded.
 - Recent G1 VFP declaration-alias slice: `#4882` recognizes `PROC` and
   `PROCEDURE` through bounded, case-insensitive paths in both managed project
   scanners. Global and qualified class declarations retain signatures,
