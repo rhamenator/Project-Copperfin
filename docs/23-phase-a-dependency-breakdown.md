@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1 signature-highlighting slice: `#4884` anchors Visual Studio
+  parameter loci at actual declaration starts instead of unconstrained name
+  matches. Prefix-related names and later names repeated inside earlier default
+  expressions retain distinct highlights, while nested calls, quotes, bracket
+  expressions, and built-in optional brackets remain intact. Exact head
+  `f6d4f224c` passes the local four-mode matrix and Windows VSIX run
+  `30530040995`; artifact `8754358316` was uploaded.
 - Recent G1 class-method visibility slice: `#4883` discovers `PROTECTED` and
   `HIDDEN` procedure/function declarations, including `PROC`, through class-
   only patterns in both managed project scanners. Qualified definitions,
