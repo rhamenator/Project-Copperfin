@@ -2321,7 +2321,7 @@ internal static partial class Program
     private static void TestSignatureParameterLociUseDeclarationStarts()
     {
         const string projectSignature =
-            "Configure(tcLongName, tc = Normalize(tcLater), tcLater, taBounds = [1, 2], tcTail)";
+            "Configure(tcLongName, tc = Normalize(tcLater), tcLater, taBounds = [1, tcTail], tcTail)";
         var searchStart = projectSignature.IndexOf('(') + 1;
 
         var longNameStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
@@ -2343,7 +2343,7 @@ internal static partial class Program
                shortNameStart == projectSignature.IndexOf("tc =", StringComparison.Ordinal) &&
                laterNameStart == projectSignature.LastIndexOf("tcLater", StringComparison.Ordinal) &&
                boundsStart == projectSignature.IndexOf("taBounds", StringComparison.Ordinal) &&
-               tailStart == projectSignature.IndexOf("tcTail", StringComparison.Ordinal),
+               tailStart == projectSignature.LastIndexOf("tcTail", StringComparison.Ordinal),
             "signature parameter loci should use declaration starts instead of prefixes, nested mentions, or bracket-expression commas");
 
         const string builtInSignature = "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])";

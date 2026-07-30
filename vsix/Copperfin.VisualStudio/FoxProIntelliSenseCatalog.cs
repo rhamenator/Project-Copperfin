@@ -397,6 +397,8 @@ internal static class FoxProIntelliSenseCatalog
         if (openParen >= 0)
         {
             var parenthesisDepth = 1;
+            var bracketDepth = 0;
+            var braceDepth = 0;
             var quote = '\0';
             var atParameterStart = true;
 
@@ -452,7 +454,23 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     parenthesisDepth--;
                 }
-                else if (value == ',' && parenthesisDepth == 1)
+                else if (value == '[')
+                {
+                    bracketDepth++;
+                }
+                else if (value == ']' && bracketDepth > 0)
+                {
+                    bracketDepth--;
+                }
+                else if (value == '{')
+                {
+                    braceDepth++;
+                }
+                else if (value == '}' && braceDepth > 0)
+                {
+                    braceDepth--;
+                }
+                else if (value == ',' && parenthesisDepth == 1 && bracketDepth == 0 && braceDepth == 0)
                 {
                     atParameterStart = true;
                 }
