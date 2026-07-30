@@ -75,6 +75,17 @@ action is to rescan remaining portable numeric parser boundaries against live
 issue state and create or select the next prompt-sized child before coding.
 This is focused evidence, not full RC evidence.
 
+The #4857/#3217 `SET REPROCESS` retry-policy slice is
+implementation-complete locally. Numeric retry budgets now use complete
+invariant integer parsing, so grouped, decimal, trailing, negative, and
+overflowing text fails closed with zero retries instead of inheriting a valid
+numeric prefix. Automatic aliases, zero, valid positive budgets,
+per-data-session state, localized timeout errors, and invariant lock telemetry
+remain unchanged. The focused table-mutation suite passes under default,
+`pt_BR.UTF-8`, and `de_DE.UTF-8` on macOS/AppleClang. Linux and Windows/MSVC
+review remains required before #4857 can close. This is focused evidence, not
+full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

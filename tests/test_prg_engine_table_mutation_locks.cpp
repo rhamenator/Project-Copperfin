@@ -274,6 +274,18 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
         "    lReplaceBlocked = .T.\n"
         "    cReplaceError = err_text.Message\n"
         "ENDTRY\n"
+        "SET REPROCESS TO 1.234\n"
+        "cGroupedReprocess = SET('REPROCESS')\n"
+        "lGroupedConflict = RLOCK()\n"
+        "SET REPROCESS TO '2abc'\n"
+        "cTrailingReprocess = SET('REPROCESS')\n"
+        "lTrailingConflict = RLOCK()\n"
+        "SET REPROCESS TO -1\n"
+        "cNegativeReprocess = SET('REPROCESS')\n"
+        "lNegativeConflict = RLOCK()\n"
+        "SET REPROCESS TO '999999999999999999999999999999'\n"
+        "cOverflowReprocess = SET('REPROCESS')\n"
+        "lOverflowConflict = RLOCK()\n"
         "SET REPROCESS TO 0\n"
         "lZeroConflict = RLOCK()\n"
         "SET DATASESSION TO 1\n"
@@ -306,6 +318,14 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
     check("ldefaultconflict", "false");
     check("lretryconflict", "false");
     check("lreplaceblocked", "true");
+    check("cgroupedreprocess", "1.234");
+    check("lgroupedconflict", "false");
+    check("ctrailingreprocess", "2ABC");
+    check("ltrailingconflict", "false");
+    check("cnegativereprocess", "-1");
+    check("lnegativeconflict", "false");
+    check("coverflowreprocess", "999999999999999999999999999999");
+    check("loverflowconflict", "false");
     check("lzeroconflict", "false");
     check("lafterrelease", "true");
     check("lafterreleasestate", "true");
@@ -371,6 +391,14 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
            "SET REPROCESS TO 2 should perform two retry attempts before RLOCK() fails");
     expect(count_retry_events("REPLACE recno=1 reprocess=2") == 2,
            "REPLACE under lock contention should honor the per-session REPROCESS retry budget");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=1.234") == 0,
+           "grouped/decimal REPROCESS text should fail closed without prefix-derived retries");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=2ABC") == 0,
+           "trailing REPROCESS text should fail closed without prefix-derived retries");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=-1") == 0,
+           "negative REPROCESS text should fail closed without inventing a retry budget");
+    expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=999999999999999999999999999999") == 0,
+           "overflowing REPROCESS text should fail closed without inventing a retry budget");
     expect(count_retry_events("PeopleTwo RLOCK recno=1 reprocess=0") == 0,
            "SET REPROCESS TO 0 should not busy-spin before RLOCK() fails");
 

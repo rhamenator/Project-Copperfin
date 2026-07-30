@@ -52,16 +52,13 @@
                 return {.display_value = "AUTOMATIC", .retry_budget = 8U};
             }
 
-            try
-            {
-                const long long parsed = std::stoll(trimmed);
-                return {.display_value = std::to_string(std::max<long long>(0LL, parsed)),
-                        .retry_budget = static_cast<std::size_t>(std::max<long long>(0LL, parsed))};
-            }
-            catch (...)
+            const auto parsed = copperfin::platform::try_parse_invariant_integer<long long>(trimmed);
+            if (!parsed.has_value() || *parsed < 0LL)
             {
                 return {.display_value = uppercase_copy(trimmed), .retry_budget = 0U};
             }
+            return {.display_value = std::to_string(*parsed),
+                    .retry_budget = static_cast<std::size_t>(*parsed)};
         }
 
         void release_shared_lock_ownership_for_cursor(const CursorState &cursor,

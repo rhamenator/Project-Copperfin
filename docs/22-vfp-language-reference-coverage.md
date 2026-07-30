@@ -1,5 +1,14 @@
 # VFP Language Reference Coverage
 
+- `SET REPROCESS` retry-policy culture boundary (2026-07-29, #4857 under
+  #3217): numeric retry budgets now require complete invariant integer tokens.
+  Grouped, decimal, trailing, negative, and overflowing policy text fails
+  closed with zero retries instead of using a valid numeric prefix. Automatic
+  aliases, zero, valid positive budgets, per-data-session state, localized
+  timeout errors, and invariant lock telemetry remain unchanged. Focused
+  macOS/AppleClang tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - Asset-inspector JSON culture boundary (2026-07-29, #4853 under #109): DBC
   record indices and DBF numeric metadata now serialize through a classic
   locale, keeping machine-readable JSON integers invariant when the host uses

@@ -1,3 +1,11 @@
+- 2026-07-29: Hardened #4857/#3217 `SET REPROCESS` retry-budget parsing.
+  Numeric policies now require complete invariant integer tokens, so grouped,
+  decimal, trailing, negative, and overflowing text cannot become a different
+  retry count. Automatic aliases, zero, valid positive budgets, per-session
+  state, localized timeout errors, and invariant lock telemetry remain
+  unchanged. Focused macOS/AppleClang lock-policy tests pass under default,
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux and Windows review remains required.
+
 - 2026-07-29: Hardened #4855/#3217 native list-control selector parsing.
   `Selected()`, `SelectedID()`, `List()`, `ListItem()`, `ItemData()`,
   `IndexToItemID()`, and `ItemIDToIndex()` now require complete invariant
