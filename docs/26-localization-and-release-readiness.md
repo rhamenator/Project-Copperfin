@@ -111,14 +111,20 @@ hosted release evidence remains separate.
 keys. Generated wrapper source lines and parameter counts are invariant C++
 numeric literals, now explicitly isolated from the host locale. The focused
 runtime-pipeline target passes under default, `pt_BR.UTF-8`, and
-`de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance and exact-head hosted
-evidence remain pending.
+`de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC. Issue #4869 is
+closed; exact-head hosted release evidence remains separate.
 
 #4870 at product head `531bbec70` adds no user-facing text or catalog keys.
 DIF `VECTORS`/`TUPLES` dimensions are invariant interchange metadata and now
 explicitly use the classic locale. The focused data-I/O target passes under
-default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC acceptance
-and exact-head hosted evidence remain pending.
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and Windows/MSVC;
+AppleClang acceptance and exact-head hosted evidence remain pending.
+
+#4871 at product head `a55a35868` adds no user-facing text or catalog keys.
+APP archive byte payloads are invariant lowercase hexadecimal machine data and
+now explicitly use the classic locale. The focused runtime-pipeline target
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang/MSVC
+acceptance and exact-head hosted evidence remain pending.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
