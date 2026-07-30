@@ -28,6 +28,16 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current standalone Open evidence includes #4890 at product/test head
+`9e4b5a286`: localized File > Open exposes Ctrl+O through the existing picker
+without changing filters, path admission, tab identity, or Close Ctrl+F4. The
+focused eight-assertion UI smoke and exact-head Linux managed-UI run
+`30538156592` plus VSIX run `30538156618` pass; artifacts `8757552969` and
+`8757588016` retain their GitHub SHA-256 digests. Native Windows validation also
+passes all eight assertions under default, pt_BR.UTF-8, and de_DE.UTF-8 locale
+modes. Child #4890 is closed; broader #26/#112, platform-native menu semantics,
+and RC validation remain separate.
+
 Current standalone Undo evidence includes #4889 at product head `631e6b61a`
 and final combined test head `34d59811d`: localized Edit/Undo chrome delegates
 to the active shared editor's existing text and host-backed undo contracts.

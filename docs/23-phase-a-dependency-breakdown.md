@@ -33,6 +33,14 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent F2 standalone Open-shortcut slice: `#4890` gives localized File > Open
+  the conventional Ctrl+O accelerator through its unchanged picker handler.
+  Product/test head `9e4b5a286` preserves filters, path admission, document
+  identity, and Close Ctrl+F4 while passing the focused eight-assertion UI smoke
+  plus exact-head Linux managed-UI run `30538156592` and VSIX run `30538156618`;
+  artifacts `8757552969` and `8757588016` were uploaded. Native Windows passes
+  the eight-assertion smoke under default, pt_BR.UTF-8, and de_DE.UTF-8 locale
+  modes, closing the child while broader IDE and cross-platform work stays open.
 - Recent F2 standalone Undo-command slice: `#4889` adds localized Edit/Undo
   chrome and routes menu invocation through the active shared editor's existing
   undo contract. Ctrl+Z is additionally gated to document-tab focus and bypasses

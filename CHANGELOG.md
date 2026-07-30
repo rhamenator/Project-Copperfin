@@ -1,3 +1,13 @@
+- 2026-07-30: Implemented #4890/#26 standalone File > Open Ctrl+O routing at
+  product/test head `9e4b5a286`. The conventional Windows shortcut invokes the
+  unchanged localized picker path, preserving captions, filters, admission,
+  document identity, and Close Ctrl+F4. The focused eight-assertion real WinForms
+  smoke and warning-free Release build pass. Exact-head Linux managed-UI run
+  `30538156592` and VSIX run `30538156618` pass, uploading artifacts `8757552969`
+  and `8757588016`. Native Windows Release/net472 validation passes all eight
+  assertions under default, pt_BR.UTF-8, and de_DE.UTF-8 locale modes; #4890 is
+  closed while broader #26/#112 and cross-platform menu semantics remain open.
+
 - 2026-07-30: Implemented #4889/#26 standalone Studio Edit/Undo routing at
   product head `631e6b61a` and final combined test head `34d59811d`. Localized
   Edit/Undo chrome queries the active shared editor's existing undo contracts,

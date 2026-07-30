@@ -2,6 +2,21 @@
 
 ## Current State
 
+The #4890/#26 standalone Open-shortcut slice is implemented at product/test
+head `9e4b5a286`. Localized File > Open now exposes conventional Ctrl+O through
+the unchanged picker handler; captions, dialog filters, path admission, document
+identity, and Close Ctrl+F4 are unchanged. The focused real WinForms Open/Close
+smoke passes eight assertions across Spanish and pseudo-localization-ready shell
+state, and Release DesignerSmoke builds warning-free. Exact-head Linux managed-
+UI run `30538156592` passes and uploads artifact `8757552969` with SHA-256
+`e802ae935e8f9dedccebfa797554f8487eb85db415fbbf532e6869185f5cbd93`.
+VSIX run `30538156618` also passes and uploads artifact `8757588016` with SHA-
+256 `40b62e89baeae95120765a4001b9b6bf74d3df795b1292fe9c6b146ca9945063`.
+Native Windows Release/net472 validation passes all eight assertions under
+default, pt_BR.UTF-8, and de_DE.UTF-8 locale modes with clean teardown. #4890 is
+closed and accepted. Broader #26/#112, platform-native menu semantics, and RC
+validation remain open.
+
 The #4889/#26 standalone Undo-command slice is implemented at product head
 `631e6b61a` and final combined test head `34d59811d`. Copperfin Studio now has
 localized Edit/Undo chrome and Ctrl+Z routing through the active shared editor's
