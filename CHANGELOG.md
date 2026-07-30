@@ -1,3 +1,15 @@
+- 2026-07-30: Hardened #4863/#109 portable cursor XML numeric metadata.
+  `CURSORTOXML()` now emits field widths and decimal counts through the classic
+  locale, and `XMLTOCURSOR()` requires complete nonnegative invariant values
+  for both attributes before materialization. Partial, grouped, negative,
+  missing, and overflowing metadata now fails closed without creating a new
+  destination, mutating an existing DBF, changing its selected alias/record,
+  or emitting a false `runtime.xmltocursor` success event. Valid round trips,
+  verified-file admission, field/row order, post-parse width/decimal bounding,
+  XML names, event categories, and localized warnings remain unchanged. The
+  focused runtime-surface target passes under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux; cross-platform review remains required.
+
 - 2026-07-30: Hardened #4862/#109 persisted transaction recovery journal
   scalars. Journal writers now serialize nesting levels through the classic
   locale, and startup recovery requires the supported version, complete

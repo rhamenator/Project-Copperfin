@@ -2,6 +2,19 @@
 
 ## Current State
 
+The #4863/#109 portable cursor-XML numeric-metadata slice is implemented at
+product/test head `f4e480ea4`. `CURSORTOXML()` serializes field widths and
+decimal counts through the classic locale, while `XMLTOCURSOR()` requires both
+attributes to contain complete nonnegative invariant `std::size_t` text before
+materialization. Focused coverage drives every-digit grouping through a valid
+round trip and rejects partial, grouped, negative, missing, and overflowing
+metadata. Every malformed case returns zero without creating a new alias,
+mutating an existing destination DBF, changing its selected alias/record, or
+emitting `runtime.xmltocursor` success. The focused runtime-surface target
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux. AppleClang and
+MSVC review remain required before closing #4863. This is focused evidence,
+not full RC evidence.
+
 The #4862/#109 persisted transaction-recovery scalar slice is implementation-
 complete and cross-platform reviewed. Journal writers serialize nesting levels
 through the classic locale, while startup recovery requires version `1`, a
@@ -30,7 +43,8 @@ macOS/AppleClang passes the same three locale runs, and hosted Windows/MSVC run
 inventory `315/315`. Issue #4861 is closed as implementation-complete. This is
 focused evidence, not full RC evidence.
 
-Current-head release validation for product head `ca7889efa` is green for
+The immediately preceding terminal hosted matrix for product head `ca7889efa`
+is green for
 Linux Native (`30511406972`), macOS Native (`30511406973`), Linux Managed UI
 (`30511406936`), VSIX (`30511406957`, including the successful retry of one
 transient descendant-held-pipe test failure), standalone installers

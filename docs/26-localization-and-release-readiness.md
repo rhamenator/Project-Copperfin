@@ -23,8 +23,9 @@ Localized text must be separated from stable protocol values:
 ## Current Validation Evidence
 
 The latest broad implementation baseline is product head `93d44395f`; the
-latest product implementation head is `30ff4ec38` and the synchronized
-documentation branch is `ee7dd62dc`. Hosted Linux Native `30329037575` and
+latest product implementation head is `f4e480ea4`, while subsequent
+documentation-only coordination commits may advance the branch. Hosted Linux
+Native `30329037575` and
 macOS Native `30329037567` passed their native
 matrices, Linux managed UI `30329037628`, VSIX `30329037609`, installers
 `30329037566`, and the security supply-chain gate `30329037556` passed, and
@@ -57,6 +58,17 @@ Issue #4861 is closed as implementation-complete. The MVP RC gate remains open
 for the separately tracked safety, protected signing, and remaining hosted
 product evidence; the product head is distinct from documentation-only
 coordination commits.
+
+Subsequent invariant-machine-metadata corrections preserve the localization
+boundary. #4862 is closed after Linux, macOS/AppleClang, and Windows/MSVC each
+passed the transaction-journal target under default, `pt_BR.UTF-8`, and
+`de_DE.UTF-8`. #4863 at product head `f4e480ea4` adds no user-facing text or
+catalog keys: portable cursor XML attribute names and runtime event categories
+remain invariant, malformed field widths/decimal counts use the existing
+localized parse-warning path, and the focused runtime-surface target passes
+the same three locale environments on Linux. AppleClang and MSVC acceptance
+for #4863 remain pending; the exact-head hosted matrix is active and is not yet
+broad release evidence.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

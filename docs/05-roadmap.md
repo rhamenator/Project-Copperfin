@@ -118,9 +118,19 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `ca7889efa` (the current branch may
-also contain documentation-only coordination commits). The exact-head hosted
-matrix is green for Linux Native (`30511406972`), macOS Native
+The latest product implementation head is `f4e480ea4` (the current branch may
+also contain documentation-only coordination commits). Its exact-head
+Security Supply Chain gate (`30516083702`) is green; Linux Native
+(`30516083711`), macOS Native (`30516083726`), Windows Native
+(`30516083688`), Linux Managed UI (`30516083680`), Visual Studio VSIX
+(`30516083707`), standalone installers (`30516083689`), generated launcher
+(`30516083677`), Windows Environment/Executable Path (`30516083690`), Windows
+DECLARE ABI (`30516083720`), and executable paths (`30516083699`) are active
+and nonterminal. The focused runtime-surface target passes locally under
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; this is not a broad RC claim.
+
+The immediately preceding terminal hosted matrix at product head `ca7889efa`
+is green for Linux Native (`30511406972`), macOS Native
 (`30511406973`), Linux Managed UI (`30511406936`), Visual Studio VSIX
 (`30511406957`), standalone installers (`30511406950`), generated launcher
 (`30511406939`), Windows Environment/Executable Path (`30511406944`),
