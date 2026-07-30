@@ -16,15 +16,13 @@ internal static class Program
     private const string HoldOutputTreeArgument = "--hold-output-tree";
     private const string StartOutputHolderArgument = "--start-output-holder";
     private const int HelperLifetimeMilliseconds = 30000;
-    private const int HelperReadinessMilliseconds = 10000;
     private const int WindowsTimeoutFixtureMilliseconds = 10000;
 
     [STAThread]
     private static int Main(string[] args)
     {
-        if (args.Length == 2 && string.Equals(args[0], HoldOutputHandlesArgument, StringComparison.Ordinal))
+        if (args.Length == 1 && string.Equals(args[0], HoldOutputHandlesArgument, StringComparison.Ordinal))
         {
-            File.WriteAllText(args[1], Process.GetCurrentProcess().Id.ToString());
             Thread.Sleep(HelperLifetimeMilliseconds);
             return 0;
         }
@@ -34,11 +32,12 @@ internal static class Program
             Console.WriteLine("before-timeout-stdout");
             Console.Error.WriteLine("before-timeout-stderr");
             File.WriteAllText(args[1], Process.GetCurrentProcess().Id.ToString());
-            using var grandchild = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument, args[2]));
+            using var grandchild = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument));
             if (grandchild is null)
             {
                 return 2;
             }
+            File.WriteAllText(args[2], grandchild.Id.ToString());
             grandchild.WaitForExit();
             return grandchild.ExitCode;
         }
@@ -46,10 +45,13 @@ internal static class Program
         if (args.Length == 2 && string.Equals(args[0], StartOutputHolderArgument, StringComparison.Ordinal))
         {
             Console.WriteLine("successful-stdout");
-            using var descendant = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument, args[1]));
-            return descendant is not null && WaitForProcessIdFile(args[1], HelperReadinessMilliseconds)
-                ? 0
-                : 2;
+            using var descendant = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument));
+            if (descendant is null)
+            {
+                return 2;
+            }
+            File.WriteAllText(args[1], descendant.Id.ToString());
+            return 0;
         }
 
         if (Environment.OSVersion.Platform != PlatformID.Win32NT)
@@ -134,14 +136,16 @@ internal static class Program
             Assert(result.Started, "net472 process runner should start the successful descendant fixture");
             Assert(!result.TimedOut,
                 "net472 process runner should preserve successful completion while a descendant retains output handles");
+            Assert(TryReadProcessId(descendantPidPath, out descendantPid),
+                "net472 successful descendant fixture should record its PID");
             Assert(result.ExitCode == 0,
-                "net472 process runner should preserve the successful root exit code");
+                "net472 process runner should preserve the successful root exit code (actual=" + result.ExitCode + ")");
             Assert(result.StandardOutput.Contains("successful-stdout"),
                 "net472 process runner should retain output captured before successful root completion");
             Assert(stopwatch.ElapsedMilliseconds < WindowsTimeoutFixtureMilliseconds,
                 "net472 process runner should bound output draining without converting success into a timeout");
-            Assert(TryReadProcessId(descendantPidPath, out descendantPid),
-                "net472 successful descendant fixture should record its PID");
+            Assert(!WaitForProcessExit(descendantPid, 250),
+                "net472 successful descendant should still hold inherited output handles after the root exits");
         }
         finally
         {
@@ -151,12 +155,16 @@ internal static class Program
 
     private static ProcessStartInfo CreateSelfStartInfo(
         string mode,
-        string firstPath,
+        string? firstPath = null,
         string? secondPath = null,
         string? workingDirectory = null)
     {
         var executablePath = Assembly.GetExecutingAssembly().Location;
-        var arguments = QuoteArgument(mode) + " " + QuoteArgument(firstPath);
+        var arguments = QuoteArgument(mode);
+        if (firstPath is { Length: > 0 })
+        {
+            arguments += " " + QuoteArgument(firstPath);
+        }
         if (secondPath is { Length: > 0 })
         {
             arguments += " " + QuoteArgument(secondPath);
@@ -177,20 +185,6 @@ internal static class Program
     private static string QuoteArgument(string value)
     {
         return "\"" + value.Replace("\"", "\\\"") + "\"";
-    }
-
-    private static bool WaitForProcessIdFile(string path, int timeoutMilliseconds)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        while (stopwatch.ElapsedMilliseconds < timeoutMilliseconds)
-        {
-            if (TryReadProcessId(path, out _))
-            {
-                return true;
-            }
-            Thread.Sleep(25);
-        }
-        return false;
     }
 
     private static bool TryReadProcessId(string path, out int processId)
