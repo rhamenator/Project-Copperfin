@@ -29,12 +29,14 @@ Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
 Current class-property navigation evidence includes #4887 at product/test head
-`3f7eb859f`: Project Insights retains qualified definitions and dotted
+`9f8f425cf`: Project Insights retains qualified definitions and dotted
 references, rename preview normalizes only unique property names, and ambiguous,
 call-shaped, quoted, bracket-string, or comment lookalikes stay excluded.
-Corrective head `ded8a7ce8` preserves executable array-subscript references, but
-new evidence shows VFP `TEXT ... ENDTEXT` bodies can still seed false references.
-The child is reopened until block-text state and corrected-head evidence land;
+Executable array-subscript references remain visible, while bounded VFP
+`TEXT ... ENDTEXT` bodies—including conservative unterminated bodies through
+EOF—cannot seed references or rename occurrences. The warning-free four-mode
+matrix, independent review, and exact combined-head Windows VSIX run
+`30534924760` pass; artifact `8756289486` was uploaded. The child is reclosed;
 broader IDE parents and RC validation remain separate.
 
 Current standalone project-command evidence includes #4888 at exact product/

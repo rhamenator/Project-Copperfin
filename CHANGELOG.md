@@ -9,7 +9,7 @@
   evidence artifact `8755970713` have recorded SHA-256 digests; native Windows
   designer smoke and installer evidence remain in progress.
 
-- 2026-07-30: Implemented, then reopened, #4887/#28 project class-property references and rename
+- 2026-07-30: Implemented and finally corrected #4887/#28 project class-property references and rename
   preview. Project Insights now applies the same `DEFINE CLASS` routine-scope
   boundary as IntelliSense, records qualified property definitions, normalizes
   exact and uniquely resolvable dotted property uses, rejects ambiguous
@@ -20,11 +20,13 @@
   brackets from bracket-delimited strings, preserving references such as
   `laValues[THIS.RetryCount]` at corrective head `ded8a7ce8`. Windows review then
   demonstrated that dotted tokens inside VFP `TEXT ... ENDTEXT` block bodies
-  still become false references. Corrective head `845105554` now mirrors the
-  native parser's block boundary, while follow-up test head `9f8f425cf` locks
-  conservative behavior for unterminated blocks. The warning-free four-mode
-  macOS/Linux harness passes; #4887 remains open pending exact corrected-head
-  hosted and Windows review, superseding the original `3f7eb859f` evidence.
+  became false references. Head `845105554` adds bounded culture-invariant block-
+  text state and resumes after exact commented terminators; final test head
+  `9f8f425cf` locks conservative unterminated-block behavior through EOF. The
+  warning-free four-mode harness, independent Linux/macOS review, and exact combined-
+  head Windows VSIX run `30534924760` pass. Artifact `8756289486` has SHA-256
+  `d67c325b244169dd9c1ea1b8f3de911721f2f3d8feab8164238a7fa86f6629a9`;
+  #4887 is reclosed and original head `3f7eb859f` is superseded.
 
 - 2026-07-30: Completed #4886/#27/#28/#29 project class-property
   IntelliSense. The Visual Studio scanner now retains identifier assignments at

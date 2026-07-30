@@ -62,8 +62,9 @@ report/label fidelity) closed on 2026-07-24 — the newest closure in the whole
 repo. The cited D1/D2 and most G1/G2/G3 slices are also closed in live GitHub state,
 while lane F has substantial shipped host and utility-pane slices. F2 now also
 has localized standalone Build/Run/Debug menu routing at #4888, while the broader
-full-IDE parent stays open. G2 child #4887 is reopened for a demonstrated
-`TEXT ... ENDTEXT` false-reference gap. **What's left:** hosted Windows,
+full-IDE parent stays open. G2 child #4887 is reclosed at corrected combined
+head `9f8f425cf` after array-subscript and `TEXT ... ENDTEXT` reference fixes.
+**What's left:** hosted Windows,
 mounted-VFP9, and Visual Studio validation remain
 release-evidence gates for the completed implementation slices (per
 `agent-handoff.md`); the broader D, F, and G umbrella scopes remain open under

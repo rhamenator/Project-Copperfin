@@ -40,13 +40,15 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   `192ef78bd` passes focused portable UI, Release Studio, default/qps-ploc
   language, VSIX run `30534152607`, and Linux managed-UI run `30534152549`;
   artifacts `8755969821` and `8755970713` were uploaded.
-- Reopened G2 class-property navigation slice: `#4887` carries qualified project
+- Corrected G2 class-property navigation slice: `#4887` carries qualified project
   property definitions and safe dotted uses into Code References and rename
   preview. Exact/unique resolution rejects ambiguous trailing names; call-shaped
   members and string/comment lookalikes remain excluded. Corrective head
   `ded8a7ce8` preserves attached array-subscript uses without admitting bracket
-  strings, but `TEXT ... ENDTEXT` bodies remain a demonstrated false-reference
-  gap. Do not treat the original `3f7eb859f` hosted evidence as closure evidence.
+  strings; combined head `9f8f425cf` also excludes bounded and unterminated
+  `TEXT ... ENDTEXT` bodies while resuming after exact terminators. The local
+  four-mode matrix and Windows VSIX run `30534924760` pass; artifact
+  `8756289486` was uploaded. Original head `3f7eb859f` remains superseded.
 - Recent G1/G2/G3 class-property slice: `#4886` indexes identifier assignments
   at `DEFINE CLASS` scope as qualified project properties while routine state
   excludes method-local assignments. Localized property completions preserve

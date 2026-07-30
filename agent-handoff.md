@@ -18,8 +18,8 @@ Native Windows designer smoke run `30534349069` and installer run `30534152560`
 remain in progress. Issue #4888 is closed; broader #26/#112 and RC validation
 remain open.
 
-The #4887/#28 project class-property reference/rename slice is reopened after
-new compatibility evidence. Its original product/test head `3f7eb859f` records qualified property
+The #4887/#28 project class-property reference/rename slice is finally corrected
+at combined product/test head `9f8f425cf`. Its original implementation records qualified property
 definitions with the same class/routine boundary as IntelliSense and binds
 exact qualified or uniquely resolvable instance-style dotted uses to that
 symbol. Ambiguous trailing property names remain unbound. Call-shaped members,
@@ -27,12 +27,18 @@ quoted text, bracket strings, and trailing `&&` comments cannot fabricate
 property references; rename preview includes the declaration and normalized
 uses without changing existing method behavior. Corrective head `ded8a7ce8`
 retains executable array-subscript uses such as `laValues[THIS.RetryCount]`
-without admitting standalone bracket strings, and independent Linux/macOS
-review passes. A second demonstrated gap remains: dotted tokens inside VFP
-`TEXT ... ENDTEXT` block bodies can still become false references and rename
-occurrences. Keep #4887 open until block-text state, focused regression coverage,
-and corrected-head hosted evidence are complete; the original Windows artifact
-is superseded as closure evidence.
+without admitting standalone bracket strings. Head `845105554` adds culture-
+invariant bounded `TEXT ... ENDTEXT` state around all runtime-reference scanning,
+resumes after exact terminators with optional `&&` comments, and rejects
+`TEXTMERGE`/terminator near-matches; final test head `9f8f425cf` locks the
+conservative consume-through-EOF behavior of unterminated blocks. The warning-
+free full harness passes default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`;
+independent Linux and scoped Windows/macOS reviews pass. Exact combined-head
+Windows VSIX run `30534924760` passes all managed/net472 gates and uploads
+artifact `8756289486` with SHA-256
+`d67c325b244169dd9c1ea1b8f3de911721f2f3d8feab8164238a7fa86f6629a9`.
+Issue #4887 is reclosed; original head `3f7eb859f` is superseded as closure
+evidence, while broader IDE parents and RC validation remain open.
 
 The #4886/#27/#28/#29 project class-property IntelliSense slice is complete at
 product/test head `bad499421`. The Visual Studio project scanner now indexes
