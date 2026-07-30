@@ -7,6 +7,13 @@
   is explicitly not release evidence. No environment, reviewer, secret, signer,
   protected run, localized string, or machine-readable package contract is
   created or changed by this repository slice; those remain #4409 authority.
+  Exact implementation head `833254e4c` passes hosted Linux/macOS Native
+  `316/316` including the focused provisioning contract, plus the VSIX,
+  managed-UI, installer, security/SBOM, executable-path, Windows
+  environment/path, and DECLARE ABI gates. Fresh permissive safety run
+  `30564527266` passes and
+  archives its non-secret report; this supporting evidence does not substitute
+  for the absent protected environment or approved signer execution.
 
 - 2026-07-30: Implemented release-trust audit slice #4894 under #4409. The
   protected Windows workflow now binds an explicit approved signer ID to its

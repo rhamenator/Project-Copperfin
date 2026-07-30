@@ -75,7 +75,17 @@ create or configure the environment: a release administrator must add the
 reviewer, prevent self-review, restrict it to `main`, provision the two
 environment-scoped secrets, and approve the eventual run. The currently absent
 `release` environment therefore remains external #4409 authority, not an
-implementation fallback.
+implementation fallback. Exact implementation head `833254e4c` passes hosted
+Linux Native run `30564419861` (`316/316`, including the focused provisioning
+contract), macOS Native `30564419735` (`316/316`), VSIX `30564419963`, managed
+UI `30564420023`, installers
+`30564419633`, security/SBOM `30564419650`, executable-path `30564419838`,
+Windows environment/path `30564419899`, and DECLARE ABI `30564419640`. Fresh
+permissive safety run `30564527266` passes for #4895 and uploads report artifact
+`8768264112`; GitHub's archive digest is
+`a5516299a05a31c1d56663e0d88493f8d699c75ba54cf95a8589f160bce44700`,
+and the report file SHA-256 is
+`512bd869a4c2d5f4865fa0be582a43560fa75a74e67bc90cc7622add99588a6e`.
 
 Do not declare the MVP RC released or advance the active queue into v1 yet.
 Issue #4403 still requires a genuinely independent arm's-length safety reviewer,

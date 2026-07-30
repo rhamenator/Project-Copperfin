@@ -56,7 +56,11 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   contract. Required reviewers, prevention of self-review, `main` branch
   restriction, environment-scoped approved secrets, and the actual approved
   run remain external #4409 configuration/evidence rather than repository
-  implementation.
+  implementation. Exact head `833254e4c` passes hosted Linux/macOS Native
+  `316/316` including the focused provisioning contract, plus the VSIX,
+  managed-UI, installer, security/SBOM, executable-path, Windows
+  environment/path, and DECLARE ABI gates; permissive safety run `30564527266`
+  also passes.
 - RC regression `#4893` removes the separate net472 fixture's nested shell and
   cold-child readiness races. Owning parents record helper PIDs immediately
   from `Process.Start`; native Windows stress passes `9/9`, exact VSIX

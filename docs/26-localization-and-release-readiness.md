@@ -65,7 +65,11 @@ Actions `release` environment. The release administrator must configure a
 required reviewer, prevent self-review, restrict the environment to `main`,
 and provision both approved secrets at environment scope. The repository does
 not perform or claim those authority-bearing steps, and no localized or
-machine-readable contract changes in this workflow-only slice.
+machine-readable contract changes in this workflow-only slice. Exact head
+`833254e4c` passes hosted Linux/macOS Native `316/316`, including the focused
+provisioning contract, plus the VSIX, managed-UI, installer, security/SBOM,
+executable-path, Windows environment/path, and DECLARE ABI gates. Permissive
+safety run `30564527266` also passes without advancing external #4409 authority.
 
 The latest broad implementation baseline is product head `93d44395f`; the
 latest product implementation/test head is `f0c9e06e2`, while subsequent
