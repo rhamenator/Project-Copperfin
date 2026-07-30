@@ -88,6 +88,15 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages() {
     expect(missing_order.message == "Requested order does not exist",
         "missing order error should route through the default locale catalog");
 
+    const auto overflowing_order = run_error_script(
+        "overflowing_order",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 999999999999999999999\n");
+    expect(overflowing_order.reason == copperfin::runtime::DebugPauseReason::error,
+        "SET ORDER with an overflowing numeric selector should pause with an error");
+    expect(overflowing_order.message == "Requested order does not exist",
+        "SET ORDER overflow should use the existing missing-order diagnostic");
+
     const auto missing_tag = run_error_script(
         "missing_tag",
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
