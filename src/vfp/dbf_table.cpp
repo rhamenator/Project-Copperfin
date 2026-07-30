@@ -517,16 +517,27 @@ std::optional<std::int64_t> parse_scaled_currency_value(const std::string& value
         return std::nullopt;
     }
 
-    constexpr long long scale = 10000LL;
-    if (whole > (std::numeric_limits<long long>::max() / scale)) {
+    constexpr std::uint64_t scale = 10000U;
+    const std::uint64_t magnitude_limit = negative
+        ? static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()) + 1U
+        : static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max());
+    const std::uint64_t whole_magnitude = static_cast<std::uint64_t>(whole);
+    const std::uint64_t fractional_magnitude = static_cast<std::uint64_t>(fractional);
+    if (whole_magnitude > magnitude_limit / scale) {
         return std::nullopt;
     }
-
-    long long scaled = (whole * scale) + fractional;
-    if (negative) {
-        scaled = -scaled;
+    const std::uint64_t scaled_whole = whole_magnitude * scale;
+    if (fractional_magnitude > magnitude_limit - scaled_whole) {
+        return std::nullopt;
     }
-    return static_cast<std::int64_t>(scaled);
+    const std::uint64_t scaled_magnitude = scaled_whole + fractional_magnitude;
+    if (negative) {
+        if (scaled_magnitude == magnitude_limit) {
+            return std::numeric_limits<std::int64_t>::min();
+        }
+        return -static_cast<std::int64_t>(scaled_magnitude);
+    }
+    return static_cast<std::int64_t>(scaled_magnitude);
 }
 
 std::optional<std::pair<std::uint32_t, std::uint32_t>> parse_datetime_storage_value(const std::string& value) {

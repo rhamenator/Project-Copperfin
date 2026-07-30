@@ -2694,9 +2694,36 @@ void test_currency_field_boundary_values() {
            "GAP-01: max positive currency boundary should be accepted");
 
     const auto replace_min = copperfin::vfp::replace_record_field_value(
-        table_path.string(), 1U, "BALANCE", "-922337203685477.5807");
+        table_path.string(), 1U, "BALANCE", "-922337203685477.5808");
     expect(replace_min.ok,
-           "GAP-01: max negative currency boundary should be accepted");
+           "#4866: minimum negative currency boundary should be accepted");
+
+    const auto boundary_bytes = read_binary_file(table_path);
+    const auto reject_positive_overflow = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "BALANCE", "922337203685477.5808");
+    expect(!reject_positive_overflow.ok,
+           "#4866: one scaled unit above the positive currency boundary should be rejected");
+    expect(read_binary_file(table_path) == boundary_bytes,
+           "#4866: rejected positive currency overflow should leave the DBF byte-for-byte unchanged");
+
+    const auto reject_negative_overflow = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 1U, "BALANCE", "-922337203685477.5809");
+    expect(!reject_negative_overflow.ok,
+           "#4866: one scaled unit below the negative currency boundary should be rejected");
+    expect(read_binary_file(table_path) == boundary_bytes,
+           "#4866: rejected negative currency overflow should leave the DBF byte-for-byte unchanged");
+
+    const fs::path rejected_positive_create_path = temp_dir / "rejected_positive.dbf";
+    const auto reject_positive_create = copperfin::vfp::create_dbf_table_file(
+        rejected_positive_create_path.string(), fields, {{"1", "922337203685477.5808"}});
+    expect(!reject_positive_create.ok && !fs::exists(rejected_positive_create_path),
+           "#4866: positive currency overflow should not materialize a new DBF");
+
+    const fs::path rejected_negative_create_path = temp_dir / "rejected_negative.dbf";
+    const auto reject_negative_create = copperfin::vfp::create_dbf_table_file(
+        rejected_negative_create_path.string(), fields, {{"1", "-922337203685477.5809"}});
+    expect(!reject_negative_create.ok && !fs::exists(rejected_negative_create_path),
+           "#4866: negative currency overflow should not materialize a new DBF");
 
     const std::locale comma_locale(std::locale::classic(), new comma_decimal_numpunct());
     scoped_global_locale locale_guard(comma_locale);
@@ -2707,8 +2734,8 @@ void test_currency_field_boundary_values() {
         parse_result.table.records[1].values.size() >= 2U) {
         expect(parse_result.table.records[0].values[1].display_value == "922337203685477.5807",
                "#4839: positive currency boundary should ignore host digit grouping");
-        expect(parse_result.table.records[1].values[1].display_value == "-922337203685477.5807",
-               "#4839: negative currency boundary should ignore host digit grouping");
+        expect(parse_result.table.records[1].values[1].display_value == "-922337203685477.5808",
+               "#4866: exact negative currency minimum should ignore host digit grouping");
     }
 
     fs::remove_all(temp_dir, ignored);
