@@ -139,8 +139,9 @@ release evidence remains separate.
 Studio-host JSON control escapes are invariant machine data and now use a
 shared platform helper with direct hexadecimal digit lookup. Direct
 every-digit coverage and a real builder-launch JSON diagnostic pass under
-default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux. AppleClang acceptance passes
-at channel seq1266; MSVC and exact-head hosted evidence remain pending.
+default, `pt_BR.UTF-8`, and `de_DE.UTF-8`. Linux seq1270, AppleClang seq1266,
+and Windows/MSVC seq1272 accept the focused contract with no dissent. Issue
+#4873 is closed; broader exact-head hosted release evidence remains separate.
 
 #4874 at product head `e70c89e87` and corrected direct regression head
 `765a31bc7` adds no user-facing text or catalog keys. It broadens only the
@@ -158,8 +159,9 @@ exact components retain precedence, a unique ordinal-ignore-case component
 preserves actual spelling, and ambiguity fails closed. Symbol names,
 descriptions, completion kinds, package/runtime/debug behavior, and trust
 boundaries remain unchanged. The focused Release managed harness passes on
-Linux, and exact-head Windows VSIX run `30522772118` passes the full managed
-suite. Issue #4875 is closed; broader #27 remains open.
+Linux, exact-head Windows VSIX run `30522772118` passes the full managed suite,
+and macOS seq1273 accepts the actual-spelling correction. Issue #4875 is
+closed; broader #27 remains open.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its

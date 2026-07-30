@@ -14,8 +14,10 @@ enumeration cannot satisfy the assertions. The Release
 VSIX run `30522772118` rebuilt the extension, passed the full managed
 language-service and adjacent suites, and uploaded artifact `8751476868` with
 SHA-256 `e058e58a4c28959f7e081c03bc4ecaf74b3e18560d68137c26fd767aba18459a`.
-Issue #4875 is closed; broader #27 remains open. No user-facing text, catalogs,
-package, runtime, debug, or trust contract changed.
+MacOS seq1273 independently accepts the actual-spelling correction, including
+reproducing the predecessor failure on a case-insensitive volume. Issue #4875
+is closed; broader #27 remains open. No user-facing text, catalogs, package,
+runtime, debug, or trust contract changed.
 
 The #4874/#27 editor-symbol include slice is implemented at product head
 `e70c89e87`, with corrected direct regression head `765a31bc7`. The
@@ -45,10 +47,9 @@ requires `--unknown\\u001fvalue`, rejects the raw control byte, and preserves
 exit status 2. Full default `test_studio_host_json` (418.61s) and
 `test_platform_models` (1.37s) pass; the exact diagnostic and platform-model
 coverage also pass sequentially under `pt_BR.UTF-8` and `de_DE.UTF-8`.
-AppleClang read-only review passes at channel seq1266. MSVC review remains
-required before closing #4873.
-No user-facing text or catalog keys changed. This is focused evidence, not
-full RC evidence.
+Linux seq1270, AppleClang seq1266, and Windows/MSVC seq1272 accept the focused
+contract with no dissent. Issue #4873 is closed. No user-facing text or catalog
+keys changed. This is focused evidence, not full RC evidence.
 
 The #4872/#108 `NEWID()` UUID-text slice is implementation-complete and
 cross-platform reviewed at exact product/test

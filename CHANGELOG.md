@@ -6,8 +6,8 @@
   closed. All fixture headers are outside the project root, and the Release
   language-service harness passes on Linux. Exact-head Windows VSIX run
   `30522772118` rebuilt the extension, passed the full managed suite, and
-  uploaded artifact `8751476868`; #4875 is closed while broader #27 remains
-  open.
+  uploaded artifact `8751476868`; macOS seq1273 independently accepts the
+  actual-spelling correction. #4875 is closed while broader #27 remains open.
 
 - 2026-07-30: Implemented #4874/#27 editor symbol discovery for common
   unquoted VFP `#INCLUDE` operands. Direct and recursively included headers now
@@ -30,8 +30,9 @@
   control, NUL, `0x1f`, and UTF-8 handling, while a real builder-launch JSON
   diagnostic requires `--unknown\\u001fvalue` with no raw control byte. The
   focused platform-model and Studio-host JSON coverage passes under default,
-  `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; AppleClang review passes at channel
-  seq1266 and MSVC review remains required.
+  `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux seq1270, AppleClang seq1266, and
+  Windows/MSVC seq1272 accept the contract with no dissent, and #4873 is
+  closed.
 
 - 2026-07-30: Hardened #4872/#108 `NEWID()` UUID text against grouped host
   locales. UUID formatting now uses the classic locale, and an every-digit

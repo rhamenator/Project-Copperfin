@@ -301,8 +301,9 @@ Follow-on G1 child #4875 at exact product/test head `e41325472` aligns external
 and recursively external editor include lookup with VFP path casing semantics:
 exact filesystem components win, one unique case-folded match is accepted with
 actual spelling, and ambiguity fails closed. The focused Release managed
-harness passes on Linux, and exact-head Windows VSIX run `30522772118` passes
-the full managed suite. Issue #4875 is closed; broader #27 remains open.
+harness passes on Linux, exact-head Windows VSIX run `30522772118` passes the
+full managed suite, and macOS seq1273 accepts the actual-spelling correction.
+Issue #4875 is closed; broader #27 remains open.
 
 **The letter "B" was never assigned as a root-issue theme.** Unlike C through
 J, no umbrella issue was ever opened with a "B" prefix. The only three
