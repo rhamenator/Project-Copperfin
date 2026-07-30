@@ -4,8 +4,10 @@
   actual matched path spelling; direct and recursive external headers resolve,
   exact case wins over a case-colliding sibling, and non-exact ambiguity fails
   closed. All fixture headers are outside the project root, and the Release
-  language-service harness passes on Linux. Exact-head Windows VSIX and
-  cross-platform review remain pending.
+  language-service harness passes on Linux. Exact-head Windows VSIX run
+  `30522772118` rebuilt the extension, passed the full managed suite, and
+  uploaded artifact `8751476868`; #4875 is closed while broader #27 remains
+  open.
 
 - 2026-07-30: Implemented #4874/#27 editor symbol discovery for common
   unquoted VFP `#INCLUDE` operands. Direct and recursively included headers now
@@ -16,9 +18,10 @@
   ordinary project header enumeration; corrected head `765a31bc7` moves the
   direct and recursive headers outside the project root so only the unquoted
   scanner can discover them. The Release language-service harness passes on
-  Linux. Earlier Windows VSIX run `30522120280` and macOS seq1268 accepted the
-  product change but predate this corrected fixture; #4874 is reopened pending
-  exact-head hosted Windows validation.
+  Linux. MacOS seq1268 accepts the product change, and exact-head Windows VSIX
+  run `30522772118` passes the corrected external-chain fixture in the full
+  managed suite; #4874 is reclosed on direct evidence while broader #27
+  remains open.
 
 - 2026-07-30: Hardened #4873/#112 Studio-host JSON control escaping against
   grouped host locales. A shared platform helper now emits control-byte

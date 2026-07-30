@@ -11,7 +11,10 @@ exact match wins, while a non-exact case-fold ambiguity admits neither header.
 Every fixture header lives outside the project root, so ordinary project
 enumeration cannot satisfy the assertions. The Release
 `Copperfin.LanguageServiceTests` harness passes on Linux. Exact-head Windows
-VSIX and cross-platform review remain pending. No user-facing text, catalogs,
+VSIX run `30522772118` rebuilt the extension, passed the full managed
+language-service and adjacent suites, and uploaded artifact `8751476868` with
+SHA-256 `e058e58a4c28959f7e081c03bc4ecaf74b3e18560d68137c26fd767aba18459a`.
+Issue #4875 is closed; broader #27 remains open. No user-facing text, catalogs,
 package, runtime, debug, or trust contract changed.
 
 The #4874/#27 editor-symbol include slice is implemented at product head
@@ -26,10 +29,11 @@ found the original same-root fixture could be satisfied by ordinary project
 header enumeration, so the corrected fixture places both headers outside the
 project root and can only pass through the unquoted include scanner. The
 Release `Copperfin.LanguageServiceTests` harness passes on Linux with that
-direct evidence. Earlier Windows VSIX run `30522120280` and macOS seq1268
-accepted the product change but predate the corrected fixture; #4874 is
-reopened pending exact-head Windows VSIX validation. No user-facing text,
-catalogs, package, runtime, debug, or trust contract changed.
+direct evidence. MacOS seq1268 accepts the product change, and exact-head
+Windows VSIX run `30522772118` passes the corrected external-chain regression
+in the full managed suite. Issue #4874 is reclosed on direct evidence; broader
+#27 remains open. No user-facing text, catalogs, package, runtime, debug, or
+trust contract changed.
 
 The #4873/#112 Studio-host JSON-control-escape slice is implemented at exact
 product/test head `4a75d3273`. Studio-host string escaping now delegates to a
