@@ -125,10 +125,11 @@ matrix is green for Linux Native (`30511406972`), macOS Native
 (`30511406957`), standalone installers (`30511406950`), generated launcher
 (`30511406939`), Windows Environment/Executable Path (`30511406944`),
 Windows DECLARE ABI (`30511406975`), executable paths (`30511406982`), and
-Security Supply Chain (`30511407013`). Windows Native (`30511406940`) is still
-queued without a hosted runner, so it is not release evidence. The supply-chain
-lane produced exactly one non-expired `cyclonedx-sbom` artifact after #4847
-pinned Syft `v1.50.0`.
+Security Supply Chain (`30511407013`). Windows Native (`30511406940`) also
+passed `315/315` CTest cases at the exact product head; its focused
+`test_prg_engine_work_areas` target passed in `79.23s` under the per-test
+`180s` timeout. The supply-chain lane produced exactly one non-expired
+`cyclonedx-sbom` artifact after #4847 pinned Syft `v1.50.0`.
 
 #4846 generated-manifest provenance is accepted on Linux, macOS/AppleClang,
 and Windows/MSVC, and #4847's hosted SBOM gate is closed. #4621's hosted

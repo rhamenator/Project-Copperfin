@@ -12,8 +12,10 @@ areas and verifies the selection and alias map remain intact after the failed
 `SELECT 0`. The focused `test_prg_engine_work_areas` target passes sequentially
 under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, covering boundary
 selection, wrapped `USE ... IN 0`, alias state, exhaustion, and reselection.
-macOS/AppleClang and Windows/MSVC review remains required before closing #4861.
-This is focused evidence, not full RC evidence.
+macOS/AppleClang passes the same three locale runs, and hosted Windows/MSVC run
+`30511406940` passes the focused target in `79.23s` plus the full native
+inventory `315/315`. Issue #4861 is closed as implementation-complete. This is
+focused evidence, not full RC evidence.
 
 Current-head release validation for product head `ca7889efa` is green for
 Linux Native (`30511406972`), macOS Native (`30511406973`), Linux Managed UI
@@ -21,9 +23,10 @@ Linux Native (`30511406972`), macOS Native (`30511406973`), Linux Managed UI
 transient descendant-held-pipe test failure), standalone installers
 (`30511406950`), generated launcher (`30511406939`), Windows environment and
 executable paths (`30511406944`), Windows DECLARE ABI (`30511406975`),
-executable paths (`30511406982`), and security (`30511407013`). Windows Native
-(`30511406940`) remains queued for a hosted runner, so this is not complete
-Windows RC evidence and does not close #4861 or the release gates.
+executable paths (`30511406982`), security (`30511407013`), and Windows Native
+(`30511406940`, `315/315`). This exact-head matrix closes #4861's hosted native
+acceptance, but does not close the independent safety, protected signing, or
+remaining hosted product release gates.
 
 The #4850/#109 runtime asset-record metadata slice is
 implementation-complete and cross-platform reviewed. The portable

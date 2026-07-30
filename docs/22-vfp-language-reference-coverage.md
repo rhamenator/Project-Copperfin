@@ -10,8 +10,9 @@
   sentinel. Focused work-area coverage fills all 32,767 areas and preserves
   explicit-boundary selection, automatic `USE ... IN 0` placement, alias state,
   exhaustion state, and stable reselection under default, `pt_BR.UTF-8`, and
-  `de_DE.UTF-8` on Linux. macOS/AppleClang and Windows/MSVC review remains
-  required.
+  `de_DE.UTF-8` on Linux and macOS/AppleClang. Hosted Windows/MSVC run
+  `30511406940` passes the focused target in `79.23s` and the complete native
+  inventory `315/315`; #4861 is closed as implementation-complete.
 
 - Numeric work-area designator culture boundary (2026-07-29, #4860 under
   #3217): mutable and const cursor lookup, `USE ... IN`, `SELECT`, and numeric

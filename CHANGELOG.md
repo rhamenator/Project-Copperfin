@@ -5,8 +5,10 @@
   through the existing localized target diagnostic. Exhaustion now fails
   without replacing the previously selected work area with the internal zero
   sentinel. Focused work-area tests, including all 32,767 occupied areas,
-  pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux;
-  macOS/AppleClang and Windows/MSVC review remains required.
+  pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and
+  macOS/AppleClang. Hosted Windows/MSVC run `30511406940` passes the focused
+  target in `79.23s` and the full native suite `315/315`, closing #4861 as
+  implementation-complete.
 
 - 2026-07-29: Hardened #4860/#3217 numeric work-area designators. Mutable and
   const cursor lookup, `USE ... IN`, `SELECT`, and numeric `SET ORDER` now use

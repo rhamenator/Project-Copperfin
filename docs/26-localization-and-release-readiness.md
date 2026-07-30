@@ -51,10 +51,12 @@ head `ca7889efa` under #4861. Linux Native (`30511406972`) and macOS Native
 (`30511406973`) passed the exact corrected source/test head; the focused
 regression fills all 32,767 bounded work areas and verifies that failed
 allocation preserves the prior selection and alias map. The corresponding
-Windows Native workflow (`30511406940`) remains queued without a hosted
-runner, and the independent Windows/MSVC review is still outstanding. This
-pending evidence means #4861 and the MVP RC gate remain open; the product head
-is distinct from documentation-only coordination commits.
+Windows Native workflow (`30511406940`) passed `315/315` CTest cases, including
+the focused work-area target in `79.23s` under the per-test `180s` timeout.
+Issue #4861 is closed as implementation-complete. The MVP RC gate remains open
+for the separately tracked safety, protected signing, and remaining hosted
+product evidence; the product head is distinct from documentation-only
+coordination commits.
 
 Subsequent focused runtime/package slices are independently tracked rather
 than silently folded into the broad baseline. #4750 is closed after its
