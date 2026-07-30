@@ -29,13 +29,14 @@ Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
 Current signature-highlighting evidence includes #4884 at final product/test
-head `4f53d7962`: Visual Studio parameter loci advance through real top-level
+head `05bd74dc8`: Visual Studio parameter loci advance through real top-level
 declaration starts, preserving distinct highlights for prefix-related names and
 for later names mentioned inside earlier default expressions. Nested calls,
 quotes, bracket-expression commas, and built-in optional brackets remain
-intact, including distinct handling for true bracket/brace defaults and optional
-`[, parameter]` notation. The local four-mode matrix and exact-head Windows
-VSIX run `30530692392` pass; artifact `8754603729` was uploaded. The child is closed,
+intact. Top-level default-assignment context distinguishes true bracket/brace
+defaults, including `[, tcTail]`, from optional `[, parameter]` notation at a
+declaration boundary. The local four-mode matrix and exact-head Windows VSIX
+run `30531427326` pass; artifact `8754891262` was uploaded. The child is closed,
 while broader G1 and RC validation remain separate.
 
 Current class-method discovery evidence includes #4883 at final corrective
