@@ -1,3 +1,11 @@
+- 2026-07-30: Hardened #4870/#109 `COPY TO ... TYPE DIF` dimensions against
+  grouped host locales. DIF `VECTORS` and `TUPLES` counts now use the classic
+  locale. A real 12-row DBF export under every-digit grouping requires
+  canonical `0,3` and `0,13` headers, never grouped `0,1.3`, and all rows
+  import back with field order plus character, numeric, and logical values
+  intact. The focused data-I/O target passes under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8` on Linux; cross-platform review remains required.
+
 - 2026-07-30: Hardened #4869/#110 generated native-wrapper numeric literals
   against grouped host locales. DLL/OCX and FLL wrapper source now uses the
   classic locale before embedding parsed PRG source lines and parameter counts.

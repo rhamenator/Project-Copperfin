@@ -118,11 +118,13 @@ evidence follows that gate and includes:
 - safety traceability validation and archived evidence
 - known limitations and compatibility exceptions
 
-The latest product implementation head is `c86be275f` (the current branch may
+The latest product implementation head is `531bbec70` (the current branch may
 also contain documentation-only coordination commits). The focused
-runtime-pipeline target passes locally under default, `pt_BR.UTF-8`, and
+data-I/O target passes locally under default, `pt_BR.UTF-8`, and
 `de_DE.UTF-8`; AppleClang/MSVC review and exact-head hosted evidence remain
-pending for the native-wrapper numeric-literal child. The preceding API-arity
+pending for the DIF-dimension child. The preceding native-wrapper head
+`c86be275f` has matching Linux and AppleClang evidence and still awaits MSVC.
+The preceding API-arity
 head `858e56929` has matching Linux, AppleClang, and MSVC evidence; #4868 is
 closed.
 At product head `a2a64427d`, Security Supply Chain

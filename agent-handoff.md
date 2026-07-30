@@ -2,6 +2,16 @@
 
 ## Current State
 
+The #4870/#109 DIF-dimension slice is implemented at exact product/test head
+`531bbec70`. `COPY TO ... TYPE DIF` binds the classic locale before emitting
+machine-readable `VECTORS` and `TUPLES` counts. A real 12-row DBF round trip
+under every-digit grouping requires canonical `0,3` and `0,13`, never grouped
+`0,1.3`, while preserving selected field order plus character, numeric, and
+logical values across all rows. `test_prg_engine_data_io` passes on Linux under
+default (13.40s), `pt_BR.UTF-8` (12.80s), and `de_DE.UTF-8` (13.47s), 3/3
+runs. AppleClang and MSVC review remain required before closing #4870. This is
+focused evidence, not full RC evidence.
+
 The #4869/#110 generated native-wrapper numeric-literal slice is implemented
 at exact product/test head `c86be275f`. DLL/OCX and FLL wrapper C++ now uses
 the classic locale before embedding parsed source lines and parameter counts.
@@ -10,8 +20,9 @@ branches emit invariant `1234U` and `12U`, never grouped `1.2.3.4U`/`1.2U`,
 while preserving escaped parameter order/names, export identity, provenance,
 dispatch, and placeholder/admission boundaries. `test_runtime_pipeline` passes
 on Linux under default (61.93s), `pt_BR.UTF-8` (63.00s), and `de_DE.UTF-8`
-(62.97s), 3/3 runs. AppleClang and MSVC review remain required before closing
-#4869. This is focused evidence, not full RC evidence.
+(62.97s), 3/3 runs. AppleClang passes the same three-locale matrix at channel
+seq1251; MSVC review remains required before closing #4869. This is focused
+evidence, not full RC evidence.
 
 The #4868/#110 generated library API-arity slice is implemented at exact
 product/test head `858e56929`. DLL/OCX and FLL API manifest streams now imbue
