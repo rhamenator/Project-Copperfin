@@ -15,6 +15,16 @@ selection, wrapped `USE ... IN 0`, alias state, exhaustion, and reselection.
 macOS/AppleClang and Windows/MSVC review remains required before closing #4861.
 This is focused evidence, not full RC evidence.
 
+Current-head release validation for product head `ca7889efa` is green for
+Linux Native (`30511406972`), macOS Native (`30511406973`), Linux Managed UI
+(`30511406936`), VSIX (`30511406957`, including the successful retry of one
+transient descendant-held-pipe test failure), standalone installers
+(`30511406950`), generated launcher (`30511406939`), Windows environment and
+executable paths (`30511406944`), Windows DECLARE ABI (`30511406975`),
+executable paths (`30511406982`), and security (`30511407013`). Windows Native
+(`30511406940`) remains queued for a hosted runner, so this is not complete
+Windows RC evidence and does not close #4861 or the release gates.
+
 The #4850/#109 runtime asset-record metadata slice is
 implementation-complete and cross-platform reviewed. The portable
 `app.cfmanifest` stream now serializes
