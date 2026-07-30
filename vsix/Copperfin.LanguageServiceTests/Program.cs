@@ -100,6 +100,7 @@ internal static partial class Program
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
         TestProjectProcedureSignatureHelpUsesLparameters();
+        TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
         TestProjectProcedureSignatureHelpRejectsBareParameter();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
@@ -2220,6 +2221,45 @@ internal static partial class Program
                 Expect(signatures[0].Parameters.Count == 2, "project procedure signature help should surface each LPARAMETERS argument");
                 Expect(signatures[0].Parameters[0].Name == "tcCustomerId", "project procedure signature help should normalize the first parameter name");
                 Expect(signatures[0].Parameters[1].Name == "tlPreview", "project procedure signature help should normalize defaulted parameter names");
+            }
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions()
+    {
+        var root = CreateProjectRoot("nested_parameter_default_signature_help");
+        try
+        {
+            var sourcePath = Path.Combine(root, "defaults.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROCEDURE Configure" + Environment.NewLine +
+                "LPARAMETERS toOptions = CREATEOBJECT(\"Collection\", 1), tcCaption = \"Save, then close\", tcEscaped = 'it''s, safe', taBounds = [1, 2], tcNext" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine);
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "Configure");
+            Expect(signatures.Count == 1,
+                "project signature help should surface a declaration with nested and quoted default-expression commas");
+            if (signatures.Count == 1)
+            {
+                var signature = signatures[0];
+                Expect(signature.Parameters.Count == 5,
+                    "nested calls, bracket expressions, and quoted commas should not create phantom parameters");
+                Expect(signature.Parameters.Select(parameter => parameter.Name).SequenceEqual(
+                        new[] { "toOptions", "tcCaption", "tcEscaped", "taBounds", "tcNext" }),
+                    "nested default expressions should preserve invariant project parameter names");
+                Expect(signature.Parameters[0].Documentation == "toOptions = CREATEOBJECT(\"Collection\", 1)" &&
+                       signature.Parameters[1].Documentation == "tcCaption = \"Save, then close\"" &&
+                       signature.Parameters[2].Documentation == "tcEscaped = 'it''s, safe'" &&
+                       signature.Parameters[3].Documentation == "taBounds = [1, 2]",
+                    "project signature help should preserve raw default-expression text");
+                Expect(signature.Content ==
+                       "Configure(toOptions = CREATEOBJECT(\"Collection\", 1), tcCaption = \"Save, then close\", tcEscaped = 'it''s, safe', taBounds = [1, 2], tcNext)",
+                    "project signature content should retain nested and quoted default-expression commas");
             }
         }
         finally

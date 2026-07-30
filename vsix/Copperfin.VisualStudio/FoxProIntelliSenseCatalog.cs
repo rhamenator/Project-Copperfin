@@ -1307,8 +1307,7 @@ internal static class FoxProIntelliSenseCatalog
             return Array.Empty<FoxProParameterEntry>();
         }
 
-        return rawParameters
-            .Split(',')
+        return SplitProjectParameters(rawParameters)
             .Select(parameter => parameter.Trim())
             .Where(parameter => !string.IsNullOrWhiteSpace(parameter))
             .Select(parameter => new FoxProParameterEntry
@@ -1317,6 +1316,55 @@ internal static class FoxProIntelliSenseCatalog
                 Documentation = parameter
             })
             .ToList();
+    }
+
+    private static IReadOnlyList<string> SplitProjectParameters(string rawParameters)
+    {
+        var parameters = new List<string>();
+        var parameterStart = 0;
+        var nesting = 0;
+        var quote = '\0';
+
+        for (var index = 0; index < rawParameters.Length; index++)
+        {
+            var value = rawParameters[index];
+            if (quote != '\0')
+            {
+                if (value == quote)
+                {
+                    if (index + 1 < rawParameters.Length && rawParameters[index + 1] == quote)
+                    {
+                        index++;
+                    }
+                    else
+                    {
+                        quote = '\0';
+                    }
+                }
+                continue;
+            }
+
+            if (value == '\'' || value == '"')
+            {
+                quote = value;
+            }
+            else if (value == '(' || value == '[' || value == '{')
+            {
+                nesting++;
+            }
+            else if ((value == ')' || value == ']' || value == '}') && nesting > 0)
+            {
+                nesting--;
+            }
+            else if (value == ',' && nesting == 0)
+            {
+                parameters.Add(rawParameters.Substring(parameterStart, index - parameterStart));
+                parameterStart = index + 1;
+            }
+        }
+
+        parameters.Add(rawParameters.Substring(parameterStart));
+        return parameters;
     }
 
     private static string NormalizeProjectParameterName(string parameter)
