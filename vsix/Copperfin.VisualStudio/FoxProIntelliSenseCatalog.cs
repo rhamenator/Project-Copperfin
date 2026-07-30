@@ -401,6 +401,7 @@ internal static class FoxProIntelliSenseCatalog
             var braceDepth = 0;
             var quote = '\0';
             var atParameterStart = true;
+            var inDefaultExpression = false;
 
             for (var index = openParen + 1; index < content.Length && parenthesisDepth > 0; index++)
             {
@@ -456,13 +457,7 @@ internal static class FoxProIntelliSenseCatalog
                 }
                 else if (value == '[')
                 {
-                    var next = index + 1;
-                    while (next < content.Length && char.IsWhiteSpace(content[next]))
-                    {
-                        next++;
-                    }
-
-                    if (next >= content.Length || content[next] != ',')
+                    if (inDefaultExpression)
                     {
                         bracketDepth++;
                     }
@@ -479,9 +474,14 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     braceDepth--;
                 }
+                else if (value == '=' && parenthesisDepth == 1 && bracketDepth == 0 && braceDepth == 0)
+                {
+                    inDefaultExpression = true;
+                }
                 else if (value == ',' && parenthesisDepth == 1 && bracketDepth == 0 && braceDepth == 0)
                 {
                     atParameterStart = true;
+                    inDefaultExpression = false;
                 }
             }
         }

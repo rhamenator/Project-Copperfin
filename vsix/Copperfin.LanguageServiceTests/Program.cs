@@ -2321,7 +2321,7 @@ internal static partial class Program
     private static void TestSignatureParameterLociUseDeclarationStarts()
     {
         const string projectSignature =
-            "Configure(tcLongName, tc = Normalize(tcLater), tcLater, taBounds = [1, tcTail], tcTail)";
+            "Configure(tcLongName, tc = Normalize(tcLater), tcLater, taBounds = [1, tcTail], taLeading = [, tcTail], tcTail)";
         var searchStart = projectSignature.IndexOf('(') + 1;
 
         var longNameStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
@@ -2336,6 +2336,9 @@ internal static partial class Program
         var boundsStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
             projectSignature, "taBounds", searchStart);
         searchStart = boundsStart + "taBounds".Length;
+        var leadingStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "taLeading", searchStart);
+        searchStart = leadingStart + "taLeading".Length;
         var tailStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
             projectSignature, "tcTail", searchStart);
 
@@ -2343,8 +2346,9 @@ internal static partial class Program
                shortNameStart == projectSignature.IndexOf("tc =", StringComparison.Ordinal) &&
                laterNameStart == projectSignature.LastIndexOf("tcLater", StringComparison.Ordinal) &&
                boundsStart == projectSignature.IndexOf("taBounds", StringComparison.Ordinal) &&
+               leadingStart == projectSignature.IndexOf("taLeading", StringComparison.Ordinal) &&
                tailStart == projectSignature.LastIndexOf("tcTail", StringComparison.Ordinal),
-            "signature parameter loci should use declaration starts instead of prefixes, nested mentions, or bracket-expression commas");
+            "signature parameter loci should use declaration starts instead of prefixes, nested mentions, or bracket defaults including leading commas");
 
         const string builtInSignature = "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])";
         searchStart = builtInSignature.IndexOf('(') + 1;
