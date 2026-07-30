@@ -2413,7 +2413,9 @@ internal static partial class Program
                 "ENDPROC" + Environment.NewLine +
                 "HIDDEN FUNCTION CalculateSecret(tnSeed, tlRefresh = .F.)" + Environment.NewLine +
                 "ENDFUNC" + Environment.NewLine +
-                "ENDDEFINE" + Environment.NewLine);
+                "ENDDEFINE" + Environment.NewLine +
+                "? app.secure.editor.SaveInternal('ALFKI')" + Environment.NewLine +
+                "? app.secure.editor.CalculateSecret(1, .T.)" + Environment.NewLine);
 
             var protectedName = "app.secure.editor.SaveInternal";
             var protectedSignature = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, protectedName);
@@ -2443,6 +2445,40 @@ internal static partial class Program
                    FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "AlsoNotGlobal").Count == 0 &&
                    !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "AlsoNotGlobal", out _),
                 "visibility-qualified declarations outside a class should not become global symbols");
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "visibility.prg",
+                            RelativePath = "visibility.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            Expect(insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Kind == "method" && symbol.Name == protectedName && symbol.Line == 4) &&
+                   insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Kind == "method" && symbol.Name == hiddenName && symbol.Line == 7),
+                "visibility-qualified class methods should feed project-insight definitions");
+            Expect(insights.RuntimeReferences.Exists(reference =>
+                       reference.Kind == "call.member" && reference.Name == protectedName) &&
+                   insights.RuntimeReferences.Exists(reference =>
+                       reference.Kind == "call.member" && reference.Name == hiddenName),
+                "visibility-qualified class methods should feed qualified project-insight references");
+            Expect(!insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Name == "NotGlobal" || symbol.Name == "AlsoNotGlobal"),
+                "visibility-qualified declarations outside classes should remain excluded from project insights");
         }
         finally
         {

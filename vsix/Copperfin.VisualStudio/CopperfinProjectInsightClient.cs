@@ -17,6 +17,8 @@ internal static class CopperfinProjectInsightClient
     private static readonly string[] TaskMarkers = { "TODO", "FIXME", "HACK", "BUG", "UNDONE" };
     private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DoFormRegex = new(@"^\s*DO\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -262,8 +264,8 @@ internal static class CopperfinProjectInsightClient
                 return;
             }
 
-            if (AddScopedMethodDefinitionIfMatch(path, lineNumber, line, ProcedureRegex, currentClassName, insights) ||
-                AddScopedMethodDefinitionIfMatch(path, lineNumber, line, FunctionRegex, currentClassName, insights))
+            if (AddScopedMethodDefinitionIfMatch(path, lineNumber, line, MethodProcedureRegex, currentClassName, insights) ||
+                AddScopedMethodDefinitionIfMatch(path, lineNumber, line, MethodFunctionRegex, currentClassName, insights))
             {
                 return;
             }

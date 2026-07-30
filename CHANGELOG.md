@@ -1,3 +1,11 @@
+- 2026-07-30: Completed #4883/#27 visibility-qualified class-method discovery
+  across both managed project scanners. `PROTECTED` and `HIDDEN`
+  procedure/function methods, including abbreviated `PROC`, now retain
+  qualified definitions, signatures, references, and rename inputs while the
+  same declarations remain excluded at global scope. Focused macOS coverage
+  exercises both scanners in the warning-free four-mode Release harness;
+  exact-head hosted follow-up validation remains pending.
+
 - 2026-07-30: Implemented #4882/#27 project language-service support for VFP's
   `PROC` abbreviation across both managed project scanners. Global routines
   and qualified class methods now retain the same inline/following-line
