@@ -2,19 +2,37 @@
 
 ## Current State
 
-The #4887/#28 project class-property reference/rename slice is complete at
-product/test head `3f7eb859f`. Project Insights now records qualified property
+The #4888/#26 standalone project-command slice is implemented at exact product/
+test head `192ef78bd`. Copperfin Studio now exposes localized Project-menu
+Build, Run Without Debugging, and Start Debugging commands using the conventional
+Windows-first Ctrl+Shift+B, Ctrl+F5, and F5 shortcuts. Commands are enabled only
+for the active PJX tab and delegate to the existing shared editor workflow; tab
+selection, close, empty-shell, and non-project states refresh safely. The focused
+portable smoke passes all nine assertions, the Release Studio build is warning-
+free, and the language/localization harness passes under default and `qps-ploc`.
+Exact-head VSIX run `30534152607` and Linux managed-UI run `30534152549` pass;
+artifacts `8755969821` and `8755970713` have SHA-256 digests
+`00a4211f991d4932188135322a1473f80aa8444cddb35687f3c9bdb3d823e950`
+and `ac72dc96a905151dc17470ed6f3fd0a524a0bf5510a98618030fdfd00dbbb2bd`.
+Native Windows designer smoke run `30534349069` and installer run `30534152560`
+remain in progress. Issue #4888 is closed; broader #26/#112 and RC validation
+remain open.
+
+The #4887/#28 project class-property reference/rename slice is reopened after
+new compatibility evidence. Its original product/test head `3f7eb859f` records qualified property
 definitions with the same class/routine boundary as IntelliSense and binds
 exact qualified or uniquely resolvable instance-style dotted uses to that
 symbol. Ambiguous trailing property names remain unbound. Call-shaped members,
 quoted text, bracket strings, and trailing `&&` comments cannot fabricate
 property references; rename preview includes the declaration and normalized
-uses without changing existing method behavior. The warning-free full harness
-passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
-Exact-head Windows VSIX run `30533345795` passes all managed/net472 steps and
-uploads artifact `8755644691` with SHA-256
-`47e21408c8da284abfeee604b591e2073cdd167a25969fdb55fc75aaf8565480`.
-Issue #4887 is closed; broader IDE parents and RC validation remain open.
+uses without changing existing method behavior. Corrective head `ded8a7ce8`
+retains executable array-subscript uses such as `laValues[THIS.RetryCount]`
+without admitting standalone bracket strings, and independent Linux/macOS
+review passes. A second demonstrated gap remains: dotted tokens inside VFP
+`TEXT ... ENDTEXT` block bodies can still become false references and rename
+occurrences. Keep #4887 open until block-text state, focused regression coverage,
+and corrected-head hosted evidence are complete; the original Windows artifact
+is superseded as closure evidence.
 
 The #4886/#27/#28/#29 project class-property IntelliSense slice is complete at
 product/test head `bad499421`. The Visual Studio project scanner now indexes

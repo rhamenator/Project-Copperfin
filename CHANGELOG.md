@@ -1,4 +1,15 @@
-- 2026-07-30: Completed #4887/#28 project class-property references and rename
+- 2026-07-30: Completed #4888/#26 standalone Studio project commands at
+  product/test head `192ef78bd`. A localized Project menu now routes Build, Run
+  Without Debugging, and Start Debugging to the active PJX editor's existing
+  shared workflow using Ctrl+Shift+B, Ctrl+F5, and F5. Commands remain disabled
+  for the empty shell and non-project tabs and refresh on selection/close. The
+  focused nine-assertion Xvfb/Mono smoke, warning-free Release Studio build,
+  default/qps-ploc language harness, exact-head VSIX run `30534152607`, and
+  Linux managed-UI run `30534152549` pass. VSIX artifact `8755969821` and UI
+  evidence artifact `8755970713` have recorded SHA-256 digests; native Windows
+  designer smoke and installer evidence remain in progress.
+
+- 2026-07-30: Implemented, then reopened, #4887/#28 project class-property references and rename
   preview. Project Insights now applies the same `DEFINE CLASS` routine-scope
   boundary as IntelliSense, records qualified property definitions, normalizes
   exact and uniquely resolvable dotted property uses, rejects ambiguous
@@ -7,9 +18,11 @@
   excluded; existing method reference/rename behavior is unchanged. A macOS
   closure audit additionally distinguishes executable array-subscripting
   brackets from bracket-delimited strings, preserving references such as
-  `laValues[THIS.RetryCount]`. The corrected warning-free four-mode Release
-  harness passes; exact corrected-head hosted and independent review remain
-  pending, superseding the original `3f7eb859f` closure evidence.
+  `laValues[THIS.RetryCount]` at corrective head `ded8a7ce8`. Windows review then
+  demonstrated that dotted tokens inside VFP `TEXT ... ENDTEXT` block bodies
+  still become false references. #4887 is reopened pending block-text state,
+  regression coverage, and corrected-head hosted evidence; the original
+  `3f7eb859f` closure evidence is superseded.
 
 - 2026-07-30: Completed #4886/#27/#28/#29 project class-property
   IntelliSense. The Visual Studio scanner now retains identifier assignments at

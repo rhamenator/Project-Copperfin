@@ -33,12 +33,20 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
-- Recent G2 class-property navigation slice: `#4887` carries qualified project
+- Recent F2 standalone project-command slice: `#4888` adds localized Project-
+  menu Build, Run Without Debugging, and Start Debugging commands with
+  Ctrl+Shift+B, Ctrl+F5, and F5. Active PJX gating delegates to the shared editor
+  workflow and refreshes across selection/close/non-project states. Exact head
+  `192ef78bd` passes focused portable UI, Release Studio, default/qps-ploc
+  language, VSIX run `30534152607`, and Linux managed-UI run `30534152549`;
+  artifacts `8755969821` and `8755970713` were uploaded.
+- Reopened G2 class-property navigation slice: `#4887` carries qualified project
   property definitions and safe dotted uses into Code References and rename
   preview. Exact/unique resolution rejects ambiguous trailing names; call-shaped
-  members and string/comment lookalikes remain excluded. Product/test head
-  `3f7eb859f` passes the local four-mode matrix and Windows VSIX run
-  `30533345795`; artifact `8755644691` was uploaded.
+  members and string/comment lookalikes remain excluded. Corrective head
+  `ded8a7ce8` preserves attached array-subscript uses without admitting bracket
+  strings, but `TEXT ... ENDTEXT` bodies remain a demonstrated false-reference
+  gap. Do not treat the original `3f7eb859f` hosted evidence as closure evidence.
 - Recent G1/G2/G3 class-property slice: `#4886` indexes identifier assignments
   at `DEFINE CLASS` scope as qualified project properties while routine state
   excludes method-local assignments. Localized property completions preserve

@@ -29,12 +29,22 @@ Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
 Current class-property navigation evidence includes #4887 at product/test head
-`3f7eb859f`: Project Insights retains qualified definitions and safe dotted
+`3f7eb859f`: Project Insights retains qualified definitions and dotted
 references, rename preview normalizes only unique property names, and ambiguous,
-call-shaped, quoted, bracket-string, or comment lookalikes stay excluded. The
-local four-mode matrix and exact-head Windows VSIX run `30533345795` pass;
-artifact `8755644691` was uploaded. The child is closed, while broader IDE
-parents and RC validation remain separate.
+call-shaped, quoted, bracket-string, or comment lookalikes stay excluded.
+Corrective head `ded8a7ce8` preserves executable array-subscript references, but
+new evidence shows VFP `TEXT ... ENDTEXT` bodies can still seed false references.
+The child is reopened until block-text state and corrected-head evidence land;
+broader IDE parents and RC validation remain separate.
+
+Current standalone project-command evidence includes #4888 at exact product/
+test head `192ef78bd`: localized Build, Run Without Debugging, and Start
+Debugging menu commands use Ctrl+Shift+B, Ctrl+F5, and F5 and route only through
+the active PJX editor's existing workflow. Focused portable UI, Release Studio,
+default/qps-ploc language, exact-head VSIX `30534152607`, and Linux managed-UI
+`30534152549` validation pass. Artifacts `8755969821` and `8755970713` retain
+their GitHub SHA-256 digests. The child is closed; native Windows UI evidence,
+broader #26/#112, and RC validation remain separate.
 
 Current class-property IntelliSense evidence includes #4886 at product/test
 head `bad499421`: class-scope identifier assignments become qualified,
