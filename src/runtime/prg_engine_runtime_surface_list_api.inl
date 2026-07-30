@@ -263,17 +263,15 @@ bool write_native_list_control_top_index(
 
     const std::string& item_key =
         runtime_object.collection_item_keys[static_cast<std::size_t>(requested_index - 1LL)];
-    long long item_id = 0LL;
-    try {
-        item_id = std::stoll(item_key);
-    } catch (const std::exception&) {
+    const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(item_key);
+    if (!item_id.has_value()) {
         return false;
     }
-    if (item_id < 1LL) {
+    if (*item_id < 1LL) {
         return false;
     }
 
-    runtime_object.properties["topitemid"] = make_number_value(static_cast<double>(item_id));
+    runtime_object.properties["topitemid"] = make_number_value(static_cast<double>(*item_id));
     runtime_object.properties["topindex"] = make_number_value(static_cast<double>(requested_index));
     return true;
 }

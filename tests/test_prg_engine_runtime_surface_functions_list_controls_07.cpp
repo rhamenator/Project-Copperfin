@@ -1,4 +1,5 @@
 #include "test_prg_engine_runtime_surface_functions_support.h"
+#include "prg_engine_runtime_surface_functions.h"
 
 namespace copperfin::runtime_surface_tests
 {
@@ -63,6 +64,82 @@ namespace copperfin::runtime_surface_tests
         check("lgroupedselectedid", "false");
 
         fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_list_control_internal_item_ids_reject_partial_tokens()
+    {
+        const auto exercise = [&](const std::string& first_key,
+                                  const std::string& expected_first_id,
+                                  const std::string& expected_index_id,
+                                  const std::string& expected_top_result,
+                                  const std::string& expected_new_id,
+                                  const std::string& label)
+        {
+            copperfin::runtime::RuntimeOleObjectState runtime_object;
+            runtime_object.base_class_name = "ListBox";
+            runtime_object.prog_id = "ListBox";
+            runtime_object.collection_items = {
+                copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::string,
+                    .string_value = "Alpha"},
+                copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::string,
+                    .string_value = "Bravo"}};
+            runtime_object.list_rows = {
+                {copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::string,
+                    .string_value = "Alpha"}},
+                {copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::string,
+                    .string_value = "Bravo"}}};
+            runtime_object.collection_item_keys = {first_key, "2"};
+            runtime_object.list_selected = {false, false};
+
+            const auto slot_id = copperfin::runtime::read_native_list_control_item_id_for_slot(
+                runtime_object,
+                0U);
+            expect(slot_id.has_value(), label + " slot lookup should return a value");
+            if (slot_id.has_value()) {
+                expect(copperfin::runtime::format_value(*slot_id) == expected_first_id,
+                       label + " slot lookup should preserve complete integer parsing");
+            }
+
+            const auto index_id = copperfin::runtime::invoke_native_list_control_method(
+                runtime_object,
+                "indextoitemid",
+                {copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::number,
+                    .number_value = 1.0}});
+            expect(index_id.has_value(), label + " IndexToItemID should return a value");
+            if (index_id.has_value()) {
+                expect(copperfin::runtime::format_value(*index_id) == expected_index_id,
+                       label + " IndexToItemID should reject partial internal keys");
+            }
+
+            const bool top_result = copperfin::runtime::write_native_list_control_top_index(
+                runtime_object,
+                copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::number,
+                    .number_value = 1.0});
+            expect((top_result ? "true" : "false") == expected_top_result,
+                   label + " TopIndex should reject malformed internal keys");
+
+            const auto new_id = copperfin::runtime::invoke_native_list_control_method(
+                runtime_object,
+                "addlistitem",
+                {copperfin::runtime::PrgValue{
+                    .kind = copperfin::runtime::PrgValueKind::string,
+                    .string_value = "Charlie"}});
+            expect(new_id.has_value(), label + " AddListItem should return a value");
+            if (new_id.has_value()) {
+                expect(copperfin::runtime::format_value(*new_id) == expected_new_id,
+                       label + " malformed keys must not consume a large generated ID");
+            }
+        };
+
+        exercise("1", "1", "1", "true", "3", "valid internal key");
+        exercise("200abc", "0", "0", "false", "3", "partial internal key");
+        exercise("1.234", "0", "0", "false", "3", "grouped internal key");
     }
 
     void test_native_list_control_array_range_properties_stay_coherent()

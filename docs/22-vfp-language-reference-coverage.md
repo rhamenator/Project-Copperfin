@@ -18,6 +18,15 @@
   Focused runtime-surface tests pass under default, `pt_BR.UTF-8`, and
   `de_DE.UTF-8` on Linux, macOS/AppleClang, and Windows/MSVC; #4855 is closed.
 
+- Internal native list-item ID culture boundary (2026-07-29, #4856 under
+  #3217): stored `collection_item_keys` now require complete invariant integer
+  tokens across list state synchronization, top-index writes, item-id lookup,
+  method reflection, and generated-ID allocation. Grouped, decimal,
+  malformed, or trailing keys cannot be truncated into a different valid item
+  ID; valid positive keys and empty-key allocation remain unchanged. Linux
+  focused runtime-surface tests pass under default, `pt_BR.UTF-8`, and
+  `de_DE.UTF-8`; macOS/AppleClang and Windows/MSVC review remains required.
+
 - Strict runtime integer culture boundary (2026-07-29, #4854 under #3217):
   runtime configuration limits/code pages and SYS(2326/2327) string handle
   arguments now require complete invariant base-10 tokens. Grouped or trailing

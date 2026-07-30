@@ -8,6 +8,15 @@
   `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux, macOS/AppleClang, and
   Windows/MSVC; #4855 is closed.
 
+- 2026-07-29: Hardened #4856/#3217 internal native list-item ID parsing.
+  Stored `collection_item_keys` now require complete invariant integer tokens
+  in list state synchronization, top-index writes, item-id lookup, method
+  reflection, and generated-ID allocation. Grouped, decimal, malformed, or
+  trailing keys cannot be truncated into a different valid item ID. Valid
+  positive keys and empty-key allocation remain unchanged. Focused
+  runtime-surface tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+  Linux locales; cross-platform review remains required before closure.
+
 - 2026-07-29: Hardened #4854/#3217 runtime integer parsing. Runtime config
   limits/code pages and SYS(2326/2327) handle strings now require complete
   invariant base-10 tokens, so grouped or trailing punctuation cannot be

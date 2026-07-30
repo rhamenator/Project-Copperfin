@@ -63,6 +63,17 @@ portable numeric parser boundaries against live issue state and create or
 select the next prompt-sized child before coding. This is focused evidence, not
 full RC evidence.
 
+The #4856/#3217 internal list-item-key slice is implementation-complete
+locally. State synchronization, top-index writes, item-id lookup, method
+reflection, and generated-ID allocation now parse stored `collection_item_keys`
+with the complete invariant integer parser. Grouped, decimal, malformed,
+trailing, non-positive, and overflow keys cannot become a different valid item
+ID; valid positive keys and empty-key allocation remain unchanged. The focused
+runtime-surface test passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on
+Linux. macOS/AppleClang and Windows/MSVC review remains required. Issue #4856
+remains open pending that cross-platform review. This is focused evidence, not
+full RC evidence.
+
 The #4849/#109 generated compiler source-line slice is
 implementation-complete. AST JSON, IR JSON, and FXP token/primary contracts now
 serialize statement coordinates through classic-locale streams. The existing

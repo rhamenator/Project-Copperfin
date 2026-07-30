@@ -172,11 +172,9 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
 
         const std::string& item_key =
             runtime_object.collection_item_keys[static_cast<std::size_t>(requested_index - 1LL)];
-        try {
-            return make_number_value(static_cast<double>(std::stoll(item_key)));
-        } catch (const std::exception&) {
-            return make_number_value(0.0);
-        }
+        const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(item_key);
+        return make_number_value(
+            item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
     }
 
     if (normalized_method_name == "itemidtoindex") {
@@ -352,12 +350,9 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         runtime_object.collection_item_keys.resize(runtime_object.list_rows.size());
         std::set<long long> used_item_ids;
         for (const std::string& key : runtime_object.collection_item_keys) {
-            try {
-                const long long item_id = std::stoll(key);
-                if (item_id >= 1LL) {
-                    used_item_ids.insert(item_id);
-                }
-            } catch (const std::exception&) {
+            const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(key);
+            if (item_id.has_value() && *item_id >= 1LL) {
+                used_item_ids.insert(*item_id);
             }
         }
         long long next_item_id = 1LL;
@@ -591,12 +586,10 @@ std::optional<PrgValue> read_native_list_control_item_id_for_slot(
         return make_number_value(0.0);
     }
 
-    try {
-        return make_number_value(
-            static_cast<double>(std::stoll(runtime_object.collection_item_keys[row_slot])));
-    } catch (const std::exception&) {
-        return make_number_value(0.0);
-    }
+    const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(
+        runtime_object.collection_item_keys[row_slot]);
+    return make_number_value(
+        item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
 }
 
 std::optional<PrgValue> read_native_list_control_index_for_item_id(

@@ -1069,12 +1069,10 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
                                                      : make_string_value("");
         }
         if (*selected_slot < runtime_object.collection_item_keys.size()) {
-            try {
-                runtime_object.properties["listitemid"] = make_number_value(
-                    static_cast<double>(std::stoll(runtime_object.collection_item_keys[*selected_slot])));
-            } catch (const std::exception&) {
-                runtime_object.properties["listitemid"] = make_number_value(0.0);
-            }
+            const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(
+                runtime_object.collection_item_keys[*selected_slot]);
+            runtime_object.properties["listitemid"] = make_number_value(
+                item_id.has_value() && *item_id >= 1LL ? static_cast<double>(*item_id) : 0.0);
         } else {
             runtime_object.properties["listitemid"] = make_number_value(0.0);
         }
@@ -1191,13 +1189,11 @@ void sync_native_list_control_top_item_id_impl(RuntimeOleObjectState& runtime_ob
         top_slot = find_native_list_control_row_by_item_id(runtime_object, current_item_id);
     }
     if (!top_slot.has_value()) {
-        try {
-            const long long first_item_id = std::stoll(runtime_object.collection_item_keys.front());
-            if (first_item_id >= 1LL) {
-                top_item_id->second = make_number_value(static_cast<double>(first_item_id));
-                top_slot = 0U;
-            }
-        } catch (const std::exception&) {
+        const auto first_item_id = copperfin::platform::try_parse_invariant_integer<long long>(
+            runtime_object.collection_item_keys.front());
+        if (first_item_id.has_value() && *first_item_id >= 1LL) {
+            top_item_id->second = make_number_value(static_cast<double>(*first_item_id));
+            top_slot = 0U;
         }
     }
     if (top_slot.has_value()) {
@@ -1214,9 +1210,10 @@ std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runti
         if (key.empty()) {
             continue;
         }
-        try {
-            next_id = std::max(next_id, static_cast<std::int64_t>(std::stoll(key) + 1LL));
-        } catch (const std::exception&) {
+        const auto item_id = copperfin::platform::try_parse_invariant_integer<long long>(key);
+        if (item_id.has_value() && *item_id >= 1LL &&
+            *item_id < std::numeric_limits<long long>::max()) {
+            next_id = std::max(next_id, static_cast<std::int64_t>(*item_id + 1LL));
         }
     }
     return next_id;
