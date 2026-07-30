@@ -1,3 +1,11 @@
+- 2026-07-30: Corrected the current RC roadmap ledger for closed Studio-host
+  JSON-control-escape child #4873. Its exact product/test head `4a75d3273` has
+  accepted Linux, macOS/AppleClang, and Windows/MSVC focused locale evidence,
+  and the later final synchronized hosted matrix supersedes the roadmap's
+  stale pending-review wording. This documentation-only correction does not
+  change product behavior or advance the still-external #4403 and #4409
+  release authorities.
+
 - 2026-07-30: Bound the manual Windows launcher-trust signer/guard job to the
   fixed GitHub Actions `release` environment under security audit child #4895.
   Workflow contracts require exactly one fixed binding and reject dynamic

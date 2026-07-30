@@ -261,11 +261,13 @@ live Visual Studio evidence remains the closed #4621 baseline because the final
 changes were catalog/managed/test-only. The v1 roadmap below is prepared and
 remains queued behind those two external release authorities.
 
-The latest product implementation head is `4a75d3273` (the current branch may
-also contain documentation-only coordination commits). The focused shared
-platform JSON and Studio-host diagnostic coverage passes locally under
-default, `pt_BR.UTF-8`, and `de_DE.UTF-8`; AppleClang/MSVC review and exact-head
-hosted evidence remain pending for the Studio-host JSON-control-escape child.
+The #4873 Studio-host JSON-control-escape child is closed at exact product/test
+head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
+coverage passed under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,
+macOS/AppleClang, and Windows/MSVC with no dissent. The final synchronized
+hosted matrix recorded above supersedes the earlier pending-evidence state;
+subsequent branch commits are coordination, documentation, or separately
+validated release-trust changes and do not reopen #4873.
 The preceding `NEWID()` UUID-text head `1568b7a11` and APP-archive hex-payload
 head `cd6cf9029` have matching Linux, AppleClang, and MSVC evidence; #4872 and
 #4871 are closed. The preceding DIF-dimension head `531bbec70` has matching
