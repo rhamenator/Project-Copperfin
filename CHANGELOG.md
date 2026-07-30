@@ -1,3 +1,13 @@
+- 2026-07-30: Hardened #4878/#110 Windows managed process-gate fixtures after
+  two hosted runs exposed nested-PowerShell startup timing failures. Dedicated
+  managed harness child modes now exercise successful-root held handles and an
+  owned timeout child/grandchild tree with invariant PID readiness, supporting
+  both `dotnet(.exe)` and apphost launch shapes. Product process-runner code and
+  its one-second drain, timeout, tree-kill, and net472 contracts are unchanged.
+  The four-mode local matrix, five repeated default runs, macOS seq1289, and
+  exact-head Windows VSIX run `30525728514` pass; artifact `8752672531` was
+  uploaded and #4878 is closed.
+
 - 2026-07-30: Hardened #4877/#2348 language-service localization tests by
   resolving nine localized descriptions from the active Visual Studio UI
   catalog rather than comparing product output to English literals. Invariant

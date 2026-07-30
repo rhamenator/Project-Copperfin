@@ -33,6 +33,14 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent D/F release-gate reliability slice: `#4878` replaces timing-sensitive
+  nested-PowerShell held-output fixtures with dedicated modes of the built
+  managed harness. The successful-root path records descendant readiness before
+  exit; the timeout path creates and records an owned managed child/grandchild
+  tree, preserving material coverage of the production timeout cleanup path.
+  Production `CopperfinProcessRunner`, its one-second drain bound, net472 lane,
+  and runtime/package/debug/trust behavior are unchanged. Local four-mode plus
+  repeated stress runs, macOS seq1289, and Windows VSIX run `30525728514` pass.
 - Recent F1 test-infrastructure slice: `#4798` adds a final owner-first,
   recursive WinForms cleanup pass to the managed DesignerSmoke executable.
   Preserve the process boundary: only forms opened by the smoke process may be

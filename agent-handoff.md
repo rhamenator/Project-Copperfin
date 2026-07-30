@@ -2,6 +2,23 @@
 
 ## Current State
 
+The #4878/#110 managed Windows-gate reliability slice is implemented at exact
+test head `5d6dd4d13`. Both held-output process fixtures now use dedicated modes
+of the already-built managed harness instead of timing-sensitive nested
+PowerShell launches. One child proves a successful root remains successful
+while a descendant retains inherited output handles; the other creates an
+owned child/grandchild tree for the real timeout/tree-cleanup path. Both record
+invariant PIDs, support `dotnet(.exe)` and apphost launch shapes, and remain
+test-owned. Production `CopperfinProcessRunner`, its one-second post-exit drain,
+net472 behavior, and timeout/tree-kill contracts are unchanged. The full
+Release harness passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and
+explicit `qps-ploc`, plus five repeated default runs; macOS seq1289 independently
+passes the expanded matrix. Exact-head Windows VSIX run `30525728514` passes
+all managed suites and uploads artifact `8752672531` with SHA-256
+`f3844d59de28bc21000f33a3fd7069feedf534f8108dd6a495934905892535ac`.
+Issue #4878 is closed. No product, text/catalog, runtime, package/debug, or trust
+behavior changed.
+
 The #4877/#2348 managed localization-gate slice is implemented at exact test
 head `7dde622ad`. Nine language-service assertions now resolve the active
 catalog text for alias, class, method, included-define, and cross-file procedure

@@ -28,6 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Fresh release-validation failures remain valid implementation input when they
+identify a nondeterministic gate. #4878 at exact test head `5d6dd4d13` replaces
+two nested-PowerShell held-output fixtures with owned managed child modes while
+leaving production process execution unchanged. Local four-locale and repeated
+stress evidence, macOS seq1289, and exact-head Windows VSIX run `30525728514`
+pass; the run uploads artifact `8752672531`. The child is closed, while the full
+RC matrix remains separate.
+
 The shared designer-interaction and report/label implementation trees are
 complete at the current MVP fidelity. Their remaining hosted Windows,
 Visual Studio, and mounted-VFP9 checks are release evidence gates, not reasons
