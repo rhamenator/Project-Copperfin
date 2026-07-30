@@ -2,6 +2,18 @@
 
 ## Current State
 
+Requirements recovery has begun in
+`docs/32-recovered-requirements-traceability.md`. Closed child #4896 establishes
+`LLR-VFP-NUM-001` from shipped VFP9 SP2 Numeric Data Type and `SET POINT` help:
+calculation/source numeric text uses a period even when display-point state
+changes. The row maps invariant numeric parsing and PRG expression parsing to
+the focused parser and data-I/O targets. macOS passes both under `C`,
+`en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8` (8/8); independent Linux seq1419
+verifies the citations and mapping and passes both targets under default, `C`,
+and `en_US.utf8` (6/6). No product/test behavior changed. Continue recovery one
+prompt-sized, allowed-evidence-backed row at a time; split any uncovered code or
+test gap into its own child before implementation.
+
 The MVP implementation tree is complete at final product/test heads
 `8d6c307d4` (catalog parity), `64e162fd4` (project-workflow UI publication),
 and `82b907cd5` (deterministic net472 held-output fixtures). Exact synchronized

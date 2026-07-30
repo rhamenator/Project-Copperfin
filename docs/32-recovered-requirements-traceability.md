@@ -27,7 +27,7 @@ Decompiled or disassembled VFP binaries are prohibited inputs under
 
 | LLR ID | Recovered low-level requirement | Allowed source evidence | Code | Tests | Verification | Status | Issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `LLR-VFP-NUM-001` | PRG numeric source and calculation text shall use a period as the decimal point independently of the host C/C++ locale or the VFP display-point setting. Comma-decimal text shall not be silently accepted as the same numeric literal. Machine numeric text routed back into parser/runtime contracts shall remain period-decimal and ungrouped. | Shipped VFP9 SP2 Help: [Numeric Data Type](https://vfphelp.com/vfp9/html/f0945c58-08e4-46fc-a15b-e1714a064d91.htm) defines numeric values using digits, an optional sign, and a decimal point. [SET POINT Command](https://www.vfphelp.com/help/html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm) states that `SET POINT` changes display but calculations must use a period. | `include/copperfin/platform/invariant_numeric.h`; `src/platform/invariant_numeric.cpp`; `src/runtime/prg_engine_expression.inl` (`parse_number`) | `tests/test_prg_engine_parser_classes.cpp` (`test_invariant_numeric_parser_preserves_vfp_decimal_contract`, comma-decimal preprocessor locale test); `tests/test_prg_engine_data_io_save_restore.cpp` (`test_restore_from_parses_numeric_values_invariantly`) | macOS current-head `test_prg_engine_parser_classes` and `test_prg_engine_data_io` under default, `C`, `pt_BR.UTF-8`, and `de_DE.UTF-8`; Linux read-only mapping review required before closure | `recovered` | `#4896` |
+| `LLR-VFP-NUM-001` | PRG numeric source and calculation text shall use a period as the decimal point independently of the host C/C++ locale or the VFP display-point setting. Comma-decimal text shall not be silently accepted as the same numeric literal. Machine numeric text routed back into parser/runtime contracts shall remain period-decimal and ungrouped. | Shipped VFP9 SP2 Help: [Numeric Data Type](https://vfphelp.com/vfp9/html/f0945c58-08e4-46fc-a15b-e1714a064d91.htm) defines numeric values using digits, an optional sign, and a decimal point. [SET POINT Command](https://www.vfphelp.com/help/html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm) states that `SET POINT` changes display but calculations must use a period. | `include/copperfin/platform/invariant_numeric.h`; `src/platform/invariant_numeric.cpp`; `src/runtime/prg_engine_expression.inl` (`parse_number`) | `tests/test_prg_engine_parser_classes.cpp` (`test_invariant_numeric_parser_preserves_vfp_decimal_contract`, comma-decimal preprocessor locale test); `tests/test_prg_engine_data_io_save_restore.cpp` (`test_restore_from_parses_numeric_values_invariantly`) | macOS: both CTest targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8` (8/8). Linux seq1419: source/evidence mapping pass plus both targets under default, `C`, and `en_US.utf8` (6/6); `pt_BR`/`de_DE` were not installed and macOS supplies those executions. | `recovered` | closed `#4896` |
 
 ## LLR-VFP-NUM-001 Evidence Boundary
 
@@ -48,3 +48,13 @@ nonfinite values unless a consuming binary-field contract explicitly opts in.
 On Apple libc++, where floating-point `std::from_chars` may be unavailable, the
 fallback stream is explicitly imbued with `std::locale::classic()` and uses
 `std::noskipws`, preserving the same invariant contract.
+
+Independent Linux review at channel sequence 1419 fetched and checked both
+shipped-help pages, verified every mapped code and test location, and ran the
+actual `test_prg_engine_parser_classes` and `test_prg_engine_data_io` targets.
+The latter is the CMake target containing
+`test_prg_engine_data_io_save_restore.cpp`; the source shard is not a standalone
+test target. The Linux host's missing `pt_BR` and `de_DE` locales are disclosed
+rather than inferred as executions. Linux source review confirmed the mapped
+comma-decimal parser test constructs its locale facet in process, while the
+macOS matrix supplies both installed locale runs.

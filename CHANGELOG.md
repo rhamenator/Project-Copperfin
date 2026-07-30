@@ -4,8 +4,10 @@
   displayed decimal point changes. The row maps that requirement to Copperfin's
   invariant numeric parser, PRG expression parser, focused parser/data-I/O
   regressions, and the Apple-libc++ classic-locale fallback. This traceability
-  addition changes no product behavior; broader requirements recovery remains
-  open.
+  addition changes no product behavior. macOS passes both mapped targets under
+  `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8`; independent Linux review
+  verifies the citations/mapping and passes both targets under default, `C`,
+  and `en_US.utf8`. #4896 is closed; broader requirements recovery remains open.
 
 - 2026-07-30: Corrected the current RC roadmap ledger for closed Studio-host
   JSON-control-escape child #4873. Its exact product/test head `4a75d3273` has
