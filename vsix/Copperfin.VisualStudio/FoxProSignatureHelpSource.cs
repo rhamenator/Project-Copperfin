@@ -125,9 +125,15 @@ internal sealed class FoxProSignature : ISignature
         Documentation = entry.Documentation;
 
         var builtParameters = new List<IParameter>();
+        var parameterSearchStart = entry.Content.IndexOf('(') + 1;
         foreach (var parameter in entry.Parameters)
         {
-            builtParameters.Add(new FoxProParameter(this, entry.Content, parameter));
+            var locusStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+                entry.Content,
+                parameter.Name,
+                parameterSearchStart);
+            builtParameters.Add(new FoxProParameter(this, entry.Content, parameter, locusStart));
+            parameterSearchStart = Math.Max(parameterSearchStart, locusStart + parameter.Name.Length);
         }
 
         parameters = new ReadOnlyCollection<IParameter>(builtParameters);
@@ -170,17 +176,11 @@ internal sealed class FoxProSignature : ISignature
 
 internal sealed class FoxProParameter : IParameter
 {
-    public FoxProParameter(ISignature signature, string content, FoxProParameterEntry entry)
+    public FoxProParameter(ISignature signature, string content, FoxProParameterEntry entry, int locusStart)
     {
         Signature = signature;
         Name = entry.Name;
         Documentation = entry.Documentation;
-
-        var locusStart = content.IndexOf(entry.Name, StringComparison.OrdinalIgnoreCase);
-        if (locusStart < 0)
-        {
-            locusStart = 0;
-        }
 
         Locus = new Span(locusStart, Math.Min(entry.Name.Length, Math.Max(0, content.Length - locusStart)));
         PrettyPrintedLocus = Locus;

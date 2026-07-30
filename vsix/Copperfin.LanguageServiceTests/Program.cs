@@ -103,6 +103,7 @@ internal static partial class Program
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions();
         TestProjectSignatureHelpUsesInlineRoutineParameters();
+        TestSignatureParameterLociUseDeclarationStarts();
         TestProjectLanguageServiceRecognizesProcAbbreviation();
         TestProjectLanguageServiceDiscoversVisibilityQualifiedMethods();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
@@ -2315,6 +2316,51 @@ internal static partial class Program
         {
             TryDelete(root);
         }
+    }
+
+    private static void TestSignatureParameterLociUseDeclarationStarts()
+    {
+        const string projectSignature =
+            "Configure(tcLongName, tc = Normalize(tcLater), tcLater, taBounds = [1, 2], tcTail)";
+        var searchStart = projectSignature.IndexOf('(') + 1;
+
+        var longNameStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "tcLongName", searchStart);
+        searchStart = longNameStart + "tcLongName".Length;
+        var shortNameStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "tc", searchStart);
+        searchStart = shortNameStart + "tc".Length;
+        var laterNameStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "tcLater", searchStart);
+        searchStart = laterNameStart + "tcLater".Length;
+        var boundsStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "taBounds", searchStart);
+        searchStart = boundsStart + "taBounds".Length;
+        var tailStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            projectSignature, "tcTail", searchStart);
+
+        Expect(longNameStart == projectSignature.IndexOf("tcLongName", StringComparison.Ordinal) &&
+               shortNameStart == projectSignature.IndexOf("tc =", StringComparison.Ordinal) &&
+               laterNameStart == projectSignature.LastIndexOf("tcLater", StringComparison.Ordinal) &&
+               boundsStart == projectSignature.IndexOf("taBounds", StringComparison.Ordinal) &&
+               tailStart == projectSignature.IndexOf("tcTail", StringComparison.Ordinal),
+            "signature parameter loci should use declaration starts instead of prefixes, nested mentions, or bracket-expression commas");
+
+        const string builtInSignature = "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])";
+        searchStart = builtInSignature.IndexOf('(') + 1;
+        var messageStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            builtInSignature, "cMessage", searchStart);
+        searchStart = messageStart + "cMessage".Length;
+        var styleStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            builtInSignature, "nDialogBoxType", searchStart);
+        searchStart = styleStart + "nDialogBoxType".Length;
+        var titleStart = FoxProIntelliSenseCatalog.FindSignatureParameterLocusStart(
+            builtInSignature, "cTitleBarText", searchStart);
+
+        Expect(messageStart == builtInSignature.IndexOf("cMessage", StringComparison.Ordinal) &&
+               styleStart == builtInSignature.IndexOf("nDialogBoxType", StringComparison.Ordinal) &&
+               titleStart == builtInSignature.IndexOf("cTitleBarText", StringComparison.Ordinal),
+            "signature parameter loci should preserve nested optional-bracket syntax for built-in functions");
     }
 
     private static void TestProjectLanguageServiceRecognizesProcAbbreviation()

@@ -383,6 +383,104 @@ internal static class FoxProIntelliSenseCatalog
         Cache.Clear();
     }
 
+    internal static int FindSignatureParameterLocusStart(
+        string content,
+        string parameterName,
+        int searchStart)
+    {
+        if (string.IsNullOrEmpty(content) || string.IsNullOrEmpty(parameterName))
+        {
+            return 0;
+        }
+
+        var openParen = content.IndexOf('(');
+        if (openParen >= 0)
+        {
+            var parenthesisDepth = 1;
+            var quote = '\0';
+            var atParameterStart = true;
+
+            for (var index = openParen + 1; index < content.Length && parenthesisDepth > 0; index++)
+            {
+                if (atParameterStart)
+                {
+                    while (index < content.Length &&
+                           (char.IsWhiteSpace(content[index]) || content[index] == '['))
+                    {
+                        index++;
+                    }
+
+                    if (index >= searchStart &&
+                        ParameterNameMatchesAt(content, parameterName, index))
+                    {
+                        return index;
+                    }
+
+                    atParameterStart = false;
+                    if (index >= content.Length)
+                    {
+                        break;
+                    }
+                }
+
+                var value = content[index];
+                if (quote != '\0')
+                {
+                    if (value == quote)
+                    {
+                        if (index + 1 < content.Length && content[index + 1] == quote)
+                        {
+                            index++;
+                        }
+                        else
+                        {
+                            quote = '\0';
+                        }
+                    }
+                    continue;
+                }
+
+                if (value == '\'' || value == '"')
+                {
+                    quote = value;
+                }
+                else if (value == '(')
+                {
+                    parenthesisDepth++;
+                }
+                else if (value == ')')
+                {
+                    parenthesisDepth--;
+                }
+                else if (value == ',' && parenthesisDepth == 1)
+                {
+                    atParameterStart = true;
+                }
+            }
+        }
+
+        var boundedSearchStart = Math.Max(0, Math.Min(searchStart, content.Length));
+        var fallback = content.IndexOf(parameterName, boundedSearchStart, StringComparison.OrdinalIgnoreCase);
+        return fallback >= 0 ? fallback : 0;
+    }
+
+    private static bool ParameterNameMatchesAt(string content, string parameterName, int start)
+    {
+        if (start < 0 || start + parameterName.Length > content.Length ||
+            string.Compare(content, start, parameterName, 0, parameterName.Length, StringComparison.OrdinalIgnoreCase) != 0)
+        {
+            return false;
+        }
+
+        var end = start + parameterName.Length;
+        return end >= content.Length || !IsIdentifierCharacter(content[end]);
+    }
+
+    private static bool IsIdentifierCharacter(char value)
+    {
+        return char.IsLetterOrDigit(value) || value == '_';
+    }
+
     private static void AddContextualProjectEntries(
         IDictionary<string, FoxProCompletionEntry> completions,
         ProjectSymbolIndex index,
