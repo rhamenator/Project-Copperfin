@@ -1421,6 +1421,20 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             this.localization.Text("AssetEditor.Snapshot.LoadingStatus"),
             StringComparison.Ordinal);
 
+    internal bool CanRunProjectWorkflow =>
+        CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+
+    internal bool TryRunProjectWorkflow(CopperfinProjectOperation operation)
+    {
+        if (!CanRunProjectWorkflow)
+        {
+            return false;
+        }
+
+        QueueUiAction(() => RunProjectWorkflowAsync(operation));
+        return true;
+    }
+
     public bool CanHandleUndoCommand()
     {
         if (TryFindFocusedUndoTextBox() is not null)

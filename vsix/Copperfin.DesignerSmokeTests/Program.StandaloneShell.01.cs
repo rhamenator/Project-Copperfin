@@ -61,6 +61,95 @@ internal static partial class Program
         TearDownForm(form);
     }
 
+    private static void SmokeStandaloneStudioProjectCommands()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-project-commands",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var projectPath = Path.Combine(root, "commands.pjx");
+        var programPath = Path.Combine(root, "commands.prg");
+
+        try
+        {
+            File.WriteAllText(projectPath, string.Empty);
+            File.WriteAllText(programPath, "RETURN");
+            using var form = new StudioMainForm(
+                new CopperfinLocalization("es-419"),
+                new InMemoryStudioShellLayoutStore())
+            {
+                Width = 1200,
+                Height = 800,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            Expect(form.BuildProjectMenuText == "&Compilar proyecto" &&
+                   form.RunProjectMenuText == "&Ejecutar sin depurar" &&
+                   form.DebugProjectMenuText == "Iniciar &depuración",
+                "standalone project commands should use the active locale catalog");
+            Expect(form.BuildProjectShortcutKeys == (Keys.Control | Keys.Shift | Keys.B) &&
+                   form.RunProjectShortcutKeys == (Keys.Control | Keys.F5) &&
+                   form.DebugProjectShortcutKeys == Keys.F5,
+                "standalone project commands should expose conventional Windows shortcuts");
+            Expect(!form.ProjectCommandsEnabled,
+                "standalone project commands should be disabled without an active project");
+
+            form.OpenDocument(projectPath);
+            form.Show();
+            Application.DoEvents();
+            Expect(form.ProjectCommandsEnabled,
+                "standalone project commands should be enabled for an active PJX document");
+
+            var projectEditor = FindTabControls(form)
+                .SelectMany(tab => tab.TabPages.Cast<TabPage>())
+                .Where(page => string.Equals(page.ToolTipText, projectPath, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(page => page.Controls.OfType<CopperfinAssetEditorControl>())
+                .Single();
+            projectEditor.SuppressProjectWorkflowDialogs = true;
+            Expect(form.RunActiveProjectWorkflowForTest(CopperfinProjectOperation.Build),
+                "standalone Build command should route to the active project editor");
+            Expect(WaitUntil(
+                    TimeSpan.FromSeconds(10),
+                    () => GetPrivateField<CopperfinProjectExecutionResult>(
+                        projectEditor,
+                        "currentProjectWorkflowResult") is not null),
+                "standalone Build command should execute the shared project workflow");
+
+            form.OpenDocument(programPath);
+            Application.DoEvents();
+            Expect(!form.ProjectCommandsEnabled,
+                "standalone project commands should be disabled for a non-project active document");
+            Expect(!form.RunActiveProjectWorkflowForTest(CopperfinProjectOperation.Build),
+                "standalone project commands should not route through a non-project active document");
+
+            form.CloseActiveDocument();
+            Application.DoEvents();
+            Expect(form.ProjectCommandsEnabled,
+                "standalone project commands should refresh when closing back to a PJX document");
+            TearDownForm(form);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeStandaloneStudioCommandWindowInteraction()
     {
         using var form = new StudioMainForm(

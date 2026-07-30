@@ -22,6 +22,9 @@ internal sealed class StudioMainForm : Form
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly ToolStripMenuItem closeDocumentMenuItem;
+    private readonly ToolStripMenuItem buildProjectMenuItem;
+    private readonly ToolStripMenuItem runProjectMenuItem;
+    private readonly ToolStripMenuItem debugProjectMenuItem;
     private readonly ToolStripMenuItem commandWindowMenuItem;
     private readonly ToolStripMenuItem terminalWindowMenuItem;
     private readonly ToolStripMenuItem floatCommandWindowMenuItem;
@@ -68,6 +71,36 @@ internal sealed class StudioMainForm : Form
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
         menuStrip.Items.Add(fileMenu);
+
+        var projectMenu = new ToolStripMenuItem(this.localization.Text("Studio.ProjectMenu"));
+        buildProjectMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.BuildProjectMenu"),
+            null,
+            (_, _) => RunActiveProjectWorkflow(CopperfinProjectOperation.Build))
+        {
+            ShortcutKeys = Keys.Control | Keys.Shift | Keys.B,
+            Enabled = false
+        };
+        runProjectMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.RunProjectMenu"),
+            null,
+            (_, _) => RunActiveProjectWorkflow(CopperfinProjectOperation.Run))
+        {
+            ShortcutKeys = Keys.Control | Keys.F5,
+            Enabled = false
+        };
+        debugProjectMenuItem = new ToolStripMenuItem(
+            this.localization.Text("Studio.DebugProjectMenu"),
+            null,
+            (_, _) => RunActiveProjectWorkflow(CopperfinProjectOperation.Debug))
+        {
+            ShortcutKeys = Keys.F5,
+            Enabled = false
+        };
+        projectMenu.DropDownItems.Add(buildProjectMenuItem);
+        projectMenu.DropDownItems.Add(runProjectMenuItem);
+        projectMenu.DropDownItems.Add(debugProjectMenuItem);
+        menuStrip.Items.Add(projectMenu);
 
         var viewMenu = new ToolStripMenuItem(this.localization.Text("Studio.ViewMenu"));
         commandWindowMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.CommandWindowMenu"))
@@ -224,6 +257,22 @@ internal sealed class StudioMainForm : Form
 
     internal string CloseDocumentMenuText => closeDocumentMenuItem.Text;
 
+    internal string BuildProjectMenuText => buildProjectMenuItem.Text;
+
+    internal string RunProjectMenuText => runProjectMenuItem.Text;
+
+    internal string DebugProjectMenuText => debugProjectMenuItem.Text;
+
+    internal Keys BuildProjectShortcutKeys => buildProjectMenuItem.ShortcutKeys;
+
+    internal Keys RunProjectShortcutKeys => runProjectMenuItem.ShortcutKeys;
+
+    internal Keys DebugProjectShortcutKeys => debugProjectMenuItem.ShortcutKeys;
+
+    internal bool ProjectCommandsEnabled => buildProjectMenuItem.Enabled &&
+                                            runProjectMenuItem.Enabled &&
+                                            debugProjectMenuItem.Enabled;
+
     internal string FloatCommandWindowMenuText => floatCommandWindowMenuItem.Text;
 
     internal string FloatTerminalWindowMenuText => floatTerminalWindowMenuItem.Text;
@@ -323,6 +372,11 @@ internal sealed class StudioMainForm : Form
     internal void SubmitCommandForTest(string command)
     {
         commandWindowControl.SubmitCommandForTest(command);
+    }
+
+    internal bool RunActiveProjectWorkflowForTest(CopperfinProjectOperation operation)
+    {
+        return RunActiveProjectWorkflow(operation);
     }
 
     private string ExecuteCommandWindowInput(string command)
@@ -801,6 +855,7 @@ internal sealed class StudioMainForm : Form
         documentTabs.SelectedTab = page;
         openDocuments[normalizedPath] = page;
         editorControl.LoadDocument(normalizedPath, objectName, uniqueId);
+        UpdateSelectedDocumentChrome();
 
         var assetKind = CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath, localization);
         Text = localization.Format("Studio.WindowTitleWithAssetKind", assetKind);
@@ -855,6 +910,11 @@ internal sealed class StudioMainForm : Form
     {
         var page = documentTabs.SelectedTab;
         closeDocumentMenuItem.Enabled = page is not null;
+        var activeEditor = page?.Controls.OfType<CopperfinAssetEditorControl>().SingleOrDefault();
+        var projectCommandsEnabled = activeEditor?.CanRunProjectWorkflow == true;
+        buildProjectMenuItem.Enabled = projectCommandsEnabled;
+        runProjectMenuItem.Enabled = projectCommandsEnabled;
+        debugProjectMenuItem.Enabled = projectCommandsEnabled;
         if (page is null)
         {
             Text = localization.Text("Studio.AppTitle");
@@ -866,5 +926,13 @@ internal sealed class StudioMainForm : Form
         var assetKind = CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath, localization);
         Text = localization.Format("Studio.WindowTitleWithAssetKind", assetKind);
         UpdateStatus(normalizedPath);
+    }
+
+    private bool RunActiveProjectWorkflow(CopperfinProjectOperation operation)
+    {
+        var editor = documentTabs.SelectedTab?.Controls
+            .OfType<CopperfinAssetEditorControl>()
+            .SingleOrDefault();
+        return editor?.TryRunProjectWorkflow(operation) == true;
     }
 }
