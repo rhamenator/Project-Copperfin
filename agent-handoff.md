@@ -2,6 +2,18 @@
 
 ## Current State
 
+The #4865/#3217 Windows-message handler-result slice is implemented at
+product/test head `6b226ba33`. The native `BINDEVENT()` dispatch lane now
+requires string handler results to contain a complete invariant signed
+pointer-sized integer before returning them to the host. Valid `"48"` and
+`"-7"` results remain compatible, while partial, decimal/grouped, and
+overflowing strings fail closed to zero. The focused headless regression
+dispatches real messages, restores `READ EVENTS`, and preserves numeric
+handler results, wildcard bindings, and current-event `AEVENTS()` metadata.
+The runtime-surface target passes under default, `pt_BR.UTF-8`, and
+`de_DE.UTF-8` on Linux. AppleClang and MSVC review remain required before
+closing #4865. This is focused evidence, not full RC evidence.
+
 The #4864/#3217 opaque runtime object-identity slice is implemented at
 product/test head `d21415cbf`. The shared
 `object:<prog-id>#<handle>` parser requires a complete invariant positive
@@ -12,7 +24,8 @@ suffixes remain character data. They fail `COMPOBJ()`, cannot expose or mutate
 the live object through `GETPEM()` / `SETPEM()`, and leave its property state
 unchanged; valid internal identity remains `O` and compares equal. The focused
 runtime-surface target passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
-on Linux. AppleClang and MSVC review remain required before closing #4864.
+on Linux and Windows/MSVC. AppleClang review remains required before closing
+#4864.
 This is focused evidence, not full RC evidence.
 
 The #4863/#109 portable cursor-XML numeric-metadata slice is implemented at
@@ -24,9 +37,9 @@ round trip and rejects partial, grouped, negative, missing, and overflowing
 metadata. Every malformed case returns zero without creating a new alias,
 mutating an existing destination DBF, changing its selected alias/record, or
 emitting `runtime.xmltocursor` success. The focused runtime-surface target
-passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux. AppleClang and
-MSVC review remain required before closing #4863. This is focused evidence,
-not full RC evidence.
+passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux and
+Windows/MSVC. AppleClang review remains required before closing #4863. This is
+focused evidence, not full RC evidence.
 
 The #4862/#109 persisted transaction-recovery scalar slice is implementation-
 complete and cross-platform reviewed. Journal writers serialize nesting levels
