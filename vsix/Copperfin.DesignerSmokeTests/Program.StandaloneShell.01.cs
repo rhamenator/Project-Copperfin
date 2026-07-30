@@ -120,6 +120,7 @@ internal static partial class Program
                 .SelectMany(page => page.Controls.OfType<CopperfinAssetEditorControl>())
                 .Single();
             projectEditor.SuppressProjectWorkflowDialogs = true;
+            var owningUiThreadId = Environment.CurrentManagedThreadId;
             Expect(form.RunActiveProjectWorkflowForTest(CopperfinProjectOperation.Build),
                 "standalone Build command should route to the active project editor");
             Expect(WaitUntil(
@@ -128,6 +129,8 @@ internal static partial class Program
                         projectEditor,
                         "currentProjectWorkflowResult") is not null),
                 "standalone Build command should execute the shared project workflow");
+            Expect(projectEditor.LastProjectWorkflowUiThreadIdForTest == owningUiThreadId,
+                "standalone project workflow completion should return to the owning UI thread before teardown");
 
             form.OpenDocument(programPath);
             Application.DoEvents();

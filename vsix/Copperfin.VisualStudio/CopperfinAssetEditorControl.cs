@@ -165,6 +165,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
     private CopperfinStudioSnapshotDocument? currentSnapshot;
     private CopperfinRuntimeDebugSession? currentDebugSession;
     private CopperfinProjectExecutionResult? currentProjectWorkflowResult;
+    private int lastProjectWorkflowUiThreadId;
     private CopperfinProjectInsights? currentProjectInsights;
     private int debugSessionGeneration;
     private bool suppressSelectionSync;
@@ -1424,6 +1425,8 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
     internal bool CanRunProjectWorkflow =>
         CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
 
+    internal int LastProjectWorkflowUiThreadIdForTest => lastProjectWorkflowUiThreadId;
+
     internal bool TryRunProjectWorkflow(CopperfinProjectOperation operation)
     {
         if (!CanRunProjectWorkflow)
@@ -1741,6 +1744,7 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         }
         currentDebugSession = null;
         currentProjectWorkflowResult = null;
+        lastProjectWorkflowUiThreadId = 0;
         currentProjectInsights = null;
         sectionListView.Items.Clear();
         objectListView.Items.Clear();
@@ -3953,7 +3957,23 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
         }
 
         currentProjectWorkflowResult = null;
-        var result = await CopperfinProjectWorkflow.ExecuteAsync(currentPath!, operation, localization);
+        lastProjectWorkflowUiThreadId = 0;
+        var result = await CopperfinProjectWorkflow
+            .ExecuteAsync(currentPath!, operation, localization)
+            .ConfigureAwait(false);
+        PostToUi(() => ApplyProjectWorkflowResult(operation, result));
+    }
+
+    private void ApplyProjectWorkflowResult(
+        CopperfinProjectOperation operation,
+        CopperfinProjectExecutionResult result)
+    {
+        if (IsDisposed || Disposing || snapshotStatusLabel.IsDisposed)
+        {
+            return;
+        }
+
+        lastProjectWorkflowUiThreadId = Environment.CurrentManagedThreadId;
         currentProjectWorkflowResult = result;
         snapshotStatusLabel.Text = result.Message;
         if (!result.Success)
