@@ -2,17 +2,18 @@
 
 ## Current State
 
-The #4884/#27 signature-parameter highlighting slice is complete at exact
-product/test head `f6d4f224c`. Visual Studio parameter loci now resolve only
+The #4884/#27 signature-parameter highlighting slice is complete at final
+product/test head `4f53d7962`. Visual Studio parameter loci now resolve only
 from actual declaration starts after the signature's outer parenthesis or
 top-level commas. Prefix-related names and later parameters mentioned inside
 earlier defaults therefore retain distinct correct highlights, while nested
-calls, quoted commas, bracket-expression commas, and built-in optional-bracket
-syntax remain intact. The warning-free full harness passes locally under
+calls and quoted commas remain intact. True bracket/brace defaults suppress
+internal comma candidates while optional `[, parameter]` notation stays on the
+structured top-level path. The warning-free full harness passes locally under
 default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`. Exact-head Windows VSIX
-run `30530040995` passes all managed/net472 steps and uploads artifact
-`8754358316` with SHA-256
-`3cace3977c17a3b5f691694b856e983899343ffbfea024ce38211c6ab8acef3c`.
+run `30530692392` passes all managed/net472 steps and uploads artifact
+`8754603729` with SHA-256
+`c1bc1c0366076c9690b43f138b9234e31729b80d57ad18950102bf37e52bdc73`.
 Issue #4884 is closed; broader #27/#112 and RC validation remain open.
 Signature content, invariant parameter names, localized documentation,
 invocation parsing, current-parameter selection, runtime/stack, package/debug,

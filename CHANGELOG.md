@@ -7,8 +7,9 @@
   macOS closure audit additionally prevents parameter-like names after commas
   inside bracket/brace defaults from stealing a later declaration locus while
   keeping optional `[, parameter]` delimiters on the top-level path. The
-  corrected warning-free four-mode Release harness passes; exact-head hosted
-  follow-up validation remains pending.
+  corrected warning-free four-mode Release harness and exact-head Windows VSIX
+  run `30530692392` pass at final head `4f53d7962`; artifact `8754603729` was
+  uploaded and #4884 is reclosed.
 
 - 2026-07-30: Completed #4883/#27 visibility-qualified class-method discovery
   across both managed project scanners. `PROTECTED` and `HIDDEN`
