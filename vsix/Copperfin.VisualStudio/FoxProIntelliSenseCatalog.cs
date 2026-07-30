@@ -54,7 +54,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly string[] TableExtensions = { ".dbf", ".dbc" };
     private static readonly string[] IgnoredDirectories = { ".git", ".vs", "bin", "obj", "build", "packages", "node_modules" };
 
-    private static readonly Regex ProcedureRegex = new(@"^\s*PROCEDURE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);

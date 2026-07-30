@@ -102,6 +102,7 @@ internal static partial class Program
         TestProjectProcedureSignatureHelpUsesLparameters();
         TestProjectProcedureSignatureHelpPreservesNestedDefaultExpressions();
         TestProjectSignatureHelpUsesInlineRoutineParameters();
+        TestProjectLanguageServiceRecognizesProcAbbreviation();
         TestProjectProcedureSignatureHelpUsesSingularLparameterForDottedMethod();
         TestProjectProcedureSignatureHelpRejectsBareParameter();
         TestProjectProcedureSignatureHelpFallsBackFromDottedInvocation();
@@ -2307,6 +2308,52 @@ internal static partial class Program
                    method[0].Parameters[0].Name == "tcScope" &&
                    method[0].Parameters[1].Name == "taBounds",
                 "inline class-method parameters should surface with qualified project identity");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectLanguageServiceRecognizesProcAbbreviation()
+    {
+        var root = CreateProjectRoot("proc_abbreviation_project_symbols");
+        try
+        {
+            var sourcePath = Path.Combine(root, "abbreviated.prg");
+            File.WriteAllText(
+                sourcePath,
+                "PROC SaveOrder" + Environment.NewLine +
+                "LPARAMETERS tcCustomerId" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "DEFINE CLASS app.customer.editor AS custom" + Environment.NewLine +
+                "PROC Refresh(tcScope, tlForce = .F.)" + Environment.NewLine +
+                "ENDPROC" + Environment.NewLine +
+                "ENDDEFINE" + Environment.NewLine +
+                "PROCEDURES NotARoutine" + Environment.NewLine);
+
+            var procedure = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "SaveOrder");
+            Expect(procedure.Count == 1 && procedure[0].Content == "SaveOrder(tcCustomerId)" &&
+                   procedure[0].Parameters.Count == 1 && procedure[0].Parameters[0].Name == "tcCustomerId",
+                "PROC declarations should retain following-line project signature discovery");
+            Expect(FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "SaveOrder", out var procedureDefinition) &&
+                   procedureDefinition.Kind == "procedure" && procedureDefinition.LineNumber == 1,
+                "PROC declarations should retain project definition provenance");
+
+            var methodName = "app.customer.editor.Refresh";
+            var method = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, methodName);
+            Expect(method.Count == 1 && method[0].Content ==
+                       "app.customer.editor.Refresh(tcScope, tlForce = .F.)" &&
+                   method[0].Parameters.Select(parameter => parameter.Name).SequenceEqual(
+                       new[] { "tcScope", "tlForce" }),
+                "class PROC declarations should retain qualified inline signature discovery");
+            Expect(FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, methodName, out var methodDefinition) &&
+                   methodDefinition.Kind == "method" && methodDefinition.LineNumber == 5,
+                "class PROC declarations should retain qualified definition provenance");
+
+            Expect(FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "NotARoutine").Count == 0 &&
+                   !FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, "NotARoutine", out _),
+                "longer identifiers beginning with PROCEDURE should not become routine declarations");
         }
         finally
         {
