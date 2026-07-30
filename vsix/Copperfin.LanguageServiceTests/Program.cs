@@ -38,6 +38,7 @@ internal static partial class Program
             return grandchild.ExitCode;
         }
 
+        TestProjectKeywordScannersAreCultureInvariant();
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
         TestLocalizationCatalogSupportsPseudoLocale();
         TestLocalizationCatalogFallsBackToEnglish();
@@ -2482,6 +2483,66 @@ internal static partial class Program
         }
         finally
         {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectKeywordScannersAreCultureInvariant()
+    {
+        var root = CreateProjectRoot("culture_invariant_project_scanners");
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+            CultureInfo.CurrentUICulture = new CultureInfo("tr-TR");
+
+            var sourcePath = Path.Combine(root, "lowercase.prg");
+            File.WriteAllText(
+                sourcePath,
+                "define class app.secure.editor as custom" + Environment.NewLine +
+                "hidden function calculateSecret(tnSeed)" + Environment.NewLine +
+                "endfunc" + Environment.NewLine +
+                "enddefine" + Environment.NewLine +
+                "? app.secure.editor.calculateSecret(1)" + Environment.NewLine);
+
+            const string methodName = "app.secure.editor.calculateSecret";
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, methodName);
+            Expect(signatures.Count == 1 && signatures[0].Parameters.Count == 1 &&
+                   signatures[0].Parameters[0].Name == "tnSeed" &&
+                   FoxProIntelliSenseCatalog.TryResolveDefinition(sourcePath, methodName, out _),
+                "project signature and definition keywords should remain case-insensitive under tr-TR");
+
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                Path = Path.Combine(root, "testapp.pjx"),
+                AssetFamily = "project",
+                ProjectWorkspace = new CopperfinStudioProjectWorkspace
+                {
+                    Entries =
+                    {
+                        new CopperfinStudioProjectEntry
+                        {
+                            Name = "lowercase.prg",
+                            RelativePath = "lowercase.prg",
+                            GroupId = "programs",
+                            GroupTitle = "Programs",
+                            TypeTitle = "Program"
+                        }
+                    }
+                }
+            };
+            var insights = CopperfinProjectInsightClient.BuildInsights(snapshot);
+            Expect(insights.DefinedSymbols.Exists(symbol =>
+                       symbol.Kind == "method" && symbol.Name == methodName) &&
+                   insights.RuntimeReferences.Exists(reference =>
+                       reference.Kind == "call.member" && reference.Name == methodName),
+                "project insight keywords should remain case-insensitive under tr-TR");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
             TryDelete(root);
         }
     }

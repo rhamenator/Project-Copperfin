@@ -12,20 +12,23 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinProjectInsightClient
 {
+    private const RegexOptions ProjectRegexOptions =
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant;
+
     private static CopperfinLocalization Localization => CopperfinLocalization.FromVisualStudioUiCulture();
 
     private static readonly string[] TaskMarkers = { "TODO", "FIXME", "HACK", "BUG", "UNDONE" };
-    private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DoFormRegex = new(@"^\s*DO\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex ReportFormRegex = new(@"^\s*REPORT\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex LabelFormRegex = new(@"^\s*LABEL\s+FORM\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DoRegex = new(@"^\s*DO\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex InvocationRegex = new(@"(?<![A-Za-z0-9_#])([A-Za-z_][A-Za-z0-9_\.]*)\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex DoFormRegex = new(@"^\s*DO\s+FORM\s+(.+)$", ProjectRegexOptions);
+    private static readonly Regex ReportFormRegex = new(@"^\s*REPORT\s+FORM\s+(.+)$", ProjectRegexOptions);
+    private static readonly Regex LabelFormRegex = new(@"^\s*LABEL\s+FORM\s+(.+)$", ProjectRegexOptions);
+    private static readonly Regex DoRegex = new(@"^\s*DO\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex InvocationRegex = new(@"(?<![A-Za-z0-9_#])([A-Za-z_][A-Za-z0-9_\.]*)\s*\(", ProjectRegexOptions);
     private static readonly HashSet<string> TextExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".prg", ".h", ".hpp", ".ch", ".qpr", ".mpr", ".spr", ".ini", ".xml", ".txt"

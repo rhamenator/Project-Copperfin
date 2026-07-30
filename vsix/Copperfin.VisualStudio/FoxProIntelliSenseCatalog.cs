@@ -46,6 +46,9 @@ internal sealed class FoxProDefinitionLocation
 
 internal static class FoxProIntelliSenseCatalog
 {
+    private const RegexOptions ProjectRegexOptions =
+        RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant;
+
     private static readonly string[] TextExtensions = { ".prg", ".h", ".hpp", ".ch", ".qpr", ".mpr", ".spr" };
     private static readonly string[] FormExtensions = { ".scx" };
     private static readonly string[] ReportExtensions = { ".frx" };
@@ -54,21 +57,21 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly string[] TableExtensions = { ".dbf", ".dbc" };
     private static readonly string[] IgnoredDirectories = { ".git", ".vs", "bin", "obj", "build", "packages", "node_modules" };
 
-    private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+(?:""([^""]+)""|<([^>]+)>|([^\s&]+))", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex UseStatementRegex = new(@"^\s*USE\s+(""[^""]+""|'[^']+'|[^\s]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex SqlExecInvocationRegex = new(@"\bSQLEXEC\s*\(", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex ParametersRegex = new(@"^\s*(?:LPARAMETERS?|PARAMETERS)\s+(.+)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex ProcedureRegex = new(@"^\s*PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex MethodProcedureRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?PROC(?:EDURE)?\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex MethodFunctionRegex = new(@"^\s*(?:(?:PROTECTED|HIDDEN)\s+)?FUNCTION\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex DefineClassRegex = new(@"^\s*DEFINE\s+CLASS\s+([A-Za-z0-9_\.]+)\s+AS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex EndDefineRegex = new(@"^\s*ENDDEFINE\b", ProjectRegexOptions);
+    private static readonly Regex DefineRegex = new(@"^\s*#DEFINE\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex IncludeRegex = new(@"^\s*#INCLUDE\s+(?:""([^""]+)""|<([^>]+)>|([^\s&]+))", ProjectRegexOptions);
+    private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex UseStatementRegex = new(@"^\s*USE\s+(""[^""]+""|'[^']+'|[^\s]+)", ProjectRegexOptions);
+    private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex SqlExecInvocationRegex = new(@"\bSQLEXEC\s*\(", ProjectRegexOptions);
+    private static readonly Regex ParametersRegex = new(@"^\s*(?:LPARAMETERS?|PARAMETERS)\s+(.+)$", ProjectRegexOptions);
+    private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", ProjectRegexOptions);
     private static readonly Regex AliasIdentifierRegex = new(@"^[A-Za-z_][A-Za-z0-9_\.]*$", RegexOptions.Compiled);
 
     private static readonly (string Name, string DescriptionKey)[] Keywords =
