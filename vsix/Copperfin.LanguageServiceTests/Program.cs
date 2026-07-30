@@ -116,6 +116,7 @@ internal static partial class Program
         TestProjectInsightsCollectQualifiedAndInstanceStyleMethodCallReferences();
         TestRenamePreviewCollectsProjectMethodDefinitionAndReferences();
         TestCompletionCatalogIngestsCreateCursorAndIntoCursorAliases();
+        TestCreateCursorFieldsFeedMatchingAliasMemberCompletion();
         TestCompletionCatalogIngestsImplicitUseAndSqlExecAliases();
         TestSelectContextKeepsAliasCompletionsAheadOfGlobalProcedureSymbols();
         TestQualifiedProjectMethodSignatureHelpAndDefinition();
@@ -3006,6 +3007,44 @@ internal static partial class Program
                     CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"),
                     StringComparison.Ordinal),
                 "described cursor aliases should reuse the alias metadata description");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestCreateCursorFieldsFeedMatchingAliasMemberCompletion()
+    {
+        var root = CreateProjectRoot("cursor_field_member_completion");
+        try
+        {
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "CREATE CURSOR curLocal (id I, amount N(12, 2), display_name C(40))" + Environment.NewLine +
+                "CREATE CURSOR curOther (other_id I)" + Environment.NewLine);
+
+            var localMembers = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "curLocal.", string.Empty);
+            Expect(localMembers.Any(entry => entry.DisplayText == "id" && entry.Kind == "field") &&
+                   localMembers.Any(entry => entry.DisplayText == "amount" && entry.Kind == "field") &&
+                   localMembers.Any(entry => entry.DisplayText == "display_name" && entry.Kind == "field"),
+                "CREATE CURSOR member completion should surface every declared field for the matching alias");
+            Expect(localMembers.Any(entry => entry.DisplayText == "display_name" &&
+                       entry.Description == CopperfinLocalization.FromVisualStudioUiCulture().Text(
+                           "LanguageService.IntelliSense.Project.CursorFieldDiscovered")),
+                "CREATE CURSOR member completion should localize field metadata through the active UI catalog");
+            Expect(!localMembers.Any(entry => entry.DisplayText == "other_id"),
+                "CREATE CURSOR fields from another alias should not leak into member completion");
+            Expect(!localMembers.Any(entry => entry.DisplayText == "2" && entry.Kind == "field"),
+                "numeric type precision commas should not create phantom cursor fields");
+            Expect(localMembers.Any(entry => entry.DisplayText == "Refresh()" && entry.Kind == "member"),
+                "cursor-field completion should preserve generic object members");
+
+            var otherMembers = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "curOther.", string.Empty);
+            Expect(otherMembers.Any(entry => entry.DisplayText == "other_id" && entry.Kind == "field") &&
+                   !otherMembers.Any(entry => entry.DisplayText == "display_name" && entry.Kind == "field"),
+                "member completion should bind cursor fields to the active alias only");
         }
         finally
         {

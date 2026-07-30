@@ -68,6 +68,7 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex UseAliasRegex = new(@"^\s*USE\s+.+?\s+ALIAS\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex UseStatementRegex = new(@"^\s*USE\s+(""[^""]+""|'[^']+'|[^\s]+)", ProjectRegexOptions);
     private static readonly Regex CreateCursorRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
+    private static readonly Regex CreateCursorDeclarationRegex = new(@"^\s*CREATE\s+CURSOR\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)\s*(?:&&.*)?$", ProjectRegexOptions);
     private static readonly Regex IntoCursorRegex = new(@"\bINTO\s+CURSOR\s+([A-Za-z0-9_\.]+)", ProjectRegexOptions);
     private static readonly Regex SqlExecInvocationRegex = new(@"\bSQLEXEC\s*\(", ProjectRegexOptions);
     private static readonly Regex ParametersRegex = new(@"^\s*(?:LPARAMETERS?|PARAMETERS)\s+(.+)$", ProjectRegexOptions);
@@ -208,7 +209,7 @@ internal static class FoxProIntelliSenseCatalog
             var index = GetProjectIndex(filePath!);
             if (LooksLikeMemberAccess(linePrefix))
             {
-                AddProjectMemberEntries(completions, index, localization);
+                AddProjectMemberEntries(completions, index, linePrefix, localization);
             }
             AddContextualProjectEntries(completions, index, linePrefix, localization);
             AddSymbolEntries(completions, index, localization);
@@ -562,8 +563,24 @@ internal static class FoxProIntelliSenseCatalog
         AddEntries(completions, index.Aliases.Select(name => (name, "LanguageService.IntelliSense.Project.AliasFromUseAlias")), "alias", priority: 100, localization);
     }
 
-    private static void AddProjectMemberEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index, CopperfinLocalization localization)
+    private static void AddProjectMemberEntries(
+        IDictionary<string, FoxProCompletionEntry> completions,
+        ProjectSymbolIndex index,
+        string linePrefix,
+        CopperfinLocalization localization)
     {
+        var memberMatch = MemberAccessRegex.Match(linePrefix);
+        if (memberMatch.Success &&
+            index.CursorFields.TryGetValue(memberMatch.Groups[1].Value, out var fields))
+        {
+            AddEntries(
+                completions,
+                fields.Select(field => (field, "LanguageService.IntelliSense.Project.CursorFieldDiscovered")),
+                "field",
+                priority: 0,
+                localization);
+        }
+
         AddEntries(
             completions,
             index.Methods.Select(method => (ExtractMethodName(method), localization.Format("LanguageService.IntelliSense.Project.MethodMemberFromType", ExtractContainingType(method)))),
@@ -787,6 +804,7 @@ internal static class FoxProIntelliSenseCatalog
             AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.WorkAreaAliasDiscovered"));
             TryAddImplicitUseAlias(index, line, normalizedPath, lineIndex + 1, localization);
             AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
+            TryAddCreateCursorFields(index, line);
             AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
             TryAddSqlExecCursorAlias(index, line, normalizedPath, lineIndex + 1, localization);
 
@@ -865,6 +883,33 @@ internal static class FoxProIntelliSenseCatalog
             lineNumber,
             arguments[2].ColumnNumber,
             localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
+    }
+
+    private static void TryAddCreateCursorFields(ProjectSymbolIndex index, string line)
+    {
+        var match = CreateCursorDeclarationRegex.Match(line);
+        if (!match.Success)
+        {
+            return;
+        }
+
+        var alias = match.Groups[1].Value;
+        if (!index.CursorFields.TryGetValue(alias, out var fields))
+        {
+            fields = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            index.CursorFields[alias] = fields;
+        }
+
+        foreach (var declaration in SplitProjectParameters(match.Groups[2].Value))
+        {
+            var trimmed = declaration.TrimStart();
+            var separator = trimmed.IndexOfAny(new[] { ' ', '\t' });
+            var field = separator >= 0 ? trimmed.Substring(0, separator) : trimmed;
+            if (AliasIdentifierRegex.IsMatch(field) && field.IndexOf('.') < 0)
+            {
+                fields.Add(field);
+            }
+        }
     }
 
     private static bool TryInferAliasFromUseOperand(string operand, out string alias)
@@ -1599,6 +1644,7 @@ internal static class FoxProIntelliSenseCatalog
         public HashSet<string> Methods { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Defines { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Aliases { get; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, HashSet<string>> CursorFields { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Tables { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Forms { get; } = new(StringComparer.OrdinalIgnoreCase);
         public HashSet<string> Reports { get; } = new(StringComparer.OrdinalIgnoreCase);
