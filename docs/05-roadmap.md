@@ -45,8 +45,10 @@ Debugging menu commands use Ctrl+Shift+B, Ctrl+F5, and F5 and route only through
 the active PJX editor's existing workflow. Focused portable UI, Release Studio,
 default/qps-ploc language, exact-head VSIX `30534152607`, and Linux managed-UI
 `30534152549` validation pass. Artifacts `8755969821` and `8755970713` retain
-their GitHub SHA-256 digests. The child is closed; native Windows UI evidence,
-broader #26/#112, and RC validation remain separate.
+their GitHub SHA-256 digests. Cross-platform installer run `30534152560` also
+passes, including Windows standalone build/install-tree checks and artifact
+`8756272479`. The child is closed; native Windows UI evidence, broader #26/#112,
+and RC validation remain separate.
 
 Current class-property IntelliSense evidence includes #4886 at product/test
 head `bad499421`: class-scope identifier assignments become qualified,

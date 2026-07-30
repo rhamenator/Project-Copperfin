@@ -14,9 +14,12 @@ Exact-head VSIX run `30534152607` and Linux managed-UI run `30534152549` pass;
 artifacts `8755969821` and `8755970713` have SHA-256 digests
 `00a4211f991d4932188135322a1473f80aa8444cddb35687f3c9bdb3d823e950`
 and `ac72dc96a905151dc17470ed6f3fd0a524a0bf5510a98618030fdfd00dbbb2bd`.
-Native Windows designer smoke run `30534349069` and installer run `30534152560`
-remain in progress. Issue #4888 is closed; broader #26/#112 and RC validation
-remain open.
+Installer run `30534152560` also passes on Windows, Linux, and macOS, including
+the standalone Studio build and install-tree checks; Windows artifact
+`8756272479` has SHA-256
+`3f444ba5885a15d316c0e348f5184dd5f9e4ed6e6633d6d7b98e4d0ac678f01a`.
+Native Windows designer smoke run `30534349069` remains in progress. Issue
+#4888 is closed; broader #26/#112 and RC validation remain open.
 
 The #4887/#28 project class-property reference/rename slice is finally corrected
 at combined product/test head `9f8f425cf`. Its original implementation records qualified property

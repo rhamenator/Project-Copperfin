@@ -6,8 +6,11 @@
   focused nine-assertion Xvfb/Mono smoke, warning-free Release Studio build,
   default/qps-ploc language harness, exact-head VSIX run `30534152607`, and
   Linux managed-UI run `30534152549` pass. VSIX artifact `8755969821` and UI
-  evidence artifact `8755970713` have recorded SHA-256 digests; native Windows
-  designer smoke and installer evidence remain in progress.
+  evidence artifact `8755970713` have recorded SHA-256 digests. Installer run
+  `30534152560` also passes all three platforms, including standalone Studio
+  build/install-tree checks on Windows; Windows artifact `8756272479` has
+  SHA-256 `3f444ba5885a15d316c0e348f5184dd5f9e4ed6e6633d6d7b98e4d0ac678f01a`.
+  Native Windows designer smoke remains in progress.
 
 - 2026-07-30: Implemented and finally corrected #4887/#28 project class-property references and rename
   preview. Project Insights now applies the same `DEFINE CLASS` routine-scope

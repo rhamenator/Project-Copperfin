@@ -39,7 +39,8 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   workflow and refreshes across selection/close/non-project states. Exact head
   `192ef78bd` passes focused portable UI, Release Studio, default/qps-ploc
   language, VSIX run `30534152607`, and Linux managed-UI run `30534152549`;
-  artifacts `8755969821` and `8755970713` were uploaded.
+  artifacts `8755969821` and `8755970713` were uploaded. Installer run
+  `30534152560` passes all platforms and uploads Windows artifact `8756272479`.
 - Corrected G2 class-property navigation slice: `#4887` carries qualified project
   property definitions and safe dotted uses into Code References and rename
   preview. Exact/unique resolution rejects ambiguous trailing names; call-shaped
