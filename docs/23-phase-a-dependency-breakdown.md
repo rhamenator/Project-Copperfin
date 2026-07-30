@@ -39,7 +39,8 @@ again unless a regression or fresh compatibility evidence creates a new gap.
   field metadata is localized, and invariant field names/kinds plus generic
   members are unchanged. Corrective head `7955966d8` also prevents trailing
   `&&` comment punctuation from seeding phantom fields and passes the local
-  four-mode matrix; exact-head hosted and independent review remain pending.
+  four-mode matrix and synchronized Windows VSIX run `30532334557`; artifact
+  `8755271046` was uploaded.
 - Recent G1 signature-highlighting slice: `#4884` anchors Visual Studio
   parameter loci at actual declaration starts instead of unconstrained name
   matches. Prefix-related names and later names repeated inside earlier default

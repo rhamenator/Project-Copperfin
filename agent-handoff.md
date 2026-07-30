@@ -10,10 +10,12 @@ matching alias member-access expression. Field descriptions use the managed
 localization catalog; invariant alias/field names, the `field` completion kind,
 and generic/class member behavior remain intact. Declaration capture stops at
 the earliest outer close that leaves only whitespace or a trailing `&&`
-comment, preventing comment punctuation from creating phantom fields. The warning-free full harness
-passes locally under default, `pt_BR.UTF-8`, `de_DE.UTF-8`, and `qps-ploc`.
-Exact-head hosted follow-up validation is pending. Issue #4885 remains open;
-broader #27/#112 and RC validation remain open.
+comment, preventing comment punctuation from creating phantom fields. The
+warning-free full harness passes locally under default, `pt_BR.UTF-8`,
+`de_DE.UTF-8`, and `qps-ploc`. Synchronized Windows VSIX run `30532334557`
+passes all managed/net472 steps and uploads artifact `8755271046` with SHA-256
+`67cd59e2e5aa11ea3ed5efa905e72fb19aedafc21ed4e5dba83d2bb13489bf2d`.
+Issue #4885 is reclosed; broader #27/#112 and RC validation remain open.
 
 The #4884/#27 signature-parameter highlighting slice is complete at final
 product/test head `05bd74dc8`. Visual Studio parameter loci now resolve only

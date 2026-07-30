@@ -6,8 +6,9 @@
   catalog, and invariant field names/kinds plus generic object members remain
   unchanged. A macOS closure audit also prevents trailing `&&` comments with
   commas and closing parentheses from seeding phantom fields. Corrective head
-  `7955966d8` passes the warning-free four-mode Release harness; exact-head
-  hosted follow-up validation remains pending.
+  `7955966d8` passes the warning-free four-mode Release harness and synchronized
+  Windows VSIX run `30532334557`; artifact `8755271046` was uploaded and #4885
+  is reclosed.
 
 - 2026-07-30: Completed #4884/#27 declaration-anchored Visual Studio
   signature-help parameter highlighting. Parameter loci now advance through

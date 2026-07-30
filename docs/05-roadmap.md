@@ -33,9 +33,9 @@ Current cursor-member evidence includes #4885 at corrective product/test head
 alias-scoped field completions without splitting nested type clauses such as
 `N(12, 2)`. Localized descriptions are added without changing invariant field
 names/kinds or existing generic/class members. Trailing `&&` comment punctuation
-cannot seed phantom fields. The local four-mode matrix passes; the child remains
-open for exact-head hosted and independent review, while broader G1 and RC
-validation remain separate.
+cannot seed phantom fields. The local four-mode matrix and synchronized Windows
+VSIX run `30532334557` pass; artifact `8755271046` was uploaded. The child is
+closed, while broader G1 and RC validation remain separate.
 
 Current signature-highlighting evidence includes #4884 at final product/test
 head `05bd74dc8`: Visual Studio parameter loci advance through real top-level
