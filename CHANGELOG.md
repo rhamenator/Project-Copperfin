@@ -15,7 +15,7 @@
   trailing keys cannot be truncated into a different valid item ID. Valid
   positive keys and empty-key allocation remain unchanged. Focused
   runtime-surface tests pass under default, `pt_BR.UTF-8`, and `de_DE.UTF-8`
-  Linux locales; cross-platform review remains required before closure.
+  on Linux, macOS/AppleClang, and Windows/MSVC; #4856 is closed.
 
 - 2026-07-29: Hardened #4854/#3217 runtime integer parsing. Runtime config
   limits/code pages and SYS(2326/2327) handle strings now require complete
