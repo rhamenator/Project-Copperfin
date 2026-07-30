@@ -170,6 +170,7 @@
             {
                 return false;
             }
+            output.imbue(std::locale::classic());
 
             output << "VERSION\t1\n";
             output << "LEVEL\t" << state.level << "\n";

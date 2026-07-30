@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <locale>
 #include <system_error>
 #include <vector>
 
@@ -20,6 +21,44 @@ namespace copperfin::table_mutation_tests
 {
 
 using namespace copperfin::test_support;
+
+namespace {
+
+class grouped_transaction_numpunct final : public std::numpunct<char> {
+protected:
+    char do_decimal_point() const override { return ','; }
+    char do_thousands_sep() const override { return '.'; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
+class transaction_global_locale_guard final {
+public:
+    explicit transaction_global_locale_guard(const std::locale& replacement)
+        : previous_(std::locale::global(replacement)) {}
+
+    ~transaction_global_locale_guard() { std::locale::global(previous_); }
+
+private:
+    std::locale previous_;
+};
+
+std::filesystem::path find_generated_transaction_journal(
+    const std::filesystem::path& temp_root,
+    std::error_code& ignored) {
+    const std::filesystem::path transaction_root = temp_root / "runtime-temp" / "transactions";
+    for (const auto& entry : std::filesystem::directory_iterator(transaction_root, ignored)) {
+        if (ignored) {
+            break;
+        }
+        const std::filesystem::path candidate = entry.path() / "journal.log";
+        if (std::filesystem::is_regular_file(candidate, ignored)) {
+            return candidate;
+        }
+    }
+    return {};
+}
+
+}  // namespace
 
 void test_rollback_transaction_replays_local_dbf_changes() {
     namespace fs = std::filesystem;
@@ -431,6 +470,133 @@ void test_startup_replays_pending_transaction_journal() {
     }), "startup session should emit runtime.transaction.replay when crash recovery runs");
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_transaction_journal_serializes_grouped_levels_invariantly() {
+    namespace fs = std::filesystem;
+    constexpr int transaction_level = 1234;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_transaction_grouped_level";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    std::string source;
+    source.reserve(static_cast<std::size_t>(transaction_level) * 18U + 8U);
+    for (int level = 0; level < transaction_level; ++level) {
+        source += "BEGIN TRANSACTION\n";
+    }
+    source += "RETURN\n";
+    const fs::path writer_path = temp_root / "writer.prg";
+    write_text(writer_path, source);
+
+    const std::locale grouping_locale(std::locale::classic(), new grouped_transaction_numpunct());
+    {
+        transaction_global_locale_guard locale_guard(grouping_locale);
+        copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(writer_path.string(), temp_root.string()));
+        const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(writer_state.completed, "grouped-locale transaction writer should complete");
+    }
+
+    const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
+    expect(!journal_path.empty(), "grouped-locale transaction journal should exist");
+    if (!journal_path.empty()) {
+        const std::string journal_text = read_text(journal_path);
+        expect(journal_text.find("LEVEL\t1234\n") != std::string::npos,
+               "transaction journal level should use invariant ungrouped digits");
+        expect(journal_text.find("LEVEL\t1.234\n") == std::string::npos,
+               "transaction journal level must reject host digit grouping at serialization");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_startup_rejects_malformed_transaction_journal_scalars() {
+    namespace fs = std::filesystem;
+
+    struct MalformedJournalCase {
+        std::string name;
+        std::string valid_token;
+        std::string malformed_token;
+    };
+
+    const std::vector<MalformedJournalCase> cases{
+        {"unsupported_version", "VERSION\t1\n", "VERSION\t2\n"},
+        {"partial_level", "LEVEL\t1\n", "LEVEL\t1garbage\n"},
+        {"overflowing_level", "LEVEL\t1\n", "LEVEL\t999999999999999999999999\n"},
+        {"malformed_exists", "", ""}};
+
+    for (const auto& test_case : cases) {
+        const fs::path temp_root =
+            fs::temp_directory_path() / ("copperfin_prg_engine_transaction_replay_" + test_case.name);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "people.dbf";
+        write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+        const std::string original_bytes = read_text(table_path);
+
+        const fs::path writer_path = temp_root / "writer.prg";
+        write_text(
+            writer_path,
+            "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+            "BEGIN TRANSACTION\n"
+            "GO 1\n"
+            "REPLACE NAME WITH 'BROKEN', AGE WITH 777\n"
+            "RETURN\n");
+        {
+            copperfin::runtime::PrgRuntimeSession writer = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(writer_path.string(), temp_root.string()));
+            const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+            expect(writer_state.completed, test_case.name + ": transaction writer should complete");
+        }
+
+        const std::string modified_bytes = read_text(table_path);
+        expect(modified_bytes != original_bytes,
+               test_case.name + ": transaction writer should modify the live DBF before recovery");
+
+        const fs::path journal_path = find_generated_transaction_journal(temp_root, ignored);
+        expect(!journal_path.empty(), test_case.name + ": generated pending journal should exist");
+        if (journal_path.empty()) {
+            fs::remove_all(temp_root, ignored);
+            continue;
+        }
+
+        std::string journal_text = read_text(journal_path);
+        const std::string valid_token = test_case.name == "malformed_exists"
+            ? "FILE\t" + table_path.string() + "\t1\t"
+            : test_case.valid_token;
+        const std::string malformed_token = test_case.name == "malformed_exists"
+            ? "FILE\t" + table_path.string() + "\t1garbage\t"
+            : test_case.malformed_token;
+        const std::size_t token_position = journal_text.find(valid_token);
+        expect(token_position != std::string::npos,
+               test_case.name + ": generated journal should contain the scalar token under test");
+        if (token_position == std::string::npos) {
+            fs::remove_all(temp_root, ignored);
+            continue;
+        }
+        journal_text.replace(token_position, valid_token.size(), malformed_token);
+        write_text(journal_path, journal_text);
+
+        const fs::path reader_path = temp_root / "reader.prg";
+        write_text(reader_path, "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession reader = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(reader_path.string(), temp_root.string()));
+        const auto reader_state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(reader_state.completed, test_case.name + ": startup should fail closed without a runtime fault");
+        expect(fs::is_regular_file(table_path),
+               test_case.name + ": malformed journal must not delete the live DBF");
+        expect(read_text(table_path) == modified_bytes,
+               test_case.name + ": malformed journal must not overwrite or partially replay the live DBF");
+        expect(std::none_of(reader_state.events.begin(), reader_state.events.end(), [](const auto& event) {
+            return event.category == "runtime.transaction.replay";
+        }), test_case.name + ": malformed journal must not emit a successful replay event");
+
+        fs::remove_all(temp_root, ignored);
+    }
 }
 
 } // namespace copperfin::table_mutation_tests

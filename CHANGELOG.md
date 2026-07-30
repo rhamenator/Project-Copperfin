@@ -1,3 +1,14 @@
+- 2026-07-30: Hardened #4862/#109 persisted transaction recovery journal
+  scalars. Journal writers now serialize nesting levels through the classic
+  locale, and startup recovery requires the supported version, complete
+  nonnegative invariant levels, and exact `0`/`1` file-existence flags before
+  replay. Unsupported, partial, overflowing, and malformed scalar records fail
+  closed without deleting, overwriting, or partially replaying the live DBF.
+  Valid interrupted-transaction recovery, event identity, paths, localization,
+  and machine field names remain unchanged. Focused table-mutation tests pass
+  under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux; cross-platform
+  review remains required.
+
 - 2026-07-30: Hardened #4861/#3217 VFP work-area allocation at the upper
   boundary. Explicit area 32767 no longer increments the signed allocation
   cursor past the valid range, and automatic allocation wraps to the lowest

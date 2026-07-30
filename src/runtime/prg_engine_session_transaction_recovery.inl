@@ -79,6 +79,8 @@
             state.root_path = journal_path.parent_path();
             state.journal_path = journal_path;
 
+            bool saw_version = false;
+            bool saw_level = false;
             std::string line;
             while (std::getline(input, line))
             {
@@ -104,20 +106,36 @@
                 {
                     continue;
                 }
-                if (tokens[0] == "LEVEL" && tokens.size() >= 2U)
+                if (tokens[0] == "VERSION")
                 {
-                    try
+                    if (saw_version || tokens.size() != 2U || tokens[1] != "1")
                     {
-                        state.level = std::max(0, std::stoi(tokens[1]));
+                        return false;
                     }
-                    catch (...)
-                    {
-                        state.level = 0;
-                    }
+                    saw_version = true;
                     continue;
                 }
-                if (tokens[0] == "FILE" && tokens.size() >= 4U)
+                if (tokens[0] == "LEVEL")
                 {
+                    if (saw_level || tokens.size() != 2U)
+                    {
+                        return false;
+                    }
+                    const auto parsed_level = copperfin::platform::try_parse_invariant_integer<int>(tokens[1]);
+                    if (!parsed_level.has_value() || *parsed_level < 0)
+                    {
+                        return false;
+                    }
+                    state.level = *parsed_level;
+                    saw_level = true;
+                    continue;
+                }
+                if (tokens[0] == "FILE")
+                {
+                    if (tokens.size() != 4U || (tokens[2] != "0" && tokens[2] != "1"))
+                    {
+                        return false;
+                    }
                     TransactionJournalFileEntry entry;
                     entry.original_path = tokens[1];
                     entry.existed_at_start = tokens[2] == "1";
@@ -126,7 +144,7 @@
                 }
             }
 
-            return true;
+            return saw_version && saw_level;
         }
 
         void replay_pending_transaction_journals()

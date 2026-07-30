@@ -2,6 +2,18 @@
 
 ## Current State
 
+The #4862/#109 persisted transaction-recovery scalar slice is implemented at
+the current local head. Journal writers serialize nesting levels through the
+classic locale, while startup recovery requires version `1`, a complete
+nonnegative invariant `LEVEL`, and exact `0`/`1` `FILE` existence flags before
+replay. Focused coverage corrupts real generated pending journals with an
+unsupported version, partial and overflowing levels, and a malformed existence
+flag; every case leaves the live DBF byte-for-byte unchanged and emits no false
+successful replay event. The same suite preserves valid interrupted-transaction
+recovery and passes under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux.
+macOS/AppleClang and Windows/MSVC review remains required before closing #4862.
+This is focused evidence, not full RC evidence.
+
 The #4861/#3217 VFP work-area allocation-boundary slice is implemented at the
 current local head. Explicit area 32767 no longer increments the signed
 allocation cursor past the valid VFP range; automatic allocation wraps to the

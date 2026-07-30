@@ -63,6 +63,8 @@ int main()
     test_rollback_transaction_removes_created_table_cursor();
     test_transaction_rollback_leaves_table_unchanged();
     test_startup_replays_pending_transaction_journal();
+    test_transaction_journal_serializes_grouped_levels_invariantly();
+    test_startup_rejects_malformed_transaction_journal_scalars();
 
     if (test_failures() != 0)
     {
