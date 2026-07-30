@@ -2156,7 +2156,12 @@ internal static partial class Program
 
             var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "app.customer.editor.Refresh");
             Expect(
-                string.Equals(description, "Project class symbol deriving from custom.", StringComparison.Ordinal),
+                string.Equals(
+                    description,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Format(
+                        "LanguageService.IntelliSense.Project.ClassSymbolDerivingFrom",
+                        "custom"),
+                    StringComparison.Ordinal),
                 "quick info should reuse the resolved dotted class definition description");
         }
         finally
@@ -2597,7 +2602,10 @@ internal static partial class Program
 
             var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "curRemote");
             Expect(
-                string.Equals(description, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
+                string.Equals(
+                    description,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"),
+                    StringComparison.Ordinal),
                 "described cursor aliases should reuse the alias metadata description");
         }
         finally
@@ -2625,12 +2633,18 @@ internal static partial class Program
 
             var useDescription = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "orderslive");
             Expect(
-                string.Equals(useDescription, "Known work-area alias discovered in project source.", StringComparison.Ordinal),
+                string.Equals(
+                    useDescription,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.WorkAreaAliasDiscovered"),
+                    StringComparison.Ordinal),
                 "implicit USE aliases should reuse the work-area alias description");
 
             var sqlDescription = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "sqlorders");
             Expect(
-                string.Equals(sqlDescription, "Known cursor alias discovered in project source.", StringComparison.Ordinal),
+                string.Equals(
+                    sqlDescription,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"),
+                    StringComparison.Ordinal),
                 "SQLEXEC target aliases should reuse the cursor alias description");
         }
         finally
@@ -2657,7 +2671,8 @@ internal static partial class Program
             {
                 Expect(completions[0].DisplayText == "curLocal" && completions[0].Kind == "alias",
                     "select context should rank alias completions ahead of unrelated global procedure symbols");
-                Expect(completions[0].Description == "Known work-area alias from project source.",
+                Expect(
+                    completions[0].Description == CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.WorkAreaAliasFromProjectSource"),
                     "select context should preserve the context-specific alias description instead of overwriting it with the global symbol entry");
                 Expect(completions.Any(entry => entry.DisplayText == "curProc" && entry.Kind == "symbol"),
                     "select context should still keep global procedure symbols available after the context-ranked alias");
@@ -2725,7 +2740,10 @@ internal static partial class Program
             {
                 Expect(completions[0].DisplayText == "SaveOrder" && completions[0].Kind == "member",
                     "member access context should rank project-defined methods ahead of generic fallback members");
-                Expect(completions[0].Description == "Project method member from app.customer.editor.",
+                Expect(
+                    completions[0].Description == CopperfinLocalization.FromVisualStudioUiCulture().Format(
+                        "LanguageService.IntelliSense.Project.MethodMemberFromType",
+                        "app.customer.editor"),
                     "member access context should surface the originating class path for project method members");
             }
         }
@@ -2825,7 +2843,10 @@ internal static partial class Program
             }
 
             var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "ORDER_STATUS_READY");
-            Expect(string.Equals(description, "Project preprocessor symbol.", StringComparison.Ordinal),
+            Expect(string.Equals(
+                    description,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.PreprocessorSymbol"),
+                    StringComparison.Ordinal),
                 "included external header defines should participate in token description lookup");
         }
         finally
@@ -2874,7 +2895,10 @@ internal static partial class Program
             }
 
             var description = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "REPORT_STATUS_READY");
-            Expect(string.Equals(description, "Project preprocessor symbol.", StringComparison.Ordinal),
+            Expect(string.Equals(
+                    description,
+                    CopperfinLocalization.FromVisualStudioUiCulture().Text("LanguageService.IntelliSense.Project.PreprocessorSymbol"),
+                    StringComparison.Ordinal),
                 "defines from recursive unquoted includes should participate in token description lookup");
         }
         finally
@@ -3013,7 +3037,9 @@ internal static partial class Program
             {
                 Expect(saveOrder.Kind == "symbol",
                     "cross-file procedure completions should preserve the invariant symbol kind");
-                Expect(saveOrder.Description == "Procedure/function/program symbol in the active project.",
+                Expect(
+                    saveOrder.Description == CopperfinLocalization.FromVisualStudioUiCulture().Text(
+                        "LanguageService.IntelliSense.Project.ProcedureFunctionProgramSymbol"),
                     "cross-file procedure completions should use the existing project-symbol description");
             }
         }
