@@ -33,6 +33,13 @@ again unless a regression or fresh compatibility evidence creates a new gap.
 
 ## Current Evidence Ledger
 
+- Recent G1 signature-help slice: `#4880` replaces unconditional comma splitting
+  for project `PARAMETERS`/`LPARAMETERS` declarations with top-level lexical
+  splitting. Nested parentheses, brackets/braces, quoted commas, and doubled
+  quote escapes remain within their default expression; raw documentation and
+  invariant parameter names are preserved. The local four-mode managed matrix
+  passes, and Windows VSIX run `30526816023` passes every managed/net472 step
+  and uploads artifact `8753063334`.
 - Recent F1 build-cleanliness slice: `#4879` routes nullable editor-pane lookup
   through shared `TryNormalize` path identity handling. Null, blank, and invalid
   arguments fail closed; valid relative/absolute paths preserve existing

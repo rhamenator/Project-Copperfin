@@ -2,6 +2,21 @@
 
 ## Current State
 
+The #4880/#27 project signature-help slice is implemented at exact product/test
+head `95dff1c75`. Project `PARAMETERS`/`LPARAMETERS` declarations now split only
+at top-level commas, so defaults containing nested calls, brackets/braces,
+quoted commas, or doubled quote escapes no longer become phantom parameters.
+Raw default-expression documentation/signature content and invariant parameter
+names remain unchanged. The full Release language-service harness builds with
+zero warnings/errors and passes locally under default, `pt_BR.UTF-8`,
+`de_DE.UTF-8`, and explicit `qps-ploc`. Exact-head Windows VSIX run
+`30526816023` passes VSIX build, localized resources, managed VSIX and language-
+service tests, the net472 process-runner suite, and artifact upload. Artifact
+`8753063334` has SHA-256
+`75a27188ad3672265e5dde9bed5c3b8e019f864803e9e0c00254a1d4943030c1`.
+Issue #4880 is closed; broader #27/#112 and full RC validation remain open. No
+catalog, runtime, package/debug, or trust contract changed.
+
 The #4879/#25 nullable editor-path slice is implemented at exact product/test
 head `c990506f0`. Shared `CopperfinDocumentPathIdentity.TryNormalize` now
 contains null, blank, and `ArgumentException`-invalid lookup input while

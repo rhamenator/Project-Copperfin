@@ -28,6 +28,14 @@ Each workstream has a subgoal tree with observable acceptance criteria:
 Completed workstreams are not revisited unless a regression, new compatibility
 evidence, or release-validation failure creates a new acceptance gap.
 
+Current G1 signature-help evidence includes #4880 at exact product/test head
+`95dff1c75`: project `PARAMETERS`/`LPARAMETERS` discovery now separates only
+top-level commas, preserving nested call, bracket/brace, quoted-comma, and
+doubled-quote default expressions instead of surfacing phantom parameters.
+The four-mode local managed matrix and exact-head Windows VSIX run
+`30526816023` pass; the run uploads artifact `8753063334`. The child is closed,
+while broader #27/#112 and the full RC matrix remain separate.
+
 Fresh release-validation failures remain valid implementation input when they
 identify a nondeterministic gate. #4878 at exact test head `5d6dd4d13` replaces
 two nested-PowerShell held-output fixtures with owned managed child modes while

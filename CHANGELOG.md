@@ -1,3 +1,11 @@
+- 2026-07-30: Implemented #4880/#27 nesting-aware project signature parameters.
+  Language-service discovery now splits `PARAMETERS`/`LPARAMETERS` only at
+  top-level commas, preserving nested calls, brackets/braces, quoted commas,
+  and doubled quote escapes in default expressions without changing raw
+  documentation or invariant parameter names. The four-mode local Release
+  harness and exact-head Windows VSIX run `30526816023` pass; artifact
+  `8753063334` was uploaded and #4880 is closed.
+
 - 2026-07-30: Closed #4879/#25 by adding nullable-safe document-path
   normalization for editor-pane lookup. Null, blank, and invalid path arguments
   now fail lookup without producing an identity; valid paths retain the existing
