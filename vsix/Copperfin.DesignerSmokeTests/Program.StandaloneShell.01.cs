@@ -150,6 +150,102 @@ internal static partial class Program
         }
     }
 
+    private static void SmokeStandaloneStudioUndoCommand()
+    {
+        var root = Path.Combine(
+            Path.GetTempPath(),
+            "copperfin-designer-smoke",
+            "standalone-undo-command",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var programPath = Path.Combine(root, "undo.prg");
+
+        try
+        {
+            File.WriteAllText(programPath, "RETURN");
+            var spanish = new CopperfinLocalization("es-419");
+            using var form = new StudioMainForm(
+                spanish,
+                new InMemoryStudioShellLayoutStore())
+            {
+                Width = 1200,
+                Height = 800,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            Expect(form.EditMenuText == "&Editar" &&
+                   form.UndoMenuText == "Deshacer" &&
+                   form.UndoShortcutKeys == (Keys.Control | Keys.Z),
+                "standalone Edit/Undo should use the active locale and conventional Windows shortcut");
+            Expect(!form.UndoCommandEnabled && !form.TryUndoActiveDocumentForTest(),
+                "standalone Undo should be disabled and safely unhandled without an active document");
+
+            form.OpenDocument(programPath);
+            form.Show();
+            Application.DoEvents();
+            var editor = FindTabControls(form)
+                .SelectMany(tab => tab.TabPages.Cast<TabPage>())
+                .Where(page => string.Equals(page.ToolTipText, programPath, StringComparison.OrdinalIgnoreCase))
+                .SelectMany(page => page.Controls.OfType<CopperfinAssetEditorControl>())
+                .Single();
+            var editBox = new TextBox
+            {
+                Text = "before",
+                Width = 240,
+                Height = 28
+            };
+            editor.Controls.Add(editBox);
+            editBox.BringToFront();
+            editBox.ClearUndo();
+            editBox.SelectAll();
+            editBox.SelectedText = "after";
+            editBox.Focus();
+            Application.DoEvents();
+
+            Expect(editBox.CanUndo,
+                "standalone Undo smoke should create a real focused text edit in the shared editor");
+            form.RefreshUndoCommandStateForTest();
+            Expect(form.UndoCommandEnabled && form.UndoMenuText == "Deshacer",
+                "standalone Undo availability should follow the active editor state");
+            Expect(form.TryUndoActiveDocumentForTest() && editBox.Text == "before",
+                "standalone Undo should route to the active editor's existing focused-text undo stack");
+            Expect(!form.UndoCommandEnabled,
+                "standalone Undo should refresh availability after consuming the active edit");
+
+            form.CloseActiveDocument();
+            Application.DoEvents();
+            Expect(!form.UndoCommandEnabled && !form.TryUndoActiveDocumentForTest(),
+                "standalone Undo should disable and safely no-op after closing the active document");
+
+            var pseudo = new CopperfinLocalization(CopperfinLocalization.PseudoLocale);
+            using var pseudoForm = new StudioMainForm(
+                pseudo,
+                new InMemoryStudioShellLayoutStore());
+            Expect(pseudoForm.EditMenuText == pseudo.Text("Studio.EditMenu") &&
+                   pseudoForm.UndoMenuText == pseudo.Text("AssetEditor.Undo.Command"),
+                "standalone Undo should remain pseudo-localization ready");
+            TearDownForm(form);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(root))
+                {
+                    Directory.Delete(root, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeStandaloneStudioCommandWindowInteraction()
     {
         using var form = new StudioMainForm(

@@ -49,6 +49,7 @@ internal static partial class Program
         runner.Run(nameof(SmokeStandaloneStudioCloseDocumentTabs), SmokeStandaloneStudioCloseDocumentTabs);
         runner.Run(nameof(SmokeStandaloneStudioCommandWindowDocking), SmokeStandaloneStudioCommandWindowDocking);
         runner.Run(nameof(SmokeStandaloneStudioProjectCommands), SmokeStandaloneStudioProjectCommands);
+        runner.Run(nameof(SmokeStandaloneStudioUndoCommand), SmokeStandaloneStudioUndoCommand);
         runner.Run(nameof(SmokeStandaloneStudioToolWindowFloating), SmokeStandaloneStudioToolWindowFloating);
         runner.Run(nameof(SmokeStandaloneStudioCommandWindowInteraction), SmokeStandaloneStudioCommandWindowInteraction);
         runner.Run(nameof(SmokeDesignerHarnessCleanupClosesOwnedForms), SmokeDesignerHarnessCleanupClosesOwnedForms);

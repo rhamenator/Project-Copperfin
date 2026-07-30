@@ -22,6 +22,8 @@ internal sealed class StudioMainForm : Form
     private readonly StudioTerminalWindowControl terminalWindowControl;
     private readonly ToolStripStatusLabel statusLabel;
     private readonly ToolStripMenuItem closeDocumentMenuItem;
+    private readonly ToolStripMenuItem editMenuItem;
+    private readonly ToolStripMenuItem undoMenuItem;
     private readonly ToolStripMenuItem buildProjectMenuItem;
     private readonly ToolStripMenuItem runProjectMenuItem;
     private readonly ToolStripMenuItem debugProjectMenuItem;
@@ -71,6 +73,19 @@ internal sealed class StudioMainForm : Form
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
         menuStrip.Items.Add(fileMenu);
+
+        editMenuItem = new ToolStripMenuItem(this.localization.Text("Studio.EditMenu"));
+        undoMenuItem = new ToolStripMenuItem(
+            this.localization.Text("AssetEditor.Undo.Command"),
+            null,
+            (_, _) => TryUndoActiveDocument())
+        {
+            ShortcutKeys = Keys.Control | Keys.Z,
+            Enabled = false
+        };
+        editMenuItem.DropDownOpening += (_, _) => RefreshUndoCommandState();
+        editMenuItem.DropDownItems.Add(undoMenuItem);
+        menuStrip.Items.Add(editMenuItem);
 
         var projectMenu = new ToolStripMenuItem(this.localization.Text("Studio.ProjectMenu"));
         buildProjectMenuItem = new ToolStripMenuItem(
@@ -227,6 +242,16 @@ internal sealed class StudioMainForm : Form
         base.OnFormClosing(e);
     }
 
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == (Keys.Control | Keys.Z) && TryUndoActiveDocument())
+        {
+            return true;
+        }
+
+        return base.ProcessCmdKey(ref msg, keyData);
+    }
+
     internal bool IsCommandWindowVisible => toolWindowTabs.TabPages.Contains(commandWindowPage) ||
                                             commandFloatingForm is not null;
 
@@ -256,6 +281,14 @@ internal sealed class StudioMainForm : Form
     internal string? ActiveDocumentPath => documentTabs.SelectedTab?.ToolTipText;
 
     internal string CloseDocumentMenuText => closeDocumentMenuItem.Text;
+
+    internal string EditMenuText => editMenuItem.Text;
+
+    internal string UndoMenuText => undoMenuItem.Text;
+
+    internal Keys UndoShortcutKeys => undoMenuItem.ShortcutKeys;
+
+    internal bool UndoCommandEnabled => undoMenuItem.Enabled;
 
     internal string BuildProjectMenuText => buildProjectMenuItem.Text;
 
@@ -377,6 +410,16 @@ internal sealed class StudioMainForm : Form
     internal bool RunActiveProjectWorkflowForTest(CopperfinProjectOperation operation)
     {
         return RunActiveProjectWorkflow(operation);
+    }
+
+    internal void RefreshUndoCommandStateForTest()
+    {
+        RefreshUndoCommandState();
+    }
+
+    internal bool TryUndoActiveDocumentForTest()
+    {
+        return TryUndoActiveDocument();
     }
 
     private string ExecuteCommandWindowInput(string command)
@@ -911,6 +954,7 @@ internal sealed class StudioMainForm : Form
         var page = documentTabs.SelectedTab;
         closeDocumentMenuItem.Enabled = page is not null;
         var activeEditor = page?.Controls.OfType<CopperfinAssetEditorControl>().SingleOrDefault();
+        RefreshUndoCommandState(activeEditor);
         var projectCommandsEnabled = activeEditor?.CanRunProjectWorkflow == true;
         buildProjectMenuItem.Enabled = projectCommandsEnabled;
         runProjectMenuItem.Enabled = projectCommandsEnabled;
@@ -934,5 +978,25 @@ internal sealed class StudioMainForm : Form
             .OfType<CopperfinAssetEditorControl>()
             .SingleOrDefault();
         return editor?.TryRunProjectWorkflow(operation) == true;
+    }
+
+    private bool TryUndoActiveDocument()
+    {
+        var editor = documentTabs.SelectedTab?.Controls
+            .OfType<CopperfinAssetEditorControl>()
+            .SingleOrDefault();
+        var handled = editor?.TryHandleUndoCommand() == true;
+        RefreshUndoCommandState(editor);
+        return handled;
+    }
+
+    private void RefreshUndoCommandState(CopperfinAssetEditorControl? editor = null)
+    {
+        editor ??= documentTabs.SelectedTab?.Controls
+            .OfType<CopperfinAssetEditorControl>()
+            .SingleOrDefault();
+        undoMenuItem.Text = editor?.GetUndoCommandText() ??
+                            localization.Text("AssetEditor.Undo.Command");
+        undoMenuItem.Enabled = editor?.CanHandleUndoCommand() == true;
     }
 }
