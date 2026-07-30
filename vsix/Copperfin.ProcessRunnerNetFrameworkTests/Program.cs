@@ -5,26 +5,61 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 
 namespace Copperfin.VisualStudio;
 
 internal static class Program
 {
-    private const int WindowsTimeoutFixtureMilliseconds = 5000;
+    private const string HoldOutputHandlesArgument = "--hold-output-handles";
+    private const string HoldOutputTreeArgument = "--hold-output-tree";
+    private const string StartOutputHolderArgument = "--start-output-holder";
+    private const int HelperLifetimeMilliseconds = 30000;
+    private const int HelperReadinessMilliseconds = 10000;
+    private const int WindowsTimeoutFixtureMilliseconds = 10000;
 
     [STAThread]
-    private static int Main()
+    private static int Main(string[] args)
     {
+        if (args.Length == 2 && string.Equals(args[0], HoldOutputHandlesArgument, StringComparison.Ordinal))
+        {
+            File.WriteAllText(args[1], Process.GetCurrentProcess().Id.ToString());
+            Thread.Sleep(HelperLifetimeMilliseconds);
+            return 0;
+        }
+
+        if (args.Length == 3 && string.Equals(args[0], HoldOutputTreeArgument, StringComparison.Ordinal))
+        {
+            Console.WriteLine("before-timeout-stdout");
+            Console.Error.WriteLine("before-timeout-stderr");
+            File.WriteAllText(args[1], Process.GetCurrentProcess().Id.ToString());
+            using var grandchild = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument, args[2]));
+            if (grandchild is null)
+            {
+                return 2;
+            }
+            grandchild.WaitForExit();
+            return grandchild.ExitCode;
+        }
+
+        if (args.Length == 2 && string.Equals(args[0], StartOutputHolderArgument, StringComparison.Ordinal))
+        {
+            Console.WriteLine("successful-stdout");
+            using var descendant = Process.Start(CreateSelfStartInfo(HoldOutputHandlesArgument, args[1]));
+            return descendant is not null && WaitForProcessIdFile(args[1], HelperReadinessMilliseconds)
+                ? 0
+                : 2;
+        }
+
         if (Environment.OSVersion.Platform != PlatformID.Win32NT)
         {
-            Console.WriteLine("Copperfin .NET Framework process-runner tests skipped: the fixture requires Windows cmd.exe, PowerShell, and taskkill.exe.");
+            Console.WriteLine("Copperfin .NET Framework process-runner tests skipped: the fixture requires Windows process-tree and taskkill.exe behavior.");
             return 0;
         }
 
         var root = Path.Combine(Path.GetTempPath(), "copperfin_process_runner_net472", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        var scriptPath = Path.Combine(root, "timeout.cmd");
         var childPidPath = Path.Combine(root, "child.pid");
         var grandchildPidPath = Path.Combine(root, "grandchild.pid");
         var childPid = 0;
@@ -32,29 +67,9 @@ internal static class Program
 
         try
         {
-            File.WriteAllLines(
-                scriptPath,
-                new[]
-                {
-                    "@echo off",
-                    "echo before-timeout-stdout",
-                    "echo before-timeout-stderr 1>&2",
-                    "powershell.exe -NoProfile -Command \"$grandchild = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + EscapePowerShellLiteral(childPidPath) + "' -Value $PID; Set-Content -LiteralPath '" + EscapePowerShellLiteral(grandchildPidPath) + "' -Value $grandchild.Id; Wait-Process -Id $grandchild.Id\"",
-                    "exit /b 0"
-                });
-
             var stopwatch = Stopwatch.StartNew();
             var result = CopperfinProcessRunner.Run(
-                new ProcessStartInfo
-                {
-                    FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
-                    Arguments = "/d /s /c \"\"" + scriptPath + "\"\"",
-                    WorkingDirectory = root,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                },
+                CreateSelfStartInfo(HoldOutputTreeArgument, childPidPath, grandchildPidPath, root),
                 timeoutMilliseconds: WindowsTimeoutFixtureMilliseconds);
             stopwatch.Stop();
 
@@ -101,41 +116,19 @@ internal static class Program
         }
     }
 
-    private static string EscapePowerShellLiteral(string value)
-    {
-        return value.Replace("'", "''");
-    }
-
     private static void TestSuccessfulExitWithHeldPipe(string root)
     {
-        var scriptPath = Path.Combine(root, "successful.cmd");
         var descendantPidPath = Path.Combine(root, "successful-descendant.pid");
         var descendantPid = 0;
         try
         {
-            File.WriteAllLines(
-                scriptPath,
-                new[]
-                {
-                    "@echo off",
-                    "echo successful-stdout",
-                    "powershell.exe -NoProfile -Command \"$child = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + EscapePowerShellLiteral(descendantPidPath) + "' -Value $child.Id\"",
-                    "exit /b 0"
-                });
-
             var stopwatch = Stopwatch.StartNew();
             var result = CopperfinProcessRunner.Run(
-                new ProcessStartInfo
-                {
-                    FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
-                    Arguments = "/d /s /c \"\"" + scriptPath + "\"\"",
-                    WorkingDirectory = root,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                },
-                timeoutMilliseconds: 5000);
+                CreateSelfStartInfo(
+                    StartOutputHolderArgument,
+                    descendantPidPath,
+                    workingDirectory: root),
+                timeoutMilliseconds: WindowsTimeoutFixtureMilliseconds);
             stopwatch.Stop();
 
             Assert(result.Started, "net472 process runner should start the successful descendant fixture");
@@ -145,7 +138,7 @@ internal static class Program
                 "net472 process runner should preserve the successful root exit code");
             Assert(result.StandardOutput.Contains("successful-stdout"),
                 "net472 process runner should retain output captured before successful root completion");
-            Assert(stopwatch.ElapsedMilliseconds < 5000,
+            Assert(stopwatch.ElapsedMilliseconds < WindowsTimeoutFixtureMilliseconds,
                 "net472 process runner should bound output draining without converting success into a timeout");
             Assert(TryReadProcessId(descendantPidPath, out descendantPid),
                 "net472 successful descendant fixture should record its PID");
@@ -154,6 +147,50 @@ internal static class Program
         {
             TryTerminateProcessTree(descendantPid);
         }
+    }
+
+    private static ProcessStartInfo CreateSelfStartInfo(
+        string mode,
+        string firstPath,
+        string? secondPath = null,
+        string? workingDirectory = null)
+    {
+        var executablePath = Assembly.GetExecutingAssembly().Location;
+        var arguments = QuoteArgument(mode) + " " + QuoteArgument(firstPath);
+        if (secondPath is { Length: > 0 })
+        {
+            arguments += " " + QuoteArgument(secondPath);
+        }
+
+        return new ProcessStartInfo
+        {
+            FileName = executablePath,
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory ?? Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = workingDirectory is not null,
+            RedirectStandardError = workingDirectory is not null
+        };
+    }
+
+    private static string QuoteArgument(string value)
+    {
+        return "\"" + value.Replace("\"", "\\\"") + "\"";
+    }
+
+    private static bool WaitForProcessIdFile(string path, int timeoutMilliseconds)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (stopwatch.ElapsedMilliseconds < timeoutMilliseconds)
+        {
+            if (TryReadProcessId(path, out _))
+            {
+                return true;
+            }
+            Thread.Sleep(25);
+        }
+        return false;
     }
 
     private static bool TryReadProcessId(string path, out int processId)
