@@ -9,6 +9,22 @@
   verifies the citations/mapping and passes both targets under default, `C`,
   and `en_US.utf8`. #4896 is closed; broader requirements recovery remains open.
 
+- 2026-07-30: Added the #4898 dedicated Linux launcher-release identity
+  generator under #4409. The fail-closed script creates an Ed25519 PKCS#8
+  private PEM, matching public PEM, compile-ready single-entry launcher trust
+  registry, and non-secret fingerprint metadata only in a current-user-owned,
+  private, out-of-checkout directory. It rejects invalid signer IDs,
+  in-checkout output, unsafe directory permissions, public/private mismatch,
+  non-Ed25519 DER, and overwrite. Focused contract execution generates and
+  validates a fresh identity, compiles the registry, signs a canonical
+  inventory, checks mode `0600`, and probes negative cases. Documentation maps
+  the two generated inputs to the exact protected `release` environment
+  secrets and makes clear that one Linux ceremony feeds the existing Windows
+  signer; it does not sign macOS/Linux artifacts or authorize the still-pending
+  protected #4409 run. The expanded contract is classified as parallel-safe
+  with process-owned temporary files and bounded child tools rather than the
+  earlier read-only/no-child static check.
+
 - 2026-07-30: Corrected the current RC roadmap ledger for closed Studio-host
   JSON-control-escape child #4873. Its exact product/test head `4a75d3273` has
   accepted Linux, macOS/AppleClang, and Windows/MSVC focused locale evidence,

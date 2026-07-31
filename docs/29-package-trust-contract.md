@@ -61,6 +61,18 @@ copperfin-package-signer sign-launcher-inventory \
 
 `--key-ref` may identify a CI secret-manager object or an external protected file. It must not accept a private key embedded in an issue, source file, package, or generated test fixture. The repository may contain public test vectors and signatures, but never production or machine-specific private keys.
 
+For a new dedicated launcher-release identity on Linux, run
+`tools/package-signer/generate-launcher-signing-key.sh` with an invariant
+`--key-id` and a protected `--output-dir` outside the checkout. Do not reuse the
+commercial-license signer. The generated private PEM maps only to the
+`COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` environment secret; the matching
+generated launcher registry header maps only to
+`COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER`. The public PEM and fingerprint
+metadata are non-secret evidence, while the private PEM remains mode `0600`
+and must be backed up in a protected external store. One Linux generation
+ceremony supplies the existing Windows PowerShell workflow; creating a second
+Windows identity is neither required nor desired.
+
 ## Verification API And Failure States
 
 The native verifier is `copperfin::package_trust`, not `copperfin::licensing`. It may reuse the verify-only Ed25519 primitive, but it owns its envelope parser, canonicalization, launcher trust-key registry, and result statuses. It must not call license parsing or make license-state decisions.

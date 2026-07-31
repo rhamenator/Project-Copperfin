@@ -1,5 +1,47 @@
 # Package Signer
 
+## Generate A Dedicated Launcher-Release Identity On Linux
+
+Do not reuse Copperfin's commercial-license signing key. Generate one dedicated
+launcher-release Ed25519 identity in a protected directory outside this
+checkout:
+
+```sh
+tools/package-signer/generate-launcher-signing-key.sh \
+  --key-id copperfin-launcher-rc1-2026 \
+  --output-dir /home/rich/copperfin-launcher-release-keys
+```
+
+The output directory must be owned by the current user, grant no group or
+other permissions, and live outside the repository. The command refuses
+invalid signer IDs and existing output files. It writes:
+
+- `copperfin-launcher-rc1-2026_launcher_private.pem`: PKCS#8 Ed25519 private
+  key, mode `0600`. Store its complete contents only in the protected GitHub
+  `release` environment secret
+  `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM`.
+- `copperfin-launcher-rc1-2026_launcher_registry.h`: matching single-key
+  `kKnownLauncherInventoryTrustedKeys` registry. Store its complete contents
+  in the `release` environment secret
+  `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER`.
+- `copperfin-launcher-rc1-2026_launcher_public.pem`: non-secret public-key
+  backup.
+- `copperfin-launcher-rc1-2026_launcher_metadata.json`: non-secret signer ID,
+  public-key fingerprint, and output-name record suitable for the release
+  evidence ledger.
+
+Back up the private PEM in a separate protected secret store before depending
+on the identity. Never commit it, paste it into an issue or chat, or store it
+as a repository-level GitHub secret. The `Windows Launcher Trust Validation`
+workflow's `signer_key_id` input must exactly match the `--key-id` value. The
+same generated files are used by the existing Windows PowerShell signer; no
+Windows key-generation script or second key pair is required.
+
+This identity authenticates the Windows generated-launcher inventory. It does
+not Authenticode-sign Windows binaries and does not sign macOS or Linux
+artifacts. Those RC artifact validations retain their existing platform
+contracts.
+
 `sign-launcher-inventory.sh` creates the detached `app.cftrust.sig` sidecar for a finalized canonical `app.cftrust` envelope. It uses OpenSSL's Ed25519 signer and accepts only a key reference to a PEM file outside the repository checkout.
 
 `sign-launcher-inventory.ps1` provides the same fail-closed contract for the

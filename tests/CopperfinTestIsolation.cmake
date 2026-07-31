@@ -238,7 +238,6 @@ function(copperfin_configure_native_test_isolation)
             test_native_platform_workflow_contract
             test_windows_msvc_cache_workflow_contract
             test_native_test_isolation_contract
-            test_package_signer_contract
             test_launcher_trust_provisioning_contract
             test_package_launcher_inventory_trust
             test_security_supply_chain_workflow_contract
@@ -254,6 +253,17 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+
+    copperfin_set_test_isolation(test_package_signer_contract
+        PARALLEL_SAFE
+        FILESYSTEM process-owned
+        ENVIRONMENT none
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM configured
+        AUDIT complete
+    )
 
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only

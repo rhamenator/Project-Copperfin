@@ -2,6 +2,19 @@
 
 ## Current State
 
+#4898 under #4409 adds a dedicated Linux launcher-release identity generator
+at `tools/package-signer/generate-launcher-signing-key.sh`. It produces a
+mode-0600 Ed25519 PKCS#8 private PEM, matching public PEM, compile-ready
+single-entry launcher trust registry, and non-secret fingerprint metadata only
+outside the checkout; it rejects unsafe IDs, locations, permissions,
+mismatches, algorithms, and overwrite. The private PEM and registry map to the
+two exact protected `release` environment secrets, and the key ID maps to the
+manual workflow input. No Windows generator or second identity is needed; the
+existing PowerShell signer consumes the same secret. This does not sign
+macOS/Linux artifacts or complete external #4409 environment provisioning,
+approval, or protected execution. Focused validation and independent review
+remain required before #4898 closure.
+
 Requirements recovery has begun in
 `docs/32-recovered-requirements-traceability.md`. Closed child #4896 establishes
 `LLR-VFP-NUM-001` from shipped VFP9 SP2 Numeric Data Type and `SET POINT` help:
