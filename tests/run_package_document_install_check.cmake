@@ -1,5 +1,6 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 foreach(required_variable IN ITEMS SOURCE_DIR BINARY_DIR TEST_ROOT_BASE)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")

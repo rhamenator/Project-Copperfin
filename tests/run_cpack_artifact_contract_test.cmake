@@ -1,5 +1,6 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 if(NOT DEFINED TEST_ROOT OR "${TEST_ROOT}" STREQUAL "")
     message(FATAL_ERROR "TEST_ROOT is required")

@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #ifndef COPPERFIN_TEST_STUDIO_HOST_JSON_SUPPORT_H
 #define COPPERFIN_TEST_STUDIO_HOST_JSON_SUPPORT_H

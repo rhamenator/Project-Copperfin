@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 // Included inside PrgRuntimeSession::Impl by prg_engine_session.inl.
 
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)

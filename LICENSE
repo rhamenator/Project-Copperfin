@@ -672,3 +672,105 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+------------------------------------------------------------------------
+
+The GNU General Public License text above is unmodified. The following
+project-specific additional permission is granted under section 7 of that
+license.
+
+        COPPERFIN APPLICATION, RUNTIME, AND TOOLCHAIN EXCEPTION
+                         Version 1.0, 4 August 2026
+
+Copyright (C) 2026 Richard M. Hamilton
+
+0. Purpose and scope
+
+This Exception applies to every first-party Project Copperfin file for which
+Richard M. Hamilton can grant copyright permission and which states that it is
+licensed under GPL-3.0-only, unless that file expressly says otherwise. It does
+not change the license of third-party material or grant rights that its
+copyright holder cannot grant.
+
+The purpose of this Exception is to keep Project Copperfin and modifications
+derived from Project Copperfin source code under the GNU General Public
+License while allowing independent applications to use Copperfin development,
+compilation, modernization, integration, packaging, and runtime facilities
+without imposing the GPL on those independent applications.
+
+1. Definitions
+
+"Copperfin Code" means Project Copperfin code covered by GPL-3.0-only to which
+this Exception applies, including a modified version that retains this
+Exception.
+
+An "Independent Work" is any program, application, module, library, source
+file, object file, executable, data set, project, report, label, documentation,
+or other work that is not based on or derived from Copperfin Code. A work does
+not cease to be an Independent Work merely because it uses, requires, loads,
+links with, communicates with, is processed by, or is distributed with
+Copperfin Code through the permissions below.
+
+"Copperfin Interfaces" means Copperfin command-line, process, library, plug-in,
+API, ABI, foreign-function, extension, package, manifest, debug, generated
+launcher, generated scaffold, file, pipe, network, and other documented or
+published integration and runtime interfaces.
+
+"Permitted Output" means source code, object code, executables, libraries,
+packages, launchers, stubs, scaffolds, headers, manifests, debug material,
+data, documentation, or other output produced in the ordinary operation of
+Copperfin from an Independent Work. It includes standard Copperfin support
+material automatically emitted or copied into that output by Copperfin. It
+does not include Copperfin Code deliberately copied or adapted outside that
+ordinary operation.
+
+2. Grant of additional permission
+
+Notwithstanding any other condition of GPL-3.0-only, you have permission to:
+
+  a. use Copperfin Code to inspect, edit, run, interpret, analyze, transform,
+     translate, modernize, generate, compile, assemble, link, package, test,
+     debug, deploy, host, maintain, or support an Independent Work;
+
+  b. combine or link an Independent Work with Copperfin Code, statically or
+     dynamically, in the same executable, library, process, or address space,
+     or connect them through Copperfin Interfaces, without the combination or
+     connection by itself causing the Independent Work to be covered by the
+     GPL;
+
+  c. make, use, reproduce, modify, and convey Permitted Output under terms of
+     your choice, consistent with the license of the Independent Work, even
+     when the Permitted Output contains standard Copperfin support material
+     emitted or copied through Copperfin's ordinary operation; and
+
+  d. reproduce and convey unmodified or modified Copperfin runtime libraries,
+     executables, launchers, support files, and other Copperfin Code together
+     with, embedded in, or alongside an Independent Work or Permitted Output.
+
+These permissions apply regardless of whether an Independent Work is free,
+open source, source-available, or proprietary, and regardless of the license
+terms chosen by its copyright holder.
+
+3. Conditions and retained copyleft
+
+This Exception does not permit you to relicense Copperfin Code itself, or a
+modification based on or derived from Copperfin Code, as proprietary code.
+When you convey Copperfin Code, including Copperfin Code conveyed under
+paragraph 2(d), you must comply with GPL-3.0-only for the Copperfin Code and
+provide its Corresponding Source, license text, notices, and installation
+information when the GPL requires them. Those duties apply to the Copperfin
+Code and modifications derived from it, not to the Independent Work merely
+because of a permitted use, combination, connection, or distribution.
+
+You must comply with the license terms of each Independent Work and all
+third-party material. This Exception grants no trademark rights and provides
+no warranty.
+
+If a combination could otherwise be considered one covered work under the
+GPL, this Exception supplies the additional permission needed for the
+Independent Work and Permitted Output to remain under terms chosen by their
+copyright holders. Wrapping, translating, reorganizing, or renaming Copperfin
+Code does not by itself turn that Copperfin Code into an Independent Work.
+
+When you modify Copperfin Code, GPLv3 section 7 governs whether you retain or
+remove this Exception from your modified version.

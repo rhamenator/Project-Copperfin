@@ -226,13 +226,21 @@ required. Preserve portable native seams while giving Windows-first behavior
 the evidence needed for the MVP release candidate. macOS and Linux standalone
 host parity follows the MVP boundary where practical and is expanded in v1.
 
-The current repository and release line are licensed under GNU GPL-3.0-only.
-The copyleft boundary covers Copperfin and works based on, modifying, copying,
-or incorporating GPL-covered Copperfin code. Merely running, interpreting,
-analyzing, building, or compiling an independent work with Copperfin does not
-change that work's license, and ordinary output derived solely from the user's
-input remains the user's work. Output that actually copies or incorporates
-Copperfin code remains subject to the GPL analysis described in `LICENSE.md`.
+The current repository and release line are licensed under GNU GPL-3.0-only
+with the Copperfin Application, Runtime, and Toolchain Exception 1.0. The
+copyleft boundary covers Copperfin and modifications derived from Copperfin
+source code. The GPLv3 section 7 exception keeps independent applications and
+ordinary toolchain output under their owners' chosen terms across inspection,
+editing, execution, interpretation, analysis, transformation, modernization,
+generation, compilation, assembly, static or dynamic linking, packaging,
+testing, debugging, deployment, hosting, maintenance, and support. It also
+covers in-process and separate-process interfaces, runtime redistribution, and
+ordinary generated launchers, scaffolds, headers, manifests, debug material,
+and packages. Distributors still owe GPL compliance and Corresponding Source
+for Copperfin and modifications derived from Copperfin source itself.
+Because this is a project-specific legal exception, qualified legal review of
+the operative text remains required before the first public release candidate;
+the implementation and regression evidence under #4902 is not legal advice.
 The earlier commercial/source-available proposal is retained only in
 `docs/archive/commercial-licensing-2026/` for possible future reconsideration.
 Normal builds keep `COPPERFIN_ENABLE_PRODUCT_LICENSING=OFF`; product-license

@@ -1,5 +1,6 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 if(NOT DEFINED INSTALL_ROOT OR "${INSTALL_ROOT}" STREQUAL "")
     message(FATAL_ERROR "INSTALL_ROOT is required")

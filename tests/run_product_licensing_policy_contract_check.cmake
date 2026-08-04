@@ -1,5 +1,6 @@
 # Copyright © 2026 Richard M. Hamilton.
 # SPDX-License-Identifier: GPL-3.0-only
+# Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -23,16 +24,26 @@ function(require_text relative_path expected_text)
 endfunction()
 
 require_text("LICENSE" "GNU GENERAL PUBLIC LICENSE")
+require_text("LICENSE" "COPPERFIN APPLICATION, RUNTIME, AND TOOLCHAIN EXCEPTION")
+require_text("LICENSE" "additional permission is granted under section 7")
+require_text("LICENSE" "link an Independent Work with Copperfin Code, statically or")
+require_text("LICENSE" "Permitted Output under terms of")
+require_text("LICENSE" "GPL-3.0-only for the Copperfin Code")
 require_text("LICENSE.md" "GPL-3.0-only")
-require_text("LICENSE.md" "does **not** place that work under the GPL")
-require_text("LICENSE.md" "based on, modifies, copies, or incorporates")
+require_text("LICENSE.md" "place that work under the GPL")
+require_text("LICENSE.md" "link statically or")
+require_text("LICENSE.md" "including proprietary terms")
 require_text("LICENSE.md" "GPLv3 section 2")
+require_text("LICENSE.md" "GPLv3 section 7")
 require_text("README.md" "GNU General Public")
 require_text("README.md" "GPL-3.0-only")
-require_text("README.md" "does **not** place that program")
-require_text("README.md" "actually contains Copperfin code")
-require_text("docs/05-roadmap.md" "ordinary output derived solely")
-require_text("tools/package-signer/README.md" "does not extend Copperfin's GPL")
+require_text("README.md" "Copperfin Application,")
+require_text("README.md" "proprietary terms")
+require_text("docs/05-roadmap.md" "GPLv3 section 7 exception")
+require_text("tools/package-signer/README.md" "static or dynamic linking")
+require_text("docs/33-application-runtime-license-exception.md" "VFP9 Offline Evidence")
+require_text("docs/33-application-runtime-license-exception.md" "GPLv3 section 7")
+require_text("docs/33-application-runtime-license-exception.md" "qualified legal review")
 require_text("docs/archive/commercial-licensing-2026/README.md" "inactive historical material")
 
 foreach(archived_name IN ITEMS
@@ -105,6 +116,15 @@ foreach(source_path IN LISTS policy_sources)
     string(FIND "${source_contents}" "Project Copperfin Source-Available License or" stale_header_offset)
     if(NOT stale_header_offset EQUAL -1)
         message(FATAL_ERROR "Stale source-available header remains in ${source_path}")
+    endif()
+    string(FIND "${source_contents}" "Copyright © 2026 Richard M. Hamilton." first_party_offset)
+    if(NOT first_party_offset EQUAL -1)
+        string(FIND "${source_contents}"
+            "Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE."
+            exception_notice_offset)
+        if(exception_notice_offset EQUAL -1)
+            message(FATAL_ERROR "First-party source omits the Copperfin exception notice: ${source_path}")
+        endif()
     endif()
 endforeach()
 

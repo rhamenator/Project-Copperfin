@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
     runtime_object.properties["count"] = make_number_value(static_cast<double>(runtime_object.collection_items.size()));

@@ -1,13 +1,29 @@
+- 2026-08-04: Added the Copperfin Application, Runtime, and Toolchain
+  Exception 1.0 under #4902 as an operative GPLv3 section 7 additional
+  permission. Independent proprietary and open-source applications retain
+  their owners' chosen terms when Copperfin inspects, edits, runs, interprets,
+  analyzes, transforms, modernizes, generates, compiles, assembles, links,
+  packages, tests, debugs, deploys, hosts, maintains, or supports them. The
+  exception expressly covers static/dynamic linking, same-process and
+  separate-process integration, documented interfaces, runtime redistribution,
+  and ordinary generated launchers, scaffolds, support code, and package/debug
+  material. Copperfin itself and modifications derived from Copperfin source
+  remain GPL-covered, including Corresponding Source duties for distributed
+  Copperfin portions. Scope was checked against the remounted VFP9 offline
+  runtime/distribution help without copying its proprietary terms. Active
+  license/help surfaces and the machine policy contract now enforce the grant;
+  artifact signing remains an independent provenance/integrity control.
+
 - 2026-08-04: Clarified the GPL output and tool-use boundary under #4901.
   Merely running, interpreting, analyzing, building, or compiling independent
   programs with Copperfin does not place those programs, their source, data,
   or ordinary user-input-derived output under GPL-3.0-only. GPL coverage
   remains for Copperfin and works that are based on, modify, copy, or
-  incorporate GPL-covered Copperfin code, including output that actually
-  contains such code. The active license overview, README, roadmap, and signer
-  guidance now state the same boundary; the inactive commercial archive is
-  unchanged. The licensing policy regression requires the clarification and
-  preserves artifact signing as an independent provenance/integrity control.
+  incorporate GPL-covered Copperfin code. #4902 later superseded this slice's
+  narrower generated-code caveat by granting an operative GPLv3 section 7
+  permission for ordinary Copperfin-generated support material, linking, and
+  runtime combination. The inactive commercial archive is unchanged, and
+  artifact signing remains an independent provenance/integrity control.
 
 - 2026-08-04: Restored the repository and current release line to GNU
   GPL-3.0-only under #4900. The prior source-available/commercial license,

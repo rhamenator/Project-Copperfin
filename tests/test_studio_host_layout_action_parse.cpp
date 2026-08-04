@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 #include "test_studio_host_support.h"
 #include "../src/studio/vs_launch_contract_internal.h"

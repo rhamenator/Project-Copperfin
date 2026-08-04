@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 bool object_has_member(const std::vector<std::string>& members, const std::string& normalized_member_name) {
     return std::find_if(members.begin(), members.end(), [&](const std::string& member) {

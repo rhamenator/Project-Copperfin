@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {

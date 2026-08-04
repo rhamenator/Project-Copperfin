@@ -1,5 +1,6 @@
 // Copyright © 2026 Richard M. Hamilton.
 // SPDX-License-Identifier: GPL-3.0-only
+// Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
 // Batch toolbox catalog planning and dispatch coverage.
 void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(

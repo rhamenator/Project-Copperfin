@@ -48,8 +48,11 @@ Important note:
 
 License documents:
 
-- [`LICENSE`](LICENSE) — operative GNU GPL v3.0-only text
+- [`LICENSE`](LICENSE) — operative GNU GPL v3.0-only text plus the Copperfin
+  Application, Runtime, and Toolchain Exception 1.0
 - [`LICENSE.md`](LICENSE.md) — concise current-license overview
+- [`docs/33-application-runtime-license-exception.md`](docs/33-application-runtime-license-exception.md)
+  — exception scope, offline evidence, and release-review rationale
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)
@@ -207,17 +210,22 @@ Known limitation:
 ## Licensing
 
 Project Copperfin is free software licensed under the **GNU General Public
-License, version 3 only** (`GPL-3.0-only`). See [`LICENSE`](LICENSE) for the
-complete terms and [`LICENSE.md`](LICENSE.md) for the plain-language licensing
+License, version 3 only** (`GPL-3.0-only`) with the **Copperfin Application,
+Runtime, and Toolchain Exception 1.0**. See [`LICENSE`](LICENSE) for the
+complete operative terms and [`LICENSE.md`](LICENSE.md) for the plain-language
 boundary.
 
-Using Copperfin to run, interpret, analyze, build, or compile an independent
-program does **not** place that program, its source, its data, or ordinary
-output under the GPL. Its author keeps the right to choose its license. The
-GPL applies to Copperfin and to works that, under applicable copyright law,
-are based on, modify, copy, or incorporate GPL-covered Copperfin code. Output
-that actually contains Copperfin code is therefore different from work that
-Copperfin merely processes.
+Independent applications remain under their owners' chosen terms—including
+proprietary terms—when Copperfin inspects, edits, runs, interprets, analyzes,
+transforms, modernizes, generates, compiles, assembles, links, packages, tests,
+debugs, deploys, hosts, maintains, or supports them. The exception covers
+static and dynamic linking, in-process and separate-process execution,
+documented interfaces, distributable Copperfin runtime components, and
+ordinary generated launchers, scaffolds, support code, and package material.
+The GPL continues to cover Copperfin itself and modifications derived from
+Copperfin source code; GPL obligations for those Copperfin portions do not
+extend into an independent application merely because of these permitted
+uses or combinations.
 
 The earlier source-available/commercial model is inactive. Its documentation
 and implementation are preserved for possible future reconsideration, but
