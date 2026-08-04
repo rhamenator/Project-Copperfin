@@ -295,6 +295,13 @@ add_test(
 )
 
 add_test(
+    NAME test_repository_community_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DCOPPERFIN_SOURCE_ROOT=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_repository_community_contract_check.cmake
+)
+
+add_test(
     NAME test_launcher_trust_provisioning_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

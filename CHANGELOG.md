@@ -1,3 +1,16 @@
+- 2026-08-04: Completed contributor licensing and repository community health
+  under #4903. Contributors retain copyright and apply GPL-3.0-only with the
+  Copperfin Application, Runtime, and Toolchain Exception 1.0 to authorized
+  submissions; no copyright assignment is required. DCO 1.1 sign-offs record
+  provenance, while Git authorship/co-authorship, pull requests, issues, and
+  GitHub contributor history provide durable credit. Added contribution,
+  credit, conduct, support, governance, and CODEOWNERS policies; strengthened
+  pull-request licensing, provenance, secrets, localization, compatibility,
+  security, and platform checks; and routed public intake through structured
+  issue forms without exposing the owner-only `agent-approved` label. A
+  machine community-policy contract protects the resulting repository-health
+  surface. No product or artifact behavior changed.
+
 - 2026-08-04: Added the Copperfin Application, Runtime, and Toolchain
   Exception 1.0 under #4902 as an operative GPLv3 section 7 additional
   permission. Independent proprietary and open-source applications retain

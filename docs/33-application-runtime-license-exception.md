@@ -27,6 +27,19 @@ permit proprietary relicensing of Copperfin itself or modifications derived
 from Copperfin source code. GPL compliance and Corresponding Source duties
 remain attached to the distributed Copperfin portions.
 
+## Contributor Treatment
+
+Each contributor retains copyright and, through the repository contribution
+terms, applies GPL-3.0-only with this Exception to the material the contributor
+has authority to submit. No copyright assignment is required. This makes the
+independent-application permission coherent across owner-authored and accepted
+contributor-authored Copperfin code while granting no rights in separately
+identified third-party material.
+
+Durable credit follows Git authorship and co-authorship metadata, pull requests,
+issues, and GitHub's contributor history. The operative inbound terms and
+sign-off requirement are in `CONTRIBUTING.md`.
+
 ## VFP9 Offline Evidence
 
 The remounted `vfp9.iso` was inspected read-only. Its `redist.txt`, setup

@@ -1,5 +1,11 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
+  - name: Contribution Guide
+    url: https://github.com/rhamenator/Project-Copperfin/blob/main/CONTRIBUTING.md
+    about: Review licensing, provenance, sign-off, testing, and clean-room requirements before contributing.
+  - name: Support Guide
+    url: https://github.com/rhamenator/Project-Copperfin/blob/main/SUPPORT.md
+    about: Choose the correct support path and remove secrets or restricted data before posting.
   - name: Security Vulnerability Report
     url: https://github.com/rhamenator/Project-Copperfin/security/advisories/new
     about: Please report security vulnerabilities privately via GitHub Security Advisories.

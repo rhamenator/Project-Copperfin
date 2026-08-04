@@ -2,6 +2,13 @@
 
 Project Copperfin treats security issues as a priority, especially anywhere the platform parses legacy assets, executes runtime behavior, handles package generation, or exposes designer/debugger surfaces.
 
+## Supported Versions
+
+Project Copperfin is pre-release. Current `main` and the latest published
+artifacts are the supported investigation baseline. Reports against older
+versions are welcome, but fixes are normally validated and delivered on the
+current line.
+
 ## Reporting a Vulnerability
 
 Please report suspected vulnerabilities privately through GitHub Security Advisories for this repository. If that path is unavailable, contact the maintainers through the most direct private channel available to you and avoid opening a public issue.

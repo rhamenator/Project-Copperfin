@@ -56,6 +56,12 @@ License documents:
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution licensing, provenance,
+  sign-off, testing, and clean-room requirements
+- [`CONTRIBUTORS.md`](CONTRIBUTORS.md) — durable contributor-credit policy
+- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) — participation expectations
+- [`SUPPORT.md`](SUPPORT.md) — public and private support routes
+- [`GOVERNANCE.md`](GOVERNANCE.md) — project roles and decision process
 - [`agents.md`](agents.md)
 - [`agent-handoff.md`](agent-handoff.md)
 - [`docs/01-product-charter.md`](docs/01-product-charter.md)
@@ -226,6 +232,12 @@ The GPL continues to cover Copperfin itself and modifications derived from
 Copperfin source code; GPL obligations for those Copperfin portions do not
 extend into an independent application merely because of these permitted
 uses or combinations.
+
+Contributors retain copyright in their contributions and receive durable
+credit through Git authorship/co-authorship, pull requests, issues, and
+GitHub's contributor history. Contributions are submitted under the same
+GPL-3.0-only-with-exception terms; no copyright assignment is required. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) and [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
 
 The earlier source-available/commercial model is inactive. Its documentation
 and implementation are preserved for possible future reconsideration, but

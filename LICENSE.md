@@ -52,3 +52,17 @@ current GPL-with-exception release.
 Artifact signatures authenticate release provenance and integrity. They do
 not change the GPL license, impose product activation, or grant commercial
 entitlements.
+
+## Contributor Copyright And Credit
+
+Contributors retain copyright in their contributions. No copyright assignment
+to Richard M. Hamilton or Project Copperfin is required. By submitting a
+contribution under [`CONTRIBUTING.md`](CONTRIBUTING.md), a contributor licenses
+that contribution under GPL-3.0-only with the Copperfin Application, Runtime,
+and Toolchain Exception 1.0 to the extent the contributor has authority to do
+so.
+
+Git authorship and co-authorship metadata, pull requests, issues, and GitHub's
+contributor history are the durable credit record. See
+[`CONTRIBUTORS.md`](CONTRIBUTORS.md) for the credit policy. Third-party material
+keeps its own copyright and license and must be identified separately.

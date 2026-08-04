@@ -686,11 +686,16 @@ Copyright (C) 2026 Richard M. Hamilton
 
 0. Purpose and scope
 
-This Exception applies to every first-party Project Copperfin file for which
-Richard M. Hamilton can grant copyright permission and which states that it is
-licensed under GPL-3.0-only, unless that file expressly says otherwise. It does
-not change the license of third-party material or grant rights that its
-copyright holder cannot grant.
+This Exception applies to every Project Copperfin file whose copyright holder
+applies it by an express notice or by submitting a contribution under the
+Project Copperfin contribution terms, unless that file expressly says
+otherwise. Richard M. Hamilton applies this Exception to the first-party
+Project Copperfin material for which he can grant copyright permission. Each
+contributor who submits material under CONTRIBUTING.md applies this Exception
+to that contribution to the extent the contributor can grant permission.
+Contributors retain copyright in their contributions; no copyright assignment
+is required. This Exception does not change the license of third-party
+material or grant rights that its copyright holder cannot grant.
 
 The purpose of this Exception is to keep Project Copperfin and modifications
 derived from Project Copperfin source code under the GNU General Public

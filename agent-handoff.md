@@ -2,6 +2,27 @@
 
 ## Current State
 
+#4903 completes the repository community-health and contributor-licensing
+slice. Contributors retain copyright and explicitly apply GPL-3.0-only with
+the Copperfin Application, Runtime, and Toolchain Exception 1.0 to material
+they have authority to submit; no copyright assignment is required. DCO 1.1
+`Signed-off-by` trailers establish the right-to-submit record. Git authorship
+and co-authorship, pull requests, issues, and GitHub's contributor history are
+the durable credit surfaces. `CONTRIBUTING.md`, `CONTRIBUTORS.md`,
+`CODE_OF_CONDUCT.md`, `SUPPORT.md`, `GOVERNANCE.md`, and `.github/CODEOWNERS`
+now complete the core repository-health set. Structured issue intake is
+required, secrets and restricted inputs are routed away from public forms,
+and the PR template covers licensing, provenance, testing, localization,
+compatibility, security, and platform impact. The machine community contract
+protects these policies and confirms no public issue form grants the reserved
+`agent-approved` label. No product/runtime, VFP9, localization catalog,
+package/debug schema, xAsset, report/label, IDE, stack, or platform behavior
+changed.
+Linux evidence at the implementation head: CMake configure succeeds; focused
+CTest passes `3/3` for repository community policy, product licensing policy,
+and native test isolation; all ten `.github/ISSUE_TEMPLATE/*.yml` files parse
+successfully; and `git diff --check` is clean.
+
 #4902 adds the operative Copperfin Application, Runtime, and Toolchain
 Exception 1.0 under GPLv3 section 7. Independent proprietary and open-source
 applications retain their owners' license choices across Copperfin inspection,

@@ -28,6 +28,14 @@
 - Workflow run(s):
 - Artifacts/logs:
 
+## Contribution Licensing And Provenance
+
+- [ ] I have the right to submit this contribution and every included file.
+- [ ] I license my contribution under GPL-3.0-only with the Copperfin Application, Runtime, and Toolchain Exception 1.0; I retain my copyright and make no copyright assignment.
+- [ ] Every commit has the contributor's `Signed-off-by` trailer.
+- [ ] Third-party material is identified with its source, copyright, and compatible license, or this change contains none.
+- [ ] This change contains no secrets, signing material, personal/customer data, restricted source, or decompiled proprietary code.
+
 ## Documentation Safety Case (Required If Docs Changed)
 
 - [ ] No documentation changes in this PR
@@ -63,3 +71,7 @@ Compatibility delta notes (if any):
 - [ ] For documentation changes, independent review and misuse analysis evidence is attached
 - [ ] Changelog updated for shipped, lasting repo changes
 - [ ] Unsupported or partial behavior is explicitly documented
+- [ ] Machine-readable contracts remain compatible, or their intentional versioned change is documented and tested
+- [ ] User-visible strings are localized and catalog parity is tested, or no user-visible strings changed
+- [ ] Windows behavior and Linux/macOS seams were considered and applicable platform evidence is recorded
+- [ ] Clean-room and security requirements were reviewed for the changed inputs and outputs

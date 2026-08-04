@@ -238,6 +238,12 @@ covers in-process and separate-process interfaces, runtime redistribution, and
 ordinary generated launchers, scaffolds, headers, manifests, debug material,
 and packages. Distributors still owe GPL compliance and Corresponding Source
 for Copperfin and modifications derived from Copperfin source itself.
+Contributors retain copyright and apply the same GPL-3.0-only-with-exception
+terms to accepted contributions through `CONTRIBUTING.md`; no copyright
+assignment is required. Git authorship/co-authorship and repository history
+provide durable credit. The community-health contract under #4903 keeps the
+contribution, conduct, support, governance, ownership, issue-intake, and
+pull-request surfaces present and mutually consistent.
 Because this is a project-specific legal exception, qualified legal review of
 the operative text remains required before the first public release candidate;
 the implementation and regression evidence under #4902 is not legal advice.
