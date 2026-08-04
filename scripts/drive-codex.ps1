@@ -21,6 +21,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+$issueIntakeModule = Join-Path $PSScriptRoot "Copperfin.AgentIssueIntake.psm1"
+Import-Module -Name $issueIntakeModule -Force
+
 if ([string]::IsNullOrWhiteSpace($PromptFile)) {
     $PromptFile = Join-Path $RepoRoot "agent-handoff.md"
 }
@@ -112,10 +115,37 @@ function Get-TrackedText {
 }
 
 function Get-OpenRelatedIssues {
-    $json = gh issue list --repo $Repository --state open --limit 200 --json number,title,url
+    $json = gh issue list --repo $Repository --state open --limit 200 --json number,state,author,labels
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not retrieve candidate GitHub issue metadata."
+    }
+
     $issues = $json | ConvertFrom-Json
+    $approvedMetadata = @(
+        Select-CopperfinAgentApprovedIssue `
+            -Issues @($issues) `
+            -TrustedOwner $TrustedIssueOwner `
+            -RequiredLabel $AgentApprovalLabel
+    )
+    $approvedIssues = @(
+        foreach ($issueMetadata in $approvedMetadata) {
+            $issueNumber = [int]$issueMetadata.number
+            $detailJson = gh issue view $issueNumber --repo $Repository --json number,title,url,state,author,labels
+            if ($LASTEXITCODE -ne 0) {
+                throw "Could not retrieve approved GitHub issue #$issueNumber."
+            }
+
+            $issue = $detailJson | ConvertFrom-Json
+            Assert-CopperfinAgentIssueApproved `
+                -Issue $issue `
+                -TrustedOwner $TrustedIssueOwner `
+                -RequiredLabel $AgentApprovalLabel
+            $issue
+        }
+    )
+
     return @(
-        $issues | Where-Object {
+        $approvedIssues | Where-Object {
             $title = $_.title
             foreach ($pattern in $relatedTitlePatterns) {
                 if ($title.IndexOf($pattern, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
@@ -148,7 +178,7 @@ function Get-TargetIssue {
     if ($RequestedIssueNumber -gt 0) {
         $requested = @($OpenIssues | Where-Object { [int]$_.number -eq $RequestedIssueNumber })
         if ($requested.Count -eq 0) {
-            throw "Requested issue #$RequestedIssueNumber is not open or is not part of the tracked backlog."
+            throw "Requested issue #$RequestedIssueNumber is not an approved owner-authored open execution issue in the tracked backlog."
         }
 
         return $requested[0]
@@ -239,6 +269,11 @@ function Get-TargetedPrompt {
         [object[]]$OpenIssues
     )
 
+    Assert-CopperfinAgentIssueApproved `
+        -Issue $TargetIssue `
+        -TrustedOwner $TrustedIssueOwner `
+        -RequiredLabel $AgentApprovalLabel
+
     $repoDocsPath = Join-Path $RepoRoot "agent-handoff.md"
     $coverageDocPath = Join-Path $RepoRoot "docs\22-vfp-language-reference-coverage.md"
     $runtimeFiles = @(
@@ -255,10 +290,17 @@ function Get-TargetedPrompt {
         $OpenIssues |
             Where-Object { [int]$_.number -ne [int]$TargetIssue.number } |
             Sort-Object -Property @{ Expression = { Get-IssuePriorityRank -Number ([int]$_.number) } }, @{ Expression = { [int]$_.number } } |
-            Select-Object -First 8 |
-            ForEach-Object { "#{0}: {1}" -f $_.number, $_.title }
+            Select-Object -First 8
     )
-    $otherOpenIssuesText = if ($otherOpenIssues.Count -gt 0) { $otherOpenIssues -join "`n- " } else { "none" }
+    $otherOpenIssuesText = if ($otherOpenIssues.Count -gt 0) {
+        (ConvertTo-CopperfinAgentIssuePromptLine `
+            -Issues $otherOpenIssues `
+            -TrustedOwner $TrustedIssueOwner `
+            -RequiredLabel $AgentApprovalLabel) -join "`n"
+    }
+    else {
+        "- none"
+    }
 
     return @"
 You are continuing Project-Copperfin in the repository rooted at: $RepoRoot
@@ -284,7 +326,7 @@ Helpful likely-relevant files for runtime/data slices:
 - $runtimeFiles
 
 Other currently open backlog items to ignore for this turn:
-- $otherOpenIssuesText
+$otherOpenIssuesText
 
 Final response requirements:
 - End with exactly one line in this format: COMPLETED_ISSUES: $($TargetIssue.number) or COMPLETED_ISSUES: none
@@ -314,7 +356,7 @@ function Close-VerifiedCompletedIssues {
     }
 
     $trackedText = Get-TrackedText
-    $openIssues = Get-OpenRelatedIssues
+    $openIssues = @(Get-OpenRelatedIssues)
     $closedNumbers = New-Object System.Collections.Generic.List[int]
     $allowedLookup = @{}
 
@@ -323,6 +365,11 @@ function Close-VerifiedCompletedIssues {
     }
 
     foreach ($issue in $openIssues) {
+        Assert-CopperfinAgentIssueApproved `
+            -Issue $issue `
+            -TrustedOwner $TrustedIssueOwner `
+            -RequiredLabel $AgentApprovalLabel
+
         if ($allowedLookup.Count -gt 0 -and -not $allowedLookup.ContainsKey([int]$issue.number)) {
             continue
         }
@@ -360,7 +407,10 @@ function Invoke-CodexPass {
     $prompt = if ($UseBroadPrompt) {
         $basePrompt = Get-Content -LiteralPath $PromptFile -Raw
         $issueLines = if ($OpenIssues.Count -gt 0) {
-            ($OpenIssues | ForEach-Object { "- #{0}: {1}" -f $_.number, $_.title }) -join "`n"
+            (ConvertTo-CopperfinAgentIssuePromptLine `
+                -Issues $OpenIssues `
+                -TrustedOwner $TrustedIssueOwner `
+                -RequiredLabel $AgentApprovalLabel) -join "`n"
         }
         else {
             "- none"
@@ -369,7 +419,7 @@ function Invoke-CodexPass {
         $automationPrompt = @"
 
 Automation instructions:
-- Continue the highest-priority unfinished slice from live GitHub issue state and the current repo guidance.
+- Continue the highest-priority unfinished slice from approved owner-authored live GitHub issue state and the current repo guidance.
 - Keep the repo buildable and run the narrow validation before you stop.
 - Update agent-handoff.md when the last shipped slice, current lane, or next action changes; update docs/22-vfp-language-reference-coverage.md only when runtime-language coverage changes.
 - End your final message with exactly one line in this format: COMPLETED_ISSUES: <comma-separated issue numbers or none>
@@ -438,8 +488,13 @@ if ([string]::IsNullOrWhiteSpace($Repository)) {
     $Repository = Get-RepositoryName -RemoteUrl $remoteUrl.Trim()
 }
 
+$TrustedIssueOwner = Get-CopperfinRepositoryOwner -Repository $Repository
+$AgentApprovalLabel = "agent-approved"
+
 Write-History "Repo root: $RepoRoot"
 Write-History "Repository: $Repository"
+Write-History "Trusted issue owner: $TrustedIssueOwner"
+Write-History "Required agent approval label: $AgentApprovalLabel"
 Write-History "Stop file: $stopFile"
 
 if ($CloseCatchUpIssuesOnly) {
@@ -461,7 +516,7 @@ while ($true) {
         break
     }
 
-    $openIssues = Get-OpenRelatedIssues
+    $openIssues = @(Get-OpenRelatedIssues)
     if ($openIssues.Count -eq 0) {
         Write-History "No open related issues remain. Exiting loop."
         break
@@ -473,6 +528,10 @@ while ($true) {
         break
     }
 
+    Assert-CopperfinAgentIssueApproved `
+        -Issue $targetIssue `
+        -TrustedOwner $TrustedIssueOwner `
+        -RequiredLabel $AgentApprovalLabel
     Write-History ("Targeting issue #{0}: {1}" -f $targetIssue.number, $targetIssue.title)
 
     $beforeStatus = Get-StatusSnapshot

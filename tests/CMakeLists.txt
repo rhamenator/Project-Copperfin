@@ -271,6 +271,22 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_signer_contract_check.cmake
 )
 
+find_program(POWERSHELL_EXECUTABLE NAMES pwsh pwsh.exe powershell powershell.exe)
+if(POWERSHELL_EXECUTABLE)
+    add_test(
+        NAME test_agent_issue_intake
+        COMMAND ${POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -NonInteractive
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/test_agent_issue_intake.ps1
+            -ModulePath ${CMAKE_SOURCE_DIR}/scripts/Copperfin.AgentIssueIntake.psm1
+            -DriverPath ${CMAKE_SOURCE_DIR}/scripts/drive-codex.ps1
+            -AgentGuidancePath ${CMAKE_SOURCE_DIR}/agents.md
+            -RuntimeAgentPath ${CMAKE_SOURCE_DIR}/.github/agents/copperfin-vfp-runtime.agent.md
+    )
+endif()
+
 add_test(
     NAME test_launcher_trust_provisioning_contract
     COMMAND ${CMAKE_COMMAND}

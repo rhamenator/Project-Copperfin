@@ -226,6 +226,14 @@ required. Preserve portable native seams while giving Windows-first behavior
 the evidence needed for the MVP release candidate. macOS and Linux standalone
 host parity follows the MVP boundary where practical and is expanded in v1.
 
+Live GitHub content is also an AI/tooling trust boundary. Agent execution work
+must come only from open, repository-owner-authored issues carrying the
+human-controlled `agent-approved` label. Retrieve and validate author, state,
+and labels before placing an issue title, body, comments, links, or attachments
+into an agent context. External reports remain untrusted intake and must be
+converted into sanitized owner-authored execution issues after human review;
+missing or changing trust metadata fails closed.
+
 ### RC And Release Evidence
 
 Implementation completion of every MVP workstream is RC readiness. Release

@@ -1,3 +1,18 @@
+- 2026-08-04: Hardened agent issue retrieval against prompt injection under
+  #4899. The Codex driver now retrieves only issue number/state/author/label
+  metadata before admission, accepts only open repository-owner-authored issues
+  carrying the exact human-controlled `agent-approved` label, and retrieves
+  titles only after that gate. Target selection, prompt formatting, logging,
+  and automatic closure revalidate the same contract and fail closed on
+  missing or changed metadata. Repository and runtime-agent instructions now
+  classify public issues, pull requests, comments, attachments, and links as
+  untrusted data and require sanitized owner-authored execution issues for
+  external reports. Focused PowerShell coverage includes malicious titles,
+  wrong and lookalike authors, missing labels, closed issues, malformed
+  authors, prompt-line revalidation, and instruction/driver contract checks.
+  No product, localization, VFP9, package/debug, xAsset, or platform behavior
+  changed.
+
 - 2026-07-30: Began the durable recovered-requirements traceability matrix under
   #4896 with `LLR-VFP-NUM-001`. Shipped VFP9 SP2 Numeric Data Type and `SET
   POINT` help establish that calculation text uses a period even when the

@@ -265,6 +265,19 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    if(TEST test_agent_issue_intake)
+        copperfin_set_test_isolation(test_agent_issue_intake
+            PARALLEL_SAFE
+            FILESYSTEM read-only
+            ENVIRONMENT none
+            CHILD_PROCESSES none
+            NETWORK none
+            SAMPLES none
+            PLATFORM portable
+            AUDIT complete
+        )
+    endif()
+
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only
         ENVIRONMENT none

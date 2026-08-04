@@ -2,6 +2,23 @@
 
 ## Current State
 
+#4899 hardens the GitHub-to-agent intake boundary against prompt injection.
+`scripts/drive-codex.ps1` now retrieves only number/state/author/label metadata
+before admission, accepts only open repository-owner-authored issues carrying
+the exact human-controlled `agent-approved` label, and fetches issue titles
+only after that gate. Selection, explicit issue requests, prompt formatting,
+logging, and automatic closure revalidate the same contract. `agents.md` and
+the runtime-agent profile treat all other issues, pull requests, comments,
+attachments, and links as untrusted data and require a sanitized
+owner-authored execution issue for external reports. Focused PowerShell
+coverage exercises malicious titles, wrong/lookalike/malformed authors,
+missing labels, closed issues, trusted owner cases, newline normalization, and
+fail-closed mixed prompt input. This security-only slice changes no product,
+VFP9, localization, package/debug, xAsset, or platform contract.
+Focused CTest validation passes for agent intake, native test-isolation
+metadata, and the security/supply-chain workflow contract; the PowerShell
+module, driver, and test also pass parser validation.
+
 #4898 under #4409 adds a dedicated Linux launcher-release identity generator
 at `tools/package-signer/generate-launcher-signing-key.sh`. It produces a
 mode-0600 Ed25519 PKCS#8 private PEM, matching public PEM, compile-ready
