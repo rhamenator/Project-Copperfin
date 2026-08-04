@@ -1,6 +1,5 @@
-# Copyright © 2026 Richard M. Hamilton. All rights reserved.
-# Licensed under the Project Copperfin Source-Available License or
-# Commercial License. See LICENSE.md in the repository root.
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
 
 foreach(required_variable IN ITEMS SOURCE_DIR BINARY_DIR TEST_ROOT_BASE)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")
@@ -34,7 +33,7 @@ if(NOT install_result EQUAL 0)
         "stderr:\n${install_error}")
 endif()
 
-set(source_document_names README.md LICENSE.md SECURITY.md remaining-work.md)
+set(source_document_names README.md LICENSE SECURITY.md remaining-work.md)
 set(installed_document_names README.md LICENSE SECURITY.md remaining-work.md)
 list(LENGTH source_document_names document_count)
 math(EXPR last_document_index "${document_count} - 1")

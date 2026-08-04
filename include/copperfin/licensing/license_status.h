@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #pragma once
 
@@ -13,6 +12,16 @@
 #include "copperfin/licensing/ed25519_public_key.h"
 
 namespace copperfin::licensing {
+
+#ifndef COPPERFIN_ENABLE_PRODUCT_LICENSING
+#define COPPERFIN_ENABLE_PRODUCT_LICENSING 0
+#endif
+
+// Deliberately false in normal builds while the commercial licensing model is
+// archived. This compile-time seam keeps the implementation recoverable while
+// preventing environment variables or on-disk license files from activating
+// product-license behavior accidentally.
+inline constexpr bool kProductLicensingEnabled = COPPERFIN_ENABLE_PRODUCT_LICENSING != 0;
 
 // The major version this build of Copperfin belongs to. Compared against a
 // Perpetual License's `perpetual_max_major_version` for *display purposes
@@ -50,8 +59,10 @@ struct LicenseStatus {
     std::string diagnostic_argument; // optional invariant value for the display placeholder
 };
 
-// Resolves and verifies a license file, entirely offline -- this function
-// never makes a network call and never blocks on external state. Path
+// When kProductLicensingEnabled is false, returns the unrestricted free state
+// without inspecting arguments, environment variables, signer registries, or
+// the filesystem. When enabled, resolves and verifies a license file entirely
+// offline -- this function never makes a network call. Path
 // resolution order: `explicit_override` (if provided and non-empty) ->
 // `COPPERFIN_LICENSE_PATH` environment variable -> `license.cflicense` next
 // to `executable_path` -> LicenseState::free if none of those resolve to a

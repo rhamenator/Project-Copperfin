@@ -2,6 +2,32 @@
 
 ## Current State
 
+#4900 temporarily restores Project Copperfin to GNU GPL-3.0-only and disables
+the retained commercial product-license loader in normal builds. The complete
+GPL text is operative at repository root, and all former commercial source
+headers use `SPDX-License-Identifier: GPL-3.0-only`. The earlier source-available,
+commercial, CLA, migration, and FAQ documents are preserved under
+`docs/archive/commercial-licensing-2026/` with prominent inactive notices.
+`COPPERFIN_ENABLE_PRODUCT_LICENSING` defaults to `OFF`; in that state the
+public loader ignores explicit paths, `COPPERFIN_LICENSE_PATH`, adjacent
+`.cflicense` files, and signer registries and returns an unrestricted empty
+free status. Build/package metadata leaves retained license fields empty,
+license-status commands are hidden and rejected, and native/managed Studio
+omits the license profile and summary. The implementation remains available
+behind the compile-time seam for a later policy decision. Launcher/package
+signing is intentionally
+unchanged and remains required release provenance/integrity work under #4409.
+Focused licensing and static policy contracts cover the disabled boundary and
+package-trust separation. No VFP9, localization, package/debug, xAsset,
+report/label, IDE, stack, or cross-platform product behavior changes.
+The default-off matrix passes 11/11 focused CTests, including native loader,
+build/runtime/inspect host behavior, installed GPL document, package/launcher
+trust, localization, provisioning, supply-chain, and isolation contracts. The
+managed DesignerSmoke project also builds with zero warnings. An isolated Linux
+configuration with `COPPERFIN_ENABLE_PRODUCT_LICENSING=ON` also builds and
+passes `test_licensing_status`, proving the archived implementation remains
+recoverable rather than deleted.
+
 #4899 hardens the GitHub-to-agent intake boundary against prompt injection.
 `scripts/drive-codex.ps1` now retrieves only number/state/author/label metadata
 before admission, accepts only open repository-owner-authored issues carrying
@@ -3363,7 +3389,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 - Validation note: `#3687` used `git diff --check`, `cmake --build build --target test_dbf_table -j4`, and `ctest --test-dir build -R '^test_dbf_table$' --output-on-failure`. The focused DBF executable now also proves zero-block-size memo sidecars fail closed during parse instead of being interpreted with a byte-sized memo stride.
 - Validation note: `test_prg_engine_control_flow`, `test_prg_engine_data_io`, and `test_prg_engine_functions` all pass both by direct executable invocation and by serial `ctest` on 2026-07-09. Earlier apparent `ctest` failures for `test_prg_engine_control_flow` were caused by launching the same large native test binary concurrently through both direct execution and `ctest`, while many cases reuse fixed temp roots under the system temp directory; avoid treating concurrent duplicate invocations of the same native test executable as a meaningful validation signal.
 - Validation note: the aggregate `test_studio_host` target is buildable again after `#3507` (`157da636`), so narrow Studio-host slices can use either that aggregate target or the split host executables as appropriate instead of assuming the old duplicate-`main` / unresolved-helper link failure is still present.
-- Repository licensing changed: prior versions were GPL-3.0-only; new versions are dual-licensed (free individual/non-commercial use plus a paid Commercial License). See `LICENSE.md`, `MIGRATION_NOTICE.md`, and `LEGAL_FAQ.md`. A license-status mechanism (`cf_licensing`, `--license-status`, `app.cfmanifest`/`app.cfdebug` stamping, Studio JSON `licenseProfile`) was added in commits `d94b31f7`/`21177bd9`; it is display/audit-only and never gates functionality.
+- Historical licensing note (superseded by #4900): commits `d94b31f7`/`21177bd9` introduced a dual source-available/commercial proposal and an informational license-status mechanism (`cf_licensing`, `--license-status`, `app.cfmanifest`/`app.cfdebug` stamping, Studio JSON `licenseProfile`). The proposal is now inactive and archived under `docs/archive/commercial-licensing-2026/`; current releases are GPL-3.0-only and normal builds ignore product-license activation inputs.
 - `#3211` tracks two pre-existing bugs discovered while adding the licensing work above (unrelated to licensing itself, both confirmed pre-existing via A/B revert): the Windows `/sdl` test-helper `getenv` failure is now addressed in the touched core tests via a shared Windows-safe environment helper, and Windows builds now reserve a 16 MiB stack for `copperfin_studio_host` through target link settings. Root cause (see issue comments) and the 16 MiB fix are both independently verified: Debug and Release `copperfin_studio_host.exe` now both handle `--json` against a trivial `.scx` and the full `solution.pjx` sample with exit code 0, and `test_licensing_status` (22/22) still passes after Codex's `test_environment_support.h` refactor. The underlying oversized Studio host entrypoint (`apps/copperfin_studio_host/main.cpp`, ~4175 lines, ~150+ inlined property-setter blocks not yet split into `try_handle_*` helpers) still merits a later structural refactor as the real fix; the stack reservation is a verified-effective mitigation, not that refactor.
 - PRG-level call-stack frugality (a founding requirement) was investigated in depth per user request: `DO`/`CALL`/`DO FORM` are confirmed genuinely frugal -- an explicit heap-backed frame stack inside an iterative `run()` loop (`src/runtime/prg_engine.cpp`), with a tested, configurable `max_call_depth` guardrail (default 1024, `prg_engine_session.inl:1652`) that raises a catchable error before any native stack risk. `#3216` is now covered through that same stack-frugal frame machine rather than a recursive side path, and `#3217` has been refreshed from a stale missing-feature report into the active parent lane for remaining native-OOP/runtime residuals. Treat that lane as common-in-the-wild VFP runtime-parity work, not a fringe wishlist item.
 - Environment-access hardening parent `#3214` is closed. Preserve its shared Windows-safe variable/path helpers and open a new prompt-sized child under the live hardening lane only when fresh evidence identifies a remaining direct-access defect.

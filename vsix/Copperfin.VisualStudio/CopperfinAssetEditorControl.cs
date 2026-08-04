@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 using System;
 using System.Collections.Generic;
@@ -5223,12 +5222,15 @@ internal sealed partial class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelOptionalAiPlanningPaths"), aiOptional));
         }
 
-        summary.AppendLine();
-        summary.AppendLine(L("AssetEditor.Summary.License"));
-        summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicenseState"), snapshot.LicenseProfile.State));
-        if (!string.IsNullOrEmpty(snapshot.LicenseProfile.Licensee))
+        if (!string.IsNullOrEmpty(snapshot.LicenseProfile.State))
         {
-            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicensee"), snapshot.LicenseProfile.Licensee));
+            summary.AppendLine();
+            summary.AppendLine(L("AssetEditor.Summary.License"));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicenseState"), snapshot.LicenseProfile.State));
+            if (!string.IsNullOrEmpty(snapshot.LicenseProfile.Licensee))
+            {
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicensee"), snapshot.LicenseProfile.Licensee));
+            }
         }
 
         return summary.ToString();

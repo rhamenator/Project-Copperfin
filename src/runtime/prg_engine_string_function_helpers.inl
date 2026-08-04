@@ -1,6 +1,5 @@
-// Copyright 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 // Included inside copperfin::runtime's private helper namespace.
 bool wildcard_match_case_sensitive_local(const std::string& pattern, const std::string& text) {

@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "test_localization_support.h"
 
@@ -152,16 +151,10 @@ void test_inspect_license_status_preserves_machine_contracts(const std::string& 
         set_env_value("COPPERFIN_LOCALE", selected_locale, true);
         const std::string output = run_command_capture(shell_quote(inspect_path) + " --license-status 2>&1");
 
-        const std::size_t status_position = output.find("status: ok");
-        const std::size_t state_position = output.find("state: ");
-        expect(status_position != std::string::npos,
-               issue_tag + ": copperfin_inspect --license-status should preserve the machine-readable status line");
-        expect(state_position != std::string::npos,
-               issue_tag + ": copperfin_inspect --license-status should preserve the machine-readable state line");
-        if (status_position != std::string::npos && state_position != std::string::npos) {
-            expect(status_position < state_position,
-                   issue_tag + ": copperfin_inspect --license-status should print status before state");
-        }
+        expect(output.find("status: ok") == std::string::npos,
+               issue_tag + "/#4900: inactive inspect license-status should not report success");
+        expect(output.find("state: ") == std::string::npos,
+               issue_tag + "/#4900: inactive inspect license-status should not present product-license state");
     };
 
     expect_license_status_contract("es-419", "#3816");

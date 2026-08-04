@@ -1,6 +1,5 @@
-// Copyright (c) 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #if !defined(_WIN32) || !defined(_MSC_VER)
 #error This fixture requires the MSVC C++/CLI toolchain.

@@ -1,5 +1,8 @@
 # Licensing Migration Notice
 
+> **Inactive archive:** preserved as history of an earlier licensing change;
+> it does not describe the current GPL-3.0-only release.
+
 Copyright © 2026 Richard M. Hamilton. All rights reserved.
 
 ## Summary

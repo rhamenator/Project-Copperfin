@@ -46,14 +46,12 @@ Important note:
 - `Copperfin` is a working codename and branding starter, not a legal clearance opinion.
 - A formal trademark review should happen before public release, filing, or product launch.
 
-Contents:
+License documents:
 
-- [`LICENSE.md`](LICENSE.md)
-- [`SOURCE_AVAILABLE_LICENSE.md`](SOURCE_AVAILABLE_LICENSE.md)
-- [`COMMERCIAL_LICENSE.md`](COMMERCIAL_LICENSE.md)
-- [`CLA.md`](CLA.md)
-- [`MIGRATION_NOTICE.md`](MIGRATION_NOTICE.md)
-- [`LEGAL_FAQ.md`](LEGAL_FAQ.md)
+- [`LICENSE`](LICENSE) — operative GNU GPL v3.0-only text
+- [`LICENSE.md`](LICENSE.md) — concise current-license overview
+- [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
+  — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)
 - [`agents.md`](agents.md)
 - [`agent-handoff.md`](agent-handoff.md)
@@ -208,33 +206,16 @@ Known limitation:
 
 ## Licensing
 
-Project Copperfin is **dual-licensed**:
+Project Copperfin is free software licensed under the **GNU General Public
+License, version 3 only** (`GPL-3.0-only`). See [`LICENSE`](LICENSE) for the
+complete terms.
 
-- **Individual, non-commercial use is free** under the
-  [Source-Available License](SOURCE_AVAILABLE_LICENSE.md) (PCSAL-1.0). You
-  can read, run, and modify the source for personal, non-commercial
-  purposes.
-- **Commercial use requires a paid [Commercial License](COMMERCIAL_LICENSE.md)**,
-  with pricing graduated by seats or revenue tier, available either as an
-  Annual Subscription or a one-time Perpetual License at the same per-seat
-  rate. Support is included with either paid option (the free tier has no
-  support). The commercial and individual editions are the same
-  codebase — only the license governing your use differs.
-- **Contributors** must agree to the [CLA.md](CLA.md) before a Contribution
-  can be merged, so the project can continue to be dual-licensed and
-  commercialized going forward.
+The earlier source-available/commercial model is inactive. Its documentation
+and implementation are preserved for possible future reconsideration, but
+normal builds ignore product license files, product-license environment
+configuration, and entitlement signer registries. See the
+[inactive archive](docs/archive/commercial-licensing-2026/README.md).
 
-This is a **source-available**, not open-source, license — it is
-intentionally not OSI-approved, since it restricts commercial use and
-restricts proprietary relicensing of derivative works.
-
-Prior versions of this repository were licensed under **GNU GPL-3.0-only**.
-That does not change: GPL-3.0 rights already granted, including to
-commercial entities that have already forked the GPL-licensed codebase,
-remain fully valid and unaffected. Only new versions going forward are
-dual-licensed. See [MIGRATION_NOTICE.md](MIGRATION_NOTICE.md) for the full
-explanation and [LICENSE-GPL-3.0-HISTORICAL.md](LICENSE-GPL-3.0-HISTORICAL.md)
-for the preserved original license text.
-
-To obtain a Commercial License, contact **[rich@yourfoxprodeveloper.com](mailto:rich@yourfoxprodeveloper.com)**.
-For common questions, see the [Legal FAQ](LEGAL_FAQ.md).
+Release artifacts and launcher inventories remain cryptographically signed.
+Those signatures establish provenance and integrity; they are not product
+activation and do not alter the GPL terms.

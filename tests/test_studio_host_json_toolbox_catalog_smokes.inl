@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 // Toolbox catalog and catalog-dispatch coverage.
 void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::string& studio_host_path) {

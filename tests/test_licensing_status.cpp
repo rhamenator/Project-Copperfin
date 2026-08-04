@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/license_status_display.h"
@@ -571,6 +570,30 @@ void test_explicit_override_takes_priority_over_env_var() {
         "an explicit override pointing at a missing file should take priority over a valid COPPERFIN_LICENSE_PATH, not silently fall back to it");
 }
 
+void test_disabled_product_licensing_ignores_all_activation_inputs() {
+    expect(!copperfin::licensing::kProductLicensingEnabled,
+           "normal builds should keep archived product licensing disabled");
+
+    const fs::path explicit_path = test_root() / "disabled-explicit.cflicense";
+    const fs::path env_path = test_root() / "disabled-env.cflicense";
+    const fs::path adjacent_dir = test_root() / "disabled-adjacent";
+    fs::create_directories(adjacent_dir);
+    write_text_file(explicit_path, kFixture1Json);
+    write_text_file(env_path, kFixture2Json);
+    write_text_file(adjacent_dir / "license.cflicense", kFixture1Json);
+
+    ScopedEnvironmentValue env("COPPERFIN_LICENSE_PATH");
+    env.set(env_path.string());
+
+    const auto status = load_license_status(adjacent_dir / "app.exe", explicit_path, kFixtureSignerKeys);
+    expect(status.state == LicenseState::free,
+           "disabled product licensing should always return unrestricted free state");
+    expect(status.license_id.empty() && status.license_type.empty() &&
+               status.licensee_name.empty() && status.source_path.empty() &&
+               status.diagnostic.empty(),
+           "disabled product licensing should not expose or retain license-file data");
+}
+
 void test_license_state_name_round_trip() {
     expect(license_state_name(LicenseState::free) == "free", "license_state_name(free)");
     expect(license_state_name(LicenseState::perpetual_out_of_version) == "perpetual_out_of_version", "license_state_name(perpetual_out_of_version)");
@@ -605,19 +628,23 @@ int main() {
     test_classifier_integer_boundaries();
     test_classifier_rejects_out_of_range_integers_without_partial_values();
 
-    test_valid_perpetual_fixture_end_to_end();
-    test_valid_subscription_fixture_end_to_end();
-    test_tampered_payload_fails_verification();
-    test_tampered_signature_fails_verification();
-    test_malformed_json_is_malformed();
-    test_malformed_surrogate_json_is_malformed();
-    test_missing_file_with_no_explicit_path_is_free();
-    test_missing_file_with_explicit_path_is_unreadable();
-    test_directory_as_explicit_path_is_unreadable();
-    test_default_location_is_used_when_present();
-    test_env_var_takes_priority_over_default_location();
-    test_env_var_preserves_non_ascii_license_path();
-    test_explicit_override_takes_priority_over_env_var();
+    if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+        test_valid_perpetual_fixture_end_to_end();
+        test_valid_subscription_fixture_end_to_end();
+        test_tampered_payload_fails_verification();
+        test_tampered_signature_fails_verification();
+        test_malformed_json_is_malformed();
+        test_malformed_surrogate_json_is_malformed();
+        test_missing_file_with_no_explicit_path_is_free();
+        test_missing_file_with_explicit_path_is_unreadable();
+        test_directory_as_explicit_path_is_unreadable();
+        test_default_location_is_used_when_present();
+        test_env_var_takes_priority_over_default_location();
+        test_env_var_preserves_non_ascii_license_path();
+        test_explicit_override_takes_priority_over_env_var();
+    } else {
+        test_disabled_product_licensing_ignores_all_activation_inputs();
+    }
     test_license_state_name_round_trip();
 
     if (failures != 0) {

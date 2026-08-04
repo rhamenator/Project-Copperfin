@@ -1,5 +1,8 @@
 # Project Copperfin Source-Available License (PCSAL-1.0)
 
+> **Inactive archive:** preserved for possible future reconsideration; this is
+> not the current Project Copperfin license.
+
 Copyright © 2026 Richard M. Hamilton. All rights reserved.
 
 This is a custom, non-OSI-approved source-available license. It is **not** an

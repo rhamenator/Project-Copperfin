@@ -1,6 +1,5 @@
-// Copyright 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 // Included inside PrgRuntimeSession::Impl by prg_engine_session.inl.
 
         std::vector<std::filesystem::path> transaction_companion_paths(const std::string &table_path) const

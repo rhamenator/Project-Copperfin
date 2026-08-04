@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/license_status_display.h"
@@ -74,12 +73,14 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
             {"runtimeHostOption", "--runtime-host"},
             {"runtimeHostValue", "<path>"}
         }) << "\n";
-    std::cout << catalog.translate(
-        "BuildHost.Usage.LicenseStatus",
-        {
-            {"commandName", "copperfin_build_host"},
-            {"licenseStatusOption", "--license-status"}
-        }) << "\n";
+    if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+        std::cout << catalog.translate(
+            "BuildHost.Usage.LicenseStatus",
+            {
+                {"commandName", "copperfin_build_host"},
+                {"licenseStatusOption", "--license-status"}
+            }) << "\n";
+    }
 }
 
 std::string message(
@@ -573,12 +574,14 @@ int run_build_host_main(int argc, char** argv) {
         args.emplace_back(argv[index]);
     }
 
-    const bool legacy_license_status = args.size() == 1U && args[0] == "license-status";
-    const bool license_status_requested =
-        std::find(args.begin(), args.end(), "--license-status") != args.end();
-    if (legacy_license_status || license_status_requested) {
-        print_license_status(copperfin::licensing::load_license_status(running_executable_path), catalog);
-        return 0;
+    if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+        const bool legacy_license_status = args.size() == 1U && args[0] == "license-status";
+        const bool license_status_requested =
+            std::find(args.begin(), args.end(), "--license-status") != args.end();
+        if (legacy_license_status || license_status_requested) {
+            print_license_status(copperfin::licensing::load_license_status(running_executable_path), catalog);
+            return 0;
+        }
     }
 
     if (args.empty() || args[0] != "build") {
@@ -749,19 +752,18 @@ int run_build_host_main(int argc, char** argv) {
         return 4;
     }
 
-    // Stamped into app.cfmanifest/app.cfdebug as inert, informational
-    // license metadata -- never gates whether the build succeeds or
-    // what it produces. Local source-path provenance stays out of the
-    // durable package artifacts. See LicenseState::perpetual_out_of_version's
-    // doc comment.
-    const auto license_status = copperfin::licensing::load_license_status(running_executable_path);
-    plan.license_state = std::string(copperfin::licensing::license_state_name(license_status.state));
-    plan.license_type = license_status.license_type;
-    plan.license_id = license_status.license_id;
-    plan.license_licensee = license_status.licensee_name;
-    plan.license_seats = license_status.seats;
-    plan.license_subscription_expires = license_status.subscription_expires;
-    plan.license_perpetual_max_major_version = license_status.perpetual_max_major_version;
+    if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+        // Retained for a possible future policy decision. This metadata is
+        // inert and never gates whether a build succeeds or what it produces.
+        const auto license_status = copperfin::licensing::load_license_status(running_executable_path);
+        plan.license_state = std::string(copperfin::licensing::license_state_name(license_status.state));
+        plan.license_type = license_status.license_type;
+        plan.license_id = license_status.license_id;
+        plan.license_licensee = license_status.licensee_name;
+        plan.license_seats = license_status.seats;
+        plan.license_subscription_expires = license_status.subscription_expires;
+        plan.license_perpetual_max_major_version = license_status.perpetual_max_major_version;
+    }
 
     const std::string runtime_host_path = resolve_runtime_host_path(
         runtime_host_override,

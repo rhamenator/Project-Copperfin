@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/license_status_display.h"
@@ -32,8 +31,12 @@ CommandLineOptions parse_arguments(int argc, char** argv) {
             continue;
         }
         if (argument == "--license-status") {
-            options.license_status = true;
-            continue;
+            if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+                options.license_status = true;
+                continue;
+            }
+            options.valid = false;
+            return options;
         }
         if (argument == "--locale") {
             if (index + 1 >= argc) {

@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "studio_host_main_support.h"
 #include "copperfin/licensing/license_status_display.h"
@@ -3355,7 +3354,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
     }
     std::cout << "]\n";
     std::cout << "    },\n";
-    {
+    if constexpr (copperfin::licensing::kProductLicensingEnabled) {
         const auto license_status = copperfin::licensing::load_license_status(g_executable_path);
         std::cout << "    \"licenseProfile\": {\n";
         std::cout << "      \"state\": ";
@@ -3757,6 +3756,11 @@ void print_json_license_status(const copperfin::licensing::LicenseStatus& status
 std::optional<int> try_handle_license_status(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
+    if constexpr (!copperfin::licensing::kProductLicensingEnabled) {
+        (void)catalog;
+        (void)args;
+        return std::nullopt;
+    }
     (void)catalog;
     const bool requested = std::find(args.begin(), args.end(), "--license-status") != args.end();
     if (!requested) {

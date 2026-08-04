@@ -1,6 +1,5 @@
-// Copyright 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 // Included inside PrgRuntimeSession::Impl by prg_engine_session.inl.
 
         static std::string make_lock_owner_key(std::uint64_t runtime_id, int data_session)

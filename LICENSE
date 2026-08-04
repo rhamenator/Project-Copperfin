@@ -1,22 +1,3 @@
-# Historical License: GNU GPL-3.0-only (Legacy Versions)
-
-Copyright © 2026 Richard M. Hamilton. All rights reserved.
-
-This file preserves, verbatim, the GNU General Public License v3.0 text
-that governed Project Copperfin for all commits up to and including the
-last GPL-licensed release (see [MIGRATION_NOTICE.md](MIGRATION_NOTICE.md)
-for the exact tag/commit boundary). It is kept here for historical
-reference and to make clear that all rights already granted under GPL-3.0
-for those versions remain fully valid and unaffected by the later
-relicensing to a dual (source-available + commercial) model.
-
-Starting with the version noted in [MIGRATION_NOTICE.md](MIGRATION_NOTICE.md),
-new releases of Project Copperfin are licensed under
-[SOURCE_AVAILABLE_LICENSE.md](SOURCE_AVAILABLE_LICENSE.md) and
-[COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) instead. See
-[LICENSE.md](LICENSE.md) for the current overview.
-
----
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

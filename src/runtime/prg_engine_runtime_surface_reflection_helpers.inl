@@ -1,6 +1,5 @@
-// Copyright 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
     runtime_object.properties["count"] = make_number_value(static_cast<double>(runtime_object.collection_items.size()));

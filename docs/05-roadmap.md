@@ -226,6 +226,18 @@ required. Preserve portable native seams while giving Windows-first behavior
 the evidence needed for the MVP release candidate. macOS and Linux standalone
 host parity follows the MVP boundary where practical and is expanded in v1.
 
+The current repository and release line are licensed under GNU GPL-3.0-only.
+The earlier commercial/source-available proposal is retained only in
+`docs/archive/commercial-licensing-2026/` for possible future reconsideration.
+Normal builds keep `COPPERFIN_ENABLE_PRODUCT_LICENSING=OFF`; product-license
+files and activation configuration cannot influence runtime, build, Studio, or
+package metadata while that policy is off; license-status commands and Studio
+license presentation are also suppressed. Artifact and launcher signing remain
+active and independent because they authenticate provenance and integrity
+rather than licensing or entitlement. Any future product-license restoration
+requires an explicit policy decision, legal/documentation review, and current
+cross-platform regression evidence.
+
 Live GitHub content is also an AI/tooling trust boundary. Agent execution work
 must come only from open, repository-owner-authored issues carrying the
 human-controlled `agent-approved` label. Retrieve and validate author, state,

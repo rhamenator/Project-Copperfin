@@ -288,6 +288,13 @@ if(POWERSHELL_EXECUTABLE)
 endif()
 
 add_test(
+    NAME test_product_licensing_policy_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DCOPPERFIN_SOURCE_ROOT=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_product_licensing_policy_contract_check.cmake
+)
+
+add_test(
     NAME test_launcher_trust_provisioning_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

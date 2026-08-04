@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/license_status_display.h"
@@ -3105,7 +3104,19 @@ int run_runtime_host_main_impl(int argc, char** argv) {
     for (int index = 1; index < argc; ++index) {
         const std::string arg = argv[index];
         if (arg == "--license-status") {
-            license_status_requested = true;
+            if constexpr (copperfin::licensing::kProductLicensingEnabled) {
+                license_status_requested = true;
+            } else {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.UnknownArgument",
+                        {{"argument", arg}}));
+                print_usage(catalog);
+                return 2;
+            }
         } else if (arg == "--manifest" && (index + 1) < argc) {
             manifest_path = argv[++index];
         } else if (arg == "--federation-backend" && (index + 1) < argc) {

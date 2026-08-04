@@ -1,4 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 #include "prg_engine_test_support.h"
 #include "test_prg_engine_table_mutation_tests.h"
 

@@ -1,30 +1,17 @@
-# License
+# Project Copperfin License
 
-Copyright © 2026 Richard M. Hamilton. All rights reserved.
+Copyright © 2026 Richard M. Hamilton.
 
-Project Copperfin is **dual-licensed**:
+Project Copperfin is licensed under the **GNU General Public License,
+version 3 only** (`GPL-3.0-only`). The complete license text is in
+[`LICENSE`](LICENSE).
 
-1. **[Source-Available License](SOURCE_AVAILABLE_LICENSE.md)** (PCSAL-1.0)
-   — free for individual developers, for personal and non-commercial use.
-2. **[Commercial License](COMMERCIAL_LICENSE.md)** — required for any
-   commercial use, with pricing graduated by seats, revenue, or usage.
+The earlier source-available/commercial licensing proposal is inactive. Its
+documents are preserved solely as historical planning material under
+[`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md).
+Those archived documents do not grant, restrict, or describe the terms of the
+current GPL-licensed release.
 
-The individual and commercial editions are the **same codebase**; only the
-license terms governing your use differ. If you contribute code, you must
-first agree to the **[Contributor License Agreement](CLA.md)**, which lets
-the project continue to be dual-licensed and commercialized going forward.
-
-Prior versions of Project Copperfin were licensed under **GNU GPL-3.0-only**
-and remain so — see **[MIGRATION_NOTICE.md](MIGRATION_NOTICE.md)** for what
-changed, why it's legal, and what it means for existing GPL forks. The
-original GPL-3.0 text is preserved at
-**[LICENSE-GPL-3.0-HISTORICAL.md](LICENSE-GPL-3.0-HISTORICAL.md)**.
-
-For plain-language answers to common questions, see
-**[LEGAL_FAQ.md](LEGAL_FAQ.md)**.
-
-This is a custom, **non-OSI-approved, source-available** license model —
-not open source. See [SOURCE_AVAILABLE_LICENSE.md §15](SOURCE_AVAILABLE_LICENSE.md#15-not-open-source)
-for why.
-
-To obtain a Commercial License, contact **[rich@yourfoxprodeveloper.com](mailto:rich@yourfoxprodeveloper.com)**.
+Artifact signatures authenticate release provenance and integrity. They do
+not change the GPL license, impose product activation, or grant commercial
+entitlements.

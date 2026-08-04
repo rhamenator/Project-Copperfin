@@ -1,5 +1,8 @@
 # Project Copperfin Licensing FAQ
 
+> **Inactive archive:** preserved for possible future reconsideration; these
+> answers do not describe the current GPL-3.0-only release.
+
 Copyright © 2026 Richard M. Hamilton. All rights reserved.
 
 This FAQ is a plain-language guide to how Project Copperfin is licensed. It

@@ -1,8 +1,12 @@
 # Package Signer
 
+Package and launcher signatures authenticate release provenance and integrity.
+They are independent of the archived product-license system and do not create
+activation or entitlement rights.
+
 ## Generate A Dedicated Launcher-Release Identity On Linux
 
-Do not reuse Copperfin's commercial-license signing key. Generate one dedicated
+Do not reuse any archived product-license signing key. Generate one dedicated
 launcher-release Ed25519 identity in a protected directory outside this
 checkout:
 

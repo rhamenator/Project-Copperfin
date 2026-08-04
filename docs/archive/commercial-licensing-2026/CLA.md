@@ -1,5 +1,8 @@
 # Project Copperfin Contributor License Agreement (CLA)
 
+> **Inactive archive:** preserved for possible future reconsideration; this
+> agreement is not the current contribution policy.
+
 Copyright © 2026 Richard M. Hamilton. All rights reserved.
 
 Thank you for your interest in contributing to Project Copperfin. To

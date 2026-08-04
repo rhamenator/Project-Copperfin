@@ -1,6 +1,5 @@
-# Copyright (c) 2026 Richard M. Hamilton. All rights reserved.
-# Licensed under the Project Copperfin Source-Available License or
-# Commercial License. See LICENSE.md in the repository root.
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
 
 foreach(required_variable IN ITEMS TEST_ROOT TEST_BINARY_DIR)
     if(NOT DEFINED ${required_variable} OR "${${required_variable}}" STREQUAL "")

@@ -1,6 +1,5 @@
-// Copyright 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 // Included inside PrgRuntimeSession::Impl by prg_engine_session.inl.
 
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)

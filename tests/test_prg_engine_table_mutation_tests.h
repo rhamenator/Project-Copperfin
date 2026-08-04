@@ -1,4 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 #pragma once
 
 namespace copperfin::table_mutation_tests

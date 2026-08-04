@@ -47,6 +47,10 @@ option(COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING
     "Apply MSVC exception flags per target for generators that cannot reconcile /EHsc with /clr"
     OFF)
 
+option(COPPERFIN_ENABLE_PRODUCT_LICENSING
+    "Enable the archived commercial product-license loader and status model"
+    OFF)
+
 option(COPPERFIN_ENFORCE_LAUNCHER_TRUST
     "Require signed app.cftrust metadata in the Windows generated-launcher guard"
     OFF)
@@ -171,6 +175,11 @@ target_include_directories(cf_licensing
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_compile_definitions(cf_licensing
+    PUBLIC
+        COPPERFIN_ENABLE_PRODUCT_LICENSING=$<BOOL:${COPPERFIN_ENABLE_PRODUCT_LICENSING}>
+)
+
 if(MSVC)
     target_compile_options(cf_licensing PRIVATE /W4 /permissive-)
 else()
@@ -189,8 +198,10 @@ set_source_files_properties(
     PROPERTIES COMPILE_OPTIONS "$<IF:$<CXX_COMPILER_ID:MSVC>,/W1,-w>"
 )
 
-# cf_licensing is intentionally dependency-free (no cf_localization link) so
-# it stays trivially unit-testable offline; see license_status.h.
+# cf_licensing retains the archived product-license parser/verifier for a
+# possible later policy decision. Product loading is disabled by default.
+# Package/launcher trust reuses only the low-level cryptographic primitives
+# and remains independent of this product-license switch.
 
 add_library(cf_package_trust
     src/package/launcher_inventory_trust.cpp
@@ -606,7 +617,7 @@ set(COPPERFIN_PACKAGE_DOCUMENTS
     SECURITY.md
     remaining-work.md
 )
-set(COPPERFIN_PACKAGE_LICENSE_DOCUMENT LICENSE.md)
+set(COPPERFIN_PACKAGE_LICENSE_DOCUMENT LICENSE)
 
 foreach(package_document IN ITEMS ${COPPERFIN_PACKAGE_DOCUMENTS} ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT})
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${package_document}")

@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
@@ -812,8 +811,8 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
             path_process.stdout_text,
             "debug.manifest.path");
         expect(!path_debug_manifest.empty() &&
-                   read_text(path_debug_manifest).find("license_state=free") != std::string::npos,
-               "#4025: PATH-launched package metadata must ignore a caller-CWD license file");
+                   read_text(path_debug_manifest).find("license_state=\n") != std::string::npos,
+               "#4900: PATH-launched package metadata should leave archived product-license state empty");
         const fs::path staged_runtime_host = expected_output.parent_path() / source_runtime_host.filename();
         expect(fs::exists(staged_runtime_host),
                "#4017: PATH-launched packaging should stage the runtime host");
@@ -967,8 +966,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                    "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
                    std::string::npos,
                "default build host usage should preserve the en-US CLI text");
-        expect(process.stdout_text.find("   or: copperfin_build_host --license-status") != std::string::npos,
-               "default build host usage should advertise the normalized license-status flag");
+        expect(process.stdout_text.find("--license-status") == std::string::npos,
+               "#4900: default build host usage should not advertise archived product licensing");
         expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
                "default build host usage should preserve configuration tokens");
 
@@ -1007,8 +1006,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
         expect(process.stdout_text.find("Uso: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
                    std::string::npos,
                "Spanish placeholder build host usage should resolve through the es-419 catalog");
-        expect(process.stdout_text.find("   o: copperfin_build_host --license-status") != std::string::npos,
-               "Spanish placeholder build host usage should localize the alternate usage prefix");
+        expect(process.stdout_text.find("--license-status") == std::string::npos,
+               "#4900: Spanish build host usage should not advertise archived product licensing");
         expect(process.stdout_text.find("Usage: copperfin_build_host") == std::string::npos,
                "Spanish placeholder build host usage should not fall back to raw English prose");
         expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
@@ -1043,8 +1042,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "pseudo-localized build host usage should decorate prose");
         expect(process.stdout_text.find("copperfin_build_host") != std::string::npos,
                "pseudo-localized build host usage should preserve the command name");
-        expect(process.stdout_text.find("--license-status") != std::string::npos,
-               "pseudo-localized build host usage should preserve the normalized license-status flag");
+        expect(process.stdout_text.find("--license-status") == std::string::npos,
+               "#4900: pseudo-localized build host usage should not advertise archived product licensing");
         expect(process.stdout_text.find("--project") != std::string::npos,
                "pseudo-localized build host usage should preserve CLI flags");
         expect(process.stdout_text.find("debug|release") != std::string::npos,
@@ -1068,18 +1067,16 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
 
     {
         const auto process = run_process_capture(build_host_path, {"--license-status"}, temp_root);
-        expect(process.exit_code == 0, "normalized build host license-status flag should succeed");
-        expect(process.stdout_text.find("status: ok") != std::string::npos,
-               "normalized build host license-status flag should preserve the machine-readable status line");
-        expect(process.stdout_text.find("state: ") != std::string::npos,
-               "normalized build host license-status flag should print the license state");
+        expect(process.exit_code == 2, "#4900: normalized license-status flag should be inactive");
+        expect(process.stdout_text.find("state: ") == std::string::npos,
+               "#4900: inactive license-status flag should not print product-license state");
     }
 
     {
         const auto process = run_process_capture(build_host_path, {"license-status"}, temp_root);
-        expect(process.exit_code == 0, "legacy build host positional license-status should remain accepted");
-        expect(process.stdout_text.find("status: ok") != std::string::npos,
-               "legacy build host positional license-status should still print the machine-readable status line");
+        expect(process.exit_code == 2, "#4900: legacy positional license-status command should be inactive");
+        expect(process.stdout_text.find("state: ") == std::string::npos,
+               "#4900: inactive legacy command should not print product-license state");
     }
 
     {
@@ -1171,8 +1168,8 @@ void run_build_host_localized_usage_path_search_smoke(const std::string& build_h
                "PATH-launched build host usage should not leak the raw usage catalog key");
         expect(process.stdout_text.find("BuildHost.Usage.LicenseStatus") == std::string::npos,
                "PATH-launched build host usage should not leak the raw license-status catalog key");
-        expect(process.stdout_text.find("--license-status") != std::string::npos,
-               "PATH-launched pseudo-localized build host usage should preserve invariant CLI flags");
+        expect(process.stdout_text.find("--license-status") == std::string::npos,
+               "#4900: PATH-launched build host usage should hide archived product licensing");
     }
 
     fs::remove_all(temp_root, ignored);

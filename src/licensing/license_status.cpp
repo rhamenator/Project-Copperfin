@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/ed25519_public_key.h"
@@ -22,6 +21,8 @@
 namespace copperfin::licensing {
 
 namespace {
+
+#if COPPERFIN_ENABLE_PRODUCT_LICENSING
 
 std::string current_date_iso8601() {
     const std::time_t now = std::time(nullptr);
@@ -55,6 +56,8 @@ void set_diagnostic(
     status.diagnostic_argument = std::move(argument);
 }
 
+#endif
+
 }  // namespace
 
 std::string_view license_state_name(LicenseState state) {
@@ -83,6 +86,12 @@ LicenseStatus load_license_status(
     const std::filesystem::path& executable_path,
     const std::optional<std::filesystem::path>& explicit_override,
     std::span<const SignerPublicKey> signer_keys) {
+#if !COPPERFIN_ENABLE_PRODUCT_LICENSING
+    (void)executable_path;
+    (void)explicit_override;
+    (void)signer_keys;
+    return {};
+#else
     LicenseStatus status;
 
     std::filesystem::path resolved_path;
@@ -188,6 +197,7 @@ LicenseStatus load_license_status(
     LicenseStatus classified = classify_verified_payload(parsed.payload_fields, kCopperfinMajorVersion, current_date_iso8601());
     classified.source_path = status.source_path;
     return classified;
+#endif
 }
 
 }  // namespace copperfin::licensing

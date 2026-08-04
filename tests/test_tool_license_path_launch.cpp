@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "test_environment_support.h"
 
@@ -90,24 +89,6 @@ ProcessResult run_process_capture(
     return result;
 }
 
-std::filesystem::path output_path_value(
-    const std::string& output,
-    const std::string& prefix) {
-    const std::size_t offset = output.find(prefix);
-    if (offset == std::string::npos) {
-        return {};
-    }
-    const std::size_t value_start = offset + prefix.size();
-    const std::size_t value_end = output.find('\n', value_start);
-    std::string value = output.substr(
-        value_start,
-        value_end == std::string::npos ? std::string::npos : value_end - value_start);
-    if (!value.empty() && value.back() == '\r') {
-        value.pop_back();
-    }
-    return std::filesystem::path(value);
-}
-
 void copy_executable(
     const std::filesystem::path& source,
     const std::filesystem::path& destination) {
@@ -183,23 +164,14 @@ int main(int argc, char** argv) {
             {"--license-status"},
             caller_root,
             label);
-        expect(process.exit_code == 0,
-               "#4025: PATH-launched " + label + " license status should succeed");
-        expect(process.stdout_text.find("status: ok") != std::string::npos &&
-                   process.stdout_text.find("state: malformed") != std::string::npos,
-               "#4025: PATH-launched " + label + " should preserve invariant status fields");
-        const fs::path reported_license = output_path_value(
-            process.stdout_text,
-            "source_path: ");
-        std::error_code deployed_error;
-        expect(!reported_license.empty() &&
-                   fs::equivalent(reported_license, deployed_license, deployed_error) &&
-                   !deployed_error,
-               "#4025: PATH-launched " + label + " should report the deployed license identity");
-        std::error_code caller_error;
-        expect(reported_license.empty() ||
-                   !fs::equivalent(reported_license, caller_license, caller_error),
-               "#4025: PATH-launched " + label + " must not inspect the caller-CWD license");
+        expect(process.exit_code != 0,
+               "#4900: PATH-launched " + label + " should reject the inactive license-status command");
+        expect(process.stdout_text.find("status: ok") == std::string::npos &&
+                   process.stdout_text.find("state:") == std::string::npos,
+               "#4900: PATH-launched " + label + " should not present product-license state");
+        expect(process.stdout_text.find("source_path:") == std::string::npos &&
+                   process.stdout_text.find("diagnostic:") == std::string::npos,
+               "#4900: PATH-launched " + label + " must not inspect deployed or caller license files");
     };
 
     verify_host(build_launch_name, "build-host");

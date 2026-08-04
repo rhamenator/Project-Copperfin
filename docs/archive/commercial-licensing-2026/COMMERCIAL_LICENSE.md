@@ -1,5 +1,8 @@
 # Project Copperfin Commercial License
 
+> **Inactive archive:** preserved for possible future reconsideration; this is
+> not a current Project Copperfin license or offer.
+
 Copyright © 2026 Richard M. Hamilton. All rights reserved.
 
 This document describes the commercial licensing program for Project

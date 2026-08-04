@@ -1,6 +1,5 @@
-// Copyright © 2026 Richard M. Hamilton. All rights reserved.
-// Licensed under the Project Copperfin Source-Available License or
-// Commercial License. See LICENSE.md in the repository root.
+// Copyright © 2026 Richard M. Hamilton.
+// SPDX-License-Identifier: GPL-3.0-only
 
 #include "test_environment_support.h"
 
@@ -37,22 +36,6 @@ std::string read_text(const std::filesystem::path& path) {
     return std::string(
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>());
-}
-
-std::string output_line_value(const std::string& output, const std::string& prefix) {
-    const std::size_t offset = output.find(prefix);
-    if (offset == std::string::npos) {
-        return {};
-    }
-    const std::size_t value_start = offset + prefix.size();
-    const std::size_t value_end = output.find('\n', value_start);
-    std::string value = output.substr(
-        value_start,
-        value_end == std::string::npos ? std::string::npos : value_end - value_start);
-    if (!value.empty() && value.back() == '\r') {
-        value.pop_back();
-    }
-    return value;
 }
 
 std::string quote_command_argument(const std::string& value) {
@@ -246,29 +229,14 @@ int main(int argc, char** argv) {
         {"--license-status"},
         caller_root,
         "license-status");
-    expect(license_process.exit_code == 0,
-           "#4016: PATH-launched license inspection should preserve the success exit code");
-    expect(license_process.stdout_text.find("status: ok") != std::string::npos &&
-               license_process.stdout_text.find("state: malformed") != std::string::npos,
-           "#4016: PATH-launched license inspection should preserve invariant status fields");
-    const fs::path reported_license_path = output_line_value(
-        license_process.stdout_text,
-        "source_path: ");
-    std::error_code deployed_equivalence_error;
-    expect(!reported_license_path.empty() &&
-               fs::equivalent(
-                   reported_license_path,
-                   deployed_license_path,
-                   deployed_equivalence_error) &&
-               !deployed_equivalence_error,
-           "#4016: default license discovery should bind to the deployed runtime host");
-    std::error_code caller_equivalence_error;
-    expect(reported_license_path.empty() ||
-               !fs::equivalent(
-                   reported_license_path,
-                   caller_license_path,
-                   caller_equivalence_error),
-           "#4016: default license discovery must not inspect the caller-CWD license sibling");
+    expect(license_process.exit_code == 2,
+           "#4900: PATH-launched runtime host should reject the inactive license-status command");
+    expect(license_process.stdout_text.find("status: ok") == std::string::npos &&
+               license_process.stdout_text.find("state:") == std::string::npos,
+           "#4900: PATH-launched runtime host should not present product-license state");
+    expect(license_process.stdout_text.find("source_path:") == std::string::npos &&
+               license_process.stdout_text.find("diagnostic:") == std::string::npos,
+           "#4900: runtime host must not inspect deployed or caller license files");
 
     const ProcessResult localized_failure = run_process_capture(
         launch_name,

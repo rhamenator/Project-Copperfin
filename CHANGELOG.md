@@ -1,3 +1,18 @@
+- 2026-08-04: Restored the repository and current release line to GNU
+  GPL-3.0-only under #4900. The prior source-available/commercial license,
+  CLA, migration notice, and FAQ are retained under an explicitly inactive
+  archive. All first-party source headers now carry `GPL-3.0-only` SPDX
+  identifiers. Normal builds set `COPPERFIN_ENABLE_PRODUCT_LICENSING=OFF`,
+  causing the retained product-license loader to ignore explicit paths,
+  `COPPERFIN_LICENSE_PATH`, adjacent `.cflicense` files, and signer registries
+  and return the unrestricted free state without reading license data. Package
+  manifests leave retained license fields empty, license-status commands are
+  not advertised or accepted, and Studio omits the license profile and summary
+  when the policy is off. Package and launcher signing remain enabled as an
+  independent provenance/integrity
+  boundary. Focused regression and static policy coverage protect both the
+  disabled product-license contract and the separation from release trust.
+
 - 2026-08-04: Hardened agent issue retrieval against prompt injection under
   #4899. The Codex driver now retrieves only issue number/state/author/label
   metadata before admission, accepts only open repository-owner-authored issues

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright © 2026 Richard M. Hamilton. All rights reserved.
-# Licensed under the Project Copperfin Source-Available License or
-# Commercial License. See LICENSE.md in the repository root.
+# Copyright © 2026 Richard M. Hamilton.
+# SPDX-License-Identifier: GPL-3.0-only
 
 """
 split_prg_engine.py
