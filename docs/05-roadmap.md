@@ -227,6 +227,12 @@ the evidence needed for the MVP release candidate. macOS and Linux standalone
 host parity follows the MVP boundary where practical and is expanded in v1.
 
 The current repository and release line are licensed under GNU GPL-3.0-only.
+The copyleft boundary covers Copperfin and works based on, modifying, copying,
+or incorporating GPL-covered Copperfin code. Merely running, interpreting,
+analyzing, building, or compiling an independent work with Copperfin does not
+change that work's license, and ordinary output derived solely from the user's
+input remains the user's work. Output that actually copies or incorporates
+Copperfin code remains subject to the GPL analysis described in `LICENSE.md`.
 The earlier commercial/source-available proposal is retained only in
 `docs/archive/commercial-licensing-2026/` for possible future reconsideration.
 Normal builds keep `COPPERFIN_ENABLE_PRODUCT_LICENSING=OFF`; product-license

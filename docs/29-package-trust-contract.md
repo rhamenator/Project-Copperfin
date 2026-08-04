@@ -64,7 +64,7 @@ copperfin-package-signer sign-launcher-inventory \
 For a new dedicated launcher-release identity on Linux, run
 `tools/package-signer/generate-launcher-signing-key.sh` with an invariant
 `--key-id` and a protected `--output-dir` outside the checkout. Do not reuse the
-commercial-license signer. The generated private PEM maps only to the
+archived product-license signer. The generated private PEM maps only to the
 `COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM` environment secret; the matching
 generated launcher registry header maps only to
 `COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER`. The public PEM and fingerprint

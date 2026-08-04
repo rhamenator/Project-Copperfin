@@ -2,6 +2,23 @@
 
 ## Current State
 
+#4901 makes the current GPL boundary explicit across every applicable active
+Markdown/help surface. Copperfin may run, interpret, analyze, build, or compile
+an independent program without changing that program's license; the author
+retains copyright and license choice for the program, its source, data, and
+ordinary output derived from the author's input. GPL coverage remains for
+Copperfin itself and works that, under applicable copyright law, are based on,
+modify, copy, or incorporate GPL-covered Copperfin code. Output that actually
+contains Copperfin code is distinguished from work Copperfin merely processes.
+`LICENSE.md` is the central plain-language explanation and links the governing
+GPLv3 section 2 and GNU tool-use FAQ. README, roadmap, and package-signer
+guidance repeat the operational boundary, while the inactive commercial
+archive remains unchanged. The focused policy contract now prevents these
+active statements from silently disappearing. Artifact signing remains an
+independent provenance/integrity control, not a copyright or entitlement
+mechanism. No runtime, VFP9, package/debug, xAsset, localization, or platform
+behavior changed.
+
 #4900 temporarily restores Project Copperfin to GNU GPL-3.0-only and disables
 the retained commercial product-license loader in normal builds. The complete
 GPL text is operative at repository root, and all former commercial source

@@ -24,8 +24,15 @@ endfunction()
 
 require_text("LICENSE" "GNU GENERAL PUBLIC LICENSE")
 require_text("LICENSE.md" "GPL-3.0-only")
+require_text("LICENSE.md" "does **not** place that work under the GPL")
+require_text("LICENSE.md" "based on, modifies, copies, or incorporates")
+require_text("LICENSE.md" "GPLv3 section 2")
 require_text("README.md" "GNU General Public")
 require_text("README.md" "GPL-3.0-only")
+require_text("README.md" "does **not** place that program")
+require_text("README.md" "actually contains Copperfin code")
+require_text("docs/05-roadmap.md" "ordinary output derived solely")
+require_text("tools/package-signer/README.md" "does not extend Copperfin's GPL")
 require_text("docs/archive/commercial-licensing-2026/README.md" "inactive historical material")
 
 foreach(archived_name IN ITEMS
@@ -66,6 +73,7 @@ require_text("CMakeLists.txt" "add_library(cf_package_trust")
 require_text("CMakeLists.txt" "set(COPPERFIN_PACKAGE_LICENSE_DOCUMENT LICENSE)")
 require_text("tests/CMakeLists.txt" "test_package_launcher_inventory_trust")
 require_text("tools/package-signer/README.md" "provenance and integrity")
+require_text("docs/29-package-trust-contract.md" "archived product-license signer")
 
 file(GLOB_RECURSE policy_sources
     LIST_DIRECTORIES false
@@ -97,6 +105,20 @@ foreach(source_path IN LISTS policy_sources)
     string(FIND "${source_contents}" "Project Copperfin Source-Available License or" stale_header_offset)
     if(NOT stale_header_offset EQUAL -1)
         message(FATAL_ERROR "Stale source-available header remains in ${source_path}")
+    endif()
+endforeach()
+
+file(GLOB_RECURSE active_policy_docs
+    LIST_DIRECTORIES false
+    "${COPPERFIN_SOURCE_ROOT}/*.md")
+foreach(doc_path IN LISTS active_policy_docs)
+    if(doc_path MATCHES "/docs/archive/commercial-licensing-2026/")
+        continue()
+    endif()
+    file(READ "${doc_path}" doc_contents)
+    string(FIND "${doc_contents}" "commercial-license signer" stale_signer_offset)
+    if(NOT stale_signer_offset EQUAL -1)
+        message(FATAL_ERROR "Stale commercial-license signer wording remains in ${doc_path}")
     endif()
 endforeach()
 

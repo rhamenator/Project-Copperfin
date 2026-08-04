@@ -1,3 +1,14 @@
+- 2026-08-04: Clarified the GPL output and tool-use boundary under #4901.
+  Merely running, interpreting, analyzing, building, or compiling independent
+  programs with Copperfin does not place those programs, their source, data,
+  or ordinary user-input-derived output under GPL-3.0-only. GPL coverage
+  remains for Copperfin and works that are based on, modify, copy, or
+  incorporate GPL-covered Copperfin code, including output that actually
+  contains such code. The active license overview, README, roadmap, and signer
+  guidance now state the same boundary; the inactive commercial archive is
+  unchanged. The licensing policy regression requires the clarification and
+  preserves artifact signing as an independent provenance/integrity control.
+
 - 2026-08-04: Restored the repository and current release line to GNU
   GPL-3.0-only under #4900. The prior source-available/commercial license,
   CLA, migration notice, and FAQ are retained under an explicitly inactive

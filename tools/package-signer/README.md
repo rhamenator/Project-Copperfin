@@ -4,6 +4,11 @@ Package and launcher signatures authenticate release provenance and integrity.
 They are independent of the archived product-license system and do not create
 activation or entitlement rights.
 
+Signing a Copperfin release also does not extend Copperfin's GPL to independent
+programs run, interpreted, analyzed, built, or compiled with the release. The
+GPL covers Copperfin and works based on or incorporating GPL-covered Copperfin
+code; see the repository's [`LICENSE.md`](../../LICENSE.md) boundary summary.
+
 ## Generate A Dedicated Launcher-Release Identity On Linux
 
 Do not reuse any archived product-license signing key. Generate one dedicated

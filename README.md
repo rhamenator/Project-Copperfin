@@ -208,7 +208,16 @@ Known limitation:
 
 Project Copperfin is free software licensed under the **GNU General Public
 License, version 3 only** (`GPL-3.0-only`). See [`LICENSE`](LICENSE) for the
-complete terms.
+complete terms and [`LICENSE.md`](LICENSE.md) for the plain-language licensing
+boundary.
+
+Using Copperfin to run, interpret, analyze, build, or compile an independent
+program does **not** place that program, its source, its data, or ordinary
+output under the GPL. Its author keeps the right to choose its license. The
+GPL applies to Copperfin and to works that, under applicable copyright law,
+are based on, modify, copy, or incorporate GPL-covered Copperfin code. Output
+that actually contains Copperfin code is therefore different from work that
+Copperfin merely processes.
 
 The earlier source-available/commercial model is inactive. Its documentation
 and implementation are preserved for possible future reconsideration, but
