@@ -2,31 +2,45 @@
 
 ## Current State
 
-#4907 maintains a private-evaluation RC assembly lane without weakening the
-official-release gates. Immutable tag `v0.1.0-rc.1` peels to `a4459e64a`.
-Exact-tag run `31236596422` passed native Linux/macOS/Windows release readiness,
-Linux managed UI, all platform installers, Visual Studio VSIX behavior, and
-security/SBOM, then failed closed in final assembly: the source scanner found
-its own literal private-key sentinel inside the authoritative Corresponding
-Source archive. No secret was present, no final bundle was uploaded, and no
-GitHub Release exists. The tag remains unchanged.
+#4907 now has a complete private-evaluation RC artifact lane without weakening
+the official-release gates. Failed immutable tag `v0.1.0-rc.1` still peels to
+`a4459e64a`; exact-tag run `31236596422` passed every native/package prerequisite
+but failed closed when the source scanner matched its own literal private-key
+sentinel. No secret or final bundle was published from RC1, and the tag remains
+unchanged.
 
-The corrective lane constructs the sentinel bytes without embedding a complete
-sentinel in its own source and puts the real scanner source inside the
-executable source-ZIP regression while retaining private-key rejection across
-arbitrarily large envelopes and common PKCS#8, RSA, EC, DSA, OpenSSH,
-canonical SSH2, PGP, and PuTTY PPK v2/v3 encodings. Absolute marker positions
-prevent an end marker before the corresponding begin marker from satisfying
-the envelope.
-`.github/workflows/rc-candidate-assembly.yml` remains manual and read-only, but
-now accepts only sequential `v0.1.0-rc.N` tags when the requested tag, checkout
-ref, peeled target, and GitHub workflow SHA are identical. This permits an
-immutable RC2 and later human-review candidates without rewriting the workflow.
-The final Ubuntu job still verifies nested artifact layout, secret-like names,
-complete private-key blocks, SBOM licensing companions, and emits one 90-day
-evaluation bundle with SHA-256 and non-secret validation manifests. Correction
-review, exact-main hosted evidence, RC2 tagging/execution, deep bundle
-inspection, and creation of `v1-development` remain before #4907 closes.
+The corrected immutable tag `v0.1.0-rc.2` has annotated tag object `910903198f`
+and peels exactly to reviewed release-content commit `fd6bd94f8`. All exact-main
+push lanes at that commit passed (`31242362021`, `31242362022`, `31242362031`,
+`31242362035`, `31242362037`, `31242362038`, `31242362040`, `31242362046`,
+`31242362049`, and `31242362052`). Non-closure safety run `31242383363` also
+passed against #4403 with primary hazards required and issue closure not
+required; artifact `9017433329` has digest
+`sha256:b944081a0df36d302416fde633161b8a15498031de13b1e44e41e2d1512d0b73`,
+reports one validated issue with zero failures/errors, and expires 2026-11-06.
+A later `.agent-channel`-only check-in advanced `main`; it is intentionally not
+part of the already validated RC2 release content.
+
+Exact-tag run `31244558839` passed 12/12 jobs, including exact tag/ref/peeled
+commit/workflow-SHA equality, Linux/macOS/Windows native release readiness,
+managed UI, every installer, Visual Studio VSIX, security/SBOM, and final
+assembly. Final artifact `9018695984`,
+`copperfin-v0.1.0-rc.2-evaluation-bundle`, has GitHub digest
+`sha256:501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`,
+size 59,511,519 bytes, and expiry 2026-11-06. Downloaded inspection verified
+the 19-file/18-checksum bundle, all 17 manifest records, 1,404 exact Git blobs
+in Corresponding Source, license/SBOM companions, installer/VSIX structures,
+and the symlink/private-key/secret-name boundaries. No GitHub Release exists.
+
+The scanner now recognizes arbitrarily large PKCS#8, RSA, EC, DSA, OpenSSH,
+canonical SSH2, PGP, and PuTTY PPK v2/v3 records without matching its own
+source, and absolute marker positions enforce begin-before-end ordering.
+`v1-development` begins exactly at the peeled RC2 commit and active no-bypass
+ruleset `20582609` prevents branch deletion and non-fast-forward updates. RC
+stabilization and v1 feature development are therefore separate. Human tester
+evaluation remains pending, and the bundle continues to disclaim Windows
+launcher release trust, Authenticode, Apple signing/notarization, Linux package
+signing, and completed human review of generated translations.
 
 #4904 hardens the GPL exception and release-license compliance surface. The
 operative exception now distinguishes automatically emitted Standard Support

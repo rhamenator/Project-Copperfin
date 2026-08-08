@@ -1,3 +1,22 @@
+- 2026-08-08: Produced and independently inspected the corrected private
+  evaluation candidate `v0.1.0-rc.2` under #4907. The protected annotated tag
+  peels exactly to reviewed commit `fd6bd94f8`; all exact-main native, package,
+  IDE, managed-UI, path, ABI, security, and permissive safety lanes passed.
+  Exact-tag run `31244558839` then passed 12/12 jobs and uploaded artifact
+  `9018695984`, `copperfin-v0.1.0-rc.2-evaluation-bundle`, with GitHub digest
+  `sha256:501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`
+  and 90-day retention. Downloaded verification passed all 18 checksums, all
+  17 validation-manifest file records, the complete 19-file payload inventory,
+  1,404 exact Corresponding Source Git blobs, installer/VSIX/SBOM/license
+  structures, and symlink/private-key/secret-name boundaries. No GitHub Release
+  was created. Long-lived `v1-development` begins exactly at the peeled RC2
+  commit and has active no-bypass deletion/non-fast-forward protection, keeping
+  v1 feature work separate from immutable RC stabilization. Human RC2 testing
+  and the documented signing, launcher-trust, localization-review, and official
+  release gates remain open. No runtime, VFP9, localization catalog,
+  package/debug schema, xAsset, report/label, IDE, stack, or platform product
+  behavior changed.
+
 - 2026-08-08: Preserved failed immutable candidate tag `v0.1.0-rc.1` and
   corrected the final evaluation-bundle scanner under #4907. Exact-tag run
   `31236596422` passed native Linux/macOS/Windows release readiness, managed
