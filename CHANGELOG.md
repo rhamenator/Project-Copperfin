@@ -1,3 +1,19 @@
+- 2026-08-08: Preserved failed immutable candidate tag `v0.1.0-rc.1` and
+  corrected the final evaluation-bundle scanner under #4907. Exact-tag run
+  `31236596422` passed native Linux/macOS/Windows release readiness, managed
+  UI, all installers, VSIX, and security/SBOM, then failed closed because the
+  scanner found its own literal private-key sentinel in the authoritative
+  Corresponding Source archive. No secret was present and no bundle or GitHub
+  Release was published. The scanner now constructs sentinel bytes without
+  embedding a complete sentinel in its source; its executable regression puts
+  the real scanner source inside the synthetic source ZIP while retaining the
+  private-key rejection case. The workflow and tester contract now accept only
+  sequential `v0.1.0-rc.N` tags whose requested tag, checked-out ref, peeled
+  commit, and workflow SHA agree, so the correction can proceed as immutable
+  RC2 and later human-review corrections do not require rewriting the lane.
+  No runtime, VFP9, localization catalog, package/debug schema, xAsset,
+  report/label, IDE, stack, or platform product behavior changed.
+
 - 2026-08-07: Added the fail-closed private-evaluation RC1 assembly path under
   #4907. Manual workflow dispatch accepts only exact tag `v0.1.0-rc.1` at its
   peeled 40-character commit, then requires hosted Linux/macOS/Windows native

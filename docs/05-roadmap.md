@@ -298,9 +298,14 @@ installer `30550923408`, and security/SBOM `30550923513` workflows also pass.
 The final release-validation regressions #4891, #4892, and #4893 are closed.
 
 This is implementation-complete RC readiness, not authority to publish an
-official release. Private RC1 evaluation may proceed through the fail-closed
+official release. Private RC evaluation may proceed through the fail-closed
 GitHub Actions artifact workflow without a GitHub Release, protected signing,
-or a claim that the external release authorities are satisfied. The complete
+or a claim that the external release authorities are satisfied. Immutable
+`v0.1.0-rc.1` run `31236596422` passed every platform and package prerequisite
+but published no final bundle because the scanner detected its own literal
+private-key sentinel in the exact source archive. No secret was present. The
+tag remains immutable, the scanner regression is corrected for sequential
+`v0.1.0-rc.N` candidates, and RC2 is the next candidate. The complete
 official-release evidence gate remains open until #4403 receives genuine
 arm's-length safety sign-off, closes, and passes strict validation, and until
 #4409 receives the approved protected launcher-trust signer/registry secrets
@@ -309,7 +314,7 @@ and passes enforced Windows validation. Permissive primary-hazard safety run
 hosted Deep runner also lacked VFP9;
 accepted installed-VFP9, mounted-sample, RuntimePackage/xAsset/Report/Menu, and
 live Visual Studio evidence remains the closed #4621 baseline because the final
-changes were catalog/managed/test-only. After the immutable RC1 artifact passes,
+changes were catalog/managed/test-only. After an immutable RC artifact passes,
 the long-lived v1 development branch may begin at that exact tag while RC
 stabilization remains isolated. Neither lane may reinterpret this parallel work
 as closure of #4403 or #4409 or as authority for an official 1.0 release.
