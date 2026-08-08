@@ -1,3 +1,21 @@
+- 2026-08-08: Added optional defense-in-depth robustness testing for
+  Copperfin's own DBF header parser (`parse_dbf_header`,
+  `parse_dbf_header_from_file`) under
+  docs/36-dbf-header-parser-robustness-testing.md. The new
+  `test_dbf_header_robustness` CTest target runs five fixed, bounded,
+  deterministic sweeps against synthetic local byte sequences only --
+  boundary input sizes, an exhaustive 256-value sweep of every single-byte
+  header field, boundary-value analysis of the multi-byte fields,
+  5,000 seeded-deterministic arbitrary-byte cases, and synthetic file-based
+  inputs -- and writes a versioned JSON result summary. When the local
+  compiler supports it, an additional `test_dbf_header_robustness_sanitized`
+  target compiles the parser with AddressSanitizer/UndefinedBehaviorSanitizer
+  instrumentation; both variants pass with zero findings across 6,752 cases
+  locally. This is explicitly optional defense-in-depth testing, not a v1 or
+  RC release gate, and does not claim exhaustive format or security
+  coverage; normal and release builds are unchanged. No product behavior
+  changed.
+
 - 2026-08-08: Preserved failed immutable candidate tag `v0.1.0-rc.1` and
   corrected the final evaluation-bundle scanner under #4907. Exact-tag run
   `31236596422` passed native Linux/macOS/Windows release readiness, managed
