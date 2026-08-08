@@ -24,3 +24,4 @@
 /tools/license-signer/keys/
 *_private.pem
 *.cflicense
+/release-source/

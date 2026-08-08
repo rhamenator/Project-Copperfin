@@ -1,3 +1,20 @@
+- 2026-08-07: Hardened GPL-exception and release-license compliance under
+  #4904. The exception now distinguishes automatically emitted Standard
+  Support Material in permitted application output from separately distributed
+  Copperfin Code. Contributor-owned work may remain in a future official
+  proprietary or otherwise GPL-incompatible release only after a separate
+  written consent agreement states compensation; otherwise it retains its
+  existing terms or must be removed or independently rewritten. Broader
+  revenue-sharing formula design remains an explicit owner policy decision
+  under #4905. Added human authorship and assisted-development evidence,
+  machine-readable custom LicenseRef metadata, an extracted operative
+  exception, third-party notices, and an exact-revision source-archive
+  contract. CMake documents, the VSIX, all installer lanes, and security/SBOM
+  evidence now carry the applicable materials. Added a trusted-base DCO check
+  for commit authors and co-authors and enabled GitHub web commit sign-off. No
+  runtime, VFP9, localization, package/debug schema, xAsset, report/label, IDE,
+  stack, or platform product behavior changed.
+
 - 2026-08-04: Completed contributor licensing and repository community health
   under #4903. Contributors retain copyright and apply GPL-3.0-only with the
   Copperfin Application, Runtime, and Toolchain Exception 1.0 to authorized

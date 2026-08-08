@@ -1,0 +1,42 @@
+name: Create Exact Corresponding Source Archive
+description: Creates and verifies the exact Git source archive that accompanies release binaries.
+
+inputs:
+  revision:
+    description: Full Git revision that produced the binary artifacts.
+    required: true
+  output-directory:
+    description: Repository-relative directory for the source archive.
+    required: false
+    default: release-source
+
+runs:
+  using: composite
+  steps:
+    - name: Archive and verify exact Corresponding Source
+      shell: bash
+      env:
+        COPPERFIN_SOURCE_REVISION: ${{ inputs.revision }}
+        COPPERFIN_SOURCE_OUTPUT_DIRECTORY: ${{ inputs.output-directory }}
+      run: |
+        set -euo pipefail
+        if [[ ! "$COPPERFIN_SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "Release source revision must be a lowercase full Git object ID." >&2
+          exit 1
+        fi
+        actual_revision="$(git rev-parse HEAD)"
+        if [[ "$actual_revision" != "$COPPERFIN_SOURCE_REVISION" ]]; then
+          echo "Checked-out revision $actual_revision does not match requested source revision $COPPERFIN_SOURCE_REVISION." >&2
+          exit 1
+        fi
+        cmake -E make_directory "$COPPERFIN_SOURCE_OUTPUT_DIRECTORY"
+        archive_path="$COPPERFIN_SOURCE_OUTPUT_DIRECTORY/Project-Copperfin-source-$COPPERFIN_SOURCE_REVISION.zip"
+        git archive \
+          --format=zip \
+          --prefix="Project-Copperfin-$COPPERFIN_SOURCE_REVISION/" \
+          --output="$archive_path" \
+          "$COPPERFIN_SOURCE_REVISION"
+        cmake \
+          -DSOURCE_ARCHIVE:FILEPATH="$archive_path" \
+          -DEXPECTED_REVISION:STRING="$COPPERFIN_SOURCE_REVISION" \
+          -P tests/run_release_source_archive_contract_check.cmake

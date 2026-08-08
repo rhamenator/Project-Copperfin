@@ -51,8 +51,13 @@ License documents:
 - [`LICENSE`](LICENSE) — operative GNU GPL v3.0-only text plus the Copperfin
   Application, Runtime, and Toolchain Exception 1.0
 - [`LICENSE.md`](LICENSE.md) — concise current-license overview
+- [`SOURCE.md`](SOURCE.md) — exact-revision Corresponding Source contract
+- [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) — separately licensed
+  material and required notices
 - [`docs/33-application-runtime-license-exception.md`](docs/33-application-runtime-license-exception.md)
   — exception scope, offline evidence, and release-review rationale
+- [`docs/34-human-authorship-and-assisted-development.md`](docs/34-human-authorship-and-assisted-development.md)
+  — human direction, review, provenance, and assisted-development evidence
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)

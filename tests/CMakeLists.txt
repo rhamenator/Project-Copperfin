@@ -302,6 +302,23 @@ add_test(
 )
 
 add_test(
+    NAME test_release_licensing_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_release_licensing_contract_check.cmake
+)
+
+find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
+if(COPPERFIN_PYTHON3_EXECUTABLE)
+    add_test(
+        NAME test_contributor_signoff_contract
+        COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/scripts/check-contributor-signoffs.py
+            --self-test
+    )
+endif()
+
+add_test(
     NAME test_launcher_trust_provisioning_contract
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR=${CMAKE_SOURCE_DIR}

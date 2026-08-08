@@ -42,6 +42,11 @@ linking, runtime combination, and generated support material. This summary is
 not a substitute for the complete GPL and exception text in `LICENSE`.
 The evidence and design intent are recorded in
 [`docs/33-application-runtime-license-exception.md`](docs/33-application-runtime-license-exception.md).
+Machine-readable release metadata identifies the custom, non-SPDX-listed
+additional permission through a stable `LicenseRef` without pretending it is a
+standard SPDX exception. See
+[`docs/contracts/release-license-metadata.json`](docs/contracts/release-license-metadata.json)
+and the extracted exception text under [`LICENSES/`](LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt).
 
 The earlier source-available/commercial licensing proposal is inactive. Its
 documents are preserved solely as historical planning material under
@@ -66,3 +71,34 @@ Git authorship and co-authorship metadata, pull requests, issues, and GitHub's
 contributor history are the durable credit record. See
 [`CONTRIBUTORS.md`](CONTRIBUTORS.md) for the credit policy. Third-party material
 keeps its own copyright and license and must be identified separately.
+
+Contributor licenses already granted under these terms remain effective.
+Because contributors retain copyright, Project Copperfin cannot place their
+contributions under an incompatible future license without the affected
+copyright holders' permission, or without removing or independently rewriting
+those contributions. A contributor remains free to license that contributor's
+own work separately.
+
+If contributor-owned work remains in a future official proprietary or
+GPL-incompatible Copperfin release, the contribution terms also require a
+separate written agreement stating that contributor's compensation. Without
+such an agreement, the work must retain its existing terms or be removed or
+independently rewritten for that release. This is not a present commercial
+license or a promise of an undefined share of unrelated revenue.
+
+## Official Releases And Downstream Copies
+
+GPLv3 section 7 permits a downstream distributor to remove an additional
+permission from its copy. Therefore, this Exception is guaranteed only for a
+copy whose license notices still include it. Official Project Copperfin
+artifacts retain the Exception and are identified by the project's signed
+release provenance. A signature authenticates an artifact; it does not change
+the artifact's license. Users of a downstream fork should inspect that fork's
+license notices rather than assume it retained the Exception.
+
+Standard Support Material automatically emitted or copied into Permitted
+Output may use the Independent Work owner's chosen terms under paragraph 2(c)
+of the Exception. The same material distributed separately, and separately
+distributed Copperfin runtimes or components, remain Copperfin Code subject to
+the GPL. This is the operative distinction between generated support embedded
+in application output and Copperfin itself.

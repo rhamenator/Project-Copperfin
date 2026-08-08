@@ -2,6 +2,30 @@
 
 ## Current State
 
+#4904 hardens the GPL exception and release-license compliance surface. The
+operative exception now distinguishes automatically emitted Standard Support
+Material in Permitted Output from separately distributed Copperfin Code, while
+preserving the independent-application boundary. Contributor ownership is
+enforced by requiring a separate written consent agreement stating compensation
+before contributor-owned work may remain in an official proprietary or
+otherwise GPL-incompatible release; without it, the existing terms remain or
+the work must be removed or independently rewritten. This is not a broad or
+undefined revenue-share promise. Planning issue #4905 records the future owner
+decision needed for an industry-informed formula covering revenue definition,
+allocation, maintenance, accounting, payments, taxes, audits, and disputes.
+Human direction and assisted-development evidence is recorded in
+`docs/34-human-authorship-and-assisted-development.md`.
+
+Release artifacts now carry the exact-revision source archive contract,
+operative exception, machine-readable custom `LicenseRef` metadata, and
+third-party notices. CMake documents, Windows VSIX packaging, all three
+installer lanes, and the security/SBOM evidence are covered. The repository
+also has a trusted-base pull-request DCO check, and GitHub web commit sign-off
+is enabled. Focused Linux contract tests and final artifact validation are the
+remaining local steps for the slice. No runtime, VFP9, localization,
+package/debug schema, xAsset, report/label, IDE, stack, or platform product
+behavior changes.
+
 #4903 completes the repository community-health and contributor-licensing
 slice. Contributors retain copyright and explicitly apply GPL-3.0-only with
 the Copperfin Application, Runtime, and Toolchain Exception 1.0 to material

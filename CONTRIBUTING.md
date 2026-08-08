@@ -34,6 +34,33 @@ Third-party material must be clearly identified with its source, copyright,
 and compatible license. Do not submit employer-owned or other encumbered work
 without authorization.
 
+### License Stability And Future Changes
+
+The license granted with an accepted contribution remains effective under its
+terms. Because contributors retain copyright, an incompatible future license
+for contributor-owned material requires the affected contributor's permission.
+Without that permission, Project Copperfin must keep the existing terms for
+that material or remove or independently rewrite it. Contributors remain free
+to license their own contributions separately. Project governance does not
+override these copyright-holder rights.
+
+### Commercialization Participation
+
+If an accepted contributor's copyrightable contribution remains in a future
+official Project Copperfin release offered under proprietary or otherwise
+GPL-incompatible terms, Project Copperfin must first obtain that contributor's
+separate written consent under an agreement that states the contributor's
+compensation. Without that agreement, the contribution must remain under its
+existing GPL-with-exception terms or be removed or independently rewritten for
+the differently licensed release.
+
+This commitment does not revoke the existing GPL grant, transfer the
+contributor's copyright, or create an unspecified share of donations, paid
+support, independent applications, or distribution of Copperfin under its
+existing GPL terms. Any broader revenue-sharing program must define eligibility,
+covered revenue, allocation, accounting, payment, and tax treatment in a
+separate written policy before revenue is collected.
+
 ## Certificate Of Origin And Sign-Off
 
 Every commit must include a `Signed-off-by` trailer under the
@@ -46,6 +73,11 @@ Create the trailer with:
 ```bash
 git commit -s
 ```
+
+GitHub is configured to add the required sign-off to web-created commits. A
+read-only pull-request check verifies every commit author and every recorded
+co-author. It fetches commit objects for inspection but never checks out or
+executes code from an untrusted pull request.
 
 The trailer must use the contributor identity associated with the work. When
 several people created a commit, record each consenting contributor with an

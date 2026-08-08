@@ -244,6 +244,14 @@ assignment is required. Git authorship/co-authorship and repository history
 provide durable credit. The community-health contract under #4903 keeps the
 contribution, conduct, support, governance, ownership, issue-intake, and
 pull-request surfaces present and mutually consistent.
+The #4904 release-compliance slice makes that retained ownership operational:
+an official proprietary or otherwise GPL-incompatible release may use an
+accepted contributor's copyrightable work only after a separate written
+consent agreement states compensation for that use. Otherwise, the work must
+remain under its existing terms or be removed or independently rewritten.
+Broader revenue sharing is intentionally not implied; #4905 tracks a future
+owner policy decision on covered revenue, contribution weighting, accounting,
+payment, taxes, audits, and disputes before any formula is adopted.
 Because this is a project-specific legal exception, qualified legal review of
 the operative text remains required before the first public release candidate;
 the implementation and regression evidence under #4902 is not legal advice.

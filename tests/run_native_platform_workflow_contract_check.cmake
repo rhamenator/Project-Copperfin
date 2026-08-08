@@ -338,8 +338,11 @@ require_text(".github/workflows/build-vsix.yml"
     "name: Build Visual Studio VSIX"
     "focused VSIX workflow identity")
 require_text(".github/workflows/build-vsix.yml"
-    "path: vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix"
+    "vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix"
     "intended VSIX artifact path")
+require_text(".github/workflows/build-vsix.yml"
+    "release-source/Project-Copperfin-source-\${{ github.sha }}.zip"
+    "matching VSIX Corresponding Source path")
 require_text(".github/workflows/build-installers.yml"
     "windows-installer:"
     "Windows installer job")
@@ -388,6 +391,10 @@ foreach(installer_path IN ITEMS
         "${installer_path}"
         "exact installer artifact path '${installer_path}'")
 endforeach()
+require_text_count(".github/workflows/build-installers.yml"
+    "release-source/Project-Copperfin-source-\${{ github.sha }}.zip"
+    3
+    "matching installer Corresponding Source paths")
 require_text(".github/workflows/build-installers.yml"
     "tests/run_cpack_artifact_contract_check.cmake"
     "CPack artifact ownership verifier")
