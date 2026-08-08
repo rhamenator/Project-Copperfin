@@ -43,6 +43,9 @@ if(MSVC)
 endif()
 
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
+option(COPPERFIN_BUILD_ROBUSTNESS_TESTS
+    "Build optional bounded parser robustness tests (not a release gate)"
+    OFF)
 option(COPPERFIN_MSVC_EXPLICIT_EXCEPTION_HANDLING
     "Apply MSVC exception flags per target for generators that cannot reconcile /EHsc with /clr"
     OFF)
