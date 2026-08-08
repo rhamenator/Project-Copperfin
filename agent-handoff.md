@@ -21,10 +21,12 @@ operative exception, machine-readable custom `LicenseRef` metadata, and
 third-party notices. CMake documents, Windows VSIX packaging, all three
 installer lanes, and the security/SBOM evidence are covered. The repository
 also has a trusted-base pull-request DCO check, and GitHub web commit sign-off
-is enabled. Focused Linux contract tests and final artifact validation are the
-remaining local steps for the slice. No runtime, VFP9, localization,
-package/debug schema, xAsset, report/label, IDE, stack, or platform product
-behavior changes.
+is enabled. The launcher-key generator and its permission regression select
+GNU `stat -c` or BSD `stat -f` explicitly, preserving the same current-user and
+mode-0600 boundary on Linux and macOS. Focused Linux contracts pass; hosted
+macOS rerun and final artifact validation remain for the slice. No runtime,
+VFP9, localization, package/debug schema, xAsset, report/label, IDE, stack, or
+platform product behavior changes.
 
 #4903 completes the repository community-health and contributor-licensing
 slice. Contributors retain copyright and explicitly apply GPL-3.0-only with

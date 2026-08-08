@@ -12,6 +12,20 @@ usage() {
     exit 2
 }
 
+stat_user_id() {
+    if stat -c '%u' "$1" 2>/dev/null; then
+        return
+    fi
+    stat -f '%u' "$1"
+}
+
+stat_permission_mode() {
+    if stat -c '%a' "$1" 2>/dev/null; then
+        return
+    fi
+    stat -f '%Lp' "$1"
+}
+
 key_id=''
 output_dir=''
 
@@ -80,13 +94,13 @@ if [ ! -d "$resolved_output_dir" ]; then
     mkdir -m 700 -- "$resolved_output_dir"
 fi
 
-output_owner=$(stat -c '%u' "$resolved_output_dir")
+output_owner=$(stat_user_id "$resolved_output_dir")
 current_owner=$(id -u)
 if [ "$output_owner" != "$current_owner" ]; then
     printf 'launcher key output directory must be owned by the current user\n' >&2
     exit 1
 fi
-output_mode=$(stat -c '%a' "$resolved_output_dir")
+output_mode=$(stat_permission_mode "$resolved_output_dir")
 if [ $((0$output_mode & 077)) -ne 0 ]; then
     printf 'launcher key output directory must not grant group or other permissions: %s\n' "$output_mode" >&2
     exit 1
