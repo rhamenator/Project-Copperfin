@@ -16,9 +16,10 @@ through the existing display-symbol boundary. Runtime print and no-picture
 a currency symbol or changing invariant `value_as_string`, parser,
 SAVE/RESTORE, JSON, manifest, or other machine text. Focused string/math and
 control-flow tests pass under the default Linux locale and explicit `C` (4/4
-executions). Complete protected review and obtain hosted Windows evidence
-before closing either issue. This is a v1-only product correction; immutable
-RC2 remains unchanged.
+executions). Exact implementation-head Windows Native Validation run
+`31275114419` passed all 322 tests, including both mapped targets. Complete
+protected review before closing either issue. This is a v1-only product
+correction; immutable RC2 remains unchanged.
 
 ## V1 optional DBF header robustness slice
 

@@ -9,7 +9,8 @@
   invariant Currency stringification plus parser, SAVE/RESTORE, manifest,
   JSON, and other machine contracts remain period-decimal. Focused control-
   flow and string/math tests pass under the default Linux locale and explicit
-  `C`; hosted Windows evidence remains the closure check. RC tags and artifacts
+  `C`. Exact implementation-head Windows Native Validation run `31275114419`
+  passed all 322 tests, including both mapped targets. RC tags and artifacts
   are unchanged.
 
 - 2026-08-08: Added optional defense-in-depth robustness testing for
