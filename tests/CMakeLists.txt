@@ -4459,6 +4459,51 @@ copperfin_add_test(test_dbf_text_encoding cf_vfp_assets
     test_dbf_text_encoding.cpp
 )
 
+# Bounded, deterministic defense-in-depth robustness coverage for the DBF
+# header parser (docs/36-dbf-header-parser-robustness-testing.md). The
+# normal variant below always builds and runs as part of the default test
+# suite. When the local compiler supports it, an additional sanitized
+# variant compiles the parser itself with AddressSanitizer/
+# UndefinedBehaviorSanitizer instrumentation; this is purely additive and
+# never changes the normal or release build.
+copperfin_add_test(test_dbf_header_robustness cf_vfp_assets
+    test_dbf_header_robustness.cpp
+)
+
+if(NOT MSVC)
+    include(CheckCXXSourceCompiles)
+    # check_cxx_compiler_flag() alone only threads the flag through the
+    # compile step of its try_compile probe, not the link step, so it
+    # cannot detect sanitizer support (which requires the flag at both
+    # compile and link time to resolve the runtime's symbols).
+    set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
+    set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=address,undefined")
+    check_cxx_source_compiles("int main() { return 0; }" COPPERFIN_HAS_ASAN_UBSAN)
+    unset(CMAKE_REQUIRED_FLAGS)
+    unset(CMAKE_REQUIRED_LINK_OPTIONS)
+    if(COPPERFIN_HAS_ASAN_UBSAN)
+        add_executable(test_dbf_header_robustness_sanitized
+            test_dbf_header_robustness.cpp
+            ${CMAKE_SOURCE_DIR}/src/vfp/dbf_header.cpp
+        )
+        target_include_directories(test_dbf_header_robustness_sanitized PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+        )
+        target_link_libraries(test_dbf_header_robustness_sanitized PRIVATE cf_localization)
+        target_compile_options(test_dbf_header_robustness_sanitized PRIVATE
+            -Wall -Wextra -Wpedantic
+            -fsanitize=address,undefined -fno-sanitize-recover=all -g
+        )
+        target_link_options(test_dbf_header_robustness_sanitized PRIVATE
+            -fsanitize=address,undefined
+        )
+        add_test(
+            NAME test_dbf_header_robustness_sanitized
+            COMMAND $<TARGET_FILE:test_dbf_header_robustness_sanitized>
+        )
+    endif()
+endif()
+
 copperfin_add_test(test_visual_asset_editor_code_page cf_vfp_assets
     test_visual_asset_editor_code_page.cpp
 )

@@ -60,6 +60,8 @@ License documents:
   — human direction, review, provenance, and assisted-development evidence
 - [`docs/35-rc1-evaluation-guide.md`](docs/35-rc1-evaluation-guide.md)
   — private RC artifact verification, test scope, limitations, and feedback
+- [`docs/36-dbf-header-parser-robustness-testing.md`](docs/36-dbf-header-parser-robustness-testing.md)
+  — optional defense-in-depth boundary/malformed-input coverage for the DBF header parser
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)
