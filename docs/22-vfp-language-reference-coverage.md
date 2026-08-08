@@ -8,8 +8,9 @@
   print and no-picture `TRANSFORM()` while leaving invariant Currency
   stringification and all machine-readable numeric contracts period-decimal.
   Focused string/math and control-flow targets pass under the default Linux
-  locale and explicit `C` (4/4 executions); hosted Windows evidence remains
-  required before closure.
+  locale and explicit `C` (4/4 executions). Exact implementation-head Windows
+  Native Validation run `31275114419` passed all 322 tests, including both
+  mapped targets; protected review remains before closure.
 
 - VFP work-area allocation boundary (2026-07-30, #4861 under #3217): the
   runtime now keeps automatic allocation within VFP's 1..32767 work-area

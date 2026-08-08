@@ -330,8 +330,10 @@ VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and
 `SEPARATOR` characters to exact four-place Currency text without changing
 scaled-int64 values or invariant machine serialization. Focused tests pass
-under the default Linux locale and explicit `C`; hosted Windows review remains
-required before the children close. This work does not alter immutable RC2.
+under the default Linux locale and explicit `C`. Exact implementation-head
+Windows Native Validation run `31275114419` passed all 322 tests, including
+both mapped targets; protected review remains before the children close. This
+work does not alter immutable RC2.
 
 The #4873 Studio-host JSON-control-escape child is closed at exact product/test
 head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
