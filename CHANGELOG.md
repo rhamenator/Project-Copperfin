@@ -11,10 +11,11 @@
   positions across arbitrary block spans, requires each end marker to occur
   later in the stream, and recognizes generic/encrypted PKCS#8, traditional
   RSA/EC/DSA, OpenSSH, canonical space-delimited SSH2-encrypted, and PGP
-  private-key envelopes. The workflow and tester contract now accept only sequential
-  `v0.1.0-rc.N` tags whose requested tag, checked-out ref, peeled commit, and
-  workflow SHA agree, so the correction can proceed as immutable RC2 and later
-  human-review corrections do not require rewriting the lane.
+  private-key envelopes plus PuTTY PPK v2/v3 private-key records. The workflow
+  and tester contract now accept only sequential `v0.1.0-rc.N` tags whose
+  requested tag, checked-out ref, peeled commit, and workflow SHA agree, so the
+  correction can proceed as immutable RC2 and later human-review corrections
+  do not require rewriting the lane.
   No runtime, VFP9, localization catalog, package/debug schema, xAsset,
   report/label, IDE, stack, or platform product behavior changed.
 
