@@ -339,6 +339,49 @@ int run_tests(const std::filesystem::path& executable) {
             !invalid_environment.started,
         "#4700: duplicate explicit environment names should be rejected");
 
+    const auto relative_executable = copperfin::platform::run_bounded_process({
+        .executable_path = executable.filename().string(),
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .cancellation_requested = {}});
+    expect(
+        relative_executable.status ==
+                copperfin::platform::BoundedProcessStatus::invalid_request &&
+            !relative_executable.started,
+        "#4700: relative executable paths should be rejected before launch");
+
+    const auto relative_working_directory =
+        copperfin::platform::run_bounded_process({
+            .executable_path = executable_path,
+            .arguments = {},
+            .working_directory = ".",
+            .environment = {},
+            .timeout_ms = 100U,
+            .poll_interval_ms = 1U,
+            .cancellation_requested = {}});
+    expect(
+        relative_working_directory.status ==
+                copperfin::platform::BoundedProcessStatus::invalid_request &&
+            !relative_working_directory.started,
+        "#4700: relative working directories should be rejected before launch");
+
+    const auto nul_argument = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {std::string{"truncated\0suffix", 16U}},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .cancellation_requested = {}});
+    expect(
+        nul_argument.status ==
+                copperfin::platform::BoundedProcessStatus::invalid_request &&
+            !nul_argument.started,
+        "#4700: arguments containing NUL should be rejected before launch");
+
     fs::remove_all(root, error);
     return failures == 0 ? 0 : 1;
 }

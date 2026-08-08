@@ -51,9 +51,10 @@ struct BoundedProcessResult {
     }
 };
 
-// Starts an executable directly without a shell, polls cancellation while it
-// runs, and owns one process group/job. Closing the invocation always removes
-// descendants so an artifact cannot leave helpers behind after returning.
+// Starts an absolute executable directly without a shell, polls cancellation
+// while it runs, and owns one process group/job. Paths and arguments containing
+// NUL are rejected. Closing the invocation always removes descendants so an
+// artifact cannot leave helpers behind after returning.
 [[nodiscard]] BoundedProcessResult run_bounded_process(
     const BoundedProcessRequest& request);
 

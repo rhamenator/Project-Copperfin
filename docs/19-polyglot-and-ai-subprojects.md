@@ -93,10 +93,11 @@ outside the policy model.
 
 `run_bounded_process` is the first execution prerequisite for an artifact-invoked
 bridge. It starts an absolute executable directly with an argument vector and explicit
-working directory; it never invokes a shell. The request supplies the complete child
-environment, and an empty environment is the secure default so build-host or agent
-secrets are not inherited implicitly. Environment names are validated and duplicates
-are rejected using platform semantics.
+absolute working directory; it never invokes a shell. Embedded NUL bytes in paths,
+arguments, or environment values are rejected before launch. The request supplies the
+complete child environment, and an empty environment is the secure default so
+build-host or agent secrets are not inherited implicitly. Environment names are
+validated and duplicates are rejected using platform semantics.
 
 The call owns one process tree. Windows starts the root suspended, assigns it to a
 kill-on-close Job Object, and only then resumes it. POSIX creates a new process group

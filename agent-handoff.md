@@ -4,9 +4,10 @@
 
 The trusted #4700 lane now has a rebased product/test candidate for the first
 external-artifact execution prerequisite. `run_bounded_process` invokes an
-absolute executable directly with an argument vector, explicit working
+absolute executable directly with an argument vector, absolute working
 directory, and complete explicit child environment; the default environment is
-empty so ambient build or agent secrets do not cross the boundary. Timeout and
+empty so ambient build or agent secrets do not cross the boundary. Relative
+paths and embedded-NUL inputs are rejected before launch. Timeout and
 prompt cancellation are polled on both platforms, cancellation-callback
 exceptions fail closed, and descendants are removed even when the root exits
 normally. Windows assigns a suspended process to a kill-on-close Job Object
