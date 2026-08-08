@@ -325,6 +325,16 @@ It is enabled only by `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`, changes no product
 behavior, and is neither an RC nor v1 completion gate. Any reproducible defect
 found by this lane must be triaged separately according to demonstrated risk.
 
+The v1 polyglot lane now has a portable bounded-process prerequisite for its
+first artifact adapter. Direct argv invocation avoids a shell; the complete
+child environment is explicit and empty by default; timeouts, cancellation,
+callback failure, and normal root completion all close the owned descendant
+tree through Windows Job Objects or POSIX process groups. Focused GCC, Clang,
+native-isolation, and ASan/UBSan evidence passes locally. Hosted Windows and
+macOS validation remains required before integration. This slice does not yet
+authorize/hash an artifact, validate envelopes, capture output, implement
+fallback/telemetry, select a route, or connect external code to PRG execution.
+
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
 Display-only formatting now applies current data-session `POINT` and
@@ -546,7 +556,7 @@ standalone Studio shell, and FoxPro language-service layer."
 | E | `#111` (`E1`/`#22`, `E2`/`#23`, `E3`/`#24`) | Shared design model and designer fidelity (`E3` = report/label parity, the single largest lane in the repo) | Closed 2026-07-24 | Phase C |
 | F | `#112` (`F1`/`#25`, `F2`/`#26`) | VS extension parity + utility panes; standalone Studio as a full IDE | MVP implementation complete for standalone shell; hosted UI evidence remains under the RC gate | Phase C |
 | G | `#112` (`G1`/`#27`, `G2`/`#28`, `G3`/`#29`) | FoxPro language service: semantic resolution, navigation/refactoring, IntelliSense metadata | Recorded G1/G2/G3 slices closed; broader MVP scope remains under the live tree | Phase C |
-| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Seeded (see gap analysis) | v1 item 3 |
+| H | `#113` (`H1`/`#30`, `H2`/`#31`, `H3`/`#32`) | Relational backend translators, document/vector + AI planning, .NET/MCP/polyglot outputs | Contract/model foundation and bounded process prerequisite implemented; real adapter/runtime dispatch remains | v1 item 3 |
 | I | `#113` (`I1`/`#33`, `I2`/`#34`) | Runtime/project security depth, extension/host/AI-MCP security boundary | Seeded (see gap analysis) | v1 item 4 |
 | J | `#114` (`J1`/`#35`, `J2`/`#36`, `J3`/`#37`) | Portable core boundary, macOS port, Linux port | Open, no shipped evidence | v1 item 5 |
 
