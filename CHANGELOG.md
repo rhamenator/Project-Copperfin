@@ -1,6 +1,7 @@
 - 2026-08-08: Added the v1 bounded-process prerequisite for the artifact-first
-  polyglot bridge. The portable API launches an executable directly without a
-  shell, supplies a complete explicit child environment that is empty by
+  polyglot bridge. The portable API launches an absolute executable directly
+  without a shell, rejects relative paths and embedded-NUL inputs, and supplies
+  a complete explicit child environment that is empty by
   default, applies finite timeout and fail-closed cancellation semantics, and
   removes descendants after every terminal path. Windows uses a suspended root
   assigned to a kill-on-close Job Object before execution; POSIX uses a new

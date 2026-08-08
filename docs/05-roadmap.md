@@ -327,9 +327,10 @@ found by this lane must be triaged separately according to demonstrated risk.
 
 The v1 polyglot lane now has a portable bounded-process prerequisite for its
 first artifact adapter. Direct argv invocation avoids a shell; the complete
-child environment is explicit and empty by default; timeouts, cancellation,
-callback failure, and normal root completion all close the owned descendant
-tree through Windows Job Objects or POSIX process groups. Focused GCC, Clang,
+child environment is explicit and empty by default; relative paths and
+embedded-NUL inputs are rejected. Timeout, cancellation, callback failure, and
+normal root completion all close the owned descendant tree through Windows Job
+Objects or POSIX process groups. Focused GCC, Clang,
 native-isolation, and ASan/UBSan evidence passes locally. Hosted Windows and
 macOS validation remains required before integration. This slice does not yet
 authorize/hash an artifact, validate envelopes, capture output, implement

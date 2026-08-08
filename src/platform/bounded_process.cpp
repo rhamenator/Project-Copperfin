@@ -65,6 +65,16 @@ bool cancellation_requested(const BoundedProcessRequest& request) noexcept {
     }
 }
 
+bool contains_nul(const std::string_view value) noexcept {
+    return value.find('\0') != std::string_view::npos;
+}
+
+bool valid_arguments(const std::vector<std::string>& arguments) noexcept {
+    return std::none_of(
+        arguments.begin(), arguments.end(),
+        [](const std::string& argument) { return contains_nul(argument); });
+}
+
 bool is_environment_name_character(const char character, const bool first) noexcept {
     return (character >= 'A' && character <= 'Z') ||
         (character >= 'a' && character <= 'z') || character == '_' ||
@@ -75,7 +85,7 @@ bool valid_environment_variable(
     const BoundedProcessEnvironmentVariable& variable) noexcept {
     if (variable.name.empty() ||
         !is_environment_name_character(variable.name.front(), true) ||
-        variable.value.find('\0') != std::string::npos) {
+        contains_nul(variable.value)) {
         return false;
     }
     for (std::size_t index = 1U; index < variable.name.size(); ++index) {
@@ -643,6 +653,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
 
 BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
     if (request.executable_path.empty() || request.working_directory.empty() ||
+        contains_nul(request.executable_path) ||
+        contains_nul(request.working_directory) ||
+        !valid_arguments(request.arguments) ||
         request.timeout_ms == 0U || request.poll_interval_ms == 0U ||
         request.poll_interval_ms > request.timeout_ms ||
         !valid_environment(request.environment)) {
@@ -653,6 +666,9 @@ BoundedProcessResult run_bounded_process(const BoundedProcessRequest& request) {
         copperfin::platform::path_from_utf8_string(request.executable_path);
     const std::filesystem::path working_directory =
         copperfin::platform::path_from_utf8_string(request.working_directory);
+    if (!executable.is_absolute() || !working_directory.is_absolute()) {
+        return invalid_request();
+    }
     if (!std::filesystem::is_regular_file(executable, error) || error) {
         BoundedProcessResult result;
         result.status = BoundedProcessStatus::launch_failed;
