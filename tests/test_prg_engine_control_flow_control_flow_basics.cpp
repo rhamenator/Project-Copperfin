@@ -1576,6 +1576,7 @@ void test_print_command_emits_event() {
         "SET SEPARATOR TO '.'\n"
         "? 1 / 3\n"
         "? 12345.6789\n"
+        "? VAL('$1234.5678')\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -1601,6 +1602,11 @@ void test_print_command_emits_event() {
         return ev.category == "runtime.print" && ev.detail == "12.345,6789";
     });
     expect(has_grouped, "SET SEPARATOR should format grouped print output");
+
+    const bool has_currency = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
+        return ev.category == "runtime.print" && ev.detail == "1.234,5678";
+    });
+    expect(has_currency, "#4914: SET POINT should format Currency print output without losing scaled digits");
 
     fs::remove_all(temp_root, ignored);
 }

@@ -1,5 +1,25 @@
 # Agent Handoff
 
+## V1 SET POINT Currency display slice
+
+Trusted requirements-recovery issue #4913 and implementation child #4914 are
+owner-authored and `agent-approved`. The mounted shipped VFP9 Help topic
+`html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm` establishes that `SET POINT`
+controls the decimal-point character used to display numeric and Currency
+expressions, defaults and resets to period, and is scoped to the current data
+session. A current-head probe demonstrated that numeric display honored the
+setting while Currency display bypassed it.
+
+The v1 topic branch now routes exact four-place scaled-int64 Currency text
+through the existing display-symbol boundary. Runtime print and no-picture
+`TRANSFORM()` therefore honor session `POINT`/`SEPARATOR` state without adding
+a currency symbol or changing invariant `value_as_string`, parser,
+SAVE/RESTORE, JSON, manifest, or other machine text. Focused string/math and
+control-flow tests pass under the default Linux locale and explicit `C` (4/4
+executions). Complete protected review and obtain hosted Windows evidence
+before closing either issue. This is a v1-only product correction; immutable
+RC2 remains unchanged.
+
 ## V1 optional DBF header robustness slice
 
 The v1 branch has an independently reviewed candidate for optional bounded

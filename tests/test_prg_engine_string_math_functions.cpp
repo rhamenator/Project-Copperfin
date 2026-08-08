@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <locale>
 #include <system_error>
 
@@ -89,6 +90,33 @@ namespace
         expect(
             display == "1,234.5",
             "#4832: display formatting should apply VFP separators after invariant conversion, got " + display);
+
+        const auto comma_point_callback = [](const std::string &name) {
+            if (name == "POINT") {
+                return std::string{","};
+            }
+            if (name == "SEPARATOR") {
+                return std::string{"."};
+            }
+            return std::string{};
+        };
+        const std::string currency_display = copperfin::runtime::format_value_for_display(
+            copperfin::runtime::make_currency_value(12345678),
+            comma_point_callback);
+        expect(
+            currency_display == "1.234,5678",
+            "#4914: Currency display should apply SET POINT/SEPARATOR without changing exact scaled digits, got " +
+                currency_display);
+        const std::string minimum_currency_display = copperfin::runtime::format_value_for_display(
+            copperfin::runtime::make_currency_value(std::numeric_limits<std::int64_t>::min()),
+            comma_point_callback);
+        expect(
+            minimum_currency_display == "-922.337.203.685.477,5808",
+            "#4914: Currency display should preserve the exact scaled INT64_MIN magnitude, got " +
+                minimum_currency_display);
+        expect(
+            copperfin::runtime::value_as_string(copperfin::runtime::make_currency_value(12345678)) == "1234.5678",
+            "#4914: display punctuation must not change invariant Currency stringification");
 
         const auto str = copperfin::runtime::evaluate_string_function(
             "str",
@@ -398,6 +426,9 @@ namespace
             "SET FIXED ON\n"
             "fixed_after = SET('FIXED')\n"
             "display_fixed = TRANSFORM(1.5)\n"
+            "currency_display_transform = TRANSFORM(VAL('$1234.5678'))\n"
+            "SET POINT TO\n"
+            "point_reset = SET('POINT')\n"
             "RETURN\n"
             "FUNCTION memo_width_resolver\n"
             "LPARAMETERS value\n"
@@ -666,6 +697,8 @@ namespace
         check("display_group", "12.345,6789");
         check("fixed_after", "ON");
         check("display_fixed", "1,5000");
+        check("currency_display_transform", "1.234,5678");
+        check("point_reset", ".");
 
         for (const char *name : {"rand_seeded", "rand_next"})
         {
