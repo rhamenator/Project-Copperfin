@@ -229,6 +229,7 @@ endif()
 target_link_libraries(cf_package_trust PRIVATE cf_licensing)
 
 add_library(cf_platform_profile
+    src/platform/bounded_process.cpp
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
     src/platform/federation_execution.cpp
