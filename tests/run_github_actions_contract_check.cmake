@@ -81,6 +81,21 @@ foreach(filtered_workflow IN ITEMS
     endif()
 endforeach()
 
+file(READ
+    "${SOURCE_DIR}/.github/workflows/native-validation-macos.yml"
+    macos_native_workflow)
+foreach(required_text IN ITEMS
+        "Run SET POINT locale matrix"
+        "test_prg_engine_control_flow|test_prg_engine_string_math_functions"
+        "C en_US.UTF-8 pt_BR.UTF-8 de_DE.UTF-8"
+        "LC_ALL=\"$locale\"")
+    string(FIND "${macos_native_workflow}" "${required_text}" required_index)
+    if(required_index EQUAL -1)
+        message(FATAL_ERROR
+            "macOS native validation is missing SET POINT locale evidence: ${required_text}")
+    endif()
+endforeach()
+
 file(GLOB workflow_files
     "${SOURCE_DIR}/.github/workflows/*.yml"
     "${SOURCE_DIR}/.github/workflows/*.yaml")
