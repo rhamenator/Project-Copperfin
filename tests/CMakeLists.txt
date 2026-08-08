@@ -4484,7 +4484,8 @@ if(COPPERFIN_BUILD_ROBUSTNESS_TESTS)
         # Sanitizer support requires a compile-and-link probe. Preserve any
         # required-check state established by the parent toolchain.
         cmake_push_check_state(RESET)
-        set(CMAKE_REQUIRED_FLAGS "-fsanitize=address,undefined")
+        set(CMAKE_REQUIRED_FLAGS
+            "-fsanitize=address,undefined -fno-sanitize-recover=all")
         set(CMAKE_REQUIRED_LINK_OPTIONS "-fsanitize=address,undefined")
         check_cxx_source_compiles("int main() { return 0; }" COPPERFIN_HAS_ASAN_UBSAN)
         cmake_pop_check_state()

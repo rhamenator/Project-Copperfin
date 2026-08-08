@@ -118,7 +118,9 @@ sanitized target and test are not created.
 
 Each run of `test_dbf_header_robustness` (and, separately, of the sanitized
 variant) writes `dbf_header_robustness_report.json` into its CTest working
-directory:
+directory. The test removes any prior report before executing a case, so a
+crash, sanitizer abort, or timeout cannot leave stale passing evidence for
+automation to collect:
 
 ```json
 {
