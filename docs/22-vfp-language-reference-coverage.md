@@ -1,5 +1,16 @@
 # VFP Language Reference Coverage
 
+- `SET POINT` display punctuation (2026-08-08, #4913/#4914): shipped VFP9
+  Help establishes that the setting controls the decimal-point character used
+  to display numeric and Currency expressions, defaults and resets to period,
+  and is scoped to the current data session. Copperfin now applies session
+  `POINT`/`SEPARATOR` state to exact scaled-int64 Currency text for runtime
+  print and no-picture `TRANSFORM()` while leaving invariant Currency
+  stringification and all machine-readable numeric contracts period-decimal.
+  Focused string/math and control-flow targets pass under the default Linux
+  locale and explicit `C` (4/4 executions); hosted Windows evidence remains
+  required before closure.
+
 - VFP work-area allocation boundary (2026-07-30, #4861 under #3217): the
   runtime now keeps automatic allocation within VFP's 1..32767 work-area
   range. Reserving area 32767 wraps the allocation cursor to the lowest

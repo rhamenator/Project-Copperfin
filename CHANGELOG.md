@@ -1,3 +1,17 @@
+- 2026-08-08: Recovered the VFP9 `SET POINT` display contract under #4913
+  from the mounted shipped `dv_foxhelp.chm` topic
+  `html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm`, then corrected the
+  demonstrated v1 Currency-display gap under #4914. Runtime print and
+  no-picture `TRANSFORM()` now apply the current data session's `POINT` and
+  `SEPARATOR` characters to exact scaled-int64 Currency text without routing
+  through binary floating point or adding a currency symbol. Argument-free
+  `SET POINT TO` resets to period, session isolation remains intact, and
+  invariant Currency stringification plus parser, SAVE/RESTORE, manifest,
+  JSON, and other machine contracts remain period-decimal. Focused control-
+  flow and string/math tests pass under the default Linux locale and explicit
+  `C`; hosted Windows evidence remains the closure check. RC tags and artifacts
+  are unchanged.
+
 - 2026-08-08: Added optional defense-in-depth robustness testing for
   Copperfin's own DBF header parser (`parse_dbf_header`,
   `parse_dbf_header_from_file`) under

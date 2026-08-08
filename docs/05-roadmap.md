@@ -325,6 +325,14 @@ It is enabled only by `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`, changes no product
 behavior, and is neither an RC nor v1 completion gate. Any reproducible defect
 found by this lane must be triaged separately according to demonstrated risk.
 
+Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
+VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.
+Display-only formatting now applies current data-session `POINT` and
+`SEPARATOR` characters to exact four-place Currency text without changing
+scaled-int64 values or invariant machine serialization. Focused tests pass
+under the default Linux locale and explicit `C`; hosted Windows review remains
+required before the children close. This work does not alter immutable RC2.
+
 The #4873 Studio-host JSON-control-escape child is closed at exact product/test
 head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
 coverage passed under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,

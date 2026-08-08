@@ -32,6 +32,9 @@ namespace {
 std::string format_value_for_display(
     const PrgValue& value,
     const std::function<std::string(const std::string&)>& set_callback) {
+    if (value.kind == PrgValueKind::currency) {
+        return apply_numeric_picture_symbols(value_as_string(value), true, false, set_callback);
+    }
     if (value.kind != PrgValueKind::number || !std::isfinite(value.number_value)) {
         return value_as_string(value);
     }
