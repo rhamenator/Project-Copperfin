@@ -1,3 +1,16 @@
+- 2026-08-08: Added the v1 bounded-process prerequisite for the artifact-first
+  polyglot bridge. The portable API launches an executable directly without a
+  shell, supplies a complete explicit child environment that is empty by
+  default, applies finite timeout and fail-closed cancellation semantics, and
+  removes descendants after every terminal path. Windows uses a suspended root
+  assigned to a kill-on-close Job Object before execution; POSIX uses a new
+  process group plus a close-on-exec launch-status pipe and `execve`. Focused
+  GCC, Clang, native-isolation, and ASan/UBSan tests pass locally. This is an
+  execution primitive only: artifact authorization/hash trust, envelope
+  validation, output capture, retry/fallback, telemetry, adapter wiring, and
+  PRG runtime routing remain unimplemented, and hosted Windows/macOS evidence
+  is still required.
+
 - 2026-08-08: Completed the #4898 launcher-key-generation safety record. The
   durable report maps both declared DQ requirements to all three DV evidence
   classes and the two registered hazards, records the owner-run signer ID,

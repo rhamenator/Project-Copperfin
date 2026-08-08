@@ -20,6 +20,10 @@ Everything else must integrate through explicit, auditable boundaries.
 Current maturity:
 
 - .NET integration currently exists as an early generated-launcher path: the native runtime pipeline can spawn a generated C# stub as a child process, but generated C# transpilation output is not executed by the runtime host.
+- A portable bounded-process primitive now provides direct executable/argument
+  invocation, an explicit child environment, timeout and cancellation handling,
+  and descendant cleanup. It is infrastructure for a future artifact adapter,
+  not a runtime route or language integration by itself.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
@@ -79,10 +83,39 @@ The decision order is cancellation, timeout, latency-budget exhaustion, and the
 reported candidate failure class. `propagate` cancellation returns a cancelled result
 without fallback; `ignore` treats cancellation as a failure and applies the configured
 fallback. Other failures map to stable machine error codes and then either fail fast,
-select native, or select the fallback artifact. The implementation records the policy's
-attempt limit but does not claim that a process was started or retried; process
-execution, cancellation tokens, and adapter-specific retry mechanics remain outside
-this contract slice.
+select native, or select the fallback artifact. The policy model records the attempt
+limit but does not itself start or retry a process. The separate bounded-process
+primitive described below supplies a low-level execution boundary; adapter-specific
+retry and the connection from policy decisions to an authorized artifact remain
+outside the policy model.
+
+## Bounded Artifact Process Primitive
+
+`run_bounded_process` is the first execution prerequisite for an artifact-invoked
+bridge. It starts an absolute executable directly with an argument vector and explicit
+working directory; it never invokes a shell. The request supplies the complete child
+environment, and an empty environment is the secure default so build-host or agent
+secrets are not inherited implicitly. Environment names are validated and duplicates
+are rejected using platform semantics.
+
+The call owns one process tree. Windows starts the root suspended, assigns it to a
+kill-on-close Job Object, and only then resumes it. POSIX creates a new process group
+and uses a close-on-exec status pipe to distinguish successful `execve` from pre-exec
+failure. Both paths poll a finite timeout and a prompt cancellation callback, fail
+closed if that callback throws, return invariant status/error identifiers, and remove
+descendants after timeout, cancellation, launch failure, or normal root exit.
+
+Focused synthetic tests cover exact exit status, shell-metacharacter arguments, a
+Unicode working path and environment value, absence of ambient `PATH`, live and
+throwing cancellation, timeout cleanup, cleanup after normal root exit, missing
+executables, invalid budgets, and duplicate environment names. Local GCC, Clang, and
+ASan/UBSan executions pass, together with the native test-isolation contract. Hosted
+Windows and macOS evidence remains required before this prerequisite is integrated.
+
+This primitive does **not** authorize or hash an artifact, validate migration
+contracts or typed envelopes, capture standard output/error, implement retries or
+fallback, choose a route, emit migration telemetry, or connect any external language
+to the PRG runtime. Those remain separately reviewable adapter and dispatch work.
 
 ## Shadow Parity v1
 

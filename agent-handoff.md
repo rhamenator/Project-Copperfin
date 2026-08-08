@@ -1,5 +1,28 @@
 # Agent Handoff
 
+## V1 bounded polyglot process prerequisite
+
+The trusted #4700 lane now has a rebased product/test candidate for the first
+external-artifact execution prerequisite. `run_bounded_process` invokes an
+absolute executable directly with an argument vector, explicit working
+directory, and complete explicit child environment; the default environment is
+empty so ambient build or agent secrets do not cross the boundary. Timeout and
+prompt cancellation are polled on both platforms, cancellation-callback
+exceptions fail closed, and descendants are removed even when the root exits
+normally. Windows assigns a suspended process to a kill-on-close Job Object
+before resuming it. POSIX creates a process group and uses a close-on-exec,
+nonblocking status pipe to keep pre-exec timeout/cancellation observable.
+
+Focused Linux evidence passes under GCC and Clang, the native test-isolation
+contract passes with `filesystem=process-owned`,
+`environment=scoped-process`, and `child-processes=bounded`, and a Clang
+ASan/UBSan build passes without findings. Focused analyzer checks produce no
+project diagnostics. Hosted Windows and macOS runs are still required. This
+candidate does not authorize or hash artifacts, parse envelopes, capture
+output, retry/fallback, emit migration telemetry, select routes, or connect an
+external language to PRG execution. It introduces no fallback/no-op runtime
+surface, so the runtime stub inventory is unchanged.
+
 ## V1 SET POINT Currency display and macOS evidence slice
 
 Trusted requirements-recovery issues #4897/#4913 and implementation child
