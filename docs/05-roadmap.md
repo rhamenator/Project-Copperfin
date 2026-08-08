@@ -319,6 +319,12 @@ the long-lived v1 development branch may begin at that exact tag while RC
 stabilization remains isolated. Neither lane may reinterpret this parallel work
 as closure of #4403 or #4409 or as authority for an official 1.0 release.
 
+The v1 lane also carries optional bounded DBF-header robustness coverage:
+6,757 deterministic synthetic cases plus an ASan/UBSan variant when supported.
+It is enabled only by `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`, changes no product
+behavior, and is neither an RC nor v1 completion gate. Any reproducible defect
+found by this lane must be triaged separately according to demonstrated risk.
+
 The #4873 Studio-host JSON-control-escape child is closed at exact product/test
 head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
 coverage passed under default, `pt_BR.UTF-8`, and `de_DE.UTF-8` on Linux,

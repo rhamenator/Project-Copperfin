@@ -57,10 +57,10 @@ inputs beyond files the test itself writes and removes):
    `header_length` threshold, and the 16-/32-bit range edges) for
    `header_length`, `record_length`, and `record_count`.
 4. **Deterministic synthetic-random sweep**: 5,000 cases from a
-   `std::mt19937` generator seeded with a fixed constant (the algorithm is
-   fully specified by the C++ standard, so the exact same sequence of cases
-   runs on every platform and every invocation), covering 0-512-byte
-   arbitrary buffers.
+   `std::mt19937` generator seeded with a fixed constant. The test maps the
+   standardized engine output directly rather than using implementation-specific
+   standard-library distributions, so the same cases run on every platform
+   and every invocation, covering 0-512-byte arbitrary buffers.
 5. **File-based inputs**: `parse_dbf_header_from_file` against a nonexistent
    path, an empty file, a one-byte-short file, a valid synthetic file, and a
    4096-byte deterministic garbage file, all under a dedicated temporary
@@ -68,16 +68,35 @@ inputs beyond files the test itself writes and removes):
 
 Every sweep is a fixed, compile-time-bounded loop -- there is no
 open-ended, coverage-guided, or corpus-mutating search, and no unbounded
-loop exists inside the code under test for any single call to hang on. The
-test also asserts its own total wall-clock time stays under a fixed 20-second
-budget as an explicit, auditable ceiling on top of that structural bound.
-Total case count and duration are reported in the JSON summary described
-below (6,752 cases in well under a second in local testing).
+loop exists inside the code under test for any single call to hang on. CTest
+applies a 60-second process timeout as an explicit, auditable ceiling on top
+of that structural bound. Total case count and duration are reported in the
+JSON summary described below.
 
 Resource limits: input sizes are capped (at most 512 bytes for the
 synthetic-random sweep, a few kilobytes for the largest file-based case);
 iteration counts are fixed constants, not runtime-configurable; the test is
 single-threaded (a concurrency limit of one).
+
+## Running the optional targets
+
+The targets are absent from default and release builds. Enable and run them
+explicitly from an out-of-tree build:
+
+```sh
+cmake -S . -B build-robustness \
+  -DCOPPERFIN_BUILD_TESTS=ON \
+  -DCOPPERFIN_BUILD_ROBUSTNESS_TESTS=ON
+cmake --build build-robustness \
+  --target test_dbf_header_robustness test_dbf_header_robustness_sanitized
+ctest --test-dir build-robustness \
+  -R '^test_dbf_header_robustness(_sanitized)?$' --output-on-failure
+```
+
+The sanitizer target is omitted when the compiler cannot pass the complete
+compile-and-link capability probe; in that case, build and run the normal
+target alone. Each variant has a separate working directory, temporary-input
+tree, and JSON report, so both may run concurrently without collision.
 
 ## Sanitizer variant
 
@@ -90,10 +109,10 @@ additional `test_dbf_header_robustness_sanitized` CTest target compiles
 AddressSanitizer and UndefinedBehaviorSanitizer (`-fsanitize=address,undefined
 -fno-sanitize-recover=all`) and links it against the same test source. This
 is purely additive: the normal `cf_vfp_assets` library and the default
-`test_dbf_header_robustness` target are compiled exactly as before, so
-normal and release builds are unchanged whether or not the sanitized variant
-exists. If the compiler does not support the flag combination, the sanitized
-target and test are not created at all.
+`test_dbf_header_robustness` target require the explicit
+`COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON` option, so normal and release builds are
+unchanged. If the compiler does not support the flag combination, the
+sanitized target and test are not created.
 
 ## Machine-readable result summary
 
@@ -110,19 +129,22 @@ directory:
   "release_gate": false,
   "exhaustive_coverage_claimed": false,
   "deterministic": true,
-  "total_cases": 6752,
+  "total_cases": 6757,
   "failures": 0,
-  "elapsed_milliseconds": 29,
-  "wall_clock_budget_seconds": 20,
+  "elapsed_milliseconds": 2640,
+  "wall_clock_budget_seconds": 60,
   "status": "passed"
 }
 ```
 
 ## Result
 
-Local Linux runs of both the normal and sanitized variants pass with zero
-failures and no AddressSanitizer or UndefinedBehaviorSanitizer findings
-across all 6,752 bounded, deterministic cases. That is evidence the header
-parser handles this test's boundary and arbitrary-byte cases safely; it is
-not a claim that the parser (or any other DBF-family parser in this
-codebase) is exhaustively verified or free of every possible defect.
+Local Linux runs of both variants pass across all 6,757 bounded,
+deterministic cases with GCC 15.2.0 (normal 2.64 seconds, sanitized 12.59
+seconds) and Clang 21.1.8 (normal 2.15 seconds, sanitized 10.53 seconds), with
+no AddressSanitizer or UndefinedBehaviorSanitizer findings. Concurrent normal
+and sanitized execution also passes, and both versioned reports record zero
+failures. That is evidence the header parser handles this test's boundary and
+arbitrary-byte cases safely; it is not a claim that the parser (or any other
+DBF-family parser in this codebase) is exhaustively verified or free of every
+possible defect.

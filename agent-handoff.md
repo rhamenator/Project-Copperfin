@@ -1,5 +1,18 @@
 # Agent Handoff
 
+## V1 optional DBF header robustness slice
+
+The v1 branch has an independently reviewed candidate for optional bounded
+DBF-header robustness coverage. It adds 6,757 deterministic synthetic cases,
+separate normal/sanitized test working directories and JSON reports, and a
+complete compile-and-link sanitizer capability probe. The targets are absent
+unless `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`, so they are defense in depth and
+not an RC or v1 gate. This changes no product behavior and does not broaden
+the evidence claim beyond the fixed 32-byte DBF header parser. Concurrent
+normal/sanitized execution passes under GCC 15.2.0 and Clang 21.1.8 with zero
+failures and no ASan/UBSan findings; the native isolation contract and existing
+`test_vfp_assets` also pass.
+
 ## Current State
 
 #4907 maintains a private-evaluation RC assembly lane without weakening the

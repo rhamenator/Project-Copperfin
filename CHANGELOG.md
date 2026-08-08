@@ -10,11 +10,14 @@
   inputs -- and writes a versioned JSON result summary. When the local
   compiler supports it, an additional `test_dbf_header_robustness_sanitized`
   target compiles the parser with AddressSanitizer/UndefinedBehaviorSanitizer
-  instrumentation; both variants pass with zero findings across 6,752 cases
-  locally. This is explicitly optional defense-in-depth testing, not a v1 or
-  RC release gate, and does not claim exhaustive format or security
-  coverage; normal and release builds are unchanged. No product behavior
-  changed.
+  instrumentation; both variants pass with zero findings across 6,757 cases
+  under local GCC and Clang builds. This is explicitly optional
+  defense-in-depth testing, not a v1 or RC release gate, and does not claim
+  exhaustive format or security
+  coverage. The targets require explicit
+  `COPPERFIN_BUILD_ROBUSTNESS_TESTS=ON`; default and release builds remain
+  unchanged. Separate working directories and reports preserve parallel test
+  isolation. No product behavior changed.
 
 - 2026-08-08: Preserved failed immutable candidate tag `v0.1.0-rc.1` and
   corrected the final evaluation-bundle scanner under #4907. Exact-tag run
