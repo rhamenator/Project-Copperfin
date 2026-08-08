@@ -208,11 +208,27 @@ int run_tests(const std::filesystem::path& executable) {
     std::ifstream record(record_path, std::ios::binary);
     const std::string record_text{
         std::istreambuf_iterator<char>(record), std::istreambuf_iterator<char>()};
+    const std::string expected_record_suffix =
+        "|space value & no shell|" + explicit_environment_value + "|isolated";
+    const bool record_suffix_matches =
+        record_text.size() >= expected_record_suffix.size() &&
+        record_text.compare(
+            record_text.size() - expected_record_suffix.size(),
+            expected_record_suffix.size(), expected_record_suffix) == 0;
+    std::error_code equivalent_error;
+    bool working_directory_matches = false;
+    if (record_suffix_matches) {
+        const std::string recorded_working_directory = record_text.substr(
+            0, record_text.size() - expected_record_suffix.size());
+        working_directory_matches = fs::equivalent(
+            copperfin::platform::path_from_utf8_string(
+                recorded_working_directory),
+            root, equivalent_error);
+    }
     expect(recorded.completed() && recorded.exit_code == 0,
            "#4700: direct invocation should complete in the requested directory");
     expect(
-        record_text == root_path + "|space value & no shell|" +
-            explicit_environment_value + "|isolated",
+        record_suffix_matches && !equivalent_error && working_directory_matches,
         "#4700: argv, working directory, and explicit environment should survive without shell parsing or ambient PATH inheritance");
 
     std::atomic_int cancellation_polls{0};
