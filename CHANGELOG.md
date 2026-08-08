@@ -11,9 +11,11 @@
   exception, third-party notices, and an exact-revision source-archive
   contract. CMake documents, the VSIX, all installer lanes, and security/SBOM
   evidence now carry the applicable materials. Added a trusted-base DCO check
-  for commit authors and co-authors and enabled GitHub web commit sign-off. No
-  runtime, VFP9, localization, package/debug schema, xAsset, report/label, IDE,
-  stack, or platform product behavior changed.
+  for commit authors and co-authors and enabled GitHub web commit sign-off. The
+  launcher-key ceremony and its mode regression now select GNU or BSD
+  `stat` forms explicitly, preserving owner-only output on Linux and macOS.
+  No runtime, VFP9, localization, package/debug schema, xAsset, report/label,
+  IDE, stack, or platform product behavior changed.
 
 - 2026-08-04: Completed contributor licensing and repository community health
   under #4903. Contributors retain copyright and apply GPL-3.0-only with the

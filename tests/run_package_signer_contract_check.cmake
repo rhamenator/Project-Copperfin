@@ -66,6 +66,10 @@ foreach(REQUIRED_TEXT IN ITEMS
     "refusing to generate launcher signing material inside the repository checkout"
     "refusing to overwrite existing launcher identity output"
     "kKnownLauncherInventoryTrustedKeys"
+    "stat -c '%u'"
+    "stat -f '%u'"
+    "stat -c '%a'"
+    "stat -f '%Lp'"
     "COPPERFIN_LAUNCHER_TRUST_SIGNING_KEY_PEM"
     "COPPERFIN_LAUNCHER_TRUST_REGISTRY_HEADER"
     "it does not sign macOS or Linux artifacts"
@@ -273,8 +277,13 @@ if(UNIX)
     endif()
 
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
+        set(MODE_COMMAND stat -c "%a" "${PRIVATE_KEY}")
+    elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+        set(MODE_COMMAND stat -f "%Lp" "${PRIVATE_KEY}")
+    endif()
+    if(DEFINED MODE_COMMAND)
         execute_process(
-            COMMAND stat -c "%a" "${PRIVATE_KEY}"
+            COMMAND ${MODE_COMMAND}
             RESULT_VARIABLE MODE_RESULT
             OUTPUT_VARIABLE PRIVATE_MODE
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -284,6 +293,7 @@ if(UNIX)
             message(FATAL_ERROR
                 "generated private key mode is not 600: ${PRIVATE_MODE}${MODE_ERROR}")
         endif()
+        unset(MODE_COMMAND)
     endif()
 
     execute_process(
