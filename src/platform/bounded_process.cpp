@@ -581,9 +581,9 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
         result.native_error = launch_read_error != 0
             ? launch_read_error
             : (error_count == sizeof(child_error) ? child_error : EIO);
+        terminate_process_group(process_id);
         int ignored_status = 0;
         (void)::waitpid(process_id, &ignored_status, 0);
-        terminate_process_group(process_id);
         result.process_tree_closed = true;
         result.elapsed_ms = elapsed_milliseconds(started_at);
         return result;
