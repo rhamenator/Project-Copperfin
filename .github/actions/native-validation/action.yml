@@ -86,6 +86,19 @@ runs:
         -CommandArguments @('--test-dir', 'build', '-C', 'Release', '--output-on-failure', '--timeout', '180', '--parallel', '2')
         -SampleResources
 
+    - name: Run macOS SET POINT locale matrix
+      if: ${{ inputs.platform == 'macos' }}
+      shell: bash
+      run: |
+        for locale in C en_US.UTF-8 pt_BR.UTF-8 de_DE.UTF-8; do
+          echo "Running SET POINT display targets with LC_ALL=$locale"
+          LC_ALL="$locale" ctest \
+            --test-dir build \
+            --output-on-failure \
+            --timeout 180 \
+            -R '^(test_prg_engine_control_flow|test_prg_engine_string_math_functions)$'
+        done
+
     - name: Finalize Windows validation metrics
       if: ${{ always() && inputs.platform == 'windows' }}
       shell: pwsh
