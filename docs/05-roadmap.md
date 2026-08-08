@@ -298,26 +298,29 @@ installer `30550923408`, and security/SBOM `30550923513` workflows also pass.
 The final release-validation regressions #4891, #4892, and #4893 are closed.
 
 This is implementation-complete RC readiness, not authority to publish an
-official release. Private RC evaluation may proceed through the fail-closed
-GitHub Actions artifact workflow without a GitHub Release, protected signing,
-or a claim that the external release authorities are satisfied. Immutable
-`v0.1.0-rc.1` run `31236596422` passed every platform and package prerequisite
-but published no final bundle because the scanner detected its own literal
-private-key sentinel in the exact source archive. No secret was present. The
-tag remains immutable, the scanner regression is corrected for sequential
-`v0.1.0-rc.N` candidates, and RC2 is the next candidate. The complete
-official-release evidence gate remains open until #4403 receives genuine
-arm's-length safety sign-off, closes, and passes strict validation, and until
-#4409 receives the approved protected launcher-trust signer/registry secrets
-and passes enforced Windows validation. Permissive primary-hazard safety run
-`30555972170` is green but cannot substitute for that strict closure. The
-hosted Deep runner also lacked VFP9;
-accepted installed-VFP9, mounted-sample, RuntimePackage/xAsset/Report/Menu, and
-live Visual Studio evidence remains the closed #4621 baseline because the final
-changes were catalog/managed/test-only. After an immutable RC artifact passes,
-the long-lived v1 development branch may begin at that exact tag while RC
-stabilization remains isolated. Neither lane may reinterpret this parallel work
-as closure of #4403 or #4409 or as authority for an official 1.0 release.
+official release. Failed immutable `v0.1.0-rc.1` remains preserved; no secret
+or final artifact escaped its fail-closed assembly. Corrected protected tag
+`v0.1.0-rc.2` peels to exact reviewed commit `fd6bd94f8`. All exact-main native,
+package, IDE, UI, path, ABI, security, and permissive primary-hazard safety
+lanes passed there, followed by exact-tag run `31244558839` passing 12/12 jobs.
+The downloaded 19-file artifact `9018695984` has GitHub digest
+`sha256:501ba26642af4fb58c69e3c69ca0f29b7eb5e242a4980ea31770e83bd84605df`;
+checksums, all 17 manifest records, installers, VSIX, SBOM, license materials,
+and 1,404 exact Corresponding Source blobs passed independent inspection. No
+GitHub Release was created.
+
+Protected `v1-development` begins exactly at the peeled RC2 commit under
+no-bypass ruleset `20582609`, while immutable RC stabilization remains separate.
+Human RC2 evaluation is pending. The complete official-release evidence gate
+remains open until #4403 receives genuine arm's-length safety sign-off, closes,
+and passes strict validation, and until #4409 receives the approved protected
+launcher-trust signer/registry secrets and passes enforced Windows validation.
+The hosted Deep runner also lacked VFP9; accepted installed-VFP9,
+mounted-sample, RuntimePackage/xAsset/Report/Menu, and live Visual Studio
+evidence remains the closed #4621 baseline because the final changes were
+release infrastructure and documentation only. Neither lane may reinterpret
+this parallel work as closure of #4403 or #4409 or as authority for an official
+1.0 release.
 
 The #4873 Studio-host JSON-control-escape child is closed at exact product/test
 head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
