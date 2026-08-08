@@ -13,7 +13,9 @@ GitHub Release exists. The tag remains unchanged.
 
 The corrective lane constructs the sentinel bytes without embedding a complete
 sentinel in its own source and puts the real scanner source inside the
-executable source-ZIP regression while retaining real private-key rejection.
+executable source-ZIP regression while retaining private-key rejection across
+arbitrarily large envelopes and common PKCS#8, RSA, EC, DSA, OpenSSH, SSH2,
+and PGP encodings.
 `.github/workflows/rc-candidate-assembly.yml` remains manual and read-only, but
 now accepts only sequential `v0.1.0-rc.N` tags when the requested tag, checkout
 ref, peeled target, and GitHub workflow SHA are identical. This permits an

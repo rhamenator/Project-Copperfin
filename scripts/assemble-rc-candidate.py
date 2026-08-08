@@ -25,10 +25,19 @@ SOURCE_PREFIX = "Project-Copperfin-source-"
 # Construct the boundaries so this scanner's own source does not contain a
 # complete private-key sentinel and falsely reject the Corresponding Source
 # archive that necessarily includes this file.
-PRIVATE_BOUNDARIES = (
-    (b"-----BEGIN " + b"PRIVATE KEY-----", b"-----END " + b"PRIVATE KEY-----"),
-    (b"-----BEGIN " + b"OPENSSH PRIVATE KEY-----", b"-----END " + b"OPENSSH PRIVATE KEY-----"),
-    (b"-----BEGIN " + b"ENCRYPTED PRIVATE KEY-----", b"-----END " + b"ENCRYPTED PRIVATE KEY-----"),
+PRIVATE_KEY_LABELS = (
+    b"PRIVATE KEY",
+    b"ENCRYPTED PRIVATE KEY",
+    b"RSA PRIVATE KEY",
+    b"EC PRIVATE KEY",
+    b"DSA PRIVATE KEY",
+    b"OPENSSH PRIVATE KEY",
+    b"SSH2 ENCRYPTED PRIVATE KEY",
+    b"PGP PRIVATE KEY BLOCK",
+)
+PRIVATE_BOUNDARIES = tuple(
+    (b"-----BEGIN " + label + b"-----", b"-----END " + label + b"-----")
+    for label in PRIVATE_KEY_LABELS
 )
 
 
@@ -45,14 +54,25 @@ def sha256(path: Path) -> str:
 
 
 def stream_contains_private_key(stream: BinaryIO) -> bool:
+    begin_seen = [False] * len(PRIVATE_BOUNDARIES)
+    overlap_length = max(
+        max(len(begin), len(end)) for begin, end in PRIVATE_BOUNDARIES
+    ) - 1
     tail = b""
     for block in iter(lambda: stream.read(1024 * 1024), b""):
         candidate = tail + block
-        for begin, end in PRIVATE_BOUNDARIES:
+        for index, (begin, end) in enumerate(PRIVATE_BOUNDARIES):
+            if begin_seen[index]:
+                if end in candidate:
+                    return True
+                continue
             begin_offset = candidate.find(begin)
-            if begin_offset != -1 and candidate.find(end, begin_offset + len(begin)) != -1:
+            if begin_offset == -1:
+                continue
+            if candidate.find(end, begin_offset + len(begin)) != -1:
                 return True
-        tail = candidate[-(128 * 1024) :]
+            begin_seen[index] = True
+        tail = candidate[-overlap_length:]
     return False
 
 
@@ -375,27 +395,36 @@ def self_test() -> None:
             else:
                 raise AssemblyError(f"self-test accepted invalid candidate tag: {invalid_tag}")
 
-        bad_inputs = root / "bad-inputs"
-        shutil.copytree(inputs, bad_inputs)
-        with zipfile.ZipFile(
-            bad_inputs / "copperfin-visualstudio-vsix/Copperfin.VisualStudio.vsix", "w"
-        ) as archive:
-            archive.writestr(
-                "private.pem",
-                PRIVATE_BOUNDARIES[0][0]
-                + b"\nQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB\n"
-                + PRIVATE_BOUNDARIES[0][1],
-            )
-        bad_arguments = argparse.Namespace(**vars(arguments))
-        bad_arguments.input_root = bad_inputs
-        bad_arguments.output_dir = root / "bad-bundle"
-        try:
-            assemble(bad_arguments)
-        except AssemblyError as error:
-            if "private-key material" not in str(error):
-                raise
-        else:
-            raise AssemblyError("self-test accepted private-key material")
+        private_envelopes = [
+            begin + b"\nQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB\n" + end
+            for begin, end in PRIVATE_BOUNDARIES
+        ]
+        private_envelopes.append(
+            PRIVATE_BOUNDARIES[0][0]
+            + b"\n"
+            + (b"A" * (2 * 1024 * 1024))
+            + b"\n"
+            + PRIVATE_BOUNDARIES[0][1]
+        )
+        for index, private_envelope in enumerate(private_envelopes):
+            bad_inputs = root / f"bad-inputs-{index}"
+            shutil.copytree(inputs, bad_inputs)
+            with zipfile.ZipFile(
+                bad_inputs / "copperfin-visualstudio-vsix/Copperfin.VisualStudio.vsix", "w"
+            ) as archive:
+                archive.writestr("private-key-fixture.txt", private_envelope)
+            bad_arguments = argparse.Namespace(**vars(arguments))
+            bad_arguments.input_root = bad_inputs
+            bad_arguments.output_dir = root / f"bad-bundle-{index}"
+            try:
+                assemble(bad_arguments)
+            except AssemblyError as error:
+                if "private-key material" not in str(error):
+                    raise
+            else:
+                raise AssemblyError(
+                    f"self-test accepted private-key envelope fixture {index}"
+                )
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
