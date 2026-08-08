@@ -46,9 +46,9 @@ void expect(bool condition, std::string_view message) {
 
 // Hard resource limits. Every sweep below is a fixed, small, compile-time
 // constant -- there is no unbounded loop, no external corpus, and no
-// wall-clock-dependent retry. The wall-clock assertion in main() is a
-// belt-and-suspenders check on top of that structural bound, not the
-// primary control.
+// wall-clock-dependent retry. The wall-clock assertion in main() and CTest
+// timeout are belt-and-suspenders checks on top of that structural bound,
+// not the primary control.
 constexpr int kBoundarySizeSweepMaxLength = 96;
 constexpr int kPseudoRandomCaseCount = 5000;
 constexpr int kPseudoRandomMaxInputBytes = 512;
@@ -277,6 +277,14 @@ std::string json_report(std::chrono::milliseconds elapsed) {
 }  // namespace
 
 int main() {
+    const fs::path report_path = fs::current_path() / "dbf_header_robustness_report.json";
+    std::error_code report_remove_error;
+    fs::remove(report_path, report_remove_error);
+    if (report_remove_error) {
+        std::cerr << "FAIL: unable to invalidate the prior DBF header robustness JSON report.\n";
+        return EXIT_FAILURE;
+    }
+
     const auto started = std::chrono::steady_clock::now();
 
     test_boundary_size_sweep();
@@ -287,8 +295,10 @@ int main() {
 
     const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - started);
+    expect(elapsed < kWallClockBudget,
+           "DBF header robustness sweep must complete within its fixed wall-clock budget");
     const std::string report = json_report(elapsed);
-    std::ofstream report_stream("dbf_header_robustness_report.json", std::ios::trunc);
+    std::ofstream report_stream(report_path, std::ios::trunc);
     if (!report_stream) {
         std::cerr << "FAIL: unable to create DBF header robustness JSON report.\n";
         return EXIT_FAILURE;
