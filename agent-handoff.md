@@ -1,9 +1,10 @@
 # Agent Handoff
 
-## V1 SET POINT Currency display slice
+## V1 SET POINT Currency display and macOS evidence slice
 
-Trusted requirements-recovery issue #4913 and implementation child #4914 are
-owner-authored and `agent-approved`. The mounted shipped VFP9 Help topic
+Trusted requirements-recovery issues #4897/#4913 and implementation child
+#4914 are owner-authored and `agent-approved`. The mounted shipped VFP9 Help
+topic
 `html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm` establishes that `SET POINT`
 controls the decimal-point character used to display numeric and Currency
 expressions, defaults and resets to period, and is scoped to the current data
@@ -17,9 +18,15 @@ a currency symbol or changing invariant `value_as_string`, parser,
 SAVE/RESTORE, JSON, manifest, or other machine text. Focused string/math and
 control-flow tests pass under the default Linux locale and explicit `C` (4/4
 executions). Exact implementation-head Windows Native Validation run
-`31275114419` passed all 322 tests, including both mapped targets. Complete
-protected review before closing either issue. This is a v1-only product
-correction; immutable RC2 remains unchanged.
+`31275114419` passed all 322 tests, including both mapped targets. Independent
+Linux review at coordination sequence 1438 reproduced the pre-fix gap and
+passed the focused targets. Exact head `0af4807ca` macOS Native Validation run
+`31281606203` passed the full suite and then both mapped targets under `C`,
+`en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8` (8/8 focused executions). The
+matrix is macOS-conditional inside the shared native action; platform workflow
+callers remain shell-free. All eight PR #4917 checks passed at `0af4807ca`
+before this evidence-only documentation update. This is a v1-only
+product/evidence correction; immutable RC2 remains unchanged.
 
 ## V1 optional DBF header robustness slice
 

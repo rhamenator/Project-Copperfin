@@ -19,8 +19,12 @@
   JSON, and other machine contracts remain period-decimal. Focused control-
   flow and string/math tests pass under the default Linux locale and explicit
   `C`. Exact implementation-head Windows Native Validation run `31275114419`
-  passed all 322 tests, including both mapped targets. RC tags and artifacts
-  are unchanged.
+  passed all 322 tests, including both mapped targets. Exact macOS evidence
+  run `31281606203` at `0af4807ca` passed the full native suite and then both
+  mapped targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+  (8/8 focused executions). The locale matrix resides in the shared native
+  action behind the macOS platform condition so platform workflows remain
+  shell-free thin callers. RC tags and artifacts are unchanged.
 
 - 2026-08-08: Added optional defense-in-depth robustness testing for
   Copperfin's own DBF header parser (`parse_dbf_header`,
