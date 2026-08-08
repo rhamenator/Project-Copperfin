@@ -44,6 +44,8 @@ PRIVATE_BOUNDARIES = tuple(
         b"---- " + b"BEGIN SSH2 ENCRYPTED PRIVATE KEY" + b" ----",
         b"---- " + b"END SSH2 ENCRYPTED PRIVATE KEY" + b" ----",
     ),
+    (b"PuTTY-" + b"User-Key-File-2:", b"\nPrivate-MAC:"),
+    (b"PuTTY-" + b"User-Key-File-3:", b"\nPrivate-MAC:"),
 )
 
 

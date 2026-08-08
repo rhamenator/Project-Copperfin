@@ -15,8 +15,9 @@ The corrective lane constructs the sentinel bytes without embedding a complete
 sentinel in its own source and puts the real scanner source inside the
 executable source-ZIP regression while retaining private-key rejection across
 arbitrarily large envelopes and common PKCS#8, RSA, EC, DSA, OpenSSH,
-canonical SSH2, and PGP encodings. Absolute marker positions prevent an end
-marker before the corresponding begin marker from satisfying the envelope.
+canonical SSH2, PGP, and PuTTY PPK v2/v3 encodings. Absolute marker positions
+prevent an end marker before the corresponding begin marker from satisfying
+the envelope.
 `.github/workflows/rc-candidate-assembly.yml` remains manual and read-only, but
 now accepts only sequential `v0.1.0-rc.N` tags when the requested tag, checkout
 ref, peeled target, and GitHub workflow SHA are identical. This permits an
