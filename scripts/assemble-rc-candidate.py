@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import re
 import shutil
@@ -22,6 +23,7 @@ from typing import BinaryIO
 CANDIDATE_TAG_PATTERN = re.compile(r"v0\.1\.0-rc\.[1-9][0-9]*\Z")
 RETENTION_DAYS = 90
 SOURCE_PREFIX = "Project-Copperfin-source-"
+SCAN_BLOCK_SIZE = 1024 * 1024
 # Construct the boundaries so this scanner's own source does not contain a
 # complete private-key sentinel and falsely reject the Corresponding Source
 # archive that necessarily includes this file.
@@ -32,12 +34,16 @@ PRIVATE_KEY_LABELS = (
     b"EC PRIVATE KEY",
     b"DSA PRIVATE KEY",
     b"OPENSSH PRIVATE KEY",
-    b"SSH2 ENCRYPTED PRIVATE KEY",
     b"PGP PRIVATE KEY BLOCK",
 )
 PRIVATE_BOUNDARIES = tuple(
     (b"-----BEGIN " + label + b"-----", b"-----END " + label + b"-----")
     for label in PRIVATE_KEY_LABELS
+) + (
+    (
+        b"---- " + b"BEGIN SSH2 ENCRYPTED PRIVATE KEY" + b" ----",
+        b"---- " + b"END SSH2 ENCRYPTED PRIVATE KEY" + b" ----",
+    ),
 )
 
 
@@ -54,24 +60,30 @@ def sha256(path: Path) -> str:
 
 
 def stream_contains_private_key(stream: BinaryIO) -> bool:
-    begin_seen = [False] * len(PRIVATE_BOUNDARIES)
+    begin_positions: list[int | None] = [None] * len(PRIVATE_BOUNDARIES)
     overlap_length = max(
         max(len(begin), len(end)) for begin, end in PRIVATE_BOUNDARIES
     ) - 1
     tail = b""
-    for block in iter(lambda: stream.read(1024 * 1024), b""):
+    stream_position = 0
+    for block in iter(lambda: stream.read(SCAN_BLOCK_SIZE), b""):
         candidate = tail + block
+        candidate_position = stream_position - len(tail)
         for index, (begin, end) in enumerate(PRIVATE_BOUNDARIES):
-            if begin_seen[index]:
-                if end in candidate:
-                    return True
-                continue
-            begin_offset = candidate.find(begin)
-            if begin_offset == -1:
-                continue
-            if candidate.find(end, begin_offset + len(begin)) != -1:
+            begin_position = begin_positions[index]
+            if begin_position is None:
+                begin_offset = candidate.find(begin)
+                if begin_offset == -1:
+                    continue
+                begin_position = candidate_position + begin_offset
+                begin_positions[index] = begin_position
+            end_search_offset = max(
+                0,
+                begin_position + len(begin) - candidate_position,
+            )
+            if candidate.find(end, end_search_offset) != -1:
                 return True
-            begin_seen[index] = True
+        stream_position += len(block)
         tail = candidate[-overlap_length:]
     return False
 
@@ -406,6 +418,22 @@ def self_test() -> None:
             + b"\n"
             + PRIVATE_BOUNDARIES[0][1]
         )
+        end_before_begin = (
+            b"A"
+            * (
+                SCAN_BLOCK_SIZE
+                - len(PRIVATE_BOUNDARIES[0][1])
+                - len(PRIVATE_BOUNDARIES[0][0])
+                - 2
+            )
+            + PRIVATE_BOUNDARIES[0][1]
+            + b"\n"
+            + PRIVATE_BOUNDARIES[0][0]
+            + b"\n"
+            + (b"B" * SCAN_BLOCK_SIZE)
+        )
+        if stream_contains_private_key(io.BytesIO(end_before_begin)):
+            raise AssemblyError("self-test accepted END-before-BEGIN as a private-key envelope")
         for index, private_envelope in enumerate(private_envelopes):
             bad_inputs = root / f"bad-inputs-{index}"
             shutil.copytree(inputs, bad_inputs)
