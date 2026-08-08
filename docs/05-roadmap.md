@@ -332,8 +332,13 @@ Display-only formatting now applies current data-session `POINT` and
 scaled-int64 values or invariant machine serialization. Focused tests pass
 under the default Linux locale and explicit `C`. Exact implementation-head
 Windows Native Validation run `31275114419` passed all 322 tests, including
-both mapped targets; protected review remains before the children close. This
-work does not alter immutable RC2.
+both mapped targets. Independent Linux review at coordination sequence 1438
+reproduced the gap and verified the focused correction. Exact head
+`0af4807ca` macOS run `31281606203` passed the full suite and both mapped
+targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8` (8/8 focused
+executions). The shared-action matrix preserves shell-free platform workflow
+callers. The #4897/#4913/#4914 acceptance evidence is complete; this work does
+not alter immutable RC2.
 
 The #4873 Studio-host JSON-control-escape child is closed at exact product/test
 head `4a75d3273`. Focused shared-platform JSON and real Studio-host diagnostic
