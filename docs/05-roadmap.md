@@ -406,6 +406,13 @@ requires the externally approved registry/key pair and does not weaken #4409;
 the accepted #4621 hosted baseline remains separate from an exact-head live
 Visual Studio UI rerun.
 
+The #4898 Linux launcher-key generator has completed its bounded tool,
+walkthrough, independent-review, and DQ/DV/HZ evidence. The non-secret record
+is archived in
+`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. GitHub still
+has no `release` environment, so this child does not satisfy #4409 or authorize
+a protected Windows launcher-trust claim.
+
 The implementation-side #4894 matrix is current at exact head `f0c9e06e2`:
 Windows native `30559930672` passes `315/315` after building the new fixture
 with MSVC, Linux `30559930560` and macOS `30559930719` pass `316/316`, and the
