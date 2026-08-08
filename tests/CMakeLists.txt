@@ -308,8 +308,22 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_release_licensing_contract_check.cmake
 )
 
+add_test(
+    NAME test_rc_candidate_workflow_contract
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rc_candidate_workflow_contract_check.cmake
+)
+
 find_program(COPPERFIN_PYTHON3_EXECUTABLE NAMES python3 python)
 if(COPPERFIN_PYTHON3_EXECUTABLE)
+    add_test(
+        NAME test_rc_candidate_assembly
+        COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}
+            ${CMAKE_SOURCE_DIR}/scripts/assemble-rc-candidate.py
+            --self-test
+    )
+
     add_test(
         NAME test_contributor_signoff_contract
         COMMAND ${COPPERFIN_PYTHON3_EXECUTABLE}

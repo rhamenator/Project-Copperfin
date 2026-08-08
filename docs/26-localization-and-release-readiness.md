@@ -41,7 +41,11 @@ test-owned process readiness. The final local `test_managed_compile` and full
 `316/316` CTest suite pass. The production-language warning below remains:
 Spanish and Portuguese still require qualified linguistic review.
 
-Implementation is RC-ready, but release authorization remains open. Permissive
+Implementation is RC-ready, but official-release authorization remains open.
+Private RC1 evaluation is permitted through the manual exact-tag GitHub Actions
+artifact workflow. That path records the English source-of-truth and preserves
+the Spanish/Portuguese human-review warning, but it neither publishes a GitHub
+Release nor claims protected signing or independent safety approval. Permissive
 #4403 primary-hazard safety run `30555972170` passes; genuine arm's-length
 review, formal issue closure, and strict validation remain required. #4409
 cannot run its enforced trust gate because no protected repository
@@ -50,8 +54,10 @@ implementation: the protected signer now signs a finalized inventory and the
 actual enforced guard records valid launch and stable exit-code-4 failures
 without exposing private material. That implementation does not replace the
 missing approved signer/registry or its required protected Windows run. Do not
-present the MVP RC as released or advance the active queue into v1 until those
-external authorities are satisfied.
+present the MVP RC as an official release. Once the immutable RC1 artifact
+passes, v1 development may proceed on its dedicated branch from the exact RC1
+commit while those external authorities and the RC stabilization lane remain
+separate.
 
 The corrected mechanics are platform-validated at exact head `f0c9e06e2`:
 Windows native run `30559930672` passes `315/315` after compiling the fixture

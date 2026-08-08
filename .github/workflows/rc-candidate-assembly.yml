@@ -1,0 +1,145 @@
+name: Assemble RC1 Evaluation Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_tag:
+        description: Exact immutable RC tag to assemble
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-candidate:
+    name: Validate exact RC1 tag and commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Fail closed outside the immutable RC1 tag
+        shell: bash
+        env:
+          COPPERFIN_CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+        run: |
+          set -euo pipefail
+          expected_tag="v0.1.0-rc.1"
+          if [[ "$COPPERFIN_CANDIDATE_TAG" != "$expected_tag" ]]; then
+            echo "candidate_tag must be exactly $expected_tag" >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_TYPE" != "tag" || "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+            echo "Run this workflow from the exact $expected_tag tag, not $GITHUB_REF." >&2
+            exit 1
+          fi
+          checked_out_revision="$(git rev-parse HEAD)"
+          tagged_revision="$(git rev-parse "refs/tags/$expected_tag^{commit}")"
+          if [[ "$checked_out_revision" != "$GITHUB_SHA" || "$tagged_revision" != "$GITHUB_SHA" ]]; then
+            echo "The checkout, workflow revision, and annotated tag target must be identical." >&2
+            exit 1
+          fi
+          if [[ ! "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "GitHub did not provide a lowercase full commit ID." >&2
+            exit 1
+          fi
+
+  native-release-readiness:
+    needs: validate-candidate
+    uses: ./.github/workflows/native-release-readiness.yml
+
+  managed-ui:
+    needs: validate-candidate
+    uses: ./.github/workflows/managed-ui-validation-linux.yml
+
+  installers:
+    needs: validate-candidate
+    uses: ./.github/workflows/build-installers.yml
+
+  visual-studio-vsix:
+    needs: validate-candidate
+    uses: ./.github/workflows/build-vsix.yml
+
+  security-and-sbom:
+    needs: validate-candidate
+    uses: ./.github/workflows/security-supply-chain.yml
+
+  assemble-evaluation-bundle:
+    name: Assemble verified RC1 evaluation bundle
+    needs:
+      - validate-candidate
+      - native-release-readiness
+      - managed-ui
+      - installers
+      - visual-studio-vsix
+      - security-and-sbom
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create authoritative exact Corresponding Source archive
+        uses: ./.github/actions/create-release-source
+        with:
+          revision: ${{ github.sha }}
+          output-directory: rc-inputs/copperfin-release-source
+
+      - name: Download Windows installers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: copperfin-windows-installers
+          path: rc-inputs/copperfin-windows-installers
+
+      - name: Download macOS installers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: copperfin-macos-installers
+          path: rc-inputs/copperfin-macos-installers
+
+      - name: Download Linux installers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: copperfin-linux-installers
+          path: rc-inputs/copperfin-linux-installers
+
+      - name: Download Visual Studio VSIX
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: copperfin-visualstudio-vsix
+          path: rc-inputs/copperfin-visualstudio-vsix
+
+      - name: Download CycloneDX SBOM
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: cyclonedx-sbom
+          path: rc-inputs/cyclonedx-sbom
+
+      - name: Assemble and verify candidate
+        shell: bash
+        env:
+          COPPERFIN_CANDIDATE_TAG: ${{ inputs.candidate_tag }}
+        run: |
+          set -euo pipefail
+          python3 scripts/assemble-rc-candidate.py \
+            --input-root rc-inputs \
+            --output-dir copperfin-v0.1.0-rc.1 \
+            --repository-root . \
+            --candidate-tag "$COPPERFIN_CANDIDATE_TAG" \
+            --revision "$GITHUB_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --server-url "$GITHUB_SERVER_URL"
+
+      - name: Upload single evaluation bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: copperfin-v0.1.0-rc.1-evaluation-bundle
+          path: copperfin-v0.1.0-rc.1
+          retention-days: 90
+          if-no-files-found: error

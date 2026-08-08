@@ -1,3 +1,20 @@
+- 2026-08-07: Added the fail-closed private-evaluation RC1 assembly path under
+  #4907. Manual workflow dispatch accepts only exact tag `v0.1.0-rc.1` at its
+  peeled 40-character commit, then requires hosted Linux/macOS/Windows native
+  release readiness, Linux managed UI, all platform installers, the Visual
+  Studio VSIX, and the security/SBOM gate. One final job assembles the verified
+  NSIS/ZIP, productbuild/TGZ, DEB/RPM/TGZ, VSIX, authoritative exact
+  Corresponding Source, CycloneDX SBOM, license metadata, tester guide,
+  non-secret validation manifest, and SHA-256 manifest into a single 90-day
+  GitHub Actions artifact. The workflow has read-only permissions, uses
+  immutable action pins, consumes no repository secrets, publishes no GitHub
+  Release, and does not claim Windows launcher release-trust approval or
+  macOS/Linux platform signing. Static and executable regressions cover the
+  workflow contract, real hosted artifact layout, private-key block rejection, and
+  deterministic bundle metadata. No runtime, VFP9, localization catalog,
+  package/debug schema, xAsset, report/label, IDE, stack, or platform product
+  behavior changed.
+
 - 2026-08-07: Hardened GPL-exception and release-license compliance under
   #4904. The exception now distinguishes automatically emitted Standard
   Support Material in permitted application output from separately distributed
