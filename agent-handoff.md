@@ -2,6 +2,28 @@
 
 ## Current State
 
+#4907 adds a private-evaluation RC1 assembly lane without weakening the
+official-release gates. `.github/workflows/rc-candidate-assembly.yml` is manual,
+read-only, and accepts only tag `v0.1.0-rc.1` when its peeled target, checkout,
+and GitHub workflow SHA are identical. Reusable hosted gates cover native
+Linux/macOS/Windows release readiness, Linux managed UI, all platform
+installers, Visual Studio VSIX behavior, and security/SBOM. The final Ubuntu
+job creates one authoritative exact-revision source archive and uses
+`scripts/assemble-rc-candidate.py` to verify the real nested artifact layout,
+reject secret-like names and complete private-key blocks, compare SBOM licensing
+companions with the tagged repository, and emit one 90-day evaluation bundle
+with SHA-256 and non-secret validation manifests. The tester guide states that
+this is not an official release, Windows launcher release-trust remains a
+separate protected approval, macOS/Linux signing is unsupported, translations
+retain review limits, and GitHub artifacts expire. Focused local contracts pass
+`6/6`; the complete local suite passes `323/323` with only the two documented
+POSIX launcher-process skips; a rehearsal against real hosted
+installer/VSIX/SBOM artifacts and its checksum verification succeeds; and
+workflow YAML parses. Hosted exact-head review, merge, immutable tagging,
+candidate execution, artifact inspection, and creation of `v1-development`
+remain before #4907 closes. No local Windows/macOS host or inter-agent channel
+is required for those GitHub-hosted gates.
+
 #4904 hardens the GPL exception and release-license compliance surface. The
 operative exception now distinguishes automatically emitted Standard Support
 Material in Permitted Output from separately distributed Copperfin Code, while
@@ -23,9 +45,11 @@ installer lanes, and the security/SBOM evidence are covered. The repository
 also has a trusted-base pull-request DCO check, and GitHub web commit sign-off
 is enabled. The launcher-key generator and its permission regression select
 GNU `stat -c` or BSD `stat -f` explicitly, preserving the same current-user and
-mode-0600 boundary on Linux and macOS. Focused Linux contracts pass; hosted
-macOS rerun and final artifact validation remain for the slice. No runtime,
-VFP9, localization, package/debug schema, xAsset, report/label, IDE, stack, or
+mode-0600 boundary on Linux and macOS. Focused Linux contracts pass, and PR
+#4906 completed all 22 hosted checks at final source head `18067e646`, including
+macOS Native `31231177152` and Windows Native `31231177171`; the rebase merge
+landed on `main` at `05eac7952`. #4904 is closed. No runtime, VFP9,
+localization, package/debug schema, xAsset, report/label, IDE, stack, or
 platform product behavior changes.
 
 #4903 completes the repository community-health and contributor-licensing
