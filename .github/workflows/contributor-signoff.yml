@@ -1,0 +1,43 @@
+name: Contributor Sign-Off
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  dco-signoff:
+    name: DCO Sign-Off
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted base policy
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch untrusted commit objects without checking them out
+        shell: bash
+        env:
+          COPPERFIN_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COPPERFIN_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$COPPERFIN_PR_NUMBER" =~ ^[0-9]+$ ]] || [[ ! "$COPPERFIN_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Pull-request identity is malformed." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin "refs/pull/$COPPERFIN_PR_NUMBER/head"
+          if [[ "$(git rev-parse FETCH_HEAD)" != "$COPPERFIN_HEAD_SHA" ]]; then
+            echo "Fetched pull-request head does not match the event identity." >&2
+            exit 1
+          fi
+
+      - name: Verify every author and co-author sign-off
+        env:
+          COPPERFIN_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          COPPERFIN_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/check-contributor-signoffs.py --base "$COPPERFIN_BASE_SHA" --head "$COPPERFIN_HEAD_SHA"

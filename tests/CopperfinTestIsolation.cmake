@@ -300,6 +300,30 @@ function(copperfin_configure_native_test_isolation)
         AUDIT complete
     )
 
+    copperfin_set_test_isolation(test_release_licensing_contract
+        PARALLEL_SAFE
+        FILESYSTEM read-only
+        ENVIRONMENT none
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
+    if(TEST test_contributor_signoff_contract)
+        copperfin_set_test_isolation(test_contributor_signoff_contract
+            PARALLEL_SAFE
+            FILESYSTEM process-owned
+            ENVIRONMENT scoped-process
+            CHILD_PROCESSES bounded
+            NETWORK none
+            SAMPLES none
+            PLATFORM configured
+            AUDIT complete
+        )
+    endif()
+
     copperfin_set_test_isolation(test_github_actions_contract
         FILESYSTEM read-only
         ENVIRONMENT none

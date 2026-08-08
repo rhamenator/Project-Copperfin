@@ -58,7 +58,11 @@ require_text("run: cmake -DSOURCE_DIR=\"$GITHUB_WORKSPACE\" -P tests/run_securit
 require_text("upload-artifact: \"false\"" "disabled Anchore artifact upload")
 require_text("upload-release-assets: \"false\"" "disabled Anchore release-asset upload")
 require_text("name: cyclonedx-sbom" "stable SBOM artifact name")
-require_text("path: sbom.cdx.json" "stable SBOM artifact path")
+require_text("path: |\n            sbom.cdx.json" "stable SBOM artifact path")
+require_text("docs/contracts/release-license-metadata.json" "custom exception metadata beside the SBOM")
+require_text("LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt"
+    "custom exception text beside the SBOM")
+require_text("THIRD_PARTY_NOTICES.md" "third-party notices beside the SBOM")
 require_text("retention-days: 0" "repository-default artifact retention")
 require_text("if-no-files-found: error" "required SBOM file behavior")
 require_text_count("uses: actions/upload-artifact@" 1 "authoritative explicit SBOM upload owner")

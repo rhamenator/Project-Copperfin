@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "project_license_spdx_id": "GPL-3.0-only",
+  "operative_license_path": "LICENSE",
+  "additional_permission": {
+    "name": "Copperfin Application, Runtime, and Toolchain Exception 1.0",
+    "reference_id": "LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0",
+    "spdx_listed_exception": false,
+    "text_path": "LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt"
+  },
+  "third_party_notices_path": "THIRD_PARTY_NOTICES.md",
+  "corresponding_source_instructions_path": "SOURCE.md"
+}

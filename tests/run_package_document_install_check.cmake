@@ -34,8 +34,24 @@ if(NOT install_result EQUAL 0)
         "stderr:\n${install_error}")
 endif()
 
-set(source_document_names README.md LICENSE SECURITY.md remaining-work.md)
-set(installed_document_names README.md LICENSE SECURITY.md remaining-work.md)
+set(source_document_names
+    README.md
+    LICENSE
+    SECURITY.md
+    SOURCE.md
+    THIRD_PARTY_NOTICES.md
+    remaining-work.md
+    LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt
+    docs/contracts/release-license-metadata.json)
+set(installed_document_names
+    README.md
+    LICENSE
+    SECURITY.md
+    SOURCE.md
+    THIRD_PARTY_NOTICES.md
+    remaining-work.md
+    licenses/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt
+    contracts/release-license-metadata.json)
 list(LENGTH source_document_names document_count)
 math(EXPR last_document_index "${document_count} - 1")
 

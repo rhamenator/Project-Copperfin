@@ -615,11 +615,21 @@ endif()
 set(COPPERFIN_PACKAGE_DOCUMENTS
     README.md
     SECURITY.md
+    SOURCE.md
+    THIRD_PARTY_NOTICES.md
     remaining-work.md
 )
 set(COPPERFIN_PACKAGE_LICENSE_DOCUMENT LICENSE)
+set(COPPERFIN_PACKAGE_EXCEPTION_DOCUMENT
+    LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt)
+set(COPPERFIN_PACKAGE_LICENSE_METADATA
+    docs/contracts/release-license-metadata.json)
 
-foreach(package_document IN ITEMS ${COPPERFIN_PACKAGE_DOCUMENTS} ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT})
+foreach(package_document IN ITEMS
+        ${COPPERFIN_PACKAGE_DOCUMENTS}
+        ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT}
+        ${COPPERFIN_PACKAGE_EXCEPTION_DOCUMENT}
+        ${COPPERFIN_PACKAGE_LICENSE_METADATA})
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${package_document}")
         message(FATAL_ERROR "Required package document is missing: ${package_document}")
     endif()
@@ -633,6 +643,16 @@ install(FILES ${COPPERFIN_PACKAGE_DOCUMENTS}
 install(FILES ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT}
     DESTINATION share/copperfin
     RENAME LICENSE
+    COMPONENT Documentation
+)
+
+install(FILES ${COPPERFIN_PACKAGE_EXCEPTION_DOCUMENT}
+    DESTINATION share/copperfin/licenses
+    COMPONENT Documentation
+)
+
+install(FILES ${COPPERFIN_PACKAGE_LICENSE_METADATA}
+    DESTINATION share/copperfin/contracts
     COMPONENT Documentation
 )
 

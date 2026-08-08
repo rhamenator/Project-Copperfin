@@ -49,8 +49,16 @@ jobs:
       - name: Run .NET Framework process-runner tests
         run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration Release
 
+      - name: Create exact Corresponding Source archive
+        uses: ./.github/actions/create-release-source
+        with:
+          revision: ${{ github.sha }}
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: copperfin-visualstudio-vsix
-          path: vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix
+          path: |
+            vsix/Copperfin.VisualStudio/bin/Release/net472/*.vsix
+            release-source/Project-Copperfin-source-${{ github.sha }}.zip
+          if-no-files-found: error

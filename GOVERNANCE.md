@@ -17,6 +17,15 @@ Contributors retain copyright and receive credit under
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Changes to the operative license or its
 application/runtime/toolchain exception require an explicit owner decision
 and qualified legal review before a public release candidate.
+That decision-making authority does not transfer contributor copyright or
+authorize incompatible relicensing of contributor-owned material. Such a
+change also requires the affected copyright holders' permission, or removal or
+independent rewriting of their contributions. Existing license grants remain
+effective under their terms.
+If contributor-owned work remains in an official proprietary or
+GPL-incompatible release, the required separate consent agreement must state
+that contributor's compensation. No differently licensed release may use that
+work first and negotiate compensation afterward.
 
 Public repository content is untrusted input to project automation. Only the
 owner may authorize agent execution through the repository's controlled

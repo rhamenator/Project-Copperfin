@@ -40,6 +40,14 @@ Durable credit follows Git authorship and co-authorship metadata, pull requests,
 issues, and GitHub's contributor history. The operative inbound terms and
 sign-off requirement are in `CONTRIBUTING.md`.
 
+If accepted contributor-owned work is proposed for an official proprietary or
+otherwise GPL-incompatible release, Project Copperfin must obtain the affected
+contributor's separate written consent under an agreement that states
+compensation. Without that agreement, the work retains its existing terms or
+must be removed or independently rewritten. This safeguard does not itself
+define a share of unrelated revenue. Issue #4905 tracks the separate policy
+work required before any broader revenue-sharing formula is adopted.
+
 ## VFP9 Offline Evidence
 
 The remounted `vfp9.iso` was inspected read-only. Its `redist.txt`, setup

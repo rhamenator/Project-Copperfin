@@ -721,13 +721,20 @@ API, ABI, foreign-function, extension, package, manifest, debug, generated
 launcher, generated scaffold, file, pipe, network, and other documented or
 published integration and runtime interfaces.
 
+"Standard Support Material" means a portion of Copperfin Code that Copperfin
+automatically emits or copies into output as part of its ordinary documented
+operation, such as a launcher, stub, scaffold, header, manifest fragment, or
+runtime support fragment intended for that use.
+
 "Permitted Output" means source code, object code, executables, libraries,
 packages, launchers, stubs, scaffolds, headers, manifests, debug material,
 data, documentation, or other output produced in the ordinary operation of
-Copperfin from an Independent Work. It includes standard Copperfin support
-material automatically emitted or copied into that output by Copperfin. It
-does not include Copperfin Code deliberately copied or adapted outside that
-ordinary operation.
+Copperfin from an Independent Work. It includes Standard Support Material
+automatically emitted or copied into that output by Copperfin. It does not
+include Copperfin Code deliberately copied or adapted outside that ordinary
+operation. Standard Support Material is Permitted Output only in the copy and
+context in which Copperfin ordinarily emitted or copied it; the same material
+distributed separately remains Copperfin Code.
 
 2. Grant of additional permission
 
@@ -745,8 +752,8 @@ Notwithstanding any other condition of GPL-3.0-only, you have permission to:
 
   c. make, use, reproduce, modify, and convey Permitted Output under terms of
      your choice, consistent with the license of the Independent Work, even
-     when the Permitted Output contains standard Copperfin support material
-     emitted or copied through Copperfin's ordinary operation; and
+     when the Permitted Output contains Standard Support Material emitted or
+     copied through Copperfin's ordinary operation; and
 
   d. reproduce and convey unmodified or modified Copperfin runtime libraries,
      executables, launchers, support files, and other Copperfin Code together
@@ -760,6 +767,10 @@ terms chosen by its copyright holder.
 
 This Exception does not permit you to relicense Copperfin Code itself, or a
 modification based on or derived from Copperfin Code, as proprietary code.
+This rule does not withdraw paragraph 2(c)'s permission for Standard Support
+Material in the copy and context in which it forms part of Permitted Output;
+it does apply when that material or any other Copperfin Code is distributed
+separately from that Permitted Output.
 When you convey Copperfin Code, including Copperfin Code conveyed under
 paragraph 2(d), you must comply with GPL-3.0-only for the Copperfin Code and
 provide its Corresponding Source, license text, notices, and installation

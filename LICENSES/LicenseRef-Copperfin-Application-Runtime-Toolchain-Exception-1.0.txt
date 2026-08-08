@@ -1,0 +1,111 @@
+        COPPERFIN APPLICATION, RUNTIME, AND TOOLCHAIN EXCEPTION
+                         Version 1.0, 4 August 2026
+
+Copyright (C) 2026 Richard M. Hamilton
+
+0. Purpose and scope
+
+This Exception applies to every Project Copperfin file whose copyright holder
+applies it by an express notice or by submitting a contribution under the
+Project Copperfin contribution terms, unless that file expressly says
+otherwise. Richard M. Hamilton applies this Exception to the first-party
+Project Copperfin material for which he can grant copyright permission. Each
+contributor who submits material under CONTRIBUTING.md applies this Exception
+to that contribution to the extent the contributor can grant permission.
+Contributors retain copyright in their contributions; no copyright assignment
+is required. This Exception does not change the license of third-party
+material or grant rights that its copyright holder cannot grant.
+
+The purpose of this Exception is to keep Project Copperfin and modifications
+derived from Project Copperfin source code under the GNU General Public
+License while allowing independent applications to use Copperfin development,
+compilation, modernization, integration, packaging, and runtime facilities
+without imposing the GPL on those independent applications.
+
+1. Definitions
+
+"Copperfin Code" means Project Copperfin code covered by GPL-3.0-only to which
+this Exception applies, including a modified version that retains this
+Exception.
+
+An "Independent Work" is any program, application, module, library, source
+file, object file, executable, data set, project, report, label, documentation,
+or other work that is not based on or derived from Copperfin Code. A work does
+not cease to be an Independent Work merely because it uses, requires, loads,
+links with, communicates with, is processed by, or is distributed with
+Copperfin Code through the permissions below.
+
+"Copperfin Interfaces" means Copperfin command-line, process, library, plug-in,
+API, ABI, foreign-function, extension, package, manifest, debug, generated
+launcher, generated scaffold, file, pipe, network, and other documented or
+published integration and runtime interfaces.
+
+"Standard Support Material" means a portion of Copperfin Code that Copperfin
+automatically emits or copies into output as part of its ordinary documented
+operation, such as a launcher, stub, scaffold, header, manifest fragment, or
+runtime support fragment intended for that use.
+
+"Permitted Output" means source code, object code, executables, libraries,
+packages, launchers, stubs, scaffolds, headers, manifests, debug material,
+data, documentation, or other output produced in the ordinary operation of
+Copperfin from an Independent Work. It includes Standard Support Material
+automatically emitted or copied into that output by Copperfin. It does not
+include Copperfin Code deliberately copied or adapted outside that ordinary
+operation. Standard Support Material is Permitted Output only in the copy and
+context in which Copperfin ordinarily emitted or copied it; the same material
+distributed separately remains Copperfin Code.
+
+2. Grant of additional permission
+
+Notwithstanding any other condition of GPL-3.0-only, you have permission to:
+
+  a. use Copperfin Code to inspect, edit, run, interpret, analyze, transform,
+     translate, modernize, generate, compile, assemble, link, package, test,
+     debug, deploy, host, maintain, or support an Independent Work;
+
+  b. combine or link an Independent Work with Copperfin Code, statically or
+     dynamically, in the same executable, library, process, or address space,
+     or connect them through Copperfin Interfaces, without the combination or
+     connection by itself causing the Independent Work to be covered by the
+     GPL;
+
+  c. make, use, reproduce, modify, and convey Permitted Output under terms of
+     your choice, consistent with the license of the Independent Work, even
+     when the Permitted Output contains Standard Support Material emitted or
+     copied through Copperfin's ordinary operation; and
+
+  d. reproduce and convey unmodified or modified Copperfin runtime libraries,
+     executables, launchers, support files, and other Copperfin Code together
+     with, embedded in, or alongside an Independent Work or Permitted Output.
+
+These permissions apply regardless of whether an Independent Work is free,
+open source, source-available, or proprietary, and regardless of the license
+terms chosen by its copyright holder.
+
+3. Conditions and retained copyleft
+
+This Exception does not permit you to relicense Copperfin Code itself, or a
+modification based on or derived from Copperfin Code, as proprietary code.
+This rule does not withdraw paragraph 2(c)'s permission for Standard Support
+Material in the copy and context in which it forms part of Permitted Output;
+it does apply when that material or any other Copperfin Code is distributed
+separately from that Permitted Output.
+When you convey Copperfin Code, including Copperfin Code conveyed under
+paragraph 2(d), you must comply with GPL-3.0-only for the Copperfin Code and
+provide its Corresponding Source, license text, notices, and installation
+information when the GPL requires them. Those duties apply to the Copperfin
+Code and modifications derived from it, not to the Independent Work merely
+because of a permitted use, combination, connection, or distribution.
+
+You must comply with the license terms of each Independent Work and all
+third-party material. This Exception grants no trademark rights and provides
+no warranty.
+
+If a combination could otherwise be considered one covered work under the
+GPL, this Exception supplies the additional permission needed for the
+Independent Work and Permitted Output to remain under terms chosen by their
+copyright holders. Wrapping, translating, reorganizing, or renaming Copperfin
+Code does not by itself turn that Copperfin Code into an Independent Work.
+
+When you modify Copperfin Code, GPLv3 section 7 governs whether you retain or
+remove this Exception from your modified version.
