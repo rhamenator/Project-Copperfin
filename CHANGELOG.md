@@ -7,10 +7,11 @@
   Release was published. The scanner now constructs sentinel bytes without
   embedding a complete sentinel in its source; its executable regression puts
   the real scanner source inside the synthetic source ZIP while retaining the
-  private-key rejection cases. The scanner now retains begin-marker state
-  across arbitrary block spans and recognizes generic/encrypted PKCS#8,
-  traditional RSA/EC/DSA, OpenSSH, SSH2-encrypted, and PGP private-key
-  envelopes. The workflow and tester contract now accept only sequential
+  private-key rejection cases. The scanner now retains absolute begin-marker
+  positions across arbitrary block spans, requires each end marker to occur
+  later in the stream, and recognizes generic/encrypted PKCS#8, traditional
+  RSA/EC/DSA, OpenSSH, canonical space-delimited SSH2-encrypted, and PGP
+  private-key envelopes. The workflow and tester contract now accept only sequential
   `v0.1.0-rc.N` tags whose requested tag, checked-out ref, peeled commit, and
   workflow SHA agree, so the correction can proceed as immutable RC2 and later
   human-review corrections do not require rewriting the lane.
