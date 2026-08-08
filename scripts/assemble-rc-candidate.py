@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Additional permission: Copperfin Application, Runtime, and Toolchain Exception 1.0; see LICENSE.
 
-"""Assemble and verify the immutable Copperfin RC1 evaluation bundle."""
+"""Assemble and verify an immutable Copperfin RC evaluation bundle."""
 
 from __future__ import annotations
 
@@ -19,13 +19,16 @@ from pathlib import Path
 from typing import BinaryIO
 
 
-RC1_TAG = "v0.1.0-rc.1"
+CANDIDATE_TAG_PATTERN = re.compile(r"v0\.1\.0-rc\.[1-9][0-9]*\Z")
 RETENTION_DAYS = 90
 SOURCE_PREFIX = "Project-Copperfin-source-"
+# Construct the boundaries so this scanner's own source does not contain a
+# complete private-key sentinel and falsely reject the Corresponding Source
+# archive that necessarily includes this file.
 PRIVATE_BOUNDARIES = (
-    (b"-----BEGIN PRIVATE KEY-----", b"-----END PRIVATE KEY-----"),
-    (b"-----BEGIN OPENSSH PRIVATE KEY-----", b"-----END OPENSSH PRIVATE KEY-----"),
-    (b"-----BEGIN ENCRYPTED PRIVATE KEY-----", b"-----END ENCRYPTED PRIVATE KEY-----"),
+    (b"-----BEGIN " + b"PRIVATE KEY-----", b"-----END " + b"PRIVATE KEY-----"),
+    (b"-----BEGIN " + b"OPENSSH PRIVATE KEY-----", b"-----END " + b"OPENSSH PRIVATE KEY-----"),
+    (b"-----BEGIN " + b"ENCRYPTED PRIVATE KEY-----", b"-----END " + b"ENCRYPTED PRIVATE KEY-----"),
 )
 
 
@@ -122,8 +125,8 @@ def relative_file_records(bundle_root: Path) -> list[dict[str, object]]:
 
 
 def assemble(args: argparse.Namespace) -> Path:
-    if args.candidate_tag != RC1_TAG:
-        raise AssemblyError(f"candidate tag must be exactly {RC1_TAG}")
+    if CANDIDATE_TAG_PATTERN.fullmatch(args.candidate_tag) is None:
+        raise AssemblyError("candidate tag must match v0.1.0-rc.N with a positive RC number")
     if not re.fullmatch(r"[0-9a-f]{40}", args.revision):
         raise AssemblyError("revision must be a lowercase 40-character Git object ID")
     if not re.fullmatch(r"[1-9][0-9]*", args.run_id):
@@ -200,9 +203,9 @@ def assemble(args: argparse.Namespace) -> Path:
             raise AssemblyError(f"SBOM license companion differs from the tagged repository: {relative}")
 
     tester_guide = require_regular(
-        repository_root / "docs/35-rc1-evaluation-guide.md", "RC1 tester guide"
+        repository_root / "docs/35-rc1-evaluation-guide.md", "RC tester guide"
     )
-    copy_verified(tester_guide, output_root / "RC1-TESTER-README.md", "RC1 tester guide")
+    copy_verified(tester_guide, output_root / "RC-TESTER-README.md", "RC tester guide")
 
     manifest = {
         "schema_version": 1,
@@ -285,6 +288,10 @@ def self_test() -> None:
         ):
             with zipfile.ZipFile(inputs / producer / source_name, "w") as archive:
                 archive.writestr(f"Project-Copperfin-{revision}/README.md", b"exact-source")
+                archive.writestr(
+                    f"Project-Copperfin-{revision}/scripts/assemble-rc-candidate.py",
+                    Path(__file__).read_bytes(),
+                )
 
         licenses = {
             "LICENSE": b"GPL\n",
@@ -293,7 +300,7 @@ def self_test() -> None:
             "THIRD_PARTY_NOTICES.md": b"Notices\n",
             "LICENSES/LicenseRef-Copperfin-Application-Runtime-Toolchain-Exception-1.0.txt": b"Exception\n",
             "docs/contracts/release-license-metadata.json": b"{}\n",
-            "docs/35-rc1-evaluation-guide.md": b"# RC1\n",
+            "docs/35-rc1-evaluation-guide.md": b"# RC candidate\n",
         }
         for relative, data in licenses.items():
             path = repository / relative
@@ -312,7 +319,7 @@ def self_test() -> None:
             input_root=inputs,
             output_dir=root / "bundle",
             repository_root=repository,
-            candidate_tag=RC1_TAG,
+            candidate_tag="v0.1.0-rc.2",
             revision=revision,
             repository="example/Project-Copperfin",
             run_id="123",
@@ -321,7 +328,7 @@ def self_test() -> None:
         )
         bundle = assemble(arguments)
         expected_bundle_files = {
-            "RC1-TESTER-README.md",
+            "RC-TESTER-README.md",
             "SHA256SUMS.txt",
             "ide/visual-studio/Copperfin.VisualStudio.vsix",
             "installers/linux/copperfin-0.1.0-Linux.deb",
@@ -349,6 +356,24 @@ def self_test() -> None:
         manifest = json.loads((bundle / "rc-validation-manifest.json").read_text(encoding="utf-8"))
         if manifest["revision"] != revision or manifest["official_release"] is not False:
             raise AssemblyError("self-test validation manifest is invalid")
+
+        for invalid_tag in (
+            "v0.1.0-rc.0",
+            "v0.1.0-rc.02",
+            "v0.1.0-rc.-1",
+            "v0.1.0-rc.2/../main",
+            "v0.1.1-rc.2",
+        ):
+            invalid_tag_arguments = argparse.Namespace(**vars(arguments))
+            invalid_tag_arguments.candidate_tag = invalid_tag
+            invalid_tag_arguments.output_dir = root / f"invalid-tag-{len(invalid_tag)}"
+            try:
+                assemble(invalid_tag_arguments)
+            except AssemblyError as error:
+                if "candidate tag must match" not in str(error):
+                    raise
+            else:
+                raise AssemblyError(f"self-test accepted invalid candidate tag: {invalid_tag}")
 
         bad_inputs = root / "bad-inputs"
         shutil.copytree(inputs, bad_inputs)

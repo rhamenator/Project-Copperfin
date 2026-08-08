@@ -1,14 +1,17 @@
-# Project Copperfin RC1 Evaluation Guide
+# Project Copperfin RC Evaluation Guide
 
-Project Copperfin `v0.1.0-rc.1` is a private-evaluation release candidate. It
-is not an official Project Copperfin release and is not distributed through a
-published GitHub Release. The bundle is produced by a manually dispatched,
-fail-closed GitHub Actions workflow from the exact tagged commit.
+Each Project Copperfin `v0.1.0-rc.N` candidate is a private-evaluation release
+candidate. It is not an official Project Copperfin release and is not
+distributed through a published GitHub Release. The bundle is produced by a
+manually dispatched, fail-closed GitHub Actions workflow from the exact tagged
+commit. A failed or superseded RC tag remains immutable; corrections use the
+next sequential RC number.
 
 ## Verify Before Testing
 
-1. Download the single `copperfin-v0.1.0-rc.1-evaluation-bundle` workflow
-   artifact while signed in to GitHub.
+1. Download the single `copperfin-<candidate-tag>-evaluation-bundle` workflow
+   artifact while signed in to GitHub. For example, RC2 uses
+   `copperfin-v0.1.0-rc.2-evaluation-bundle`.
 2. Extract it into a new directory.
 3. Compare the tag and 40-character revision in
    `rc-validation-manifest.json` with the workflow page.
@@ -47,7 +50,7 @@ installer also does not claim Authenticode signing. Project Copperfin does not
 currently support Apple platform signing/notarization or Linux distribution
 package signing.
 
-English is the authoritative reviewed documentation and UI source for RC1.
+English is the authoritative reviewed documentation and UI source for the RC.
 Shipped non-English and pseudo-localized catalogs remain subject to the
 documented machine-translation and human-review limits in
 `docs/26-localization-and-release-readiness.md` from the Corresponding Source.

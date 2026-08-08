@@ -1,4 +1,4 @@
-name: Assemble RC1 Evaluation Candidate
+name: Assemble RC Evaluation Candidate
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   validate-candidate:
-    name: Validate exact RC1 tag and commit
+    name: Validate exact RC tag and commit
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,15 +22,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fail closed outside the immutable RC1 tag
+      - name: Fail closed outside an immutable sequential RC tag
         shell: bash
         env:
           COPPERFIN_CANDIDATE_TAG: ${{ inputs.candidate_tag }}
         run: |
           set -euo pipefail
-          expected_tag="v0.1.0-rc.1"
-          if [[ "$COPPERFIN_CANDIDATE_TAG" != "$expected_tag" ]]; then
-            echo "candidate_tag must be exactly $expected_tag" >&2
+          expected_tag="$COPPERFIN_CANDIDATE_TAG"
+          if [[ ! "$expected_tag" =~ ^v0\.1\.0-rc\.[1-9][0-9]*$ ]]; then
+            echo "candidate_tag must match v0.1.0-rc.N with a positive RC number" >&2
             exit 1
           fi
           if [[ "$GITHUB_REF_TYPE" != "tag" || "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
@@ -69,7 +69,7 @@ jobs:
     uses: ./.github/workflows/security-supply-chain.yml
 
   assemble-evaluation-bundle:
-    name: Assemble verified RC1 evaluation bundle
+    name: Assemble verified RC evaluation bundle
     needs:
       - validate-candidate
       - native-release-readiness
@@ -127,7 +127,7 @@ jobs:
           set -euo pipefail
           python3 scripts/assemble-rc-candidate.py \
             --input-root rc-inputs \
-            --output-dir copperfin-v0.1.0-rc.1 \
+            --output-dir "copperfin-$COPPERFIN_CANDIDATE_TAG" \
             --repository-root . \
             --candidate-tag "$COPPERFIN_CANDIDATE_TAG" \
             --revision "$GITHUB_SHA" \
@@ -139,7 +139,7 @@ jobs:
       - name: Upload single evaluation bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: copperfin-v0.1.0-rc.1-evaluation-bundle
-          path: copperfin-v0.1.0-rc.1
+          name: copperfin-${{ inputs.candidate_tag }}-evaluation-bundle
+          path: copperfin-${{ inputs.candidate_tag }}
           retention-days: 90
           if-no-files-found: error

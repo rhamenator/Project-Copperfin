@@ -59,7 +59,7 @@ License documents:
 - [`docs/34-human-authorship-and-assisted-development.md`](docs/34-human-authorship-and-assisted-development.md)
   — human direction, review, provenance, and assisted-development evidence
 - [`docs/35-rc1-evaluation-guide.md`](docs/35-rc1-evaluation-guide.md)
-  — private RC1 artifact verification, test scope, limitations, and feedback
+  — private RC artifact verification, test scope, limitations, and feedback
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)

@@ -2,27 +2,27 @@
 
 ## Current State
 
-#4907 adds a private-evaluation RC1 assembly lane without weakening the
-official-release gates. `.github/workflows/rc-candidate-assembly.yml` is manual,
-read-only, and accepts only tag `v0.1.0-rc.1` when its peeled target, checkout,
-and GitHub workflow SHA are identical. Reusable hosted gates cover native
-Linux/macOS/Windows release readiness, Linux managed UI, all platform
-installers, Visual Studio VSIX behavior, and security/SBOM. The final Ubuntu
-job creates one authoritative exact-revision source archive and uses
-`scripts/assemble-rc-candidate.py` to verify the real nested artifact layout,
-reject secret-like names and complete private-key blocks, compare SBOM licensing
-companions with the tagged repository, and emit one 90-day evaluation bundle
-with SHA-256 and non-secret validation manifests. The tester guide states that
-this is not an official release, Windows launcher release-trust remains a
-separate protected approval, macOS/Linux signing is unsupported, translations
-retain review limits, and GitHub artifacts expire. Focused local contracts pass
-`6/6`; the complete local suite passes `323/323` with only the two documented
-POSIX launcher-process skips; a rehearsal against real hosted
-installer/VSIX/SBOM artifacts and its checksum verification succeeds; and
-workflow YAML parses. Hosted exact-head review, merge, immutable tagging,
-candidate execution, artifact inspection, and creation of `v1-development`
-remain before #4907 closes. No local Windows/macOS host or inter-agent channel
-is required for those GitHub-hosted gates.
+#4907 maintains a private-evaluation RC assembly lane without weakening the
+official-release gates. Immutable tag `v0.1.0-rc.1` peels to `a4459e64a`.
+Exact-tag run `31236596422` passed native Linux/macOS/Windows release readiness,
+Linux managed UI, all platform installers, Visual Studio VSIX behavior, and
+security/SBOM, then failed closed in final assembly: the source scanner found
+its own literal private-key sentinel inside the authoritative Corresponding
+Source archive. No secret was present, no final bundle was uploaded, and no
+GitHub Release exists. The tag remains unchanged.
+
+The corrective lane constructs the sentinel bytes without embedding a complete
+sentinel in its own source and puts the real scanner source inside the
+executable source-ZIP regression while retaining real private-key rejection.
+`.github/workflows/rc-candidate-assembly.yml` remains manual and read-only, but
+now accepts only sequential `v0.1.0-rc.N` tags when the requested tag, checkout
+ref, peeled target, and GitHub workflow SHA are identical. This permits an
+immutable RC2 and later human-review candidates without rewriting the workflow.
+The final Ubuntu job still verifies nested artifact layout, secret-like names,
+complete private-key blocks, SBOM licensing companions, and emits one 90-day
+evaluation bundle with SHA-256 and non-secret validation manifests. Correction
+review, exact-main hosted evidence, RC2 tagging/execution, deep bundle
+inspection, and creation of `v1-development` remain before #4907 closes.
 
 #4904 hardens the GPL exception and release-license compliance surface. The
 operative exception now distinguishes automatically emitted Standard Support
