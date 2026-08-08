@@ -199,8 +199,10 @@ two exact protected `release` environment secrets, and the key ID maps to the
 manual workflow input. No Windows generator or second identity is needed; the
 existing PowerShell signer consumes the same secret. This does not sign
 macOS/Linux artifacts or complete external #4409 environment provisioning,
-approval, or protected execution. Focused validation and independent review
-remain required before #4898 closure.
+approval, or protected execution. The owner ceremony, focused validation,
+independent review, and complete DQ/DV/HZ mapping are archived in
+`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`; #4898 can close
+without weakening the still-open #4409 protected-execution gate.
 
 Requirements recovery has begun in
 `docs/32-recovered-requirements-traceability.md`. Closed child #4896 establishes

@@ -10,9 +10,34 @@ set(SIGNER "${SOURCE_DIR}/tools/package-signer/sign-launcher-inventory.sh")
 set(WINDOWS_SIGNER "${SOURCE_DIR}/tools/package-signer/sign-launcher-inventory.ps1")
 set(KEY_GENERATOR
     "${SOURCE_DIR}/tools/package-signer/generate-launcher-signing-key.sh")
+set(KEY_GENERATOR_SAFETY_REPORT
+    "${SOURCE_DIR}/docs/safety/traceability-report-2026-08-08-launcher-keygen.md")
 foreach(REQUIRED_SIGNER IN ITEMS "${SIGNER}" "${WINDOWS_SIGNER}" "${KEY_GENERATOR}")
     if(NOT EXISTS "${REQUIRED_SIGNER}")
         message(FATAL_ERROR "package signer is missing: ${REQUIRED_SIGNER}")
+    endif()
+endforeach()
+
+if(NOT EXISTS "${KEY_GENERATOR_SAFETY_REPORT}")
+    message(FATAL_ERROR
+        "launcher key generator safety report is missing: ${KEY_GENERATOR_SAFETY_REPORT}")
+endif()
+file(READ "${KEY_GENERATOR_SAFETY_REPORT}" KEY_GENERATOR_SAFETY_CONTENT)
+foreach(REQUIRED_TEXT IN ITEMS
+    "DQ-MVP-launcher-keygen-dedicated-identity"
+    "DQ-MVP-launcher-keygen-secret-boundary"
+    "DV-MVP-launcher-keygen-contract"
+    "DV-MVP-launcher-keygen-walkthrough"
+    "DV-MVP-launcher-keygen-independent-review"
+    "HZ-system-failure-01"
+    "HZ-doc-command-01"
+    "copperfin-launcher-2026-01"
+    "de4e9c062bbad4f591031da08b4b76ebac6fb1319f6f82eea521737b6c72241a"
+    "does not complete #4409")
+    string(FIND "${KEY_GENERATOR_SAFETY_CONTENT}" "${REQUIRED_TEXT}" POSITION)
+    if(POSITION EQUAL -1)
+        message(FATAL_ERROR
+            "launcher key generator safety report is missing required evidence: ${REQUIRED_TEXT}")
     endif()
 endforeach()
 

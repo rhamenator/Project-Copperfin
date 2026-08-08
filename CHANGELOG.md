@@ -1,3 +1,12 @@
+- 2026-08-08: Completed the #4898 launcher-key-generation safety record. The
+  durable report maps both declared DQ requirements to all three DV evidence
+  classes and the two registered hazards, records the owner-run signer ID,
+  public DER fingerprint, and mode check without private material, and records
+  the independent cryptographic/negative-case review. The focused package-
+  signer contract now fails if this evidence disappears. This documentation
+  closure does not create the GitHub `release` environment, provision secrets,
+  dispatch protected Windows validation, or close #4409.
+
 - 2026-08-08: Recovered the VFP9 `SET POINT` display contract under #4913
   from the mounted shipped `dv_foxhelp.chm` topic
   `html/ab6ea03e-d7f8-4ddb-b2e2-56755efd8857.htm`, then corrected the

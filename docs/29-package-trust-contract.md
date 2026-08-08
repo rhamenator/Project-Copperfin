@@ -73,6 +73,11 @@ and must be backed up in a protected external store. One Linux generation
 ceremony supplies the existing Windows PowerShell workflow; creating a second
 Windows identity is neither required nor desired.
 
+The non-secret DQ/DV/HZ mapping, owner ceremony fingerprint, contract evidence,
+and independent review boundary are archived in
+`docs/safety/traceability-report-2026-08-08-launcher-keygen.md`. That report
+does not provision GitHub secrets or claim completion of protected gate #4409.
+
 ## Verification API And Failure States
 
 The native verifier is `copperfin::package_trust`, not `copperfin::licensing`. It may reuse the verify-only Ed25519 primitive, but it owns its envelope parser, canonicalization, launcher trust-key registry, and result statuses. It must not call license parsing or make license-state decisions.
