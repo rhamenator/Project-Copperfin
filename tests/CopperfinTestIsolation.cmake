@@ -127,6 +127,16 @@ function(copperfin_configure_native_test_isolation)
             AUDIT complete
         )
     endforeach()
+    copperfin_set_test_isolation(test_bounded_process
+        PARALLEL_SAFE
+        FILESYSTEM process-owned
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES bounded
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
     copperfin_set_test_isolation(test_polyglot_contract
         PARALLEL_SAFE
         FILESYSTEM read-only

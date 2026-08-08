@@ -4672,6 +4672,10 @@ copperfin_add_test(test_polyglot_bridge_invocation cf_platform_profile
     test_polyglot_bridge_invocation.cpp
 )
 
+copperfin_add_test(test_bounded_process cf_platform_profile
+    test_bounded_process.cpp
+)
+
 copperfin_add_test(test_polyglot_parity_comparator cf_platform_profile
     test_polyglot_parity_comparator.cpp
 )
