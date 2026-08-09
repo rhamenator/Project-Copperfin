@@ -1,0 +1,1 @@
+{"envelope_version":"1.0","kind":"invocation","capability_id":"reports.invoice.render","correlation_id":"example-correlation-001","protocol_version":"1.0.0","arguments":{"invoice_id":"INV-001","format":"pdf"}}

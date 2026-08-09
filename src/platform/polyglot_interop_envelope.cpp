@@ -61,6 +61,125 @@ PolyglotInteropEnvelopeResult invalid_result(
     return result;
 }
 
+PolyglotInteropInvocationRequestResult invalid_request_result(
+    const PolyglotInteropInvocationRequestError error,
+    const char* error_code) {
+    PolyglotInteropInvocationRequestResult result;
+    result.error = error;
+    result.error_code = error_code;
+    return result;
+}
+
+bool is_valid_utf8(const std::string_view value) noexcept {
+    std::size_t position = 0U;
+    while (position < value.size()) {
+        const unsigned char first = static_cast<unsigned char>(value[position++]);
+        if (first < 0x80U) {
+            continue;
+        }
+
+        std::size_t continuation_count = 0U;
+        std::uint32_t codepoint = 0U;
+        std::uint32_t minimum = 0U;
+        if (first >= 0xC2U && first <= 0xDFU) {
+            continuation_count = 1U;
+            codepoint = first & 0x1FU;
+            minimum = 0x80U;
+        } else if (first >= 0xE0U && first <= 0xEFU) {
+            continuation_count = 2U;
+            codepoint = first & 0x0FU;
+            minimum = 0x800U;
+        } else if (first >= 0xF0U && first <= 0xF4U) {
+            continuation_count = 3U;
+            codepoint = first & 0x07U;
+            minimum = 0x10000U;
+        } else {
+            return false;
+        }
+        if (value.size() - position < continuation_count) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < continuation_count; ++index) {
+            const unsigned char continuation =
+                static_cast<unsigned char>(value[position++]);
+            if ((continuation & 0xC0U) != 0x80U) {
+                return false;
+            }
+            codepoint = (codepoint << 6U) | (continuation & 0x3FU);
+        }
+        if (codepoint < minimum || codepoint > 0x10FFFFU ||
+            (codepoint >= 0xD800U && codepoint <= 0xDFFFU)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool append_bounded(
+    std::string& output,
+    const std::string_view value,
+    const std::size_t limit) {
+    if (output.size() > limit || value.size() > limit - output.size()) {
+        return false;
+    }
+    output.append(value);
+    return true;
+}
+
+bool append_bounded_character(
+    std::string& output,
+    const char value,
+    const std::size_t limit) {
+    if (output.size() >= limit) {
+        return false;
+    }
+    output.push_back(value);
+    return true;
+}
+
+bool append_json_string_bounded(
+    std::string& output,
+    const std::string_view value,
+    const std::size_t limit) {
+    constexpr char hex_digits[] = "0123456789abcdef";
+    if (!append_bounded_character(output, '"', limit)) {
+        return false;
+    }
+    for (const unsigned char character : value) {
+        std::string_view escaped;
+        switch (character) {
+        case '"': escaped = "\\\""; break;
+        case '\\': escaped = "\\\\"; break;
+        case '\b': escaped = "\\b"; break;
+        case '\f': escaped = "\\f"; break;
+        case '\n': escaped = "\\n"; break;
+        case '\r': escaped = "\\r"; break;
+        case '\t': escaped = "\\t"; break;
+        default: break;
+        }
+        if (!escaped.empty()) {
+            if (!append_bounded(output, escaped, limit)) {
+                return false;
+            }
+        } else if (character < 0x20U) {
+            const char unicode_escape[] = {
+                '\\', 'u', '0', '0',
+                hex_digits[(character >> 4U) & 0x0FU],
+                hex_digits[character & 0x0FU]};
+            if (!append_bounded(
+                    output,
+                    std::string_view(unicode_escape, sizeof(unicode_escape)),
+                    limit)) {
+                return false;
+            }
+        } else if (!append_bounded_character(
+                       output, static_cast<char>(character), limit)) {
+            return false;
+        }
+    }
+    return append_bounded_character(output, '"', limit);
+}
+
 bool append_utf8(std::string& output, const std::uint32_t codepoint) {
     if (codepoint <= 0x7FU) {
         output.push_back(static_cast<char>(codepoint));
@@ -167,6 +286,12 @@ public:
         }
         value.assign(document_.substr(start, position_ - start));
         return true;
+    }
+
+    [[nodiscard]] bool validate_object() {
+        skip_whitespace();
+        return position_ < document_.size() && document_[position_] == '{' &&
+            skip_value(1U);
     }
 
     [[nodiscard]] bool at_end() const noexcept {
@@ -712,6 +837,91 @@ PolyglotInteropEnvelopeResult parse_polyglot_interop_envelope(
         return invalid_result(
             PolyglotInteropEnvelopeError::protocol_version_mismatch,
             "polyglot.envelope.protocol_version_mismatch");
+    }
+    return result;
+}
+
+PolyglotInteropInvocationRequestResult serialize_polyglot_invocation_request(
+    const PolyglotInteropInvocationRequest& request) {
+    using Error = PolyglotInteropInvocationRequestError;
+    if (request.max_document_bytes == 0U ||
+        request.max_document_bytes > hard_max_document_bytes ||
+        request.max_nesting_depth == 0U ||
+        request.max_nesting_depth > hard_max_nesting_depth) {
+        return invalid_request_result(
+            Error::invalid_limits, "polyglot.request.invalid_limits");
+    }
+    if (!is_machine_identifier(request.capability_id)) {
+        return invalid_request_result(
+            Error::invalid_capability_id,
+            "polyglot.request.invalid_capability_id");
+    }
+    if (request.correlation_id.empty()) {
+        return invalid_request_result(
+            Error::correlation_id_required,
+            "polyglot.request.correlation_id_required");
+    }
+    if (!is_valid_utf8(request.correlation_id)) {
+        return invalid_request_result(
+            Error::invalid_correlation_id,
+            "polyglot.request.invalid_correlation_id");
+    }
+    if (!is_semantic_version(request.protocol_version)) {
+        return invalid_request_result(
+            Error::invalid_protocol_version,
+            "polyglot.request.invalid_protocol_version");
+    }
+    if (request.arguments_json.empty()) {
+        return invalid_request_result(
+            Error::arguments_required,
+            "polyglot.request.arguments_required");
+    }
+    if (request.arguments_json.size() > request.max_document_bytes) {
+        return invalid_request_result(
+            Error::document_too_large,
+            "polyglot.request.document_too_large");
+    }
+
+    const std::size_t first_non_whitespace =
+        request.arguments_json.find_first_not_of(" \t\r\n");
+    if (first_non_whitespace == std::string::npos) {
+        return invalid_request_result(
+            Error::arguments_required,
+            "polyglot.request.arguments_required");
+    }
+    if (request.arguments_json[first_non_whitespace] != '{') {
+        return invalid_request_result(
+            Error::arguments_object_required,
+            "polyglot.request.arguments_object_required");
+    }
+
+    JsonCursor cursor(request.arguments_json, request.max_nesting_depth);
+    if (!cursor.validate_object() || !cursor.at_end()) {
+        return invalid_request_result(
+            Error::invalid_arguments_json,
+            "polyglot.request.invalid_arguments_json");
+    }
+
+    PolyglotInteropInvocationRequestResult result;
+    const std::size_t limit = request.max_document_bytes;
+    const bool serialized =
+        append_bounded(
+            result.document,
+            "{\"envelope_version\":\"1.0\",\"kind\":\"invocation\","
+            "\"capability_id\":",
+            limit) &&
+        append_json_string_bounded(result.document, request.capability_id, limit) &&
+        append_bounded(result.document, ",\"correlation_id\":", limit) &&
+        append_json_string_bounded(result.document, request.correlation_id, limit) &&
+        append_bounded(result.document, ",\"protocol_version\":", limit) &&
+        append_json_string_bounded(result.document, request.protocol_version, limit) &&
+        append_bounded(result.document, ",\"arguments\":", limit) &&
+        append_bounded(result.document, request.arguments_json, limit) &&
+        append_bounded_character(result.document, '}', limit);
+    if (!serialized) {
+        return invalid_request_result(
+            Error::document_too_large,
+            "polyglot.request.document_too_large");
     }
     return result;
 }

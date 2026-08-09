@@ -156,6 +156,19 @@
         }
       }
     },
+    "invocationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["envelope_version", "kind", "capability_id", "correlation_id", "protocol_version", "arguments"],
+      "properties": {
+        "envelope_version": {"const": "1.0"},
+        "kind": {"const": "invocation"},
+        "capability_id": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"},
+        "correlation_id": {"type": "string", "minLength": 1},
+        "protocol_version": {"$ref": "#/$defs/semanticVersion"},
+        "arguments": {"type": "object"}
+      }
+    },
     "successEnvelope": {
       "type": "object",
       "additionalProperties": false,
