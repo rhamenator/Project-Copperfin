@@ -110,8 +110,13 @@ Focused synthetic tests cover exact exit status, shell-metacharacter arguments, 
 Unicode working path and environment value, absence of ambient `PATH`, live and
 throwing cancellation, timeout cleanup, cleanup after normal root exit, missing
 executables, invalid budgets, and duplicate environment names. Local GCC, Clang, and
-ASan/UBSan executions pass, together with the native test-isolation contract. Hosted
-Windows and macOS evidence remains required before this prerequisite is integrated.
+ASan/UBSan executions pass, together with the native test-isolation contract. Exact
+implementation/test head `36f25b1e5` passes Linux Native `324/324`
+(`31284210937`), macOS Native `324/324` plus its existing four-locale matrix
+(`31284210940`), and Windows Native `323/323` (`31284210974`); each full suite
+executes this regression. The earlier macOS textual-path assertion was corrected to
+compare filesystem identity for equivalent `/var` and `/private/var` spellings without
+weakening exact argv, Unicode environment, or ambient-`PATH` isolation coverage.
 
 This primitive does **not** authorize or hash an artifact, validate migration
 contracts or typed envelopes, capture standard output/error, implement retries or

@@ -330,9 +330,12 @@ first artifact adapter. Direct argv invocation avoids a shell; the complete
 child environment is explicit and empty by default; relative paths and
 embedded-NUL inputs are rejected. Timeout, cancellation, callback failure, and
 normal root completion all close the owned descendant tree through Windows Job
-Objects or POSIX process groups. Focused GCC, Clang,
-native-isolation, and ASan/UBSan evidence passes locally. Hosted Windows and
-macOS validation remains required before integration. This slice does not yet
+Objects or POSIX process groups. Focused GCC, Clang, native-isolation, and
+ASan/UBSan evidence passes locally. At exact implementation/test head
+`36f25b1e5`, Linux Native run `31284210937` passes `324/324`, macOS Native run
+`31284210940` passes `324/324` plus the existing four-locale matrix, and
+Windows Native run `31284210974` passes `323/323`; all three execute the
+bounded-process regression. This slice does not yet
 authorize/hash an artifact, validate envelopes, capture output, implement
 fallback/telemetry, select a route, or connect external code to PRG execution.
 

@@ -14,12 +14,19 @@ normally. Windows assigns a suspended process to a kill-on-close Job Object
 before resuming it. POSIX creates a process group and uses a close-on-exec,
 nonblocking status pipe to keep pre-exec timeout/cancellation observable.
 
-Focused Linux evidence passes under GCC and Clang, the native test-isolation
-contract passes with `filesystem=process-owned`,
-`environment=scoped-process`, and `child-processes=bounded`, and a Clang
-ASan/UBSan build passes without findings. Focused analyzer checks produce no
-project diagnostics. Hosted Windows and macOS runs are still required. This
-candidate does not authorize or hash artifacts, parse envelopes, capture
+Exact implementation/test head `36f25b1e5` passes the focused GCC
+licensing/polyglot/isolation set `10/10`, Clang bounded-process coverage `1/1`,
+and Clang ASan/UBSan coverage `1/1` without findings; focused analyzer checks
+produce no project diagnostics. Hosted Linux Native run `31284210937` passes
+`324/324`, macOS Native run `31284210940` passes `324/324` plus the existing
+four-locale matrix, and Windows Native run `31284210974` passes `323/323`.
+Each full suite executes `test_bounded_process`. The immediately preceding
+macOS run `31283452931` failed only because the test compared equivalent
+`/var` and `/private/var` working-directory spellings textually; the corrected
+test compares filesystem identity while retaining exact argv, Unicode
+environment, and ambient-`PATH` isolation checks. Product code did not change
+for that correction. All eight protected PR checks also pass at `36f25b1e5`.
+This candidate does not authorize or hash artifacts, parse envelopes, capture
 output, retry/fallback, emit migration telemetry, select routes, or connect an
 external language to PRG execution. It introduces no fallback/no-op runtime
 surface, so the runtime stub inventory is unchanged.
