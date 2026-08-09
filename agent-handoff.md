@@ -21,7 +21,12 @@ a route. The planned later boundary keeps FP/VFP source in control through
 PRG-callable capabilities and bounded status/cancel/result operations; foreign
 threads must not enter mutable runtime state directly. No stub or no-op was
 introduced, so the runtime stub inventory is unchanged. Hosted platform and
-protected-PR evidence remain pending.
+protected-PR evidence is complete at exact candidate head `282d3a3e5`: Linux
+Native `31292774286` and macOS Native `31292774288` pass `325/325`, Windows
+Native `31294519761` passes `324/324`, and each executes
+`test_polyglot_interop_envelope` successfully. The macOS run also passes both
+`SET POINT` targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and
+`de_DE.UTF-8` (`8/8`). All eight protected PR checks pass.
 
 ## V1 polyglot response-envelope admission candidate
 
