@@ -367,7 +367,11 @@ before shutdown. POSIX nonblocking drains honor an explicit shutdown signal so
 a retained writer cannot stall capture cleanup. Windows restricts inherited
 handles to null stdin and the two pipe writers. Focused GCC, Clang 21
 ASan/UBSan, ThreadSanitizer, 20-run stress,
-and analyzer evidence passes locally; hosted native evidence remains required.
+and analyzer evidence passes locally. At exact candidate head `93350a1a6`,
+Linux Native `31334334063` and macOS Native `31334334101` pass `331/331`,
+macOS also passes the four-locale SET POINT matrix at `8/8`, and Windows Native
+`31334334089` passes `330/330`; all three execute `test_bounded_process`
+successfully. All eight candidate-head protected checks pass.
 These slices still do not authorize/hash an artifact, write a request, validate
 captured envelopes, implement fallback/telemetry, select a route, or connect
 external code to PRG execution.

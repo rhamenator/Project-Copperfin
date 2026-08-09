@@ -28,10 +28,13 @@ times. It separately proves embedded-NUL/high-byte/newline and CRLF capture,
 pre-cancellation/pre-timeout output, and invalid-budget rejection while
 retaining the existing argv/environment/tree tests. Clang 21 ASan/UBSan and
 ThreadSanitizer runs pass without findings, and focused analyzer checks are
-clean. Hosted native evidence is still required. No artifact authorization,
-hashing, request transport, envelope admission, route selection, fallback,
-telemetry, PRG dispatch, or external-language adapter is added; the runtime
-stub inventory is unchanged.
+clean. Exact candidate head `93350a1a6` passes Linux Native `31334334063` and
+macOS Native `31334334101` at `331/331`, the macOS four-locale SET POINT
+matrix at `8/8`, and Windows Native `31334334089` at `330/330`;
+`test_bounded_process` passes on every platform. All eight candidate-head
+protected checks pass. No artifact authorization, hashing, request transport,
+envelope admission, route selection, fallback, telemetry, PRG dispatch, or
+external-language adapter is added; the runtime stub inventory is unchanged.
 
 ## V1 PRG HMAC payload-authentication candidate
 
