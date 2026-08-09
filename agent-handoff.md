@@ -22,8 +22,13 @@ child-process, artifact-admission, external-execution, audit-stream, or
 callback access. It does not generate, derive, store, rotate, erase, or
 distribute keys; PRG strings are not a dedicated secret container. The full
 contract is in `docs/41-prg-payload-integrity-and-base64.md`. Hosted evidence
-remains pending. No stub or no-op was added, so the runtime stub inventory is
-unchanged.
+is complete at exact candidate head `4ebcc8ca3`: Linux Native `31325459240`
+and macOS Native `31325460029` pass `331/331`, macOS also passes the
+four-locale SET POINT matrix at `8/8`, and Windows Native `31325460842` passes
+`330/330`. Both HMAC-bearing targets pass on every platform. Candidate-head
+checks complete with seven success conclusions and the non-failing Socket
+PR-alert check neutral. No stub or no-op was added, so the runtime stub
+inventory is unchanged.
 
 ## V1 PRG payload-integrity and Base64 candidate
 
