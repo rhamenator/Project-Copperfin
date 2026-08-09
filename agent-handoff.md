@@ -11,8 +11,9 @@ Completion reads do not consume the task; legacy `AWAIT` still merges events,
 assigns its Boolean completion result, and erases the handle. Handles are
 monotonic exact integers and never reused during the runtime session.
 
-Focused `test_prg_engine_control_flow` passes under GCC in 95.20 seconds and
-under Clang 21 ASan/UBSan in 345.26 seconds, covering running and terminal
+At implementation head `92f96dd64`, focused `test_prg_engine_control_flow`
+passes under GCC in 95.20 seconds and under Clang 21 ASan/UBSan in 345.26
+seconds, covering running and terminal
 observations, retained return and ordered print output, cooperative
 cancellation, unknown handles, non-reuse, and unchanged `AWAIT` behavior. The
 document-install contract passes and static analysis reports no slice finding.

@@ -5,8 +5,9 @@
   available until the unchanged `AWAIT` join erases the task. Handles are
   monotonic, data-session scoped, non-reused for the runtime lifetime, and
   bounded to VFP's exact numeric-integer range. Accepted cancellation emits
-  `runtime.task.cancel_requested`. The GCC control-flow suite passes in 95.20
-  seconds; Clang 21 ASan/UBSan passes the same suite in 345.26 seconds without
+  `runtime.task.cancel_requested`. At implementation head `92f96dd64`, the GCC
+  control-flow suite passes in 95.20 seconds; Clang 21 ASan/UBSan passes the
+  same suite in 345.26 seconds without
   a sanitizer finding; and the document-install contract passes. Static
   analysis reports no slice finding. This does not execute or admit an
   external-language artifact and adds no runtime stub or no-op.
