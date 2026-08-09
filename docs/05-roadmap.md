@@ -35,8 +35,11 @@ assembly loading, external I/O, and secret access are independently scoped, and
 the gateway emits stable machine diagnostics plus a canonical audit record.
 The accompanying threat model keeps FP/VFP source in control through a future
 supervised-job facade; foreign threads cannot directly mutate runtime state.
-Focused GCC policy/runtime/locale checks and Clang ASan/UBSan pass. Managed
-execution, the PRG job facade, and hosted platform evidence remain separate.
+Focused GCC policy/runtime/locale checks and Clang ASan/UBSan pass. Exact
+implementation head `5c6ccfa79` passes Linux and macOS at `325/325`, Windows at
+`324/324`, the policy regression on every platform, the macOS four-locale
+matrix at `8/8`, and all eight protected checks. Managed parity-call execution
+and the PRG job facade remain separate.
 
 Current standalone Open evidence includes #4890 at product/test head
 `9e4b5a286`: localized File > Open exposes Ctrl+O through the existing picker

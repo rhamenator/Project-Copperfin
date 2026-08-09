@@ -308,8 +308,8 @@ matches the events `cf_security`'s `audit_stream` emits today.
 
 ### docs/11 — Engineering Spec: Copperfin .NET Bridge
 
-**Status: spec'd in full, with a portable policy gateway and execution still
-absent.** The document specs four native
+**Status: spec'd in full, with a portable policy gateway and parity-call
+execution still absent.** The document specs four native
 modules (`cf_dotnet_host`, `cf_dotnet_marshaler`, `cf_dotnet_policy`,
 `cf_dotnet_codegen`), three managed surfaces, a typed marshaling contract for 11
 value kinds, a policy-driven call gateway with three outcomes
@@ -325,12 +325,14 @@ job and foreign-thread boundary.
 **What it will take:** none of the four named native execution/marshaling
 modules exist yet. What exists today, per `docs/28-repository-ontology.md` §3, is
 `cf_runtime_pipeline`'s `_csharp_and_launcher` — a generated C# launcher stub
-spawned as a child process. That is the entire current footprint of a
+that runs as a child and forwards to the native runtime host. That is the
+entire current footprint of a
 fully-specified CLR-hosting-and-marshaling subsystem beyond the portable policy
 model. This is corroborated
 verbatim in three places — `docs/01` (charter), `docs/19` (polyglot), and here —
 all stating the same thing in nearly identical language: **the transpiled C#
-output is emitted, never executed, by the runtime host.**
+output is emitted, never executed, by the runtime host.** The runnable launcher
+and the separately emitted transpilation artifact are distinct outputs.
 
 ### docs/19 — Polyglot And AI Subprojects
 

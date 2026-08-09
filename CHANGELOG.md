@@ -9,6 +9,12 @@
   supervised status/wait/cancel/result/output operations and forbids foreign
   threads from directly mutating VFP-compatible runtime state. This slice does
   not load or run managed code and does not implement the PRG job facade.
+  Focused GCC policy/runtime/locale checks pass `3/3`, Clang 21 ASan/UBSan
+  passes `1/1`, and focused static analysis reports no findings. Exact
+  implementation head `5c6ccfa79` passes Linux Native `31297811840` and macOS
+  Native `31297811846` at `325/325`, Windows Native `31297811822` at `324/324`,
+  and `test_platform_models` on all three; macOS also passes the four-locale
+  SET POINT matrix at `8/8`, and all eight protected checks pass.
 
 - 2026-08-08: Added deterministic Polyglot Invocation Request v1 serialization
   under #4920/#91/#4700. The portable API validates invariant capability and
