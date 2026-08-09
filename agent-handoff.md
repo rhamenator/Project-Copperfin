@@ -25,6 +25,19 @@ requests, capture process output, authorize/hash an artifact, render candidate
 messages, connect to the runtime host or PRG dispatch, or close #91/#4700.
 Those remain separate slices; the runtime stub inventory is unchanged.
 
+Hosted Linux Native run `31287594685` and macOS Native run `31287594735`
+passed `325/325` at implementation head `171a1652b`, including the envelope
+test. Windows Native run `31287594747` completed `323/324` and failed only
+because the fixture assertion hard-coded LF while the binary reader and parser
+correctly preserved the checkout's CRLF payload bytes. Owner-approved
+test-only final head `09284457e` makes the fixture expectation follow its
+actual LF/CRLF convention and separately requires exact preservation for
+synthetic LF and CRLF payloads. Fresh local GCC and Clang focused builds pass
+`1/1` without project warnings. Exact-final-head Windows Native run
+`31289912992` passes `324/324`, including
+`test_polyglot_interop_envelope`, and all eight protected checks pass. Product
+source did not change for the line-ending correction.
+
 ## V1 bounded polyglot process prerequisite
 
 The trusted #4700 lane now has a rebased product/test candidate for the first
