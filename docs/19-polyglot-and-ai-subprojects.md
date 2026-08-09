@@ -137,10 +137,19 @@ from making progress. An overflow retains only that stream's admitted prefix, re
 `output-limit-exceeded` with `polyglot.process.stdout_limit_exceeded` or
 `polyglot.process.stderr_limit_exceeded`, and closes the complete owned tree. Timeout
 and cancellation retain bytes captured before shutdown. Windows restricts inherited
-handles with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` to null stdin and the two pipe writers;
-unrelated inheritable host/agent handles remain outside the child. POSIX readers drain
+handles with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` to the stdin pipe reader and two
+output pipe writers; unrelated inheritable host/agent handles remain outside the child. POSIX readers drain
 nonblocking and accept an explicit shutdown signal, so a retained writer cannot make
 capture cleanup wait indefinitely.
+
+Caller-supplied stdin is delivered as exact bytes under an independent positive 1 MiB
+default and the same fixed 16 MiB hard ceiling. Its writer runs concurrently with both
+readers, closes stdin immediately for empty input, and fails closed if the child closes
+stdin before consuming the complete request. POSIX writes are nonblocking and block
+`SIGPIPE` only in the writer thread. Windows shutdown cancels outstanding synchronous
+writer I/O. Timeout and cancellation keep their precedence and cannot be delayed by a
+child that leaves a 1 MiB request unread. Request bytes are never staged in a temporary
+file.
 
 Focused synthetic tests cover exact exit status, shell-metacharacter arguments, a
 Unicode working path and environment value, absence of ambient `PATH`, live and
@@ -163,11 +172,18 @@ Native `31334334101` at `331/331`, the macOS four-locale SET POINT matrix at
 `8/8`, and Windows Native `31334334089` at `330/330`; the bounded-process
 regression passes on every platform. All eight candidate-head protected checks pass.
 
+The input extension adds exact binary echo, 256 KiB simultaneous three-pipe
+saturation, premature-close failure, unread-input timeout/cancellation, and invalid
+input-budget cases. Focused GCC passes with package/isolation coverage (`3/3`) and the
+bounded-process target repeats 20 times. Clang 21 ASan/UBSan and ThreadSanitizer
+pass. Focused analyzer coverage reports no diagnostic in the owned files and one
+pre-existing dead store in unchanged `query_translator.cpp`; hosted evidence remains pending.
+
 This primitive does **not** authorize or hash an artifact, validate migration
-contracts or typed envelopes, write a request to the child, validate captured output,
-implement retries or fallback, choose a route, emit migration telemetry, or connect any
-external language to the PRG runtime. Those remain separately reviewable adapter and
-dispatch work.
+contracts or typed envelopes, automatically connect the request serializer or response
+parser, implement retries or fallback, choose a route, emit migration telemetry, or
+connect any external language to the PRG runtime. Those remain separately reviewable
+adapter and dispatch work.
 
 ## Invocation Request Serialization v1
 

@@ -32,10 +32,15 @@ struct BoundedProcessRequest {
     // Complete child environment. The default is intentionally empty; ambient
     // agent/build secrets are never inherited implicitly.
     std::vector<BoundedProcessEnvironmentVariable> environment;
+    // Exact request bytes delivered to child stdin. Empty input closes stdin
+    // immediately. The limit must be positive and cannot exceed the fixed
+    // implementation hard ceiling.
+    std::string standard_input{};
     std::uint32_t timeout_ms = 5000U;
     std::uint32_t poll_interval_ms = 10U;
+    std::uint32_t stdin_limit_bytes = 1024U * 1024U;
     // Output is captured as exact bytes. Limits must be positive and cannot
-    // exceed the implementation hard ceiling.
+    // exceed the same implementation hard ceiling.
     std::uint32_t stdout_limit_bytes = 1024U * 1024U;
     std::uint32_t stderr_limit_bytes = 1024U * 1024U;
     // Must return promptly. true, or an exception, fails closed as cancellation.
@@ -59,10 +64,10 @@ struct BoundedProcessResult {
 };
 
 // Starts an absolute executable directly without a shell, polls cancellation
-// while it runs, captures stdout/stderr under fixed byte ceilings, and owns one
-// process group/job. Paths and arguments containing NUL are rejected. Closing
-// the invocation always removes descendants so an artifact cannot leave helpers
-// behind after returning.
+// while it runs, delivers exact stdin and captures stdout/stderr under fixed
+// byte ceilings, and owns one process group/job. Paths and arguments containing
+// NUL are rejected. Closing the invocation always removes descendants so an
+// artifact cannot leave helpers behind after returning.
 [[nodiscard]] BoundedProcessResult run_bounded_process(
     const BoundedProcessRequest& request);
 
