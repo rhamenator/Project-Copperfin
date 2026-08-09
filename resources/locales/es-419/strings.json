@@ -284,6 +284,7 @@
   "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired": "permitida por politica con ruta que requiere auditoria",
   "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired": "se requiere un id de actor verificado",
   "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied": "la carga de ensamblados no esta autorizada para esta capacidad",
+  "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed": "no se pudo confirmar el evento de auditoria de politica requerido",
   "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable": "el destino de auditoria de politica requerido no esta disponible",
   "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy": "capacidad denegada por la politica de allowlist/denylist",
   "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired": "se requiere un id de capacidad",

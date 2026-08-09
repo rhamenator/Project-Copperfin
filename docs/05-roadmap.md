@@ -41,6 +41,13 @@ implementation head `5c6ccfa79` passes Linux and macOS at `325/325`, Windows at
 matrix at `8/8`, and all eight protected checks. Managed parity-call execution
 and the PRG job facade remain separate.
 
+The next .NET security criterion now has a candidate durable-audit boundary:
+an audited policy allow remains `pending_audit` until a trusted, non-owning function-pointer
+sink callback commits the structured event and returns a non-empty receipt.
+Absent, failing, empty-receipt, and throwing sinks fail closed. A focused
+adapter regression uses the contained hash-chained audit stream; managed
+execution and runtime-host/PRG wiring remain separate.
+
 Current standalone Open evidence includes #4890 at product/test head
 `9e4b5a286`: localized File > Open exposes Ctrl+O through the existing picker
 without changing filters, path admission, tab identity, or Close Ctrl+F4. The

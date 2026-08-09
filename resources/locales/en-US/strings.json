@@ -788,6 +788,7 @@
   "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired": "allowed by policy with audit-required path",
   "Platform.Extensibility.DotNetInteropDecision.ActorIdRequired": "verified actor id is required",
   "Platform.Extensibility.DotNetInteropDecision.AssemblyLoadingDenied": "assembly loading is not authorized for this capability",
+  "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed": "required policy audit event could not be committed",
   "Platform.Extensibility.DotNetInteropDecision.AuditSinkUnavailable": "required policy audit sink is unavailable",
   "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy": "capability denied by policy allowlist/denylist",
   "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired": "capability id is required",

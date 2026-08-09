@@ -191,6 +191,16 @@ function(copperfin_configure_native_test_isolation)
         )
     endforeach()
 
+    copperfin_set_test_isolation(test_dotnet_interop_audit
+        FILESYSTEM test-owned-unique
+        ENVIRONMENT scoped-process
+        CHILD_PROCESSES none
+        NETWORK none
+        SAMPLES none
+        PLATFORM portable
+        AUDIT complete
+    )
+
     foreach(test_name IN ITEMS
             test_query_translator
             test_federation_execution)

@@ -1,3 +1,14 @@
+- 2026-08-09: Added the #279 durable .NET policy-audit boundary. Audited policy
+  allows now expose `pending_audit`, not an executable route, until
+  `evaluate_and_commit_dotnet_interop_call` receives a successful non-empty
+  receipt from its non-owning function-pointer sink callback. Missing, failed, empty-receipt,
+  and throwing sinks fail closed with the stable
+  `dotnet.interop.audit_commit_failed` diagnostic; denials and native fallbacks
+  use the same commit path. The focused adapter regression writes through the
+  contained, locked, hash-chained native audit stream and verifies the receipt,
+  chain, and durable actor/capability/decision/outcome fields. Managed execution
+  and runtime-host/PRG wiring remain unimplemented.
+
 - 2026-08-09: Added the #279 .NET interop threat model and fail-closed policy
   context gates. Candidate calls now require a trusted host to bind actor,
   verified policy context, audit readiness, and exact capability scope;

@@ -490,6 +490,10 @@ void test_materialize_runtime_package() {
                "debug manifest should preserve task-primitives parity matrix entries");
         expect(debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
                "debug manifest should preserve .NET gateway allow decision diagnostics");
+        expect(
+            manifest_value_for_key(debug_manifest, "dotnet_gateway_task_primitives")
+                    .find("pending_audit:") != std::string::npos,
+            "#279: debug manifest must not present an uncommitted .NET allow as executable");
         expect(debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
                "debug manifest should preserve .NET gateway deny decision diagnostics");
         expect(debug_manifest.find("language_integration_count=") != std::string::npos,

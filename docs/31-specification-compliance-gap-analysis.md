@@ -318,7 +318,10 @@ value kinds, a policy-driven call gateway with three outcomes
 
 The portable profile now enforces verified actor, exact capability scope,
 required audit readiness, and separate reflection/assembly/I/O/secret scopes;
-it emits stable diagnostics and a structured audit record. The threat model in
+it emits stable diagnostics and a structured audit record. An audited allow is
+non-executable until a trusted sink commits the event and returns a non-empty
+receipt; the focused adapter exercises the contained hash-chained audit stream.
+The threat model in
 `docs/37-dotnet-interop-threat-model.md` also fixes the future PRG-supervised
 job and foreign-thread boundary.
 
