@@ -398,7 +398,10 @@ Concurrent same-handle polling now uses a per-task synchronization boundary
 for the one-time immutable completion publication. A two-sibling watcher
 regression passes under GCC and the complete control-flow target passes under
 Clang 21 ThreadSanitizer with no race or deadlock finding. This correction does
-not serialize unrelated tasks or broaden the interop execution surface.
+not serialize unrelated tasks or broaden the interop execution surface. Exact
+candidate `e93686326` passes Linux Native `31329773481` and macOS Native
+`31329773480` at `331/331`, macOS locales at `8/8`, and Windows Native
+`31329773507` at `330/330`; the control-flow target passes everywhere.
 
 The task-supervision implementation is directly validated at candidate head
 `09c1b1046`: Linux Native `31307387144` passes `326/326`, macOS Native

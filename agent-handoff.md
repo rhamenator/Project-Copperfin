@@ -146,8 +146,12 @@ handle-lifetime, or `AWAIT` contracts. A new real-PRG regression drives two
 spawned watchers against one handle, retains the completed result and output,
 and then consumes the task through `AWAIT`. The GCC control-flow target passes
 in 6.94 seconds; the same full target passes under Clang 21 ThreadSanitizer in
-382.70 seconds with no race or deadlock finding. Hosted evidence remains to be
-recorded on the corrective PR head.
+382.70 seconds with no race or deadlock finding. At exact candidate head
+`e93686326`, Linux Native `31329773481` and macOS Native `31329773480` pass
+`331/331`, macOS also passes the four-locale matrix at `8/8`, and Windows
+Native `31329773507` passes `330/330`. The control-flow target passes on every
+platform. Candidate protected checks conclude seven successes plus the
+non-failing neutral Socket project report.
 
 ## V1 .NET interop durable-audit boundary candidate
 

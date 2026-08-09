@@ -86,3 +86,10 @@ control-flow target passes in 6.94 seconds. The complete target passes under
 Clang 21 ThreadSanitizer in 382.70 seconds with no race or deadlock finding.
 This correction changes synchronization only; all public task-supervision
 semantics above remain unchanged.
+
+At exact corrective candidate head `e93686326`, Linux Native run
+`31329773481` and macOS Native run `31329773480` pass `331/331`, macOS also
+passes both SET POINT targets under four locales (`8/8`), and Windows Native
+run `31329773507` passes `330/330`. Every platform executes
+`test_prg_engine_control_flow` successfully. Candidate protected checks
+conclude seven successes plus the non-failing neutral Socket project report.
