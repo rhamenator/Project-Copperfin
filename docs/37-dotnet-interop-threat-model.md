@@ -71,6 +71,16 @@ The record always carries actor, capability, decision, outcome, and stable
 diagnostic code. The serializer escapes control characters and quotes so one
 untrusted value cannot forge an additional record.
 
+## Verification Evidence
+
+At exact implementation head `5c6ccfa79`, focused GCC policy, runtime-pipeline,
+and locale-install contracts pass `3/3`; Clang 21 ASan/UBSan passes the policy
+model `1/1`; and focused Clang static analysis reports no findings. Hosted
+Linux Native run `31297811840` and macOS Native run `31297811846` pass
+`325/325`; Windows Native run `31297811822` passes `324/324`.
+`test_platform_models` passes in every matrix, the macOS four-locale SET POINT
+matrix passes `8/8`, and all eight protected PR checks pass at that head.
+
 ## Nonclaims And Later Work
 
 This slice does not load an assembly, launch a process, provide a PRG job

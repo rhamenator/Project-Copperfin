@@ -19,9 +19,13 @@ immutable completion records and never enter mutable runtime state directly.
 This slice neither executes managed code nor implements that PRG job facade.
 Focused GCC passes the policy model, runtime pipeline, and locale-install
 contracts (`3/3`); Clang 21 ASan/UBSan passes the policy model (`1/1`), and a
-focused Clang static-analysis pass reports no findings. Hosted evidence remains
-to be recorded before merge. No stub or no-op was added, so the runtime stub
-inventory is unchanged.
+focused Clang static-analysis pass reports no findings. Exact implementation
+head `5c6ccfa79` passes Linux Native `31297811840` at `325/325`, macOS Native
+`31297811846` at `325/325` plus the four-locale SET POINT matrix at `8/8`, and
+Windows Native `31297811822` at `324/324`; every platform executes
+`test_platform_models` successfully. All eight protected PR checks pass at the
+same head. No stub or no-op was added, so the runtime stub inventory is
+unchanged.
 
 ## V1 polyglot invocation-request serialization candidate
 
