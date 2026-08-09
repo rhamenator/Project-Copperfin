@@ -26,8 +26,8 @@ This folder captures the current plan for a new platform that can:
 Interop maturity:
 
 - Version 1 is anchored on Visual FoxPro 9 compatibility. VFP 6, VFP 7, and VFP 8 assets may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate targets. Older Fox Software and xBase-family assets may become wishlist interpretation/inspection targets, but producing binaries for those products is not in the current scope.
-- Current .NET support is an early modernization path, not a general managed-runtime surface: the build host can publish a generated C# launcher/stub that the native runtime pipeline starts as a child process, while generated C# transpilation output is only an emitted artifact today. Portable bridge prerequisites now include bounded process ownership, deterministic invocation-request serialization, and strict response-envelope admission, but they are not yet connected into a PRG-facing dispatch/supervision API.
-- Polyglot capability use does not require foreign-language syntax inside FP/VFP source files. The intended boundary keeps PRG code in control through stable capability calls and, for asynchronous work, future bounded status/cancel/result operations; foreign runtime threads must not enter Copperfin runtime state directly.
+- Current .NET support is an early modernization path, not a general managed-runtime surface: the build host can publish a generated C# launcher/stub that the native runtime pipeline starts as a child process, while generated C# transpilation output is only an emitted artifact today. Portable bridge prerequisites now include bounded process ownership, deterministic invocation-request serialization, strict response-envelope admission, and a PRG task-supervision seam, but no admitted external-artifact adapter is connected to that seam yet.
+- Polyglot capability use does not require foreign-language syntax inside FP/VFP source files. PRG code can supervise existing `SPAWN` work through nonblocking `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()` calls; future external adapters must reuse this runtime-owned boundary, and foreign runtime threads must not enter Copperfin runtime state directly.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook. These capabilities should stay behind a user-selected modernization target until they are implemented and tested end-to-end.
 
 Requirements Recovery:
@@ -65,6 +65,8 @@ License documents:
   — optional defense-in-depth boundary/malformed-input coverage for the DBF header parser
 - [`docs/37-dotnet-interop-threat-model.md`](docs/37-dotnet-interop-threat-model.md)
   — fail-closed .NET policy gates and the PRG-supervised foreign-work boundary
+- [`docs/38-prg-task-supervision.md`](docs/38-prg-task-supervision.md)
+  — nonblocking PRG task status, cancellation, result, and output contract
 - [`docs/archive/commercial-licensing-2026/`](docs/archive/commercial-licensing-2026/README.md)
   — inactive, preserved commercial/source-available planning documents
 - [`SECURITY.md`](SECURITY.md)

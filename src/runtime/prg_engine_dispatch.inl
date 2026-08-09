@@ -2319,7 +2319,7 @@
                         std::move(call_argument_references));
                 }
 
-                const int handle = allocate_async_task_handle();
+                const long long handle = allocate_async_task_handle();
                 auto task = std::make_shared<AsyncTaskState>();
                 task->handle = handle;
                 task->routine_name = target;
@@ -2377,7 +2377,7 @@
                 {
                     return {};
                 }
-                const int handle = static_cast<int>(std::llround(value_as_number(*handle_value)));
+                const long long handle = std::llround(value_as_number(*handle_value));
                 const std::shared_ptr<AsyncTaskState> task = find_async_task(handle);
                 if (task == nullptr)
                 {
@@ -2390,8 +2390,7 @@
                 }
 
                 task->future.wait();
-                task->result = task->future.get();
-                task->finished = true;
+                (void)refresh_async_task_completion(task);
 
                 if (!task->result.events.empty())
                 {

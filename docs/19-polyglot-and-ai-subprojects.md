@@ -27,6 +27,9 @@ Current maturity:
 - A portable serializer now emits the versioned invocation request in fixed,
   compact field order after strict identity and arguments-object admission; the
   matching response parser admits only the checked-in success/error shapes.
+- Existing `SPAWN` tasks now have a nonblocking PRG supervision seam for
+  status, cooperative cancellation, retained return values, and completed
+  print output. No external artifact adapter is connected to it yet.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
 - .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
 
@@ -157,11 +160,11 @@ passes both `SET POINT` targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and
 `de_DE.UTF-8` (`8/8`). All eight protected PR checks pass.
 
 This is serialization only. It does not choose or authorize an artifact, write
-or send the request, capture output, dispatch from PRG, or implement
-asynchronous supervision. The intended later runtime boundary keeps FP/VFP
-source in control through capability operations and bounded status,
-cancellation, and result retrieval; foreign runtime threads must not enter
-mutable Copperfin runtime state directly.
+or send the request, capture process output, or dispatch an external route from
+PRG. The separate task-supervision seam now keeps FP/VFP source in control of
+existing `SPAWN` workers through bounded status, cancellation, result, and
+completed print-output retrieval; a later artifact adapter must reuse it, and
+foreign runtime threads must not enter mutable Copperfin runtime state directly.
 
 ## Response Envelope Admission v1
 

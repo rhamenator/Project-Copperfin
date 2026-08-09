@@ -386,10 +386,13 @@ at `325/325`, Windows Native `31294519761` at `324/324`, and the named
 interop-envelope regression on every platform. The macOS four-locale
 `SET POINT` matrix passes `8/8`, and all eight protected PR checks pass. This
 serializer does not select or authorize an artifact, send the request, capture
-process output, or
-wire runtime-host/PRG dispatch. The intended later PRG boundary keeps FP/VFP
-source in control through bounded capability status/cancel/result operations;
-foreign runtime threads do not directly enter mutable runtime state.
+process output, or wire runtime-host/PRG dispatch. The existing `SPAWN` task
+registry now supplies the nonblocking PRG half of that boundary through
+`CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()`;
+supervision reads retain completion data until legacy `AWAIT` consumes the
+task, and monotonic non-reused handles prevent stale-task aliasing. No external
+artifact is connected yet, and foreign runtime threads do not directly enter
+mutable runtime state.
 
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.

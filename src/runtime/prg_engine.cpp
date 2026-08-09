@@ -831,7 +831,7 @@ namespace copperfin::runtime
 
         struct AsyncTaskState
         {
-            int handle = 0;
+            long long handle = 0;
             std::string routine_name;
             std::string source_path;
             std::shared_ptr<std::atomic<bool>> cancel_requested;
@@ -843,8 +843,8 @@ namespace copperfin::runtime
         struct RuntimeConcurrencyState
         {
             std::mutex mutex;
-            std::map<int, std::map<int, std::shared_ptr<AsyncTaskState>>> async_tasks_by_session;
-            std::map<int, int> next_async_task_handle_by_session;
+            std::map<int, std::map<long long, std::shared_ptr<AsyncTaskState>>> async_tasks_by_session;
+            std::map<int, long long> next_async_task_handle_by_session;
             std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_sections;
             std::map<std::string, std::string> table_lock_owner_by_resource;
             std::map<std::string, std::map<std::size_t, std::string>> record_lock_owner_by_resource;
@@ -2821,6 +2821,10 @@ namespace copperfin::runtime
             [this](const std::string &function, const std::vector<PrgValue> &arguments)
             {
                 return cursor_buffering_function(function, arguments);
+            },
+            [this](const std::string &function, const std::vector<PrgValue> &arguments)
+            {
+                return async_task_control_function(function, arguments);
             },
             [this](const std::string &category, const std::string &detail)
             {

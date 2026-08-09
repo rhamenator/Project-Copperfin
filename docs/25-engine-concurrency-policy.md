@@ -4,6 +4,7 @@ This document defines the runtime invariants for Copperfin's in-memory coordinat
 
 - `SPAWN`
 - `AWAIT`
+- `CFTASKSTATUS()`, `CFTASKCANCEL()`, `CFTASKRESULT()`, and `CFTASKOUTPUT()`
 - `YIELD`
 - `ENTER CRITICAL`
 - `EXIT CRITICAL`
@@ -73,6 +74,9 @@ Fast failure is intentional. The engine must not convert a critical section into
 ### 4. Non-blocking cooperative operations remain allowed
 
 - `YIELD` is allowed while a critical section is held because it does not wait on external completion, time, or lock ownership.
+- The `CFTASK*()` supervision functions are allowed while a critical section is
+  held. They use a zero-duration readiness probe or an atomic cancellation
+  request and never join a worker. `AWAIT` remains the blocking join.
 - Pure computation, local state updates, and other non-blocking operations are allowed.
 
 The policy is specifically about blocking behavior, not about banning all coordination-aware statements inside critical sections.
