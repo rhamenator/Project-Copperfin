@@ -6,11 +6,14 @@
   removes descendants after every terminal path. Windows uses a suspended root
   assigned to a kill-on-close Job Object before execution; POSIX uses a new
   process group plus a close-on-exec launch-status pipe and `execve`. Focused
-  GCC, Clang, native-isolation, and ASan/UBSan tests pass locally. This is an
-  execution primitive only: artifact authorization/hash trust, envelope
+  GCC, Clang, native-isolation, and ASan/UBSan tests pass locally. Exact head
+  `36f25b1e5` also passes Linux Native `324/324` (`31284210937`), macOS Native
+  `324/324` plus the existing four-locale matrix (`31284210940`), and Windows
+  Native `323/323` (`31284210974`), with the bounded-process regression
+  executed on every platform. This is an execution primitive only: artifact
+  authorization/hash trust, envelope
   validation, output capture, retry/fallback, telemetry, adapter wiring, and
-  PRG runtime routing remain unimplemented, and hosted Windows/macOS evidence
-  is still required.
+  PRG runtime routing remain unimplemented.
 
 - 2026-08-08: Completed the #4898 launcher-key-generation safety record. The
   durable report maps both declared DQ requirements to all three DV evidence
