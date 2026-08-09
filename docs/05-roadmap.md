@@ -435,9 +435,13 @@ fallbacks, and fixed 1 MiB payload ceilings make the helpers suitable for PRG
 control-plane envelopes without implying authentication or encryption.
 Focused portable and real-session tests pass under GCC and Clang 21
 ASan/UBSan; a broader seven-test GCC contract set and focused analyzer checks
-also pass. File hashing, signing, message authentication, key handling, safe
-HTTP, collection utilities, artifact admission, and external dispatch remain
-separate.
+also pass. Exact candidate head `08fe8dd98` passes Linux Native
+`31321075915` and macOS Native `31321075953` at `331/331`, the macOS
+four-locale SET POINT matrix at `8/8`, and Windows Native `31321075911` at
+`330/330`; both payload targets pass everywhere and all eight candidate-head
+protected checks are green. File hashing, signing, message authentication, key
+handling, safe HTTP, collection utilities, artifact admission, and external
+dispatch remain separate.
 
 Current v1 runtime-parity work under trusted #4913/#4914 recovers the shipped
 VFP9 `SET POINT` display contract and corrects the demonstrated Currency path.

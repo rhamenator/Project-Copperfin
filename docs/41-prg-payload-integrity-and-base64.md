@@ -90,4 +90,8 @@ The platform test touches no filesystem; the PRG test owns one unique temporary
 directory for its source fixture. Both pass under GCC and Clang 21 ASan/UBSan.
 The final-source GCC package, isolation, audit-stream, security-control,
 focused, and broad runtime-surface set passes `7/7`; focused Clang analyzer
-checks report no project diagnostic.
+checks report no project diagnostic. At exact candidate head `08fe8dd98`,
+Linux Native run `31321075915` and macOS Native run `31321075953` pass
+`331/331`, the macOS four-locale SET POINT matrix passes `8/8`, and Windows
+Native run `31321075911` passes `330/330`. Both focused targets pass in all
+three native runs, and all eight candidate-head protected checks are green.

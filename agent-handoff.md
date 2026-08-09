@@ -21,9 +21,13 @@ network-free, and child-process-free. The full contract and security nonclaims a
 `docs/41-prg-payload-integrity-and-base64.md`. SHA-256 does not authenticate a
 sender and Base64 is not encryption; this slice does not hash files, handle
 keys, sign or authenticate messages, admit artifacts, access the network, or
-execute external code. Hosted evidence remains to be recorded before merge. No
-stub or no-op was added, so the runtime stub
-inventory is unchanged.
+execute external code. Hosted evidence is complete at exact candidate head
+`08fe8dd98`: Linux Native `31321075915` and macOS Native `31321075953` pass
+`331/331`, macOS also passes the four-locale SET POINT matrix at `8/8`, and
+Windows Native `31321075911` passes `330/330`. Both payload-focused targets
+pass on every native platform, and all eight candidate-head protected checks
+are green. No stub or no-op was added, so the runtime stub inventory is
+unchanged.
 
 ## V1 PRG safe-regex control-plane candidate
 
