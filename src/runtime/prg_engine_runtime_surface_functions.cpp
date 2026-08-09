@@ -358,6 +358,42 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             ? make_string_value(std::move(result.text))
             : fallback();
     }
+    if (function == "cfhmacsha256") {
+        const auto fallback = [&]() {
+            return arguments.size() >= 3U
+                ? arguments[2]
+                : make_string_value(std::string{});
+        };
+        if (arguments.size() < 2U || arguments[0].kind != PrgValueKind::string ||
+            arguments[1].kind != PrgValueKind::string) {
+            return fallback();
+        }
+        const auto result = copperfin::security::payload_hmac_sha256_hex(
+            arguments[0].string_value,
+            arguments[1].string_value);
+        return result.ok()
+            ? make_string_value(result.text)
+            : fallback();
+    }
+    if (function == "cfhmacverify") {
+        const auto fallback = [&]() {
+            return arguments.size() >= 4U
+                ? arguments[3]
+                : make_boolean_value(false);
+        };
+        if (arguments.size() < 3U || arguments[0].kind != PrgValueKind::string ||
+            arguments[1].kind != PrgValueKind::string ||
+            arguments[2].kind != PrgValueKind::string) {
+            return fallback();
+        }
+        const auto result = copperfin::security::payload_hmac_sha256_verify(
+            arguments[0].string_value,
+            arguments[1].string_value,
+            arguments[2].string_value);
+        return result.ok()
+            ? make_boolean_value(result.matches)
+            : fallback();
+    }
 
     auto safe_int_argument = [&](std::size_t index, int default_value) {
         if (index >= arguments.size()) {

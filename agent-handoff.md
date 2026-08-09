@@ -1,5 +1,30 @@
 # Agent Handoff
 
+## V1 PRG HMAC payload-authentication candidate
+
+The approved native parity pack now adds `CFHMACSHA256()` and
+`CFHMACVERIFY()` over exact PRG key/data bytes. Generation returns canonical
+lowercase HMAC-SHA256. Verification admits only canonical 64-character
+lowercase hex, examines every admitted character, returns logical false for an
+ordinary mismatch, and preserves a caller's optional typed fallback for
+malformed input or internal failure. Non-character values fail rather than
+being silently stringified, and fixed 1 MiB ceilings apply independently to
+the key and payload.
+
+Focused native and real-session GCC targets pass `2/2`, including empty and
+RFC 4231 vectors, long-key, binary key/data, exact-bound, mismatch,
+malformed-digest, and typed-fallback coverage. Both targets pass under Clang 21
+ASan/UBSan `2/2`; focused analyzer checks report no project diagnostic. The
+final-source GCC package, isolation, audit-stream, security-control, focused,
+and broad runtime-surface set passes `7/7` in 175.73 seconds. The helper
+performs no file, environment, network,
+child-process, artifact-admission, external-execution, audit-stream, or
+callback access. It does not generate, derive, store, rotate, erase, or
+distribute keys; PRG strings are not a dedicated secret container. The full
+contract is in `docs/41-prg-payload-integrity-and-base64.md`. Hosted evidence
+remains pending. No stub or no-op was added, so the runtime stub inventory is
+unchanged.
+
 ## V1 PRG payload-integrity and Base64 candidate
 
 The approved native parity pack now includes `CFSHA256()`,

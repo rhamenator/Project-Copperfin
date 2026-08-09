@@ -6,6 +6,8 @@
 
 #include "copperfin/security/sha256.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <utility>
 
@@ -15,6 +17,9 @@ namespace {
 
 constexpr char kBase64Alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+constexpr std::size_t kSha256BlockBytes = 64U;
+constexpr std::size_t kSha256DigestBytes = 32U;
+constexpr std::size_t kSha256HexBytes = kSha256DigestBytes * 2U;
 
 int decode_base64_char(const char value) noexcept {
     if (value >= 'A' && value <= 'Z') {
@@ -39,6 +44,33 @@ PayloadCryptoResult failure(const PayloadCryptoError error) {
     return {.error = error, .text = {}};
 }
 
+int decode_lower_hex_char(const char value) noexcept {
+    if (value >= '0' && value <= '9') {
+        return value - '0';
+    }
+    if (value >= 'a' && value <= 'f') {
+        return (value - 'a') + 10;
+    }
+    return -1;
+}
+
+bool decode_sha256_hex(
+    const std::string_view hex,
+    std::array<std::uint8_t, kSha256DigestBytes>& bytes) noexcept {
+    if (hex.size() != kSha256HexBytes) {
+        return false;
+    }
+    for (std::size_t index = 0U; index < bytes.size(); ++index) {
+        const int high = decode_lower_hex_char(hex[index * 2U]);
+        const int low = decode_lower_hex_char(hex[index * 2U + 1U]);
+        if (high < 0 || low < 0) {
+            return false;
+        }
+        bytes[index] = static_cast<std::uint8_t>((high << 4U) | low);
+    }
+    return true;
+}
+
 }  // namespace
 
 PayloadCryptoResult payload_sha256_hex(const std::string_view input) {
@@ -49,6 +81,75 @@ PayloadCryptoResult payload_sha256_hex(const std::string_view input) {
     return hashed.ok
         ? PayloadCryptoResult{.error = PayloadCryptoError::none, .text = hashed.hex_digest}
         : failure(PayloadCryptoError::hash_failed);
+}
+
+PayloadCryptoResult payload_hmac_sha256_hex(
+    const std::string_view key,
+    const std::string_view input) {
+    if (key.size() > kPayloadCryptoMaxBytes || input.size() > kPayloadCryptoMaxBytes) {
+        return failure(PayloadCryptoError::input_too_large);
+    }
+
+    std::array<std::uint8_t, kSha256BlockBytes> key_block{};
+    if (key.size() > key_block.size()) {
+        const auto key_hash = sha256_hex_for_text(std::string(key));
+        std::array<std::uint8_t, kSha256DigestBytes> key_digest{};
+        if (!key_hash.ok || !decode_sha256_hex(key_hash.hex_digest, key_digest)) {
+            return failure(PayloadCryptoError::hash_failed);
+        }
+        std::copy(key_digest.begin(), key_digest.end(), key_block.begin());
+    } else {
+        std::transform(
+            key.begin(),
+            key.end(),
+            key_block.begin(),
+            [](const char value) { return static_cast<std::uint8_t>(value); });
+    }
+
+    std::string inner_input(kSha256BlockBytes, '\0');
+    std::string outer_input(kSha256BlockBytes, '\0');
+    for (std::size_t index = 0U; index < key_block.size(); ++index) {
+        inner_input[index] = static_cast<char>(key_block[index] ^ 0x36U);
+        outer_input[index] = static_cast<char>(key_block[index] ^ 0x5cU);
+    }
+    inner_input.append(input);
+    const auto inner_hash = sha256_hex_for_text(inner_input);
+    std::array<std::uint8_t, kSha256DigestBytes> inner_digest{};
+    if (!inner_hash.ok || !decode_sha256_hex(inner_hash.hex_digest, inner_digest)) {
+        return failure(PayloadCryptoError::hash_failed);
+    }
+    outer_input.append(
+        reinterpret_cast<const char*>(inner_digest.data()),
+        inner_digest.size());
+    const auto outer_hash = sha256_hex_for_text(outer_input);
+    return outer_hash.ok
+        ? PayloadCryptoResult{.error = PayloadCryptoError::none, .text = outer_hash.hex_digest}
+        : failure(PayloadCryptoError::hash_failed);
+}
+
+PayloadCryptoVerificationResult payload_hmac_sha256_verify(
+    const std::string_view key,
+    const std::string_view input,
+    const std::string_view expected_hex_digest) {
+    if (key.size() > kPayloadCryptoMaxBytes || input.size() > kPayloadCryptoMaxBytes) {
+        return {.error = PayloadCryptoError::input_too_large, .matches = false};
+    }
+    std::array<std::uint8_t, kSha256DigestBytes> expected_bytes{};
+    if (!decode_sha256_hex(expected_hex_digest, expected_bytes)) {
+        return {.error = PayloadCryptoError::invalid_digest, .matches = false};
+    }
+    const auto actual = payload_hmac_sha256_hex(key, input);
+    if (!actual.ok()) {
+        return {.error = actual.error, .matches = false};
+    }
+
+    unsigned int difference = 0U;
+    for (std::size_t index = 0U; index < kSha256HexBytes; ++index) {
+        difference |= static_cast<unsigned int>(
+            static_cast<unsigned char>(actual.text[index]) ^
+            static_cast<unsigned char>(expected_hex_digest[index]));
+    }
+    return {.error = PayloadCryptoError::none, .matches = difference == 0U};
 }
 
 PayloadCryptoResult payload_base64_encode(const std::string_view input) {
