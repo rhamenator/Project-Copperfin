@@ -102,6 +102,11 @@
   retained result/output plus unchanged final `AWAIT` consumption. The focused
   GCC control-flow test passes in 6.94 seconds, and the full target passes under
   Clang 21 ThreadSanitizer in 382.70 seconds with no race or deadlock finding.
+  Exact candidate `e93686326` passes Linux Native `31329773481` and macOS
+  Native `31329773480` at `331/331`, the macOS four-locale matrix at `8/8`,
+  and Windows Native `31329773507` at `330/330`; the control-flow target passes
+  everywhere. Candidate protected checks conclude seven successes plus the
+  non-failing neutral Socket project report.
 
 - 2026-08-09: Added the #279 durable .NET policy-audit boundary. Audited policy
   allows now expose `pending_audit`, not an executable route, until
