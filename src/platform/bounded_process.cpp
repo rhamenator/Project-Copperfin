@@ -287,24 +287,31 @@ void read_windows_capture_pipe(
     const std::uint32_t limit,
     CapturedStreamState& state) {
     char buffer[8192];
-    for (;;) {
-        DWORD read = 0U;
-        if (::ReadFile(
-                read_handle, buffer, static_cast<DWORD>(sizeof(buffer)),
-                &read, nullptr) == FALSE) {
-            const DWORD error = ::GetLastError();
-            if (error != ERROR_BROKEN_PIPE) {
-                state.native_error.store(static_cast<int>(error), std::memory_order_release);
+    try {
+        for (;;) {
+            DWORD read = 0U;
+            if (::ReadFile(
+                    read_handle, buffer, static_cast<DWORD>(sizeof(buffer)),
+                    &read, nullptr) == FALSE) {
+                const DWORD error = ::GetLastError();
+                if (error != ERROR_BROKEN_PIPE) {
+                    state.native_error.store(
+                        static_cast<int>(error), std::memory_order_release);
+                }
+                break;
             }
-            break;
+            if (read == 0U) {
+                break;
+            }
+            append_captured_bytes(
+                output, buffer, static_cast<std::size_t>(read), limit, state);
+            if (state.limit_exceeded.load(std::memory_order_acquire)) {
+                break;
+            }
         }
-        if (read == 0U) {
-            break;
-        }
-        append_captured_bytes(output, buffer, static_cast<std::size_t>(read), limit, state);
-        if (state.limit_exceeded.load(std::memory_order_acquire)) {
-            break;
-        }
+    } catch (...) {
+        state.native_error.store(
+            static_cast<int>(ERROR_NOT_ENOUGH_MEMORY), std::memory_order_release);
     }
     (void)::CloseHandle(read_handle);
 }
@@ -735,30 +742,34 @@ void read_posix_capture_pipe(
     const std::uint32_t limit,
     CapturedStreamState& state) {
     char buffer[8192];
-    for (;;) {
-        const ssize_t count = ::read(descriptor, buffer, sizeof(buffer));
-        if (count < 0 && errno == EINTR) {
-            continue;
-        }
-        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            if (state.stop_requested.load(std::memory_order_acquire)) {
+    try {
+        for (;;) {
+            const ssize_t count = ::read(descriptor, buffer, sizeof(buffer));
+            if (count < 0 && errno == EINTR) {
+                continue;
+            }
+            if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+                if (state.stop_requested.load(std::memory_order_acquire)) {
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1U));
+                continue;
+            }
+            if (count < 0) {
+                state.native_error.store(errno, std::memory_order_release);
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1U));
-            continue;
+            if (count == 0) {
+                break;
+            }
+            append_captured_bytes(
+                output, buffer, static_cast<std::size_t>(count), limit, state);
+            if (state.limit_exceeded.load(std::memory_order_acquire)) {
+                break;
+            }
         }
-        if (count < 0) {
-            state.native_error.store(errno, std::memory_order_release);
-            break;
-        }
-        if (count == 0) {
-            break;
-        }
-        append_captured_bytes(
-            output, buffer, static_cast<std::size_t>(count), limit, state);
-        if (state.limit_exceeded.load(std::memory_order_acquire)) {
-            break;
-        }
+    } catch (...) {
+        state.native_error.store(ENOMEM, std::memory_order_release);
     }
     (void)::close(descriptor);
 }
