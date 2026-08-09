@@ -383,7 +383,11 @@ cannot delay timeout or cancellation. Focused GCC passes `3/3` with package and
 isolation contracts and repeats the bounded-process target 20 times; Clang 21
 ASan/UBSan and ThreadSanitizer also pass. Focused analyzer coverage reports no
 diagnostic in the owned files and one pre-existing dead store in unchanged
-`query_translator.cpp`. Hosted input-transport evidence remains required. These slices still do not
+`query_translator.cpp`. At exact candidate head `301d74bf5`, Linux Native
+`31340579206` and macOS Native `31340580178` pass `331/331`, macOS also passes
+the four-locale SET POINT matrix at `8/8`, and Windows Native `31340581094`
+passes `330/330`; all three execute `test_bounded_process` successfully. All
+eight candidate-head protected checks pass. These slices still do not
 authorize/hash an artifact, automatically connect the serializer or response
 parser, implement fallback/telemetry, select a route, or connect external code
 to PRG execution.

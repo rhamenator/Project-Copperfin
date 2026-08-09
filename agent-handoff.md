@@ -37,12 +37,13 @@ pre-cancellation/pre-timeout output while retaining the existing
 argv/environment/tree tests. The input extension also passes Clang 21
 ASan/UBSan and ThreadSanitizer. Focused analyzer coverage reports no diagnostic
 in the owned files; its one report is the pre-existing dead store in unchanged
-`query_translator.cpp`. The preceding output candidate `93350a1a6`
-passes Linux Native `31334334063` and
-macOS Native `31334334101` at `331/331`, the macOS four-locale SET POINT
-matrix at `8/8`, and Windows Native `31334334089` at `330/330`;
-`test_bounded_process` passes on every platform. All eight candidate-head
-protected checks pass. The input extension still requires hosted validation.
+`query_translator.cpp`. Exact input-transport candidate `301d74bf5` passes
+Linux Native `31340579206` and macOS Native `31340580178` at `331/331`, the
+macOS four-locale SET POINT matrix at `8/8`, and Windows Native `31340581094`
+at `330/330`; `test_bounded_process` passes on every platform. All eight
+candidate-head protected checks pass. Windows diagnostics are pre-existing
+warnings in unchanged runtime sources, with none in this slice's implementation
+or test.
 No artifact authorization/hashing, automatic serializer/parser connection,
 route selection, fallback, telemetry, PRG dispatch, or external-language
 adapter is added; the runtime stub inventory is unchanged.
