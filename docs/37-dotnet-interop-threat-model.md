@@ -56,9 +56,15 @@ is initially scoped only to `safe-http-helpers`. A request is rejected before a
 
 Stable machine diagnostics use the `dotnet.interop.*` namespace. Human-facing
 reason text remains localizable and must not be parsed as a machine contract.
-An allow decision with `audit_commit_required=true` is conditional: the caller
-must durably append the returned event before invoking managed code. Rejection
-and native-fallback events must also be recorded when auditing is required.
+An allow decision with `audit_commit_required=true` is conditional and carries
+the non-executable `pending_audit` path. The caller must use
+`evaluate_and_commit_dotnet_interop_call` with a trusted audit sink before an
+executable `dotnet` path can be returned. The sink contract is a function
+pointer plus opaque context, avoiding an owning callback wrapper. Missing,
+failed, empty-receipt, or throwing sinks return
+`dotnet.interop.audit_commit_failed` and `reject`; no managed route is exposed.
+Rejection and native-fallback events are committed through the same boundary
+when auditing is required.
 
 `serialize_dotnet_interop_audit_event` emits one compact JSON object with fixed
 field order:
@@ -69,7 +75,15 @@ field order:
 
 The record always carries actor, capability, decision, outcome, and stable
 diagnostic code. The serializer escapes control characters and quotes so one
-untrusted value cannot forge an additional record.
+untrusted value cannot forge an additional record. It emits the audit stream's
+field delimiter as JSON `\\u007c`, preserving identity data instead of allowing
+the line format to rewrite it.
+
+The focused durable-adapter regression binds that sink to
+`append_immutable_audit_event_to_contained_file`. A successful receipt is the
+entry's SHA-256 chain hash after the audit implementation has flushed the
+replacement file and directory/write-through state. The gateway treats an
+empty receipt as failure even when a sink incorrectly reports success.
 
 ## Verification Evidence
 
@@ -85,8 +99,9 @@ matrix passes `8/8`, and all eight protected PR checks pass at that head.
 
 This slice does not load an assembly, launch a process, provide a PRG job
 facade, capture worker output, transport an invocation envelope, select or hash
-an artifact, or persist an audit event. The existing bounded-process and
-polyglot envelope primitives remain separate prerequisites. A later adapter
-must derive the verified context from trusted host state, commit required audit
-events, enforce artifact identity at execution time, and expose supervision to
-PRG without allowing foreign-thread runtime re-entry.
+an artifact, or wire a runtime-host/PRG call. The policy API can now require and
+prove an audit commit, and its regression uses the existing contained durable
+audit stream; a later runtime adapter must derive the verified context from
+trusted host state, bind that sink, enforce artifact identity at execution
+time, and expose supervision to PRG without allowing foreign-thread runtime
+re-entry.

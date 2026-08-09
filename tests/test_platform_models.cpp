@@ -412,8 +412,8 @@ void test_dotnet_interop_policy_gateway() {
         allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
         "policy gateway should allow listed .NET parity capabilities within budget");
     expect(
-        allowed.execution_path == "dotnet",
-        "#2493: allowed .NET interop execution path should remain invariant");
+        allowed.execution_path == "pending_audit",
+        "#279: audited .NET interop should not expose an executable path before commit");
     expect(
         allowed.reason == "allowed by policy with audit-required path",
         "#2493: allowed .NET interop reason should preserve default en-US prose");
@@ -421,19 +421,21 @@ void test_dotnet_interop_policy_gateway() {
            "#279: allowed interop should expose a stable diagnostic code");
     expect(allowed.audit_commit_required,
            "#279: an allowed audited call must require durable audit commit before execution");
+    expect(!allowed.audit_committed && allowed.audit_receipt.empty(),
+           "#279: policy evaluation alone must not claim audit persistence");
     expect(allowed.audit_event.actor_id == "prg:main" &&
                allowed.audit_event.capability_id == "task-primitives" &&
                allowed.audit_event.decision == copperfin::platform::DotNetInteropDecision::allow &&
                allowed.audit_event.outcome == "allow",
            "#279: audit event should bind actor, capability, decision, and outcome");
     auto escaped_event = allowed.audit_event;
-    escaped_event.actor_id = "prg:\"main\"\nsecond-line";
+    escaped_event.actor_id = "prg:\"main\"|batch\nsecond-line";
     expect(
         copperfin::platform::serialize_dotnet_interop_audit_event(escaped_event) ==
-            "{\"schema_version\":1,\"actor\":\"prg:\\\"main\\\"\\nsecond-line\","
+            "{\"schema_version\":1,\"actor\":\"prg:\\\"main\\\"\\u007cbatch\\nsecond-line\","
             "\"capability\":\"task-primitives\",\"decision\":\"allow\","
             "\"outcome\":\"allow\",\"diagnostic_code\":\"dotnet.interop.allowed\"}",
-        "#279: audit serialization should be deterministic and prevent line/JSON injection");
+        "#279: audit serialization should be deterministic and preserve JSON through the delimited stream");
 
     const auto missing_actor = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
@@ -600,8 +602,8 @@ void test_dotnet_interop_policy_gateway() {
         spanish_catalog);
     expect(spanish_allowed.reason == "permitida por politica con ruta que requiere auditoria",
            "#2599: es-419 allowed .NET interop reason should localize the prose");
-    expect(spanish_allowed.execution_path == "dotnet",
-           "#2599: es-419 allowed .NET interop should preserve execution-path values");
+    expect(spanish_allowed.execution_path == "pending_audit",
+           "#279: localized policy evaluation should preserve the pending-audit path");
 
     const auto portuguese_denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
@@ -627,8 +629,8 @@ void test_dotnet_interop_policy_gateway() {
         pseudo_allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
         "#2493: pseudo-localized allowed decision enum should remain invariant");
     expect(
-        pseudo_allowed.execution_path == "dotnet",
-        "#2493: pseudo-localized allowed execution path should remain invariant");
+        pseudo_allowed.execution_path == "pending_audit",
+        "#279: pseudo-localized policy evaluation should preserve the pending-audit path");
     expect(
         pseudo_allowed.reason.find("[!! ") != std::string::npos,
         "#2493: pseudo-localized allowed reason should route through the catalog");

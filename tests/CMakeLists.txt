@@ -4659,6 +4659,10 @@ copperfin_add_test(test_platform_models "cf_security;cf_platform_profile"
     test_platform_models.cpp
 )
 
+copperfin_add_test(test_dotnet_interop_audit "cf_security;cf_platform_profile"
+    test_dotnet_interop_audit.cpp
+)
+
 copperfin_add_test(test_polyglot_route_registry cf_platform_profile
     test_polyglot_route_registry.cpp
 )

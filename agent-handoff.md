@@ -1,5 +1,22 @@
 # Agent Handoff
 
+## V1 .NET interop durable-audit boundary candidate
+
+Trusted #279 now has a follow-on candidate that removes the last executable
+interpretation from an uncommitted policy allow. Raw policy evaluation returns
+`pending_audit`; `evaluate_and_commit_dotnet_interop_call` promotes it to
+`dotnet` only after a non-owning function-pointer sink callback reports success with a
+non-empty receipt. Missing, failed, empty-receipt, and throwing sinks return a
+localized `dotnet.interop.audit_commit_failed` rejection. Rejections and native
+fallbacks use the same commit boundary when auditing is required.
+
+The focused adapter regression binds the callback to the existing physically
+contained, locked, hash-chained audit stream and verifies its returned SHA-256
+receipt and chain. Actor, capability, decision, and outcome survive in the
+durable record. This does not execute managed code or wire the runtime host or
+PRG job facade. Focused and hosted evidence remains to be recorded before
+merge; no stub or no-op is introduced.
+
 ## V1 .NET interop security-gate candidate
 
 Trusted #279 now has a fail-closed policy-gateway candidate. A .NET route can

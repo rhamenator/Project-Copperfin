@@ -76,6 +76,22 @@ struct DotNetInteropCallDecision {
     std::string diagnostic_code;
     DotNetInteropAuditEvent audit_event{};
     bool audit_commit_required = false;
+    bool audit_committed = false;
+    std::string audit_receipt;
+};
+
+struct DotNetInteropAuditCommitResult {
+    bool ok = false;
+    std::string receipt;
+};
+
+using DotNetInteropAuditCommitFunction = DotNetInteropAuditCommitResult (*)(
+    const DotNetInteropAuditEvent& event,
+    void* context);
+
+struct DotNetInteropAuditSink {
+    DotNetInteropAuditCommitFunction commit = nullptr;
+    void* context = nullptr;
 };
 
 struct LanguageIntegration {
@@ -122,6 +138,15 @@ struct ExtensibilityProfile {
 [[nodiscard]] DotNetInteropCallDecision evaluate_dotnet_interop_call(
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request,
+    const localization::LocalizedCatalog& catalog);
+[[nodiscard]] DotNetInteropCallDecision evaluate_and_commit_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const DotNetInteropAuditSink& sink);
+[[nodiscard]] DotNetInteropCallDecision evaluate_and_commit_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const DotNetInteropAuditSink& sink,
     const localization::LocalizedCatalog& catalog);
 [[nodiscard]] std::string serialize_dotnet_interop_audit_event(
     const DotNetInteropAuditEvent& event);

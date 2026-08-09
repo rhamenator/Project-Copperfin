@@ -32,6 +32,20 @@ std::string decision_name(DotNetInteropDecision decision) {
     return "reject";
 }
 
+std::string audit_json_escape(std::string_view value) {
+    const std::string escaped = json_escape_string(value);
+    std::string result;
+    result.reserve(escaped.size());
+    for (const char ch : escaped) {
+        if (ch == '|') {
+            result += "\\u007c";
+        } else {
+            result.push_back(ch);
+        }
+    }
+    return result;
+}
+
 DotNetInteropCallDecision make_decision(
     const DotNetInteropCallRequest& request,
     DotNetInteropDecision value,
@@ -272,20 +286,71 @@ DotNetInteropCallDecision evaluate_dotnet_interop_call(
             "dotnet.interop.latency_budget_exceeded", rules.require_policy_audit);
     }
 
-    return make_decision(request, DotNetInteropDecision::allow, "dotnet",
+    return make_decision(request, DotNetInteropDecision::allow,
+        rules.require_policy_audit ? "pending_audit" : "dotnet",
         rules.require_policy_audit
             ? extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired")
             : extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy"),
         "dotnet.interop.allowed", rules.require_policy_audit);
 }
 
+DotNetInteropCallDecision evaluate_and_commit_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const DotNetInteropAuditSink& sink) {
+    return evaluate_and_commit_dotnet_interop_call(
+        profile,
+        request,
+        sink,
+        extensibility_profile_catalog());
+}
+
+DotNetInteropCallDecision evaluate_and_commit_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const DotNetInteropAuditSink& sink,
+    const localization::LocalizedCatalog& catalog) {
+    DotNetInteropCallDecision decision =
+        evaluate_dotnet_interop_call(profile, request, catalog);
+    if (!decision.audit_commit_required) {
+        return decision;
+    }
+
+    DotNetInteropAuditCommitResult commit_result;
+    if (sink.commit != nullptr) {
+        try {
+            commit_result = sink.commit(decision.audit_event, sink.context);
+        } catch (...) {
+            commit_result = {};
+        }
+    }
+    if (!commit_result.ok || commit_result.receipt.empty()) {
+        return make_decision(
+            request,
+            DotNetInteropDecision::reject,
+            "none",
+            extensibility_text(
+                catalog,
+                "Platform.Extensibility.DotNetInteropDecision.AuditCommitFailed"),
+            "dotnet.interop.audit_commit_failed",
+            true);
+    }
+
+    decision.audit_committed = true;
+    decision.audit_receipt = std::move(commit_result.receipt);
+    if (decision.decision == DotNetInteropDecision::allow) {
+        decision.execution_path = "dotnet";
+    }
+    return decision;
+}
+
 std::string serialize_dotnet_interop_audit_event(const DotNetInteropAuditEvent& event) {
     std::ostringstream stream;
-    stream << "{\"schema_version\":1,\"actor\":\"" << json_escape_string(event.actor_id)
-           << "\",\"capability\":\"" << json_escape_string(event.capability_id)
-           << "\",\"decision\":\"" << json_escape_string(decision_name(event.decision))
-           << "\",\"outcome\":\"" << json_escape_string(event.outcome)
-           << "\",\"diagnostic_code\":\"" << json_escape_string(event.diagnostic_code) << "\"}";
+    stream << "{\"schema_version\":1,\"actor\":\"" << audit_json_escape(event.actor_id)
+           << "\",\"capability\":\"" << audit_json_escape(event.capability_id)
+           << "\",\"decision\":\"" << audit_json_escape(decision_name(event.decision))
+           << "\",\"outcome\":\"" << audit_json_escape(event.outcome)
+           << "\",\"diagnostic_code\":\"" << audit_json_escape(event.diagnostic_code) << "\"}";
     return stream.str();
 }
 

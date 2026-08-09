@@ -207,6 +207,8 @@ Current gate checks:
 - allowlist/denylist capability matching
 - host-verified actor and exact granted-capability scoping
 - required audit-sink availability with a structured actor/capability/decision/outcome event
+- non-executable `pending_audit` policy allows promoted to `dotnet` only after a
+  successful sink commit returns a non-empty receipt
 - reflection, assembly-loading, external-I/O, and secret-access capability scopes that default closed
 - latency-budget eligibility for in-process managed path
 - reflection restrictions for untrusted or security-sensitive inputs
