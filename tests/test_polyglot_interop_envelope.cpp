@@ -32,6 +32,26 @@ copperfin::platform::PolyglotInteropEnvelopeExpectation expectation() {
         .protocol_version = "1.0.0"};
 }
 
+copperfin::platform::PolyglotInteropInvocationRequest invocation_request() {
+    return {
+        .capability_id = "reports.invoice.render",
+        .correlation_id = "example-correlation-001",
+        .protocol_version = "1.0.0",
+        .arguments_json =
+            R"json({"invoice_id":"INV-001","format":"pdf"})json"};
+}
+
+void expect_request_error(
+    const copperfin::platform::PolyglotInteropInvocationRequest& request,
+    const copperfin::platform::PolyglotInteropInvocationRequestError error,
+    const std::string& error_code,
+    const std::string& message) {
+    const auto result =
+        copperfin::platform::serialize_polyglot_invocation_request(request);
+    expect(!result.ok() && result.error == error && result.error_code == error_code,
+           message);
+}
+
 void expect_error(
     const std::string& document,
     const copperfin::platform::PolyglotInteropEnvelopeExpectation& expected,
@@ -281,6 +301,141 @@ void test_expectation_validation() {
         "#91: response protocol should use semantic version syntax");
 }
 
+void test_request_fixture_and_deterministic_order() {
+    auto expected_document = read_text(COPPERFIN_POLYGLOT_REQUEST_ENVELOPE_PATH);
+    if (!expected_document.empty() && expected_document.back() == '\n') {
+        expected_document.pop_back();
+        if (!expected_document.empty() && expected_document.back() == '\r') {
+            expected_document.pop_back();
+        }
+    }
+
+    const auto request = invocation_request();
+    const auto first =
+        copperfin::platform::serialize_polyglot_invocation_request(request);
+    const auto second =
+        copperfin::platform::serialize_polyglot_invocation_request(request);
+    expect(first.ok() && first.document == expected_document,
+           "#4920: serializer should match the checked-in compact request fixture");
+    expect(second.ok() && second.document == first.document,
+           "#4920: repeated serialization should produce identical bytes");
+    expect(first.document ==
+               R"json({"envelope_version":"1.0","kind":"invocation","capability_id":"reports.invoice.render","correlation_id":"example-correlation-001","protocol_version":"1.0.0","arguments":{"invoice_id":"INV-001","format":"pdf"}})json",
+           "#4920: outer request fields should use the documented fixed order");
+}
+
+void test_request_preserves_arguments_and_escapes_identity() {
+    auto request = invocation_request();
+    request.correlation_id = std::string{"review-\"caf\xC3\xA9\n"};
+    request.arguments_json =
+        " \r\n{\"message\":\"caf\\u00e9\",\"nested\":[true,null,-1.25e+3]}\t ";
+    const auto result =
+        copperfin::platform::serialize_polyglot_invocation_request(request);
+    expect(result.ok(),
+           "#4920: valid Unicode identities and nested argument objects should serialize");
+    expect(result.document.find("\"correlation_id\":\"review-\\\"caf\xC3\xA9\\n\"") !=
+               std::string::npos,
+           "#4920: correlation identity should be JSON-escaped without localization");
+    expect(result.document.ends_with("\"arguments\":" + request.arguments_json + "}"),
+           "#4920: admitted argument object bytes should remain exact in the envelope");
+}
+
+void test_request_identity_and_shape_fail_closed() {
+    using Error = copperfin::platform::PolyglotInteropInvocationRequestError;
+    auto request = invocation_request();
+    request.capability_id = "Invalid Capability";
+    expect_request_error(request, Error::invalid_capability_id,
+                         "polyglot.request.invalid_capability_id",
+                         "#4920: invalid capability identity should fail closed");
+
+    request = invocation_request();
+    request.correlation_id.clear();
+    expect_request_error(request, Error::correlation_id_required,
+                         "polyglot.request.correlation_id_required",
+                         "#4920: correlation identity should be required");
+    request = invocation_request();
+    request.correlation_id.push_back(static_cast<char>(0xC0));
+    expect_request_error(request, Error::invalid_correlation_id,
+                         "polyglot.request.invalid_correlation_id",
+                         "#4920: invalid UTF-8 correlation identity should fail closed");
+
+    request = invocation_request();
+    request.protocol_version = "1.0";
+    expect_request_error(request, Error::invalid_protocol_version,
+                         "polyglot.request.invalid_protocol_version",
+                         "#4920: protocol identity should use semantic-version syntax");
+
+    request = invocation_request();
+    request.arguments_json.clear();
+    expect_request_error(request, Error::arguments_required,
+                         "polyglot.request.arguments_required",
+                         "#4920: arguments should be required");
+    request.arguments_json = " \r\n\t";
+    expect_request_error(request, Error::arguments_required,
+                         "polyglot.request.arguments_required",
+                         "#4920: whitespace-only arguments should be rejected");
+    request.arguments_json = "[]";
+    expect_request_error(request, Error::arguments_object_required,
+                         "polyglot.request.arguments_object_required",
+                         "#4920: arguments should have object shape");
+}
+
+void test_request_ambiguous_and_malformed_arguments_rejected() {
+    using Error = copperfin::platform::PolyglotInteropInvocationRequestError;
+    for (const std::string& invalid : {
+             std::string{R"json({"value":1,"value":2})json"},
+             std::string{R"json({"outer":{"value":1,"value":2}})json"},
+             std::string{R"json({"value":1,"val\u0075e":2})json"},
+             std::string{R"json({"value":01})json"},
+             std::string{R"json({"value":"\ud800"})json"},
+             std::string{R"json({"value":true} trailing)json"}}) {
+        auto request = invocation_request();
+        request.arguments_json = invalid;
+        expect_request_error(request, Error::invalid_arguments_json,
+                             "polyglot.request.invalid_arguments_json",
+                             "#4920: malformed or ambiguous argument JSON should fail closed");
+    }
+
+    auto request = invocation_request();
+    request.arguments_json = "{\"value\":\"";
+    request.arguments_json.push_back(static_cast<char>(0xC0));
+    request.arguments_json += "\"}";
+    expect_request_error(request, Error::invalid_arguments_json,
+                         "polyglot.request.invalid_arguments_json",
+                         "#4920: invalid UTF-8 arguments should fail closed");
+}
+
+void test_request_resource_bounds() {
+    using Error = copperfin::platform::PolyglotInteropInvocationRequestError;
+    auto request = invocation_request();
+    request.max_document_bytes = 0U;
+    expect_request_error(request, Error::invalid_limits,
+                         "polyglot.request.invalid_limits",
+                         "#4920: zero byte budget should be rejected");
+    request = invocation_request();
+    request.max_nesting_depth = 65U;
+    expect_request_error(request, Error::invalid_limits,
+                         "polyglot.request.invalid_limits",
+                         "#4920: hard nesting ceiling should not be disableable");
+
+    request = invocation_request();
+    request.arguments_json = R"json({"outer":{"inner":true}})json";
+    request.max_nesting_depth = 1U;
+    expect_request_error(request, Error::invalid_arguments_json,
+                         "polyglot.request.invalid_arguments_json",
+                         "#4920: argument parsing should honor the nesting budget");
+
+    request = invocation_request();
+    const auto baseline =
+        copperfin::platform::serialize_polyglot_invocation_request(request);
+    expect(baseline.ok() && !baseline.document.empty(),
+           "#4920: baseline request should establish its exact byte size");
+    request.max_document_bytes = baseline.document.size() - 1U;
+    expect_request_error(request, Error::document_too_large,
+                         "polyglot.request.document_too_large",
+                         "#4920: complete serialized request should honor the byte budget");
+}
+
 }  // namespace
 
 int main() {
@@ -291,6 +446,11 @@ int main() {
     test_unicode_and_resource_bounds();
     test_large_bounded_payload();
     test_expectation_validation();
+    test_request_fixture_and_deterministic_order();
+    test_request_preserves_arguments_and_escapes_identity();
+    test_request_identity_and_shape_fail_closed();
+    test_request_ambiguous_and_malformed_arguments_rejected();
+    test_request_resource_bounds();
     if (failures != 0) {
         std::cerr << failures << " polyglot interop envelope test(s) failed\n";
         return 1;

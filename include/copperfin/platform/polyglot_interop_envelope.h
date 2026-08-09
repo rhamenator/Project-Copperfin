@@ -65,8 +65,45 @@ struct PolyglotInteropEnvelopeResult {
     }
 };
 
+enum class PolyglotInteropInvocationRequestError : std::uint8_t {
+    none,
+    invalid_limits,
+    invalid_capability_id,
+    correlation_id_required,
+    invalid_correlation_id,
+    invalid_protocol_version,
+    arguments_required,
+    arguments_object_required,
+    invalid_arguments_json,
+    document_too_large
+};
+
+struct PolyglotInteropInvocationRequest {
+    std::string capability_id;
+    std::string correlation_id;
+    std::string protocol_version;
+    std::string arguments_json;
+    std::size_t max_document_bytes = std::size_t{1024U} * 1024U;
+    std::uint32_t max_nesting_depth = 32U;
+};
+
+struct PolyglotInteropInvocationRequestResult {
+    std::string document;
+    PolyglotInteropInvocationRequestError error =
+        PolyglotInteropInvocationRequestError::none;
+    std::string error_code;
+
+    [[nodiscard]] bool ok() const noexcept {
+        return error == PolyglotInteropInvocationRequestError::none;
+    }
+};
+
 [[nodiscard]] PolyglotInteropEnvelopeResult parse_polyglot_interop_envelope(
     std::string_view document,
     const PolyglotInteropEnvelopeExpectation& expectation);
+
+[[nodiscard]] PolyglotInteropInvocationRequestResult
+serialize_polyglot_invocation_request(
+    const PolyglotInteropInvocationRequest& request);
 
 }  // namespace copperfin::platform
