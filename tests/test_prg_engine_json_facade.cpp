@@ -33,6 +33,7 @@ void test_prg_json_control_plane_facade() {
         "cExact = CFJSONGET(cPayload, '/exact')\n"
         "cMissingType = CFJSONTYPE(cPayload, '/missing')\n"
         "cMissing = CFJSONGET(cPayload, '/missing', 'fallback')\n"
+        "nTypedMissing = CFJSONGET(cPayload, '/missing', 42)\n"
         "cMalformedType = CFJSONTYPE('[1,]')\n"
         "lMalformed = CFJSONVALID('[1,]')\n"
         "cMalformed = CFJSONGET('[1,]', '', 'invalid-fallback')\n"
@@ -63,6 +64,11 @@ void test_prg_json_control_plane_facade() {
            "CFJSONTYPE should distinguish a missing value from invalid JSON");
     expect(formatted("cmissing") == "fallback",
            "CFJSONGET should return the caller fallback for a missing value");
+    const auto typed_missing = state.globals.find("ntypedmissing");
+    expect(typed_missing != state.globals.end() &&
+               typed_missing->second.kind == copperfin::runtime::PrgValueKind::number &&
+               typed_missing->second.number_value == 42.0,
+           "CFJSONGET should preserve the caller fallback type and value");
     expect(formatted("cmalformedtype") == "invalid",
            "CFJSONTYPE should classify malformed JSON as invalid");
     expect(formatted("lmalformed") == "false",
