@@ -924,8 +924,8 @@ void write_posix_input_pipe(
     const std::string_view input,
     InputStreamState& state) noexcept {
     sigset_t blocked_signals;
-    (void)::sigemptyset(&blocked_signals);
-    (void)::sigaddset(&blocked_signals, SIGPIPE);
+    (void)sigemptyset(&blocked_signals);
+    (void)sigaddset(&blocked_signals, SIGPIPE);
     const int signal_error = ::pthread_sigmask(SIG_BLOCK, &blocked_signals, nullptr);
     if (signal_error != 0) {
         state.native_error.store(signal_error, std::memory_order_release);
