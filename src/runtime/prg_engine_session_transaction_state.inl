@@ -513,6 +513,11 @@
             {
                 return false;
             }
+
+            // Multiple spawned supervisors can poll the same handle. Publish
+            // the future's result exactly once and establish a happens-before
+            // edge before any caller reads the immutable completion record.
+            std::lock_guard<std::mutex> completion_lock(task->completion_mutex);
             if (task->finished)
             {
                 return true;

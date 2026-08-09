@@ -324,6 +324,66 @@ void test_spawn_task_supervision_observes_status_result_and_output_without_consu
     fs::remove_all(temp_root, ignored);
 }
 
+void test_spawn_task_supervision_serializes_same_handle_completion_publication() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_task_supervision_same_handle";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "task_supervision_same_handle_test.prg";
+    write_text(
+        main_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 25\n"
+        "    ? 'published once'\n"
+        "    RETURN 42\n"
+        "ENDPROC\n"
+        "PROCEDURE watcher\n"
+        "    DO WHILE CFTASKSTATUS(nTarget) == 'running'\n"
+        "        YIELD\n"
+        "    ENDDO\n"
+        "    RETURN CFTASKRESULT(nTarget)\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nTarget\n"
+        "SPAWN watcher TO nWatcherOne\n"
+        "SPAWN watcher TO nWatcherTwo\n"
+        "AWAIT nWatcherOne TO lWatcherOneDone\n"
+        "AWAIT nWatcherTwo TO lWatcherTwoDone\n"
+        "nRetainedResult = CFTASKRESULT(nTarget)\n"
+        "cRetainedOutput = CFTASKOUTPUT(nTarget)\n"
+        "AWAIT nTarget TO lTargetDone\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "same-handle task-supervision script should complete: " + state.message);
+
+    const auto watcher_one_done = state.globals.find("lwatcheronedone");
+    const auto watcher_two_done = state.globals.find("lwatchertwodone");
+    const auto retained_result = state.globals.find("nretainedresult");
+    const auto retained_output = state.globals.find("cretainedoutput");
+    const auto target_done = state.globals.find("ltargetdone");
+    expect(watcher_one_done != state.globals.end() && watcher_one_done->second.boolean_value,
+           "the first sibling watcher should complete");
+    expect(watcher_two_done != state.globals.end() && watcher_two_done->second.boolean_value,
+           "the second sibling watcher should complete");
+    expect(retained_result != state.globals.end() &&
+               copperfin::runtime::format_value(retained_result->second) == "42",
+           "concurrent watchers should retain the target result without corruption");
+    expect(retained_output != state.globals.end() &&
+               retained_output->second.string_value == "published once",
+           "concurrent watchers should retain the target output without corruption");
+    expect(target_done != state.globals.end() && target_done->second.boolean_value,
+           "the target should remain awaitable after concurrent supervision");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_task_supervision_requests_cooperative_cancellation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_task_supervision_cancel";

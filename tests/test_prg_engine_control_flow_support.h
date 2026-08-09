@@ -137,6 +137,7 @@ void test_sleep_command_emits_runtime_sleep_event();
 void test_sleep_duration_uses_heap_backed_frame_continuations();
 void test_spawn_and_await_command_runs_task_to_completion();
 void test_spawn_task_supervision_observes_status_result_and_output_without_consuming_task();
+void test_spawn_task_supervision_serializes_same_handle_completion_publication();
 void test_spawn_task_supervision_requests_cooperative_cancellation();
 void test_spawn_arguments_use_heap_backed_frame_continuations();
 void test_spawn_cancellation_propagates_to_sibling_tasks();

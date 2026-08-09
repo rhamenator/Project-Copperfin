@@ -137,6 +137,18 @@ plus the four-locale SET POINT matrix at `8/8`, and Windows Native
 `31307387195` passes `325/325`. The control-flow target passes on every
 platform and all eight protected PR checks are green.
 
+A follow-up concurrency audit found that two sibling supervisors could reach
+the same ready future and copy its completion record concurrently. The
+corrective implementation gives each task a dedicated mutex around the
+zero-duration readiness check and one-time result publication. It does not
+serialize unrelated tasks or change status, cancellation, result/output,
+handle-lifetime, or `AWAIT` contracts. A new real-PRG regression drives two
+spawned watchers against one handle, retains the completed result and output,
+and then consumes the task through `AWAIT`. The GCC control-flow target passes
+in 6.94 seconds; the same full target passes under Clang 21 ThreadSanitizer in
+382.70 seconds with no race or deadlock finding. Hosted evidence remains to be
+recorded on the corrective PR head.
+
 ## V1 .NET interop durable-audit boundary candidate
 
 Trusted #279 now has a follow-on candidate that removes the last executable
