@@ -7,7 +7,12 @@
   use the same commit path. The focused adapter regression writes through the
   contained, locked, hash-chained native audit stream and verifies the receipt,
   chain, and durable actor/capability/decision/outcome fields. Managed execution
-  and runtime-host/PRG wiring remain unimplemented.
+  and runtime-host/PRG wiring remain unimplemented. At exact implementation
+  head `af99a3af5`, Linux Native run `31301544541` and macOS Native run
+  `31301544576` pass `326/326`, macOS also passes the four-locale SET POINT
+  matrix at `8/8`, and Windows Native run `31302777143` passes `325/325`;
+  `test_platform_models` and `test_dotnet_interop_audit` pass everywhere, as do
+  all eight protected checks.
 
 - 2026-08-09: Added the #279 .NET interop threat model and fail-closed policy
   context gates. Candidate calls now require a trusted host to bind actor,

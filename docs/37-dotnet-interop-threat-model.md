@@ -95,6 +95,16 @@ Linux Native run `31297811840` and macOS Native run `31297811846` pass
 `test_platform_models` passes in every matrix, the macOS four-locale SET POINT
 matrix passes `8/8`, and all eight protected PR checks pass at that head.
 
+At exact durable-audit implementation head `af99a3af5`, Linux Native run
+`31301544541` and macOS Native run `31301544576` pass `326/326`, and Windows
+Native run `31302777143` passes `325/325`. `test_platform_models` and
+`test_dotnet_interop_audit` pass on all three platforms; macOS also passes both
+SET POINT targets under `C`, `en_US.UTF-8`, `pt_BR.UTF-8`, and `de_DE.UTF-8`
+(`8/8`). All eight protected checks pass at that implementation head. Local
+GCC selected contracts pass `5/5`, focused post-delimiter-hardening contracts
+pass `2/2`, Clang 21 ASan/UBSan passes `2/2`, and focused static analysis reports
+no finding.
+
 ## Nonclaims And Later Work
 
 This slice does not load an assembly, launch a process, provide a PRG job

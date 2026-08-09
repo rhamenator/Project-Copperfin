@@ -14,8 +14,14 @@ The focused adapter regression binds the callback to the existing physically
 contained, locked, hash-chained audit stream and verifies its returned SHA-256
 receipt and chain. Actor, capability, decision, and outcome survive in the
 durable record. This does not execute managed code or wire the runtime host or
-PRG job facade. Focused and hosted evidence remains to be recorded before
-merge; no stub or no-op is introduced.
+PRG job facade. At exact implementation head `af99a3af5`, Linux Native run
+`31301544541` and macOS Native run `31301544576` pass `326/326`, with macOS also
+passing the four-locale SET POINT matrix at `8/8`; exact-SHA Windows Native run
+`31302777143` passes `325/325`. Both `test_platform_models` and
+`test_dotnet_interop_audit` pass on every platform, and all eight protected
+checks pass. The original Windows branch-ref dispatch `31301545011` never
+acquired a runner and was cancelled after the exact-SHA replacement started;
+it is not product evidence. No stub or no-op is introduced.
 
 ## V1 .NET interop security-gate candidate
 
