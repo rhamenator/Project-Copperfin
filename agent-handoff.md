@@ -17,9 +17,15 @@ values, bounding dense-document memory amplification. Focused
 under GCC and Clang 21 ASan/UBSan; the broader runtime-surface, native-isolation,
 and document-install checks also pass under GCC. Focused Clang analyzer checks
 report no project diagnostics. The complete contract is in
-`docs/39-prg-json-control-plane.md`. This slice performs no artifact admission,
-process launch, network access, external-language execution, or runtime-state
-callback; hosted cross-platform evidence still must be attached before merge.
+`docs/39-prg-json-control-plane.md`. Hosted evidence is complete at exact
+candidate head `b507572d1` (product/documentation head `0176d0531` plus a
+test-only typed-fallback assertion): Linux Native `31312190207` and macOS
+Native `31312191221` pass `327/327`, macOS also passes the four-locale SET
+POINT matrix at `8/8`, and Windows Native `31312192368` passes `326/326`.
+`test_platform_models` and `test_prg_engine_json_facade` pass on every native
+platform, and all eight protected checks are green. This slice performs no
+artifact admission, process launch, network access, external-language
+execution, or runtime-state callback.
 
 ## V1 PRG task-supervision candidate
 
