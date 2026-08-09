@@ -175,9 +175,14 @@ int run_helper(
         }
         return 0;
     }
-    if (arguments[0] == "--emit-sleep" && arguments.size() == 2U) {
+    if (arguments[0] == "--emit-sleep" &&
+        (arguments.size() == 2U || arguments.size() == 3U)) {
         std::cout << "before-wait" << std::flush;
         std::cerr << "diagnostic" << std::flush;
+        if (arguments.size() == 3U) {
+            write_marker(
+                copperfin::platform::path_from_utf8_string(arguments[2]), "flushed");
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(std::stoi(arguments[1])));
         return 0;
     }
@@ -349,16 +354,19 @@ int run_tests(const std::filesystem::path& executable) {
         record_suffix_matches && !equivalent_error && working_directory_matches,
         "#4700: argv, working directory, and explicit environment should survive without shell parsing or ambient PATH inheritance");
 
-    std::atomic_int cancellation_polls{0};
+    const fs::path output_flushed_marker = root / "output-flushed.txt";
     const auto cancelled = copperfin::platform::run_bounded_process({
         .executable_path = executable_path,
-        .arguments = {"--emit-sleep", "2000"},
+        .arguments = {
+            "--emit-sleep", "2000",
+            copperfin::platform::path_to_utf8_string(output_flushed_marker)},
         .working_directory = root_path,
         .environment = {},
         .timeout_ms = 3000U,
         .poll_interval_ms = 10U,
-        .cancellation_requested = [&cancellation_polls]() {
-            return cancellation_polls.fetch_add(1) >= 3;
+        .cancellation_requested = [&output_flushed_marker]() {
+            std::error_code marker_error;
+            return fs::exists(output_flushed_marker, marker_error) && !marker_error;
         }});
     expect(cancelled.status == copperfin::platform::BoundedProcessStatus::cancelled &&
                cancelled.started && cancelled.process_tree_closed,

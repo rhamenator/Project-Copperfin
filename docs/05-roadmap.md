@@ -363,8 +363,10 @@ stdout and stderr bytes under independent 1 MiB defaults and fixed 16 MiB hard
 ceilings. Concurrent readers prevent cross-stream pipe deadlock; overflow
 retains the admitted prefix, returns a stream-specific invariant failure, and
 closes the owned descendant tree. Timeout and cancellation retain bytes emitted
-before shutdown. Windows restricts inherited handles to null stdin and the two
-pipe writers. Focused GCC, Clang 21 ASan/UBSan, ThreadSanitizer, 20-run stress,
+before shutdown. POSIX nonblocking drains honor an explicit shutdown signal so
+a retained writer cannot stall capture cleanup. Windows restricts inherited
+handles to null stdin and the two pipe writers. Focused GCC, Clang 21
+ASan/UBSan, ThreadSanitizer, 20-run stress,
 and analyzer evidence passes locally; hosted native evidence remains required.
 These slices still do not authorize/hash an artifact, write a request, validate
 captured envelopes, implement fallback/telemetry, select a route, or connect

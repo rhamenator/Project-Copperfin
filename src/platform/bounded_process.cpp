@@ -143,6 +143,7 @@ bool valid_environment(
 
 struct CapturedStreamState {
     std::atomic_bool limit_exceeded{false};
+    std::atomic_bool stop_requested{false};
     std::atomic_int native_error{0};
 };
 
@@ -712,9 +713,11 @@ bool create_posix_capture_pipe(int descriptors[2]) {
     if (::pipe(descriptors) != 0) {
         return false;
     }
-    const int flags = ::fcntl(descriptors[1], F_GETFD, 0);
-    if (flags == -1 ||
-        ::fcntl(descriptors[1], F_SETFD, flags | FD_CLOEXEC) == -1) {
+    const int read_flags = ::fcntl(descriptors[0], F_GETFL, 0);
+    const int write_flags = ::fcntl(descriptors[1], F_GETFD, 0);
+    if (read_flags == -1 || write_flags == -1 ||
+        ::fcntl(descriptors[0], F_SETFL, read_flags | O_NONBLOCK) == -1 ||
+        ::fcntl(descriptors[1], F_SETFD, write_flags | FD_CLOEXEC) == -1) {
         const int pipe_error = errno;
         (void)::close(descriptors[0]);
         (void)::close(descriptors[1]);
@@ -735,6 +738,13 @@ void read_posix_capture_pipe(
     for (;;) {
         const ssize_t count = ::read(descriptor, buffer, sizeof(buffer));
         if (count < 0 && errno == EINTR) {
+            continue;
+        }
+        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            if (state.stop_requested.load(std::memory_order_acquire)) {
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1U));
             continue;
         }
         if (count < 0) {
@@ -865,6 +875,8 @@ BoundedProcessResult run_posix(const BoundedProcessRequest& request) {
     std::thread stdout_thread;
     std::thread stderr_thread;
     const auto finish_capture = [&]() {
+        stdout_state.stop_requested.store(true, std::memory_order_release);
+        stderr_state.stop_requested.store(true, std::memory_order_release);
         if (stdout_thread.joinable()) {
             stdout_thread.join();
         }

@@ -4,6 +4,8 @@
   the admitted prefix, returns invariant `output-limit-exceeded` status with a
   stream-specific machine error, and closes the entire owned process tree.
   Dedicated concurrent readers prevent either pipe from blocking the other.
+  POSIX readers use nonblocking drains plus an explicit shutdown signal, so a
+  retained writer cannot make capture wait indefinitely after tree shutdown.
   Timeout and cooperative cancellation retain bytes emitted before shutdown.
   Windows uses an explicit process handle list so enabling capture inherits
   only null stdin and the two pipe writers, not unrelated agent/host handles.
