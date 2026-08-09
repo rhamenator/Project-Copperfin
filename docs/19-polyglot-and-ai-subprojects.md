@@ -22,8 +22,9 @@ Current maturity:
 - .NET integration currently exists as an early generated-launcher path: the native runtime pipeline can spawn a generated C# stub as a child process, but generated C# transpilation output is not executed by the runtime host.
 - A portable bounded-process primitive now provides direct executable/argument
   invocation, an explicit child environment, timeout and cancellation handling,
-  and descendant cleanup. It is infrastructure for a future artifact adapter,
-  not a runtime route or language integration by itself.
+  descendant cleanup, and independently bounded exact-byte stdout/stderr
+  capture. It is infrastructure for a future artifact adapter, not a runtime
+  route or language integration by itself.
 - A portable serializer now emits the versioned invocation request in fixed,
   compact field order after strict identity and arguments-object admission; the
   matching response parser admits only the checked-in success/error shapes.
@@ -129,6 +130,16 @@ failure. Both paths poll a finite timeout and a prompt cancellation callback, fa
 closed if that callback throws, return invariant status/error identifiers, and remove
 descendants after timeout, cancellation, launch failure, or normal root exit.
 
+Standard output and error are captured independently as exact bytes. Each positive
+budget defaults to 1 MiB and cannot exceed the fixed 16 MiB hard ceiling. Dedicated
+readers drain both streams concurrently so filling one pipe cannot prevent the other
+from making progress. An overflow retains only that stream's admitted prefix, returns
+`output-limit-exceeded` with `polyglot.process.stdout_limit_exceeded` or
+`polyglot.process.stderr_limit_exceeded`, and closes the complete owned tree. Timeout
+and cancellation retain bytes captured before shutdown. Windows restricts inherited
+handles with `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` to null stdin and the two pipe writers;
+unrelated inheritable host/agent handles remain outside the child.
+
 Focused synthetic tests cover exact exit status, shell-metacharacter arguments, a
 Unicode working path and environment value, absence of ambient `PATH`, live and
 throwing cancellation, timeout cleanup, cleanup after normal root exit, missing
@@ -141,10 +152,17 @@ executes this regression. The earlier macOS textual-path assertion was corrected
 compare filesystem identity for equivalent `/var` and `/private/var` spellings without
 weakening exact argv, Unicode environment, or ambient-`PATH` isolation coverage.
 
+The capture extension adds exact binary/CRLF tests, 256 KiB simultaneous stream
+saturation, independent overflow, retained pre-timeout/pre-cancellation bytes, and
+invalid output budgets. Focused GCC passes and repeats 20 times; Clang 21 ASan/UBSan
+and ThreadSanitizer pass without findings, and focused analyzer checks are clean.
+Hosted Linux/macOS/Windows native evidence remains required for this extension.
+
 This primitive does **not** authorize or hash an artifact, validate migration
-contracts or typed envelopes, capture standard output/error, implement retries or
-fallback, choose a route, emit migration telemetry, or connect any external language
-to the PRG runtime. Those remain separately reviewable adapter and dispatch work.
+contracts or typed envelopes, write a request to the child, validate captured output,
+implement retries or fallback, choose a route, emit migration telemetry, or connect any
+external language to the PRG runtime. Those remain separately reviewable adapter and
+dispatch work.
 
 ## Invocation Request Serialization v1
 

@@ -6,6 +6,7 @@
 #include "copperfin/platform/environment.h"
 #include "copperfin/platform/path.h"
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <exception>
@@ -139,6 +140,47 @@ int run_helper(
         std::this_thread::sleep_for(std::chrono::milliseconds(std::stoi(arguments[1])));
         return 0;
     }
+    if (arguments[0] == "--emit" && arguments.size() == 1U) {
+        const std::string stdout_bytes{"out\0\xFF\n", 6U};
+        const std::string stderr_bytes{"err\r\n", 5U};
+        std::cout.write(stdout_bytes.data(), static_cast<std::streamsize>(stdout_bytes.size()));
+        std::cerr.write(stderr_bytes.data(), static_cast<std::streamsize>(stderr_bytes.size()));
+        return 0;
+    }
+    if (arguments[0] == "--flood" && arguments.size() == 3U) {
+        std::ostream& output = arguments[1] == "stdout" ? std::cout : std::cerr;
+        const std::size_t count = static_cast<std::size_t>(std::stoul(arguments[2]));
+        const std::string block(8192U, arguments[1] == "stdout" ? 'O' : 'E');
+        std::size_t written = 0U;
+        while (written < count) {
+            const std::size_t next = std::min(block.size(), count - written);
+            output.write(block.data(), static_cast<std::streamsize>(next));
+            output.flush();
+            written += next;
+        }
+        return 0;
+    }
+    if (arguments[0] == "--flood-both" && arguments.size() == 2U) {
+        const std::size_t count = static_cast<std::size_t>(std::stoul(arguments[1]));
+        const std::string stdout_block(4096U, 'O');
+        const std::string stderr_block(4096U, 'E');
+        std::size_t written = 0U;
+        while (written < count) {
+            const std::size_t next = std::min(stdout_block.size(), count - written);
+            std::cout.write(stdout_block.data(), static_cast<std::streamsize>(next));
+            std::cout.flush();
+            std::cerr.write(stderr_block.data(), static_cast<std::streamsize>(next));
+            std::cerr.flush();
+            written += next;
+        }
+        return 0;
+    }
+    if (arguments[0] == "--emit-sleep" && arguments.size() == 2U) {
+        std::cout << "before-wait" << std::flush;
+        std::cerr << "diagnostic" << std::flush;
+        std::this_thread::sleep_for(std::chrono::milliseconds(std::stoi(arguments[1])));
+        return 0;
+    }
     if (arguments[0] == "--grandchild" && arguments.size() == 2U) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1200));
         write_marker(copperfin::platform::path_from_utf8_string(arguments[1]), "orphaned");
@@ -191,6 +233,82 @@ int run_tests(const std::filesystem::path& executable) {
            "#4700: direct invocation should preserve the candidate exit code");
     expect(exited.process_tree_closed && exited.error_code == "polyglot.process.exited",
            "#4700: normal completion should close the owned process tree");
+    expect(exited.standard_output.empty() && exited.standard_error.empty(),
+           "#4700: a silent candidate should capture empty output streams");
+
+    const auto emitted = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--emit"},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 2000U,
+        .poll_interval_ms = 5U,
+        .stdout_limit_bytes = 1024U,
+        .stderr_limit_bytes = 1024U,
+        .cancellation_requested = {}});
+    expect(emitted.completed() && emitted.exit_code == 0,
+           "#4700: exact-byte output helper should complete");
+    expect(emitted.standard_output == std::string{"out\0\xFF\n", 6U},
+           "#4700: stdout capture should preserve NUL, high-byte, and newline bytes");
+    expect(emitted.standard_error == std::string{"err\r\n", 5U},
+           "#4700: stderr capture should preserve exact CRLF bytes separately");
+
+    constexpr std::uint32_t saturation_bytes = 256U * 1024U;
+    const auto saturated = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--flood-both", std::to_string(saturation_bytes)},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 5000U,
+        .poll_interval_ms = 5U,
+        .stdout_limit_bytes = saturation_bytes,
+        .stderr_limit_bytes = saturation_bytes,
+        .cancellation_requested = {}});
+    expect(saturated.completed() && saturated.exit_code == 0,
+           "#4700: concurrent stdout/stderr pipe saturation should not deadlock");
+    expect(saturated.standard_output == std::string(saturation_bytes, 'O') &&
+               saturated.standard_error == std::string(saturation_bytes, 'E'),
+           "#4700: saturation capture should retain both streams exactly to their limits");
+
+    const auto stdout_overflow = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--flood", "stdout", "65536"},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 5000U,
+        .poll_interval_ms = 5U,
+        .stdout_limit_bytes = 4096U,
+        .stderr_limit_bytes = 4096U,
+        .cancellation_requested = {}});
+    expect(
+        stdout_overflow.status ==
+                copperfin::platform::BoundedProcessStatus::output_limit_exceeded &&
+            stdout_overflow.error_code == "polyglot.process.stdout_limit_exceeded" &&
+            stdout_overflow.standard_output == std::string(4096U, 'O') &&
+            stdout_overflow.process_tree_closed,
+        "#4700: stdout overflow should retain only the admitted prefix and close the tree");
+    expect(
+        std::string{copperfin::platform::bounded_process_status_name(
+            stdout_overflow.status)} == "output-limit-exceeded",
+        "#4700: output-limit status text should remain invariant");
+
+    const auto stderr_overflow = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--flood", "stderr", "65536"},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 5000U,
+        .poll_interval_ms = 5U,
+        .stdout_limit_bytes = 4096U,
+        .stderr_limit_bytes = 4096U,
+        .cancellation_requested = {}});
+    expect(
+        stderr_overflow.status ==
+                copperfin::platform::BoundedProcessStatus::output_limit_exceeded &&
+            stderr_overflow.error_code == "polyglot.process.stderr_limit_exceeded" &&
+            stderr_overflow.standard_error == std::string(4096U, 'E') &&
+            stderr_overflow.process_tree_closed,
+        "#4700: stderr overflow should retain only the admitted prefix and close the tree");
 
     const fs::path record_path = root / "record.txt";
     const auto recorded = copperfin::platform::run_bounded_process({
@@ -234,7 +352,7 @@ int run_tests(const std::filesystem::path& executable) {
     std::atomic_int cancellation_polls{0};
     const auto cancelled = copperfin::platform::run_bounded_process({
         .executable_path = executable_path,
-        .arguments = {"--sleep", "2000"},
+        .arguments = {"--emit-sleep", "2000"},
         .working_directory = root_path,
         .environment = {},
         .timeout_ms = 3000U,
@@ -247,6 +365,26 @@ int run_tests(const std::filesystem::path& executable) {
            "#4700: live cancellation should stop the owned process tree");
     expect(cancelled.elapsed_ms < 1000U,
            "#4700: cancellation should not wait for the candidate sleep to finish");
+    expect(cancelled.standard_output == "before-wait" &&
+               cancelled.standard_error == "diagnostic",
+           "#4700: cancellation should retain exact bytes captured before tree shutdown");
+
+    const auto output_timed_out = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {"--emit-sleep", "2000"},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 5U,
+        .stdout_limit_bytes = 1024U,
+        .stderr_limit_bytes = 1024U,
+        .cancellation_requested = {}});
+    expect(
+        output_timed_out.status == copperfin::platform::BoundedProcessStatus::timed_out &&
+            output_timed_out.process_tree_closed &&
+            output_timed_out.standard_output == "before-wait" &&
+            output_timed_out.standard_error == "diagnostic",
+        "#4700: timeout should retain bounded bytes emitted before tree shutdown");
 
     std::atomic_int throwing_cancellation_polls{0};
     const auto callback_failed = copperfin::platform::run_bounded_process({
@@ -338,6 +476,38 @@ int run_tests(const std::filesystem::path& executable) {
     expect(invalid.status == copperfin::platform::BoundedProcessStatus::invalid_request &&
                !invalid.started,
            "#4700: a zero execution budget should be rejected");
+
+    const auto zero_output_limit = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .stdout_limit_bytes = 0U,
+        .stderr_limit_bytes = 1024U,
+        .cancellation_requested = {}});
+    expect(
+        zero_output_limit.status ==
+                copperfin::platform::BoundedProcessStatus::invalid_request &&
+            !zero_output_limit.started,
+        "#4700: a zero output budget should reject before launch");
+
+    const auto excessive_output_limit = copperfin::platform::run_bounded_process({
+        .executable_path = executable_path,
+        .arguments = {},
+        .working_directory = root_path,
+        .environment = {},
+        .timeout_ms = 100U,
+        .poll_interval_ms = 1U,
+        .stdout_limit_bytes = 1024U,
+        .stderr_limit_bytes = 16U * 1024U * 1024U + 1U,
+        .cancellation_requested = {}});
+    expect(
+        excessive_output_limit.status ==
+                copperfin::platform::BoundedProcessStatus::invalid_request &&
+            !excessive_output_limit.started,
+        "#4700: an above-hard-ceiling output budget should reject before launch");
 
     const auto invalid_environment = copperfin::platform::run_bounded_process({
         .executable_path = executable_path,
